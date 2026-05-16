@@ -126,6 +126,18 @@
                 ],
                 "max_mass_pct": 0.3
             }
+        ],
+        "Mine_Standard": [
+            {
+                "type": "CORE",
+                "restrictions": [
+                    "allow_ability:Warhead",
+                    "allow_ability:Laserhead",
+                    "allow_ability:StructuralIntegrity",
+                    "allow_ability:ToHitAttackModifier"
+                ],
+                "max_mass_pct": 1.0
+            }
         ]
     }
 }

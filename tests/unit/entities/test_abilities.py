@@ -9,7 +9,6 @@ from game.simulation.components.abilities import (
     ManeuveringThruster,
     WeaponAbility,
     ProjectileWeaponAbility,
-    VehicleLaunchAbility
 )
 from game.simulation.components.abilities.ui_colors import HINT_THRUST
 
@@ -104,16 +103,11 @@ class TestAbilities:
         ab.update()  # -0.01
         assert ab.cooldown_timer == pytest.approx(1.49)
 
-    def test_vehicle_launch(self, mock_component):
-        data = {"fighter_class": "Ace Fighter", "cycle_time": 2.0}
-        ab = VehicleLaunchAbility(mock_component, data)
-
-        assert ab.try_launch() is True
-        assert ab.try_launch() is False  # Cooldown active
-
-        # fast forward
-        ab.cooldown = 0
-        assert ab.try_launch() is True
+    # PROJ-FMS-C audit Fix 1: ``test_vehicle_launch`` removed — the
+    # legacy :class:`VehicleLaunchAbility` was deleted in favor of the
+    # PROJ-FMS-A Phase 5 :class:`TacticalFighterLaunchAbility`. See
+    # ``tests/unit/simulation/components/abilities/test_tactical_fighter_launch.py``
+    # for coverage of the replacement.
 
     def test_ui_rows(self, mock_component):
         ab = CombatPropulsion(mock_component, 100)

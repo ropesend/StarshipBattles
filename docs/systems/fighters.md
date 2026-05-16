@@ -1,0 +1,190 @@
+# Fighters System
+
+> **Last verified:** 2026-05-16 - PROJ-FMS-C end-to-end fighter system shipped.
+
+End-to-end fighter lifecycle: design → bay → strategic launch → tactical
+combat → strategic recovery, with mid-battle launches that auto-reboard
+at battle end. Source design lives at
+[`PROJ-FMS-shared/design.md`](../../Projects/active_projects/PROJ-FMS-shared/design.md);
+this doc is the runtime reference.
+
+## Quick lifecycle map
+
+```text
+Workshop / Build queue
+        |
+        v  (Fighter design as a CarriedVehicle in the carrier's bay)
+ShipInstance.carried_items[*]  ← VehicleBayAbility caps total mass
+        |
+        v  IssueLaunchFightersCommand → OrderType.LAUNCH_FIGHTERS
+LaunchFightersOrderHandler
+        | pops N matching CarriedVehicles, creates a fighter_group Fleet
+        v
+fighter_group Fleet (group_kind="fighter_group")
+        |  ships: List[ShipInstance]   ← real combat-capable entities
+        |  HP preserved from CarriedVehicle.current_hp
+        |
+        v  contested-hex combat → build_strategy_battle_spec
+spec compiler groups fleets by owner_id; fighter_group merges onto the
+owner's team alongside any regular fleets.
+        |
+        v
+BattleEngine ticks; FighterAIController drives each fighter ("target
+nearest enemy"); kamikaze fighters with RamTargetAbility defer to the
+engine's RamTargetResolver.
+        |
+        v  battle ends
+Post-battle hook → fighter_reboard.apply_reboard(engine, fleets, empires)
+        | + apply_outcome_to_fleets prunes destroyed/retreated ships
+        v
+Mid-battle launches (tagged launched_in_battle_id) auto-reboard onto
+friendly bays; overflow spills into a new (or pre-existing) sector
+fighter_group. Pre-existing fighter_group fighters stay in their
+group unless explicitly recovered.
+        |
+        v  IssueRecoverFightersCommand → OrderType.RECOVER_FIGHTERS
+RecoverFightersOrderHandler
+        | pops N ShipInstances from the target fighter_group, converts
+        | each back to a CarriedVehicle (HP preserved), loads into bay
+        v
+ShipInstance.carried_items[*]   ← back where we started.
+```
+
+## Strategic launch (`OrderType.LAUNCH_FIGHTERS`)
+
+`IssueLaunchFightersCommand(fleet_id, ship_instance_id, fighter_design_id,
+count, target_hex)` queues a `LAUNCH_FIGHTERS` order on the issuing
+fleet. The validator (`LaunchFightersCommandHandler`) rejects non-fleet
+`group_kind` callers and verifies the carrier has at least `count`
+matching fighter `CarriedVehicle`s.
+
+`LaunchFightersOrderHandler.execute_action_order` then:
+
+1. Pops the matching `CarriedVehicle`s from the carrier's
+   `carried_items`. Atomic — partial pops are restored on failure.
+2. Mints a fresh `fighter_group` Fleet (no auto-merge — mirrors PROJ-FMS-B
+   audit Fix 4 for mine_groups).
+3. Builds a deployed `ShipInstance` per CarriedVehicle, preserving
+   `current_hp` and `component_states` when present.
+4. Adds the group to `empire.fleets`. Conflict-resolution picks it up
+   automatically via the existing `empire.fleets` iteration.
+
+Files: [`game/strategy/engine/handlers/launch_fighters.py`](../../game/strategy/engine/handlers/launch_fighters.py),
+[`game/strategy/engine/order_handlers/launch_fighters.py`](../../game/strategy/engine/order_handlers/launch_fighters.py).
+
+## Tactical launch (mid-battle, design-instance)
+
+The legacy `VehicleLaunchAbility` auto-launch path at
+[`weapon_firing_system.py`](../../game/simulation/combat/weapon_firing_system.py)
+still emits `AttackType.LAUNCH` attacks for old designs, but
+`process_launch_attack` now accepts an optional `carried_vehicle` payload
+that drives a full design-backed spawn via `ShipSerializer.from_dict`.
+Legacy class-string payloads still spawn a generic fighter but log a
+deprecation warning.
+
+Production entry point: `BattleEngine.launch_fighters_in_battle(carrier,
+[CarriedVehicle, ...])`. The engine spawns each fighter, tags it with
+`launched_in_battle_id`, and registers it on the engine's
+`ReboardTracker` for end-of-battle reboard.
+
+## Combat join via `group_kind`
+
+`fighter_group` Fleets are real combat fleets — unlike `mine_group`s
+they ARE combat-capable entities and translate to `ShipSpec` entries on
+the owner's team in `build_strategy_battle_spec`. The spec compiler's
+`_split_mine_groups_from_fleets` only filters mine groups; fighter_groups
+fall through to the normal `fleets_by_owner` grouping.
+
+Each `ShipInstance` in the fighter_group becomes a tactical entity
+through the standard materialiser pipeline
+(`InstanceBackedMaterializer` calls `ShipInstance.to_ship(...)`).
+
+## Fighter AI
+
+`FighterAIController` (in [`game/ai/fighter_controller.py`](../../game/ai/fighter_controller.py))
+implements the minimal "target nearest enemy" behavior:
+
+1. Find the closest live enemy via the spatial grid (bypasses the policy
+   weighting in `AIController.find_target` — fighters always want the
+   nearest threat).
+2. Set it as the current target so the weapon firing system fires.
+3. Turn toward it and thrust forward via `AIController.navigate_to`.
+4. When a `RamTargetAbility` has its `target_id` set (kamikaze flow),
+   defer movement to the engine's `RamTargetResolver`; still pull the
+   trigger so any non-ram weapons fire on the ram target en-route.
+
+`AIControllerFactory.create_for_ship` dispatches based on
+`ship.vehicle_type`: `Fighter` gets `FighterAIController`; everything
+else gets the full `AIController`.
+
+## Strategic recovery (`OrderType.RECOVER_FIGHTERS`)
+
+`IssueRecoverFightersCommand(fleet_id, ship_instance_id, fighter_group_id,
+count)` queues a `RECOVER_FIGHTERS` order. The handler:
+
+1. Locates the source `fighter_group` (by id, or first owner-owned
+   group at the recovering fleet's hex).
+2. Pops up to `count` ShipInstances (or all when `count is None`).
+3. Converts each into a CarriedVehicle preserving `current_hp` and
+   per-component damage state.
+4. Loads each into the carrier's bay via `ShipCargoManager.load_vehicle`.
+   Partial recovery is allowed — fighters that don't fit stay in the
+   group.
+5. If the source group ends up empty, removes it from `empire.fleets`.
+
+Files: [`game/strategy/engine/handlers/recover_fighters.py`](../../game/strategy/engine/handlers/recover_fighters.py),
+[`game/strategy/engine/order_handlers/recover_fighters.py`](../../game/strategy/engine/order_handlers/recover_fighters.py).
+
+## End-of-battle reboard
+
+The strategy-side post-battle hook in
+[`spec_compiler.py`](../../game/strategy/combat/spec_compiler.py)
+runs `fighter_reboard.apply_reboard(...)` BEFORE
+`apply_outcome_to_fleets` so reboarded fighters land on friendly bays
+before the regular ship-outcome processing prunes empty fleets.
+
+Policy:
+
+- **Survivors tagged `launched_in_battle_id == this_battle_id`** auto-
+  reboard onto any friendly ship in the battle that has bay space.
+  Walks the participating fleets in order (carrier's home fleet first).
+- **Overflow** spills into a new `fighter_group` Fleet at the sector.
+  If a pre-existing fighter_group at that hex already belongs to the
+  same empire, overflow MERGES into it rather than fragmenting.
+- **Dead-on-arrival** fighters (HP <= 0 or `is_alive == False` at battle
+  end) are discarded.
+- **Carrier destroyed mid-battle** is handled implicitly — the destroyed
+  carrier is skipped in the friendly-ship walk; the reboard finds the
+  next live carrier or falls through to overflow.
+
+Wiring:
+
+- [`fighter_reboard.ReboardTracker`](../../game/simulation/systems/fighter_reboard.py)
+  installed on the engine via the spec compiler's
+  `build_fighter_reboard_setup` pre_tick_loop_callback.
+- [`attack_processor.process_launch_attack`](../../game/simulation/systems/attack_processor.py)
+  appends each spawned fighter to the tracker.
+- The post-battle hook in `_build_strategy_post_battle_hook` reads the
+  engine via a shared `_engine_ref` list parked on the spec and calls
+  `apply_reboard`.
+- The simulation adapter composes `mine_resolver_setup` and
+  `reboard_setup` into a single `pre_tick_loop_callback`.
+
+## Tests
+
+| Layer | File |
+|---|---|
+| Strategic launch handler unit | `tests/unit/strategy/engine/order_handlers/test_launch_fighters_handler.py` |
+| Strategic recovery handler unit | `tests/unit/strategy/engine/order_handlers/test_recover_fighters_handler.py` |
+| Tactical launch (design-instance) unit | `tests/unit/simulation/components/abilities/test_tactical_fighter_launch.py` |
+| Fighter AI controller unit | `tests/unit/ai/test_fighter_controller.py` |
+| Spec-compiler / combat-join unit | `tests/unit/strategy/combat/test_fighter_group_combat_join.py` |
+| End-of-battle reboard unit | `tests/unit/simulation/systems/test_fighter_reboard.py` |
+| Strategic launch → recover round-trip | `tests/integration/test_fms_c_e2e.py` |
+| Mid-battle launch + reboard + overflow | `tests/integration/test_fms_c_launch_in_battle_e2e.py` |
+
+## Decisions captured
+
+See [`Projects/active_projects/PROJ-FMS-C/decisions.md`](../../Projects/active_projects/PROJ-FMS-C/decisions.md)
+for the per-phase implementation decisions (no-auto-merge,
+overflow-merge-into-existing-group policy, fighter AI scope, etc.).

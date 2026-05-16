@@ -386,8 +386,13 @@ def seed_default_commands(registry: CommandRegistry) -> None:
     from game.strategy.engine.handlers import (
         build,
         construction_queue,
+        launch_fighters,
+        launch_satellites,
+        lay_mines,
         movement,
         order_queue,
+        recover_fighters,
+        recover_satellites,
         transfer,
     )
     from game.strategy.engine import (
@@ -397,8 +402,13 @@ def seed_default_commands(registry: CommandRegistry) -> None:
     for module in (
         build,
         construction_queue,
+        launch_fighters,
+        launch_satellites,
+        lay_mines,
         movement,
         order_queue,
+        recover_fighters,
+        recover_satellites,
         transfer,
         planet_command_handlers,
         superweapon_command_handlers,

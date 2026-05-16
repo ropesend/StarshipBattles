@@ -9,17 +9,24 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Strategic + tactical fighter launch (design-instance based) | Not started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Deployed wing combat join + fighter AI | Not started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Recovery + end-of-battle reboard | Not started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Integration tests + E2E gameplay smoke | Not started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 1. Strategic + tactical fighter launch (design-instance based) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Deployed wing combat join + fighter AI | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Recovery + end-of-battle reboard | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Integration tests + E2E gameplay smoke | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-15
-**Active Phase:** Phase 1 (blocked on PROJ-FMS-A)
-**Last Action:** Project scaffolded
-**Next Action:** Wait for PROJ-FMS-A complete (and ideally PROJ-FMS-B, though only A is hard-blocking), then begin Phase 1
-**Blockers:** PROJ-FMS-A (hard); ramming from PROJ-FMS-B can land before or after fighters (soft).
+**Last Updated:** 2026-05-16
+**Active Phase:** All phases complete; audit fix pass landed
+**Last Action:** Codex audit fix pass (2026-05-16) — P1 carrier-AI
+production caller + legacy `VehicleLaunchAbility` removal; P2 component-
+state round trip; P2 artifact correction; inline ability-gating fix.
+See [`findings/audit_fix_report.md`](findings/audit_fix_report.md).
+**Sharded suite:** 20568 / 20549 passed, 9 failed / 6 errors / 4
+skipped — pre-existing baseline only; zero new failures.
+**Next Action:** Pygame UI binding for player-facing launch/recover
+(deferred follow-up); PROJ-FMS-D (satellites) may now begin.
+**Blockers:** None for backend. UI smoke verification deferred — see
+"Known limitations" in [`findings/implementation_report.md`](findings/implementation_report.md).
 
 ## Overview
 End-to-end fighters: ships carry fighters as bay cargo, launch them strategically into a hex (forming a `fighter_group`) or tactically into a battle (deploying actual carried design instances). Fighters fight via minimal AI. Survivors recover — strategically via an explicit empire action, tactically via end-of-battle reboard with overflow → sector group.

@@ -71,12 +71,13 @@ class PlanetQueryService:
     def can_build_type(planet: "Planet", vehicle_type: str) -> bool:
         """True iff this planet can build the given vehicle type.
 
-        Complexes can always be built. Ships, fighters, and satellites
-        require a space shipyard. Anything else returns False.
+        Complexes can always be built. Ships, fighters, satellites, and
+        mines require a space shipyard (PROJ-FMS-A Phase 1: mines join
+        the small-craft yard rule). Anything else returns False.
         """
         vehicle_lower = vehicle_type.lower()
         if vehicle_lower == "complex":
             return True
-        if vehicle_lower in ("ship", "fighter", "satellite"):
+        if vehicle_lower in ("ship", "fighter", "satellite", "mine"):
             return planet.has_space_shipyard
         return False

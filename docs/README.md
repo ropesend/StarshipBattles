@@ -35,6 +35,8 @@ notes, not project documentation.
 | Production | `docs/systems/production_system.md` | queues, tick production, spawning, rate resolution, habitability multiplier |
 | Resources | `docs/systems/resource_system.md` | unified material/consumable catalog, definitions, component-driven behavior |
 | Save / Load | `docs/systems/save_load.md` | `SaveGameService` v3.0.0, turn-based disk layout, atomic writes, no migration, replay-store coupling |
+| Fighters | `docs/systems/fighters.md` | fighter design -> bay -> strategic launch -> tactical combat -> recovery; mid-battle launch + end-of-battle reboard; overflow into sector fighter_group |
+| Satellites | `docs/systems/satellites.md` | satellite design -> bay -> strategic launch -> stationary tactical combat -> recovery; mirrors fighters with stationary AI, separate ability gates, separate satellite_group namespace |
 
 ## How-To Guides
 
@@ -230,5 +232,7 @@ docs/
     production_system.md
     resource_system.md
     save_load.md
+    fighters.md
+    satellites.md
 ```
 

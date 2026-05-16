@@ -224,6 +224,118 @@ class QueueCreateDysonSphereMissionCommand(Command):
 # =============================================================================
 
 @dataclass
+class IssueLaunchFightersCommand(Command):
+    """PROJ-FMS-C Phase 1: command to launch fighters from a ship's bay.
+
+    Args:
+        fleet_id: Source fleet containing the carrier ship.
+        ship_instance_id: The carrier ship within the fleet that holds the
+            fighters.
+        fighter_design_id: Specific fighter design to launch. Use "auto" or
+            an empty string to take any fighter from the bay.
+        count: Number of fighters of that design to launch.
+        target_hex: Optional target hex. ``None`` => current fleet hex.
+    """
+
+    fleet_id: int
+    ship_instance_id: str
+    fighter_design_id: str = "auto"
+    count: int = 1
+    target_hex: Optional[HexCoord] = None
+
+
+@dataclass
+class IssueRecoverFightersCommand(Command):
+    """PROJ-FMS-C Phase 3: command to recover fighters into a ship's bay.
+
+    Args:
+        fleet_id: Recovering fleet containing the carrier ship.
+        ship_instance_id: The carrier ship that will receive the fighters.
+        fighter_group_id: Specific fighter_group fleet id to recover from.
+            ``None`` => the first fighter_group at the recovering fleet's
+            current hex owned by the same empire.
+        count: Number of fighters to recover. ``None`` => recover all
+            available (capped by bay capacity).
+    """
+
+    fleet_id: int
+    ship_instance_id: str
+    fighter_group_id: Optional[int] = None
+    count: Optional[int] = None
+
+
+@dataclass
+class IssueLaunchSatellitesCommand(Command):
+    """PROJ-FMS-D Phase 1: command to launch satellites from a ship's bay.
+
+    Mirrors :class:`IssueLaunchFightersCommand` but operates on satellite
+    CarriedVehicle entries. Satellite recovery has its own command
+    (:class:`IssueRecoverSatellitesCommand`) so a fighter-only carrier
+    can't accidentally recover satellites and vice versa.
+
+    Args:
+        fleet_id: Source fleet containing the carrier ship.
+        ship_instance_id: The carrier ship within the fleet that holds the
+            satellites.
+        satellite_design_id: Specific satellite design to launch. Use
+            "auto" or an empty string to take any satellite from the bay.
+        count: Number of satellites of that design to launch.
+        target_hex: Optional target hex. ``None`` => current fleet hex.
+    """
+
+    fleet_id: int
+    ship_instance_id: str
+    satellite_design_id: str = "auto"
+    count: int = 1
+    target_hex: Optional[HexCoord] = None
+
+
+@dataclass
+class IssueRecoverSatellitesCommand(Command):
+    """PROJ-FMS-D Phase 2: command to recover satellites into a ship's bay.
+
+    Mirrors :class:`IssueRecoverFightersCommand` but operates on
+    ``satellite_group`` Fleets and requires the recovering ship to carry
+    :class:`RecoverSatellitesAbility`. Per the merged design the ability
+    gates are intentionally separate from fighters'.
+
+    Args:
+        fleet_id: Recovering fleet containing the carrier ship.
+        ship_instance_id: The carrier ship that will receive the satellites.
+        satellite_group_id: Specific ``satellite_group`` fleet id to
+            recover from. ``None`` => the first satellite_group at the
+            recovering fleet's current hex owned by the same empire.
+        count: Number of satellites to recover. ``None`` => recover all
+            available (capped by bay capacity).
+    """
+
+    fleet_id: int
+    ship_instance_id: str
+    satellite_group_id: Optional[int] = None
+    count: Optional[int] = None
+
+
+@dataclass
+class IssueLayMinesCommand(Command):
+    """PROJ-FMS-B Phase 1: command to lay mines from a ship's bay.
+
+    Args:
+        fleet_id: Source fleet containing the carrier ship.
+        ship_instance_id: The carrier ship within the fleet that holds the mines.
+        mine_design_id: Specific mine design to lay (must match
+            ``CarriedVehicle.design_id`` entries in the bay).
+        count: Number of mines of that design to lay.
+        target_hex: Optional target hex. ``None`` => current fleet hex.
+    """
+
+    fleet_id: int
+    ship_instance_id: str
+    mine_design_id: str
+    count: int = 1
+    target_hex: Optional[HexCoord] = None
+
+
+@dataclass
 class IssueWarpCommand(Command):
     """Command to issue a WARP order to traverse a specific warp point.
 

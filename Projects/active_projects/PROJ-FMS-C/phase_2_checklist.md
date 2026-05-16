@@ -7,29 +7,29 @@
 ## Tasks
 
 ### Combat join
-- [ ] Audit [`game/strategy/engine/conflict_resolution_engine.py:312-321,357-376`](../../../game/strategy/engine/conflict_resolution_engine.py#L312). If it iterates `empire.fleets` to build combat manifests, `fighter_group` Fleets are picked up for free thanks to PROJ-FMS-A's `group_kind`. Verify with a targeted test.
-- [ ] If the engine has any path that filters by "fleet with movement" or "fleet with crew," extend it to include non-fleet kinds. Add a guard against assuming a group has a flagship / can carry orders / has resources.
-- [ ] When a `fighter_group` participates in combat, each fighter in the group becomes a tactical entity placed on the owner's side at battle start. (Position: cluster near the owner-side spawn zone? Random within a small radius? Document the choice in [`decisions.md`](decisions.md).)
+- [x] Audit [`game/strategy/engine/conflict_resolution_engine.py:312-321,357-376`](../../../game/strategy/engine/conflict_resolution_engine.py#L312). If it iterates `empire.fleets` to build combat manifests, `fighter_group` Fleets are picked up for free thanks to PROJ-FMS-A's `group_kind`. Verify with a targeted test.
+- [x] If the engine has any path that filters by "fleet with movement" or "fleet with crew," extend it to include non-fleet kinds. Add a guard against assuming a group has a flagship / can carry orders / has resources.
+- [x] When a `fighter_group` participates in combat, each fighter in the group becomes a tactical entity placed on the owner's side at battle start. (Position: cluster near the owner-side spawn zone? Random within a small radius? Document the choice in [`decisions.md`](decisions.md).)
 
 ### Minimal fighter AI
-- [ ] Add a `FighterAIController` (or extend [`game/ai/controller.py`](../../../game/ai/controller.py)).
-- [ ] Each tick: pick the nearest enemy ship; turn toward it; thrust forward; if a weapon is in range and `cooldown` allows, fire.
-- [ ] No formation logic, no wingman behavior, no retreat — that's a follow-up.
-- [ ] When the target dies, re-target on next tick.
-- [ ] When all enemies are dead / fighter is alone, idle / hold position.
-- [ ] Confirm fighters with `RamTargetAbility` set (PROJ-FMS-B Phase 4) follow ram intercept rather than the default AI when their target is set.
+- [x] Add a `FighterAIController` (or extend [`game/ai/controller.py`](../../../game/ai/controller.py)).
+- [x] Each tick: pick the nearest enemy ship; turn toward it; thrust forward; if a weapon is in range and `cooldown` allows, fire.
+- [x] No formation logic, no wingman behavior, no retreat — that's a follow-up.
+- [x] When the target dies, re-target on next tick.
+- [x] When all enemies are dead / fighter is alone, idle / hold position.
+- [x] Confirm fighters with `RamTargetAbility` set (PROJ-FMS-B Phase 4) follow ram intercept rather than the default AI when their target is set.
 
 ### Fighter combat behavior
-- [ ] Fighters fire any weapons they have per their design; damage flows through standard pipeline.
-- [ ] Fighters take damage; HP tracked per-fighter (each is its own combat entity).
-- [ ] Destroyed fighters are removed from the tactical map AND the parent `fighter_group` Fleet's ship list (for end-of-battle reckoning).
+- [x] Fighters fire any weapons they have per their design; damage flows through standard pipeline.
+- [x] Fighters take damage; HP tracked per-fighter (each is its own combat entity).
+- [x] Destroyed fighters are removed from the tactical map AND the parent `fighter_group` Fleet's ship list (for end-of-battle reckoning).
 
 ### Tests
-- [ ] `fighter_group` of 3 in a hex; trigger combat with an enemy fleet there → all 3 fighters appear on the owner's side.
-- [ ] Minimal AI: fighter with weapons targets nearest enemy and fires when in range; verify behavior over a few ticks of a contrived scenario.
-- [ ] Fighter destroyed mid-battle → removed from `fighter_group`.
-- [ ] Kamikaze fighter (Warhead + RamTarget) launched and target set → fighter intercepts and detonates (verifies the RamTarget path from PROJ-FMS-B doesn't break for launched fighters).
-- [ ] Tactical launch (Phase 1) + auto-join (this phase) interact correctly: a fighter launched from a carrier mid-battle is a peer of fighters from a pre-existing `fighter_group` in the same hex.
+- [x] `fighter_group` of 3 in a hex; trigger combat with an enemy fleet there → all 3 fighters appear on the owner's side.
+- [x] Minimal AI: fighter with weapons targets nearest enemy and fires when in range; verify behavior over a few ticks of a contrived scenario.
+- [x] Fighter destroyed mid-battle → removed from `fighter_group`.
+- [x] Kamikaze fighter (Warhead + RamTarget) launched and target set → fighter intercepts and detonates (verifies the RamTarget path from PROJ-FMS-B doesn't break for launched fighters).
+- [x] Tactical launch (Phase 1) + auto-join (this phase) interact correctly: a fighter launched from a carrier mid-battle is a peer of fighters from a pre-existing `fighter_group` in the same hex.
 
 ## Verification
 - `python Tools/test_sharded/test_sharded.py`

@@ -9,16 +9,22 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Strategic + tactical satellite launch + stationary AI | Not started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Recovery (separate ability gate from fighters) | Not started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Integration tests + E2E gameplay smoke | Not started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. Strategic + tactical satellite launch + stationary AI | Shipped | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Recovery (separate ability gate from fighters) | Shipped | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Integration tests + E2E gameplay smoke | Shipped | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-15
-**Active Phase:** Phase 1 (blocked on PROJ-FMS-A; PROJ-FMS-C work serves as a useful template)
-**Last Action:** Project scaffolded
-**Next Action:** Wait for PROJ-FMS-A complete (and ideally PROJ-FMS-C for the template), then begin Phase 1
-**Blockers:** PROJ-FMS-A (hard).
+**Last Updated:** 2026-05-16 (post audit-fix pass)
+**Active Phase:** Complete
+**Last Action:** All three phases implemented end-to-end + codex audit
+remediation applied. Implementation report at
+[`findings/implementation_report.md`](findings/implementation_report.md)
+documents per-phase deliverables, production wiring, and the sharded
+suite status vs PROJ-FMS-C baseline (20646 / 20627 / 9 / 6 / 4 —
++78 net, zero new regressions). Audit-fix details at
+[`findings/audit_fix_report.md`](findings/audit_fix_report.md).
+**Next Action:** ship the four-project sequence (PROJ-FMS-A/B/C/D).
+**Blockers:** None.
 
 ## Overview
 Satellites mirror fighters but stay stationary in tactical combat and use a **separate set** of bay / launch / recovery abilities so a ship with fighter capacity does not automatically pick up satellites and vice versa. After this phase, all three unit types are fully integrated.

@@ -3,15 +3,20 @@ WeaponFiringSystem - Extracted weapon firing logic from ShipCombatEngine.
 
 This class handles all weapon firing operations:
 - Processing weapon components for firing
-- Hangar vehicle launches (out-of-scope dict-shaped path)
 - Family-routed weapon dispatch (Beam, PDC, Projectile, Seeker via
   WEAPON_REGISTRY)
 
 Part of PROJ-44 Phase 5: ShipCombatEngine Decomposition. Refactored under
 PROJ-359 to delegate per-family construction to WeaponHandler instances
 (see game/simulation/combat/families/).
+
+PROJ-FMS-C audit Fix 1: the legacy ``VehicleLaunch`` hangar auto-launch
+path was removed; tactical fighter launches now go through
+:meth:`BattleEngine.launch_fighters_in_battle` driven by
+:class:`game.ai.carrier_controller.CarrierAIController` or a player UI
+action.
 """
-from typing import TYPE_CHECKING, List, Optional, Any, Dict
+from typing import TYPE_CHECKING, List, Optional, Any
 
 from game.core.constants import AttackType, CombatConstants
 
@@ -93,12 +98,13 @@ class WeaponFiringSystem:
             return attacks
 
         for layer_type, comp in ship.iter_components():
-            # Handle Hangar Launch
-            if comp.has_ability('VehicleLaunch') and comp.is_operational:
-                attack = self._process_hangar_launch(ship, comp)
-                if attack:
-                    attacks.append(attack)
-                continue
+            # PROJ-FMS-C audit Fix 1: the legacy ``VehicleLaunch`` weapon-
+            # firing auto-launch path has been removed. Tactical fighter
+            # launches now go through :meth:`BattleEngine.launch_fighters_in_battle`
+            # driven by :class:`CarrierAIController` (or a player UI action),
+            # not as a side-effect of the weapon-firing loop. The new path
+            # spawns design-instance fighters with full components / weapons /
+            # HP rather than class-string shells.
 
             # Handle Weapons (is_operational checks both is_active AND
             # requirement satisfaction like RequiresCommandAndControl)
@@ -111,34 +117,6 @@ class WeaponFiringSystem:
                         attacks.append(attack_result)
 
         return attacks
-
-    def _process_hangar_launch(
-        self,
-        ship: 'Ship',
-        comp: 'Component'
-    ) -> Optional[Dict]:
-        """
-        Process vehicle launch from hangar component.
-
-        Args:
-            ship: The ship launching
-            comp: Hangar component with VehicleLaunch ability
-
-        Returns:
-            Launch attack dict or None
-        """
-        vl_ability = comp.get_ability('VehicleLaunch')
-
-        # Auto-launch if we have a target
-        if ship.current_target and vl_ability.try_launch():
-            return {
-                'type': AttackType.LAUNCH,
-                'source': ship,
-                'origin': ship.position,
-                'hangar': comp,
-                'fighter_class': vl_ability.fighter_class
-            }
-        return None
 
     def _process_weapon_fire(
         self,

@@ -271,6 +271,42 @@
             "cost_multiplier": 5.0,
             "layer_config": "Planetary_Complex",
             "default_hull_id": "hull_drop_pod_heavy"
+        },
+        "Mine (Small)": {
+            "type": "Mine",
+            "code": "MNS",
+            "max_mass": 5,
+            "layer_config": "Mine_Standard",
+            "default_hull_id": "hull_mine_small",
+            "cost_multiplier": 1.0,
+            "signature_bonus": 3.0
+        },
+        "Mine (Medium)": {
+            "type": "Mine",
+            "code": "MNM",
+            "max_mass": 15,
+            "layer_config": "Mine_Standard",
+            "default_hull_id": "hull_mine_medium",
+            "cost_multiplier": 1.0,
+            "signature_bonus": 3.0
+        },
+        "Mine (Large)": {
+            "type": "Mine",
+            "code": "MNL",
+            "max_mass": 40,
+            "layer_config": "Mine_Standard",
+            "default_hull_id": "hull_mine_large",
+            "cost_multiplier": 1.0,
+            "signature_bonus": 3.0
+        },
+        "Mine (Heavy)": {
+            "type": "Mine",
+            "code": "MNH",
+            "max_mass": 100,
+            "layer_config": "Mine_Standard",
+            "default_hull_id": "hull_mine_heavy",
+            "cost_multiplier": 1.0,
+            "signature_bonus": 3.0
         }
     }
 }

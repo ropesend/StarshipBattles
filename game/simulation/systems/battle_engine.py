@@ -167,6 +167,13 @@ class BattleEngine:
             # working factory. start_teams() will overwrite this with the
             # seeded `random.Random(seed)` instance once the seed is known.
             self._ai_factory.set_rng(self.rng)
+            # PROJ-FMS-C audit Fix 1: forward ``self`` so the factory can
+            # build :class:`CarrierAIController` instances that have access
+            # to :meth:`launch_fighters_in_battle`. Optional — factories
+            # without ``set_engine`` (test mocks) skip this cleanly.
+            set_engine = getattr(self._ai_factory, "set_engine", None)
+            if callable(set_engine):
+                set_engine(self)
 
         # PROJ-269 Phase 3: boundary region (per-tick enforcement).
         # Defaults to UnboundedRegion when not passed — matches pre-Phase-3 behavior.
@@ -181,6 +188,40 @@ class BattleEngine:
         # PROJ-269 Phase 5.5: modifier stack applied at engine start via
         # the FleetAuraManager pipeline. None = no external modifiers.
         self.modifier_stack = modifier_stack
+
+        # PROJ-FMS-B Phase 3: optional tactical mine resolver hook. When
+        # set (by the strategy-side battle compiler when a hex contains
+        # ``mine_group`` Fleets), :meth:`update` ticks the resolver
+        # after weapon firing so mines react to ship movement / range.
+        # ``None`` keeps battles without mines exactly as before.
+        #
+        # PROJ-FMS-B audit Fix 2: ``mine_resolvers`` is the multi-resolver
+        # variant — one resolver per ``mine_group`` so each maintains its
+        # own ``_owner_team_id`` (mines belonging to different empires can
+        # coexist in the same battle without friendly-firing each other).
+        # ``mine_resolver`` remains the single-resolver alias for the
+        # existing Phase 3 hook + unit tests. Setting one implies the
+        # other.
+        self.mine_resolver: Optional[Any] = None
+        self.mine_resolvers: List[Any] = []
+
+        # PROJ-FMS-B audit Fix 3: ramming is a first-class per-tick phase
+        # owned by every battle. Pre-fix, ``RamTargetResolver`` existed
+        # but had no production caller — the "E2E" ramming test only
+        # exercised the resolver in isolation, so the player-facing
+        # kamikaze-fighter flow was non-functional. Auto-instantiating
+        # here makes ``engine.ram_resolver.set_ram_target(rammer, target)``
+        # the canonical UI/AI action surface, and :meth:`update` ticks
+        # the resolver after the standard tick phases so collisions
+        # resolve against the up-to-date ship positions.
+        from game.simulation.combat.ram_target_resolver import (
+            RamTargetResolver,
+        )
+        # The damage-calculator is reset per-battle in
+        # ``battle_setup.initialize_start_state``; the resolver looks it
+        # up via ``ShipCombatEngine`` at collision time so we don't pin
+        # a stale reference here.
+        self.ram_resolver: RamTargetResolver = RamTargetResolver()
 
         # PROJ-405: session EventBus (game.core.event_logging.EventBus).
         # Distinct from `self.combat_events` (the per-battle CombatEventBus
@@ -418,6 +459,201 @@ class BattleEngine:
 
         # PROJ-259: Delegate to registered tick phases (default: 5 phases)
         self._tick_phases.execute_all(self)
+
+        # PROJ-FMS-B audit Fix 3: ramming tick. Always runs — the resolver
+        # is a no-op when no ship has an active ``ram_target``. Sits
+        # AFTER the standard tick phases so collisions resolve against
+        # the up-to-date positions produced by movement / weapon firing
+        # this tick.
+        try:
+            self._run_ramming_tick()
+        except Exception:  # Intentional broad catch: ramming must not break the battle loop.
+            import logging as _logging
+            _logging.getLogger(__name__).exception(
+                "RamTargetResolver raised during battle tick"
+            )
+
+        # PROJ-FMS-B Phase 3: tactical mine resolver hook (when wired).
+        # Runs AFTER the standard tick phases so mines see the new
+        # ship positions / weapon-fire outcomes from this tick. Bypassed
+        # entirely when neither ``mine_resolver`` nor ``mine_resolvers`` is
+        # set (battles without mines).
+        #
+        # PROJ-FMS-B audit Fix 2: ticks every resolver in ``mine_resolvers``
+        # so multiple ``mine_group`` Fleets at the same hex (potentially
+        # belonging to different empires) all participate. The single
+        # ``mine_resolver`` attribute remains for backwards-compat with
+        # Phase 3 unit tests that wire one resolver directly.
+        active_resolvers = list(self.mine_resolvers)
+        if self.mine_resolver is not None and self.mine_resolver not in active_resolvers:
+            active_resolvers.append(self.mine_resolver)
+        if active_resolvers:
+            try:
+                self._run_mine_resolver_tick(active_resolvers)
+            except Exception:  # Intentional broad catch: mine ticking must not break the battle loop on a single bad mine.
+                import logging as _logging
+                _logging.getLogger(__name__).exception(
+                    "TacticalMineResolver raised during battle tick"
+                )
+
+    def launch_fighters_in_battle(
+        self,
+        carrier: 'Ship',
+        carried_vehicles: List[Any],
+    ) -> List[Any]:
+        """PROJ-FMS-C Phase 1: tactical fighter launch action surface.
+
+        Spawns one design-backed combat fighter per ``CarriedVehicle`` in
+        ``carried_vehicles``. Used by player / AI tactical-launch UI as
+        the canonical action surface (mirrors :meth:`set_ram_target`).
+
+        Each launched fighter is:
+        - Materialised from its ``CarriedVehicle.design_data`` with full
+          components, weapons, HP.
+        - Spawned at the carrier's position + a small random offset.
+        - Tagged with ``launched_in_battle_id`` so the end-of-battle
+          reboard hook (Phase 3) can identify it.
+        - Added to the battle via :meth:`add_ship_mid_battle` which wires
+          AI, event bus, aura management.
+
+        Returns the list of spawned Ship objects (may be shorter than
+        ``carried_vehicles`` if any individual spawn fails — failures
+        are logged via :attr:`logger`).
+        """
+        from game.core.constants import AttackType
+
+        spawned: List[Any] = []
+        for cv in carried_vehicles:
+            attack = {
+                'type': AttackType.LAUNCH,
+                'source': carrier,
+                'origin': carrier.position,
+                'hangar': None,
+                'carried_vehicle': cv,
+            }
+            ships_before = list(self.ships)
+            _attacks.process_launch_attack(self, attack)
+            new_ships = [s for s in self.ships if s not in ships_before]
+            spawned.extend(new_ships)
+        return spawned
+
+    def launch_satellites_in_battle(
+        self,
+        carrier: 'Ship',
+        carried_vehicles: List[Any],
+    ) -> List[Any]:
+        """PROJ-FMS-D Phase 1: tactical satellite launch action surface.
+
+        Mirrors :meth:`launch_fighters_in_battle` but spawns satellites.
+        Each launched satellite is materialised from its
+        ``CarriedVehicle.design_data`` (full components / weapons / HP),
+        spawned at the carrier's position + small offset, tagged with
+        ``launched_in_battle_id`` for end-of-battle reboard, and added
+        via :meth:`add_ship_mid_battle` which wires AI (the
+        :class:`SatelliteAIController` keeps it stationary), event bus,
+        and aura management.
+
+        Returns the list of spawned Ship objects.
+        """
+        from game.core.constants import AttackType
+
+        spawned: List[Any] = []
+        for cv in carried_vehicles:
+            attack = {
+                'type': AttackType.LAUNCH,
+                'source': carrier,
+                'origin': carrier.position,
+                'hangar': None,
+                'carried_vehicle': cv,
+            }
+            ships_before = list(self.ships)
+            _attacks.process_launch_attack(self, attack)
+            new_ships = [s for s in self.ships if s not in ships_before]
+            spawned.extend(new_ships)
+        return spawned
+
+    def set_ram_target(self, rammer: 'Ship', target: 'Ship') -> bool:
+        """PROJ-FMS-B audit Fix 3: action-surface for "set ram target".
+
+        Routes through the engine-owned :class:`RamTargetResolver`.
+        Returns False if the rammer lacks ``RamTargetAbility`` or
+        either ship is dead. UI / AI callers use this rather than
+        poking ship attributes directly.
+        """
+        return self.ram_resolver.set_ram_target(rammer, target)
+
+    def clear_ram_target(self, rammer: 'Ship') -> None:
+        """Companion of :meth:`set_ram_target`. Clears any active target."""
+        self.ram_resolver.clear_ram_target(rammer)
+
+    def _run_ramming_tick(self) -> None:
+        """PROJ-FMS-B audit Fix 3: run one tick of explicit-target ramming.
+
+        Wires the engine's auto-instantiated :class:`RamTargetResolver`
+        to the current damage calculator and ship roster. The resolver
+        does its own filtering — ships without an active
+        ``ram_target`` are short-circuited — so we can call it
+        unconditionally on every tick at minimal cost.
+        """
+        # Pull the per-battle damage calculator. ``initialize_start_state``
+        # constructs a fresh one keyed to the battle seed; we just look
+        # it up here. The resolver gracefully falls back to direct-HP
+        # decrement when the lookup fails.
+        damage_calc = None
+        try:
+            from game.simulation.entities.ship_combat_engine import (
+                ShipCombatEngine,
+            )
+            damage_calc = ShipCombatEngine._damage_calculator
+        except Exception:  # Intentional broad catch: damage-calc lookup is best-effort.
+            damage_calc = None
+        self.ram_resolver._damage_calculator = damage_calc
+        self.ram_resolver.process_ramming_tick(self.ships)
+
+    def _run_mine_resolver_tick(self, resolvers: List[Any] | None = None) -> None:
+        """Run the tactical mine resolver(s) for the current tick.
+
+        The resolver evaluates per-mine warhead proximity + laserhead
+        range triggers against all ships whose ``team_id`` differs
+        from each mine's owner team. Mines belong to the owning empire
+        and target enemies of that owner; we look up the mine team via
+        each resolver's ``_owner_team_id`` attribute (set by the battle
+        compiler) and treat every other team as hostile.
+
+        PROJ-FMS-B audit Fix 2: accepts an explicit ``resolvers`` list so
+        callers can tick multiple resolvers (one per ``mine_group``) in
+        a single dispatch. When ``resolvers`` is None, falls back to the
+        single ``self.mine_resolver`` for backwards compat.
+        """
+        if resolvers is None:
+            if self.mine_resolver is None:
+                return
+            resolvers = [self.mine_resolver]
+        # Use the DamageCalculator owned by the ship combat engine if
+        # available — falls back to None and the resolver uses direct
+        # HP decrement.
+        damage_calc = None
+        try:
+            from game.simulation.entities.ship_combat_engine import ShipCombatEngine
+            damage_calc = ShipCombatEngine._damage_calculator
+        except Exception:  # Intentional broad catch: damage-calc lookup is best-effort.
+            damage_calc = None
+        for resolver in resolvers:
+            owner_team = getattr(resolver, "_owner_team_id", None)
+            if owner_team is None:
+                continue
+            enemy_ships = [
+                s for s in self.ships
+                if s.is_alive and s.team_id != owner_team
+            ]
+            if not enemy_ships:
+                continue
+            resolver.tick(
+                tick=self.tick_counter,
+                enemy_ships=enemy_ships,
+                damage_calculator=damage_calc,
+                event_bus=self.combat_events,
+            )
 
     def _rebuild_grid(self) -> List['Ship']:
         """Rebuild the spatial grid and return ships alive at tick start."""

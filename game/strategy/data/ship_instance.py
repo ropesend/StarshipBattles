@@ -132,7 +132,17 @@ class ShipInstance:
     # Cargo contents (cargo_type -> current amount)
     cargo_contents: Dict[str, int] = field(default_factory=dict)
 
-    # Carried constructed items (drop pods, etc.) — full design data preserved
+    # Carried constructed items — full design data preserved.
+    #
+    # PROJ-FMS-A Phase 3: entries can now take either of two shapes:
+    #   1. Drop-pod entry (pre-existing): untyped dict (design payload).
+    #   2. CarriedVehicle entry (new): dict produced by
+    #      ``CarriedVehicle.to_dict()`` with ``vehicle_type`` in
+    #      {"mine", "fighter", "satellite"} — distinguishable from drop-pod
+    #      entries by ``CarriedVehicle.from_any()``.
+    # Helpers on the ``ShipCargoManager`` (``load_vehicle`` / ``unload_vehicle``
+    # / ``get_carried_vehicles``) operate on the new shape; the drop-pod
+    # entries remain on their existing path.
     carried_items: List[Dict[str, Any]] = field(default_factory=list)
 
     # Status
@@ -460,6 +470,41 @@ class ShipInstance:
         """Unload cargo from this ship."""
         return self._cargo_mgr.unload_cargo(cargo_type, amount)
 
+    # --- Carried Vehicles (PROJ-FMS-A Phase 3) ---
+
+    def get_carried_vehicles(self) -> "list":
+        """All design-backed carried vehicles (skipping drop-pod dicts)."""
+        return self._cargo_mgr.get_carried_vehicles()
+
+    def get_carried_vehicles_by_type(self, vehicle_type: str) -> "list":
+        """Carried vehicles filtered by type ("mine"/"fighter"/"satellite")."""
+        return self._cargo_mgr.get_carried_vehicles_by_type(vehicle_type)
+
+    def get_carried_vehicle_mass(self) -> float:
+        """Sum of CarriedVehicle masses in the ship's bay."""
+        current, _max_mass = self._cargo_mgr.get_vehicle_bay_capacity()
+        return current
+
+    def get_vehicle_bay_capacity(self) -> "tuple":
+        """Return (current_mass, max_mass) for the ship's vehicle bays."""
+        return self._cargo_mgr.get_vehicle_bay_capacity()
+
+    @property
+    def bay_current_mass(self) -> float:
+        """PROJ-FMS-A: runtime vehicle-bay usage on this ship.
+
+        Mirrors the ``bay_capacity_mass`` design stat. Computed at the
+        strategy layer because it depends on the actual contents of
+        ``carried_items`` (simulation ``Ship`` cannot see those).
+        """
+        return self.get_carried_vehicle_mass()
+
+    @property
+    def bay_capacity_mass(self) -> float:
+        """PROJ-FMS-A: maximum vehicle-bay capacity from design stats."""
+        _current, max_mass = self._cargo_mgr.get_vehicle_bay_capacity()
+        return max_mass
+
     # --- Pod Storage (mass-based carried_items capacity) ---
 
     def get_pod_storage_capacity(self) -> float:
@@ -468,8 +513,21 @@ class ShipInstance:
         return float(stats.get('pod_storage_mass', 0))
 
     def get_pod_storage_used(self) -> float:
-        """Get total mass of items currently in carried_items."""
-        return sum(item.get('mass', 0.0) for item in self.carried_items)
+        """Get total mass of drop-pod items currently in carried_items.
+
+        PROJ-FMS-A: ``carried_items`` may also hold ``CarriedVehicle``-
+        shaped entries (mines/fighters/satellites stored in the ship's
+        ``VehicleBay``). Those must NOT count toward drop-pod accounting
+        — they go through ``ShipCargoManager.get_vehicle_bay_capacity``
+        instead. Filter them out via ``CarriedVehicle.from_any``.
+        """
+        from game.strategy.data.carried_vehicle import CarriedVehicle
+        total = 0.0
+        for item in self.carried_items:
+            if CarriedVehicle.from_any(item) is not None:
+                continue
+            total += item.get('mass', 0.0)
+        return total
 
     def can_carry_pod(self, pod_mass: float) -> bool:
         """Check if this ship can carry an additional pod of the given mass."""

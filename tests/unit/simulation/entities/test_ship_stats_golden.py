@@ -324,18 +324,21 @@ def test_ship_stats_match_golden(design_name, fresh_registries, golden_snapshot)
 
 
 def test_carrier_design_exercises_typed_vehicle_abilities(fresh_registries):
-    """PROJ-367 Phase 1: ``qs_carrier`` exercises VehicleLaunchAbility +
-    VehicleStorageAbility (closes EXT-07 + PROJ-360 FIND-001).
+    """PROJ-FMS-C audit Fix 1: ``qs_carrier`` exercises the new launch surface.
 
-    If the typed-ability access broke, ``fighter_capacity``,
-    ``fighters_per_wave``, ``fighter_size_cap``, and ``launch_cycle``
-    would all be 0. The non-zero check pins the typed-ability path.
+    The carrier now mounts :class:`TacticalFighterLaunchAbility` and
+    :class:`VehicleBayAbility` (PROJ-FMS-A Phase 5) in place of the
+    legacy :class:`VehicleLaunchAbility` / :class:`VehicleStorageAbility`
+    pair. The stat aggregator's ``contribute_vehicle_launch`` reads
+    ``capacity_per_action`` / ``cycle_time`` into ``fighters_per_wave`` /
+    ``launch_cycle`` and the ``contribute_vehicle_bay`` aggregator sums
+    ``capacity_mass`` into ``bay_capacity_mass``. The non-zero checks
+    pin the typed-ability access path.
     """
     ship = _build_and_calculate("qs_carrier", fresh_registries)
-    assert ship.fighter_capacity > 0
     assert ship.fighters_per_wave > 0
-    assert ship.fighter_size_cap > 0
     assert ship.launch_cycle > 0
+    assert ship.bay_capacity_mass > 0
 
 
 def test_recon_picket_design_exercises_typed_multiplex(fresh_registries):

@@ -1227,34 +1227,6 @@
             }
         },
         {
-            "id": "fighter_launch_bay",
-            "name": "Fighter Launch Bay",
-            "type": "Hangar",
-            "mass": 500,
-            "hp": 500,
-            "allowed_vehicle_types": [
-                "Ship",
-                "Planetary Complex"
-            ],
-            "sprite_index": 22,
-            "abilities": {
-                "VehicleStorage": 50,
-                "VehicleLaunch": {
-                    "max_launch_mass": 50,
-                    "cycle_time": 5.0
-                },
-                "CrewRequired": 5,
-                "RequiresCommandAndControl": true
-            },
-            "major_classification": "Infrastructure",
-            "resource_cost": {
-                "metals": 400,
-                "organics": 50,
-                "radioactives": 20,
-                "exotics": 30
-            }
-        },
-        {
             "id": "master_computer",
             "name": "Master Computer",
             "type": "Bridge",
@@ -3836,6 +3808,610 @@
                 "metals": 1200,
                 "exotics": 400,
                 "radioactives": 300
+            }
+        },
+        {
+            "id": "hull_mine_small",
+            "name": "Small Mine Hull",
+            "type": "Hull",
+            "mass": 1,
+            "hp": 4,
+            "allowed_vehicle_types": [
+                "Mine"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure",
+            "resource_cost": {
+                "metals": 2
+            }
+        },
+        {
+            "id": "hull_mine_medium",
+            "name": "Medium Mine Hull",
+            "type": "Hull",
+            "mass": 3,
+            "hp": 10,
+            "allowed_vehicle_types": [
+                "Mine"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure",
+            "resource_cost": {
+                "metals": 5
+            }
+        },
+        {
+            "id": "hull_mine_large",
+            "name": "Large Mine Hull",
+            "type": "Hull",
+            "mass": 8,
+            "hp": 24,
+            "allowed_vehicle_types": [
+                "Mine"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure",
+            "resource_cost": {
+                "metals": 12
+            }
+        },
+        {
+            "id": "hull_mine_heavy",
+            "name": "Heavy Mine Hull",
+            "type": "Hull",
+            "mass": 20,
+            "hp": 60,
+            "allowed_vehicle_types": [
+                "Mine"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "StructuralIntegrity": true
+            },
+            "major_classification": "Structure",
+            "resource_cost": {
+                "metals": 30
+            }
+        },
+        {
+            "id": "warhead_small",
+            "name": "Small Warhead",
+            "type": "Warhead",
+            "mass": 2,
+            "hp": 1,
+            "allowed_vehicle_types": [
+                "Mine",
+                "Fighter",
+                "Ship"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "Warhead": {
+                    "damage": 50
+                }
+            },
+            "major_classification": "Weapons",
+            "resource_cost": {
+                "metals": 5,
+                "exotics": 2
+            }
+        },
+        {
+            "id": "warhead_medium",
+            "name": "Medium Warhead",
+            "type": "Warhead",
+            "mass": 6,
+            "hp": 1,
+            "allowed_vehicle_types": [
+                "Mine",
+                "Fighter",
+                "Ship"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "Warhead": {
+                    "damage": 200
+                }
+            },
+            "major_classification": "Weapons",
+            "resource_cost": {
+                "metals": 15,
+                "exotics": 5
+            }
+        },
+        {
+            "id": "warhead_large",
+            "name": "Large Warhead",
+            "type": "Warhead",
+            "mass": 18,
+            "hp": 1,
+            "allowed_vehicle_types": [
+                "Mine",
+                "Fighter",
+                "Ship"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "Warhead": {
+                    "damage": 800
+                }
+            },
+            "major_classification": "Weapons",
+            "resource_cost": {
+                "metals": 40,
+                "exotics": 15
+            }
+        },
+        {
+            "id": "laserhead_small",
+            "name": "Small Laserhead",
+            "type": "Laserhead",
+            "mass": 2,
+            "hp": 1,
+            "allowed_vehicle_types": [
+                "Mine"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "Laserhead": {
+                    "damage": 30,
+                    "range": 600,
+                    "reload": 1.0,
+                    "base_accuracy": 1.0,
+                    "accuracy_falloff": 0.002,
+                    "consume_on_fire": true
+                }
+            },
+            "major_classification": "Weapons",
+            "resource_cost": {
+                "metals": 8,
+                "exotics": 4
+            }
+        },
+        {
+            "id": "laserhead_medium",
+            "name": "Medium Laserhead",
+            "type": "Laserhead",
+            "mass": 6,
+            "hp": 1,
+            "allowed_vehicle_types": [
+                "Mine"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "Laserhead": {
+                    "damage": 120,
+                    "range": 900,
+                    "reload": 1.0,
+                    "base_accuracy": 1.0,
+                    "accuracy_falloff": 0.0015,
+                    "consume_on_fire": true
+                }
+            },
+            "major_classification": "Weapons",
+            "resource_cost": {
+                "metals": 20,
+                "exotics": 10
+            }
+        },
+        {
+            "id": "laserhead_large",
+            "name": "Large Laserhead",
+            "type": "Laserhead",
+            "mass": 18,
+            "hp": 1,
+            "allowed_vehicle_types": [
+                "Mine"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "Laserhead": {
+                    "damage": 480,
+                    "range": 1200,
+                    "reload": 1.0,
+                    "base_accuracy": 1.0,
+                    "accuracy_falloff": 0.001,
+                    "consume_on_fire": true
+                }
+            },
+            "major_classification": "Weapons",
+            "resource_cost": {
+                "metals": 60,
+                "exotics": 30
+            }
+        },
+        {
+            "id": "small_targeting_sensor",
+            "name": "Small Targeting Sensor",
+            "type": "Sensor",
+            "mass": 1,
+            "hp": 1,
+            "allowed_vehicle_types": [
+                "Mine",
+                "Fighter"
+            ],
+            "sprite_index": 26,
+            "abilities": {
+                "ToHitAttackModifier": {
+                    "value": 0.3,
+                    "stack_group": "Sensor"
+                }
+            },
+            "major_classification": "Sensors",
+            "resource_cost": {
+                "metals": 4,
+                "vapors": 2,
+                "exotics": 2
+            }
+        },
+        {
+            "id": "small_targeting_sensor_advanced",
+            "name": "Advanced Targeting Sensor",
+            "type": "Sensor",
+            "mass": 2,
+            "hp": 1,
+            "allowed_vehicle_types": [
+                "Mine",
+                "Fighter"
+            ],
+            "sprite_index": 26,
+            "abilities": {
+                "ToHitAttackModifier": {
+                    "value": 0.6,
+                    "stack_group": "Sensor"
+                }
+            },
+            "major_classification": "Sensors",
+            "resource_cost": {
+                "metals": 8,
+                "vapors": 4,
+                "exotics": 5
+            }
+        },
+        {
+            "id": "mine_launcher_small",
+            "name": "Small Mine Launcher",
+            "type": "Hangar",
+            "mass": 60,
+            "hp": 100,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 22,
+            "abilities": {
+                "StrategicMineLayer": {
+                    "capacity_per_action": 4,
+                    "cycle_time": 10.0
+                },
+                "TacticalMineLayer": {
+                    "capacity_per_action": 1,
+                    "cycle_time": 5.0
+                },
+                "CrewRequired": 2,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "metals": 60,
+                "exotics": 10
+            }
+        },
+        {
+            "id": "fighter_launch_bay_small",
+            "name": "Small Fighter Launch Bay",
+            "type": "Hangar",
+            "mass": 80,
+            "hp": 150,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 22,
+            "abilities": {
+                "StrategicFighterLaunch": {
+                    "capacity_per_action": 4,
+                    "cycle_time": 15.0
+                },
+                "TacticalFighterLaunch": {
+                    "capacity_per_action": 2,
+                    "cycle_time": 6.0
+                },
+                "CrewRequired": 4,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "metals": 80,
+                "exotics": 12
+            }
+        },
+        {
+            "id": "satellite_launch_bay_small",
+            "name": "Small Satellite Launch Bay",
+            "type": "Hangar",
+            "mass": 100,
+            "hp": 150,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 22,
+            "abilities": {
+                "StrategicSatelliteLaunch": {
+                    "capacity_per_action": 2,
+                    "cycle_time": 20.0
+                },
+                "TacticalSatelliteLaunch": {
+                    "capacity_per_action": 1,
+                    "cycle_time": 8.0
+                },
+                "CrewRequired": 4,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "metals": 100,
+                "exotics": 15
+            }
+        },
+        {
+            "id": "fighter_recovery_bay_small",
+            "name": "Small Fighter Recovery Bay",
+            "type": "Hangar",
+            "mass": 60,
+            "hp": 120,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 22,
+            "abilities": {
+                "RecoverFighters": {
+                    "recovery_per_action": 4
+                },
+                "CrewRequired": 3,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "metals": 60,
+                "exotics": 8
+            }
+        },
+        {
+            "id": "satellite_recovery_bay_small",
+            "name": "Small Satellite Recovery Bay",
+            "type": "Hangar",
+            "mass": 80,
+            "hp": 120,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 22,
+            "abilities": {
+                "RecoverSatellites": {
+                    "recovery_per_action": 2
+                },
+                "CrewRequired": 3,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "metals": 80,
+                "exotics": 10
+            }
+        },
+        {
+            "id": "vehicle_bay_small",
+            "name": "Small Vehicle Bay",
+            "type": "Hangar",
+            "mass": 200,
+            "hp": 200,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 22,
+            "abilities": {
+                "VehicleBay": {
+                    "capacity_mass": 250,
+                    "allowed_types": ["mine", "fighter", "satellite"]
+                },
+                "CrewRequired": 2,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "metals": 150,
+                "organics": 20,
+                "exotics": 10
+            }
+        },
+        {
+            "id": "fighter_bay_small",
+            "name": "Small Fighter-Only Bay",
+            "type": "Hangar",
+            "mass": 180,
+            "hp": 180,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 22,
+            "abilities": {
+                "VehicleBay": {
+                    "capacity_mass": 250,
+                    "allowed_types": ["fighter"]
+                },
+                "CrewRequired": 2,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "metals": 140,
+                "organics": 18,
+                "exotics": 10
+            }
+        },
+        {
+            "id": "satellite_bay_small",
+            "name": "Small Satellite-Only Bay",
+            "type": "Hangar",
+            "mass": 220,
+            "hp": 220,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 22,
+            "abilities": {
+                "VehicleBay": {
+                    "capacity_mass": 300,
+                    "allowed_types": ["satellite"]
+                },
+                "CrewRequired": 2,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "metals": 160,
+                "organics": 20,
+                "exotics": 12
+            }
+        },
+        {
+            "id": "satellite_bay_medium",
+            "name": "Medium Satellite-Only Bay",
+            "type": "Hangar",
+            "mass": 520,
+            "hp": 520,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 22,
+            "abilities": {
+                "VehicleBay": {
+                    "capacity_mass": 800,
+                    "allowed_types": ["satellite"]
+                },
+                "CrewRequired": 5,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "metals": 420,
+                "organics": 50,
+                "exotics": 32
+            }
+        },
+        {
+            "id": "satellite_bay_large",
+            "name": "Large Satellite-Only Bay",
+            "type": "Hangar",
+            "mass": 1250,
+            "hp": 1250,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 22,
+            "abilities": {
+                "VehicleBay": {
+                    "capacity_mass": 2100,
+                    "allowed_types": ["satellite"]
+                },
+                "CrewRequired": 12,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "metals": 1050,
+                "organics": 100,
+                "exotics": 80
+            }
+        },
+        {
+            "id": "vehicle_bay_medium",
+            "name": "Medium Vehicle Bay",
+            "type": "Hangar",
+            "mass": 500,
+            "hp": 500,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 22,
+            "abilities": {
+                "VehicleBay": {
+                    "capacity_mass": 750,
+                    "allowed_types": ["mine", "fighter", "satellite"]
+                },
+                "CrewRequired": 5,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "metals": 400,
+                "organics": 50,
+                "exotics": 30
+            }
+        },
+        {
+            "id": "vehicle_bay_large",
+            "name": "Large Vehicle Bay",
+            "type": "Hangar",
+            "mass": 1200,
+            "hp": 1200,
+            "allowed_vehicle_types": [
+                "Ship",
+                "Planetary Complex"
+            ],
+            "sprite_index": 22,
+            "abilities": {
+                "VehicleBay": {
+                    "capacity_mass": 2000,
+                    "allowed_types": ["mine", "fighter", "satellite"]
+                },
+                "CrewRequired": 12,
+                "RequiresCommandAndControl": true
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "metals": 1000,
+                "organics": 100,
+                "exotics": 75
+            }
+        },
+        {
+            "id": "ram_target_module",
+            "name": "Ram Target Module",
+            "type": "RamTarget",
+            "mass": 1,
+            "hp": 5,
+            "allowed_vehicle_types": [
+                "Fighter",
+                "Ship"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "RamTarget": {}
+            },
+            "major_classification": "Special",
+            "resource_cost": {
+                "metals": 5,
+                "exotics": 3
             }
         },
         {

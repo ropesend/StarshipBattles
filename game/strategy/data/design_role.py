@@ -58,7 +58,15 @@ _SEEKER_ABILITIES = {"SeekerWeaponAbility"}
 _BEAM_PROJECTILE_ABILITIES = {"BeamWeaponAbility", "ProjectileWeaponAbility"}
 _SENSOR_ABILITIES = {"SensorAbility", "ECMAbility"}
 _SUPPORT_ABILITIES = {"ShipRepair", "SpaceShipyard", "ResourceGeneration"}
-_CARRIER_ABILITIES = {"VehicleLaunch"}
+# PROJ-FMS-C audit Fix 1: the legacy ``VehicleLaunch`` ability was deleted.
+# A ship is now a carrier if it mounts the PROJ-FMS-A Phase 5
+# ``TacticalFighterLaunch`` or ``StrategicFighterLaunch`` ability.
+# PROJ-FMS-D Phase 1: satellite carriers (ships that strategically or
+# tactically launch satellites) are also classified as carriers.
+_CARRIER_ABILITIES = {
+    "TacticalFighterLaunch", "StrategicFighterLaunch",
+    "TacticalSatelliteLaunch", "StrategicSatelliteLaunch",
+}
 _COMMAND_ABILITIES = {"TacticalDataLinkAbility"}
 
 # Mass thresholds for light/heavy classification

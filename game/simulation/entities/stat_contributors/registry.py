@@ -509,12 +509,29 @@ def _seed_builtin_contributors() -> None:
     )
 
     # Hangar domain (phase_order=40) — split from aggregate_hangar.
-    # Decision (Task 2.4): VehicleStorage stays gated under VehicleLaunch
-    # (the legacy semantics required a launch bay to count storage; storage
-    # without a launch ability is meaningless). The single contributor
-    # `contribute_vehicle_launch` reads both abilities.
+    # PROJ-FMS-C audit Fix 1: keyed on ``TacticalFighterLaunch`` (PROJ-FMS-A
+    # Phase 5). The legacy ``VehicleLaunch`` ability was removed; the
+    # contributor reads only the new tactical-launch shape plus
+    # co-located ``VehicleStorage`` for ``fighter_capacity``.
     register_stat_contributor(
-        "VehicleLaunch", _launch.contribute_vehicle_launch,
+        "TacticalFighterLaunch", _launch.contribute_vehicle_launch,
+        default=True, phase_order=p_hangar,
+    )
+
+    # PROJ-FMS-D Phase 1: satellite tactical-launch aggregation. Writes
+    # to ``ship.satellites_per_wave`` / ``ship.satellite_launch_cycle``
+    # / ``ship.satellite_capacity`` so the satellite stat set stays
+    # independent of the fighter equivalents.
+    register_stat_contributor(
+        "TacticalSatelliteLaunch",
+        _launch.contribute_tactical_satellite_launch,
+        default=True, phase_order=p_hangar,
+    )
+
+    # PROJ-FMS-A Phase 3: typed VehicleBay capacity aggregation (separate
+    # from the legacy VehicleLaunch/VehicleStorage counters).
+    register_stat_contributor(
+        "VehicleBay", _launch.contribute_vehicle_bay,
         default=True, phase_order=p_hangar,
     )
 

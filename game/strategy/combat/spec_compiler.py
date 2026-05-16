@@ -140,6 +140,16 @@ def build_strategy_battle_spec(
     if empires is None:
         empires = {}
 
+    # PROJ-FMS-B audit Fix 2: mine_groups participate in combat as
+    # battlefield hazards via :class:`TacticalMineResolver`, NOT as
+    # combat-capable ShipSpecs. Their synthetic carrier ShipInstance is
+    # a strategy-layer container with no real layers/components; turning
+    # it into a ShipSpec would produce a degenerate "ship" with zero HP
+    # on the battle map. Filter mine_groups out of the team-construction
+    # path here. The hook wiring (resolver attachment + writeback) is
+    # done downstream by the caller (``SimulationBattleResolver``).
+    combat_fleets, mine_groups = _split_mine_groups_from_fleets(fleets)
+
     # PROJ-320 Phase 3: group fleets by `owner_id` so allied fleets
     # share a team rather than fighting each other (the engine has no
     # alliances — every non-self team is hostile by default). Pre-PROJ-320
@@ -154,7 +164,7 @@ def build_strategy_battle_spec(
     # fleet_id)` before passing them in — so insertion order here is
     # already the (sorted-empire-id) order for production.
     fleets_by_owner: Dict[Any, List["Fleet"]] = {}
-    for fleet in fleets:
+    for fleet in combat_fleets:
         fleets_by_owner.setdefault(fleet.owner_id, []).append(fleet)
     owner_order: List[Any] = list(fleets_by_owner.keys())
 
@@ -162,7 +172,8 @@ def build_strategy_battle_spec(
     if num_teams < _MIN_TEAMS or num_teams > _MAX_TEAMS:
         raise ValueError(
             f"build_strategy_battle_spec: requires {_MIN_TEAMS}..{_MAX_TEAMS} "
-            f"unique fleet owners; got {num_teams} from {len(fleets)} fleets"
+            f"unique combat-fleet owners; got {num_teams} from "
+            f"{len(combat_fleets)} combat fleets ({len(mine_groups)} mine_groups)"
         )
 
     entry_vectors = resolve_team_entry_vectors(team_count=num_teams)
@@ -215,11 +226,31 @@ def build_strategy_battle_spec(
     # this battle's fleets + empires and calls `apply_outcome_to_fleets`
     # to persist outcome state. Callers that want a no-op (tests, legacy)
     # can pass an explicit `post_battle_hook=lambda outcome: None`.
+    #
+    # PROJ-FMS-B audit Fix 2: when mine_groups are present, the post-
+    # battle hook is wrapped with a closure that drives
+    # ``TacticalMineResolver.writeback_to_mine_group`` for each mine_group
+    # so the strategic mine inventory matches what the battle consumed.
+    # The mine_resolvers list is populated at battle start by the
+    # ``mine_resolver_setup`` callable returned alongside the spec
+    # (production callers use
+    # :class:`SimulationBattleResolver._run_simulated_battle` for that
+    # wiring; unit-test callers may pass ``post_battle_hook=...`` to
+    # skip both halves).
+    # PROJ-FMS-C Phase 3: shared engine ref list — the spec compiler
+    # parks it on the spec via a side-channel so the simulation adapter
+    # can populate it from the pre_tick_loop_callback. The post-battle
+    # hook reads it when present and runs reboard. Tests / callers that
+    # don't wire a callback simply see ``engine_ref == []`` and skip.
+    engine_ref: List[Any] = []
     effective_hook = post_battle_hook
     if effective_hook is None:
-        effective_hook = _build_strategy_post_battle_hook(fleets, empires)
+        effective_hook = _build_strategy_post_battle_hook(
+            combat_fleets, empires, mine_groups=mine_groups,
+            engine_ref=engine_ref,
+        )
 
-    return BattleSpec(
+    spec = BattleSpec(
         seed=seed if seed is not None else 0,
         telemetry_level=TelemetryLevel.NORMAL,
         boundary=boundary,
@@ -229,11 +260,32 @@ def build_strategy_battle_spec(
         modifier_stack=modifier_stack,
         post_battle_hook=effective_hook,
     )
+    # PROJ-FMS-B audit Fix 2: expose the mine_groups + owner→team mapping
+    # on the spec via an object.__setattr__ side-channel so the
+    # production caller (``SimulationBattleResolver``) can build the
+    # ``pre_tick_loop_callback`` that attaches a
+    # :class:`TacticalMineResolver` to ``BattleEngine`` before the first
+    # tick. ``BattleSpec`` is a frozen dataclass; the side-channel keeps
+    # the canonical fields stable while still threading the mine
+    # context. Consumers that don't need mines can ignore both attrs.
+    object.__setattr__(spec, "_mine_groups", tuple(mine_groups))
+    object.__setattr__(spec, "_owner_to_team_id", dict(empire_to_team_id))
+    # PROJ-FMS-C Phase 3: side-channel the engine_ref so the simulation
+    # adapter can populate it from its pre_tick_loop_callback. Combined
+    # with the reboard_setup closure below, this closes the loop so
+    # mid-battle launched fighters land back in friendly bays / overflow
+    # into sector fighter_groups at battle end.
+    object.__setattr__(spec, "_engine_ref", engine_ref)
+    object.__setattr__(spec, "_combat_fleets", tuple(combat_fleets))
+    return spec
 
 
 def _build_strategy_post_battle_hook(
     fleets: List["Fleet"],
     empires: Mapping[Any, Any],
+    *,
+    mine_groups: Optional[Sequence["Fleet"]] = None,
+    engine_ref: Optional[List[Any]] = None,
 ) -> Callable[[Any], None]:
     """Create a post-battle hook closure for a specific set of fleets.
 
@@ -242,6 +294,16 @@ def _build_strategy_post_battle_hook(
     receives `{team_id: [list of allied fleets]}` so the
     `apply_outcome_to_fleets` instance-id lookup can find each ship in
     its originating fleet.
+
+    PROJ-FMS-B audit Fix 2: when ``mine_groups`` is provided, the hook
+    also drives :meth:`TacticalMineResolver.writeback_to_mine_group` for
+    each mine_group via the resolvers attached to the engine at battle
+    start. The resolvers are referenced through the
+    ``mine_group._tactical_resolver`` attribute that the
+    ``pre_tick_loop_callback`` sets up (see
+    :func:`build_mine_resolver_setup`). Any mine_group that ends the
+    battle with zero remaining mines is pruned from its empire's
+    ``fleets`` list — closing the loop with Phase 4 self-destruct.
 
     Captures (team_id -> fleets) by owner — the compiler assigns
     team_ids by sorted owner order, mirrored here.
@@ -275,14 +337,216 @@ def _build_strategy_post_battle_hook(
         if empire is not None:
             empires_by_team_id[team_id] = empire
 
+    captured_mine_groups: Tuple["Fleet", ...] = tuple(mine_groups or ())
+    captured_engine_ref: List[Any] = engine_ref if engine_ref is not None else []
+    captured_owner_to_fleets: Dict[Any, List["Fleet"]] = dict(owner_to_fleets)
+    captured_empires_by_owner: Dict[Any, Any] = {}
+    for owner_id in owner_order:
+        emp = empires.get(owner_id)
+        if emp is not None:
+            captured_empires_by_owner[owner_id] = emp
+
     def _hook(outcome) -> None:
+        # PROJ-FMS-C Phase 3: end-of-battle reboard. Runs BEFORE
+        # apply_outcome_to_fleets so any fighters that get reboarded
+        # are no longer present in the battle's fleets and won't be
+        # double-processed (the reboarded fighters were spawned mid-
+        # battle, so they have no ShipInstance in the originating
+        # fleets to begin with — but discarded-already-dead ones
+        # do, and we want the surviving-overflow ones to land in their
+        # new sector group BEFORE the empty-fleet prune step might
+        # remove a now-empty pre-existing fighter_group whose
+        # contents got merged in).
+        if captured_engine_ref:
+            from game.simulation.systems.fighter_reboard import apply_reboard
+            try:
+                apply_reboard(
+                    engine=captured_engine_ref[0],
+                    participating_fleets_by_owner=captured_owner_to_fleets,
+                    empires_by_owner=captured_empires_by_owner,
+                )
+            except Exception:  # Intentional broad catch: reboard failures must not break post-battle persistence; log + continue.
+                import logging as _logging
+                _logging.getLogger(__name__).exception(
+                    "fighter_reboard.apply_reboard raised during post-battle hook"
+                )
+
         apply_outcome_to_fleets(
             outcome,
             fleets_by_team_id=fleets_by_team_id,
             empires=empires_by_team_id or None,
         )
+        # PROJ-FMS-B audit Fix 2: drive tactical mine writeback for each
+        # mine_group that participated. The ``_tactical_resolver``
+        # attribute is populated by the ``pre_tick_loop_callback``
+        # built by :func:`build_mine_resolver_setup`. When absent (no
+        # resolver attached / unit-test path), the writeback is skipped
+        # cleanly so the hook still works in non-mine battles and
+        # legacy tests.
+        for mg in captured_mine_groups:
+            resolver = getattr(mg, "_tactical_resolver", None)
+            if resolver is None:
+                continue
+            try:
+                resolver.writeback_to_mine_group(mg)
+            except Exception:  # Intentional broad catch: writeback failures must not break post-battle persistence.
+                import logging as _logging
+
+                _logging.getLogger(__name__).exception(
+                    "TacticalMineResolver.writeback_to_mine_group raised "
+                    "for mine_group %s; continuing.",
+                    getattr(mg, "id", "?"),
+                )
+            # Detach so a re-used Fleet object doesn't carry the
+            # resolver into the next battle.
+            try:
+                delattr(mg, "_tactical_resolver")
+            except AttributeError:
+                pass
+        # Prune any mine_group that ended the battle empty.
+        for mg in captured_mine_groups:
+            if not _mine_group_has_inventory(mg):
+                # Find the owning empire and remove the now-empty
+                # mine_group from its fleets list.
+                for empire in empires_by_team_id.values():
+                    fleets_list = getattr(empire, "fleets", None)
+                    if fleets_list is None:
+                        continue
+                    if mg in fleets_list:
+                        fleets_list.remove(mg)
+                        break
 
     return _hook
+
+
+def _mine_group_has_inventory(mine_group: "Fleet") -> bool:
+    """True iff the mine_group's synthetic carrier still has any mines."""
+    ships = getattr(mine_group, "ships", None) or []
+    if not ships:
+        return False
+    return bool(getattr(ships[0], "carried_items", None))
+
+
+def _split_mine_groups_from_fleets(
+    fleets: Sequence["Fleet"],
+) -> Tuple[List["Fleet"], List["Fleet"]]:
+    """Partition ``fleets`` into ``(combat_fleets, mine_groups)``.
+
+    PROJ-FMS-B audit Fix 2: ``mine_group`` Fleets carry mines in a
+    synthetic-carrier ShipInstance whose ``layers`` / ``components`` are
+    empty. They participate in tactical combat exclusively via
+    :class:`TacticalMineResolver`, NOT as ShipSpecs on a team. Without
+    this filter the spec compiler turns the synthetic carrier into a
+    degenerate ship on its own team — which is both wrong (it has no
+    real combat surface) and a violation of the design's "mines are a
+    battlefield hazard, not a combatant" rule.
+    """
+    combat: List["Fleet"] = []
+    mine_groups: List["Fleet"] = []
+    for fleet in fleets:
+        if getattr(fleet, "group_kind", "fleet") == "mine_group":
+            mine_groups.append(fleet)
+        else:
+            combat.append(fleet)
+    return combat, mine_groups
+
+
+def build_fighter_reboard_setup(
+    participating_fleets: Sequence["Fleet"],
+    *,
+    engine_ref: Optional[List[Any]] = None,
+) -> Optional[Callable[[Any], None]]:
+    """Build a ``pre_tick_loop_callback`` that installs a reboard tracker.
+
+    PROJ-FMS-C Phase 3: returns a closure suitable for
+    ``run_battle(..., pre_tick_loop_callback=...)`` that installs a
+    :class:`ReboardTracker` on the engine. The tracker captures
+    fighters launched mid-battle (via the ``carried_vehicle`` payload
+    on LAUNCH attacks) so the strategy post-battle hook can call
+    :func:`apply_reboard` once the outcome is known.
+
+    When ``engine_ref`` is provided (the shared list parked on the
+    BattleSpec via ``_engine_ref``), the callback also appends the
+    engine to it so the post-battle hook can read it.
+
+    Returns ``None`` when there are no combat fleets — the tracker is
+    pointless without any battle to track.
+    """
+    if not participating_fleets:
+        return None
+
+    from game.simulation.systems.fighter_reboard import ReboardTracker
+
+    captured_engine_ref = engine_ref
+
+    def _setup(engine: Any) -> None:
+        tracker = ReboardTracker(battle_id=id(engine))
+        try:
+            setattr(engine, "reboard_tracker", tracker)
+        except (AttributeError, TypeError):
+            pass
+        if captured_engine_ref is not None:
+            captured_engine_ref.append(engine)
+
+    return _setup
+
+
+def build_mine_resolver_setup(
+    mine_groups: Sequence["Fleet"],
+    owner_to_team_id: Mapping[Any, int],
+    *,
+    battle_boundary: Optional[Tuple[float, float, float, float]] = None,
+) -> Optional[Callable[[Any], None]]:
+    """Build a ``pre_tick_loop_callback`` that wires mine resolvers.
+
+    PROJ-FMS-B audit Fix 2: returns a closure suitable for
+    ``run_battle(..., pre_tick_loop_callback=...)`` that, given the
+    constructed :class:`BattleEngine`, constructs a
+    :class:`TacticalMineResolver` per ``mine_group``, seeds its
+    ``_owner_team_id`` from ``owner_to_team_id``, attaches it to
+    ``engine.mine_resolvers``, and parks a back-reference on each
+    mine_group (``_tactical_resolver``) so the post-battle hook can
+    call :meth:`writeback_to_mine_group` cleanly.
+
+    Returns ``None`` when there are no mine_groups (callers can skip
+    the kwarg entirely in that case).
+    """
+    if not mine_groups:
+        return None
+
+    # Local import keeps the strategy-side spec_compiler module free of
+    # simulation-systems dependencies at import time (BattleEngine is
+    # not needed when there are no mines).
+    from game.simulation.systems.tactical_mine_resolver import (
+        TacticalMineResolver,
+    )
+
+    captured_groups: Tuple["Fleet", ...] = tuple(mine_groups)
+    captured_owner_map: Dict[Any, int] = dict(owner_to_team_id)
+    captured_boundary = battle_boundary
+
+    def _setup(engine: Any) -> None:
+        for mg in captured_groups:
+            owner_id = getattr(mg, "owner_id", None)
+            if owner_id not in captured_owner_map:
+                # Mine belongs to a non-combatant — mines without an
+                # opposing combatant in this battle have no enemies, so
+                # they have nothing to do. Skip cleanly rather than
+                # accidentally siding the resolver with team 0.
+                continue
+            resolver = TacticalMineResolver.from_mine_group(
+                mg, battle_boundary=captured_boundary,
+            )
+            resolver._owner_team_id = captured_owner_map[owner_id]
+            engine.mine_resolvers.append(resolver)
+            # Park the resolver on the mine_group for the post-battle
+            # writeback hook.
+            try:
+                setattr(mg, "_tactical_resolver", resolver)
+            except (AttributeError, TypeError):
+                pass
+
+    return _setup
 
 
 # ---------------------------------------------------------------------------
@@ -688,4 +952,8 @@ def _entries_from_fleet_combat_modifiers(
     return entries
 
 
-__all__ = ["build_strategy_battle_spec"]
+__all__ = [
+    "build_strategy_battle_spec",
+    "build_mine_resolver_setup",
+    "build_fighter_reboard_setup",
+]

@@ -61,6 +61,8 @@ VEHICLE_TYPE_COLORS = {
     'station': VEHICLE_STATION,
     'satellite': VEHICLE_STATION,
     'fighter': VEHICLE_FIGHTER,
+    # Mines reuse the fighter color hint (small-craft tier visual grouping).
+    'mine': VEHICLE_FIGHTER,
 }
 
 

@@ -128,6 +128,10 @@ class Paths:
     GROUP_POLICIES_FILE: str = os.path.join(DATA_DIR, "group_policies.json")
     DESIGN_ROLES_FILE: str = os.path.join(DATA_DIR, "design_roles.json")
 
+    # === Balance Files (PROJ-FMS-B) ===
+    BALANCE_DIR: str = os.path.join(DATA_DIR, "balance")
+    MINES_BALANCE_FILE: str = os.path.join(BALANCE_DIR, "mines.json")
+
     # === Mod & User Overlay Directories (PROJ-278) ===
     # Mods are loose JSON files in mods/<mod_name>/ that override base data.
     # User overlays live in output/ and persist player runtime additions.

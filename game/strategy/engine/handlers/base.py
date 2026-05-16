@@ -206,6 +206,30 @@ class BaseCommandHandler:
         return fleet
 
     @staticmethod
+    def _reject_if_non_fleet_group(fleet, action: str) -> 'ValidationResult | None':
+        """PROJ-FMS-A Phase 4: reject fleet-manipulation commands on
+        non-fleet ``group_kind`` discriminators (fighter_group /
+        satellite_group / mine_group).
+
+        Returns a ``ValidationResult.error(...)`` when the fleet is a
+        deployed group; returns ``None`` to indicate the action may
+        proceed (real fleet).
+        """
+        kind = getattr(fleet, "group_kind", "fleet")
+        # Only string values are valid discriminators. Mocked / partial
+        # fleets without an explicit ``group_kind`` (e.g. tests) are
+        # treated as real fleets.
+        if not isinstance(kind, str) or kind == "fleet":
+            return None
+        if kind not in ("fighter_group", "satellite_group", "mine_group"):
+            return None
+        return ValidationResult.error(
+            f"{action} is not allowed for group_kind={kind!r}: "
+            f"deployed groups (mines / fighters / satellites) "
+            f"cannot move, warp, build, or join."
+        )
+
+    @staticmethod
     def _resolve_player_planet(session: 'GameSession', planet_id: int) -> tuple:
         """Resolve a planet and authorize against the active empire.
 

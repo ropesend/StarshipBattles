@@ -293,7 +293,7 @@
             "order": 30,
             "visibility": {
                 "type": "ability_present",
-                "abilities": ["VehicleLaunch"]
+                "abilities": ["TacticalFighterLaunch", "StrategicFighterLaunch"]
             },
             "items": [
                 {

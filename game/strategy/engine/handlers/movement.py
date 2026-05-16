@@ -101,6 +101,12 @@ class MoveCommandHandler(BaseCommandHandler):
         if error:
             return error
 
+        # PROJ-FMS-A Phase 4: deployed groups (mines / fighters / sats)
+        # cannot issue strategic Move orders.
+        reject = self._reject_if_non_fleet_group(fleet, "Move")
+        if reject is not None:
+            return reject
+
         # 2. Validation / Pathfinding
         path = session.preview_fleet_path(fleet, cmd.target_hex)
 
@@ -144,6 +150,11 @@ class InterceptCommandHandler(BaseCommandHandler):
         if error:
             return error
 
+        # PROJ-FMS-A Phase 4: deployed groups cannot pursue.
+        reject = self._reject_if_non_fleet_group(fleet, "Intercept")
+        if reject is not None:
+            return reject
+
         # 2. Resolve target fleet
         target_fleet, error = self._resolve_fleet(session, cmd.target_fleet_id)
         if error:
@@ -181,6 +192,11 @@ class JoinCommandHandler(BaseCommandHandler):
         fleet, error = self._resolve_player_fleet(session, cmd.fleet_id)
         if error:
             return error
+
+        # PROJ-FMS-A Phase 4: deployed groups cannot rejoin a fleet.
+        reject = self._reject_if_non_fleet_group(fleet, "Join Fleet")
+        if reject is not None:
+            return reject
 
         # 2. Resolve target fleet
         target_fleet, error = self._resolve_fleet(session, cmd.target_fleet_id)
@@ -227,6 +243,11 @@ class WarpCommandHandler(BaseCommandHandler):
         fleet, error = self._resolve_player_fleet(session, cmd.fleet_id)
         if error:
             return error
+
+        # PROJ-FMS-A Phase 4: deployed groups cannot warp.
+        reject = self._reject_if_non_fleet_group(fleet, "Warp")
+        if reject is not None:
+            return reject
 
         # 2. Validate fleet can use warp
         if not fleet.capabilities.can_use_warp():

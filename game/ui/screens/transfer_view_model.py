@@ -267,30 +267,38 @@ class TransferViewModel:
         return rows
 
     def _build_pod_rows(self, source_obj, target_obj) -> List[dict]:
-        """Return drop-pod rows merging known pod designs with any
-        pods actually present on either side."""
+        """Return drop-pod and carried-vehicle rows.
+
+        PROJ-FMS-A Phase 3: rows whose ``vehicle_type`` is one of
+        {mine, fighter, satellite} get the ``vehicle:<name>`` cargo_key
+        so the transfer dispatcher routes them through the
+        ``_dispatch_carried_vehicle_*`` branches. Everything else stays
+        on the legacy ``drop_pod:<name>`` key.
+        """
         from game.strategy.facade.dto.fleet_dto import FleetInfo
         from game.strategy.facade.dto.planet_dto import PlanetInfo
 
-        source_pods: Dict[str, int] = {}
-        if isinstance(source_obj, PlanetInfo):
-            for name, _vtype, _mass, count in getattr(
-                    source_obj, "staging_yard_summary", ()):
-                source_pods[name] = source_pods.get(name, 0) + count
-        elif isinstance(source_obj, FleetInfo):
-            for name, _vtype, _mass, count in getattr(
-                    source_obj, "carried_items_summary", ()):
-                source_pods[name] = source_pods.get(name, 0) + count
+        vehicle_types = {"mine", "fighter", "satellite"}
 
-        target_pods: Dict[str, int] = {}
-        if isinstance(target_obj, PlanetInfo):
-            for name, _vtype, _mass, count in getattr(
-                    target_obj, "staging_yard_summary", ()):
-                target_pods[name] = target_pods.get(name, 0) + count
-        elif isinstance(target_obj, FleetInfo):
-            for name, _vtype, _mass, count in getattr(
-                    target_obj, "carried_items_summary", ()):
-                target_pods[name] = target_pods.get(name, 0) + count
+        def _collect(obj) -> Dict[str, dict]:
+            """Walk both staging_yard_summary and carried_items_summary;
+            return {name: {"count": N, "is_vehicle": bool}}."""
+            out: Dict[str, dict] = {}
+            if isinstance(obj, PlanetInfo):
+                tuples = getattr(obj, "staging_yard_summary", ())
+            elif isinstance(obj, FleetInfo):
+                tuples = getattr(obj, "carried_items_summary", ())
+            else:
+                tuples = ()
+            for name, vtype, _mass, count in tuples:
+                row = out.setdefault(name, {"count": 0, "is_vehicle": False})
+                row["count"] += count
+                if str(vtype).lower() in vehicle_types:
+                    row["is_vehicle"] = True
+            return out
+
+        source_pods = _collect(source_obj)
+        target_pods = _collect(target_obj)
 
         all_pod_names = set(self.all_pod_names)
         all_pod_names.update(source_pods.keys())
@@ -298,11 +306,15 @@ class TransferViewModel:
 
         out: List[dict] = []
         for pod_name in sorted(all_pod_names):
+            s = source_pods.get(pod_name, {"count": 0, "is_vehicle": False})
+            t = target_pods.get(pod_name, {"count": 0, "is_vehicle": False})
+            is_vehicle = s["is_vehicle"] or t["is_vehicle"]
+            prefix = "vehicle" if is_vehicle else "drop_pod"
             out.append({
-                "cargo_key": f"drop_pod:{pod_name}",
+                "cargo_key": f"{prefix}:{pod_name}",
                 "display_name": pod_name,
-                "source_amt": source_pods.get(pod_name, 0),
-                "target_amt": target_pods.get(pod_name, 0),
+                "source_amt": s["count"],
+                "target_amt": t["count"],
             })
         return out
 

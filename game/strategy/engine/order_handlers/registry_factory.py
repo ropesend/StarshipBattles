@@ -18,6 +18,19 @@ from game.strategy.data.order_types import OrderType
 from game.strategy.engine.order_handlers.base import OrderHandlerRegistry
 from game.strategy.engine.order_handlers.colonize import ColonizeHandler
 from game.strategy.engine.order_handlers.join_fleet import JoinFleetHandler
+from game.strategy.engine.order_handlers.launch_fighters import (
+    LaunchFightersOrderHandler,
+)
+from game.strategy.engine.order_handlers.launch_satellites import (
+    LaunchSatellitesOrderHandler,
+)
+from game.strategy.engine.order_handlers.lay_mines import LayMinesOrderHandler
+from game.strategy.engine.order_handlers.recover_fighters import (
+    RecoverFightersOrderHandler,
+)
+from game.strategy.engine.order_handlers.recover_satellites import (
+    RecoverSatellitesOrderHandler,
+)
 from game.strategy.engine.order_handlers.self_destruct import SelfDestructHandler
 from game.strategy.engine.order_handlers.superweapons import (
     build_superweapon_handlers,
@@ -50,6 +63,28 @@ def create_default_order_handler_registry(
     registry.register(OrderType.JOIN_FLEET, JoinFleetHandler(event_bus=event_bus))
     registry.register(OrderType.COLONIZE, ColonizeHandler(event_bus=event_bus))
     registry.register(OrderType.SELF_DESTRUCT, SelfDestructHandler(event_bus=event_bus))
+    # PROJ-FMS-B Phase 1: strategic mine-laying.
+    registry.register(OrderType.LAY_MINES, LayMinesOrderHandler(event_bus=event_bus))
+    # PROJ-FMS-C Phase 1: strategic fighter launch.
+    registry.register(
+        OrderType.LAUNCH_FIGHTERS,
+        LaunchFightersOrderHandler(event_bus=event_bus),
+    )
+    # PROJ-FMS-C Phase 3: strategic fighter recovery.
+    registry.register(
+        OrderType.RECOVER_FIGHTERS,
+        RecoverFightersOrderHandler(event_bus=event_bus),
+    )
+    # PROJ-FMS-D Phase 1: strategic satellite launch.
+    registry.register(
+        OrderType.LAUNCH_SATELLITES,
+        LaunchSatellitesOrderHandler(event_bus=event_bus),
+    )
+    # PROJ-FMS-D Phase 2: strategic satellite recovery.
+    registry.register(
+        OrderType.RECOVER_SATELLITES,
+        RecoverSatellitesOrderHandler(event_bus=event_bus),
+    )
     # TransferHandler is a single instance registered against three OrderType keys.
     transfer_handler = TransferHandler(event_bus=event_bus)
     registry.register(OrderType.TRANSFER, transfer_handler)

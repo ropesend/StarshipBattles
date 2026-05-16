@@ -183,6 +183,25 @@ class ShipStatsCalculator:
         ship.fighter_size_cap = 0
         ship.launch_cycle = 0
 
+        # PROJ-FMS-D Phase 1: satellite launch stats are aggregated
+        # separately from fighter equivalents. Without this split a
+        # carrier mounting both fighter and satellite tactical bays
+        # would have its wave-size / cycle stats merged and the
+        # design-workshop UI couldn't distinguish them.
+        ship.satellite_capacity = 0
+        ship.satellites_per_wave = 0
+        ship.satellite_launch_cycle = 0
+
+        # PROJ-FMS-A Phase 3: vehicle-bay capacity (typed design-backed
+        # carried vehicles; separate from the legacy ``fighter_capacity``
+        # counter that VehicleLaunch / VehicleStorage feed). Note: there
+        # is intentionally no ``ship.bay_current_mass`` here — current
+        # bay usage is a strategy-layer runtime value (depends on what's
+        # in ``ShipInstance.carried_items``) and is exposed via
+        # ``ShipInstance.bay_current_mass`` / ``ShipCargoManager
+        # .get_vehicle_bay_capacity()``. See PROJ-FMS-A audit fix pass.
+        ship.bay_capacity_mass = 0.0
+
     def _phase_damage_check_and_supply(
         self, ship: "Ship"
     ) -> Tuple[List["Component"], int, int]:
@@ -441,7 +460,18 @@ class ShipStatsCalculator:
         # Returns the ECM term so we can compose total_defense_score here.
         ecm_score = _wep.aggregate_targeting_scores(ship, component_pool)
 
-        ship.total_defense_score = size_score + maneuver_score + ecm_score
+        # PROJ-FMS-A Phase 4: vehicle-class ``signature_bonus`` (mines
+        # default to +3; ships/fighters/satellites default to 0). Sourced
+        # from ``vehicleclasses.json`` via the cached ``vehicle_classes``
+        # registry. Default 0.0 keeps existing classes' defense scores
+        # unchanged.
+        class_def = self.vehicle_classes.get(ship.ship_class, {})
+        signature_bonus = float(class_def.get("signature_bonus", 0.0))
+        ship.signature_bonus = signature_bonus
+
+        ship.total_defense_score = (
+            size_score + maneuver_score + ecm_score + signature_bonus
+        )
 
         # Armor abilities + repair via defense contributor.
         _def.apply_armor_and_repair_scores(ship, component_pool)

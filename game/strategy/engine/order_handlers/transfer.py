@@ -133,8 +133,9 @@ class TransferHandler(_TransferDispatchMixin, BaseOrderHandler):
         elif target_fleet_id:
             target = self._resolve_target_fleet_by_id(target_fleet_id, empire, galaxy)
 
-        # Validate -- skip location check for drop_pod (fleet is already at planet via MOVE order).
-        skip_loc = cargo_type == "drop_pod"
+        # Validate -- skip location check for drop_pod / vehicle (fleet is
+        # already at planet via MOVE order).
+        skip_loc = cargo_type in ("drop_pod", "vehicle")
         logger.info(
             f"TransferHandler.execute_action_order: fleet={fleet.id} cargo={cargo_type} "
             f"dir={direction} amt={amount} species={species_id} "
@@ -168,6 +169,11 @@ class TransferHandler(_TransferDispatchMixin, BaseOrderHandler):
                     transferred = self._dispatch_drop_pod_load(
                         fleet, target, species_id, amount
                     )
+                elif cargo_type == "vehicle":
+                    # PROJ-FMS-A Phase 3: design-backed carried vehicle.
+                    transferred = self._dispatch_carried_vehicle_load(
+                        fleet, target, species_id, amount
+                    )
                 elif cargo_type == "passengers":
                     transferred = self._dispatch_load_planet_passengers(
                         fleet, target, amount, species_id
@@ -182,6 +188,11 @@ class TransferHandler(_TransferDispatchMixin, BaseOrderHandler):
                 )
                 if cargo_type == "drop_pod":
                     transferred = self._dispatch_drop_pod_unload(
+                        fleet, target, species_id, amount
+                    )
+                elif cargo_type == "vehicle":
+                    # PROJ-FMS-A Phase 3: design-backed carried vehicle.
+                    transferred = self._dispatch_carried_vehicle_unload(
                         fleet, target, species_id, amount
                     )
                 elif cargo_type == "passengers":

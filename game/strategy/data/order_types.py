@@ -35,6 +35,18 @@ class OrderType(Enum):
     # Planet orders — generic ability toggle
     ACTIVATE_ABILITY = auto()
     DEACTIVATE_ABILITY = auto()
+    # PROJ-FMS-A Phase 5 reservations. No handlers attached yet; values
+    # are reserved for PROJ-FMS-B/C/D to wire concrete order handlers:
+    #   LAY_MINES         -> PROJ-FMS-B Phase 1 (LayMinesOrderHandler)
+    #   LAUNCH_FIGHTERS   -> PROJ-FMS-C Phase 1 (LaunchFightersOrderHandler)
+    #   LAUNCH_SATELLITES -> PROJ-FMS-D Phase 1 (LaunchSatellitesOrderHandler)
+    #   RECOVER_FIGHTERS  -> PROJ-FMS-C Phase 3 (RecoverFightersOrderHandler)
+    #   RECOVER_SATELLITES -> PROJ-FMS-D Phase 2 (RecoverSatellitesOrderHandler)
+    LAY_MINES = auto()
+    LAUNCH_FIGHTERS = auto()
+    LAUNCH_SATELLITES = auto()
+    RECOVER_FIGHTERS = auto()
+    RECOVER_SATELLITES = auto()
 
 
 # PROJ-187: Order type categorization for ActionExecutionEngine.
@@ -77,6 +89,16 @@ ACTION_ORDER_TYPES: frozenset = frozenset({
     OrderType.SELF_DESTRUCT,
     OrderType.ACTIVATE_ABILITY,
     OrderType.DEACTIVATE_ABILITY,
+    # PROJ-FMS-B Phase 1: strategic mine-laying through ActionExecutionEngine.
+    OrderType.LAY_MINES,
+    # PROJ-FMS-C Phase 1: strategic fighter launch through ActionExecutionEngine.
+    OrderType.LAUNCH_FIGHTERS,
+    # PROJ-FMS-C Phase 3: strategic fighter recovery through ActionExecutionEngine.
+    OrderType.RECOVER_FIGHTERS,
+    # PROJ-FMS-D Phase 1: strategic satellite launch through ActionExecutionEngine.
+    OrderType.LAUNCH_SATELLITES,
+    # PROJ-FMS-D Phase 2: strategic satellite recovery through ActionExecutionEngine.
+    OrderType.RECOVER_SATELLITES,
 })
 
 # Planet-specific action orders (subset of ACTION_ORDER_TYPES).

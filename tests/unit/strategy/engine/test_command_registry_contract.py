@@ -133,6 +133,14 @@ def test_action_order_types_contains_all_known_members() -> None:
         OrderType.SELF_DESTRUCT,
         OrderType.ACTIVATE_ABILITY,
         OrderType.DEACTIVATE_ABILITY,
+        # PROJ-FMS-B Phase 1: strategic mine-laying.
+        OrderType.LAY_MINES,
+        # PROJ-FMS-C Phase 1+3: strategic fighter launch + recovery.
+        OrderType.LAUNCH_FIGHTERS,
+        OrderType.RECOVER_FIGHTERS,
+        # PROJ-FMS-D Phase 1+2: strategic satellite launch + recovery.
+        OrderType.LAUNCH_SATELLITES,
+        OrderType.RECOVER_SATELLITES,
     })
 
 
@@ -151,6 +159,18 @@ _ABILITY_LOOKUP_EXEMPT = MOVEMENT_ORDER_TYPES | {
     OrderType.TRANSFER,     # falls through to default action_time=1
     OrderType.LOAD_POPULATION,
     OrderType.UNLOAD_POPULATION,
+    # PROJ-FMS-B Phase 1: LAY_MINES uses StrategicMineLayerAbility on the
+    # carrier ship, but the action_time lookup is data-only here; falls
+    # through to default action_time. The ability-name resolver is not
+    # the gate.
+    OrderType.LAY_MINES,
+    # PROJ-FMS-C audit Fix (inline risk): LAUNCH_FIGHTERS / RECOVER_FIGHTERS
+    # are NO LONGER exempt — the command specs declare
+    # ``action_ability_name='StrategicFighterLaunch'`` and
+    # ``'RecoverFighters'`` respectively, so the ability-lookup resolver
+    # gates them via the carrier ship's mounted abilities. Adding either
+    # back to this exempt set is a deliberate regression and must surface
+    # in this test.
 }
 
 
@@ -181,6 +201,16 @@ def test_order_to_ability_map_values_are_known_abilities() -> None:
         OrderType.CLOSE_WARP_POINT: 'CloseWarpPoint',
         OrderType.CREATE_DYSON_SPHERE: 'CreateDysonSphere',
         OrderType.SELF_DESTRUCT: 'SelfDestruct',
+        # PROJ-FMS-C audit Fix (inline risk): ability-lookup gating for
+        # the fighter launch + recovery flows. Ability names match the
+        # component ability dicts in ``data/components.json``.
+        OrderType.LAUNCH_FIGHTERS: 'StrategicFighterLaunch',
+        OrderType.RECOVER_FIGHTERS: 'RecoverFighters',
+        # PROJ-FMS-D Phase 1+2: ability-lookup gating for satellite
+        # launch + recovery. Closes the same loophole the fighter
+        # equivalents closed.
+        OrderType.LAUNCH_SATELLITES: 'StrategicSatelliteLaunch',
+        OrderType.RECOVER_SATELLITES: 'RecoverSatellites',
     }
 
 
@@ -296,17 +326,33 @@ ORDER_TYPES_REACHABLE_VIA_COMMAND = {
     OrderType.UNLOAD_POPULATION,       # IssueTransferCommand (direction=UNLOAD)
     OrderType.ACTIVATE_ABILITY,        # IssuePlanetOrderCommand
     OrderType.DEACTIVATE_ABILITY,      # IssuePlanetOrderCommand
+    OrderType.LAY_MINES,               # PROJ-FMS-B Phase 1: IssueLayMinesCommand
+    OrderType.LAUNCH_FIGHTERS,         # PROJ-FMS-C Phase 1: IssueLaunchFightersCommand
+    OrderType.RECOVER_FIGHTERS,        # PROJ-FMS-C Phase 3: IssueRecoverFightersCommand
+    OrderType.LAUNCH_SATELLITES,       # PROJ-FMS-D Phase 1: IssueLaunchSatellitesCommand
+    OrderType.RECOVER_SATELLITES,      # PROJ-FMS-D Phase 2: IssueRecoverSatellitesCommand
 }
+
+
+# PROJ-FMS-A Phase 5 reserved enum values. These intentionally have no
+# command/handler path in PROJ-FMS-A — they are wired in PROJ-FMS-B/C/D.
+# PROJ-FMS-B Phase 1 moved LAY_MINES into ORDER_TYPES_REACHABLE_VIA_COMMAND.
+# PROJ-FMS-C Phase 1+3 moved LAUNCH_FIGHTERS / RECOVER_FIGHTERS.
+# PROJ-FMS-D Phase 1+2 moved LAUNCH_SATELLITES / RECOVER_SATELLITES.
+ORDER_TYPES_RESERVED_NO_COMMAND_YET: set = set()
 
 
 def test_every_order_type_is_reachable_via_command() -> None:
     """Pin the 1:N OrderType-to-Command coverage.
 
     Adding a new OrderType without any command path is almost always a
-    bug: there's no way for the UI or AI to issue the order.
+    bug: there's no way for the UI or AI to issue the order. PROJ-FMS-A
+    Phase 5 reserved five enum values for future PROJ-FMS-B/C/D wiring
+    — those are tracked in ``ORDER_TYPES_RESERVED_NO_COMMAND_YET`` and
+    excluded from the strict coverage assertion here.
     """
     actual = set(OrderType)
-    extra = actual - ORDER_TYPES_REACHABLE_VIA_COMMAND
+    extra = actual - ORDER_TYPES_REACHABLE_VIA_COMMAND - ORDER_TYPES_RESERVED_NO_COMMAND_YET
     missing = ORDER_TYPES_REACHABLE_VIA_COMMAND - actual
     assert not extra, (
         f"New OrderType members without a documented command path: {sorted(e.name for e in extra)}."

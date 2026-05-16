@@ -1,64 +1,17 @@
 from typing import Dict, Any, List
 
-from game.core.config import PhysicsConfig
 from .base import Ability
-from .stat_keys import StatKey, AbilityStatBinding
+from .stat_keys import AbilityStatBinding
 from .ui_colors import HINT_NEUTRAL, HINT_CREW_CAP, HINT_REQUIREMENT
 
 
-class VehicleLaunchAbility(Ability):
-    """Allows storing and launching fighters."""
-
-    STAT_BINDINGS: List[AbilityStatBinding] = [
-        AbilityStatBinding(StatKey.CAPACITY_MULT, 'capacity', 'multiply', '_base_capacity'),
-    ]
-
-    def __init__(self, component, data: Dict[str, Any]):
-        super().__init__(component, data)
-        self.cooldown = 0.0  # runtime state, NOT data-derived
-
-    def _parse_attrs(self, data: Any) -> None:
-        """Parse data attributes; called from __init__ and sync_data so
-        formula-driven attributes refresh on data updates.
-
-        PROJ-367 Phase 1: ``max_launch_mass`` is now a typed attribute (was
-        previously read from the raw abilities dict by the hangar
-        contributor). Additive — not modifier-scaled — so STAT_BINDINGS is
-        unchanged.
-        """
-        if not isinstance(data, dict):
-            data = {}
-        self.fighter_class = data.get('fighter_class', 'Fighter (Small)')
-        self.capacity = data.get('capacity', 0)
-        self._base_capacity = self.capacity
-        self.cycle_time = data.get('cycle_time', 5.0)
-        # PROJ-367 Phase 1: typed `max_launch_mass`; consumed by the hangar
-        # contributor at `stat_contributors/launch.py`.
-        self.max_launch_mass = data.get('max_launch_mass', 0.0)
-
-    def recalculate(self) -> None:
-        # Apply capacity mult
-        self.capacity = int(self._base_capacity * self.get_effective_stat('capacity_mult', 1.0))
-
-    def update(self) -> bool:
-        if self.cooldown > 0:
-            self.cooldown -= PhysicsConfig.TICK_RATE
-        return True
-
-    def try_launch(self) -> bool:
-        if self.cooldown <= 0:
-            self.cooldown = self.cycle_time
-            return True
-        return False
-
-    def get_ui_rows(self) -> List[Dict[str, Any]]:
-        return [
-            {'label': 'Hangar', 'value': f"{self.fighter_class}", 'color_hint': HINT_NEUTRAL},
-            {'label': 'Cycle', 'value': f"{self.cycle_time}s", 'color_hint': HINT_NEUTRAL}
-        ]
-
-    def get_primary_value(self) -> float:
-        return float(self.capacity)
+# PROJ-FMS-C audit Fix 1: ``VehicleLaunchAbility`` removed.
+# The legacy class-string fighter launch path was replaced by
+# :class:`game.simulation.components.abilities.launch.TacticalFighterLaunchAbility`
+# (PROJ-FMS-A Phase 5) plus :class:`game.simulation.components.abilities.launch.StrategicFighterLaunchAbility`
+# for strategic-layer launches. The production caller is
+# :class:`game.ai.carrier_controller.CarrierAIController` (auto-launch) and
+# the strategic-layer :class:`LaunchFightersCommandHandler`.
 
 
 class CommandAndControl(Ability):

@@ -103,10 +103,12 @@ class TestRegistryThreadingToRunBattle:
         captured = {}
 
         def _fake_run_battle(
-            spec, *, ai_factory, registry_provider, capture_context, event_bus=None
+            spec, *, ai_factory, registry_provider, capture_context,
+            event_bus=None, pre_tick_loop_callback=None,
         ):
             captured["registry_provider"] = registry_provider
             captured["event_bus"] = event_bus
+            captured["pre_tick_loop_callback"] = pre_tick_loop_callback
             return _make_outcome(winner_team_id=0)
 
         with patch(
@@ -148,10 +150,12 @@ class TestRegistryThreadingToRunBattle:
         captured = {}
 
         def _fake_run_battle(
-            spec, *, ai_factory, registry_provider, capture_context, event_bus=None
+            spec, *, ai_factory, registry_provider, capture_context,
+            event_bus=None, pre_tick_loop_callback=None,
         ):
             captured["registry_provider"] = registry_provider
             captured["event_bus"] = event_bus
+            captured["pre_tick_loop_callback"] = pre_tick_loop_callback
             return _make_outcome(winner_team_id=0)
 
         with patch(

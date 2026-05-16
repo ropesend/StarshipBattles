@@ -94,12 +94,21 @@ class ProductionSpawner:
         design_id = item['design_id']
         vehicle_type = item.get('type', 'ship').lower().replace(' ', '_')
 
+        # PROJ-FMS-A Phase 4: output normalisation. Small-craft
+        # (mine / fighter / satellite) follow the unified bay-or-staging
+        # rule; capital ships continue to spawn as full ShipInstance
+        # entries. See PROJ-FMS-A decisions.md for the chosen flagship-
+        # first-then-canonical-fleet-order bay-selection rule.
         if isinstance(colony_or_fleet, Fleet):
             if vehicle_type in ('complex', 'planetary_complex'):
                 target_planet_id = item.get('target_planet_id')
                 self._spawn_fleet_complex(
                     colony_or_fleet, design_id, empire, galaxy, save_path,
                     target_planet_id=target_planet_id
+                )
+            elif vehicle_type in ('mine', 'fighter', 'satellite'):
+                self._spawn_fleet_carried_vehicle(
+                    colony_or_fleet, design_id, item, empire, save_path
                 )
             else:
                 self._spawn_fleet_ship(colony_or_fleet, design_id, empire, save_path)
@@ -109,7 +118,7 @@ class ProductionSpawner:
                 self._create_and_place_facility(
                     colony_or_fleet, design_id, empire, save_path, galaxy
                 )
-            elif vehicle_type in ('drop_pod', 'fighter'):
+            elif vehicle_type in ('drop_pod', 'fighter', 'satellite', 'mine'):
                 self._spawn_to_staging_yard(
                     colony_or_fleet, design_id, item, empire, save_path
                 )
@@ -288,19 +297,28 @@ class ProductionSpawner:
 
         # Calculate mass from design using simulation Ship (single source of truth)
         total_mass = 0.0
+        max_hp = 0
         if self._registries:
             from game.simulation.entities.ship_design_stats import calculate_design_stats
             stats = calculate_design_stats(design_data, self._registries)
             total_mass = stats.get('mass', 0.0)
+            max_hp = int(stats.get('max_hp', 0))
 
-        staging_item = {
+        vehicle_type = item.get('type', 'drop_pod').lower()
+        staging_item: Dict[str, Any] = {
             'design_id': design_id,
             'name': design_data.get('name', design_id),
-            'vehicle_type': item.get('type', 'drop_pod'),
+            'vehicle_type': vehicle_type,
             'design_data': design_data,
             'mass': total_mass,
             'owner_id': empire.id,
         }
+        # PROJ-FMS-A Phase 4: design-backed carried vehicles (mine /
+        # fighter / satellite) carry a typed per-instance HP through
+        # staging so transfer round-trips preserve damage state. Drop
+        # pods retain their legacy dict shape.
+        if vehicle_type in ("mine", "fighter", "satellite"):
+            staging_item['current_hp'] = max_hp
 
         if planet.add_to_staging_yard(staging_item):
             logger.info(
@@ -366,6 +384,119 @@ class ProductionSpawner:
                 location_hex=[spawn_loc.q, spawn_loc.r],
                 system_name=system_name,
                 local_hex=local_hex,
+            )
+
+    def _spawn_fleet_carried_vehicle(
+        self,
+        fleet: Fleet,
+        design_id: str,
+        item: Dict,
+        empire: 'Empire',
+        save_path: Optional[str] = None,
+    ) -> None:
+        """PROJ-FMS-A Phase 4: fleet-yard-built mine / fighter / satellite.
+
+        Bay-selection rule (decisions.md):
+            1. Try the flagship's VehicleBay first.
+            2. Otherwise walk ``fleet.ships`` in canonical order and
+               deposit into the first ship whose VehicleBay has capacity
+               and accepts this vehicle type.
+            3. If no ship has compatible bay capacity, log a clear
+               "no bay capacity" error and surface a UI event so the
+               player can clear queue or add bays.
+
+        The vehicle is stored as a :class:`CarriedVehicle` (typed) — its
+        ``to_dict()`` form is appended to the receiving ship's
+        ``carried_items`` list by the cargo manager.
+        """
+        from game.strategy.data.carried_vehicle import CarriedVehicle
+
+        design_data = item.get('design_data') or self._load_design(
+            design_id, empire, save_path
+        )
+        if not design_data:
+            logger.warning(
+                f"Cannot spawn carried vehicle: design '{design_id}' not found"
+            )
+            return
+
+        # Calculate mass from design via the single-source-of-truth
+        # ShipStatsCalculator path. Without registries we cannot accurately
+        # gate bay capacity — abort cleanly.
+        if self._registries is None:
+            logger.warning(
+                f"ProductionSpawner: missing registries; cannot spawn "
+                f"carried vehicle '{design_id}'."
+            )
+            return
+        from game.simulation.entities.ship_design_stats import calculate_design_stats
+        stats = calculate_design_stats(design_data, self._registries)
+        total_mass = float(stats.get('mass', 0.0))
+        max_hp = int(stats.get('max_hp', 0))
+
+        vehicle_type = item.get('type', 'fighter').lower()
+        if vehicle_type == 'drop_pod':
+            # Drop pods stay on the legacy pod-storage path.
+            self._spawn_fleet_ship(fleet, design_id, empire, save_path)
+            return
+        if vehicle_type not in ("mine", "fighter", "satellite"):
+            # Unknown small-craft type — fall back to full ship spawn.
+            self._spawn_fleet_ship(fleet, design_id, empire, save_path)
+            return
+
+        cv = CarriedVehicle(
+            design_id=design_id,
+            design_data=design_data,
+            vehicle_type=vehicle_type,
+            mass=total_mass,
+            current_hp=max_hp,
+        )
+
+        # Flagship-first; fall back to canonical fleet order.
+        ordered_ships = list(fleet.ships)
+        # ``fleet.flagship`` may not be exposed; treat fleet.ships[0] as the
+        # flagship per existing fleet-hierarchy convention.
+        # No re-ordering needed — fleet.ships[0] is already the flagship.
+        for ship in ordered_ships:
+            cargo_mgr = getattr(ship, "_cargo_mgr", None)
+            if cargo_mgr is None:
+                continue
+            if cargo_mgr.can_accept_vehicle(cv):
+                if cargo_mgr.load_vehicle(cv):
+                    logger.info(
+                        f"Fleet {fleet.id}: loaded {vehicle_type} "
+                        f"'{design_id}' into {ship.name}'s VehicleBay "
+                        f"(mass={total_mass:.0f})"
+                    )
+                    if self._event_bus:
+                        self._event_bus.log_event(
+                            EventType.SHIP_BUILT,
+                            category=EventCategory.PRODUCTION,
+                            empire_id=empire.id,
+                            message=f"Fleet {fleet.id} built {vehicle_type} '{design_id}' "
+                                    f"into bay on {ship.name}",
+                            design_id=design_id,
+                            fleet_id=fleet.id,
+                            is_fleet_production=True,
+                            location_hex=[fleet.location.q, fleet.location.r],
+                        )
+                    return
+        # No bay capacity in any fleet ship.
+        logger.warning(
+            f"Fleet {fleet.id}: no VehicleBay capacity for {vehicle_type} "
+            f"'{design_id}' (mass={total_mass:.0f}); production output dropped."
+        )
+        if self._event_bus:
+            self._event_bus.log_event(
+                EventType.SHIP_BUILT,
+                category=EventCategory.PRODUCTION,
+                empire_id=empire.id,
+                message=f"Fleet {fleet.id}: no bay capacity for "
+                        f"{vehicle_type} '{design_id}' — output discarded",
+                design_id=design_id,
+                fleet_id=fleet.id,
+                is_fleet_production=True,
+                location_hex=[fleet.location.q, fleet.location.r],
             )
 
     def _spawn_fleet_ship(

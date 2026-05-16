@@ -100,6 +100,57 @@ class TestTickPhaseHooks:
 
         assert ctx.moved_fleet_ids == {1}
 
+    def test_derive_moved_fleet_ids_threads_registries_to_minefield_resolver(self):
+        """PROJ-FMS-B audit Fix 1: the minefield resolver must receive the
+        engine's GameRegistries so strategic damage routes through the real
+        DamageCalculator pipeline (shields + emissive armor + SRA) instead
+        of the direct-HP fallback. Pre-fix, ``_derive_moved_fleet_ids``
+        omitted ``registries=`` and every live mine hit silently bypassed
+        shields.
+        """
+        captured: dict = {}
+
+        # A fleet that "moved" so the hook tries the resolver branch.
+        moved_fleet = SimpleNamespace(
+            id=1,
+            location='B',
+            ships=[SimpleNamespace(instance_id="s1", is_alive=True)],
+            group_kind='fleet',
+        )
+        empire = SimpleNamespace(id=1, fleets=[moved_fleet], _booster_dirty=False)
+        ctx = TickContext(
+            tick=5,
+            empires=[empire],
+            galaxy=object(),
+            pre_movement_locations={1: 'A'},
+        )
+
+        sentinel_registries = object()
+        engine = SimpleNamespace(_registries=sentinel_registries)
+
+        from game.strategy.engine import minefield_resolver as _mr_mod
+
+        class _CaptureResolver:
+            def __init__(self, *args, **kwargs) -> None:
+                pass
+
+            def resolve_minefield_entry(self, **kwargs):
+                captured.update(kwargs)
+                return _mr_mod.MinefieldResolutionResult()
+
+        original = _mr_mod.MinefieldResolver
+        _mr_mod.MinefieldResolver = _CaptureResolver
+        try:
+            _derive_moved_fleet_ids(engine, ctx, None)
+        finally:
+            _mr_mod.MinefieldResolver = original
+
+        assert captured, "Expected resolver to be invoked"
+        assert captured.get("registries") is sentinel_registries, (
+            "MinefieldResolver must be called with the engine's _registries "
+            "so strategic mine damage uses the real damage pipeline."
+        )
+
 
 class TestDefaultTickPhaseList:
     """Pin the default registry's ordering, count, and key uniqueness."""

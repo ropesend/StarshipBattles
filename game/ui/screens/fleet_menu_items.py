@@ -58,6 +58,16 @@ def _can_warp(fleet: Any) -> bool:
     return bool(caps.can_use_warp())
 
 
+def _can_strategic_move(fleet: Any) -> bool:
+    """PROJ-FMS-A: non-``fleet`` group_kinds cannot move on the strategy map.
+
+    Resilient to mock fleets that lack the property entirely (defaults
+    to True so existing tests don't break).
+    """
+    val = getattr(fleet, "can_strategic_move", True)
+    return bool(val)
+
+
 def _has_self_destruct_ships(fleet: Any) -> bool:
     caps = getattr(fleet, "capabilities", None)
     if caps is None:
@@ -85,9 +95,12 @@ def build_menu_items(
     Items the fleet cannot perform are omitted entirely (not greyed —
     per AC: "exactly the orders the fleet can perform").
     """
+    # PROJ-FMS-A: non-fleet group_kinds (fighter_group / satellite_group /
+    # mine_group) cannot perform strategic moves or merge with other fleets.
+    can_move = _can_strategic_move(fleet)
     rows: list[tuple[str, InputAction, bool]] = [
-        ("Move", InputAction.FLEET_MOVE, True),
-        ("Join Fleet", InputAction.FLEET_JOIN, True),
+        ("Move", InputAction.FLEET_MOVE, can_move),
+        ("Join Fleet", InputAction.FLEET_JOIN, can_move),
         (
             "Colonize",
             InputAction.FLEET_COLONIZE,

@@ -13,12 +13,15 @@ logger = logging.getLogger(__name__)
 class TransferValidator:
     """Validates TRANSFER orders for cargo operations between fleets and colonies."""
 
-    # Valid cargo types (resources + passengers + drop pods)
+    # Valid cargo types (resources + passengers + drop pods + carried vehicles)
     VALID_CARGO_TYPES = {
         "passengers",
         "metals", "organics", "vapors", "radioactives", "exotics",
         "fuel", "energy", "ammo",
         "drop_pod",
+        # PROJ-FMS-A: design-backed carried vehicles
+        # (mines/fighters/satellites) routed through VehicleBay.
+        "vehicle",
     }
 
     # Valid directions
@@ -91,7 +94,9 @@ class TransferValidator:
                     f"Fleet is not at {target.name}'s system.",
                     code="NOT_AT_PLANET"
                 )
-            if target.owner_id is None and cargo_type != "drop_pod":
+            # drop_pod and vehicle transfers use the staging yard, which
+            # does not require the planet to be colonized.
+            if target.owner_id is None and cargo_type not in ("drop_pod", "vehicle"):
                 return ValidationResult.error(
                     f"Planet {target.name} is not colonized.",
                     code="NOT_COLONIZED"
@@ -186,6 +191,15 @@ class TransferValidator:
                 )
             return ValidationResult.success()
 
+        if cargo_type == "vehicle":
+            # PROJ-FMS-A: design-backed carried-vehicle load. Mirrors the
+            # drop_pod path: staging yard must contain at least one
+            # CarriedVehicle-shaped entry, and the fleet must have at
+            # least one ship with VehicleBay capacity remaining.
+            return TransferValidator._validate_vehicle_load(
+                fleet, planet, species_id
+            )
+
         # For passengers, check fleet has cargo capacity
         # PROJ-210: Use fleet.resources delegate for cargo operations
         if cargo_type == "passengers":
@@ -254,4 +268,103 @@ class TransferValidator:
                     code="NO_CARGO_TO_UNLOAD"
                 )
 
+        if cargo_type == "vehicle":
+            # PROJ-FMS-A: design-backed carried-vehicle unload. Fleet
+            # must have at least one CarriedVehicle entry; the planet
+            # staging yard must have capacity for at least the smallest
+            # carried vehicle. (Per-item capacity is re-checked by
+            # ``planet.add_to_staging_yard`` at execution time.)
+            return TransferValidator._validate_vehicle_unload(fleet, planet, species_id)
+
+        return ValidationResult.success()
+
+    @staticmethod
+    def _validate_vehicle_load(
+        fleet: Any,
+        planet: Any,
+        design_id: str = None,
+    ) -> ValidationResult:
+        """PROJ-FMS-A: validate planet -> fleet carried-vehicle load.
+
+        Mirrors the drop-pod path: planet staging yard must contain at
+        least one ``CarriedVehicle``-shaped entry (optionally matching
+        ``design_id``), and the fleet must have at least one ship with
+        ``VehicleBay`` capacity remaining for the smallest matching item.
+        """
+        from game.strategy.data.carried_vehicle import CarriedVehicle
+
+        staging = getattr(planet, "staging_yard", [])
+        if not isinstance(staging, list):
+            staging = []
+        candidate: Any = None
+        for item in staging:
+            cv = CarriedVehicle.from_any(item)
+            if cv is None:
+                continue
+            if design_id and cv.design_id != design_id:
+                continue
+            candidate = cv
+            break
+        if candidate is None:
+            return ValidationResult.error(
+                f"{planet.name} has no matching carried vehicle in staging yard.",
+                code="NO_STAGING_VEHICLE",
+            )
+        # Need at least one ship with a bay that can accept the smallest matching vehicle.
+        for ship in getattr(fleet, "ships", []):
+            mgr = getattr(ship, "_cargo_mgr", None)
+            if mgr is None:
+                continue
+            try:
+                if mgr.can_accept_vehicle(candidate):
+                    return ValidationResult.success()
+            except Exception as exc:  # Intentional: capability probe; missing registry => no capacity.
+                _ = exc
+                continue
+        return ValidationResult.error(
+            "Fleet has no vehicle-bay capacity for this vehicle.",
+            code="NO_BAY_CAPACITY",
+        )
+
+    @staticmethod
+    def _validate_vehicle_unload(
+        fleet: Any,
+        planet: Any,
+        design_id: str = None,
+    ) -> ValidationResult:
+        """PROJ-FMS-A: validate fleet -> planet carried-vehicle unload.
+
+        Fleet must have at least one ``CarriedVehicle`` entry matching
+        ``design_id`` (or any, if ``design_id`` is None). Planet staging
+        capacity is re-checked per-item by
+        ``planet.add_to_staging_yard`` at execution time; we only verify
+        there is capacity for the smallest matching item up-front so we
+        don't queue an order that cannot transfer anything.
+        """
+        candidate: Any = None
+        for ship in getattr(fleet, "ships", []):
+            try:
+                carried = ship.get_carried_vehicles()
+            except Exception as exc:  # Intentional: facade probe; treat missing accessor as empty.
+                _ = exc
+                continue
+            for cv in carried:
+                if design_id and cv.design_id != design_id:
+                    continue
+                if candidate is None or cv.mass < candidate.mass:
+                    candidate = cv
+        if candidate is None:
+            return ValidationResult.error(
+                "Fleet has no matching carried vehicle to unload.",
+                code="NO_CARGO_TO_UNLOAD",
+            )
+        # Check planet staging yard has at least enough capacity for the smallest vehicle.
+        max_staging = float(getattr(planet, "max_staging_mass", 0.0) or 0.0)
+        if max_staging > 0:
+            current = float(planet.get_staging_mass())
+            if current + candidate.mass > max_staging:
+                return ValidationResult.error(
+                    f"{planet.name} staging yard has no capacity for this vehicle.",
+                    code="NO_STAGING_CAPACITY",
+                )
         return ValidationResult.success()

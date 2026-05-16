@@ -86,6 +86,15 @@ class TestPlanetCanBuildType:
         """Planet with space shipyard can build fighters."""
         assert planet_with_shipyard.can_build_type("fighter") is True
 
+    def test_planet_can_build_mines_with_shipyard(self, planet_with_shipyard):
+        """PROJ-FMS-A Phase 1: planet with shipyard can build mines."""
+        assert planet_with_shipyard.can_build_type("mine") is True
+        assert planet_with_shipyard.can_build_type("Mine") is True
+
+    def test_planet_cannot_build_mines_without_shipyard(self, minimal_planet):
+        """PROJ-FMS-A Phase 1: planet without shipyard cannot build mines."""
+        assert minimal_planet.can_build_type("mine") is False
+
     def test_planet_can_build_satellites_with_shipyard(self, planet_with_shipyard):
         """Planet with space shipyard can build satellites."""
         assert planet_with_shipyard.can_build_type("satellite") is True

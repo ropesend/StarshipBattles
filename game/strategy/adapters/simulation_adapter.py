@@ -306,6 +306,45 @@ class SimulationBattleResolver(IBattleResolver):
             SimulationException,
             ValidationException,
         )
+        # PROJ-FMS-B audit Fix 2: when the spec compiler tagged the
+        # spec with mine_groups, build the ``pre_tick_loop_callback``
+        # that attaches per-mine_group :class:`TacticalMineResolver`
+        # instances to the constructed :class:`BattleEngine` before
+        # the first tick. Without this hook mines list as Fleets at the
+        # hex but never participate in tactical combat.
+        mine_groups = getattr(spec, "_mine_groups", ()) or ()
+        owner_to_team_id = getattr(spec, "_owner_to_team_id", {}) or {}
+        mine_resolver_setup = None
+        if mine_groups:
+            from game.strategy.combat.spec_compiler import (
+                build_mine_resolver_setup,
+            )
+            battle_boundary = self._boundary_to_box(spec.boundary)
+            mine_resolver_setup = build_mine_resolver_setup(
+                mine_groups,
+                owner_to_team_id,
+                battle_boundary=battle_boundary,
+            )
+
+        # PROJ-FMS-C Phase 3: build the reboard pre-tick callback. It
+        # installs a ReboardTracker on the engine and parks the engine
+        # on the spec's ``_engine_ref`` side-channel so the post-battle
+        # hook can call ``apply_reboard``.
+        reboard_setup = None
+        combat_fleets = getattr(spec, "_combat_fleets", ()) or ()
+        engine_ref = getattr(spec, "_engine_ref", None)
+        if combat_fleets:
+            from game.strategy.combat.spec_compiler import (
+                build_fighter_reboard_setup,
+            )
+            reboard_setup = build_fighter_reboard_setup(
+                combat_fleets, engine_ref=engine_ref,
+            )
+
+        pre_tick_loop_callback = self._compose_setup_callbacks(
+            mine_resolver_setup, reboard_setup,
+        )
+
         try:
             outcome = run_battle(
                 spec,
@@ -313,6 +352,7 @@ class SimulationBattleResolver(IBattleResolver):
                 registry_provider=registries,
                 capture_context=capture_context,
                 event_bus=self._event_bus,
+                pre_tick_loop_callback=pre_tick_loop_callback,
             )
         except (SimulationException, ValidationException) as e:
             fleet_ids = [getattr(f, "id", None) for f in fleet_list]
@@ -366,6 +406,56 @@ class SimulationBattleResolver(IBattleResolver):
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
+
+    @staticmethod
+    def _compose_setup_callbacks(*callbacks: Any) -> Optional[Any]:
+        """Compose multiple pre_tick_loop_callbacks into a single callable.
+
+        PROJ-FMS-C Phase 3: ``run_battle`` accepts exactly one
+        ``pre_tick_loop_callback``. Mine resolver setup AND fighter
+        reboard setup both need to install state on the engine before
+        the first tick, so we compose them sequentially. ``None``
+        entries are filtered out so callers can pass unconditionally.
+        """
+        non_null = [cb for cb in callbacks if cb is not None]
+        if not non_null:
+            return None
+        if len(non_null) == 1:
+            return non_null[0]
+
+        def _composed(engine: Any) -> None:
+            for cb in non_null:
+                cb(engine)
+
+        return _composed
+
+    @staticmethod
+    def _boundary_to_box(
+        boundary: Any,
+    ) -> Optional[Tuple[float, float, float, float]]:
+        """PROJ-FMS-B audit Fix 2: derive an axis-aligned scatter box.
+
+        The tactical mine scatter takes a ``(xmin, ymin, xmax, ymax)``
+        rect to place mines uniformly inside. ``UnboundedRegion`` and
+        non-rectangular boundaries fall back to ``None`` so the
+        scatter pulls from the mine_group's stored ``mine_positions``
+        (the strategic-layer fallback-circle layout). Circles are
+        approximated by their bounding square — close enough for
+        scatter, and keeps the resolver from rejecting non-rect
+        boundaries entirely.
+        """
+        if boundary is None:
+            return None
+        # CircleBoundary exposes ``radius`` centered at (0, 0).
+        radius = getattr(boundary, "radius", None)
+        if radius is not None:
+            r = float(radius)
+            return (-r, -r, r, r)
+        # Generic ``bounds`` attribute, when present, is preferred.
+        bounds = getattr(boundary, "bounds", None)
+        if bounds is not None and len(bounds) == 4:
+            return tuple(float(v) for v in bounds)  # type: ignore[return-value]
+        return None
 
     def _resolve_seed(self, seed: Optional[int]) -> int:
         if seed is not None:

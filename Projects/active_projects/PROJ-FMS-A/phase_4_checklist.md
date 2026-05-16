@@ -10,43 +10,43 @@
 ## Tasks
 
 ### 1. Fleet `group_kind`
-- [ ] Add `group_kind: str = "fleet"` field to `Fleet.__init__` at [`fleet.py:39-93`](../../../game/strategy/data/fleet.py#L39). Valid values: `"fleet"`, `"fighter_group"`, `"satellite_group"`, `"mine_group"`.
-- [ ] Add `can_strategic_move` property: returns `self.group_kind == "fleet"`.
-- [ ] **Reject more than just Move/Path** — non-fleet `group_kind`s should reject the full set of fleet-management commands. Add validation rejection in the relevant command handlers in [`game/strategy/engine/handlers/`](../../../game/strategy/engine/handlers/):
+- [x] Add `group_kind: str = "fleet"` field to `Fleet.__init__` at [`fleet.py:39-93`](../../../game/strategy/data/fleet.py#L39). Valid values: `"fleet"`, `"fighter_group"`, `"satellite_group"`, `"mine_group"`.
+- [x] Add `can_strategic_move` property: returns `self.group_kind == "fleet"`.
+- [x] **Reject more than just Move/Path** — non-fleet `group_kind`s should reject the full set of fleet-management commands. Add validation rejection in the relevant command handlers in [`game/strategy/engine/handlers/`](../../../game/strategy/engine/handlers/):
   - [`movement.py:87-225`](../../../game/strategy/engine/handlers/movement.py#L87) — `IssueMoveCommand`, `IssueInterceptCommand`, `IssueJoinFleetCommand`, `IssueWarpCommand`
   - [`build.py:26-53`](../../../game/strategy/engine/handlers/build.py#L26) — `IssueBuildOrderCommand` (non-fleet groups cannot have build queues)
   - Any other commands assuming "fleet has crew / movement / build". The validation should check `fleet.can_strategic_move` and the implicit "is a real fleet" semantics; return a clear `ValidationResult` failure.
-- [ ] Serialize / deserialize `group_kind` through fleet save/load (Fleet's existing serialization delegate).
-- [ ] DTO: [`fleet_dto.py`](../../../game/strategy/facade/dto/fleet_dto.py) — surface `group_kind` so UI can render deployed groups differently from fleets.
-- [ ] Make sure [`FleetCapabilityCalculator`](../../../game/strategy/data/fleet_capability_calculator.py) and related delegates don't crash on non-fleet kinds (some capabilities won't apply — e.g., mine groups have no warp drive). Defensive: capabilities that conceptually don't apply (warp, build, recovery, etc.) return False / empty for non-fleet kinds without raising.
+- [x] Serialize / deserialize `group_kind` through fleet save/load (Fleet's existing serialization delegate).
+- [x] DTO: [`fleet_dto.py`](../../../game/strategy/facade/dto/fleet_dto.py) — surface `group_kind` so UI can render deployed groups differently from fleets.
+- [x] Make sure [`FleetCapabilityCalculator`](../../../game/strategy/data/fleet_capability_calculator.py) and related delegates don't crash on non-fleet kinds (some capabilities won't apply — e.g., mine groups have no warp drive). Defensive: capabilities that conceptually don't apply (warp, build, recovery, etc.) return False / empty for non-fleet kinds without raising.
 
 ### 2. signature_bonus wiring
-- [ ] Read the vehicle class data (loaded via [`vehicleclasses.json`](../../../data/vehicleclasses.json)) and expose `signature_bonus` on the `Ship` entity (probably via the existing vehicle-class data flow into `Ship.__init__`).
-- [ ] Extend the defense-score aggregation at [`ship_stats.py:424-444`](../../../game/simulation/entities/ship_stats.py#L424). Current aggregation: `total_defense_score = size_score + maneuver_score + ecm_score`. New: `total_defense_score = size_score + maneuver_score + ecm_score + signature_bonus`. Default `signature_bonus = 0` for non-mine classes — no behavior change for existing ships.
-- [ ] Verify mine designs see a meaningful boost (~+3 from class bonus on top of the ~+4 from tiny `size_score`).
+- [x] Read the vehicle class data (loaded via [`vehicleclasses.json`](../../../data/vehicleclasses.json)) and expose `signature_bonus` on the `Ship` entity (probably via the existing vehicle-class data flow into `Ship.__init__`).
+- [x] Extend the defense-score aggregation at [`ship_stats.py:424-444`](../../../game/simulation/entities/ship_stats.py#L424). Current aggregation: `total_defense_score = size_score + maneuver_score + ecm_score`. New: `total_defense_score = size_score + maneuver_score + ecm_score + signature_bonus`. Default `signature_bonus = 0` for non-mine classes — no behavior change for existing ships.
+- [x] Verify mine designs see a meaningful boost (~+3 from class bonus on top of the ~+4 from tiny `size_score`).
 
 ### 3. Production output normalisation
-- [ ] Audit [`production_spawner.py:107-117`](../../../game/strategy/engine/production_spawner.py#L107) for the current split: colony-built fighters → staging, satellites → active ship, fleet-built fighters → fleet. Document the current behavior in [`decisions.md`](decisions.md) before changing.
+- [x] Audit [`production_spawner.py:107-117`](../../../game/strategy/engine/production_spawner.py#L107) for the current split: colony-built fighters → staging, satellites → active ship, fleet-built fighters → fleet. Document the current behavior in [`decisions.md`](decisions.md) before changing.
 
 **Note on fleet production model**: fleet production is **one shared fleet queue** whose rate scales with yard count ([`production_engine.py:235-240`](../../../game/strategy/engine/production_engine.py#L235), [`build_queue_source.py:362-383`](../../../game/strategy/data/build_queue_source.py#L362)). There is no per-ship producer concept today. The "producing ship's bay" phrasing must therefore be replaced with a deterministic fleet-level bay-selection rule.
 
-- [ ] Replace with unified rule:
+- [x] Replace with unified rule:
   - **Planet-built** fighter/satellite/mine → goes into the producing planet's `Planet.staging_yard` as a `CarriedVehicle`.
   - **Fleet-yard-built** fighter/satellite/mine → fleet-level bay-selection rule:
     1. Try the flagship's `VehicleBay` first (if it has capacity and accepts the vehicle type).
     2. Otherwise, walk `fleet.ships` in canonical order; deposit into the first ship whose `VehicleBay` has capacity and accepts the vehicle type.
     3. If no ship in the fleet has compatible bay capacity, fail the production order with a clear "no bay capacity" error and surface a UI event.
   - Document the chosen rule and rationale in [`decisions.md`](decisions.md).
-- [ ] Capital ships and other large vehicles continue to spawn as full `ShipInstance` entries — the rule only applies to small craft (fighters/satellites/mines).
-- [ ] Update any UI surfacing of production output (build-queue completion log, fleet info DTO).
+- [x] Capital ships and other large vehicles continue to spawn as full `ShipInstance` entries — the rule only applies to small craft (fighters/satellites/mines).
+- [x] Update any UI surfacing of production output (build-queue completion log, fleet info DTO).
 
 ### Tests
-- [ ] Fleet with `group_kind="fighter_group"` rejects a Move order at validation.
-- [ ] Fleet with `group_kind="fleet"` accepts Move (no regression).
-- [ ] Serialize-deserialize a non-fleet group → `group_kind` survives.
-- [ ] Ship with mine design has `total_defense_score` ≈ original + signature_bonus.
-- [ ] Build a fighter on a planet → ends up in `staging_yard`. Build on a ship yard → ends up in `VehicleBay`.
-- [ ] Build a fighter with no available bay → production order fails cleanly.
+- [x] Fleet with `group_kind="fighter_group"` rejects a Move order at validation.
+- [x] Fleet with `group_kind="fleet"` accepts Move (no regression).
+- [x] Serialize-deserialize a non-fleet group → `group_kind` survives.
+- [x] Ship with mine design has `total_defense_score` ≈ original + signature_bonus.
+- [x] Build a fighter on a planet → ends up in `staging_yard`. Build on a ship yard → ends up in `VehicleBay`.
+- [x] Build a fighter with no available bay → production order fails cleanly.
 
 ## Verification
 - `python Tools/test_sharded/test_sharded.py`

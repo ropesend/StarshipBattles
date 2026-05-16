@@ -6,7 +6,7 @@ from game.simulation.components.abilities import (
     ShieldRegeneration, CrewCapacity, LifeSupportCapacity, CrewRequired,
     ResourceStorage, ResourceGeneration, ResourceConsumption,
     ToHitAttackModifier, ToHitDefenseModifier, EmissiveArmor,
-    WeaponAbility, CommandAndControl, VehicleLaunchAbility
+    WeaponAbility, CommandAndControl,
 )
 
 
@@ -103,6 +103,6 @@ class TestAbilityPrimaryValueInterface:
         assert ab.get_primary_value() == 1.0
 
     # --- Hangar ---
-    def test_vehicle_launch_returns_capacity(self):
-        ab = VehicleLaunchAbility(self.mock_comp, {'capacity': 4, 'cycle_time': 5.0})
-        assert ab.get_primary_value() == 4.0
+    # PROJ-FMS-C audit Fix 1: ``test_vehicle_launch_returns_capacity`` removed.
+    # The legacy ``VehicleLaunchAbility`` was deleted in favor of
+    # ``TacticalFighterLaunchAbility`` (PROJ-FMS-A Phase 5).

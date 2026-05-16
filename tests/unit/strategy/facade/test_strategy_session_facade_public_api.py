@@ -57,6 +57,11 @@ PUBLIC_METHODS: frozenset[str] = frozenset({
     "dispatch_queue_close_warp_point_mission",
     "dispatch_queue_create_dyson_sphere_mission",
     "dispatch_issue_warp",
+    "dispatch_issue_lay_mines",  # PROJ-FMS-B Phase 1
+    "dispatch_issue_launch_fighters",  # PROJ-FMS-C Phase 1
+    "dispatch_issue_recover_fighters",  # PROJ-FMS-C Phase 3
+    "dispatch_issue_launch_satellites",  # PROJ-FMS-D Phase 1
+    "dispatch_issue_recover_satellites",  # PROJ-FMS-D Phase 2
     "dispatch_issue_build_order",
     "dispatch_remove_build_order",
     "dispatch_split_fleet",

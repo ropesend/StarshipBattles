@@ -815,13 +815,64 @@ class TestTickProcessingOrder:
 # =============================================================================
 
 class TestFighterLaunchProcessing:
-    """Tests for LAUNCH attack type (fighter spawning) during tick."""
+    """Tests for LAUNCH attack type (design-instance fighter spawning) during tick.
+
+    PROJ-FMS-C audit Fix 1: migrated from the legacy ``fighter_class``
+    class-string payload to the design-instance ``carried_vehicle``
+    payload. The spawn path is now
+    :func:`game.simulation.systems.attack_processor._spawn_from_carried_vehicle`,
+    which goes through :meth:`ShipSerializer.from_dict` rather than the
+    old ``Ship(...)`` constructor.
+    """
+
+    @staticmethod
+    def _make_mock_fighter():
+        from game.strategy.data.carried_vehicle import CarriedVehicle  # local import keeps top-of-file clean
+        mock_fighter = Mock()
+        mock_fighter.team_id = 0
+        mock_fighter.velocity = pygame.math.Vector2(0, 0)
+        mock_fighter.angle = 0
+        mock_fighter.is_alive = True
+        mock_fighter.is_derelict = False
+        mock_fighter.position = pygame.math.Vector2(0, 0)
+        mock_fighter.just_fired_projectiles = []
+        mock_fighter.update = Mock()
+        mock_fighter.combat_engine = Mock()
+        mock_fighter.get_all_components = Mock(return_value=[])
+        mock_fighter.recalculate_stats = Mock()
+        mock_fighter.update_derelict_status = Mock()
+        mock_fighter.fleet_attack_bonus = 0.0
+        mock_fighter.fleet_defense_bonus = 0.0
+        mock_fighter.ram_target = None
+        mock_fighter.name = ""
+        mock_fighter.components = {}
+        mock_fighter.current_hp = 80
+        return mock_fighter, CarriedVehicle
+
+    def _build_launch_attack(self, source_ship, CarriedVehicle):
+        cv = CarriedVehicle(
+            design_id="test_fighter",
+            design_data={
+                "name": "Test Fighter",
+                "vehicle_type": "Fighter",
+                "layers": {"CORE": [{"id": "hull_fighter_small"}]},
+            },
+            vehicle_type="fighter",
+            mass=20.0,
+            current_hp=80,
+        )
+        return {
+            'type': AttackType.LAUNCH,
+            'source': source_ship,
+            'hangar': Mock(),
+            'carried_vehicle': cv,
+            'origin': pygame.math.Vector2(0, 0),
+        }
 
     def test_launch_attack_spawns_fighter_ship(self, battle_engine_with_ships):
         """LAUNCH attack should create a new fighter ship."""
         engine = battle_engine_with_ships
 
-        # Set up factory for fighter creation
         mock_factory = Mock()
         mock_ai = Mock()
         mock_ai.update = Mock()
@@ -835,43 +886,23 @@ class TestFighterLaunchProcessing:
         source_ship.registries = Mock()
         source_ship.velocity = pygame.math.Vector2(0, 0)
         source_ship.angle = 0
+        source_ship.ram_target = None
+        engine.ships[1].ram_target = None
 
-        # Create LAUNCH attack dict
-        launch_attack = {
-            'type': AttackType.LAUNCH,
-            'source': source_ship,
-            'hangar': Mock(),
-            'fighter_class': 'Fighter (Small)',
-            'origin': pygame.math.Vector2(100, 100)
-        }
-
-        source_ship.just_fired_projectiles = [launch_attack]
+        mock_fighter, CarriedVehicle = self._make_mock_fighter()
+        source_ship.just_fired_projectiles = [
+            self._build_launch_attack(source_ship, CarriedVehicle)
+        ]
         initial_ship_count = len(engine.ships)
 
-        # Mock Ship class to avoid full initialization
-        with patch('game.simulation.systems.attack_processor.Ship') as MockShip:
-            mock_fighter = Mock()
-            mock_fighter.team_id = source_ship.team_id
-            mock_fighter.velocity = pygame.math.Vector2(0, 0)
-            mock_fighter.angle = 0
-            mock_fighter.is_alive = True
-            mock_fighter.position = pygame.math.Vector2(100, 100)
-            mock_fighter.just_fired_projectiles = []
-            mock_fighter.update = Mock()
-            # PROJ-243: add_ship_mid_battle now runs _initialize_ship + aura registration
-            mock_fighter.combat_engine = Mock()
-            mock_fighter.get_all_components = Mock(return_value=[])
-            mock_fighter.recalculate_stats = Mock()
-            mock_fighter.update_derelict_status = Mock()
-            mock_fighter.fleet_attack_bonus = 0.0
-            mock_fighter.fleet_defense_bonus = 0.0
-            MockShip.return_value = mock_fighter
-
+        with patch(
+            'game.simulation.entities.ship_serialization.ShipSerializer.from_dict',
+            return_value=mock_fighter,
+        ):
             engine.update()
 
-            # Fighter should be added to ships
-            assert mock_fighter in engine.ships
-            assert len(engine.ships) == initial_ship_count + 1
+        assert mock_fighter in engine.ships
+        assert len(engine.ships) == initial_ship_count + 1
 
     def test_launch_attack_creates_ai_controller_for_fighter(
         self, battle_engine_with_ships
@@ -892,40 +923,22 @@ class TestFighterLaunchProcessing:
         source_ship.registries = Mock()
         source_ship.velocity = pygame.math.Vector2(0, 0)
         source_ship.angle = 0
+        source_ship.ram_target = None
+        engine.ships[1].ram_target = None
 
-        launch_attack = {
-            'type': AttackType.LAUNCH,
-            'source': source_ship,
-            'hangar': Mock(),
-            'origin': pygame.math.Vector2(0, 0)
-        }
+        mock_fighter, CarriedVehicle = self._make_mock_fighter()
+        source_ship.just_fired_projectiles = [
+            self._build_launch_attack(source_ship, CarriedVehicle)
+        ]
 
-        source_ship.just_fired_projectiles = [launch_attack]
-
-        with patch('game.simulation.systems.attack_processor.Ship') as MockShip:
-            mock_fighter = Mock()
-            mock_fighter.team_id = source_ship.team_id
-            mock_fighter.velocity = pygame.math.Vector2(0, 0)
-            mock_fighter.angle = 0
-            mock_fighter.is_alive = True
-            mock_fighter.position = pygame.math.Vector2(0, 0)
-            mock_fighter.just_fired_projectiles = []
-            mock_fighter.update = Mock()
-            # PROJ-243: add_ship_mid_battle now runs _initialize_ship + aura registration
-            mock_fighter.combat_engine = Mock()
-            mock_fighter.get_all_components = Mock(return_value=[])
-            mock_fighter.recalculate_stats = Mock()
-            mock_fighter.update_derelict_status = Mock()
-            mock_fighter.fleet_attack_bonus = 0.0
-            mock_fighter.fleet_defense_bonus = 0.0
-            MockShip.return_value = mock_fighter
-
+        with patch(
+            'game.simulation.entities.ship_serialization.ShipSerializer.from_dict',
+            return_value=mock_fighter,
+        ):
             engine.update()
 
-            # Factory should be called to create AI for fighter
-            mock_factory.create_for_ship.assert_called_once()
-            # AI should be added to controllers
-            assert mock_ai in engine.ai_controllers
+        mock_factory.create_for_ship.assert_called_once()
+        assert mock_ai in engine.ai_controllers
 
     def test_launch_attack_fighter_inherits_team_id(self, battle_engine_with_ships):
         """Spawned fighter should inherit team_id from source ship."""
@@ -945,40 +958,24 @@ class TestFighterLaunchProcessing:
         source_ship.registries = Mock()
         source_ship.velocity = pygame.math.Vector2(0, 0)
         source_ship.angle = 0
+        source_ship.ram_target = None
+        engine.ships[1].ram_target = None
 
-        launch_attack = {
-            'type': AttackType.LAUNCH,
-            'source': source_ship,
-            'hangar': Mock(),
-            'origin': pygame.math.Vector2(0, 0)
-        }
+        mock_fighter, CarriedVehicle = self._make_mock_fighter()
+        source_ship.just_fired_projectiles = [
+            self._build_launch_attack(source_ship, CarriedVehicle)
+        ]
 
-        source_ship.just_fired_projectiles = [launch_attack]
-
-        with patch('game.simulation.systems.attack_processor.Ship') as MockShip:
-            mock_fighter = Mock()
-            mock_fighter.team_id = source_ship.team_id  # Must match for enemy_team calc
-            mock_fighter.velocity = pygame.math.Vector2(0, 0)
-            mock_fighter.angle = 0
-            mock_fighter.is_alive = True
-            mock_fighter.position = pygame.math.Vector2(0, 0)
-            mock_fighter.just_fired_projectiles = []
-            mock_fighter.update = Mock()
-            # PROJ-243: add_ship_mid_battle now runs _initialize_ship + aura registration
-            mock_fighter.combat_engine = Mock()
-            mock_fighter.get_all_components = Mock(return_value=[])
-            mock_fighter.recalculate_stats = Mock()
-            mock_fighter.update_derelict_status = Mock()
-            mock_fighter.fleet_attack_bonus = 0.0
-            mock_fighter.fleet_defense_bonus = 0.0
-            MockShip.return_value = mock_fighter
-
+        with patch(
+            'game.simulation.entities.ship_serialization.ShipSerializer.from_dict',
+            return_value=mock_fighter,
+        ):
             engine.update()
 
-            # Verify Ship was called with correct team_id
-            MockShip.assert_called_once()
-            call_kwargs = MockShip.call_args[1]
-            assert call_kwargs['team_id'] == source_ship.team_id
+        # ``_spawn_from_carried_vehicle`` sets team_id directly from the
+        # source ship onto the spawned fighter (overwriting whatever
+        # ShipSerializer.from_dict produced).
+        assert mock_fighter.team_id == source_ship.team_id
 
     def test_launch_attack_without_ai_factory_raises_error(
         self, battle_engine_with_ships
@@ -993,17 +990,18 @@ class TestFighterLaunchProcessing:
         source_ship.registries = Mock()
         source_ship.velocity = pygame.math.Vector2(0, 0)
         source_ship.angle = 0
+        source_ship.ram_target = None
+        engine.ships[1].ram_target = None
 
-        launch_attack = {
-            'type': AttackType.LAUNCH,
-            'source': source_ship,
-            'hangar': Mock(),
-            'origin': pygame.math.Vector2(0, 0)
-        }
+        mock_fighter, CarriedVehicle = self._make_mock_fighter()
+        source_ship.just_fired_projectiles = [
+            self._build_launch_attack(source_ship, CarriedVehicle)
+        ]
 
-        source_ship.just_fired_projectiles = [launch_attack]
-
-        with patch('game.simulation.systems.attack_processor.Ship'):
+        with patch(
+            'game.simulation.entities.ship_serialization.ShipSerializer.from_dict',
+            return_value=mock_fighter,
+        ):
             with pytest.raises(ValidationException):
                 engine.update()
 
@@ -1023,40 +1021,23 @@ class TestFighterLaunchProcessing:
         source_ship.theme_id = "test_theme"
         source_ship.registries = Mock()
         source_ship.velocity = pygame.math.Vector2(10, 5)
-        source_ship.angle = 0  # Facing right
+        source_ship.angle = 0
+        source_ship.ram_target = None
+        engine.ships[1].ram_target = None
 
-        launch_attack = {
-            'type': AttackType.LAUNCH,
-            'source': source_ship,
-            'hangar': Mock(),
-            'origin': pygame.math.Vector2(0, 0)
-        }
+        mock_fighter, CarriedVehicle = self._make_mock_fighter()
+        source_ship.just_fired_projectiles = [
+            self._build_launch_attack(source_ship, CarriedVehicle)
+        ]
 
-        source_ship.just_fired_projectiles = [launch_attack]
-
-        with patch('game.simulation.systems.attack_processor.Ship') as MockShip:
-            mock_fighter = Mock()
-            mock_fighter.team_id = 0
-            mock_fighter.velocity = pygame.math.Vector2(0, 0)
-            mock_fighter.angle = 0
-            mock_fighter.is_alive = True
-            mock_fighter.position = pygame.math.Vector2(0, 0)
-            mock_fighter.just_fired_projectiles = []
-            mock_fighter.update = Mock()
-            # PROJ-243: add_ship_mid_battle now runs _initialize_ship + aura registration
-            mock_fighter.combat_engine = Mock()
-            mock_fighter.get_all_components = Mock(return_value=[])
-            mock_fighter.recalculate_stats = Mock()
-            mock_fighter.update_derelict_status = Mock()
-            mock_fighter.fleet_attack_bonus = 0.0
-            mock_fighter.fleet_defense_bonus = 0.0
-            MockShip.return_value = mock_fighter
-
+        with patch(
+            'game.simulation.entities.ship_serialization.ShipSerializer.from_dict',
+            return_value=mock_fighter,
+        ):
             engine.update()
 
-            # Fighter velocity should be set (inherits + boost)
-            # Check that velocity was modified (not zero)
-            assert mock_fighter.velocity != pygame.math.Vector2(0, 0)
+        # Fighter velocity should be set (inherits + boost).
+        assert mock_fighter.velocity != pygame.math.Vector2(0, 0)
 
 
 # =============================================================================
@@ -1181,39 +1162,26 @@ class TestDictBasedAttackProcessing:
         source_ship.registries = Mock()
         source_ship.velocity = pygame.math.Vector2(0, 0)
         source_ship.angle = 0
+        source_ship.ram_target = None
+        engine.ships[1].ram_target = None
 
-        # LAUNCH is always dict-based
-        launch_dict = {
-            'type': AttackType.LAUNCH,
-            'source': source_ship,
-            'hangar': Mock(),
-            'origin': pygame.math.Vector2(0, 0)
-        }
+        mock_fighter, CarriedVehicle = (
+            TestFighterLaunchProcessing._make_mock_fighter()
+        )
+        launch_dict = TestFighterLaunchProcessing._build_launch_attack(
+            self, source_ship, CarriedVehicle
+        )
 
         source_ship.just_fired_projectiles = [launch_dict]
         initial_count = len(engine.ships)
 
-        with patch('game.simulation.systems.attack_processor.Ship') as MockShip:
-            mock_fighter = Mock()
-            mock_fighter.team_id = 0
-            mock_fighter.velocity = pygame.math.Vector2(0, 0)
-            mock_fighter.angle = 0
-            mock_fighter.is_alive = True
-            mock_fighter.position = pygame.math.Vector2(0, 0)
-            mock_fighter.just_fired_projectiles = []
-            mock_fighter.update = Mock()
-            # PROJ-243: add_ship_mid_battle now runs _initialize_ship + aura registration
-            mock_fighter.combat_engine = Mock()
-            mock_fighter.get_all_components = Mock(return_value=[])
-            mock_fighter.recalculate_stats = Mock()
-            mock_fighter.update_derelict_status = Mock()
-            mock_fighter.fleet_attack_bonus = 0.0
-            mock_fighter.fleet_defense_bonus = 0.0
-            MockShip.return_value = mock_fighter
-
+        with patch(
+            'game.simulation.entities.ship_serialization.ShipSerializer.from_dict',
+            return_value=mock_fighter,
+        ):
             engine.update()
 
-            assert len(engine.ships) == initial_count + 1
+        assert len(engine.ships) == initial_count + 1
 
 
 # =============================================================================
@@ -1280,34 +1248,22 @@ class TestLoggerIntegration:
         source_ship.registries = Mock()
         source_ship.velocity = pygame.math.Vector2(0, 0)
         source_ship.angle = 0
+        source_ship.ram_target = None
+        engine.ships[1].ram_target = None
 
-        launch_attack = {
-            'type': AttackType.LAUNCH,
-            'source': source_ship,
-            'hangar': Mock(),
-            'origin': pygame.math.Vector2(0, 0)
-        }
+        mock_fighter, CarriedVehicle = (
+            TestFighterLaunchProcessing._make_mock_fighter()
+        )
+        source_ship.just_fired_projectiles = [
+            TestFighterLaunchProcessing._build_launch_attack(
+                self, source_ship, CarriedVehicle
+            )
+        ]
 
-        source_ship.just_fired_projectiles = [launch_attack]
-
-        with patch('game.simulation.systems.attack_processor.Ship') as MockShip:
-            mock_fighter = Mock()
-            mock_fighter.team_id = 0
-            mock_fighter.velocity = pygame.math.Vector2(0, 0)
-            mock_fighter.angle = 0
-            mock_fighter.is_alive = True
-            mock_fighter.position = pygame.math.Vector2(0, 0)
-            mock_fighter.just_fired_projectiles = []
-            mock_fighter.update = Mock()
-            # PROJ-243: add_ship_mid_battle now runs _initialize_ship + aura registration
-            mock_fighter.combat_engine = Mock()
-            mock_fighter.get_all_components = Mock(return_value=[])
-            mock_fighter.recalculate_stats = Mock()
-            mock_fighter.update_derelict_status = Mock()
-            mock_fighter.fleet_attack_bonus = 0.0
-            mock_fighter.fleet_defense_bonus = 0.0
-            MockShip.return_value = mock_fighter
-
+        with patch(
+            'game.simulation.entities.ship_serialization.ShipSerializer.from_dict',
+            return_value=mock_fighter,
+        ):
             engine.update()
 
         # Verify log was called with LAUNCH message

@@ -39,20 +39,12 @@ class TestShieldRegenerationBindings:
         assert binding.operation == 'multiply'
 
 
-class TestVehicleLaunchBindings:
-    """Tests for VehicleLaunchAbility STAT_BINDINGS."""
-
-    def test_vehicle_launch_has_capacity_binding(self):
-        """VehicleLaunchAbility should have CAPACITY_MULT binding."""
-        from game.simulation.components.abilities.markers import VehicleLaunchAbility
-
-        bindings = [b for b in VehicleLaunchAbility.STAT_BINDINGS
-                   if b.stat_key == StatKey.CAPACITY_MULT]
-        assert len(bindings) == 1
-
-        binding = bindings[0]
-        assert binding.attribute_name == 'capacity'
-        assert binding.operation == 'multiply'
+# PROJ-FMS-C audit Fix 1: ``TestVehicleLaunchBindings`` removed — the
+# ``VehicleLaunchAbility`` class itself was deleted in favor of the
+# PROJ-FMS-A Phase 5 ``TacticalFighterLaunchAbility`` /
+# ``StrategicFighterLaunchAbility`` pair. Those abilities are additive
+# (capacity_per_action / cycle_time) and carry no ``CAPACITY_MULT``
+# binding — there is nothing for this test to pin.
 
 
 class TestMarkerAbilitiesHaveEmptyBindings:

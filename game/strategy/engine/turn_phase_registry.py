@@ -151,22 +151,30 @@ def _capture_move_queue(_engine, ctx: TickContext, result) -> None:
     }
 
 
-def _derive_moved_fleet_ids(_engine, ctx: TickContext, _result) -> None:
+def _derive_moved_fleet_ids(engine, ctx: TickContext, _result) -> None:
     """Post-hook on movement_apply: PROJ-320 location-diff derivation.
 
     PROJ-412 Phase 5: also flips ``_booster_dirty`` on every empire whose
     fleet actually moved this tick. Fleets can carry ``ResourceHarvestBooster``
     components, so a move invalidates the harvesting engine's per-turn
     booster cache for any empire that has a moved fleet.
+
+    PROJ-FMS-B Phase 1: after movement_apply and before combat, run the
+    minefield resolver on every fleet that entered a new hex. This
+    enforces "fleet destroyed by mines never reaches conflict
+    resolution" by pruning destroyed ships from the affected fleet's
+    roster (and the fleet from its empire's fleet list when empty).
     """
     pre = ctx.pre_movement_locations or {}
     moved_owner_ids: set = set()
     moved_ids: set = set()
+    moved_fleets: list = []
     for emp in ctx.empires:
         emp_id = getattr(emp, 'id', None)
         for f in emp.fleets:
             if pre.get(f.id) != f.location:
                 moved_ids.add(f.id)
+                moved_fleets.append((emp, f))
                 if emp_id is not None:
                     moved_owner_ids.add(emp_id)
     ctx.moved_fleet_ids = moved_ids
@@ -174,6 +182,59 @@ def _derive_moved_fleet_ids(_engine, ctx: TickContext, _result) -> None:
         for emp in ctx.empires:
             if getattr(emp, 'id', None) in moved_owner_ids:
                 emp._booster_dirty = True
+
+    # PROJ-FMS-B Phase 1: minefield resolution on moved fleets.
+    # Defensive: only invoke when fleet objects expose ``ships`` (real
+    # ``Fleet`` instances). SimpleNamespace test doubles without
+    # ``ships`` short-circuit cleanly — the hook must never break
+    # existing turn-phase descriptor tests.
+    runnable_movers = [
+        (emp, f) for (emp, f) in moved_fleets
+        if hasattr(f, "ships") and getattr(f, "ships", None)
+        and getattr(f, "group_kind", "fleet") == "fleet"
+    ]
+    if runnable_movers:
+        # Local import keeps the strategy ``turn_phase_registry`` module
+        # free of strategy.engine cycles at import time.
+        from game.strategy.engine.minefield_resolver import (
+            MinefieldResolver,
+        )
+
+        resolver = MinefieldResolver()
+        # PROJ-FMS-B audit Fix 1: thread the engine's GameRegistries through
+        # so :func:`MinefieldResolver._apply_strategic_damage` routes mine
+        # damage through the full :class:`DamageCalculator.apply_damage`
+        # pipeline (shields → emissive armor → SRA → hull). Pre-fix this
+        # kwarg was omitted and every live strategic mine hit silently
+        # took the direct-HP fallback, bypassing shields. Tests that pass
+        # ``engine=None`` (descriptor-shape tests) continue to work because
+        # ``getattr(None, '_registries', None)`` is ``None`` and the
+        # resolver gracefully falls back.
+        registries = getattr(engine, "_registries", None)
+        for owning_empire, fleet in runnable_movers:
+            try:
+                result = resolver.resolve_minefield_entry(
+                    galaxy=ctx.galaxy,
+                    empires=ctx.empires,
+                    fleet=fleet,
+                    registries=registries,
+                )
+            except Exception:  # Intentional broad catch: minefield resolution must never break the turn loop; log and continue.
+                import logging as _logging
+
+                _logging.getLogger(__name__).exception(
+                    "MinefieldResolver raised during turn tick"
+                )
+                continue
+            # Prune destroyed ships from the entering fleet so combat
+            # resolution downstream sees the survivors only.
+            if result.destroyed_ship_ids:
+                fleet.ships = [
+                    s for s in fleet.ships
+                    if s.instance_id not in result.destroyed_ship_ids
+                ]
+                if not fleet.ships and fleet in owning_empire.fleets:
+                    owning_empire.fleets.remove(fleet)
 
 
 def _resolve_planet_modifier_effects(engine):

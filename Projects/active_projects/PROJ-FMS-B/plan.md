@@ -9,18 +9,21 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Strategic mine layer + minefield_resolver + warhead trigger math | Not started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Warhead detonation + Laserhead beam behavior with threshold | Not started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Tactical mine resolver + sector scatter | Not started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Sensitivity UI + selective self-destruct + ramming | Not started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Integration tests + E2E gameplay smoke | Not started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 1. Strategic mine layer + minefield_resolver + warhead trigger math | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Warhead detonation + Laserhead beam behavior with threshold | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Tactical mine resolver + sector scatter | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Sensitivity UI + selective self-destruct + ramming | Complete (service layer) | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Integration tests + E2E gameplay smoke | Complete (automated) | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-15
-**Active Phase:** Phase 1 (blocked on PROJ-FMS-A)
-**Last Action:** Project scaffolded
-**Next Action:** Wait for PROJ-FMS-A complete, then begin Phase 1
-**Blockers:** PROJ-FMS-A must be complete (foundation substrate)
+**Last Updated:** 2026-05-16
+**Active Phase:** All 5 phases complete
+**Last Action:** Phase 5 integration tests + statistical balance + docs landed
+**Next Action:** Codex consult / audit pass
+**Blockers:** None
+**Known follow-ups:** Strategy-side battle-spec compiler does not yet wire
+`BattleEngine.mine_resolver` automatically; the resolver + service layers
+are fully tested in isolation. See `decisions.md` "Known limitations".
 
 ## Overview
 End-to-end mines: lay them strategically, hit fleets entering the hex, deal damage; tactical participation; ramming for fighters/ships with warheads; selective self-destruct; mine field sensitivity and laserhead threshold UI.

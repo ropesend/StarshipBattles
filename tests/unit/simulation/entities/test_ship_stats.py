@@ -5,15 +5,11 @@ from unittest.mock import MagicMock
 from game.simulation.entities.ship_stats import ShipStatsCalculator
 
 
-# PROJ-367 Phase 1: VehicleLaunch / VehicleStorage are now typed abilities.
-# The fixture mirrors the typed-ability access path used by
-# `launch.aggregate_hangar` (no more raw `comp.abilities` dict reads).
-_VL_ABILITY = SimpleNamespace(
-    capacity=0,
-    cycle_time=9.0,
-    max_launch_mass=750.0,
-    fighter_class="Fighter (Small)",
-)
+# PROJ-FMS-C audit Fix 1: migrated off the legacy ``VehicleLaunch`` ability
+# to ``TacticalFighterLaunch`` (PROJ-FMS-A Phase 5). The contributor
+# now reads ``capacity_per_action`` (additive) and ``cycle_time`` (max)
+# plus co-located ``VehicleStorage`` (additive into ``fighter_capacity``).
+_TL_ABILITY = SimpleNamespace(capacity_per_action=2, cycle_time=9.0)
 _VS_ABILITY = SimpleNamespace(capacity=3)
 
 
@@ -23,11 +19,11 @@ class _HangarComponent:
     ability_instances = ()
 
     def has_ability(self, name: str) -> bool:
-        return name in {"VehicleLaunch", "VehicleStorage"}
+        return name in {"TacticalFighterLaunch", "VehicleStorage"}
 
     def get_abilities(self, name: str) -> list:
-        if name == "VehicleLaunch":
-            return [_VL_ABILITY]
+        if name == "TacticalFighterLaunch":
+            return [_TL_ABILITY]
         if name == "VehicleStorage":
             return [_VS_ABILITY]
         return []
@@ -49,6 +45,5 @@ def test_stats_aggregation_routes_hangar_abilities_to_launch_contributor() -> No
     )
 
     assert ship.fighter_capacity == 3
-    assert ship.fighters_per_wave == 1
-    assert ship.fighter_size_cap == 750.0
+    assert ship.fighters_per_wave == 2
     assert ship.launch_cycle == 9.0

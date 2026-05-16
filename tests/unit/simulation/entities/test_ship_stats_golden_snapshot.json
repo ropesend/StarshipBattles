@@ -116,7 +116,7 @@
     "warp_resource_costs": {}
   },
   "qs_carrier": {
-    "acceleration_rate": 0.064742594344,
+    "acceleration_rate": 0.071729011241,
     "ammo_consumption": 3.0,
     "ammo_endurance": 6666.666666666667,
     "ammo_gen_rate": 0.0,
@@ -125,24 +125,24 @@
     "baseline_to_hit_offense": 0,
     "cached_summary": {
       "dps": 980.0,
-      "mass": 6807.154036486907,
-      "max_hp": 19802,
+      "mass": 6467.154036486907,
+      "max_hp": 19602,
       "range": 2400.0,
       "shield": 3000.0,
-      "speed": 4.407128124205,
-      "turn": 16.024856240548
+      "speed": 4.638825645832,
+      "turn": 17.305043750513
     },
     "cargo_storage": {},
     "construction_cost": {
-      "exotics": 492,
-      "metals": 7105,
-      "organics": 595,
-      "radioactives": 602,
+      "exotics": 486,
+      "metals": 6865,
+      "organics": 545,
+      "radioactives": 562,
       "vapors": 206
     },
     "crew_onboard": 120,
-    "crew_required": 119,
-    "current_mass": 6807.154036486907,
+    "crew_required": 122,
+    "current_mass": 6467.154036486907,
     "current_shields": 3000.0,
     "drag": 0.5,
     "emissive_armor": 0,
@@ -150,13 +150,13 @@
     "energy_endurance": 58.181818181818,
     "energy_net": -275.0,
     "energy_recharge": 640.0,
-    "fighter_capacity": 100,
-    "fighter_size_cap": 50,
+    "fighter_capacity": 0,
+    "fighter_size_cap": 0,
     "fighters_per_wave": 2,
     "fuel_consumption": 4.0,
     "fuel_endurance": 100000.0,
-    "hp": 19802,
-    "launch_cycle": 5.0,
+    "hp": 19602,
+    "launch_cycle": 6.0,
     "layer_status": {
       "ARMOR": {
         "limit": 0.3,
@@ -178,29 +178,29 @@
       },
       "INNER": {
         "limit": 0.5,
-        "mass": 740.0,
+        "mass": 1240.0,
         "ok": true,
-        "ratio": 0.00578125
+        "ratio": 0.0096875
       },
       "OUTER": {
         "limit": 0.5,
-        "mass": 2491.468611537669,
+        "mass": 1651.468611537669,
         "ok": true,
-        "ratio": 0.019464598528
+        "ratio": 0.012902098528
       }
     },
-    "mass": 6807.154036486907,
+    "mass": 6467.154036486907,
     "mass_limits_ok": true,
-    "max_hp": 19802,
+    "max_hp": 19602,
     "max_mass_budget": 128000,
     "max_shields": 3000.0,
-    "max_speed": 4.407128124205,
+    "max_speed": 4.638825645832,
     "max_targets": 1,
     "pod_storage_mass": 0.0,
     "potential_ammo_consumption": 3.0,
     "potential_energy_consumption": 300.0,
     "potential_fuel_consumption": 4.0,
-    "radius": 75.808025313617,
+    "radius": 74.524269277951,
     "repair_rate": 0,
     "resources": {
       "ammo": {
@@ -219,16 +219,16 @@
         "value": 50000.0
       }
     },
-    "shield_regen_cost": 0,
-    "shield_regen_rate": 0,
+    "shield_regen_cost": 0.0,
+    "shield_regen_rate": 0.0,
     "shield_regenerating_armor": 0,
-    "total_defense_score": -0.475618831015,
+    "total_defense_score": -0.448314737771,
     "total_maneuver_points": 360.0,
     "total_strategic_movement": 800.0,
     "total_thrust": 1200.0,
-    "turn_speed": 16.024856240548,
-    "warp_energy_cost": 0,
-    "warp_max_tonnage": 0,
+    "turn_speed": 17.305043750513,
+    "warp_energy_cost": 0.0,
+    "warp_max_tonnage": 0.0,
     "warp_resource_costs": {}
   },
   "qs_escort": {

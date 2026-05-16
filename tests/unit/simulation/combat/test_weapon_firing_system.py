@@ -276,44 +276,13 @@ class TestSeekerWeaponFiring:
             assert call_kwargs['proj_type'] == AttackType.MISSILE
 
 
-class TestHangarLaunch:
-    """Tests for hangar vehicle launch."""
-
-    def test_hangar_creates_launch_attack(self):
-        """Hangar component creates launch attack when ready."""
-        from game.simulation.combat.weapon_firing_system import WeaponFiringSystem
-        from game.simulation.combat.targeting_system import TargetingSystem
-
-        targeting = TargetingSystem()
-        system = WeaponFiringSystem(targeting)
-
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-
-        target = MagicMock()
-        target.is_alive = True
-        target.team_id = 1
-        ship.current_target = target
-
-        vl_ability = MagicMock()
-        vl_ability.try_launch = MagicMock(return_value=True)
-        vl_ability.fighter_class = 'interceptor'
-
-        hangar = MagicMock()
-        hangar.is_active = True
-        hangar.has_ability = lambda name: name == 'VehicleLaunch'
-        hangar.get_ability = lambda name: vl_ability if name == 'VehicleLaunch' else None
-
-        ship.iter_components = MagicMock(return_value=[(LayerType.INNER, hangar)])
-
-        attacks = system.fire_weapons(ship)
-
-        assert len(attacks) == 1
-        assert attacks[0]['type'] == AttackType.LAUNCH
-        assert attacks[0]['fighter_class'] == 'interceptor'
+# PROJ-FMS-C audit Fix 1: ``TestHangarLaunch`` removed. The legacy
+# ``VehicleLaunch`` weapon-firing auto-launch path has been deleted in
+# favor of the explicit :meth:`BattleEngine.launch_fighters_in_battle`
+# action surface, driven by
+# :class:`game.ai.carrier_controller.CarrierAIController` or a player UI
+# action. See ``tests/unit/ai/test_carrier_controller.py`` and
+# ``tests/integration/test_fms_c_launch_in_battle_e2e.py``.
 
 
 class TestWeaponFiringConditions:
@@ -1095,108 +1064,8 @@ class TestWeaponShotTracking:
         assert weapon.shots_hit == 0
 
 
-class TestHangarLaunchEdgeCases:
-    """Edge cases for hangar vehicle launch."""
-
-    def test_hangar_no_target_no_launch(self):
-        """Hangar does not launch without a target."""
-        from game.simulation.combat.weapon_firing_system import WeaponFiringSystem
-        from game.simulation.combat.targeting_system import TargetingSystem
-
-        targeting = TargetingSystem()
-        system = WeaponFiringSystem(targeting)
-
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-        ship.current_target = None  # No target
-
-        vl_ability = MagicMock()
-        vl_ability.try_launch = MagicMock(return_value=True)
-        vl_ability.fighter_class = 'interceptor'
-
-        hangar = MagicMock()
-        hangar.is_active = True
-        hangar.has_ability = lambda name: name == 'VehicleLaunch'
-        hangar.get_ability = lambda name: vl_ability if name == 'VehicleLaunch' else None
-
-        ship.iter_components = MagicMock(return_value=[(LayerType.INNER, hangar)])
-
-        attacks = system.fire_weapons(ship)
-
-        # No launch without target
-        assert attacks == []
-
-    def test_hangar_try_launch_fails(self):
-        """Hangar does not launch when try_launch returns False."""
-        from game.simulation.combat.weapon_firing_system import WeaponFiringSystem
-        from game.simulation.combat.targeting_system import TargetingSystem
-
-        targeting = TargetingSystem()
-        system = WeaponFiringSystem(targeting)
-
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-
-        target = MagicMock()
-        target.is_alive = True
-        target.team_id = 1
-        ship.current_target = target
-
-        vl_ability = MagicMock()
-        vl_ability.try_launch = MagicMock(return_value=False)  # Launch fails
-        vl_ability.fighter_class = 'interceptor'
-
-        hangar = MagicMock()
-        hangar.is_active = True
-        hangar.has_ability = lambda name: name == 'VehicleLaunch'
-        hangar.get_ability = lambda name: vl_ability if name == 'VehicleLaunch' else None
-
-        ship.iter_components = MagicMock(return_value=[(LayerType.INNER, hangar)])
-
-        attacks = system.fire_weapons(ship)
-
-        assert attacks == []
-
-    def test_hangar_inactive_no_launch(self):
-        """Inactive hangar does not launch."""
-        from game.simulation.combat.weapon_firing_system import WeaponFiringSystem
-        from game.simulation.combat.targeting_system import TargetingSystem
-
-        targeting = TargetingSystem()
-        system = WeaponFiringSystem(targeting)
-
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-
-        target = MagicMock()
-        target.is_alive = True
-        target.team_id = 1
-        ship.current_target = target
-
-        vl_ability = MagicMock()
-        vl_ability.try_launch = MagicMock(return_value=True)
-        vl_ability.fighter_class = 'interceptor'
-
-        hangar = MagicMock()
-        hangar.is_active = False  # Inactive
-        hangar.is_operational = False  # Non-operational (checked by fire_weapons)
-        hangar.has_ability = lambda name: name == 'VehicleLaunch'
-        hangar.get_ability = lambda name: vl_ability if name == 'VehicleLaunch' else None
-
-        ship.iter_components = MagicMock(return_value=[(LayerType.INNER, hangar)])
-
-        attacks = system.fire_weapons(ship)
-
-        assert attacks == []
+# PROJ-FMS-C audit Fix 1: ``TestHangarLaunchEdgeCases`` removed alongside
+# ``TestHangarLaunch``. The legacy auto-launch path has been deleted.
 
 
 class TestSecondaryTargets:

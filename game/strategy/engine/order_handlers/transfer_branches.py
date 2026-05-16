@@ -136,7 +136,11 @@ class _TransferDispatchMixin:
 
         Lifted verbatim from `OrderProcessor._load_pod_from_staging_yard`.
         Staging yard iterated in reverse so `pop` removals are safe.
+        PROJ-FMS-A: skips ``CarriedVehicle``-shaped entries — those go
+        through the dedicated carried-vehicle branch.
         """
+        from game.strategy.data.carried_vehicle import CarriedVehicle
+
         logger.info(
             f"_dispatch_drop_pod_load: planet={planet.name} pod_name={pod_name!r} "
             f"amount={amount} staging_count={len(planet.staging_yard)} "
@@ -150,6 +154,8 @@ class _TransferDispatchMixin:
             if loaded >= to_load:
                 break
             item = planet.staging_yard[i]
+            if CarriedVehicle.from_any(item) is not None:
+                continue
             if pod_name and item.get("name") != pod_name:
                 logger.debug(
                     f"  Skipping staging item {i}: name={item.get('name')!r} != {pod_name!r}"
@@ -248,6 +254,88 @@ class _TransferDispatchMixin:
         species_pop.count += actual_unloaded
         return actual_unloaded
 
+    def _dispatch_carried_vehicle_load(
+        self,
+        fleet: Fleet,
+        planet: "Planet",
+        design_id: Optional[str] = None,
+        amount: int = 0,
+    ) -> int:
+        """PROJ-FMS-A Phase 3: planet -> fleet, carried vehicle.
+
+        Generalised drop-pod load path for design-backed carried vehicles
+        (mines / fighters / satellites). Loads from ``planet.staging_yard``
+        into the first ship whose ``VehicleBay`` has compatible capacity.
+        Staging yard iterated in reverse so ``pop`` removals are safe.
+
+        ``design_id`` may be passed via the legacy ``species_id`` slot in
+        the order target dict — the order serializer treats the slot as
+        a generic per-order discriminator.
+        """
+        from game.strategy.data.carried_vehicle import CarriedVehicle
+
+        loaded = 0
+        to_load = amount if amount > 0 else len(planet.staging_yard)
+
+        for i in range(len(planet.staging_yard) - 1, -1, -1):
+            if loaded >= to_load:
+                break
+            item = planet.staging_yard[i]
+            cv = CarriedVehicle.from_any(item)
+            if cv is None:
+                continue
+            if design_id and cv.design_id != design_id:
+                continue
+            target_ship = None
+            for ship in fleet.ships:
+                if ship._cargo_mgr.can_accept_vehicle(cv):
+                    target_ship = ship
+                    break
+            if target_ship is None:
+                continue
+            removed = planet.remove_from_staging_yard(i)
+            if removed and target_ship._cargo_mgr.load_vehicle(cv):
+                loaded += 1
+            elif removed:
+                # Restore: load failed unexpectedly. Put it back at end of staging.
+                planet.staging_yard.append(removed)
+        return loaded
+
+    def _dispatch_carried_vehicle_unload(
+        self,
+        fleet: Fleet,
+        planet: "Planet",
+        design_id: Optional[str] = None,
+        amount: int = 0,
+    ) -> int:
+        """PROJ-FMS-A Phase 3: fleet -> planet, carried vehicle.
+
+        Mirror of :meth:`_dispatch_carried_vehicle_load`. Moves matching
+        ``CarriedVehicle`` entries from ship bays into the planet's
+        staging yard.
+        """
+        from game.strategy.data.carried_vehicle import CarriedVehicle
+
+        unloaded = 0
+        total_count = sum(len(s.get_carried_vehicles()) for s in fleet.ships)
+        to_unload = amount if amount > 0 else total_count
+        for ship in fleet.ships:
+            if unloaded >= to_unload:
+                break
+            carried = ship.get_carried_vehicles()
+            # Walk indices in reverse so unload_vehicle pops are stable.
+            for idx in range(len(carried) - 1, -1, -1):
+                if unloaded >= to_unload:
+                    break
+                cv: CarriedVehicle = carried[idx]
+                if design_id and cv.design_id != design_id:
+                    continue
+                # add_to_staging_yard returns False if planet capacity exceeded.
+                if planet.add_to_staging_yard(cv.to_dict()):
+                    ship._cargo_mgr.unload_vehicle(idx)
+                    unloaded += 1
+        return unloaded
+
     def _dispatch_drop_pod_unload(
         self,
         fleet: Fleet,
@@ -258,10 +346,20 @@ class _TransferDispatchMixin:
         """Branch 6: fleet -> planet, drop_pod (unload to staging yard).
 
         Lifted verbatim from `OrderProcessor._unload_pod_to_staging_yard`.
+        PROJ-FMS-A: skips ``CarriedVehicle``-shaped entries — those go
+        through the dedicated carried-vehicle branch.
         """
+        from game.strategy.data.carried_vehicle import CarriedVehicle
+
         unloaded = 0
+        # Count drop-pod entries only; CarriedVehicle entries belong to
+        # a different transfer branch.
         to_unload = amount if amount > 0 else sum(
-            len(getattr(s, "carried_items", [])) for s in fleet.ships
+            sum(
+                1 for it in getattr(s, "carried_items", [])
+                if CarriedVehicle.from_any(it) is None
+            )
+            for s in fleet.ships
         )
 
         for ship in fleet.ships:
@@ -271,6 +369,8 @@ class _TransferDispatchMixin:
                 if unloaded >= to_unload:
                     break
                 item = ship.carried_items[i]
+                if CarriedVehicle.from_any(item) is not None:
+                    continue
                 if pod_name and item.get("name") != pod_name:
                     continue
                 if planet.add_to_staging_yard(item):

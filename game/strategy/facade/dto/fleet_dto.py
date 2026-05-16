@@ -95,9 +95,20 @@ class FleetInfo:
     cargo_capacities: Tuple[Tuple[str, int], ...] = field(default_factory=tuple)
     # Carried items summary: tuple of (name, vehicle_type, mass, count)
     carried_items_summary: Tuple[Tuple[str, str, float, int], ...] = field(default_factory=tuple)
+    # PROJ-FMS-A Phase 3: per-vehicle-type count breakdown of carried items.
+    # Tuple of (vehicle_type, count). Only counts entries whose
+    # ``vehicle_type`` is one of {"mine", "fighter", "satellite"}.
+    carried_vehicles_by_type: Tuple[Tuple[str, int], ...] = field(default_factory=tuple)
     # Pod storage capacity and usage
     pod_storage_capacity: float = 0.0
     pod_storage_used: float = 0.0
+    # PROJ-FMS-A Phase 3: vehicle-bay capacity (current/max mass) across
+    # all combat-capable ships in this fleet.
+    vehicle_bay_capacity_used: float = 0.0
+    vehicle_bay_capacity_max: float = 0.0
+    # PROJ-FMS-A Phase 4: fleet vs deployed-group discriminator.
+    # "fleet" / "fighter_group" / "satellite_group" / "mine_group".
+    group_kind: str = "fleet"
 
     @classmethod
     def from_fleet(cls, fleet: 'Fleet') -> 'FleetInfo':
@@ -214,9 +225,55 @@ class FleetInfo:
                             "fuel", "energy", "ammo")
             ),
             carried_items_summary=cls._aggregate_carried_items(fleet),
+            carried_vehicles_by_type=cls._aggregate_carried_vehicles_by_type(fleet),
             pod_storage_capacity=fleet.resources.get_fleet_pod_capacity(),
             pod_storage_used=fleet.resources.get_fleet_pod_mass_used(),
+            vehicle_bay_capacity_used=cls._sum_vehicle_bay_used(fleet),
+            vehicle_bay_capacity_max=cls._sum_vehicle_bay_max(fleet),
+            group_kind=getattr(fleet, "group_kind", "fleet"),
         )
+
+    @staticmethod
+    def _aggregate_carried_vehicles_by_type(
+        fleet: 'Fleet',
+    ) -> Tuple[Tuple[str, int], ...]:
+        """PROJ-FMS-A Phase 3: per-type count of CarriedVehicle entries."""
+        types = ("mine", "fighter", "satellite")
+        counts: dict = {t: 0 for t in types}
+        for ship in fleet.ships:
+            for item in getattr(ship, 'carried_items', []):
+                vt = str(item.get('vehicle_type', 'unknown')).lower()
+                if vt in counts:
+                    counts[vt] += 1
+        return tuple((vt, counts[vt]) for vt in types if counts[vt] > 0)
+
+    @staticmethod
+    def _sum_vehicle_bay_used(fleet: 'Fleet') -> float:
+        total = 0.0
+        for ship in fleet.ships:
+            cargo_mgr = getattr(ship, "_cargo_mgr", None)
+            if cargo_mgr is None or not hasattr(cargo_mgr, "get_vehicle_bay_capacity"):
+                continue
+            try:
+                used, _max = cargo_mgr.get_vehicle_bay_capacity()
+            except Exception:  # Intentional broad catch: mock fleets in tests return non-tuple values; treat as zero.
+                continue
+            total += used
+        return total
+
+    @staticmethod
+    def _sum_vehicle_bay_max(fleet: 'Fleet') -> float:
+        total = 0.0
+        for ship in fleet.ships:
+            cargo_mgr = getattr(ship, "_cargo_mgr", None)
+            if cargo_mgr is None or not hasattr(cargo_mgr, "get_vehicle_bay_capacity"):
+                continue
+            try:
+                _used, max_mass = cargo_mgr.get_vehicle_bay_capacity()
+            except Exception:  # Intentional broad catch: same as above; treat unreadable bays as zero.
+                continue
+            total += max_mass
+        return total
 
     @staticmethod
     def _aggregate_carried_items(fleet: 'Fleet') -> Tuple[Tuple[str, str, float, int], ...]:

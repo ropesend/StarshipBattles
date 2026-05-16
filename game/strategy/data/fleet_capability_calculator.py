@@ -92,6 +92,23 @@ class FleetCapabilityCalculator:
         self._fleet = fleet
         self._component_registry = component_registry
 
+    def _is_real_fleet(self) -> bool:
+        """PROJ-FMS-A: True only for ``group_kind == "fleet"`` groups.
+
+        Non-fleet groups (``fighter_group`` / ``satellite_group`` /
+        ``mine_group``) cannot perform strategic-layer actions; their
+        ships are tactical entities loaned to the strategy layer via the
+        VehicleBay/staging-yard substrate. Resilient to mock fleets in
+        tests: only string discriminators in the recognised set trigger
+        rejection. Treats anything else (including missing attribute,
+        Mock objects) as a real fleet so existing tests don't have to
+        wire ``group_kind``.
+        """
+        kind = getattr(self._fleet, "group_kind", "fleet")
+        if isinstance(kind, str):
+            return kind == "fleet"
+        return True
+
     @property
     def has_space_shipyard(self) -> bool:
         """
@@ -99,7 +116,13 @@ class FleetCapabilityCalculator:
 
         Returns True if any combat-capable ship has a component with
         SpaceShipyard ability (e.g., space_shipyard component).
+
+        PROJ-FMS-A: non-``fleet`` group kinds (fighter_group,
+        satellite_group, mine_group) are not real fleets and cannot host
+        shipyards, regardless of any ship's components.
         """
+        if not self._is_real_fleet():
+            return False
         return self.space_shipyard_count > 0
 
     @property
@@ -149,13 +172,16 @@ class FleetCapabilityCalculator:
         Returns:
             True if fleet can build the given vehicle type.
         """
+        if not self._is_real_fleet():
+            return False
         if not self.has_space_shipyard:
             return False
 
         vehicle_lower = vehicle_type.lower()
 
-        # Ships, fighters, and satellites can always be built if we have a yard
-        if vehicle_lower in ("ship", "fighter", "satellite"):
+        # Ships, fighters, satellites, and mines can always be built if we
+        # have a yard (PROJ-FMS-A Phase 1: mines join the small-craft rule).
+        if vehicle_lower in ("ship", "fighter", "satellite", "mine"):
             return True
 
         # Complexes require being at the same hex as a planet
@@ -182,6 +208,10 @@ class FleetCapabilityCalculator:
         # INTENTIONAL LATE IMPORT: Query operation, service encapsulates warp logic
         # See docs/ARCHITECTURE.md "Intentional Late Imports" section
         from game.strategy.services.component_inspector import has_warp_capability
+
+        # PROJ-FMS-A: non-fleet groups never qualify for strategic warp.
+        if not self._is_real_fleet():
+            return False
 
         combat_ships = self._fleet.get_combat_capable_ships()
         if not combat_ships:

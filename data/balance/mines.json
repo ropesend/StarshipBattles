@@ -1,0 +1,26 @@
+{
+  "_doc": "PROJ-FMS-B Phase 1 balance file. Constants for strategic and tactical minefield resolution.",
+  "warhead_trigger": {
+    "k_size": 1.0,
+    "k_eva": 0.5,
+    "bias": 2.0
+  },
+  "sensitivity_multipliers": {
+    "LOW": 0.5,
+    "MED": 1.0,
+    "HIGH": 1.5
+  },
+  "scatter": {
+    "fallback_radius_m": 5000.0,
+    "seed_namespace": "fms.mines.scatter.v1"
+  },
+  "laserhead": {
+    "default_threshold": 0.30
+  },
+  "tactical": {
+    "warhead_proximity_radius": 600.0,
+    "per_tick_scaling": "expected_ticks_in_proximity",
+    "expected_ticks_in_proximity": 50,
+    "min_tick_chance": 1e-6
+  }
+}

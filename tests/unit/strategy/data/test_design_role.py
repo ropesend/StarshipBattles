@@ -59,11 +59,16 @@ class TestDesignRole:
 class TestRoleClassifier:
     """Tests for auto-classifying ship design role from component loadout."""
 
-    def test_carrier_detected_by_vehicle_launch(self):
-        """Ship with VehicleLaunch ability is classified as Carrier."""
+    def test_carrier_detected_by_tactical_fighter_launch(self):
+        """Ship with TacticalFighterLaunch ability is classified as Carrier.
+
+        PROJ-FMS-C audit Fix 1: legacy ``VehicleLaunch`` was deleted; the
+        new launch abilities (``TacticalFighterLaunch`` /
+        ``StrategicFighterLaunch``) are the carrier markers.
+        """
         from game.strategy.data.design_role import DesignRole, classify_design_role
 
-        abilities = {"VehicleLaunch": True, "CombatPropulsion": True}
+        abilities = {"TacticalFighterLaunch": True, "CombatPropulsion": True}
         role = classify_design_role(abilities=abilities, mass=8000)
         assert role == DesignRole.CARRIER
 

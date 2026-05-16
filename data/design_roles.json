@@ -6,7 +6,20 @@
             "id": "general_purpose",
             "display_name": "General Purpose",
             "description": "No specific role specialization.",
-            "vehicle_type_filter": ["Ship", "Fighter", "Satellite", "Planetary Complex", "Drop Pod"]
+            "vehicle_type_filter": ["Ship", "Fighter", "Satellite", "Planetary Complex", "Drop Pod", "Mine"]
+        },
+
+        {
+            "id": "mine_warhead",
+            "display_name": "Warhead Mine",
+            "description": "Contact-trigger explosive mine.",
+            "vehicle_type_filter": ["Mine"]
+        },
+        {
+            "id": "mine_laserhead",
+            "display_name": "Laserhead Mine",
+            "description": "Beam-fire mine; uses targeting sensor to engage at range.",
+            "vehicle_type_filter": ["Mine"]
         },
 
         {

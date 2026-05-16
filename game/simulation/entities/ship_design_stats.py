@@ -108,4 +108,6 @@ def calculate_design_stats(
         'warp_resource_costs': dict(ship.warp_resource_costs),
         'resource_consumption_per_hex': per_hex,
         'resource_consumption_per_turn': per_turn,
+        # PROJ-FMS-A Phase 3: VehicleBay aggregated capacity.
+        'bay_capacity_mass': getattr(ship, 'bay_capacity_mass', 0.0),
     }

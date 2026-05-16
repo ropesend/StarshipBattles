@@ -9,18 +9,18 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Data: mine vehicle classes, layer, components | Not started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Abilities: Warhead / Laserhead / Sensor / Ram | Not started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. VehicleBay substrate + carried_items generalisation | Not started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Fleet `group_kind` + signature_bonus + production normalisation | Not started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Launch/recover ability skeletons + tests | Not started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 1. Data: mine vehicle classes, layer, components | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Abilities: Warhead / Laserhead / Sensor / Ram | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. VehicleBay substrate + carried_items generalisation | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Fleet `group_kind` + signature_bonus + production normalisation | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Launch/recover ability skeletons + tests | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-15
-**Active Phase:** Phase 1 (not started)
-**Last Action:** Project scaffolded from PROJ-FMS-shared/design.md after claude/codex consensus
-**Next Action:** Begin Phase 1 — add mine vehicle classes and `Mine_Standard` layer
-**Blockers:** None — awaiting codex review per user
+**Active Phase:** All 5 phases complete; ready for PROJ-FMS-B handoff
+**Last Action:** Phase 5 — launch/recovery skeletons + OrderType reservations + integration tests + ability_reference.md docs update
+**Next Action:** Hand off to PROJ-FMS-B (mine end-to-end). All foundation plumbing in place.
+**Blockers:** None. Pre-existing test failures on main (6 errors + 1 ship_instance_damage flake + 5 quickstart metadata + 3 ship_stats_golden) are unchanged by FMS-A.
 
 ## Overview
 Foundation phase for the four-project Fighters/Mines/Satellites sequence. Establishes the data, components, abilities, and storage substrate that PROJ-FMS-B/C/D all build on. **No user-facing behavior in this project** — everything is plumbing.

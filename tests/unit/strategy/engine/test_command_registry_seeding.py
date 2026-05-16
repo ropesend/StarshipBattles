@@ -55,9 +55,17 @@ def test_registry_module_exists() -> None:
 
 
 def test_registry_count_is_35() -> None:
-    """The seeded default registry contains 35 specs (PROJ-371 baseline)."""
-    assert len(command_registry) == 35
-    assert len(list(command_registry.all())) == 35
+    """The seeded default registry contains 40 specs.
+
+    Baseline was 35 (PROJ-371); PROJ-FMS-B Phase 1 added
+    ``IssueLayMinesCommand`` -> ``LayMinesCommandHandler``, bumping to 36.
+    PROJ-FMS-C Phase 1+3 added ``IssueLaunchFightersCommand`` and
+    ``IssueRecoverFightersCommand``, bumping to 38. PROJ-FMS-D Phase 1+2
+    added ``IssueLaunchSatellitesCommand`` and
+    ``IssueRecoverSatellitesCommand``, bumping to 40.
+    """
+    assert len(command_registry) == 40
+    assert len(list(command_registry.all())) == 40
 
 
 # ---------------------------------------------------------------------------
@@ -107,7 +115,7 @@ def test_import_handler_module_does_not_register() -> None:
 def test_round_trip_reset_then_seed() -> None:
     """``reset_command_registry`` clears and re-seeds without leaking state."""
     original_count = len(command_registry)
-    assert original_count == 35
+    assert original_count == 40  # PROJ-FMS-D Phase 1+2 added launch + recover satellites
     reset_command_registry()
     assert len(command_registry) == original_count
 

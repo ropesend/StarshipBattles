@@ -1154,6 +1154,18 @@ class TestCharacterizationCoverageGaps:
         filtered, _roles = controller.load_designs_by_category("complex")
         assert filtered == [d1]
 
+    def test_load_designs_filters_by_vehicle_type_mine(self):
+        """PROJ-FMS-A Phase 1: mine category maps to vehicle_type='Mine'."""
+        d_mine = MagicMock()
+        d_mine.vehicle_type = "Mine"
+        d_mine.design_role = None
+        d_ship = MagicMock()
+        d_ship.vehicle_type = "Ship"
+        d_ship.design_role = None
+        controller = self._make_controller([d_mine, d_ship])
+        filtered, _roles = controller.load_designs_by_category("mine")
+        assert filtered == [d_mine]
+
     def test_load_designs_unknown_category_defaults_to_ship(self):
         d_ship = MagicMock()
         d_ship.vehicle_type = "Ship"

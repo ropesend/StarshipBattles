@@ -577,3 +577,198 @@ pytest tests/unit/strategy/services/test_effect_ability_metadata.py tests/unit/s
 pytest tests/integration/test_strategic_abilities.py
 python Tools/test_sharded/test_sharded.py
 ```
+
+## PROJ-FMS-A: Fighters / Mines / Satellites — Foundation abilities
+
+> **Added 2026-05-15** during PROJ-FMS-A. Behavior for launch/recovery/mine
+> abilities lands in PROJ-FMS-B/C/D; PROJ-FMS-A only registers them so
+> designs validate and the data shapes are pinned.
+
+| Registry key | Class | Layer | File | Notes |
+|---|---|---|---|---|
+| `Warhead` | `WarheadAbility` | BOTH | `warhead.py` | Single attr `damage`. Always hits when triggered; behavior wired in PROJ-FMS-B. |
+| `Laserhead` | `LaserheadAbility(BeamWeaponAbility)` | BOTH | `warhead.py` | Subclass of `BeamWeaponAbility` so MRO + family detection at `weapon_registry.py:78-94` works unchanged. Adds `consume_on_fire` (default true). |
+| `RamTarget` | `RamTargetAbility` | COMBAT | `warhead.py` | Marker — combat engine sets `target_id` at runtime. Detonates carried Warheads on collision (PROJ-FMS-B). |
+| `VehicleBay` | `VehicleBayAbility` | STRATEGIC | `vehicle_bay.py` | `capacity_mass`, `allowed_types` (defaults to mine/fighter/satellite). Aggregated by `stat_contributors/launch.py::contribute_vehicle_bay` into `ship.bay_capacity_mass`. |
+| `StrategicMineLayer` | `StrategicMineLayerAbility` | STRATEGIC | `launch.py` | Skeleton; behavior in PROJ-FMS-B Phase 1 via `OrderType.LAY_MINES`. |
+| `StrategicFighterLaunch` | `StrategicFighterLaunchAbility` | STRATEGIC | `launch.py` | Skeleton; behavior in PROJ-FMS-C Phase 1 via `OrderType.LAUNCH_FIGHTERS`. |
+| `StrategicSatelliteLaunch` | `StrategicSatelliteLaunchAbility` | STRATEGIC | `launch.py` | Skeleton; behavior in PROJ-FMS-D Phase 1 via `OrderType.LAUNCH_SATELLITES`. |
+| `TacticalMineLayer` | `TacticalMineLayerAbility` | COMBAT | `launch.py` | Skeleton; behavior in PROJ-FMS-B Phase 3 (battle-engine hook). |
+| `TacticalFighterLaunch` | `TacticalFighterLaunchAbility` | COMBAT | `launch.py` | Skeleton; replaces legacy `VehicleLaunchAbility` at `markers.py:9` in PROJ-FMS-C Phase 1. |
+| `TacticalSatelliteLaunch` | `TacticalSatelliteLaunchAbility` | COMBAT | `launch.py` | Skeleton; PROJ-FMS-D Phase 1. |
+| `RecoverFighters` | `RecoverFightersAbility` | STRATEGIC | `recovery.py` | Skeleton; PROJ-FMS-C Phase 3 via `OrderType.RECOVER_FIGHTERS`. |
+| `RecoverSatellites` | `RecoverSatellitesAbility` | STRATEGIC | `recovery.py` | Skeleton; PROJ-FMS-D Phase 2 via `OrderType.RECOVER_SATELLITES`. |
+
+Data shape for the six launch skeletons:
+
+```json
+"StrategicFighterLaunch": {"capacity_per_action": 4, "cycle_time": 15.0}
+```
+
+Data shape for the two recovery skeletons:
+
+```json
+"RecoverFighters": {"recovery_per_action": 4}
+```
+
+Data shape for VehicleBay:
+
+```json
+"VehicleBay": {"capacity_mass": 750, "allowed_types": ["mine", "fighter", "satellite"]}
+```
+
+Reserved `OrderType` enum values (no handlers attached yet, reserved for
+the PROJ-FMS-B/C/D handlers): `LAY_MINES`, `LAUNCH_FIGHTERS`,
+`LAUNCH_SATELLITES`, `RECOVER_FIGHTERS`, `RECOVER_SATELLITES`.
+
+Fleet discriminator: `Fleet.group_kind` ∈ `{"fleet", "fighter_group",
+"satellite_group", "mine_group"}`; non-fleet kinds reject Move /
+Intercept / Join / Warp / Build at command validation
+(`BaseCommandHandler._reject_if_non_fleet_group`).
+
+## PROJ-FMS-B — Mines runtime behaviour
+
+PROJ-FMS-B wired runtime behaviour for the abilities skeletoned in
+PROJ-FMS-A. See [`docs/systems/minefields.md`](minefields.md) for the
+end-to-end system design.
+
+| Registry key | Ability class | Layer | Source file | Behaviour landed in |
+|---|---|---|---|---|
+| `Warhead` | `WarheadAbility` | BOTH | `abilities/warhead.py` | Detonation routed through `DamageCalculator.apply_damage`; applied by `MinefieldResolver` (strategic), `TacticalMineResolver` (tactical), and `RamTargetResolver` (collision). |
+| `Laserhead` | `LaserheadAbility(BeamWeaponAbility)` | BOTH | `abilities/warhead.py` | Continuous expected-hit-chance threshold gate before the standard beam roll; consume-on-fire. |
+| `RamTarget` | `RamTargetAbility` | COMBAT | `abilities/warhead.py` | Explicit set-target action; collision detonates every `Warhead` component on the rammer against the target via the damage pipeline; rammer destroyed. |
+| `StrategicMineLayer` | `StrategicMineLayerAbility` | STRATEGIC | `abilities/launch.py` | Wired via `OrderType.LAY_MINES` -> `LayMinesOrderHandler`. Pops mines from `VehicleBay` -> creates / extends a `mine_group` Fleet at the target hex. |
+| `TacticalMineLayer` | `TacticalMineLayerAbility` | COMBAT | `abilities/launch.py` | Wired via the battle-engine `mine_resolver` hook. Mid-battle-laid mines persist to the laying empire's `mine_group`. |
+
+Reserved `OrderType` enum values still pending (PROJ-FMS-D):
+`LAUNCH_SATELLITES`, `RECOVER_SATELLITES`. `LAY_MINES` was moved
+to the reachable-via-command set in PROJ-FMS-B Phase 1.
+`LAUNCH_FIGHTERS` and `RECOVER_FIGHTERS` were moved to the
+reachable-via-command set in PROJ-FMS-C Phase 1+3.
+
+Mine-group runtime fields on `Fleet` (only meaningful when
+`group_kind == "mine_group"`):
+
+- `sensitivity` — `"LOW" | "MED" | "HIGH"` (default `"MED"`).
+- `expected_hit_chance_threshold` — float `0.0..1.0` (default
+  `0.30` from `data/balance/mines.json::laserhead.default_threshold`).
+- `mine_positions` — `List[(float, float)]` scatter coords.
+- `scatter_seed` — stable PRNG seed for the scatter layout.
+
+These fields serialise through `Fleet.to_dict` / `Fleet.from_dict`.
+
+## PROJ-FMS-C — Fighters runtime behaviour
+
+PROJ-FMS-C wired runtime behaviour for the fighter abilities skeletoned
+in PROJ-FMS-A and added end-of-battle reboard. See
+[`docs/systems/fighters.md`](fighters.md) for the full system reference.
+
+| Ability | Class | Layer | File | Behavior |
+|---|---|---|---|---|
+| `StrategicFighterLaunch` | `StrategicFighterLaunchAbility` | STRATEGIC | `abilities/launch.py` | Wired via `OrderType.LAUNCH_FIGHTERS` -> `LaunchFightersOrderHandler`. Pops fighter `CarriedVehicle`s from `VehicleBay` -> mints a new `fighter_group` Fleet at the target hex with one `ShipInstance` per launched fighter. HP preserved from `CarriedVehicle.current_hp`. |
+| `TacticalFighterLaunch` | `TacticalFighterLaunchAbility` | COMBAT | `abilities/launch.py` | Drives the design-instance launch path. `BattleEngine.launch_fighters_in_battle(carrier, [CarriedVehicle, ...])` spawns full design-backed fighters with components / weapons / HP, tags them with `launched_in_battle_id` for end-of-battle reboard. Legacy `VehicleLaunchAbility`-string spawn path retained with deprecation warning. |
+| `RecoverFighters` | `RecoverFightersAbility` | STRATEGIC | `abilities/recovery.py` | Wired via `OrderType.RECOVER_FIGHTERS` -> `RecoverFightersOrderHandler`. Pops `ShipInstance`s from the target `fighter_group`, converts each to a `CarriedVehicle` (HP + per-component damage preserved), loads into the recovering carrier's bay. Partial recovery allowed; empty groups pruned from `empire.fleets`. |
+
+`OrderType.LAUNCH_FIGHTERS` and `OrderType.RECOVER_FIGHTERS` were moved
+from the reserved-no-command-yet set to the reachable-via-command set in
+PROJ-FMS-C Phase 1+3. `LAUNCH_SATELLITES` and `RECOVER_SATELLITES`
+remain reserved for PROJ-FMS-D.
+
+End-of-battle reboard semantics (PROJ-FMS-C Phase 3):
+
+- Fighters launched mid-battle (tag `launched_in_battle_id`) auto-
+  reboard onto friendly ships with bay space at battle end.
+- Overflow spills into a new `fighter_group` at the sector. Pre-existing
+  fighter_groups at the sector owned by the same empire MERGE overflow
+  rather than fragmenting.
+- Dead-on-arrival fighters are discarded.
+- Carrier destroyed mid-battle: launched fighters look for any other
+  friendly carrier; otherwise overflow to sector.
+- Pre-existing fighter_group ships are NOT auto-reboarded — they stay
+  in their original group unless explicitly recovered.
+
+The reboard pipeline is hooked into `run_battle` via the spec compiler's
+`build_fighter_reboard_setup` `pre_tick_loop_callback`. The strategy
+post-battle hook in `_build_strategy_post_battle_hook` calls
+`fighter_reboard.apply_reboard(...)` BEFORE `apply_outcome_to_fleets`.
+
+## PROJ-FMS-D — Satellites runtime behaviour
+
+PROJ-FMS-D wired runtime behaviour for the three satellite skeletons in
+PROJ-FMS-A. The design intent is "satellites mirror fighters with three
+differences": stationary tactical AI, separate ability gates (a
+fighter-only carrier cannot recover satellites and vice versa), and
+typed bays. See [`docs/systems/satellites.md`](satellites.md) for the
+full system reference.
+
+| Ability | Class | Layer | File | Behavior |
+|---|---|---|---|---|
+| `StrategicSatelliteLaunch` | `StrategicSatelliteLaunchAbility` | STRATEGIC | `abilities/launch.py` | Wired via `OrderType.LAUNCH_SATELLITES` -> `LaunchSatellitesOrderHandler`. Pops satellite `CarriedVehicle`s from `VehicleBay` -> mints a new `satellite_group` Fleet (id namespace 300000+) at the target hex with one deployed `ShipInstance` per launched satellite. HP preserved from `CarriedVehicle.current_hp`. |
+| `TacticalSatelliteLaunch` | `TacticalSatelliteLaunchAbility` | COMBAT | `abilities/launch.py` | Drives the in-battle satellite spawn. `BattleEngine.launch_satellites_in_battle(carrier, [CarriedVehicle, ...])` materialises full design-backed satellites with components / weapons / HP, tags them with `launched_in_battle_id` for end-of-battle reboard. Production caller: `CarrierAIController._maybe_launch_satellite_wave` (factory-dispatched). |
+| `RecoverSatellites` | `RecoverSatellitesAbility` | STRATEGIC | `abilities/recovery.py` | Wired via `OrderType.RECOVER_SATELLITES` -> `RecoverSatellitesOrderHandler`. Pops `ShipInstance`s from the target `satellite_group`, converts each to a `CarriedVehicle` (HP + per-component damage preserved), loads into the recovering carrier's bay (respecting the bay's `allowed_types` filter). Partial recovery allowed; empty groups pruned. |
+
+`OrderType.LAUNCH_SATELLITES` and `OrderType.RECOVER_SATELLITES` were
+moved from the reserved-no-command-yet set to the reachable-via-command
+set in PROJ-FMS-D Phase 1+2. All five PROJ-FMS reserved OrderType values
+are now wired.
+
+### Bay separation mechanism — `VehicleBay.allowed_types`
+
+`VehicleBayAbility` (PROJ-FMS-A Phase 3) carries an `allowed_types`
+list. PROJ-FMS-D Phase 1 ships three pre-configured component variants:
+
+- `vehicle_bay_{small,medium,large}` — universal (`["mine", "fighter",
+  "satellite"]`).
+- `fighter_bay_small` — fighter-only (`["fighter"]`).
+- `satellite_bay_{small,medium,large}` — satellite-only (`["satellite"]`).
+
+`ShipCargoManager.can_accept_vehicle` queries this list per active bay
+and refuses to load a vehicle whose `vehicle_type` is not accepted by
+any bay. This is the same gate used by both the strategic launch /
+recovery handlers and the end-of-battle reboard, so a fighter-only
+carrier cannot accidentally pick up satellites no matter the layer.
+
+### Cross-type ability gating
+
+The command specs declare `action_ability_name`:
+
+- `LaunchSatellitesCommandHandler` -> `StrategicSatelliteLaunch`.
+- `RecoverSatellitesCommandHandler` -> `RecoverSatellites`.
+
+This closes the same gating loophole the PROJ-FMS-C audit fixed for
+fighters: `ActionTimeResolver` looks up the ability on the carrier's
+components, so a ship without the appropriate strategic launch /
+recovery ability cannot issue the order.
+
+### Stationary tactical AI
+
+`SatelliteAIController` (registered via
+`AIControllerFactory.create_for_ship` on `vehicle_type == "Satellite"`)
+forces zero throttle / zero turn throttle every tick. It still
+acquires the nearest enemy and pulls the trigger so weapons fire, but
+the ship never accelerates or rotates under its own power. No movement
+policy, no behaviour tree, no avoidance, no kamikaze handling.
+
+### Stat aggregation
+
+`stat_contributors/launch.py::contribute_tactical_satellite_launch`
+aggregates into `ship.satellites_per_wave` /
+`ship.satellite_launch_cycle` / `ship.satellite_capacity`, kept
+distinct from the fighter equivalents so a carrier mounting both bays
+shows both stat sets independently.
+
+### End-of-battle reboard — generalised
+
+`fighter_reboard.apply_reboard` (kept under that file name for
+backwards-compat) is now vehicle-type aware:
+
+- The CarriedVehicle's `vehicle_type` is read from the spawned Sim
+  Ship's `vehicle_type` attribute (`Fighter` -> `"fighter"`,
+  `Satellite` -> `"satellite"`).
+- Overflow uses the matching `group_kind` (`fighter_group` /
+  `satellite_group`) and the matching id namespace (200000+ / 300000+).
+- The bay-side `load_vehicle` honours `allowed_types`, so a fighter
+  reboard never lands in a satellite-only bay (and vice versa).
+
+The same reboard hook handles fighters and satellites in a single
+pass; there is no parallel `satellite_reboard.py`.

@@ -160,7 +160,8 @@ class BuildQueueController:
             "ship": "Ship",
             "satellite": "Satellite",
             "fighter": "Fighter",
-            "drop_pod": "Drop Pod"
+            "drop_pod": "Drop Pod",
+            "mine": "Mine"
         }
 
         target_type = type_map.get(category, "Ship")

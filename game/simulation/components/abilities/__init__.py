@@ -50,7 +50,6 @@ from .crew import CrewCapacity, LifeSupportCapacity, CrewRequired
 
 # Marker abilities
 from .markers import (
-    VehicleLaunchAbility,
     CommandAndControl,
     RequiresCommandAndControl,
     RequiresCombatMovement,
@@ -67,6 +66,33 @@ from .weapons import (
     ProjectileWeaponAbility,
     BeamWeaponAbility,
     SeekerWeaponAbility,
+)
+
+# PROJ-FMS-A Phase 2: mine / kamikaze abilities (data-bearing skeletons,
+# behavior lands in PROJ-FMS-B).
+from .warhead import (
+    WarheadAbility,
+    LaserheadAbility,
+    RamTargetAbility,
+)
+
+# PROJ-FMS-A Phase 3: VehicleBay substrate for design-backed carried vehicles.
+from .vehicle_bay import VehicleBayAbility
+
+# PROJ-FMS-A Phase 5: launch + recovery ability skeletons. Six launch
+# classes (3 strategic + 3 tactical) and two recovery classes. All
+# data-bearing only; execution lands in PROJ-FMS-B/C/D.
+from .launch import (
+    StrategicMineLayerAbility,
+    StrategicFighterLaunchAbility,
+    StrategicSatelliteLaunchAbility,
+    TacticalMineLayerAbility,
+    TacticalFighterLaunchAbility,
+    TacticalSatelliteLaunchAbility,
+)
+from .recovery import (
+    RecoverFightersAbility,
+    RecoverSatellitesAbility,
 )
 
 # Harvester and storage abilities
@@ -98,7 +124,9 @@ ABILITY_REGISTRY = {
     "WarpJump": WarpJump,
     "ShieldProjection": ShieldProjection,
     "ShieldRegeneration": ShieldRegeneration,
-    "VehicleLaunch": VehicleLaunchAbility,
+    # PROJ-FMS-C audit Fix 1: ``VehicleLaunch`` removed in favor of
+    # the PROJ-FMS-A Phase 5 launch abilities (``TacticalFighterLaunch`` /
+    # ``StrategicFighterLaunch``) plus :class:`CarrierAIController`.
     # PROJ-367 Phase 1: typed classes for previously-untyped abilities.
     "MultiplexTracking": MultiplexTrackingAbility,
     "VehicleStorage": VehicleStorageAbility,
@@ -107,6 +135,21 @@ ABILITY_REGISTRY = {
     "ProjectileWeaponAbility": ProjectileWeaponAbility,
     "BeamWeaponAbility": BeamWeaponAbility,
     "SeekerWeaponAbility": SeekerWeaponAbility,
+    # PROJ-FMS-A Phase 2 (mine / kamikaze surface).
+    "Warhead": WarheadAbility,
+    "Laserhead": LaserheadAbility,
+    "RamTarget": RamTargetAbility,
+    # PROJ-FMS-A Phase 3 (vehicle bay substrate).
+    "VehicleBay": VehicleBayAbility,
+    # PROJ-FMS-A Phase 5 (launch / recovery skeletons).
+    "StrategicMineLayer": StrategicMineLayerAbility,
+    "StrategicFighterLaunch": StrategicFighterLaunchAbility,
+    "StrategicSatelliteLaunch": StrategicSatelliteLaunchAbility,
+    "TacticalMineLayer": TacticalMineLayerAbility,
+    "TacticalFighterLaunch": TacticalFighterLaunchAbility,
+    "TacticalSatelliteLaunch": TacticalSatelliteLaunchAbility,
+    "RecoverFighters": RecoverFightersAbility,
+    "RecoverSatellites": RecoverSatellitesAbility,
     "CommandAndControl": CommandAndControl,
     "CrewCapacity": CrewCapacity,
     "LifeSupportCapacity": LifeSupportCapacity,
@@ -260,7 +303,6 @@ __all__ = [
     'LifeSupportCapacity',
     'CrewRequired',
     # Markers
-    'VehicleLaunchAbility',
     'CommandAndControl',
     'RequiresCommandAndControl',
     'RequiresCombatMovement',
@@ -274,6 +316,21 @@ __all__ = [
     'ProjectileWeaponAbility',
     'BeamWeaponAbility',
     'SeekerWeaponAbility',
+    # PROJ-FMS-A Phase 2
+    'WarheadAbility',
+    'LaserheadAbility',
+    'RamTargetAbility',
+    # PROJ-FMS-A Phase 3
+    'VehicleBayAbility',
+    # PROJ-FMS-A Phase 5
+    'StrategicMineLayerAbility',
+    'StrategicFighterLaunchAbility',
+    'StrategicSatelliteLaunchAbility',
+    'TacticalMineLayerAbility',
+    'TacticalFighterLaunchAbility',
+    'TacticalSatelliteLaunchAbility',
+    'RecoverFightersAbility',
+    'RecoverSatellitesAbility',
     # Harvester and storage
     'ResourceHarvesterAbility',
     'SpaceShipyardAbility',

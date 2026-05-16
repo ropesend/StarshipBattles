@@ -53,7 +53,8 @@ class BuildContext(Protocol):
         Check if this context can build the given vehicle type.
 
         Args:
-            vehicle_type: Type of vehicle ("ship", "fighter", "satellite", "complex")
+            vehicle_type: Type of vehicle ("ship", "fighter", "satellite",
+                "complex", "mine", "drop_pod").
 
         Returns:
             True if this context can build the given type.

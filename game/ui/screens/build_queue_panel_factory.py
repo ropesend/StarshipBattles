@@ -79,6 +79,7 @@ class BuildQueuePanels:
     btn_category_satellite: ui.UIButton
     btn_category_fighter: ui.UIButton
     btn_category_drop_pod: ui.UIButton
+    btn_category_mine: ui.UIButton
     resource_icons: Dict[str, pygame.Surface]
 
 
@@ -166,7 +167,7 @@ class BuildQueuePanelFactory:
             data_source,
             btn_pause_queue,
         ) = self._create_build_queue_panel(background)
-        filter_panel, btn_complex, btn_ship, btn_sat, btn_fighter, btn_drop_pod, roles_scrollable = (
+        filter_panel, btn_complex, btn_ship, btn_sat, btn_fighter, btn_drop_pod, btn_mine, roles_scrollable = (
             self._create_filter_panel(background)
         )
         bottom_bar, btn_close = self._create_bottom_bar(background, format_empire_resources)
@@ -197,6 +198,7 @@ class BuildQueuePanelFactory:
             btn_category_satellite=btn_sat,
             btn_category_fighter=btn_fighter,
             btn_category_drop_pod=btn_drop_pod,
+            btn_category_mine=btn_mine,
             resource_icons=self.resource_icons,
         )
 
@@ -445,7 +447,7 @@ class BuildQueuePanelFactory:
         """Create categories/filter panel.
 
         Returns:
-            Tuple of (panel, btn_complex, btn_ship, btn_satellite, btn_fighter, btn_drop_pod, roles_scrollable).
+            Tuple of (panel, btn_complex, btn_ship, btn_satellite, btn_fighter, btn_drop_pod, btn_mine, roles_scrollable).
         """
         panel_width = 600
         panel_left = 10
@@ -513,7 +515,14 @@ class BuildQueuePanelFactory:
             container=categories_scrollable
         )
 
-        categories_scrollable.set_scrollable_area_dimensions((260, 225))
+        btn_mine = ui.UIButton(
+            relative_rect=pygame.Rect(0, 225, 260, 40),
+            text="Mines",
+            manager=self.manager,
+            container=categories_scrollable
+        )
+
+        categories_scrollable.set_scrollable_area_dimensions((260, 270))
 
         ui.UITextBox(
             relative_rect=pygame.Rect(300, 10, 280, 30),
@@ -528,7 +537,7 @@ class BuildQueuePanelFactory:
             container=panel
         )
 
-        return panel, btn_complex, btn_ship, btn_satellite, btn_fighter, btn_drop_pod, roles_scrollable
+        return panel, btn_complex, btn_ship, btn_satellite, btn_fighter, btn_drop_pod, btn_mine, roles_scrollable
 
     def _create_bottom_bar(self, container: ui.UIPanel, format_empire_resources) -> tuple:
         """Create bottom bar with close button and info.
