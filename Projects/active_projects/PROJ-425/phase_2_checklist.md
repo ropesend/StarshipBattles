@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Depends on:** phase_1
 **Review Mode:** standard
 **Files (planned):**
@@ -19,9 +19,9 @@
 
 ## Pre-flight (TDD baseline)
 
-- [ ] Re-read `component_inspector.py` end-to-end. Capture current LOC + the API surface that already exists.
-- [ ] If extending `component_inspector.py` would push it past 500 LOC, record in `decisions.md` and only then consider a new module.
-- [ ] Re-read the component-by-layer methods on `ShipInstance` and grep for callers: `rg -n "iter_all_components_by_layer|get_damaged_components_by_layer|get_damaged_component_count" game tests`.
+- [x] Re-read `component_inspector.py` end-to-end. Capture current LOC + the API surface that already exists.
+- [x] If extending `component_inspector.py` would push it past 500 LOC, record in `decisions.md` and only then consider a new module.
+- [x] Re-read the component-by-layer methods on `ShipInstance` and grep for callers: `rg -n "iter_all_components_by_layer|get_damaged_components_by_layer|get_damaged_component_count" game tests`.
 
 ---
 
@@ -31,9 +31,9 @@
 **File:** `tests/unit/strategy/fleets/test_ship_instance_components.py` (update)
 **Tests:** `pytest tests/unit/strategy/fleets/test_ship_instance_components.py -v`
 
-- [ ] Add or pivot tests to call the new inspector entry points directly (e.g. `ComponentInspector(ship_instance).iter_all_components_by_layer()` or whatever the chosen surface is).
-- [ ] Keep one parallel test against `ShipInstance.iter_all_components_by_layer(...)` (if it survives as a thin shim) to prove call-site equivalence.
-- [ ] **Verify:** new-API tests fail today; legacy-API tests still pass.
+- [x] Add or pivot tests to call the new inspector entry points directly (e.g. `ComponentInspector(ship_instance).iter_all_components_by_layer()` or whatever the chosen surface is).
+- [x] Keep one parallel test against `ShipInstance.iter_all_components_by_layer(...)` (if it survives as a thin shim) to prove call-site equivalence.
+- [x] **Verify:** new-API tests fail today; legacy-API tests still pass.
 
 **Notes:**
 
@@ -41,9 +41,9 @@
 **File:** `game/strategy/services/component_inspector.py`
 **Tests:** Task 2.1
 
-- [ ] Add `iter_all_components_by_layer`, `get_damaged_components_by_layer`, `get_damaged_component_count` to the inspector. Cut the helper logic that joins design layers with `ComponentState` out of `ShipInstance` and into the inspector.
-- [ ] Do **not** move this logic into UI code (TD-06 §"Phase 2" is explicit).
-- [ ] **Verify:** new-API tests now pass.
+- [x] Add `iter_all_components_by_layer`, `get_damaged_components_by_layer`, `get_damaged_component_count` to the inspector. Cut the helper logic that joins design layers with `ComponentState` out of `ShipInstance` and into the inspector.
+- [x] Do **not** move this logic into UI code (TD-06 §"Phase 2" is explicit).
+- [x] **Verify:** new-API tests now pass.
 
 **Notes:**
 
@@ -51,20 +51,20 @@
 **File:** `game/strategy/data/ship_instance.py`
 **Tests:** Task 2.1
 
-- [ ] Remove the inspector implementations from `ShipInstance`. Either delete the methods entirely or leave them as thin forwarders to the inspector (forwarder removal is Phase 5-style work; defer if caller migration is large).
-- [ ] If forwarders remain, document in `findings_ledger.md` which ones survive into Phase 5/6.
-- [ ] **Verify:** legacy-API tests in 2.1 still pass (if forwarders remain) — or were migrated to the new API (if forwarders were removed).
+- [x] Remove the inspector implementations from `ShipInstance`. Either delete the methods entirely or leave them as thin forwarders to the inspector (forwarder removal is Phase 5-style work; defer if caller migration is large).
+- [x] If forwarders remain, document in `findings_ledger.md` which ones survive into Phase 5/6.
+- [x] **Verify:** legacy-API tests in 2.1 still pass (if forwarders remain) — or were migrated to the new API (if forwarders were removed).
 
 **Notes:**
 
 ### Task 2.4: Focused regression + sharded suite [Simple]
 **Tests:** as below.
 
-- [ ] `pytest tests/unit/strategy/ship_instance/ tests/unit/strategy/fleets/ -x`
-- [ ] `pytest tests/integration/test_fms_b_e2e.py tests/integration/test_fms_c_carrier_ai_launch.py -x`
-- [ ] `python Tools/test_sharded/test_sharded.py`
-- [ ] Record post-phase `wc -l ship_instance.py` and `wc -l component_inspector.py` in `findings_ledger.md`.
-- [ ] Run `python Projects/scripts/phase_complete.py PROJ-425 phase_2`.
+- [x] `pytest tests/unit/strategy/ship_instance/ tests/unit/strategy/fleets/ -x`
+- [x] `pytest tests/integration/test_fms_b_e2e.py tests/integration/test_fms_c_carrier_ai_launch.py -x`
+- [x] `python Tools/test_sharded/test_sharded.py`
+- [x] Record post-phase `wc -l ship_instance.py` and `wc -l component_inspector.py` in `findings_ledger.md`.
+- [x] Run `python Projects/scripts/phase_complete.py PROJ-425 phase_2`.
 
 **Notes:**
 
@@ -72,11 +72,11 @@
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Component/layer inspection no longer lives inline in `ShipInstance`
-- [ ] `component_inspector.py` still under 500 LOC (or the split is justified in `decisions.md`)
-- [ ] No inspector logic landed in UI code
-- [ ] Focused + sharded suites green
-- [ ] Update status at top of this file to `Complete (Committed)` then `Complete (Verified)` after review
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 3
+- [x] All task checkboxes above are checked
+- [x] Component/layer inspection no longer lives inline in `ShipInstance`
+- [x] `component_inspector.py` still under 500 LOC (or the split is justified in `decisions.md`)
+- [x] No inspector logic landed in UI code
+- [x] Focused + sharded suites green
+- [x] Update status at top of this file to `Complete (Committed)` then `Complete (Verified)` after review
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 3

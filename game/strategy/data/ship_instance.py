@@ -564,14 +564,13 @@ class ShipInstance:
         return self._display_fmt.get_display_id()
 
     def get_damaged_component_count(self) -> int:
-        """
-        Get count of damaged component instances.
+        """Get count of damaged component instances.
 
-        Returns:
-            Number of component instances whose current_hp is below their
-            design max_hp.
+        Delegates to `component_inspector.count_damaged_components`
+        (PROJ-425 Phase 2).
         """
-        return sum(1 for cs in self.components.values() if cs.is_damaged)
+        from game.strategy.services.component_inspector import count_damaged_components
+        return count_damaged_components(self)
 
     def get_status_text(self) -> str:
         """Get human-readable status text."""
@@ -595,130 +594,23 @@ class ShipInstance:
         layers = self.design_data.get('layers', {})
         return {layer_name: list(comps) for layer_name, comps in layers.items()}
 
-    def _lookup_design_max_hp(self, comp_id: str) -> Optional[int]:
-        """Look up a component's design max HP from available registries.
-
-        Returns None when the registry is unavailable, the component is
-        unknown, or the registry stores a formula instead of a concrete
-        numeric value. This is only a legacy/missing-state fallback; normal
-        ship creation persists computed per-instance `ComponentState.max_hp`.
-        """
-        components = None
-        if self._registries is not None:
-            components = self._registries.get_components()
-        else:
-            try:
-                from game.core.registry import get_default_registry_provider
-                components = get_default_registry_provider().get_components()
-            except Exception:  # Intentional broad catch: registry may be absent in legacy save context
-                return None
-
-        comp = components.get(comp_id)
-        if comp is None:
-            return None
-        if isinstance(comp, dict):
-            raw = comp.get('max_hp', comp.get('hp'))
-        else:
-            raw = getattr(comp, 'max_hp', None) or getattr(comp, 'hp', None)
-        if raw is None:
-            return None
-        try:
-            return int(raw)
-        except (TypeError, ValueError):
-            return None
-
     def iter_all_components_by_layer(self) -> Dict[str, List[ComponentInstanceView]]:
         """Return every component on this ship grouped by layer.
 
-        Walks `design_data['layers']` in source order; joins each entry
-        with `self.components` via `component_state_key(component_id,
-        instance_index)`. When the key is missing, looks up max HP from
-        the component registry and emits a full-HP active view. If the
-        registry is unavailable or the component is unknown, the instance
-        is skipped instead of emitting a meaningless 0/0 HP view.
-
-        The HULL layer is filtered out — the Fleet Report panel does
-        not display it. Other unrecognised layer names pass through.
-
-        Introduced by PROJ-315 to back the Fleet Report's COMPONENT
-        STATUS panel without exposing mutable `ComponentState` instances
-        to the UI.
+        Delegates to `component_inspector.iter_components_by_layer`
+        (PROJ-425 Phase 2). See that function for behavior.
         """
-        result: Dict[str, List[ComponentInstanceView]] = {}
-        per_id_index: Dict[str, int] = {}
-        for layer_name, components in self.design_data.get('layers', {}).items():
-            if layer_name == 'HULL':
-                continue
-            views: List[ComponentInstanceView] = []
-            for entry in components:
-                comp_id = entry.get('id') if isinstance(entry, dict) else entry
-                if not comp_id:
-                    continue
-                idx = per_id_index.get(comp_id, 0)
-                per_id_index[comp_id] = idx + 1
-                key = component_state_key(comp_id, idx)
-                state = self.components.get(key)
-                if state is not None:
-                    max_hp = int(state.max_hp)
-                    current_hp = int(state.current_hp)
-                    is_active = bool(state.is_active)
-                else:
-                    fallback_max_hp = self._lookup_design_max_hp(comp_id)
-                    if fallback_max_hp is None:
-                        continue
-                    max_hp = fallback_max_hp
-                    current_hp = fallback_max_hp
-                    is_active = True
-                views.append(
-                    ComponentInstanceView(
-                        component_id=comp_id,
-                        instance_index=idx,
-                        current_hp=current_hp,
-                        max_hp=max_hp,
-                        is_active=is_active,
-                    )
-                )
-            result[layer_name] = views
-        return result
+        from game.strategy.services.component_inspector import iter_components_by_layer
+        return iter_components_by_layer(self)
 
     def get_damaged_components_by_layer(self) -> Dict[str, List[Tuple[str, int]]]:
+        """Get damaged component instances grouped by layer.
+
+        Delegates to `component_inspector.damaged_components_by_layer`
+        (PROJ-425 Phase 2).
         """
-        Get damaged component instances grouped by layer.
-
-        Walks the design's layers to map each `component_id` to its layer,
-        then iterates per-instance `components` picking out the ones whose
-        `current_hp` is below `max_hp`.
-
-        Returns:
-            Dict mapping layer name to a list of
-            `(component_state_key, current_hp)` tuples for each damaged
-            instance in that layer. `component_state_key` is the
-            `{comp_id}#{idx}` format — callers that need the raw
-            `component_id` can split on `#`.
-        """
-        damaged_states = [
-            (key, cs) for key, cs in self.components.items() if cs.is_damaged
-        ]
-        if not damaged_states:
-            return {}
-
-        # Build lookup from component_id to layer.
-        comp_id_to_layer: Dict[str, str] = {}
-        for layer_name, components in self.design_data.get('layers', {}).items():
-            for comp_entry in components:
-                comp_id = (
-                    comp_entry.get('id') if isinstance(comp_entry, dict)
-                    else comp_entry
-                )
-                if comp_id:
-                    comp_id_to_layer[comp_id] = layer_name
-
-        result: Dict[str, List[Tuple[str, int]]] = {}
-        for key, cs in damaged_states:
-            layer_name = comp_id_to_layer.get(cs.component_id, 'UNKNOWN')
-            result.setdefault(layer_name, []).append((key, int(cs.current_hp)))
-
-        return result
+        from game.strategy.services.component_inspector import damaged_components_by_layer
+        return damaged_components_by_layer(self)
 
     def to_ship(
         self,

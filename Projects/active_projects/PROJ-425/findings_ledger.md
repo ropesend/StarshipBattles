@@ -55,3 +55,19 @@ Created `game/strategy/data/ship_stats_cache.py` (66 LOC) with `ShipStatsCache.c
 - New test file: `tests/unit/strategy/ship_instance/test_ship_stats_cache.py` (6 tests).
 - Focused suite: **149 passed** (143 baseline + 6 new).
 - `ship_instance.py` LOC: 830 (down from 845; -15).
+
+## Phase 2 — Component/layer inspection extraction (2026-05-17)
+
+Added to `game/strategy/services/component_inspector.py`:
+
+- `iter_components_by_layer(ship)` — extracted from `ShipInstance.iter_all_components_by_layer`.
+- `damaged_components_by_layer(ship)` — extracted from `ShipInstance.get_damaged_components_by_layer`.
+- `count_damaged_components(ship)` — extracted from `ShipInstance.get_damaged_component_count`.
+- `lookup_design_max_hp(ship, comp_id)` — extracted from `ShipInstance._lookup_design_max_hp` (private helper, no production callers).
+
+`ShipInstance` methods now delegate. The entity drops ~96 LOC of inspection logic.
+
+- New test file: `tests/unit/strategy/services/test_component_inspector_layers.py` (6 tests, all green).
+- Focused suite: **155 passed**.
+- `ship_instance.py` LOC: **722** (was 830; -108 this phase, -123 cumulative).
+- `component_inspector.py` LOC: 537 (was 391; +146). Above the 500-LOC guideline but already-shared infrastructure module — split deferred as the additions are cohesive ship-introspection helpers; revisit if it grows further.

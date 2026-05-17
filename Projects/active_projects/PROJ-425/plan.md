@@ -17,7 +17,7 @@
 |-------|--------|-----------|
 | 0. Characterization — freeze current behavior using existing test surfaces | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Extract stats-calculation logic before changing storage | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Move component/layer inspection out of `ShipInstance` | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Move component/layer inspection out of `ShipInstance` | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Extract the factory path and keep a thin shim | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Move write behavior onto `ShipInstanceWriteService` + standardize manager names | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Demolish display / consumable / serializer / bridge forwarders (batches 5a/5b/5d/5e) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -25,9 +25,9 @@
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 2 (component/layer inspection extraction)
-**Last Action:** Phase 1 complete — created `game/strategy/data/ship_stats_cache.py` (66 LOC) with `calculate`/`get_or_compute`/`invalidate`; `ShipInstance.get_calculated_stats` + `invalidate_stats_cache` now delegate. Focused suite 149 passed (+6 new tests). `ship_instance.py` LOC 830 (-15).
-**Next Action:** Phase 2 — move `iter_all_components_by_layer`, `get_damaged_components_by_layer`, `get_damaged_component_count`, and `_lookup_design_max_hp` into `game/strategy/services/component_inspector.py`.
+**Active Phase:** Phase 3 (factory path extraction)
+**Last Action:** Phase 2 complete — added `iter_components_by_layer`, `damaged_components_by_layer`, `count_damaged_components`, `lookup_design_max_hp` to `component_inspector.py`; entity methods delegate. Focused suite 155 passed. `ship_instance.py` 722 LOC (-108). `component_inspector.py` 537 LOC.
+**Next Action:** Phase 3 — extract `ShipInstance.create(...)` body + `_build_full_hp_components_from_design` into a factory helper. Keep `ShipInstance.create(...)` as a thin shim.
 **Blockers:** None for Phases 0–5. Phase 6 is blocked until [PROJ-431](../PROJ-431/plan.md) Phase 1 lands typed `bay_inventory`.
 
 ## Overview
