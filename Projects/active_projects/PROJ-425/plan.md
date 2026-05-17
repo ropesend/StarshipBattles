@@ -15,7 +15,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Characterization — freeze current behavior using existing test surfaces | In Progress | [phase_0_checklist.md](phase_0_checklist.md) |
+| 0. Characterization — freeze current behavior using existing test surfaces | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Extract stats-calculation logic before changing storage | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Move component/layer inspection out of `ShipInstance` | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Extract the factory path and keep a thin shim | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
@@ -24,11 +24,11 @@
 | 6. **Cargo + deployable forwarder demolition (batch 5c)** — **Blocked by:** PROJ-431 Phase 1 (typed `bay_inventory`) | Blocked | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-16
-**Active Phase:** Phase 0 (characterization)
-**Last Action:** Project initialized from the TD-06 plan; scaffold populated with TD-06's phased remediation order (Phases 0–4 free to run, the cargo/deployable batch deferred behind PROJ-431).
-**Next Action:** Read TD-06 source plan + foundation docs, then audit the existing test homes listed under `tests/unit/strategy/ship_instance/` and tighten/extend characterization tests for `create(...)`, stats-cache invalidation, component-toggle invalidation, bridge round-trip, and serializer round-trip.
-**Blockers:** None for Phases 0–4. Phase 6 (cargo/deployable demolition batch) is blocked until [PROJ-431](../PROJ-431/plan.md) Phase 1 lands the typed `bay_inventory` substrate.
+**Last Updated:** 2026-05-17
+**Active Phase:** Phase 1 (stats-calculation extraction)
+**Last Action:** Phase 0 complete — read TD-06 + foundation docs, captured manager-name divergence (`_cargo_mgr`/`_resource_mgr` on entity vs `_cargo_manager`/`_consumable_manager` in write service) in `findings_ledger.md` for Phase 4 reconciliation, baseline focused suite green (143 passed), baseline LOC 845.
+**Next Action:** Phase 1 — move stats-calculation + cache-invalidation logic into a helper (extend existing module if natural; otherwise add `game/strategy/data/ship_stats_cache.py`). Keep `_cached_stats` on entity.
+**Blockers:** None for Phases 0–5. Phase 6 is blocked until [PROJ-431](../PROJ-431/plan.md) Phase 1 lands typed `bay_inventory`.
 
 ## Overview
 `game/strategy/data/ship_instance.py` is 845 LOC — well past the 500-LOC project ceiling — and is mostly a wall of one-line forwarders to delegate classes that already exist (`ShipConsumableManager`, `ShipCargoManager`, `ShipDisplayFormatter`, `ShipInstanceBridge`, `ShipInstanceSerializer`, `ShipInstanceWriteService`). Three substantive in-class blocks remain — the stats cache + registry-DI calculation path, the component-introspection helpers, and the `create(...)` factory — and they all want to move out before the forwarders are demolished. This project executes the six-phase TDD extraction in TD-06, slimming `ShipInstance` toward "durable state + identity + small pure predicates" without breaking any caller.
