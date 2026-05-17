@@ -1,0 +1,123 @@
+{
+  "audit": {
+    "final_audit_request_id": null,
+    "final_audit_status": "not_run",
+    "merge_to_main_at_utc": null,
+    "merge_to_main_sha": null
+  },
+  "buffer_depth": 0,
+  "buffer_depth_override_reason": null,
+  "execution_protocol": "03c-phase-aware-execution",
+  "findings": {},
+  "phases": {
+    "phase_0": {
+      "depends_on": [],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-437/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "Projects/active_projects/PROJ-437/findings/transfer_ui_migration_map.md"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "lightweight",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_1": {
+      "depends_on": ["phase_0"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-437/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/ui/screens/transfer_view_model.py",
+        "game/ui/screens/transfer_controller.py",
+        "game/ui/screens/fleet_data_source.py",
+        "tests/unit/ui/screens/test_transfer_view_model_container.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_2": {
+      "depends_on": ["phase_1"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-437/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/ui/screens/transfer_view_model.py",
+        "game/ui/screens/transfer_grid_renderer.py",
+        "game/ui/screens/transfer_dialog.py",
+        "tests/unit/ui/screens/test_transfer_mass_preview.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_3": {
+      "depends_on": ["phase_2"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-437/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/ui/screens/transfer_view_model.py",
+        "game/ui/screens/transfer_grid_renderer.py",
+        "game/ui/screens/strategy_windows/transfer_dialogs.py",
+        "tests/unit/ui/screens/test_transfer_mixed_content.py",
+        "tests/integration/ui/test_transfer_container_e2e.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_4": {
+      "depends_on": ["phase_3"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-437/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/ui/screens/transfer_dialog.py",
+        "game/ui/screens/transfer_view_model.py",
+        "tests/static_guards/test_no_resource_types_constant.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_5": {
+      "depends_on": ["phase_4"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-437/main",
+      "phase_head_sha": null,
+      "planned_files": [],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    }
+  },
+  "project_baseline_sha": "4177fef361ec7857f32492a8f829777b0e1de41b",
+  "project_baseline_tests": "21132 passed, 0 failed, 0 errors, 0 skipped (sharded suite, 85.9s, 2026-05-17)",
+  "soft_dependency": "PROJ-436 Phase 7 (TransferValidator.VALID_CARGO_TYPES deletion + Container.accepts() stable). PROJ-437 Phase 0 may begin during PROJ-436 Phase 6-8; Phase 1+ blocked on PROJ-436 Phase 7 verified."
+}

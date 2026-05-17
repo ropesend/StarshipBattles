@@ -4,6 +4,8 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-437 | Container-Aware Transfer UI | Planning | 2026-05-17 | 2026-05-17 |
+| PROJ-436 | Unified Storage Substrate and Container Unification | Planning | 2026-05-17 | 2026-05-17 |
 | PROJ-435 | Migrate UI _ACTIVATABLE_ABILITIES to AbilityMetadataRegistry | Planning | 2026-05-17 | 2026-05-17 |
 | PROJ-434 | Complete DesignLibrary deletion (PROJ-427 phase 6 follow-up) | Planning | 2026-05-17 | 2026-05-17 |
 | PROJ-433 | Strategy tech-debt follow-up: component_inspector split (PROJ-425 consult) | Planning | 2026-05-17 | 2026-05-17 |

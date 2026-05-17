@@ -1,0 +1,247 @@
+{
+  "audit": {
+    "final_audit_request_id": null,
+    "final_audit_status": "not_run",
+    "merge_to_main_at_utc": null,
+    "merge_to_main_sha": null
+  },
+  "buffer_depth": 0,
+  "buffer_depth_override_reason": null,
+  "execution_protocol": "03c-phase-aware-execution",
+  "findings": {},
+  "phases": {
+    "phase_0": {
+      "depends_on": [],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-436/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/data/container.py",
+        "game/strategy/data/containable.py",
+        "game/core/resources.py",
+        "data/resources.json",
+        "tests/unit/strategy/data/test_container.py",
+        "tests/unit/strategy/data/test_containable.py",
+        "tests/unit/core/test_resource_catalog_mass_per_unit.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_1": {
+      "depends_on": ["phase_0"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-436/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/simulation/components/abilities/container.py",
+        "game/simulation/components/abilities/cargo.py",
+        "game/simulation/components/abilities/resources.py",
+        "tests/unit/simulation/components/abilities/test_container_ability.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_2": {
+      "depends_on": ["phase_1"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-436/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/data/bay_inventory.py",
+        "game/strategy/engine/order_handlers/launch_fighters.py",
+        "game/strategy/engine/order_handlers/launch_satellites.py",
+        "game/strategy/engine/order_handlers/lay_mines.py",
+        "game/strategy/engine/order_handlers/recover_fighters.py",
+        "game/strategy/engine/order_handlers/recover_satellites.py",
+        "game/strategy/services/mine_group_service.py",
+        "tests/unit/strategy/data/test_bay_inventory_widened.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_3": {
+      "depends_on": ["phase_2"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-436/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/data/ship_instance.py",
+        "game/strategy/data/ship_cargo_manager.py",
+        "game/strategy/data/ship_consumable_manager.py",
+        "game/strategy/data/ship_instance_bridge.py",
+        "game/strategy/data/ship_display_formatter.py",
+        "game/strategy/data/ship_instance_serializer.py",
+        "tests/integration/test_ship_resource_migration.py",
+        "tests/static_guards/test_no_legacy_storage_fields.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_4": {
+      "depends_on": ["phase_3"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-436/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/data/planet.py",
+        "game/strategy/data/planetary_facility.py",
+        "tests/integration/test_planet_storage_migration.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_5": {
+      "depends_on": ["phase_4"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-436/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/data/empire.py",
+        "game/strategy/engine/empire_economy_calculator.py",
+        "game/strategy/services/empire_write_service.py",
+        "tests/integration/test_empire_resource_aggregation.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_6": {
+      "depends_on": ["phase_5"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-436/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/core/protocols/strategy_domain.py",
+        "game/strategy/data/galaxy_protocols.py",
+        "game/ui/panels/build_queue_controller.py",
+        "tests/static_guards/test_no_legacy_protocol_names.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_7": {
+      "depends_on": ["phase_6"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-436/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/validation/transfer_validator.py",
+        "game/ui/screens/transfer_view_model.py",
+        "game/ui/screens/transfer_dialog.py",
+        "game/strategy/engine/order_handlers/transfer_branches.py",
+        "tests/integration/test_transfer_container_validation.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_8": {
+      "depends_on": ["phase_7"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-436/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/engine/production_engine.py",
+        "tests/integration/test_production_engine_container_unified.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_9": {
+      "depends_on": ["phase_8"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-436/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/data/ship_instance.py",
+        "tests/static_guards/test_no_carried_items_proxy.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_10": {
+      "depends_on": ["phase_9"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-436/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "docs/systems/resource_system.md",
+        "docs/systems/production_system.md",
+        "docs/systems/strategy_layer.md",
+        "docs/01_ARCHITECTURE.md",
+        "docs/02_PATTERNS.md"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "lightweight",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_11": {
+      "depends_on": ["phase_10"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-436/main",
+      "phase_head_sha": null,
+      "planned_files": [],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    }
+  },
+  "project_baseline_sha": "4177fef361ec7857f32492a8f829777b0e1de41b",
+  "project_baseline_tests": "21132 passed, 0 failed, 0 errors, 0 skipped (sharded suite, 85.9s, 2026-05-17)"
+}

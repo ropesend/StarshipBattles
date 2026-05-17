@@ -1,0 +1,60 @@
+# PROJ-436: Decisions Log
+
+> **LOG ALL DECISIONS HERE**
+> When you make a design choice or the user specifies a preference, add it to this table.
+> Future agents will reference this to understand why things were done a certain way.
+
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| 2026-05-17 | Project initialized from converged design discussion | Charter built from `AgentCoordination/Scratchpad/Discussion/20260517T230029Z_post-435-project-creation/plans/post_435_project_set_r001.md` (Claude+Codex consensus) and `AgentCoordination/Scratchpad/reports/unified_container_design_sketch.md` (user-confirmed design Q&A). |
+| 2026-05-17 | **Project scope is "storage substrate unification," not just "cargo"** | User #1 goal is tech-debt reduction; cargo is the central seam but the project must also own protocol churn (`IEmpire.resource_pool` / `max_storage`, `IStockpileHolder` / `IStagingYardHolder`), production-engine `context_type` deletion, `Empire._fleet_resource_pool` deletion, and the `_CarriedItemsProxy` final cutover. Naming reflects the broader scope so reviewers in 6 months read the name accurately. |
+| 2026-05-17 | **A2 three-slice internal store** (`resources: Dict[str, float]`, `items: List[ItemRef]`, `population: Dict[str, int]`) wins over A1 uniform store | Items carry identity (damage state, design ref); resources are continuous; population is per-species integer counts. A1 uniform `Dict[ContainableRef, float]` would lose item identity (you cannot store "0.7 fighter") and would force quantity-as-float for discrete kinds. A2 is more code but truer to domain semantics. User confirmed; Codex independently agreed. |
+| 2026-05-17 | **Item identity rule: damaged items preserved per-instance; healthy uniform-design items may be compressed** | A fighter with component damage is a distinguishable thing; 7 healthy fighters of the same design are practically fungible. Compression is a representation detail under the items slice — public ops behave identically. User confirmed. |
+| 2026-05-17 | **Mass-based capacity throughout; mass_per_unit is data-driven** | One JSON-controlled scale across resources/items/population. `energy = 1.0` and `population = 0.1` per individual (10 per ton) per explicit user directive. Initial values for metals (0.01), organics (0.01), vapors (0.001), radioactives (0.005), exotics (0.001), fuel (0.0001), ammo (0.001) are first-pass to seat the math; balance comes later. Items derive mass from their design (e.g., a fighter's mass already exists on its ship spec). |
+| 2026-05-17 | **Population is per-species `Dict[str, int]` slice; no individual identity** | Per user: "10 individuals per ton, we need to keep track of the different species though and it should be integer values." Different races allowed in the same container; mixed-race transports OK. Per-species mass-per-unit lives on race JSONs under `data/races/`, defaulting to 0.1. |
+| 2026-05-17 | **Containers are storage only; launch / recovery / life support / production stay separate abilities** | Per user direction. A Container ability provides mass-capped policy-driven storage. A passenger bay component pairs a `Container` (allowed_kinds=POPULATION) with a `LifeSupportCapacity` ability (existing). A shipyard pairs a `Container` (output destination) with a production ability. A fighter bay pairs a `Container` (allowed_kinds=ITEM, allowed_type_ids includes fighter designs) with a `LaunchFighters` ability. Containers do not gain launch / production capability from the surrounding components. |
+| 2026-05-17 | **Passenger components carry less mass of population than cargo components carry of metals** | Per user direction. Achieved by tuning `capacity_mass` on passenger components down relative to their physical mass, NOT by inflating population mass-per-unit when in a passenger bay. Engine stays uniform; balance is data. |
+| 2026-05-17 | **Deployed groups stay outside the container model** | Per user direction L. Container handles only pre-deployment / post-recovery storage. Once a `FighterWing` / `SatelliteConstellation` / `MineGroup` is on `empire.deployed_groups`, it is not in a container. PROJ-431 typed deployed-group siblings of Fleet preserved as-is. |
+| 2026-05-17 | **Per-resource specialty components remain valid in data, but engine does not require them** | Per user direction F. A `metals_silo` with `allowed_type_ids=["metals"]` works fine; a generic cargo hold with `allowed_type_ids=null` also works. Policy is data, not code. |
+| 2026-05-17 | **No per-type sub-caps inside a container** | Per user direction J. One shared total mass cap and one content-policy filter. No "max 50 mass of fighters AND max 30 mass of satellites" hybrid policies. |
+| 2026-05-17 | **Saves are disposable** | Per CLAUDE.md "no save-file migration" rule. No legacy-format shims. Each sub-phase migrates the durable shape via the substrate-then-sweep-per-PROJ-431-model: new container is a projection over the legacy field during sweep; final cutover commit deletes the legacy field. After the project's final phase, old saves predating PROJ-436 will not load. |
+| 2026-05-17 | **Phase boundary checkpoint rule: every phase leaves the game runnable/savable/loadable** | Per user `feedback_refactor_checkpoints.md`. No multi-phase legacy shadow paths. Substrate-then-sweep-per-PROJ-431-model is the template for each migration. |
+| 2026-05-17 | **End-of-project Codex consult is Phase 11; verified findings become added phases** | Per user `feedback_consult_at_project_end.md`. Findings are NOT auto-trusted; each is verified against current code before being acted on. Verified findings get a new phase (12+, 13+, …) on this project, not a follow-on project ID. |
+| 2026-05-17 | **No worktrees; serial execution in main checkout** | Per user `feedback_no_worktrees.md`. The project branch (`proj/PROJ-436/main`) is conventional; no worktree is created. Multi-machine parallelism requires explicit user coordination, not worktrees. |
+| 2026-05-17 | **PROJ-437 (Container-Aware Transfer UI) is a sibling subproject, not absorbed** | Per user "data-model first, UI second" preference. PROJ-436 ships Phase 7's `TransferValidator` cleanup as the substrate for PROJ-437's UI rewrite. PROJ-437 may start its Phase 0 (read-the-API) during PROJ-436's Phase 6-8 if the API surface stabilizes. |
+| 2026-05-17 | **`_CarriedItemsProxy` deletion is PROJ-436 Phase 9, not a standalone project** | The proxy exists because tests still poke `ship.carried_items.append({...})` — by PROJ-436 Phase 3 completion, production code no longer uses `carried_items` at all, and Phase 9 audits test fixtures and rewrites them to the typed Container API. Tying the deletion to this project keeps the substrate cutover atomic. |
+| 2026-05-18 | **Extend existing `ResourceCatalog` with `mass_per_unit`, do NOT create a parallel strategy-local `resource_registry.py`** | Codex caught this in discussion arc01-006. `game/core/resources.py` already owns `ResourceCatalog` + `ResourceDefinition` as the Core-layer single source of truth for resource definitions, loaded from `data/resources.json`. Creating a sibling `game/strategy/data/resource_registry.py` would duplicate the exact metadata surface we're trying to converge and would violate the layer rule (strategy-local registry of cross-layer data). Correct approach: add `mass_per_unit: float = 1.0` to `ResourceDefinition`, add `ResourceCatalog.get_mass_per_unit(resource_id)` accessor, extend the existing canonical `data/resources.json` with `mass_per_unit` on each of the 8 entries. All strategy/UI consumers go through the existing `ResourceCatalog` public API. Mistake came from drafting before doing the Core-layer audit; corrected before any phase started. |
+| 2026-05-18 | **`data/resources.json` is a modified existing canonical file, not a new file** | Same arc01-006 correction. The file already exists with 8 entries (`metals`, `organics`, `vapors`, `radioactives`, `exotics`, `fuel`, `energy`, `ammo`). Phase 0 extends each entry with `mass_per_unit`; existing fields (`id`, `name`, `description`, `display_group`, `has_quality`) unchanged. |
+
+## Phase 0 deferred design decisions
+
+These three decisions need to land in Phase 0 (Container substrate). They are NOT user-blocking — Phase 0 will pick a default and document the rationale here.
+
+### D1: `PlanetaryFacility.consumable_levels` fold-in
+
+`game/strategy/data/planetary_facility.py:32` currently has `consumable_levels: Dict[str, float]`. Two options:
+
+- **(a) Fold into facility-local Container.** Facility becomes a Container-holding entity like ship / planet. Adds a Container to every facility instance (memory + serialization cost) but unifies the model.
+- **(b) Keep as facility-internal state.** Facilities maintain their own consumables that do not participate in transfers. Cleaner if no UI/gameplay flow exposes facility consumables as transfer-able.
+
+**Default for Phase 0:** (b) — keep as internal state until a concrete transfer use case justifies (a). If Phase 4 (planet migration) discovers a flow that needs (a), revisit.
+
+### D2: `Empire.resource_pool` query-vs-cached
+
+After `_fleet_resource_pool` deletion, `Empire.resource_pool` is a pure aggregation query that walks every container in the empire. Two options:
+
+- **(a) Pure query** every call. Simple, always-correct, may be expensive at scale (large empires).
+- **(b) Cached aggregate** invalidated on container mutation. Complex, fast, can desync if invalidation has bugs.
+
+**Default for Phase 0:** (a) — measure first. If profiling in Phase 5 shows it's hot, add caching with explicit invalidation hooks (PROJ-293 / PROJ-311 patterns are nearby precedent).
+
+### D3: Initial `mass_per_unit` values for non-user-fixed resources
+
+The values added to the existing `data/resources.json` entries (metals 0.01, organics 0.01, vapors 0.001, radioactives 0.005, exotics 0.001, fuel 0.0001, ammo 0.001) are first-pass guesses to seat the math. Balance is a separate concern.
+
+**Default for Phase 0:** ship the first-pass values. Document that they're balance-placeholders. If Phase 1 parser parity tests reveal a values-driven test failure (e.g., a fuel_tank holding 50000 units at mass 0.0001 = 5 tons doesn't fit in a 4-mass component), retune that specific value and document the retune.
+
+## Flagged for product-review (no code action this project)
+
+- `Empire.is_eliminated()` semantics when an empire owns only `MineGroup`s — flagged in PROJ-431 phase 5 decisions. Product question, not a tech-debt fix. Out of scope.
+- The 5 high-value `ShipInstance` entry-point thin shims (`create`, `to_dict`, `clone`, `to_ship`, `update_from_ship`) — 910 callers across 252 files — kept per TD-06 Weak-LLM Guardrail #1. Out of scope unless container migration naturally reduces caller count.
