@@ -21,11 +21,12 @@
 | 3. Validate consumers (regression sweep) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Docs sync | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Clean review | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Codex consult follow-ups | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-16
+**Last Updated:** 2026-05-17
 **Active Phase:** All phases complete; ready for user verification
-**Last Action:** Phase 5 complete — diff-shape audit, leaf inspection, surface checks. Diff vs `07eddbe93` (the user's pre-existing branch commit): 1 deletion (engines.py, -778), 10 additions (engines/ leaves + __init__.py), 1 rewrite (interfaces/__init__.py), 1 new test, plus project scaffold + test_baseline receipts. Zero concrete engine edits. `engines.__all__` has exactly 18 names; all TYPE_CHECKING imports are referenced.
+**Last Action:** Phase 6 complete — addressed two Codex consult findings. Fixed the stale docstring in `tests/unit/strategy/interfaces/test_engine_inheritance.py` (referenced the deleted `engines.py` monolith; now points at the package). Added `tests/unit/strategy/interfaces/test_engines_leaf_path_discipline.py`, an AST guard that walks `game/` and `tests/` and forbids any `from game.strategy.interfaces.engines.<leaf> import ...` or `import game.strategy.interfaces.engines.<leaf>` (allowlist: the package `__init__.py` and the structural layout test). All 18 focused tests green; no current violations.
 **Next Action:** User verification + archive via `/claude-proj-archive` when ready.
 **Blockers:** None
 
@@ -87,6 +88,9 @@ Update any doc that refers to `interfaces/engines.py` as a single file. Likely c
 
 ### Phase 5: Clean review
 `git status --short` to confirm the only deletion is `engines.py` and the only additions are the 9 leaf modules + `__init__.py` + the new test. Inspect each leaf module for copy/paste duplicates, orphan TYPE_CHECKING imports, and docstring fidelity. Confirm `engines/__init__.py` re-exports exactly 18 names and matches `__all__`.
+
+### Phase 6: Codex consult follow-ups
+Triggered by a Codex consult on the merged PROJ-422 surface. Two bounded items: (1) update the now-stale docstring in `tests/unit/strategy/interfaces/test_engine_inheritance.py` that referenced the deleted `game/strategy/interfaces/engines.py` monolith — it now points at the `engines/` package and restates the leaf-private invariant; (2) add `tests/unit/strategy/interfaces/test_engines_leaf_path_discipline.py`, an AST-based guard that walks both `game/` and `tests/` and forbids any `from game.strategy.interfaces.engines.<leaf> import ...` or `import game.strategy.interfaces.engines.<leaf>` for the nine known leaves. Allowlist is exactly two files: `game/strategy/interfaces/engines/__init__.py` (purpose is to re-export leaves) and `tests/unit/strategy/interfaces/test_engines_package_layout.py` (legitimately probes leaf paths to validate package layout). Includes walker self-tests so the guard is not vacuous. No current violations expected (and none found) — the guard codifies the architectural invariant that was documented in `engines/__init__.py` but previously unenforced.
 
 ## Related Documents
 - [TD-09 source plan](../../../Reviews/results/2026-05-16_strategy-layer-tech-debt-review/Verified%20Problem%20Remediation%20Plans/TD-09_engine_interface_split.md) — canonical specification (verification findings, file touch plan, per-phase success criteria)

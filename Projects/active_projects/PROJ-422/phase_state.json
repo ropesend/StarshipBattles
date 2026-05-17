@@ -121,6 +121,25 @@
       "scrap_history": [],
       "status": "complete",
       "verifying_review_id": null
+    },
+    "phase_6": {
+      "depends_on": [
+        "phase_5"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "tests/unit/strategy/interfaces/test_engine_inheritance.py",
+        "tests/unit/strategy/interfaces/test_engines_leaf_path_discipline.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "lightweight",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "complete",
+      "verifying_review_id": null
     }
   },
   "project_branch": "proj/PROJ-422/main",

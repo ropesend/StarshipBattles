@@ -2,7 +2,11 @@
 Tests that all strategy sub-engines inherit from their interface ABCs.
 
 PROJ-239 Task 2.3: AR-005 - All sub-engines should formally inherit
-from their interfaces defined in game/strategy/interfaces/engines.py.
+from their interfaces defined in the ``game/strategy/interfaces/engines/``
+package (split from the former 778-LOC ``engines.py`` monolith by PROJ-422).
+Consumers must continue to import via the package root path
+``game.strategy.interfaces.engines``; leaf modules under that package are
+private.
 """
 import pytest
 
