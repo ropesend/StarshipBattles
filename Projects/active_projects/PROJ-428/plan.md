@@ -16,7 +16,7 @@
 
 | Phase | Name | Status | Checklist |
 |-------|------|--------|-----------|
-| 0 | Freeze the real contract with red tests | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
+| 0 | Freeze the real contract with red tests | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1 | Move planet-modifier engine resolution onto `TurnEngine` | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2 | Move small hook logic onto named `TurnEngine` methods | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3 | Extract the movement-only collaborator | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
@@ -25,10 +25,10 @@
 
 ## Current State
 
-**Last Updated:** 2026-05-16
-**Active Phase:** 0 — Freeze the real contract with red tests
-**Last Action:** Project scaffold populated from TD-04 plan
-**Next Action:** Run `python Projects/scripts/phase_dag.py PROJ-428 eligible`, then start phase 0 characterization tests
+**Last Updated:** 2026-05-17
+**Active Phase:** 1 — Move planet-modifier engine resolution onto `TurnEngine`
+**Last Action:** Phase 0 characterization tests added (env-event hook, booster-dirty selective flip, fleet pruning after minefield kill); hook lookup goes through `DEFAULT_TICK_PHASE_LIST` so tests survive relocation.
+**Next Action:** Phase 1 — lazy property + descriptor lambda + delete `_resolve_planet_modifier_effects`.
 **Blockers:** None
 
 ## Overview

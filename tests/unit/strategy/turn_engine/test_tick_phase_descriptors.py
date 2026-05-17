@@ -18,12 +18,38 @@ from game.strategy.engine.turn_phase_registry import (
     DEFAULT_TICK_PHASE_LIST,
     TickContext,
     TickPhase,
-    _capture_move_queue,
-    _derive_moved_fleet_ids,
 )
 from tests.unit.strategy.turn_engine.test_default_tick_phase_list import (
     GOLDEN_PHASE_ORDER,
 )
+
+
+def _get_movement_calc_post_hook(engine=None):
+    """Return the bound ``movement_calc`` post-exec hook.
+
+    PROJ-428: hooks may live either on the registry module (pre-refactor)
+    or on a TurnEngine collaborator (post-refactor). The lookup walks
+    DEFAULT_TICK_PHASE_LIST so the characterization tests survive the
+    relocation.
+    """
+    for phase in DEFAULT_TICK_PHASE_LIST:
+        if phase.phase_key == 'movement_calc':
+            return phase.post_exec_hook
+    raise AssertionError("movement_calc phase missing from registry")
+
+
+def _get_movement_apply_post_hook():
+    for phase in DEFAULT_TICK_PHASE_LIST:
+        if phase.phase_key == 'movement_apply':
+            return phase.post_exec_hook
+    raise AssertionError("movement_apply phase missing from registry")
+
+
+def _get_env_post_hook():
+    for phase in DEFAULT_TICK_PHASE_LIST:
+        if phase.phase_key == 'environmental':
+            return phase.post_exec_hook
+    raise AssertionError("environmental phase missing from registry")
 
 
 class TestTickPhaseShape:
@@ -81,7 +107,8 @@ class TestTickPhaseHooks:
         )
         move_queue = [(fleet_a, 'C')]
 
-        _capture_move_queue(None, ctx, move_queue)
+        hook = _get_movement_calc_post_hook()
+        hook(None, ctx, move_queue)
 
         assert ctx.move_queue is move_queue
         assert ctx.pre_movement_locations == {1: 'A', 2: 'B'}
@@ -96,7 +123,8 @@ class TestTickPhaseHooks:
             pre_movement_locations={1: 'old-A', 2: 'B'},
         )
 
-        _derive_moved_fleet_ids(None, ctx, None)
+        hook = _get_movement_apply_post_hook()
+        hook(None, ctx, None)
 
         assert ctx.moved_fleet_ids == {1}
 
@@ -141,7 +169,8 @@ class TestTickPhaseHooks:
         original = _mr_mod.MinefieldResolver
         _mr_mod.MinefieldResolver = _CaptureResolver
         try:
-            _derive_moved_fleet_ids(engine, ctx, None)
+            hook = _get_movement_apply_post_hook()
+            hook(engine, ctx, None)
         finally:
             _mr_mod.MinefieldResolver = original
 
@@ -150,6 +179,100 @@ class TestTickPhaseHooks:
             "MinefieldResolver must be called with the engine's _registries "
             "so strategic mine damage uses the real damage pipeline."
         )
+
+
+class TestPhase428Characterization:
+    """PROJ-428 Phase 0: pin behavioral contracts before relocating hooks.
+
+    These tests must remain green when the registry helpers move onto
+    ``TurnEngine`` (Phase 2) or ``MovementPhaseCollaborator`` (Phase 3).
+    They are robust to the post-exec hook callable's location: they look
+    it up via ``DEFAULT_TICK_PHASE_LIST``'s descriptor binding.
+    """
+
+    def test_env_hook_accumulates_events_on_ctx(self):
+        ctx = TickContext(tick=3, empires=[], galaxy=object())
+        hook = _get_env_post_hook()
+
+        hook(None, ctx, ['evt_a', 'evt_b'])
+        hook(None, ctx, ['evt_c'])
+
+        assert ctx.last_environmental_events == ['evt_a', 'evt_b', 'evt_c']
+
+    def test_env_hook_ignores_falsy_result(self):
+        ctx = TickContext(tick=3, empires=[], galaxy=object())
+        hook = _get_env_post_hook()
+
+        hook(None, ctx, [])
+        hook(None, ctx, None)
+
+        assert ctx.last_environmental_events == []
+
+    def test_booster_dirty_flips_only_for_moved_empires(self):
+        """Empire A's fleet moves; empire B's fleet stays put. Only A's
+        ``_booster_dirty`` should flip."""
+        fleet_a = SimpleNamespace(id=1, location='Y')  # moved
+        fleet_b = SimpleNamespace(id=2, location='Z')  # stayed
+        empire_a = SimpleNamespace(id=10, fleets=[fleet_a], _booster_dirty=False)
+        empire_b = SimpleNamespace(id=20, fleets=[fleet_b], _booster_dirty=False)
+        ctx = TickContext(
+            tick=4,
+            empires=[empire_a, empire_b],
+            galaxy=object(),
+            pre_movement_locations={1: 'X', 2: 'Z'},
+        )
+
+        hook = _get_movement_apply_post_hook()
+        hook(SimpleNamespace(_registries=None), ctx, None)
+
+        assert empire_a._booster_dirty is True
+        assert empire_b._booster_dirty is False
+
+    def test_fleets_emptied_by_minefield_damage_removed_from_empire(self):
+        """A moved fleet whose ships are all destroyed by mines must be
+        pruned from the owning empire's fleet list."""
+        ship = SimpleNamespace(instance_id='s1', is_alive=True)
+        moved_fleet = SimpleNamespace(
+            id=42,
+            location='B',
+            ships=[ship],
+            group_kind='fleet',
+        )
+        empire = SimpleNamespace(
+            id=7, fleets=[moved_fleet], _booster_dirty=False,
+        )
+        ctx = TickContext(
+            tick=5,
+            empires=[empire],
+            galaxy=object(),
+            pre_movement_locations={42: 'A'},
+        )
+        engine = SimpleNamespace(_registries=object())
+
+        from game.strategy.engine import minefield_resolver as _mr_mod
+
+        class _DestroyAllResolver:
+            def __init__(self, *args, **kwargs) -> None:
+                pass
+
+            def resolve_minefield_entry(self, **kwargs):
+                # Destroy every ship in the entering fleet.
+                fleet = kwargs['fleet']
+                result = _mr_mod.MinefieldResolutionResult()
+                result.destroyed_ship_ids = [s.instance_id for s in fleet.ships]
+                return result
+
+        original = _mr_mod.MinefieldResolver
+        _mr_mod.MinefieldResolver = _DestroyAllResolver
+        try:
+            hook = _get_movement_apply_post_hook()
+            hook(engine, ctx, None)
+        finally:
+            _mr_mod.MinefieldResolver = original
+
+        # Fleet has no ships left → pruned from empire.
+        assert moved_fleet.ships == []
+        assert moved_fleet not in empire.fleets
 
 
 class TestDefaultTickPhaseList:
