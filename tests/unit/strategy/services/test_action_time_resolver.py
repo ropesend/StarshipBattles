@@ -570,3 +570,116 @@ class TestFacetDrivenActivationTimeField:
             'is the single answer to "which ability_data field carries the '
             'time?".'
         )
+
+    def test_activate_unregistered_ability_raises(
+        self, mock_component_registry
+    ) -> None:
+        """PROJ-429 Phase 8 (Codex follow-up): an ACTIVATE_ABILITY order
+        whose target ability is NOT registered in
+        ``AbilityMetadataRegistry`` (or is registered with no
+        ``EnergyFacet``) must fail fast rather than silently falling back
+        to the literal ``'activation_time'``/``'deactivation_time'`` field
+        names. The literal fallback hid drift between callers and the
+        registry.
+        """
+        planet = MagicMock()
+        facility = MagicMock()
+        facility.is_operational = True
+        facility.design_data = {
+            'layers': {
+                'core': [{
+                    'id': 'shield_generator',
+                    'abilities': {
+                        'NotARegisteredAbility': {'activation_time': 13},
+                    },
+                }],
+            },
+        }
+        facility.instance_id = 'fac-shield'
+        planet.facilities = [facility]
+
+        order = Order(
+            OrderType.ACTIVATE_ABILITY,
+            target={
+                'ability_name': 'NotARegisteredAbility',
+                'facility_instance_id': 'fac-shield',
+            },
+        )
+
+        with pytest.raises(ValueError, match='NotARegisteredAbility'):
+            ActionTimeResolver.resolve_action_time(
+                planet, order, mock_component_registry
+            )
+
+    def test_deactivate_unregistered_ability_raises(
+        self, mock_component_registry
+    ) -> None:
+        """Mirror of ``test_activate_unregistered_ability_raises`` for
+        DEACTIVATE_ABILITY.
+        """
+        planet = MagicMock()
+        facility = MagicMock()
+        facility.is_operational = True
+        facility.design_data = {
+            'layers': {
+                'core': [{
+                    'id': 'shield_generator',
+                    'abilities': {
+                        'NotARegisteredAbility': {'deactivation_time': 13},
+                    },
+                }],
+            },
+        }
+        facility.instance_id = 'fac-shield'
+        planet.facilities = [facility]
+
+        order = Order(
+            OrderType.DEACTIVATE_ABILITY,
+            target={
+                'ability_name': 'NotARegisteredAbility',
+                'facility_instance_id': 'fac-shield',
+            },
+        )
+
+        with pytest.raises(ValueError, match='NotARegisteredAbility'):
+            ActionTimeResolver.resolve_action_time(
+                planet, order, mock_component_registry
+            )
+
+    def test_activate_registered_without_energy_facet_raises(
+        self, mock_component_registry
+    ) -> None:
+        """An ACTIVATE_ABILITY order targeting an ability that IS
+        registered but carries no ``EnergyFacet`` (e.g. a passive combat
+        modifier) is a category error — raise rather than silently
+        falling back to literal field names. ``ShieldModifier`` is
+        registered as a passive multiplier with no energy facet.
+        """
+        planet = MagicMock()
+        facility = MagicMock()
+        facility.is_operational = True
+        facility.design_data = {
+            'layers': {
+                'core': [{
+                    'id': 'fac_with_shield_mod',
+                    'abilities': {
+                        'ShieldModifier': {'multiplier': 1.5},
+                    },
+                }],
+            },
+        }
+        facility.instance_id = 'fac-mod'
+        planet.facilities = [facility]
+
+        order = Order(
+            OrderType.ACTIVATE_ABILITY,
+            target={
+                'ability_name': 'ShieldModifier',
+                'facility_instance_id': 'fac-mod',
+            },
+        )
+
+        with pytest.raises(ValueError, match='ShieldModifier'):
+            ActionTimeResolver.resolve_action_time(
+                planet, order, mock_component_registry
+            )

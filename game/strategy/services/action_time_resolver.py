@@ -48,19 +48,39 @@ def _activate_time_field(ability_name: str, *, activating: bool) -> str:
     ACTIVATE_ABILITY / DEACTIVATE_ABILITY order.
 
     Sources the field name from the per-ability ``EnergyFacet`` in the
-    unified ``AbilityMetadataRegistry``. Falls back to the historical
-    literals (``'activation_time'`` / ``'deactivation_time'``) for
-    abilities that are not registered with an ``EnergyFacet`` — the
-    facet itself defaults to those same literal names.
+    unified ``AbilityMetadataRegistry``.
+
+    PROJ-429 Phase 8 (Codex follow-up): if ``ability_name`` is not
+    registered, OR is registered without an ``EnergyFacet``, raise
+    ``ValueError``. The previous literal fallback
+    (``'activation_time'``/``'deactivation_time'``) silently papered
+    over caller/registry drift — an unregistered energy ability
+    happened to work today because the facet defaults match the
+    literals, but the moment a new energy ability declares a
+    non-default field name a stale caller would read the wrong field
+    with no error. Fail fast instead.
     """
     meta = get_ability_metadata(ability_name)
-    if meta is not None and meta.energy is not None:
-        return (
-            meta.energy.activation_time_field
-            if activating
-            else meta.energy.deactivation_time_field
+    if meta is None:
+        raise ValueError(
+            f"ActionTimeResolver: ACTIVATE_ABILITY/DEACTIVATE_ABILITY order "
+            f"targets ability {ability_name!r}, which is NOT registered in "
+            f"AbilityMetadataRegistry. Add an entry with an EnergyFacet to "
+            f"game/strategy/services/ability_metadata.py."
         )
-    return 'activation_time' if activating else 'deactivation_time'
+    if meta.energy is None:
+        raise ValueError(
+            f"ActionTimeResolver: ACTIVATE_ABILITY/DEACTIVATE_ABILITY order "
+            f"targets ability {ability_name!r}, which IS registered in "
+            f"AbilityMetadataRegistry but carries no EnergyFacet. Only "
+            f"energy-cycling abilities (those declaring activation/"
+            f"deactivation timings) can be (de)activated."
+        )
+    return (
+        meta.energy.activation_time_field
+        if activating
+        else meta.energy.deactivation_time_field
+    )
 
 
 class ActionTimeResolver:

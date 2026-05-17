@@ -214,19 +214,21 @@ class TestPlanetActionEngine:
     def test_multiple_planet_action_orders_all_dispatch_same_tick(self):
         """All planet action orders dispatch instantly on the same tick."""
         engine = PlanetActionEngine()
+        # PROJ-429 Phase 8: ACTIVATE_ABILITY orders now fail fast against
+        # unregistered ability names; use real registered stabilizers.
         design = {
             "layers": {
                 "OUTER": [
-                    {"id": "comp_a", "abilities": {"AbilityA": {"activation_time": 100, "deactivation_time": 50, "energy_drain_rate": 10}}},
-                    {"id": "comp_b", "abilities": {"AbilityB": {"activation_time": 200, "deactivation_time": 75, "energy_drain_rate": 20}}},
+                    {"id": "comp_a", "abilities": {"GeologicStabilizer": {"activation_time": 100, "deactivation_time": 50, "energy_drain_rate": 10}}},
+                    {"id": "comp_b", "abilities": {"StellarStabilizer": {"activation_time": 200, "deactivation_time": 75, "energy_drain_rate": 20}}},
                 ]
             }
         }
         facility = _make_facility("fac-1", design)
         order1 = Order(OrderType.ACTIVATE_ABILITY,
-                            target={"facility_instance_id": "fac-1", "ability_name": "AbilityA"})
+                            target={"facility_instance_id": "fac-1", "ability_name": "GeologicStabilizer"})
         order2 = Order(OrderType.ACTIVATE_ABILITY,
-                            target={"facility_instance_id": "fac-1", "ability_name": "AbilityB"})
+                            target={"facility_instance_id": "fac-1", "ability_name": "StellarStabilizer"})
         planet = _make_planet(facilities=[facility], orders=[order1, order2])
         empire = _make_empire(colonies=[planet])
 
@@ -277,20 +279,22 @@ class TestPlanetActionEngine:
     def test_mixed_orders_stops_at_non_planet_action(self):
         """Planet action orders dispatch until a non-planet-action order is reached."""
         engine = PlanetActionEngine()
+        # PROJ-429 Phase 8: ACTIVATE_ABILITY orders now fail fast against
+        # unregistered ability names; use a real registered stabilizer.
         design = {
             "layers": {
                 "OUTER": [
-                    {"id": "comp_a", "abilities": {"AbilityA": {"activation_time": 100, "deactivation_time": 50, "energy_drain_rate": 10}}},
+                    {"id": "comp_a", "abilities": {"GeologicStabilizer": {"activation_time": 100, "deactivation_time": 50, "energy_drain_rate": 10}}},
                 ]
             }
         }
         facility = _make_facility("fac-1", design)
         activate_order = Order(OrderType.ACTIVATE_ABILITY,
-                                    target={"facility_instance_id": "fac-1", "ability_name": "AbilityA"})
+                                    target={"facility_instance_id": "fac-1", "ability_name": "GeologicStabilizer"})
         # A non-planet-action order blocks further processing
         move_order = Order(OrderType.MOVE, target=None)
         deactivate_order = Order(OrderType.DEACTIVATE_ABILITY,
-                                      target={"facility_instance_id": "fac-1", "ability_name": "AbilityA"})
+                                      target={"facility_instance_id": "fac-1", "ability_name": "GeologicStabilizer"})
         planet = _make_planet(facilities=[facility], orders=[activate_order, move_order, deactivate_order])
         empire = _make_empire(colonies=[planet])
 
@@ -303,26 +307,28 @@ class TestPlanetActionEngine:
     def test_activate_then_deactivate_same_tick(self):
         """Activate + Deactivate on same tick: both process instantly."""
         engine = PlanetActionEngine()
+        # PROJ-429 Phase 8: ACTIVATE_ABILITY orders now fail fast against
+        # unregistered ability names; use real registered stabilizers.
         design = {
             "layers": {
                 "OUTER": [
-                    {"id": "comp_a", "abilities": {"AbilityA": {"activation_time": 100, "deactivation_time": 50, "energy_drain_rate": 10}}},
-                    {"id": "comp_b", "abilities": {"AbilityB": {"activation_time": 200, "deactivation_time": 75, "energy_drain_rate": 20}}},
+                    {"id": "comp_a", "abilities": {"GeologicStabilizer": {"activation_time": 100, "deactivation_time": 50, "energy_drain_rate": 10}}},
+                    {"id": "comp_b", "abilities": {"StellarStabilizer": {"activation_time": 200, "deactivation_time": 75, "energy_drain_rate": 20}}},
                 ]
             }
         }
         facility = _make_facility("fac-1", design)
-        # Pre-set AbilityB as active
+        # Pre-set StellarStabilizer as active
         facility.component_states["OUTER:1:comp_b"] = ComponentActivationState(
             phase=ActivationPhase.ACTIVE,
-            ability_name="AbilityB",
+            ability_name="StellarStabilizer",
             energy_drain_rate=20.0,
         ).to_dict()
 
         activate_a = Order(OrderType.ACTIVATE_ABILITY,
-                                target={"facility_instance_id": "fac-1", "ability_name": "AbilityA"})
+                                target={"facility_instance_id": "fac-1", "ability_name": "GeologicStabilizer"})
         deactivate_b = Order(OrderType.DEACTIVATE_ABILITY,
-                                  target={"facility_instance_id": "fac-1", "ability_name": "AbilityB",
+                                  target={"facility_instance_id": "fac-1", "ability_name": "StellarStabilizer",
                                           "component_key": "OUTER:1:comp_b"})
         planet = _make_planet(facilities=[facility], orders=[activate_a, deactivate_b])
         empire = _make_empire(colonies=[planet])
