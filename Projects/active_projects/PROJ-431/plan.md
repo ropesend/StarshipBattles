@@ -17,21 +17,32 @@
 |-------|--------|-----------|
 | 1. Typed `BayInventory` on `ShipInstance` | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. `MineGroup` extraction (DeployedGroup family 1) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. `FighterWing` + `SatelliteConstellation` (families 2 & 3) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. `FighterWing` + `SatelliteConstellation` (families 2 & 3) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Polish + docs + dead-code sweep | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 3 (next)
-**Last Action:** Phase 2 COMPLETE. Landed in five commits on `proj/PROJ-431/main` (head `b9c8720d3`):
+**Active Phase:** Phase 4 (next)
+**Last Action:** Phase 3 COMPLETE. Landed in four commits on `proj/PROJ-431/main` (head `8c131a969`):
+1. `f4a93be4b` — added `FighterWing` + `SatelliteConstellation` (typed `DeployedGroup` siblings of Fleet) in `game/strategy/data/deployed_group.py`. Both carry `list[ShipInstance]` and round-trip via the polymorphic `DeployedGroup.from_dict` dispatcher (type tags `"fighter_wing"`, `"satellite_constellation"`). New tests: `test_fighter_wing.py`, `test_satellite_constellation.py`.
+2. `f8ef01bba` — `LaunchFighters` / `LaunchSatellites` order handlers mint typed `FighterWing` / `SatelliteConstellation` on `empire.deployed_groups`. `RecoverFighters` / `RecoverSatellites` walk `empire.deployed_groups_of(<type>)` via isinstance dispatch, no more string `group_kind` filter on `Fleet`. Migrated all four launch/recover order-handler unit tests + the five FMS integration suites (C/D e2e, cd-isolation, planet launch + recovery, in-battle launch e2e).
+3. `feede748a` — combat consumers: `ConflictResolutionEngine` walks `empire.deployed_groups_of(FighterWing|SatelliteConstellation)` into the occupants list alongside `empire.fleets`. Fighter-reboard overflow mints typed deployed groups instead of `Fleet(group_kind=...)`. `EmpireWriteService.prune_empty_fleets` handles both Fleet and `DeployedGroup` empties. New `_ShipBearingDeployedGroup` base provides `remove_ship` so the post-battle `IFleetMutator` plumbing prunes destroyed ships polymorphically.
+4. `8c131a969` — cleanup: `_reject_if_non_fleet_group` + all 10 callers DELETED; `Fleet.group_kind` field + constructor parameter + legal-values check + to_dict emission + from_dict default DELETED; `FleetCapabilityCalculator._is_real_fleet` collapsed to a degenerate `return True` no-op; `FleetInfo.group_kind` DTO field DELETED; UI dispatch tables (`fleet_menu_items.py`, `planet_menu_items.py`) now dispatch on `isinstance(group, FighterWing|SatelliteConstellation)` reading `empire.deployed_groups`.
+
+Grep gates: zero hits for `_reject_if_non_fleet_group` in `game/` and `tests/`; zero hits for `"fighter_group"` / `"satellite_group"` outside docstrings/comments and `commands/__init__.py` (preserved payload field names). `Fleet.group_kind` field disposition: **DELETED entirely** — every Fleet is a real fleet, deployed mines/fighters/satellites are typed sibling models on `empire.deployed_groups`. Full sharded suite: **21134/21134 passed (145.7s, 12 shards)**.
+**Next Action:** Phase 4 — polish + docs + final grep sweep.
+**Blockers:** None.
+
+---
+
+### Pre-Phase-3 historical state (preserved):
+Phase 2 COMPLETE. Landed in five commits on `proj/PROJ-431/main` (head `b9c8720d3`):
 1. `0839f2077` — added typed `DeployedGroup` base + concrete `MineGroup` (`game/strategy/data/deployed_group.py`); `Empire.deployed_groups: list[DeployedGroup]` + `add_deployed_group` / `remove_deployed_group` / `deployed_groups_of(cls)`; polymorphic save round-trip via a per-subclass `type` discriminator. `Empire.is_eliminated` now also checks deployed_groups.
 2. `a3168cd66` — `LayMinesOrderHandler` deposits into a fresh `MineGroup` on `empire.deployed_groups`. Deletes the synthetic `mine_carrier_synthetic` `ShipInstance` (`_seed_mine_group_carrier` gone), renames `_mint_fleet_id` to `_mint_deployed_group_id`. Mines live as homogeneous `list[CarriedVehicle]` on the group — no `bay_inventory` indirection.
 3. `04956b69d` — every consumer reads `MineGroup` directly: `MinefieldResolver` walks `empire.deployed_groups_of(MineGroup)`; `_iter_mines`/`_set_mines` collapse to `_pop_mine_at`; `TacticalMineResolver.from_mine_group` / `writeback_to_mine_group` operate on `mine_group.mines`; `MineGroupService` uses `isinstance(group, MineGroup)`; post-battle hook prunes empty mine groups from `deployed_groups`; `movement_phase_collaborator` drops moot `group_kind == 'fleet'` filter.
 4. `b9c8720d3` — `StrategyBattleAssembler.mine_group_filter` parameter and `_default_mine_group_filter` DELETED; `TeamSpecBuilder.split_mine_groups` DELETED; assembler walks `empire.deployed_groups` via the `empires` mapping (`_collect_mine_groups_at_hex`). `"mine_group"` removed from `Fleet.group_kind` legal-values; mine-only attributes (`sensitivity`, `expected_hit_chance_threshold`, `mine_positions`, `scatter_seed`) deleted from `Fleet` (they live on `MineGroup` now); `_reject_if_non_fleet_group` and `FleetCapabilityCalculator._is_real_fleet` drop the `"mine_group"` entry from the recognised non-fleet set. Test fixtures across 9 files migrated.
 
 Grep gates all green: zero hits for `_split_mine_groups_from_fleets`, `mine_group_filter`, `_seed_mine_group_carrier`, `mine_carrier_synthetic`, `_set_mines` outside the prose / decisions docs. Full sharded suite: **21134/21134 passed (144.1s, 12 shards)**. `mine_group_filter` disposition: DROPPED entirely (not defaulted-and-kept) — per design.md "the filter is deleted, not refactored" once mines live on `deployed_groups`; the typed split removes the seam that the parameter was guarding.
-**Next Action:** Phase 3 — `FighterWing` + `SatelliteConstellation` extraction. Open `phase_3_checklist.md`.
-**Blockers:** None.
 
 ## Overview
 Strategy tech-debt #10/10 (final project in the arc). Replace the two overloaded substrates that currently carry every deployable family — `Fleet.group_kind`-string discrimination and `ShipInstance.carried_items: List[Dict[str, Any]]` — with explicit typed models. Today four deployable families (mines, fighters, satellites, drop pods) hang off two abstractions, mine groups invent a synthetic-carrier `ShipInstance` whose only job is to hold mines, and **ten** fleet-action handlers must remember to call `_reject_if_non_fleet_group` to guard against deployed-group dispatch. The redesign introduces a `BayInventory` (typed `bay: list[CarriedVehicle]` + `pods: list[DropPod]`) on `ShipInstance` and a sibling `DeployedGroup` family (`MineGroup`, `FighterWing`, `SatelliteConstellation`) on `Empire`, so runtime type replaces the string discriminator and the handler guard becomes unnecessary.
