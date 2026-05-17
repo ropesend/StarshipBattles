@@ -21,15 +21,15 @@
 | 1. Introduce `DesignRepository` (additive, no caller migration) | Complete | [phase_1_checklist.md](phase_1_checklist.md) | Phase 0 |
 | 2. Introduce `DesignCatalog` and move cache ownership | Complete (scope-narrowed: absorption only; cache migration deferred to Phase 6) | [phase_2_checklist.md](phase_2_checklist.md) | Phase 1 |
 | 3. Migrate runtime production to the catalog | Complete (Committed) | [phase_3_checklist.md](phase_3_checklist.md) | Phase 2 |
-| 4. Built-count write-back (deferred, no mid-tick disk writes) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) | Phase 3 |
+| 4. Built-count write-back (deferred, no mid-tick disk writes) | Complete (Committed) | [phase_4_checklist.md](phase_4_checklist.md) | Phase 3 |
 | 5. Convert `SaveGameService` to instance-owned replay-store wiring | Not Started | [phase_5_checklist.md](phase_5_checklist.md) | Phase 4 |
 | 6. Migrate UI callers and delete the old `DesignLibrary` shim | Not Started | [phase_6_checklist.md](phase_6_checklist.md) | Phase 5 |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 3 complete; resuming with Phase 4.
-**Last Action:** Phase 3 — Migrated runtime production off `DesignLibrary` / `save_path`. `ProductionSpawner`, `ProductionEngine`, `AddToConstructionQueueCommandHandler`, and `quickstart_builder.spawn_initial_complexes` now consume `DesignCatalog` via `session.services.design_catalogs_by_empire[empire_id]`. `ProductionEngine` no longer threads `save_path` through tick processing. The Phase 0 integration guard `tests/integration/strategy/production/test_no_design_disk_read_during_tick.py` has been flipped from xfail to expected-pass. Test patches in `tests/unit/strategy/engine/test_production_spawner.py` and `tests/unit/strategy/production_engine/test_spawning.py` re-pointed to patch `DesignCatalog` instead of `DesignLibrary`. Quickstart retains a `save_path` parameter only to bootstrap-time prime each empire's catalog from a fresh `DesignRepository` scan — no tick-path disk reads. Grep gate against the four tick-path runtime files shows only doc-string mentions. Focused suites green: 137 passed across production / construction-queue / quickstart unit + integration.
-**Next Action:** Begin Phase 4 (deferred built-count flush at save time, no schema bump, no `Empire.designs_built_count` field).
+**Active Phase:** Phase 4 complete; resuming with Phase 5.
+**Last Action:** Phase 4 — Wired the deferred built-count flush at save time. `SaveGameService.save_game` now calls a new `_flush_pending_built_counts(game_session, save_path)` helper before serialising the turn file. The helper iterates `session.services.design_catalogs_by_empire`, constructs a per-empire `DesignRepository(save_path, empire_id=...)` on the fly, and asks each catalog to drain its pending map via `DesignCatalog.flush_pending_built_counts(repository)`. Missing `services` or missing catalog map degrades silently — legacy / minimal sessions still save. **Schema discipline preserved:** `SAVE_VERSION` stays at `"3.0.0"` (no v4.0.0 bump); no `Empire.designs_built_count` field introduced. Tests: `tests/unit/strategy/design_catalog/test_pending_built_count_flush.py` (3 tests) and `tests/unit/strategy/save_game_service/test_built_count_flush_on_save.py` (3 tests) added. Focused suite: 83 passed across `save_game_service/` + production integration.
+**Next Action:** Begin Phase 5 (SaveGameService replay-store conversion from module-global `_replay_store` to instance-owned).
 **Blockers:** None.
 
 ## Overview

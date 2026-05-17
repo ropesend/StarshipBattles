@@ -110,6 +110,15 @@ class SaveGameService:
             # Update game session's save_path
             game_session.save_path = save_path
 
+            # PROJ-427 Phase 4: flush each per-empire DesignCatalog's pending
+            # built-count increments through DesignRepository BEFORE the turn
+            # file is serialised. No mid-tick disk writes — the increments
+            # accumulated during the tick land on disk at save time, against
+            # ``designs/empire_<id>/<design>.json`` metadata. No save-schema
+            # change: ``Empire.designs_built_count`` field is intentionally
+            # not introduced.
+            SaveGameService._flush_pending_built_counts(game_session, save_path)
+
             # Serialize and save game state to turn file
             game_state = game_session.to_dict()
             turn_file = os.path.join(turns_folder, f"turn_{game_session.turn_number}.json")
@@ -446,6 +455,43 @@ class SaveGameService:
         except (AttributeError, ImportError, RuntimeError, StateException) as e:
             logger.error(f"SaveGameService: Failed to reconstruct game session - {e}")
             return None, f"Save file corrupted: Failed to reconstruct game state"
+
+    @staticmethod
+    def _flush_pending_built_counts(game_session, save_path: str) -> None:
+        """PROJ-427 Phase 4: drain each empire catalog's pending built-counts.
+
+        Iterates ``game_session.services.design_catalogs_by_empire`` (if
+        present) and asks each catalog to flush its accumulated
+        ``record_built(...)`` increments through a per-empire
+        ``DesignRepository`` rooted at ``save_path``. Missing ``services`` or
+        missing catalog map degrades silently — legacy / minimal sessions
+        without the runtime-services bag still save.
+        """
+        services = getattr(game_session, "services", None)
+        if services is None:
+            return
+        catalogs = getattr(services, "design_catalogs_by_empire", None)
+        if not catalogs:
+            return
+        try:
+            from game.strategy.systems.design_repository import DesignRepository
+        except ImportError:  # Intentional broad catch: repository import must not break save.
+            logger.exception(
+                "SaveGameService: DesignRepository import failed during "
+                "built-count flush; skipping flush."
+            )
+            return
+        for empire_id, catalog in catalogs.items():
+            if catalog is None:
+                continue
+            try:
+                per_empire_repo = DesignRepository(save_path, empire_id=empire_id)
+                catalog.flush_pending_built_counts(per_empire_repo)
+            except Exception:  # Intentional broad catch: a flush failure must not abort the save.
+                logger.exception(
+                    "SaveGameService: built-count flush failed for empire_%s",
+                    empire_id,
+                )
 
     @staticmethod
     def _validate_save(save_path: str) -> Tuple[bool, Optional[str]]:
