@@ -15,15 +15,15 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Characterization — pin current `component_inspector` surface with focused tests | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
+| 0. Characterization — pin current `component_inspector` surface with focused tests | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Split `component_inspector.py` into `component_abilities.py` + `component_layers.py` | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Verification + docs | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 0 (planning — initialized from PROJ-425 Codex consult)
-**Last Action:** Project scaffolded from PROJ-425 Codex consult (2026-05-17). Codex flagged that `game/strategy/services/component_inspector.py` reached 537 LOC after PROJ-425 Phase 2 added the per-instance layer-view helpers, exceeding the 500-LOC convention. Codex recommended splitting into `component_abilities.py` (ability iteration helpers) + `component_layers.py` (layer-view helpers); not large enough to reopen PROJ-425 as a new phase, so spun out into this small follow-up project.
-**Next Action:** Begin Phase 0 — pin the current `component_inspector` public surface with focused tests before any code moves between modules. The existing test homes are `tests/unit/strategy/services/test_component_inspector*.py` plus the strategy-layer suites that consume the helpers indirectly.
+**Active Phase:** Phase 1 (split into component_abilities.py + component_layers.py)
+**Last Action:** Phase 0 complete. Added `tests/unit/strategy/services/test_component_inspector_surface.py` pinning the 16-name `__all__` set. Grep confirmed ~50 import sites across ~33 files. Option A (re-export shim) locked in `decisions.md`. `lookup_design_max_hp` will ship in `component_layers.py` (only consumer is `iter_components_by_layer`).
+**Next Action:** Begin Phase 1 — create `component_abilities.py` (Surface A + `has_warp_capability`) and `component_layers.py` (Surface B + `lookup_design_max_hp`); rewrite `component_inspector.py` as a re-export shim. Snapshot test must stay green.
 **Blockers:** None. Predecessor PROJ-425 Phases 0-5 are complete on `proj/PROJ-425/main`.
 
 ## Overview
