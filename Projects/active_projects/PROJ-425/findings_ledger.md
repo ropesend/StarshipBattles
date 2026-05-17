@@ -47,3 +47,11 @@ The existing tests in `tests/unit/strategy/ship_instance/` already cover all req
 - **Convenience-method coverage** (Task 0.6): `test_convenience_methods.py`, `test_capacity_levels.py`.
 
 **No new characterization tests needed** — coverage is already sufficient. Phase 0 is a read-only confirmation phase. Phases 1-5 will add their own TDD anchor tests.
+
+## Phase 1 — Stats-calculation extraction (2026-05-17)
+
+Created `game/strategy/data/ship_stats_cache.py` (66 LOC) with `ShipStatsCache.calculate` / `get_or_compute` / `invalidate`. `ShipInstance.get_calculated_stats` and `invalidate_stats_cache` now delegate to the helper. `_cached_stats` storage stays on the entity (Guardrail #2).
+
+- New test file: `tests/unit/strategy/ship_instance/test_ship_stats_cache.py` (6 tests).
+- Focused suite: **149 passed** (143 baseline + 6 new).
+- `ship_instance.py` LOC: 830 (down from 845; -15).

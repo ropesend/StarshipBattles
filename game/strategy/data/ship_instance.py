@@ -339,9 +339,9 @@ class ShipInstance:
         """
         Get calculated stats from components, respecting damage state.
 
-        Uses Ship.from_dict() + recalculate_stats() via calculate_design_stats()
-        as the single source of truth for all stat calculations. Results are
-        cached and invalidated when component damage changes.
+        Delegates to `ShipStatsCache` (PROJ-425 Phase 1): the helper owns
+        the registry-DI calculation path and the cache rule. Storage of
+        `_cached_stats` remains on this entity per TD-06 Guardrail #2.
 
         Args:
             force_refresh: If True, recalculate even if cached
@@ -349,24 +349,8 @@ class ShipInstance:
         Returns:
             Dict with calculated stats (max_hp, mass, resource_storage, etc.)
         """
-        if self._cached_stats is None or force_refresh:
-            from game.simulation.entities.ship_design_stats import calculate_design_stats
-
-            registries = self._registries
-            if registries is None:
-                raise ValueError(
-                    "ShipInstance requires registries for stats calculation. "
-                    "Use ShipInstance.create() or from_dict() with registries parameter, "
-                    "or set ship._registries after construction."
-                )
-
-            self._cached_stats = calculate_design_stats(
-                self.design_data,
-                registries,
-                components=self.components,
-                component_toggles=self.component_toggles,
-            )
-        return self._cached_stats
+        from game.strategy.data.ship_stats_cache import ShipStatsCache
+        return ShipStatsCache.get_or_compute(self, force_refresh=force_refresh)
 
     def invalidate_stats_cache(self) -> None:
         """
@@ -375,7 +359,8 @@ class ShipInstance:
         Call this when component damage changes, after battle,
         or after repair operations.
         """
-        self._cached_stats = None
+        from game.strategy.data.ship_stats_cache import ShipStatsCache
+        ShipStatsCache.invalidate(self)
 
     def get_hp_percentage(self) -> float:
         """Get current HP as percentage of max."""

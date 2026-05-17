@@ -16,7 +16,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 0. Characterization — freeze current behavior using existing test surfaces | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. Extract stats-calculation logic before changing storage | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Extract stats-calculation logic before changing storage | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Move component/layer inspection out of `ShipInstance` | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Extract the factory path and keep a thin shim | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Move write behavior onto `ShipInstanceWriteService` + standardize manager names | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -25,9 +25,9 @@
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 1 (stats-calculation extraction)
-**Last Action:** Phase 0 complete — read TD-06 + foundation docs, captured manager-name divergence (`_cargo_mgr`/`_resource_mgr` on entity vs `_cargo_manager`/`_consumable_manager` in write service) in `findings_ledger.md` for Phase 4 reconciliation, baseline focused suite green (143 passed), baseline LOC 845.
-**Next Action:** Phase 1 — move stats-calculation + cache-invalidation logic into a helper (extend existing module if natural; otherwise add `game/strategy/data/ship_stats_cache.py`). Keep `_cached_stats` on entity.
+**Active Phase:** Phase 2 (component/layer inspection extraction)
+**Last Action:** Phase 1 complete — created `game/strategy/data/ship_stats_cache.py` (66 LOC) with `calculate`/`get_or_compute`/`invalidate`; `ShipInstance.get_calculated_stats` + `invalidate_stats_cache` now delegate. Focused suite 149 passed (+6 new tests). `ship_instance.py` LOC 830 (-15).
+**Next Action:** Phase 2 — move `iter_all_components_by_layer`, `get_damaged_components_by_layer`, `get_damaged_component_count`, and `_lookup_design_max_hp` into `game/strategy/services/component_inspector.py`.
 **Blockers:** None for Phases 0–5. Phase 6 is blocked until [PROJ-431](../PROJ-431/plan.md) Phase 1 lands typed `bay_inventory`.
 
 ## Overview
