@@ -17,16 +17,16 @@
 |-------|--------|-----------|
 | 0. Docs read + structural TDD anchor test | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Introduce the engines package | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Align top-level interfaces aggregator | In Progress | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Validate consumers (regression sweep) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 2. Align top-level interfaces aggregator | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Validate consumers (regression sweep) | In Progress | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Docs sync | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Clean review | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-16
-**Active Phase:** Phase 2
-**Last Action:** Phase 1 complete — `engines.py` deleted; new `engines/` package contains `__init__.py` + 9 leaf modules (movement/orders/combat/production/logistics/population/planet_ops/terraforming/components). 5 of 6 layout-test assertions are green; only `test_top_level_interfaces_reexports_all_engines` remains red (Phase 2 scope).
-**Next Action:** Phase 2 — rewrite `game/strategy/interfaces/__init__.py` to re-export all 18 engine ABCs (closes the 5-name drift).
+**Active Phase:** Phase 3
+**Last Action:** Phase 2 complete — `game/strategy/interfaces/__init__.py` rewritten to re-export all 18 engine ABCs (closes the 5-name drift). All 6 layout-test assertions are now green.
+**Next Action:** Phase 3 — run focused strategy-engine test surface, TurnEngine AST guard, and the full sharded baseline to validate consumer source files require zero edits.
 **Blockers:** None
 
 ## Overview
