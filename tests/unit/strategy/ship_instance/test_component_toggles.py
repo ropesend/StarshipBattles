@@ -244,7 +244,7 @@ class TestCacheInvalidation:
         assert ship._cached_stats is not None
 
         # Consume resource (should not invalidate cache)
-        ship.consume_resource('fuel', 100)
+        ship._resource_mgr.consume_resource('fuel', 100)
 
         # Cache should still be valid
         assert ship._cached_stats is not None

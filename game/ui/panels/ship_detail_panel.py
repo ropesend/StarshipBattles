@@ -322,7 +322,7 @@ class ShipDetailPanel:
 
         y += image_size + 10
 
-        display_id = ship.get_display_id() or ship.instance_id[:8]
+        display_id = ship._display_fmt.get_display_id() or ship.instance_id[:8]
         header = UILabel(
             relative_rect=pygame.Rect(10, y, width, 30),
             text=display_id,
@@ -346,8 +346,8 @@ class ShipDetailPanel:
         # --- Status Section ---
         y = self._add_section_header("STATUS", 10, y, width)
 
-        status_text = ship.get_status_text()
-        hp_display = ship.get_hp_display()
+        status_text = ship._display_fmt.get_status_text()
+        hp_display = ship._display_fmt.get_hp_display()
         hp_pct = ship.get_hp_percentage()
 
         status_label = UILabel(
@@ -372,7 +372,7 @@ class ShipDetailPanel:
         y = self._add_section_header("RESOURCES", 10, y, width)
 
         for resource in ["fuel", "energy", "ammo"]:
-            display = ship.get_resource_display(resource)
+            display = ship._display_fmt.get_resource_display(resource)
             if display != "N/A":
                 pct = ship.get_resource_percentage(resource)
                 label = UILabel(

@@ -237,8 +237,8 @@ class TestAdditionalCoverage:
             consumable_levels={'fuel': 5000, 'energy': 2000}
         )
 
-        ship.consume_resource('fuel', 1000)
-        ship.consume_resource('energy', 500)
+        ship._resource_mgr.consume_resource('fuel', 1000)
+        ship._resource_mgr.consume_resource('energy', 500)
 
         data = ship.to_dict()
         restored = ShipInstance.from_dict(data)
@@ -279,7 +279,7 @@ class TestAdditionalCoverage:
         )
 
         # Zero capacity means current is also 0 (assumed full of 0)
-        assert ship.get_current_resource('fuel') == 0
+        assert ship._resource_mgr.get_current_resource('fuel') == 0
 
     def test_clone_preserves_consumable_levels(self, make_design_data_with_stats):
         """clone preserves consumable_levels state.
@@ -298,7 +298,7 @@ class TestAdditionalCoverage:
             consumable_levels={'fuel': 5000, 'energy': 2000}
         )
 
-        ship.consume_resource('fuel', 1000)
+        ship._resource_mgr.consume_resource('fuel', 1000)
 
         cloned = ship.clone()
 
@@ -327,7 +327,7 @@ class TestEdgeCases:
         ship.consumable_levels['fuel'] = 3000
 
         # Negative amount should be rejected - cannot "consume" a negative amount
-        result = ship.consume_resource('fuel', -100)
+        result = ship._resource_mgr.consume_resource('fuel', -100)
 
         # Should return False and leave resource unchanged
         assert result is False
@@ -337,7 +337,7 @@ class TestEdgeCases:
         """get_resource_capacity handles empty expected_stats."""
         ship = make_ship_with_stats(expected_stats={})
 
-        capacity = ship.get_resource_capacity('fuel')
+        capacity = ship._resource_mgr.get_resource_capacity('fuel')
         assert capacity == 0
 
     def test_component_toggles_with_nonexistent_component(self, make_design_data_with_stats):
@@ -365,9 +365,9 @@ class TestEdgeCases:
         })
 
         # Should not raise, return empty dict
-        per_hex = ship.get_all_resource_costs_per_hex()
-        per_turn = ship.get_all_resource_costs_per_turn()
-        warp = ship.get_warp_resource_costs()
+        per_hex = ship._resource_mgr.get_all_resource_costs_per_hex()
+        per_turn = ship._resource_mgr.get_all_resource_costs_per_turn()
+        warp = ship._resource_mgr.get_warp_resource_costs()
 
         assert per_hex == {}
         assert per_turn == {}

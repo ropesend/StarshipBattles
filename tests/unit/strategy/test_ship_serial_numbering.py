@@ -127,7 +127,7 @@ class TestShipInstanceSerial:
 
 
 class TestShipInstanceDisplayId:
-    """Test cases for ShipInstance.get_display_id() method."""
+    """Test cases for ShipInstance._display_fmt.get_display_id() method."""
 
     @pytest.fixture
     def design_data(self):
@@ -142,7 +142,7 @@ class TestShipInstanceDisplayId:
         instance = ship_factory(design_data, owner_id=0)
         instance.serial = 1
 
-        display_id = instance.get_display_id()
+        display_id = instance._display_fmt.get_display_id()
 
         assert display_id == "Destroyer-000001"
 
@@ -151,7 +151,7 @@ class TestShipInstanceDisplayId:
         instance = ship_factory(design_data, owner_id=0)
         instance.serial = 1034
 
-        display_id = instance.get_display_id()
+        display_id = instance._display_fmt.get_display_id()
 
         assert display_id == "Destroyer-001034"
 
@@ -161,7 +161,7 @@ class TestShipInstanceDisplayId:
         instance = ship_factory(design_data, owner_id=0, name="USS Enterprise")
         instance.serial = 7
 
-        display_id = instance.get_display_id()
+        display_id = instance._display_fmt.get_display_id()
 
         # Should use design name "Cruiser", not instance name "USS Enterprise"
         assert display_id == "Cruiser-000007"
@@ -171,7 +171,7 @@ class TestShipInstanceDisplayId:
         instance = ship_factory(design_data, owner_id=0)
         instance.serial = None
 
-        display_id = instance.get_display_id()
+        display_id = instance._display_fmt.get_display_id()
 
         assert display_id is None
 

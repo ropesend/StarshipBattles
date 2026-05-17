@@ -18,7 +18,7 @@ class TestGetAllResourceCostsPerHex:
             'resource_consumption_per_hex': {}
         })
 
-        result = ship.get_all_resource_costs_per_hex()
+        result = ship._resource_mgr.get_all_resource_costs_per_hex()
         assert result == {}
 
     def test_get_all_resource_costs_per_hex_fuel_only(self, make_ship_with_stats):
@@ -27,7 +27,7 @@ class TestGetAllResourceCostsPerHex:
             'resource_consumption_per_hex': {'fuel': 100}
         })
 
-        result = ship.get_all_resource_costs_per_hex()
+        result = ship._resource_mgr.get_all_resource_costs_per_hex()
         assert result == {'fuel': 100}
 
     def test_get_all_resource_costs_per_hex_multiple_resources(self, make_ship_with_stats):
@@ -36,7 +36,7 @@ class TestGetAllResourceCostsPerHex:
             'resource_consumption_per_hex': {'fuel': 100, 'energy': 50}
         })
 
-        result = ship.get_all_resource_costs_per_hex()
+        result = ship._resource_mgr.get_all_resource_costs_per_hex()
         assert result == {'fuel': 100, 'energy': 50}
 
     def test_get_all_resource_costs_per_hex_custom_resource(self, make_ship_with_stats):
@@ -45,7 +45,7 @@ class TestGetAllResourceCostsPerHex:
             'resource_consumption_per_hex': {'fuel': 100, 'glag': 5}
         })
 
-        result = ship.get_all_resource_costs_per_hex()
+        result = ship._resource_mgr.get_all_resource_costs_per_hex()
         assert result == {'fuel': 100, 'glag': 5}
 
 
@@ -58,7 +58,7 @@ class TestGetAllResourceCostsPerTurn:
             'resource_consumption_per_turn': {}
         })
 
-        result = ship.get_all_resource_costs_per_turn()
+        result = ship._resource_mgr.get_all_resource_costs_per_turn()
         assert result == {}
 
     def test_get_all_resource_costs_per_turn_single_resource(self, make_ship_with_stats):
@@ -67,7 +67,7 @@ class TestGetAllResourceCostsPerTurn:
             'resource_consumption_per_turn': {'energy': 100}
         })
 
-        result = ship.get_all_resource_costs_per_turn()
+        result = ship._resource_mgr.get_all_resource_costs_per_turn()
         assert result == {'energy': 100}
 
     def test_get_all_resource_costs_per_turn_multiple_resources(self, make_ship_with_stats):
@@ -76,7 +76,7 @@ class TestGetAllResourceCostsPerTurn:
             'resource_consumption_per_turn': {'energy': 100, 'fuel': 50}
         })
 
-        result = ship.get_all_resource_costs_per_turn()
+        result = ship._resource_mgr.get_all_resource_costs_per_turn()
         assert result == {'energy': 100, 'fuel': 50}
 
     def test_get_all_resource_costs_per_turn_custom_resource(self, make_ship_with_stats):
@@ -85,7 +85,7 @@ class TestGetAllResourceCostsPerTurn:
             'resource_consumption_per_turn': {'energy': 100, 'glag': 10}
         })
 
-        result = ship.get_all_resource_costs_per_turn()
+        result = ship._resource_mgr.get_all_resource_costs_per_turn()
         assert result == {'energy': 100, 'glag': 10}
 
 
@@ -98,7 +98,7 @@ class TestGetWarpResourceCosts:
             'warp_resource_costs': {}
         })
 
-        result = ship.get_warp_resource_costs()
+        result = ship._resource_mgr.get_warp_resource_costs()
         assert result == {}
 
     def test_get_warp_resource_costs_energy_only(self, make_ship_with_stats):
@@ -107,7 +107,7 @@ class TestGetWarpResourceCosts:
             'warp_resource_costs': {'energy': 500}
         })
 
-        result = ship.get_warp_resource_costs()
+        result = ship._resource_mgr.get_warp_resource_costs()
         assert result == {'energy': 500}
 
     def test_get_warp_resource_costs_fuel_and_energy(self, make_ship_with_stats):
@@ -116,7 +116,7 @@ class TestGetWarpResourceCosts:
             'warp_resource_costs': {'energy': 500, 'fuel': 100}
         })
 
-        result = ship.get_warp_resource_costs()
+        result = ship._resource_mgr.get_warp_resource_costs()
         assert result == {'energy': 500, 'fuel': 100}
 
     def test_get_warp_resource_costs_custom_resource(self, make_ship_with_stats):
@@ -125,7 +125,7 @@ class TestGetWarpResourceCosts:
             'warp_resource_costs': {'energy': 500, 'antimatter': 50}
         })
 
-        result = ship.get_warp_resource_costs()
+        result = ship._resource_mgr.get_warp_resource_costs()
         assert result == {'energy': 500, 'antimatter': 50}
 
     def test_get_warp_resource_costs_damaged_warp_drive(self, make_ship_with_stats):
@@ -143,5 +143,5 @@ class TestGetWarpResourceCosts:
             current_hp=50.0, max_hp=100.0,
         )
 
-        result = ship.get_warp_resource_costs()
+        result = ship._resource_mgr.get_warp_resource_costs()
         assert result == {}

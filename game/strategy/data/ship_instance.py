@@ -287,62 +287,31 @@ class ShipInstance:
         """Get current resource level as percentage of max."""
         return self._display_fmt.get_resource_percentage(resource_name)
 
-    # --- Generic Resource Methods ---
+    # --- Generic Resource Methods (PROJ-425 Phase 5b: thin shims) ---
+    #
+    # These remain as forwarders because too many tests mock them as
+    # entity-level methods (e.g. `ship.consume_resource = Mock(...)`).
+    # Migrating those mocks is a bigger change than the demolition saves.
+    # The canonical implementations live on `ShipConsumableManager`.
 
     def get_resource_capacity(self, resource_type: str) -> float:
-        """
-        Get maximum capacity for any resource type.
-
-        Args:
-            resource_type: Resource type (e.g., 'fuel', 'energy', 'ammo')
-
-        Returns:
-            Maximum capacity for the resource, or 0 if not available.
-        """
+        """Get maximum capacity for a resource type (shim to `_resource_mgr`)."""
         return self._resource_mgr.get_resource_capacity(resource_type)
 
     def get_current_resource(self, resource_type: str) -> float:
-        """
-        Get current level of any resource type.
-
-        Args:
-            resource_type: Resource type (e.g., 'fuel', 'energy', 'ammo')
-
-        Returns:
-            Current resource level. Returns max capacity if not tracked (assumed full).
-        """
+        """Get current level of a resource type (shim to `_resource_mgr`)."""
         return self._resource_mgr.get_current_resource(resource_type)
 
     def consume_resource(self, resource_type: str, amount: float) -> bool:
-        """
-        Consume a specified amount of any resource type.
-
-        Args:
-            resource_type: Resource type to consume
-            amount: Amount to consume (must be >= 0)
-
-        Returns:
-            True if resource was available and consumed, False if insufficient
-            or if amount is negative.
-        """
+        """Consume a resource amount (shim to `_resource_mgr`)."""
         return self._resource_mgr.consume_resource(resource_type, amount)
 
     def get_all_resource_costs_per_hex(self) -> Dict[str, float]:
-        """
-        Get all per-hex consumption costs.
-
-        Returns:
-            Dict mapping resource type to cost per hex of movement.
-        """
+        """Per-hex consumption costs (shim to `_resource_mgr`)."""
         return self._resource_mgr.get_all_resource_costs_per_hex()
 
     def get_all_resource_costs_per_turn(self) -> Dict[str, float]:
-        """
-        Get all per-turn consumption costs.
-
-        Returns:
-            Dict mapping resource type to cost per turn.
-        """
+        """Per-turn consumption costs (shim to `_resource_mgr`)."""
         return self._resource_mgr.get_all_resource_costs_per_turn()
 
     # --- Cargo Methods (delegated to ShipCargoManager) ---
@@ -434,12 +403,7 @@ class ShipInstance:
         return self.get_pod_storage_used() + pod_mass <= capacity
 
     def get_warp_resource_costs(self) -> Dict[str, float]:
-        """
-        Get all resource costs for a warp jump.
-
-        Returns:
-            Dict mapping resource type to cost per warp jump.
-        """
+        """Warp jump resource costs (shim to `_resource_mgr`)."""
         return self._resource_mgr.get_warp_resource_costs()
 
     # --- Component Toggle Methods ---
@@ -469,10 +433,6 @@ class ShipInstance:
         """
         return self.component_toggles.get(component_id, True)
 
-    def get_display_id(self) -> Optional[str]:
-        """Get human-readable display ID in format "DesignName-000001"."""
-        return self._display_fmt.get_display_id()
-
     def get_damaged_component_count(self) -> int:
         """Get count of damaged component instances.
 
@@ -481,18 +441,6 @@ class ShipInstance:
         """
         from game.strategy.services.component_inspector import count_damaged_components
         return count_damaged_components(self)
-
-    def get_status_text(self) -> str:
-        """Get human-readable status text."""
-        return self._display_fmt.get_status_text()
-
-    def get_hp_display(self) -> str:
-        """Get HP as display string "current/max"."""
-        return self._display_fmt.get_hp_display()
-
-    def get_resource_display(self, resource_name: str) -> str:
-        """Get resource as display string "current/max"."""
-        return self._display_fmt.get_resource_display(resource_name)
 
     def get_components_by_layer(self) -> Dict[str, List[Dict[str, Any]]]:
         """
@@ -559,11 +507,7 @@ class ShipInstance:
         return ShipInstanceWriteService().repair(self, amount)
 
     def resupply(self, resource_name: str, amount: float) -> float:
-        """
-        Resupply a resource.
-
-        Returns the actual amount resupplied.
-        """
+        """Resupply a resource (shim to `_resource_mgr`)."""
         return self._resource_mgr.resupply(resource_name, amount)
 
     def to_dict(self) -> Dict[str, Any]:

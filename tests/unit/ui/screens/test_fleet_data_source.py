@@ -95,11 +95,11 @@ class TestFleetDataSourceCellValueSerial:
     """Test FleetDataSource serial column value extraction."""
 
     def test_serial_returns_display_id(self):
-        """Serial column returns ship.get_display_id()."""
+        """Serial column returns ship._display_fmt.get_display_id()."""
         from game.ui.screens.fleet_data_source import FleetDataSource
 
         ship = Mock()
-        ship.get_display_id = Mock(return_value="SN-0001")
+        ship._display_fmt.get_display_id = Mock(return_value="SN-0001")
         ship.instance_id = "abc123"
 
         ds = _make_data_source(ships=[ship])
@@ -111,7 +111,7 @@ class TestFleetDataSourceCellValueSerial:
         from game.ui.screens.fleet_data_source import FleetDataSource
 
         ship = Mock()
-        ship.get_display_id = Mock(return_value=None)
+        ship._display_fmt.get_display_id = Mock(return_value=None)
         ship.instance_id = "abc123456789"
 
         ds = _make_data_source(ships=[ship])

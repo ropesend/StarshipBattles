@@ -36,7 +36,7 @@ def create_mock_ship(instance_id: str, name: str, serial: int = 1):
     ship.is_derelict = False
     ship.is_damaged = Mock(return_value=False)
     ship.get_hp_percentage = Mock(return_value=1.0)
-    ship.get_display_id = Mock(return_value=f"SN-{serial:04d}")
+    ship._display_fmt.get_display_id = Mock(return_value=f"SN-{serial:04d}")
     return ship
 
 

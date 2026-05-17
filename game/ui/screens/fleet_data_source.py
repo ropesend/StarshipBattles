@@ -201,7 +201,7 @@ class FleetDataSource(ITableDataSource):
 
     def _format_serial(self, ship: "ShipInstance") -> str:
         """Format ship serial ID for display."""
-        display_id = ship.get_display_id()
+        display_id = ship._display_fmt.get_display_id()
         return display_id if display_id else ship.instance_id[:8]
 
     def _format_design(self, ship: "ShipInstance") -> str:

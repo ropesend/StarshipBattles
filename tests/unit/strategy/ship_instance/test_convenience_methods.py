@@ -20,7 +20,7 @@ class TestResourceMethodInteractions:
             'resource_storage': {'fuel': 1000}
         })
 
-        initial_capacity = ship.get_resource_capacity('fuel')
+        initial_capacity = ship._resource_mgr.get_resource_capacity('fuel')
         assert initial_capacity == 1000
 
         # Disable fuel tank - should invalidate cache
@@ -46,8 +46,8 @@ class TestResourceMethodInteractions:
             consumable_levels={'fuel': 5000, 'energy': 2000}
         )
 
-        ship.consume_resource('fuel', 1000)
-        ship.consume_resource('energy', 500)
+        ship._resource_mgr.consume_resource('fuel', 1000)
+        ship._resource_mgr.consume_resource('energy', 500)
 
         assert ship.consumable_levels == {'fuel': 4000, 'energy': 1500}
 
@@ -60,13 +60,13 @@ class TestResourceMethodInteractions:
         })
 
         # Call multiple times
-        per_hex1 = ship.get_all_resource_costs_per_hex()
-        per_turn1 = ship.get_all_resource_costs_per_turn()
-        warp1 = ship.get_warp_resource_costs()
+        per_hex1 = ship._resource_mgr.get_all_resource_costs_per_hex()
+        per_turn1 = ship._resource_mgr.get_all_resource_costs_per_turn()
+        warp1 = ship._resource_mgr.get_warp_resource_costs()
 
-        per_hex2 = ship.get_all_resource_costs_per_hex()
-        per_turn2 = ship.get_all_resource_costs_per_turn()
-        warp2 = ship.get_warp_resource_costs()
+        per_hex2 = ship._resource_mgr.get_all_resource_costs_per_hex()
+        per_turn2 = ship._resource_mgr.get_all_resource_costs_per_turn()
+        warp2 = ship._resource_mgr.get_warp_resource_costs()
 
         assert per_hex1 == per_hex2
         assert per_turn1 == per_turn2
@@ -92,7 +92,7 @@ class TestResupply:
 
         # Resupply should correctly use 250 as max (from resource_storage)
         # not 100 (default fallback from old buggy code)
-        actual = ship.resupply('fuel', 200)
+        actual = ship._resource_mgr.resupply('fuel', 200)
 
         # Should be clamped to max of 250
         assert actual == 150  # 250 - 100 = 150 actual resupplied
@@ -106,7 +106,7 @@ class TestResupply:
         })
         ship.consumable_levels['fuel'] = 500
 
-        actual = ship.resupply('fuel', 200)
+        actual = ship._resource_mgr.resupply('fuel', 200)
 
         assert actual == 200
         assert ship.consumable_levels['fuel'] == 700

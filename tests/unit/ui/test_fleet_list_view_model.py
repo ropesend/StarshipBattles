@@ -28,7 +28,7 @@ class TestFleetListViewModel:
             ship.is_derelict = (i == 3)   # 4th ship is derelict
             ship.is_damaged = Mock(return_value=(i >= 2))  # Ships 2,3,4 are damaged
             ship.get_hp_percentage = Mock(return_value=(1.0 - i * 0.2))  # 100%, 80%, 60%, 40%, 20%
-            ship.get_display_id = Mock(return_value=f"SN-{i:04d}")
+            ship._display_fmt.get_display_id = Mock(return_value=f"SN-{i:04d}")
             ships.append(ship)
         return ships
 

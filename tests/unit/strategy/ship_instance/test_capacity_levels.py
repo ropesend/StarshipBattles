@@ -18,7 +18,7 @@ class TestGetResourceCapacity:
             'resource_storage': {'fuel': 5000}
         })
 
-        assert ship.get_resource_capacity('fuel') == 5000
+        assert ship._resource_mgr.get_resource_capacity('fuel') == 5000
 
     def test_get_resource_capacity_energy(self, make_ship_with_stats):
         """get_resource_capacity returns energy capacity from resource_storage."""
@@ -26,7 +26,7 @@ class TestGetResourceCapacity:
             'resource_storage': {'energy': 2000}
         })
 
-        assert ship.get_resource_capacity('energy') == 2000
+        assert ship._resource_mgr.get_resource_capacity('energy') == 2000
 
     def test_get_resource_capacity_custom_resource(self, make_ship_with_stats):
         """get_resource_capacity returns custom resource capacity."""
@@ -34,7 +34,7 @@ class TestGetResourceCapacity:
             'resource_storage': {'fuel': 1000, 'energy': 500, 'glag': 200}
         })
 
-        assert ship.get_resource_capacity('glag') == 200
+        assert ship._resource_mgr.get_resource_capacity('glag') == 200
 
     def test_get_resource_capacity_unknown_resource(self, make_ship_with_stats):
         """get_resource_capacity returns 0 for unknown resource types."""
@@ -42,7 +42,7 @@ class TestGetResourceCapacity:
             'resource_storage': {'fuel': 1000}
         })
 
-        assert ship.get_resource_capacity('unknown_resource') == 0
+        assert ship._resource_mgr.get_resource_capacity('unknown_resource') == 0
 
     def test_get_resource_capacity_zero_capacity(self, make_ship_with_stats):
         """get_resource_capacity returns 0 when resource has zero capacity."""
@@ -50,7 +50,7 @@ class TestGetResourceCapacity:
             'resource_storage': {'fuel': 0, 'energy': 100}
         })
 
-        assert ship.get_resource_capacity('fuel') == 0
+        assert ship._resource_mgr.get_resource_capacity('fuel') == 0
 
 
 class TestGetCurrentResource:
@@ -73,7 +73,7 @@ class TestGetCurrentResource:
             consumable_levels={'fuel': 5000}  # Explicitly stored at full
         )
 
-        assert ship.get_current_resource('fuel') == 5000
+        assert ship._resource_mgr.get_current_resource('fuel') == 5000
 
     def test_get_current_resource_returns_current_when_partial(self, make_design_data_with_stats):
         """get_current_resource returns tracked value when partially consumed."""
@@ -89,7 +89,7 @@ class TestGetCurrentResource:
         )
 
         ship.consumable_levels['fuel'] = 3000
-        assert ship.get_current_resource('fuel') == 3000
+        assert ship._resource_mgr.get_current_resource('fuel') == 3000
 
     def test_get_current_resource_with_all_types(self, make_design_data_with_stats):
         """get_current_resource works with multiple resource types.
@@ -108,9 +108,9 @@ class TestGetCurrentResource:
             consumable_levels={'fuel': 2500, 'energy': 1000, 'ammo': 500}
         )
 
-        assert ship.get_current_resource('fuel') == 2500
-        assert ship.get_current_resource('energy') == 1000
-        assert ship.get_current_resource('ammo') == 500
+        assert ship._resource_mgr.get_current_resource('fuel') == 2500
+        assert ship._resource_mgr.get_current_resource('energy') == 1000
+        assert ship._resource_mgr.get_current_resource('ammo') == 500
 
     def test_get_current_resource_custom_resource(self, make_design_data_with_stats):
         """get_current_resource works with custom resource types."""
@@ -126,7 +126,7 @@ class TestGetCurrentResource:
         )
 
         ship.consumable_levels['glag'] = 50
-        assert ship.get_current_resource('glag') == 50
+        assert ship._resource_mgr.get_current_resource('glag') == 50
 
 
 class TestConsumeResource:
@@ -149,7 +149,7 @@ class TestConsumeResource:
             consumable_levels={'fuel': 5000}  # Start at full
         )
 
-        result = ship.consume_resource('fuel', 1000)
+        result = ship._resource_mgr.consume_resource('fuel', 1000)
 
         assert result is True
         assert ship.consumable_levels['fuel'] == 4000
@@ -168,7 +168,7 @@ class TestConsumeResource:
         )
 
         ship.consumable_levels['fuel'] = 500
-        result = ship.consume_resource('fuel', 1000)
+        result = ship._resource_mgr.consume_resource('fuel', 1000)
 
         assert result is False
         assert ship.consumable_levels['fuel'] == 500  # Unchanged
@@ -187,7 +187,7 @@ class TestConsumeResource:
         )
 
         ship.consumable_levels['fuel'] = 1000
-        result = ship.consume_resource('fuel', 1000)
+        result = ship._resource_mgr.consume_resource('fuel', 1000)
 
         assert result is True
         assert ship.consumable_levels['fuel'] == 0
@@ -209,10 +209,10 @@ class TestConsumeResource:
             consumable_levels={'fuel': 5000}
         )
 
-        result = ship.consume_resource('fuel', 0)
+        result = ship._resource_mgr.consume_resource('fuel', 0)
 
         assert result is True
-        assert ship.get_current_resource('fuel') == 5000
+        assert ship._resource_mgr.get_current_resource('fuel') == 5000
 
     def test_consume_resource_multiple_types(self, make_design_data_with_stats):
         """consume_resource handles multiple resource types independently.
@@ -231,8 +231,8 @@ class TestConsumeResource:
             consumable_levels={'fuel': 5000, 'energy': 2000}
         )
 
-        ship.consume_resource('fuel', 1000)
-        ship.consume_resource('energy', 500)
+        ship._resource_mgr.consume_resource('fuel', 1000)
+        ship._resource_mgr.consume_resource('energy', 500)
 
         assert ship.consumable_levels['fuel'] == 4000
         assert ship.consumable_levels['energy'] == 1500
@@ -254,7 +254,7 @@ class TestConsumeResource:
             consumable_levels={'glag': 100}
         )
 
-        result = ship.consume_resource('glag', 25)
+        result = ship._resource_mgr.consume_resource('glag', 25)
 
         assert result is True
         assert ship.consumable_levels['glag'] == 75
@@ -279,7 +279,7 @@ class TestConsumeResource:
         # Start at full
         assert ship.consumable_levels['fuel'] == 5000
 
-        result = ship.consume_resource('fuel', 1000)
+        result = ship._resource_mgr.consume_resource('fuel', 1000)
 
         assert result is True
         assert ship.consumable_levels['fuel'] == 4000

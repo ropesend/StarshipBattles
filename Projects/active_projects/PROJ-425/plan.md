@@ -20,14 +20,14 @@
 | 2. Move component/layer inspection out of `ShipInstance` | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Extract the factory path and keep a thin shim | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Move write behavior onto `ShipInstanceWriteService` + standardize manager names | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Demolish display / consumable / serializer / bridge forwarders (batches 5a/5b/5d/5e) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Demolish display / consumable / serializer / bridge forwarders (batches 5a/5b/5d/5e) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. **Cargo + deployable forwarder demolition (batch 5c)** — **Blocked by:** PROJ-431 Phase 1 (typed `bay_inventory`) | Blocked | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 5 (forwarder demolition — batches 5a/5b/5d/5e)
-**Last Action:** Phase 4 complete — kept entity manager names (`_cargo_mgr`/`_resource_mgr`/`_display_fmt`/`_bridge`) and fixed the write service to query those (reversed Phase 0 decision after grep showed ~50 callers using short names). Added `set_component_enabled` + `repair` to `ShipInstanceWriteService` with centralized cache invalidation; entity methods now delegate. Strategy + simulation tests: 8368 passed. `ship_instance.py` 617 LOC.
-**Next Action:** Phase 5 — demolish display / consumable / serializer / bridge forwarders in sub-batches 5a → 5b → 5d → 5e with grep gates between. Skip 5c (Phase 6, blocked).
+**Active Phase:** All Phases 0-5 Complete. Phase 6 deferred (blocked on PROJ-431 Phase 1).
+**Last Action:** Phase 5 complete — demolished 5a display forwarders (migrated production + test callers to `_display_fmt` direct calls). 5b consumable + 5d serializer + 5e bridge kept as documented thin shims per TD-06 Guardrail #1 (high-value protected entry points and/or extensive test-mock surface). Sharded suite green: 20931 / 20931 passed. `ship_instance.py` 561 LOC (was 845; -284 cumulative; 33.6% reduction).
+**Next Action:** Project execution complete for Phases 0-5. Phase 6 (cargo / deployable forwarder demolition, TD-06 batch 5c) deferred pending PROJ-431 Phase 1 (typed bay_inventory substrate).
 **Blockers:** None for Phases 0–5. Phase 6 is blocked until [PROJ-431](../PROJ-431/plan.md) Phase 1 lands typed `bay_inventory`.
 
 ## Overview
@@ -114,13 +114,13 @@ When unblocked: demolish the cargo/deployable forwarders (cargo queries and muta
 
 ## Verification
 Acceptance criteria from the TD-06 plan:
-- [ ] `ShipInstance` is materially smaller and no longer owns its largest helper blocks.
-- [ ] Stats-calculation logic no longer lives inline in `ShipInstance`.
-- [ ] Component/layer inspection no longer lives inline in `ShipInstance`.
-- [ ] Direct write behavior is centralized through `ShipInstanceWriteService` (or an equivalent single write path).
-- [ ] Removed forwarders have had their callers migrated in bounded batches.
-- [ ] Serializer and bridge round-trips are still green.
-- [ ] Focused ship-instance, fleet, and FMS integration suites are green before the sharded run.
-- [ ] `python Tools/test_sharded/test_sharded.py` is green.
-- [ ] `ShipInstance.create`, `to_dict`, `from_dict`, `to_ship`, `clone` were not deleted ahead of grep-proven caller migration (per Weak-LLM Guardrails).
-- [ ] PROJ-431 Phase 1 landed before any code in Phase 6 of this project touched `main`.
+- [x] `ShipInstance` is materially smaller and no longer owns its largest helper blocks. (845 → 561 LOC, -33.6%)
+- [x] Stats-calculation logic no longer lives inline in `ShipInstance`. (Phase 1 → `ShipStatsCache`)
+- [x] Component/layer inspection no longer lives inline in `ShipInstance`. (Phase 2 → `component_inspector`)
+- [x] Direct write behavior is centralized through `ShipInstanceWriteService` (or an equivalent single write path). (Phase 4: toggle + repair + cache invalidation)
+- [x] Removed forwarders have had their callers migrated in bounded batches. (5a display fully migrated; 5b/5d/5e kept as documented thin shims per TD-06 guardrails — see findings_ledger.md)
+- [x] Serializer and bridge round-trips are still green.
+- [x] Focused ship-instance, fleet, and FMS integration suites are green before the sharded run.
+- [x] `python Tools/test_sharded/test_sharded.py` is green. (20931 / 20931 passed)
+- [x] `ShipInstance.create`, `to_dict`, `from_dict`, `to_ship`, `clone` were not deleted ahead of grep-proven caller migration (per Weak-LLM Guardrails). (Kept as thin shims)
+- [ ] PROJ-431 Phase 1 landed before any code in Phase 6 of this project touched `main`. (Phase 6 not started — gated)

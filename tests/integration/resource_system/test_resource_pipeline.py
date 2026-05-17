@@ -85,14 +85,14 @@ class TestCustomResourceTypeFullPipeline:
         ship.consumable_levels['plasma'] = 5000
 
         # Consume some plasma
-        success = ship.consume_resource('plasma', 1500)
+        success = ship._resource_mgr.consume_resource('plasma', 1500)
         assert success is True
-        assert ship.get_current_resource('plasma') == 3500
+        assert ship._resource_mgr.get_current_resource('plasma') == 3500
 
         # Try to consume more than available
-        success = ship.consume_resource('plasma', 5000)
+        success = ship._resource_mgr.consume_resource('plasma', 5000)
         assert success is False
-        assert ship.get_current_resource('plasma') == 3500  # Unchanged
+        assert ship._resource_mgr.get_current_resource('plasma') == 3500  # Unchanged
 
 
 class TestPerTurnConsumptionAcrossFullTurn:
@@ -155,7 +155,7 @@ class TestPerTurnConsumptionAcrossFullTurn:
         # Verify exact consumption: 100 energy per turn total
         # 100 ticks * (100/100) = 100 energy consumed
         expected_remaining = 10000 - 100
-        actual_remaining = ship.get_current_resource('energy')
+        actual_remaining = ship._resource_mgr.get_current_resource('energy')
 
         assert actual_remaining == pytest.approx(expected_remaining, abs=0.01), \
             f"Expected {expected_remaining}, got {actual_remaining}"

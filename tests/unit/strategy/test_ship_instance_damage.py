@@ -97,7 +97,7 @@ class TestShipInstanceDisplayMethods:
         """Healthy ship should return OK status."""
         instance = ship_factory(design_data, owner_id=0)
 
-        status = instance.get_status_text()
+        status = instance._display_fmt.get_status_text()
 
         assert status == "OK"
 
@@ -106,7 +106,7 @@ class TestShipInstanceDisplayMethods:
         instance = ship_factory(design_data, owner_id=0)
         instance.current_hp = 150
 
-        status = instance.get_status_text()
+        status = instance._display_fmt.get_status_text()
 
         assert status == "DAMAGED"
 
@@ -115,7 +115,7 @@ class TestShipInstanceDisplayMethods:
         instance = ship_factory(design_data, owner_id=0)
         instance.is_derelict = True
 
-        status = instance.get_status_text()
+        status = instance._display_fmt.get_status_text()
 
         assert status == "DERELICT"
 
@@ -124,7 +124,7 @@ class TestShipInstanceDisplayMethods:
         instance = ship_factory(design_data, owner_id=0)
         instance.is_alive = False
 
-        status = instance.get_status_text()
+        status = instance._display_fmt.get_status_text()
 
         assert status == "DESTROYED"
 
@@ -132,7 +132,7 @@ class TestShipInstanceDisplayMethods:
         """Full HP ship should show max/max."""
         instance = ship_factory(design_data, owner_id=0)
 
-        display = instance.get_hp_display()
+        display = instance._display_fmt.get_hp_display()
 
         assert display == "200/200"
 
@@ -141,7 +141,7 @@ class TestShipInstanceDisplayMethods:
         instance = ship_factory(design_data, owner_id=0)
         instance.current_hp = 150
 
-        display = instance.get_hp_display()
+        display = instance._display_fmt.get_hp_display()
 
         assert display == "150/200"
 
@@ -151,7 +151,7 @@ class TestShipInstanceDisplayMethods:
         instance.is_alive = False
         instance.current_hp = 0
 
-        display = instance.get_hp_display()
+        display = instance._display_fmt.get_hp_display()
 
         assert display == "0/200"
 
@@ -177,7 +177,7 @@ class TestShipInstanceResourceDisplay:
         """Full resources should show max/max."""
         instance = ship_factory(design_data, owner_id=0)
 
-        fuel_display = instance.get_resource_display('fuel')
+        fuel_display = instance._display_fmt.get_resource_display('fuel')
 
         assert fuel_display == "500/500"
 
@@ -186,7 +186,7 @@ class TestShipInstanceResourceDisplay:
         instance = ship_factory(design_data, owner_id=0)
         instance.consumable_levels['fuel'] = 250
 
-        fuel_display = instance.get_resource_display('fuel')
+        fuel_display = instance._display_fmt.get_resource_display('fuel')
 
         assert fuel_display == "250/500"
 
@@ -194,7 +194,7 @@ class TestShipInstanceResourceDisplay:
         """Unknown resource should return N/A."""
         instance = ship_factory(design_data, owner_id=0)
 
-        display = instance.get_resource_display('unknown_resource')
+        display = instance._display_fmt.get_resource_display('unknown_resource')
 
         assert display == "N/A"
 

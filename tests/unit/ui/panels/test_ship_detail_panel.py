@@ -27,12 +27,13 @@ def _make_mock_ship_instance():
         'ship_class': 'Cruiser'
     }
 
-    # Display methods
-    ship.get_display_id.return_value = "CRS-001"
-    ship.get_status_text.return_value = "Operational"
-    ship.get_hp_display.return_value = "80/100"
+    # Display methods (PROJ-425 Phase 5a: forwarders deleted; callers
+    # now go through ship._display_fmt directly).
+    ship._display_fmt.get_display_id.return_value = "CRS-001"
+    ship._display_fmt.get_status_text.return_value = "Operational"
+    ship._display_fmt.get_hp_display.return_value = "80/100"
     ship.get_hp_percentage.return_value = 0.8
-    ship.get_resource_display.return_value = "50/100"
+    ship._display_fmt.get_resource_display.return_value = "50/100"
     ship.get_resource_percentage.return_value = 0.5
     ship.get_damaged_component_count.return_value = 2
     ship.get_damaged_components_by_layer.return_value = {
@@ -687,11 +688,11 @@ def _stub_ship_instance(views_by_layer):
         'theme_id': 'Federation',
         'ship_class': 'Cruiser',
     }
-    ship.get_display_id.return_value = 'TST-001'
-    ship.get_status_text.return_value = 'OK'
-    ship.get_hp_display.return_value = '100/100'
+    ship._display_fmt.get_display_id.return_value = 'TST-001'
+    ship._display_fmt.get_status_text.return_value = 'OK'
+    ship._display_fmt.get_hp_display.return_value = '100/100'
     ship.get_hp_percentage.return_value = 1.0
-    ship.get_resource_display.return_value = 'N/A'
+    ship._display_fmt.get_resource_display.return_value = 'N/A'
     ship.get_resource_percentage.return_value = 0.0
     ship.get_damaged_component_count.return_value = 0
     ship.iter_all_components_by_layer.return_value = views_by_layer

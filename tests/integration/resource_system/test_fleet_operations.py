@@ -86,7 +86,7 @@ class TestWarpJumpUsesResourceConsumptionTrigger:
         ship.consumable_levels['energy'] = 5000
 
         # Verify get_warp_resource_costs() returns both resources
-        warp_costs = ship.get_warp_resource_costs()
+        warp_costs = ship._resource_mgr.get_warp_resource_costs()
 
         assert 'plasma' in warp_costs, "Warp costs should include plasma"
         assert 'energy' in warp_costs, "Warp costs should include energy"
@@ -102,8 +102,8 @@ class TestWarpJumpUsesResourceConsumptionTrigger:
         assert success is True
 
         # Verify both resources were consumed
-        assert ship.get_current_resource('plasma') == 1500
-        assert ship.get_current_resource('energy') == 4000
+        assert ship._resource_mgr.get_current_resource('plasma') == 1500
+        assert ship._resource_mgr.get_current_resource('energy') == 4000
 
 
 class TestMovementWithMultiResourceConsumption:
@@ -194,8 +194,8 @@ class TestMovementWithMultiResourceConsumption:
         assert success is True
 
         # Verify both resources consumed
-        assert ship.get_current_resource('fuel') == 50000 - (100 * 3)
-        assert ship.get_current_resource('coolant') == 1000 - (25 * 3)
+        assert ship._resource_mgr.get_current_resource('fuel') == 50000 - (100 * 3)
+        assert ship._resource_mgr.get_current_resource('coolant') == 1000 - (25 * 3)
 
 
 class TestComponentToggleAffectsMovementAndWarp:

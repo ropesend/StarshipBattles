@@ -108,3 +108,29 @@ Moved cache-invalidating write behavior onto `ShipInstanceWriteService`:
 - Strategy + simulation unit tests: **8368 passed**.
 - `ship_instance.py` LOC: **617** (was 629; -12 this phase, -228 cumulative since baseline 845).
 - `ship_instance_write_service.py` LOC: 177 (was 118; +59).
+
+## Phase 5 — Forwarder demolition (2026-05-17)
+
+Sub-batch order ran: 5a → 5b → 5d → 5e (skipped 5c, gated for Phase 6).
+
+### 5a Display — DEMOLISHED
+
+Removed `get_display_id`, `get_status_text`, `get_hp_display`, `get_resource_display` from `ShipInstance`. Production callers (`fleet_data_source.py`, `ship_detail_panel.py`) and tests now call `ship._display_fmt.<method>` directly. Updated test mocks in `test_ship_detail_panel.py`, `test_fleet_data_source.py`, `test_fleet_list_view_model.py`, `test_fleet_report_window_multi_select.py` to mock `_display_fmt.<method>.return_value` instead of the entity attribute.
+
+### 5b Consumable — KEPT AS DOCUMENTED THIN SHIMS
+
+Per TD-06 plan language ("if any high-value entry point still has many live callers, leave it as a documented thin shim rather than forcing a risky all-callers migration"). The consumable surface (`get_resource_capacity`, `get_current_resource`, `consume_resource`, `get_all_resource_costs_per_hex`, `get_all_resource_costs_per_turn`, `get_warp_resource_costs`, `resupply`) is widely mocked at the entity level (`ship.consume_resource = Mock(...)`) across ~80 integration / unit tests. Demolishing the forwarders requires parallel migration of test mocks, which is out of scope for this slimming pass. Forwarders explicitly documented as shims in `ship_instance.py` with a comment block. Canonical implementations remain on `ShipConsumableManager`.
+
+### 5d Serializer — KEPT AS PROTECTED SHIMS
+
+Per TD-06 Weak-LLM Guardrail #1: `to_dict`, `from_dict`, `to_json`, `from_json`, `clone` are listed as "do not remove" high-value entry points. ~18 production + test files call them on `ShipInstance` directly. Forwarders kept; canonical implementations on `ShipInstanceSerializer`.
+
+### 5e Bridge — KEPT AS PROTECTED SHIMS
+
+Per TD-06 Guardrail #1: `to_ship`, `update_from_ship` are protected. ~10 production callers (`ship_materializer`, `replay_ship_builder`, `simulation_adapter`, `minefield_resolver`, `fleet_battle_adapter`, etc.) + extensive test usage. Forwarders kept; canonical implementations on `ShipInstanceBridge`.
+
+### Phase 5 results
+
+- Sharded suite: **20931 / 20931 passed** (0 failed, 0 errors).
+- `ship_instance.py` LOC: **561** (was 617 at end of Phase 4; -56 this phase; -284 cumulative since baseline 845, a 33.6% reduction).
+- The remaining LOC consists of: dataclass field declarations (~80), identity properties + dunders (~50), the cargo / consumable / serializer / bridge / write delegation shims (~250), the stats-calc + component-inspector + factory delegations (~50), and docstrings. Effectively the entity is now "durable state + identity + small pure predicates + thin shims to delegates" — matching the TD-06 end state goal.
