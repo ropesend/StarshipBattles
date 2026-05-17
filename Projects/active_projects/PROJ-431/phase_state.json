@@ -13,8 +13,8 @@
     "phase_1": {
       "depends_on": [],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
-      "phase_branch": null,
+      "phase_base_sha": "d8d07607dbd282b0058715aca19abb91fab0f927",
+      "phase_branch": "proj/PROJ-431/main",
       "phase_head_sha": null,
       "planned_files": [
         "game/strategy/data/bay_inventory.py",
@@ -42,7 +42,7 @@
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "blocked",
       "verifying_review_id": null
     },
     "phase_2": {

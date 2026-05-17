@@ -38,6 +38,7 @@ _DEFAULT_MAX_HP = 100
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
     from game.core.registry import GameRegistries
+    from game.strategy.data.bay_inventory import BayInventory
 
 
 @dataclass
@@ -364,6 +365,63 @@ class ShipInstance:
         ``carried_items`` (simulation ``Ship`` cannot see those).
         """
         return self.get_carried_vehicle_mass()
+
+    # ------------------------------------------------------------------
+    # PROJ-431 Phase 1: typed bay_inventory view over carried_items
+    # ------------------------------------------------------------------
+    #
+    # ``bay_inventory`` is the new canonical typed accessor. It is a
+    # ``BayInventory`` projection (``bay: list[CarriedVehicle]`` +
+    # ``pods: list[DropPod]``) backed by the underlying ``carried_items``
+    # list for save compatibility. Mutations applied via the typed API
+    # write through to ``carried_items`` so the existing serialisation
+    # path remains unchanged.
+
+    @property
+    def bay_inventory(self) -> 'BayInventory':
+        """Return a typed view of this ship's bay + pods.
+
+        The returned :class:`BayInventory` is a fresh projection; do
+        not mutate its lists directly to push contents back onto the
+        ship. Use :meth:`set_bay_inventory` (or the typed mutation
+        helpers on :class:`ShipCargoManager`) instead.
+        """
+        from game.strategy.data.bay_inventory import BayInventory, DropPod
+        from game.strategy.data.carried_vehicle import CarriedVehicle
+        bay: list = []
+        pods: list = []
+        for item in self.carried_items:
+            cv = CarriedVehicle.from_any(item)
+            if cv is not None:
+                bay.append(cv)
+            elif isinstance(item, dict):
+                pods.append(DropPod(
+                    design_id=str(item.get('design_id', '')),
+                    design_data=dict(item.get('design_data', {})),
+                    mass=float(item.get('mass', 0.0)),
+                    payload={k: v for k, v in item.items() if k not in {'design_id', 'design_data', 'mass'}},
+                ))
+        return BayInventory(bay=bay, pods=pods)
+
+    def set_bay_inventory(self, bay_inventory: 'BayInventory') -> None:
+        """Replace ``carried_items`` from a typed :class:`BayInventory`.
+
+        Serialises each ``CarriedVehicle`` via ``to_dict()`` and each
+        ``DropPod`` to a dict whose schema matches the legacy drop-pod
+        payload shape so all existing consumers keep working.
+        """
+        new_items: list = []
+        for cv in bay_inventory.bay:
+            new_items.append(cv.to_dict())
+        for pod in bay_inventory.pods:
+            entry = {
+                'design_id': pod.design_id,
+                'design_data': pod.design_data,
+                'mass': pod.mass,
+            }
+            entry.update(pod.payload)
+            new_items.append(entry)
+        self.carried_items = new_items
 
     @property
     def bay_capacity_mass(self) -> float:

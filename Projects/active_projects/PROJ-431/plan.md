@@ -15,17 +15,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Typed `BayInventory` on `ShipInstance` | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Typed `BayInventory` on `ShipInstance` | Blocked (partial) | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. `MineGroup` extraction (DeployedGroup family 1) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. `FighterWing` + `SatelliteConstellation` (families 2 & 3) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Polish + docs + dead-code sweep | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-16
-**Active Phase:** Planning (blocked)
-**Last Action:** Project initialized from TD-10 plan
-**Next Action:** Wait for PROJ-426 (TD-01) to complete, then start Phase 1
-**Blockers:** **HARD: PROJ-426 (TD-01) must complete before this project's main redesign starts.** Phase 1 may begin once PROJ-426 lands; Phases 2+ also depend on PROJ-426 being complete so deployable changes do not have to preserve the current battle-spec side-channel shape.
+**Last Updated:** 2026-05-17
+**Active Phase:** Phase 1 (blocked — partial)
+**Last Action:** Landed typed `BayInventory` + `DropPod` substrate in `game/strategy/data/bay_inventory.py` and a backwards-compatible `ShipInstance.bay_inventory` view + `set_bay_inventory()` setter. 8 RED→GREEN tests pass; existing bay/vehicle tests (37 total) still green.
+**Next Action:** Complete the caller-migration sweep (sub-steps 1a–1f in decisions.md). See decisions log entry dated 2026-05-17.
+**Blockers:** Phase 1 full acceptance requires migrating 87 production occurrences across 26 files + 331 test occurrences across 53 files of `carried_items` in a single atomic commit (zero-hit grep gate). Exceeded single-conversation execution budget. Recommend splitting into sub-phases per decisions.md.
 
 ## Overview
 Strategy tech-debt #10/10 (final project in the arc). Replace the two overloaded substrates that currently carry every deployable family — `Fleet.group_kind`-string discrimination and `ShipInstance.carried_items: List[Dict[str, Any]]` — with explicit typed models. Today four deployable families (mines, fighters, satellites, drop pods) hang off two abstractions, mine groups invent a synthetic-carrier `ShipInstance` whose only job is to hold mines, and **ten** fleet-action handlers must remember to call `_reject_if_non_fleet_group` to guard against deployed-group dispatch. The redesign introduces a `BayInventory` (typed `bay: list[CarriedVehicle]` + `pods: list[DropPod]`) on `ShipInstance` and a sibling `DeployedGroup` family (`MineGroup`, `FighterWing`, `SatelliteConstellation`) on `Empire`, so runtime type replaces the string discriminator and the handler guard becomes unnecessary.
