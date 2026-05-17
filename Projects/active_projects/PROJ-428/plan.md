@@ -21,14 +21,14 @@
 | 2 | Move small hook logic onto named `TurnEngine` methods | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3 | Extract the movement-only collaborator | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4 | Add a registry-purity guard | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5 | Validate and document | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5 | Validate and document | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 
 **Last Updated:** 2026-05-17
-**Active Phase:** 5 — Validate and document
-**Last Action:** Phase 4 — registry-purity AST guard added at `tests/unit/strategy/turn_engine/test_turn_phase_registry_purity.py` (5 tests: zero module-level functions, no forbidden gameplay-engine module imports, no forbidden imported names, golden tick/end-of-turn phase orderings).
-**Next Action:** Phase 5 — run the full sharded suite + final doc check.
+**Active Phase:** complete (awaiting final audit)
+**Last Action:** Phase 5 — `docs/systems/minefields.md` updated for the new `MovementPhaseCollaborator.resolve_after` wiring; `docs/systems/strategy_layer.md` was already accurate (only references the registry's pinned descriptor lists, which remain). Full sharded suite ran 21016/21016 green in 149.3s. `turn_phase_registry.py` has zero module-level functions; LOC dropped from 465 to 340.
+**Next Action:** None — project complete, awaiting human verification.
 **Blockers:** None
 
 ## Overview
@@ -154,20 +154,20 @@ placement or registry ownership.
 
 ## Verification
 
-- [ ] `turn_phase_registry.py` defines no module-level behavior functions.
-- [ ] `turn_phase_registry.py` imports no gameplay engine classes
+- [x] `turn_phase_registry.py` defines no module-level behavior functions.
+- [x] `turn_phase_registry.py` imports no gameplay engine classes
       (`PlanetModifierEffectEngine`, `MinefieldResolver`, etc.).
-- [ ] `DEFAULT_TICK_PHASE_LIST` and `DEFAULT_END_OF_TURN_PHASE_LIST` keep the
+- [x] `DEFAULT_TICK_PHASE_LIST` and `DEFAULT_END_OF_TURN_PHASE_LIST` keep the
       same phase keys, order, and timing buckets.
-- [ ] `TURN PERF` output format is unchanged.
-- [ ] `TurnEngine.last_environmental_events` behavior is unchanged.
-- [ ] `_booster_dirty` behavior is unchanged.
-- [ ] Minefield resolution still runs after movement and before combat with
+- [x] `TURN PERF` output format is unchanged.
+- [x] `TurnEngine.last_environmental_events` behavior is unchanged.
+- [x] `_booster_dirty` behavior is unchanged.
+- [x] Minefield resolution still runs after movement and before combat with
       `registries=engine._registries`.
-- [ ] Fleets emptied by minefield damage are pruned exactly as before.
-- [ ] Registry-purity AST guard is in place.
-- [ ] Focused turn-engine + FMS-B suites are green.
-- [ ] `python Tools/test_sharded/test_sharded.py` is green.
-- [ ] All phase checklists complete.
+- [x] Fleets emptied by minefield damage are pruned exactly as before.
+- [x] Registry-purity AST guard is in place.
+- [x] Focused turn-engine + FMS-B suites are green.
+- [x] `python Tools/test_sharded/test_sharded.py` is green (21016/21016).
+- [x] All phase checklists complete.
 - [ ] Audit passed.
 - [ ] User verified.

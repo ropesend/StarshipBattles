@@ -117,9 +117,10 @@ Multiple `mine_group`s per owner per hex are allowed; each
 
 At the strategic layer, an enemy fleet that ends a movement tick on
 a hex containing one or more enemy `mine_group`s runs the minefield
-resolver BEFORE `ConflictResolutionEngine`. Wired in
-`game/strategy/engine/turn_phase_registry.py::_derive_moved_fleet_ids`
-as a post-hook on the `movement_apply` phase.
+resolver BEFORE `ConflictResolutionEngine`. Wired through
+`game/strategy/engine/movement_phase_collaborator.py::MovementPhaseCollaborator.resolve_after`
+(owned by `TurnEngine`), invoked as the `movement_apply` post-exec
+hook in `DEFAULT_TICK_PHASE_LIST`.
 
 Per ship, in fleet-entry order, the resolver runs the warhead pass
 then the laserhead pass.
@@ -308,7 +309,8 @@ session.
 | `game/ui/screens/planet_menu_items.py` | Planet right-click menu items (FMS rows) |
 | `game/ui/screens/fms_menu_callbacks.py` | Shared FMS menu callbacks (Lay Mines / Launch * / Recover *) |
 | `game/ui/screens/planet_context_menu.py` | Planet context-menu wiring |
-| `game/strategy/engine/turn_phase_registry.py` | Turn-engine wiring (post-hook on movement_apply) |
+| `game/strategy/engine/turn_phase_registry.py` | Turn-engine wiring (descriptor for movement_apply phase) |
+| `game/strategy/engine/movement_phase_collaborator.py` | Owns the movement_apply post-hook pipeline (diff/booster/minefield/prune) |
 | `game/strategy/services/mine_group_service.py` | Player operations on mine_groups |
 | `game/simulation/systems/tactical_mine_resolver.py` | Per-tick tactical mine logic |
 | `game/simulation/systems/battle_engine.py` | `mine_resolver` hook + per-tick invocation |
