@@ -20,13 +20,13 @@
 | 2. Align top-level interfaces aggregator | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Validate consumers (regression sweep) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Docs sync | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Clean review | In Progress | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Clean review | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-16
-**Active Phase:** Phase 5
-**Last Action:** Phase 4 complete — sanity grep confirmed zero `engines.py` references in `docs/` (matches Phase 0 finding); no doc updates were required.
-**Next Action:** Phase 5 — clean review (diff-shape audit, leaf-module inspection, surface checks).
+**Active Phase:** All phases complete; ready for user verification
+**Last Action:** Phase 5 complete — diff-shape audit, leaf inspection, surface checks. Diff vs `07eddbe93` (the user's pre-existing branch commit): 1 deletion (engines.py, -778), 10 additions (engines/ leaves + __init__.py), 1 rewrite (interfaces/__init__.py), 1 new test, plus project scaffold + test_baseline receipts. Zero concrete engine edits. `engines.__all__` has exactly 18 names; all TYPE_CHECKING imports are referenced.
+**Next Action:** User verification + archive via `/claude-proj-archive` when ready.
 **Blockers:** None
 
 ## Overview
@@ -97,10 +97,10 @@ Update any doc that refers to `interfaces/engines.py` as a single file. Likely c
 
 ## Verification
 Acceptance criteria from the TD-09 plan:
-- [ ] `game/strategy/interfaces/engines.py` has been replaced by a package layout without changing the public symbols available to production callers.
-- [ ] Package-root imports continue to work for all existing consumers (30 import sites confirmed pre-split).
-- [ ] No concrete engine modules required logic changes just to accommodate the split.
-- [ ] The new structural layout test (`tests/unit/strategy/interfaces/test_engines_package_layout.py`) is present and passes.
-- [ ] Focused interface/import regression coverage is green before the sharded run.
-- [ ] `python Tools/test_sharded/test_sharded.py` is green.
-- [ ] Docs no longer describe `engines.py` as a monolithic single file.
+- [x] `game/strategy/interfaces/engines.py` has been replaced by a package layout without changing the public symbols available to production callers.
+- [x] Package-root imports continue to work for all existing consumers (30 import sites confirmed pre-split).
+- [x] No concrete engine modules required logic changes just to accommodate the split.
+- [x] The new structural layout test (`tests/unit/strategy/interfaces/test_engines_package_layout.py`) is present and passes.
+- [x] Focused interface/import regression coverage is green before the sharded run.
+- [x] `python Tools/test_sharded/test_sharded.py` is green. (20857/20857 in Phase 3.)
+- [x] Docs no longer describe `engines.py` as a monolithic single file. (They never did; Phase 4 confirmed no-op.)
