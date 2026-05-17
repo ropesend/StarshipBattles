@@ -14,7 +14,7 @@ exactly.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 from game.core.error_codes import ErrorCode
 from game.core.exceptions import PersistenceException
@@ -63,6 +63,8 @@ class SessionPersistenceAdapter:
         data: dict[str, Any],
         *,
         ai_factory: Any | None = None,
+        turn_number_provider: Callable[[], int] | None = None,
+        race_registry_provider: Callable[[], Any] | None = None,
     ) -> SessionBootstrapState:
         """Reconstruct a `SessionBootstrapState` from a save dict.
 
@@ -112,33 +114,31 @@ class SessionPersistenceAdapter:
             data.get("event_log", {"events": []})
         )
 
-        # Holder lets the bootstrap event-handler factory and
-        # race-registry provider close over a `current_turn` reference
-        # without needing a real GameSession instance at this layer.
-        # `GameSession._apply_provisional_state` re-stamps the
-        # session-level event handler in Phase 4. For Phase 3 the bus is
-        # rebuilt from the freshly-constructed session in
-        # `GameSession.from_dict` to keep the closure pointed at `self`.
-        # The bootstrap output is wholly consumed by `from_dict` so
-        # using the lightweight stamp here is fine.
-        race_registry_holder: dict[str, Any] = {"cached": None}
+        # The event-handler closure needs a live turn-number source so
+        # events stamp the *post-load* turn even though `from_dict`
+        # builds the state before the session is fully constructed. The
+        # caller (`GameSession.from_dict`) passes a provider that points
+        # at the bare session's `turn_number` slot, which
+        # `_apply_bootstrap_state` populates from `state.turn_number`
+        # below.
+        if turn_number_provider is None:
+            turn_number_provider = lambda: turn_number  # noqa: E731
 
-        def _race_registry_provider() -> Any:
-            if race_registry_holder["cached"] is None:
-                from game.strategy.systems.race_library import (
-                    CachedRaceRegistry,
-                    RaceLibrary,
-                )
-                race_registry_holder["cached"] = CachedRaceRegistry(
-                    RaceLibrary()
-                )
-            return race_registry_holder["cached"]
+        # Race registry: rehydrate-only callers can pass their own
+        # provider so the bootstrap shares the same cached
+        # `CachedRaceRegistry` instance as the session's `race_registry`
+        # property. When None, the bootstrap falls back to its own
+        # eager construction.
+        from game.strategy.engine.session.bootstrap import build_event_handler
 
         services = SessionBootstrap._build_services(
             registries=registries,
             event_log=restored_event_log,
             ai_factory=ai_factory,
-            race_registry_provider=_race_registry_provider,
+            race_registry_provider=race_registry_provider,
+            event_handler_factory=lambda log: build_event_handler(
+                log, turn_number_provider
+            ),
         )
 
         # Two-phase deserialisation.

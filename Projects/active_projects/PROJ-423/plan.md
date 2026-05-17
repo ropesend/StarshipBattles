@@ -16,14 +16,14 @@
 | 1. Add `SessionRuntimeServices` + `SessionBootstrapState` | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Extract canonical service construction into `SessionBootstrap` | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Extract `SessionPersistenceAdapter` | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Collapse `GameSession` to a thin shell | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Collapse `GameSession` to a thin shell | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Docs update | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 4 — Collapse `GameSession` to a thin shell
-**Last Action:** Phase 3 complete — `SessionPersistenceAdapter.serialize/rehydrate_state` live at `game/strategy/engine/session/persistence_adapter.py`; `to_dict` / `from_dict` are thin delegates. Save schema byte-for-byte preserved; `human_player_ids` `[0, 1]` fallback preserved. Sharded suite: 20885/20885 green.
-**Next Action:** Phase 4 — introduce canonical `_apply_bootstrap_state(...)`, retarget `__init__` / `from_dict` through it, forward service properties through `self._services`, drop dead imports
+**Active Phase:** Phase 5 — Docs update
+**Last Action:** Phase 4 complete — canonical `_apply_bootstrap_state(...)` is the single state-application path; `__init__` and `from_dict` both route through it. Service properties forward through `self._services`; dead imports (`EventBus`, `TurnEngine`, `TurnEngineConfig`, `create_default_registry`, `GameInitializer`, `Empire`, `Galaxy`, plus the five mutator service classes) dropped. game_session.py: 599 → 474 LOC. Sharded suite: 20890/20890 green.
+**Next Action:** Phase 5 — docs update (architecture, patterns, strategy_layer, save_load)
 **Blockers:** None
 
 ## Overview

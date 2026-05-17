@@ -59,20 +59,17 @@ if TYPE_CHECKING:
 
 import logging
 
-from game.core.event_logging import EventBus
 from game.core.registry import GameRegistries, get_default_registry_provider
-from game.strategy.events import Event, EventLog
-
-logger = logging.getLogger(__name__)
-from game.strategy.engine.turn_engine import TurnEngine
-from game.strategy.engine.turn_engine_config import TurnEngineConfig
 from game.strategy.engine.game_config import GameConfig
-from game.strategy.engine.handlers import create_default_registry
+from game.strategy.engine.session.bootstrap import (
+    build_event_handler as _make_event_handler,
+)
 from game.strategy.engine.session.runtime_services import (
     SessionRuntimeServices,
 )
-from game.strategy.data.empire import Empire
-from game.strategy.data.galaxy import Galaxy
+from game.strategy.events import EventLog
+
+logger = logging.getLogger(__name__)
 
 class GameSession:
     """
@@ -80,32 +77,45 @@ class GameSession:
     Owns the Galaxy, Empires, and the Turn Engine.
     Running completely decoupled from the UI/Rendering layer.
     """
-    def __init__(self, config: Optional[GameConfig] = None, ai_factory: Optional[Any] = None):
-        # Use provided config or create default
+    def __init__(
+        self,
+        config: Optional[GameConfig] = None,
+        ai_factory: Optional[Any] = None,
+        *,
+        _state: Optional['SessionBootstrapState'] = None,
+    ) -> None:
+        """Construct a GameSession.
+
+        Two entry forms:
+
+        - **New game** — `GameSession(config=..., ai_factory=...)` runs
+          `SessionBootstrap.new_game_state(...)` and applies the
+          resulting `SessionBootstrapState`. `SessionInitializationError`
+          null-object substitution at the `self` boundary (PROJ-381) is
+          preserved.
+        - **Internal `_state=` form** — `GameSession.from_dict(...)` uses
+          this with a pre-built `SessionBootstrapState`. Not part of the
+          public API.
+
+        Either way the single internal assignment path is
+        `_apply_bootstrap_state(state)`.
+        """
+        # PROJ-291 C3: race registry stays lazy on GameSession (see the
+        # `race_registry` property). Initialized here so the bootstrap's
+        # `race_registry_provider` lambda can route through `self.race_registry`
+        # before `_apply_bootstrap_state` runs.
+        self._race_registry: Optional['IRaceRegistry'] = None
+
+        if _state is not None:
+            self._apply_bootstrap_state(_state)
+            return
+
+        # New-game path.
         if config is None:
             config = GameConfig()
 
-        self.turn_number = 1
-        self.save_path = None  # Set when save game is created/loaded (Phase 3)
-
-        # PROJ-291 C3: race registry stays lazy on GameSession (see the
-        # `race_registry` property). The bootstrap's
-        # `race_registry_provider` callback resolves through that property
-        # so the cached instance is the same one engines see.
-        self._race_registry: Optional['IRaceRegistry'] = None
-
-        # PROJ-423 Phase 2: route construction through SessionBootstrap so
-        # the wired-service bag has a single canonical assembly point
-        # (eliminates the PROJ-396 CRIT-002 drift surface). Phase 4
-        # collapses this into the canonical `_apply_bootstrap_state(...)`
-        # method.
-        #
-        # PROJ-381 Phase 2 (B-11): SessionInitializationError null-object
-        # substitution is still applied at the `self` boundary so the
-        # partially-constructed session a caller sees lands in a
-        # deterministic null-object state. The bootstrap re-raises the
-        # typed error; this catch only sets the visible null-object slots
-        # on `self` before propagating.
+        # PROJ-381 Phase 2 (B-11): wrap construction so the caller sees a
+        # deterministic null-object partial session on init failure.
         from game.core.exceptions import SessionInitializationError
         from game.strategy.engine.session.bootstrap import SessionBootstrap
         try:
@@ -113,7 +123,9 @@ class GameSession:
                 config,
                 ai_factory=ai_factory,
                 race_registry_provider=lambda: self.race_registry,
-                event_handler_factory=lambda log: self._build_event_handler(log),
+                event_handler_factory=lambda log: _make_event_handler(
+                    log, lambda: self.turn_number
+                ),
             )
         except SessionInitializationError:
             self.config = config
@@ -124,7 +136,7 @@ class GameSession:
             self.active_empire = None
             self.enemy_empire = None
             raise
-        self._apply_provisional_state(state)
+        self._apply_bootstrap_state(state)
 
     @staticmethod
     def _resolve_registries() -> GameRegistries:
@@ -157,12 +169,33 @@ class GameSession:
     @property
     def event_log(self) -> EventLog:
         """The session's event log for recording game events."""
-        return self._event_log
+        return self._services.event_log
+
+    @property
+    def _event_log(self) -> EventLog:
+        """Backwards-compatible attribute alias.
+
+        PROJ-423: ownership moved to `self._services.event_log`. The
+        underscore alias is kept because save/load code and a small
+        number of internal callers still read it directly; refactoring
+        them is out of scope for the structural extraction.
+        """
+        return self._services.event_log
+
+    @property
+    def _event_bus(self):  # type: ignore[no-untyped-def]
+        """Backwards-compatible attribute alias for `services.event_bus`."""
+        return self._services.event_bus
 
     @property
     def registries(self) -> GameRegistries:
         """The session's game registries for DI to sub-systems."""
-        return self._registries
+        return self._services.registries
+
+    @property
+    def _registries(self) -> GameRegistries:
+        """Backwards-compatible alias for `services.registries`."""
+        return self._services.registries
 
     @property
     def fleet_mutator(self):  # type: ignore[no-untyped-def]
@@ -172,22 +205,42 @@ class GameSession:
         ``FleetNavigationService``). Command handlers pull this to mutate
         Fleet state without bypassing the AST-guarded boundary.
         """
-        return self._fleet_mutator
+        return self._services.fleet_mutator
+
+    @property
+    def _fleet_mutator(self):  # type: ignore[no-untyped-def]
+        return self._services.fleet_mutator
 
     @property
     def planet_mutator(self):  # type: ignore[no-untyped-def]
         """The session's IPlanetMutator (PROJ-370)."""
-        return self._planet_mutator
+        return self._services.planet_mutator
+
+    @property
+    def _planet_mutator(self):  # type: ignore[no-untyped-def]
+        return self._services.planet_mutator
 
     @property
     def empire_mutator(self):  # type: ignore[no-untyped-def]
         """The session's IEmpireMutator (PROJ-370)."""
-        return self._empire_mutator
+        return self._services.empire_mutator
+
+    @property
+    def _empire_mutator(self):  # type: ignore[no-untyped-def]
+        return self._services.empire_mutator
 
     @property
     def ship_mutator(self):  # type: ignore[no-untyped-def]
         """The session's IShipInstanceMutator (PROJ-370)."""
-        return self._ship_mutator
+        return self._services.ship_mutator
+
+    @property
+    def _ship_mutator(self):  # type: ignore[no-untyped-def]
+        return self._services.ship_mutator
+
+    @property
+    def _command_registry(self):  # type: ignore[no-untyped-def]
+        return self._services.command_registry
 
     @property
     def race_registry(self) -> 'IRaceRegistry':
@@ -211,63 +264,21 @@ class GameSession:
             self._race_registry = CachedRaceRegistry(RaceLibrary())
         return self._race_registry
 
-    def _create_event_handler(self) -> Callable[..., None]:
-        """Backwards-compatible event-handler factory.
+    def _apply_bootstrap_state(self, state: 'SessionBootstrapState') -> None:
+        """Copy a SessionBootstrapState onto self (PROJ-423 Phase 4).
 
-        Captures `self._event_log` implicitly via `self._build_event_handler`.
-        Kept for any direct callers; production paths now route through the
-        SessionBootstrap event-handler factory which also stamps the current
-        `self.turn_number` onto each event.
-        """
-        return self._build_event_handler(self._event_log)
-
-    def _build_event_handler(self, event_log: EventLog) -> Callable[..., None]:
-        """Create the closure handler the global log_event() system calls.
-
-        Capturing `event_log` as a parameter (rather than implicitly via
-        `self._event_log`) lets `SessionBootstrap._build_services(...)`
-        construct the EventBus *before* `self._event_log` is set during
-        rehydration. Turn stamping still reads `self.turn_number`.
-        """
-
-        def handler(event_type: str, **kwargs) -> None:
-            category = kwargs.pop('category', 'other')
-            message = kwargs.pop('message', '')
-            empire_id = kwargs.pop('empire_id', -1)
-            # Coerce enum values to string (hasattr checks if Enum or str)
-            cat_value = category.value if hasattr(category, 'value') else category
-            etype_value = event_type.value if hasattr(event_type, 'value') else event_type
-            event = Event(
-                event_type=etype_value,
-                category=cat_value,
-                turn=self.turn_number,
-                empire_id=empire_id,
-                message=message,
-                details=kwargs,
-            )
-            event_log.append(event)
-        return handler
-
-    def _apply_provisional_state(self, state: 'SessionBootstrapState') -> None:
-        """Copy a SessionBootstrapState onto self (PROJ-423 Phase 2 / 3).
-
-        Provisional assignment path used by `__init__` and `from_dict`
-        until Phase 4 introduces the canonical `_apply_bootstrap_state(...)`.
-        Sets `self.config`, the session-scoped service attribute set, the
-        `self._services` bag, owned domain state, and the
+        Single canonical assignment path for both `__init__` (new-game)
+        and `from_dict` (rehydrate). Sets `self.config`, `self._services`
+        (the wired-services bag), the owned domain state, and the
         `active_empire` / `enemy_empire` seed (BUG-125).
+
+        Does NOT touch `self._race_registry` — that slot is set to None
+        by `__init__` before this method runs and stays lazy via the
+        `race_registry` property.
         """
         self.config = state.config
-        self._registries = state.services.registries
-        self._event_log = state.services.event_log
-        self._event_bus = state.services.event_bus
-        self._fleet_mutator = state.services.fleet_mutator
-        self._planet_mutator = state.services.planet_mutator
-        self._empire_mutator = state.services.empire_mutator
-        self._ship_mutator = state.services.ship_mutator
-        self.turn_engine = state.services.turn_engine
-        self._command_registry = state.services.command_registry
         self._services = state.services
+        self.turn_engine = state.services.turn_engine
 
         self.turn_number = state.turn_number
         self.save_path = state.save_path
@@ -277,7 +288,13 @@ class GameSession:
         self.systems = (
             list(state.galaxy.systems.values()) if state.galaxy is not None else []
         )
-        # BUG-125: see __init__ for `active_empire` contract.
+        # BUG-125: `active_empire` is the empire whose turn it currently
+        # is. Defaults to empires[0] at session creation; rotated by
+        # `StrategyGameStateManager.advance_turn` on each hot-seat turn
+        # change. Authorization gates in command handlers read this —
+        # never the original session creator. Save/load resets to
+        # empires[0]; the UI rotation index lives in
+        # `StrategyScreen.current_player_index`.
         self.active_empire = (
             self.empires[0] if len(self.empires) > 0 else None
         )
@@ -415,16 +432,15 @@ class GameSession:
         return SessionPersistenceAdapter.serialize(self)
 
     @classmethod
-    def from_dict(cls, data: dict, ai_factory=None) -> 'GameSession':
+    def from_dict(cls, data: dict, ai_factory: Any | None = None) -> 'GameSession':
         """Deserialize GameSession from dict.
 
         PROJ-423: thin delegate. `SessionPersistenceAdapter.rehydrate_state`
         performs the two-phase galaxy / empire load plus the four
         load-only operations (galaxy back-refs, fleet registration, order
         reference resolution, pursuer-tracker rebuild) and returns a
-        `SessionBootstrapState`. The session is then assembled by
-        applying that state through the provisional assignment path; the
-        canonical `_apply_bootstrap_state(...)` arrives in Phase 4.
+        `SessionBootstrapState`. The session is then assembled through
+        the canonical `_apply_bootstrap_state(...)` path.
 
         Args:
             data: Saved game session data.
@@ -441,53 +457,18 @@ class GameSession:
             SessionPersistenceAdapter,
         )
 
-        state = SessionPersistenceAdapter.rehydrate_state(
-            data, ai_factory=ai_factory
-        )
-
+        # Bare session so the rehydrate path can reference `session.turn_number`
+        # and `session.race_registry` through provider lambdas. The
+        # closures see the values written by `_apply_bootstrap_state`
+        # below.
         session = cls.__new__(cls)
         session._race_registry = None
-        session._apply_provisional_state(state)
 
-        # PROJ-77 / PROJ-252: the EventBus must capture `self` so global
-        # `log_event` calls stamp the *live* `session.turn_number`. The
-        # bootstrap builds the bus with a placeholder handler during
-        # rehydrate (no `self` yet); rebind it here. The event log is
-        # the deserialized one (preserved by reference through the
-        # SessionRuntimeServices bag), so no events are lost.
-        from game.core.event_logging import EventBus as _EventBus
-        new_bus = _EventBus(session._build_event_handler(session._event_log))
-        session._event_bus = new_bus
-        # Re-wire `_services` to carry the new bus.
-        import dataclasses as _dc
-        session._services = _dc.replace(session._services, event_bus=new_bus)
-        # Re-wire turn_engine so it uses the new bus too (the previous
-        # bus captured during rehydrate has the wrong turn-number
-        # closure). Rebuild via TurnEngineConfig.create_default to mirror
-        # __init__ exactly.
-        from game.strategy.engine.turn_engine import TurnEngine as _TurnEngine
-        from game.strategy.engine.turn_engine_config import (
-            TurnEngineConfig as _TurnEngineConfig,
-        )
-        _cfg = _TurnEngineConfig.create_default(
-            session._registries,
+        state = SessionPersistenceAdapter.rehydrate_state(
+            data,
             ai_factory=ai_factory,
-            race_registry=session.race_registry,
-            event_bus=new_bus,
-            fleet_mutator=session._fleet_mutator,
-            planet_mutator=session._planet_mutator,
-            empire_mutator=session._empire_mutator,
-            ship_mutator=session._ship_mutator,
+            turn_number_provider=lambda: session.turn_number,
+            race_registry_provider=lambda: session.race_registry,
         )
-        session.turn_engine = _TurnEngine(
-            registries=session._registries,
-            config=_cfg,
-            ai_factory=ai_factory,
-            event_bus=new_bus,
-            race_registry=session.race_registry,
-        )
-        session._services = _dc.replace(
-            session._services, turn_engine=session.turn_engine
-        )
-
+        session._apply_bootstrap_state(state)
         return session

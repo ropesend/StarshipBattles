@@ -42,15 +42,17 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def _build_event_handler(
+def build_event_handler(
     event_log: EventLog,
     turn_number_getter: Callable[[], int],
 ) -> Callable[..., None]:
     """Build the closure-based handler the global `log_event` system calls.
 
-    Mirrors the closure currently in `GameSession._create_event_handler`
-    but is sourced from a bootstrap-level helper so both `__init__` and
-    `from_dict` agree on the shape.
+    Captures `event_log` and a `turn_number_getter` (a zero-arg callable
+    that returns the live turn number). Both `GameSession.__init__` and
+    `GameSession.from_dict` use this helper; the getter resolves through
+    `self.turn_number` so events stamp the live turn even if construction
+    overwrites it.
     """
 
     def handler(event_type: str, **kwargs: Any) -> None:
@@ -121,7 +123,7 @@ class SessionBootstrap:
             # Fallback: stamp event-bus events with turn 0. Production
             # callers always pass `event_handler_factory` so this branch
             # only runs in isolated bootstrap tests.
-            handler = _build_event_handler(log, lambda: 0)
+            handler = build_event_handler(log, lambda: 0)
         event_bus = EventBus(handler)
 
         # Mutator services. Order matches the existing GameSession.__init__
