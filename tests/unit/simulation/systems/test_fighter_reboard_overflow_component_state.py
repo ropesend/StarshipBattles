@@ -23,6 +23,7 @@ import pytest
 
 from game.core.component_state import ComponentState
 from game.core.hex_math import HexCoord
+from game.strategy.data.deployed_group import FighterWing, SatelliteConstellation
 from game.simulation.systems.fighter_reboard import (
     ReboardTracker,
     apply_reboard,
@@ -127,7 +128,7 @@ def test_fighter_overflow_preserves_component_states():
     engine = MagicMock()
     engine.reboard_tracker = tracker
 
-    empire = SimpleNamespace(id=42, fleets=[fleet])
+    empire = SimpleNamespace(id=42, fleets=[fleet], deployed_groups=[])
     summary = apply_reboard(
         engine=engine,
         participating_fleets_by_owner={42: [fleet]},
@@ -136,10 +137,7 @@ def test_fighter_overflow_preserves_component_states():
     assert summary["overflowed"] == 1
     assert summary["reboarded"] == 0
 
-    fgs = [
-        f for f in empire.fleets
-        if getattr(f, "group_kind", "fleet") == "fighter_group"
-    ]
+    fgs = [g for g in empire.deployed_groups if isinstance(g, FighterWing)]
     assert len(fgs) == 1
     overflow_ship = fgs[0].ships[0]
     # PROJ-FMS-D audit Fix 1: the overflow ShipInstance must carry forward
@@ -175,17 +173,14 @@ def test_satellite_overflow_preserves_component_states():
     engine = MagicMock()
     engine.reboard_tracker = tracker
 
-    empire = SimpleNamespace(id=42, fleets=[fleet])
+    empire = SimpleNamespace(id=42, fleets=[fleet], deployed_groups=[])
     summary = apply_reboard(
         engine=engine,
         participating_fleets_by_owner={42: [fleet]},
         empires_by_owner={42: empire},
     )
     assert summary["overflowed"] == 1
-    sgs = [
-        f for f in empire.fleets
-        if getattr(f, "group_kind", "fleet") == "satellite_group"
-    ]
+    sgs = [g for g in empire.deployed_groups if isinstance(g, SatelliteConstellation)]
     assert len(sgs) == 1
     overflow_ship = sgs[0].ships[0]
     # Same contract for satellites.
@@ -216,17 +211,14 @@ def test_overflow_no_components_is_fine():
     engine = MagicMock()
     engine.reboard_tracker = tracker
 
-    empire = SimpleNamespace(id=42, fleets=[fleet])
+    empire = SimpleNamespace(id=42, fleets=[fleet], deployed_groups=[])
     summary = apply_reboard(
         engine=engine,
         participating_fleets_by_owner={42: [fleet]},
         empires_by_owner={42: empire},
     )
     assert summary["overflowed"] == 1
-    fgs = [
-        f for f in empire.fleets
-        if getattr(f, "group_kind", "fleet") == "fighter_group"
-    ]
+    fgs = [g for g in empire.deployed_groups if isinstance(g, FighterWing)]
     overflow_ship = fgs[0].ships[0]
     # Empty components dict is fine; what matters is no crash + HP carried.
     assert overflow_ship.current_hp == 70

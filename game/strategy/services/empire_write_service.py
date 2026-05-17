@@ -120,16 +120,35 @@ class EmpireWriteService:
         """
         import logging
         log = logging.getLogger(__name__)
+        from game.strategy.data.deployed_group import DeployedGroup
         removed_ids: list = []
         for team_id, fleets in list(fleets_by_team_id.items()):
             empire = empires_by_team_id.get(team_id)
             if empire is None:
                 continue
             empire_fleets = getattr(empire, "fleets", None)
-            if empire_fleets is None:
-                continue
+            empire_groups = getattr(empire, "deployed_groups", None)
             for fleet in list(fleets):
-                if not fleet.ships and fleet in empire_fleets:
+                if fleet.ships:
+                    continue
+                # PROJ-431 Phase 3: empty deployed groups
+                # (FighterWing / SatelliteConstellation) prune from
+                # ``empire.deployed_groups``; empty real Fleets prune
+                # from ``empire.fleets``.
+                if isinstance(fleet, DeployedGroup):
+                    if empire_groups is not None and fleet in empire_groups:
+                        try:
+                            empire_groups.remove(fleet)
+                        except ValueError:
+                            log.warning(
+                                f"DeployedGroup {fleet.id} not found on empire "
+                                f"while pruning."
+                            )
+                        removed_ids.append(fleet.id)
+                    continue
+                if empire_fleets is None:
+                    continue
+                if fleet in empire_fleets:
                     if hasattr(empire, "remove_fleet"):
                         empire.remove_fleet(fleet, event_bus=event_bus)
                     else:

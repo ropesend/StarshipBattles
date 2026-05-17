@@ -290,13 +290,8 @@ def _resolve_sector_hex(fleets: List["Fleet"]) -> Optional[Any]:
     return None
 
 
-def _ensure_overflow_fighter_group(*, empire: Any, sector_hex: Any) -> "Fleet":
-    """Backwards-compat alias of :func:`_ensure_overflow_group` for fighters.
-
-    Kept so existing PROJ-FMS-C tests (and any external callers) that
-    import the original symbol continue to work after the PROJ-FMS-D
-    generalisation.
-    """
+def _ensure_overflow_fighter_group(*, empire: Any, sector_hex: Any) -> Any:
+    """Backwards-compat alias of :func:`_ensure_overflow_group` for fighters."""
     return _ensure_overflow_group(
         empire=empire, sector_hex=sector_hex, vehicle_type="fighter",
     )
@@ -304,54 +299,58 @@ def _ensure_overflow_fighter_group(*, empire: Any, sector_hex: Any) -> "Fleet":
 
 def _ensure_overflow_group(
     *, empire: Any, sector_hex: Any, vehicle_type: str,
-) -> "Fleet":
-    """Look up or mint an overflow group Fleet at ``sector_hex``.
+) -> Any:
+    """Look up or mint an overflow deployed-group at ``sector_hex``.
 
-    PROJ-FMS-D Phase 2: generalised over ``vehicle_type``.
-    ``fighter`` -> ``fighter_group`` (id namespace 200000+),
-    ``satellite`` -> ``satellite_group`` (id namespace 300000+).
+    PROJ-431 Phase 3: returns a :class:`FighterWing` /
+    :class:`SatelliteConstellation` on ``empire.deployed_groups``,
+    not a synthetic ``Fleet(group_kind=...)``.
 
     Reboard policy (PROJ-FMS-C decisions.md, carried forward): if a
-    pre-existing group of the same kind at the sector already belongs to
-    this empire, MERGE overflow into it. Otherwise mint a fresh group.
-    This matches the "pre-existing groups stay in original group"
-    principle while preferring reuse over fragmentation.
+    pre-existing group of the same type at the sector already belongs
+    to this empire, MERGE overflow into it. Otherwise mint a fresh group.
     """
-    from game.strategy.data.fleet import Fleet
+    from game.strategy.data.deployed_group import (
+        FighterWing,
+        SatelliteConstellation,
+    )
 
     vt = vehicle_type.lower()
     if vt == "satellite":
-        group_kind = "satellite_group"
+        target_cls: type = SatelliteConstellation
         display_name_template = "Satellite Group"
         base_id = 300000
     else:
         # Default = fighter for backwards-compat with PROJ-FMS-C tests
         # that don't set a vehicle_type on the CarriedVehicle.
-        group_kind = "fighter_group"
+        target_cls = FighterWing
         display_name_template = "Fighter Wing"
         base_id = 200000
 
-    for f in getattr(empire, "fleets", []):
-        if getattr(f, "group_kind", "fleet") != group_kind:
+    deployed = getattr(empire, "deployed_groups", None)
+    if deployed is None:
+        deployed = []
+        empire.deployed_groups = deployed
+    for g in deployed:
+        if not isinstance(g, target_cls):
             continue
-        if getattr(f, "location", None) == sector_hex:
-            return f
+        if getattr(g, "location", None) == sector_hex:
+            return g
 
     new_id = _mint_overflow_id(empire, base_id=base_id)
-    group = Fleet(
-        fleet_id=new_id,
+    group = target_cls(
+        group_id=new_id,
         owner_id=getattr(empire, "id", 0),
         location=sector_hex,
-        speed=0.0,
         display_name=f"{display_name_template} {new_id}",
-        group_kind=group_kind,
     )
-    empire.fleets.append(group)
+    deployed.append(group)
     return group
 
 
 def _mint_overflow_id(empire: Any, *, base_id: int = 200000) -> int:
-    existing = {f.id for f in getattr(empire, "fleets", []) if isinstance(f.id, int)}
+    deployed = getattr(empire, "deployed_groups", None) or ()
+    existing = {g.id for g in deployed if isinstance(g.id, int)}
     candidate = base_id
     while candidate in existing:
         candidate += 1

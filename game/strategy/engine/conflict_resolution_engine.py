@@ -185,6 +185,27 @@ class ConflictResolutionEngine(IConflictEngine):
                         context={"empire_id": empire.id, "fleet_id": fleet.id}
                     )
 
+    @staticmethod
+    def _combat_participating_groups(empire) -> list:
+        """PROJ-431 Phase 3: deployed groups that participate in combat.
+
+        FighterWings and SatelliteConstellations live on
+        ``empire.deployed_groups`` (typed siblings of Fleet) but still
+        participate in conflict resolution at their hex. Mines stay
+        inside their MineGroup and don't trigger conflicts directly —
+        they're resolved via :class:`TacticalMineResolver` from a fleet
+        battle that happens at their hex.
+        """
+        from game.strategy.data.deployed_group import (
+            FighterWing,
+            SatelliteConstellation,
+        )
+        deployed = getattr(empire, "deployed_groups", None) or ()
+        return [
+            g for g in deployed
+            if isinstance(g, (FighterWing, SatelliteConstellation))
+        ]
+
     def resolve_all_conflicts(
         self,
         empires,
@@ -310,12 +331,17 @@ class ConflictResolutionEngine(IConflictEngine):
             ):
                 continue
             # Build current occupants list at this fleet's hex from LIVE
-            # empire.fleets state. Skip if no opposing empire is present.
+            # empire.fleets state + deployed_groups (PROJ-431 Phase 3:
+            # FighterWings / SatelliteConstellations participate
+            # alongside Fleets). Skip if no opposing empire is present.
             occupants = []
             for other_empire in empires:
                 for other_fleet in other_empire.fleets:
                     if other_fleet.location == fleet.location:
                         occupants.append((other_empire, other_fleet))
+                for other_group in self._combat_participating_groups(other_empire):
+                    if other_group.location == fleet.location:
+                        occupants.append((other_empire, other_group))
             if len({emp.id for emp, _ in occupants}) < 2:
                 continue
             self._resolve_combat_at_hex(occupants)

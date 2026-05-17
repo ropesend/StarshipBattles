@@ -284,8 +284,29 @@ class MineGroup(DeployedGroup):
 # ---------------------------------------------------------------------------
 
 
+class _ShipBearingDeployedGroup(DeployedGroup):
+    """Mixin-style base for deployed groups that carry materialised ships.
+
+    Provides the minimal ``Fleet``-like surface (``remove_ship``) so the
+    PROJ-269 post-battle hook can prune destroyed ships from
+    ``FighterWing`` / ``SatelliteConstellation`` containers via the
+    same :class:`IFleetMutator` plumbing it uses for real Fleets.
+
+    The class itself is NOT registered with ``_TYPE_REGISTRY`` — only
+    concrete subclasses (FighterWing, SatelliteConstellation) are.
+    """
+
+    ships: List[Any]
+
+    def remove_ship(self, ship: Any) -> bool:
+        if ship in self.ships:
+            self.ships.remove(ship)
+            return True
+        return False
+
+
 @_register_type("fighter_wing")
-class FighterWing(DeployedGroup):
+class FighterWing(_ShipBearingDeployedGroup):
     """Deployed-fighter group — sibling of :class:`Fleet`, NOT a Fleet.
 
     Replaces the previous ``Fleet(group_kind="fighter_group")`` synthetic
@@ -352,7 +373,7 @@ class FighterWing(DeployedGroup):
 
 
 @_register_type("satellite_constellation")
-class SatelliteConstellation(DeployedGroup):
+class SatelliteConstellation(_ShipBearingDeployedGroup):
     """Deployed-satellite group — sibling of :class:`Fleet`, NOT a Fleet.
 
     Mirror of :class:`FighterWing` for the satellite family. Replaces

@@ -22,6 +22,7 @@ from game.simulation.systems.fighter_reboard import (
     ReboardTracker,
     apply_reboard,
 )
+from game.strategy.data.deployed_group import FighterWing, SatelliteConstellation
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.ship_instance import ShipInstance
 
@@ -120,7 +121,7 @@ def test_satellite_reboards_into_universal_bay():
     survivor = _stub_launched_ship(alive=True, hp=60, vehicle_type="Satellite")
     engine = _stub_engine_with_launched([survivor])
 
-    empire = SimpleNamespace(id=42, fleets=[fleet])
+    empire = SimpleNamespace(id=42, fleets=[fleet], deployed_groups=[])
     summary = apply_reboard(
         engine=engine,
         participating_fleets_by_owner={42: [fleet]},
@@ -151,26 +152,20 @@ def test_satellite_overflows_into_new_satellite_group():
     ]
     engine = _stub_engine_with_launched(survivors)
 
-    empire = SimpleNamespace(id=42, fleets=[fleet])
+    empire = SimpleNamespace(id=42, fleets=[fleet], deployed_groups=[])
     summary = apply_reboard(
         engine=engine,
         participating_fleets_by_owner={42: [fleet]},
         empires_by_owner={42: empire},
     )
     assert summary["overflowed"] == 2
-    sat_groups = [
-        f for f in empire.fleets
-        if getattr(f, "group_kind", "fleet") == "satellite_group"
-    ]
+    sat_groups = [g for g in empire.deployed_groups if isinstance(g, SatelliteConstellation)]
     assert len(sat_groups) == 1
     assert len(sat_groups[0].ships) == 2
     # 300000+ id namespace.
     assert sat_groups[0].id >= 300000
-    # No spurious fighter_group.
-    assert not any(
-        getattr(f, "group_kind", "fleet") == "fighter_group"
-        for f in empire.fleets
-    )
+    # No spurious FighterWing.
+    assert not any(isinstance(g, FighterWing) for g in empire.deployed_groups)
 
 
 def test_satellite_overflow_merges_into_existing_satellite_group():
@@ -184,12 +179,13 @@ def test_satellite_overflow_merges_into_existing_satellite_group():
     )
     fleet.ships.append(carrier)
 
-    pre_existing = Fleet(
-        fleet_id=300001, owner_id=42, location=hex_c, speed=0.0,
-        group_kind="satellite_group",
+    pre_existing = SatelliteConstellation(
+        group_id=300001, owner_id=42, location=hex_c,
     )
 
-    empire = SimpleNamespace(id=42, fleets=[fleet, pre_existing])
+    empire = SimpleNamespace(
+        id=42, fleets=[fleet], deployed_groups=[pre_existing],
+    )
     survivor = _stub_launched_ship(alive=True, hp=70, vehicle_type="Satellite")
     engine = _stub_engine_with_launched([survivor])
     summary = apply_reboard(
@@ -198,10 +194,7 @@ def test_satellite_overflow_merges_into_existing_satellite_group():
         empires_by_owner={42: empire},
     )
     assert summary["overflowed"] == 1
-    sat_groups = [
-        f for f in empire.fleets
-        if getattr(f, "group_kind", "fleet") == "satellite_group"
-    ]
+    sat_groups = [g for g in empire.deployed_groups if isinstance(g, SatelliteConstellation)]
     assert len(sat_groups) == 1
     assert sat_groups[0] is pre_existing
     assert len(pre_existing.ships) == 1
@@ -227,21 +220,15 @@ def test_mixed_fighter_satellite_batch_uses_correct_overflow_kinds():
     )
     engine = _stub_engine_with_launched([fighter, satellite])
 
-    empire = SimpleNamespace(id=42, fleets=[fleet])
+    empire = SimpleNamespace(id=42, fleets=[fleet], deployed_groups=[])
     summary = apply_reboard(
         engine=engine,
         participating_fleets_by_owner={42: [fleet]},
         empires_by_owner={42: empire},
     )
     assert summary["overflowed"] == 2
-    fgs = [
-        f for f in empire.fleets
-        if getattr(f, "group_kind", "fleet") == "fighter_group"
-    ]
-    sgs = [
-        f for f in empire.fleets
-        if getattr(f, "group_kind", "fleet") == "satellite_group"
-    ]
+    fgs = [g for g in empire.deployed_groups if isinstance(g, FighterWing)]
+    sgs = [g for g in empire.deployed_groups if isinstance(g, SatelliteConstellation)]
     assert len(fgs) == 1
     assert len(sgs) == 1
     assert len(fgs[0].ships) == 1
@@ -266,7 +253,7 @@ def test_satellite_only_bay_rejects_fighter_overflow():
     )
     engine = _stub_engine_with_launched([fighter])
 
-    empire = SimpleNamespace(id=42, fleets=[fleet])
+    empire = SimpleNamespace(id=42, fleets=[fleet], deployed_groups=[])
     summary = apply_reboard(
         engine=engine,
         participating_fleets_by_owner={42: [fleet]},
@@ -275,8 +262,5 @@ def test_satellite_only_bay_rejects_fighter_overflow():
     # Bay rejects fighters; overflows into fighter_group.
     assert summary["overflowed"] == 1
     assert summary["reboarded"] == 0
-    fgs = [
-        f for f in empire.fleets
-        if getattr(f, "group_kind", "fleet") == "fighter_group"
-    ]
+    fgs = [g for g in empire.deployed_groups if isinstance(g, FighterWing)]
     assert len(fgs) == 1

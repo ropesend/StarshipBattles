@@ -117,7 +117,7 @@ def test_reboard_one_survivor_onto_friendly_carrier():
     survivor = _stub_launched_ship(alive=True, hp=70, team_id=0)
     engine = _stub_engine_with_launched([survivor])
 
-    empire = SimpleNamespace(id=42, fleets=[fleet])
+    empire = SimpleNamespace(id=42, fleets=[fleet], deployed_groups=[])
     summary = apply_reboard(
         engine=engine,
         participating_fleets_by_owner={42: [fleet]},
@@ -142,7 +142,7 @@ def test_dead_fighter_is_discarded():
     dead = _stub_launched_ship(alive=False, hp=0, team_id=0)
     engine = _stub_engine_with_launched([dead])
 
-    empire = SimpleNamespace(id=42, fleets=[fleet])
+    empire = SimpleNamespace(id=42, fleets=[fleet], deployed_groups=[])
     summary = apply_reboard(
         engine=engine,
         participating_fleets_by_owner={42: [fleet]},
@@ -154,11 +154,11 @@ def test_dead_fighter_is_discarded():
 
 
 def test_overflow_spills_into_new_fighter_group():
+    from game.strategy.data.deployed_group import FighterWing
     hex_c = HexCoord(0, 0)
     carrier = _make_carrier("carrier_1", capacity=1)  # only 1 slot
     fleet = Fleet(
         fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
     )
     fleet.ships.append(carrier)
 
@@ -169,7 +169,7 @@ def test_overflow_spills_into_new_fighter_group():
     ]
     engine = _stub_engine_with_launched(survivors)
 
-    empire = SimpleNamespace(id=42, fleets=[fleet])
+    empire = SimpleNamespace(id=42, fleets=[fleet], deployed_groups=[])
     summary = apply_reboard(
         engine=engine,
         participating_fleets_by_owner={42: [fleet]},
@@ -179,8 +179,8 @@ def test_overflow_spills_into_new_fighter_group():
     assert summary["overflowed"] == 2
     # The carrier has 1 fighter loaded.
     assert len(carrier.carried_items) == 1
-    # A new fighter_group exists at the hex with 2 fighters.
-    fgs = [f for f in empire.fleets if getattr(f, "group_kind", "fleet") == "fighter_group"]
+    # A new FighterWing exists at the hex with 2 fighters.
+    fgs = [g for g in empire.deployed_groups if isinstance(g, FighterWing)]
     assert len(fgs) == 1
     assert len(fgs[0].ships) == 2
     assert fgs[0].location == hex_c
@@ -188,21 +188,20 @@ def test_overflow_spills_into_new_fighter_group():
 
 def test_overflow_merges_into_existing_fighter_group_at_hex():
     """Per decisions.md: overflow merges into a pre-existing
-    fighter_group at the same hex (owner match) rather than fragmenting."""
+    FighterWing at the same hex (owner match) rather than fragmenting."""
+    from game.strategy.data.deployed_group import FighterWing
     hex_c = HexCoord(0, 0)
     carrier = _make_carrier("carrier_1", capacity=0)  # zero capacity, force overflow
     fleet = Fleet(
         fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
     )
     fleet.ships.append(carrier)
 
-    pre_existing = Fleet(
-        fleet_id=200001, owner_id=42, location=hex_c, speed=0.0,
-        group_kind="fighter_group",
-    )
+    pre_existing = FighterWing(group_id=200001, owner_id=42, location=hex_c)
 
-    empire = SimpleNamespace(id=42, fleets=[fleet, pre_existing])
+    empire = SimpleNamespace(
+        id=42, fleets=[fleet], deployed_groups=[pre_existing],
+    )
 
     survivor = _stub_launched_ship(alive=True, hp=70, team_id=0)
     engine = _stub_engine_with_launched([survivor])
@@ -213,7 +212,7 @@ def test_overflow_merges_into_existing_fighter_group_at_hex():
     )
     assert summary["overflowed"] == 1
     # Pre-existing group grew, no new group minted.
-    fgs = [f for f in empire.fleets if getattr(f, "group_kind", "fleet") == "fighter_group"]
+    fgs = [g for g in empire.deployed_groups if isinstance(g, FighterWing)]
     assert len(fgs) == 1
     assert fgs[0] is pre_existing
     assert len(pre_existing.ships) == 1
@@ -236,7 +235,7 @@ def test_carrier_destroyed_finds_other_friendly_with_bay_space():
     survivor = _stub_launched_ship(alive=True, hp=80, team_id=0)
     engine = _stub_engine_with_launched([survivor])
 
-    empire = SimpleNamespace(id=42, fleets=[fleet])
+    empire = SimpleNamespace(id=42, fleets=[fleet], deployed_groups=[])
     summary = apply_reboard(
         engine=engine,
         participating_fleets_by_owner={42: [fleet]},

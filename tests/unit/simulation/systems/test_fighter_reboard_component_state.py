@@ -130,7 +130,7 @@ def test_reboard_captures_component_states_into_carried_vehicle(monkeypatch):
         group_kind="fleet",
     )
     fleet.ships.append(carrier_inst)
-    empire = SimpleNamespace(id=42, fleets=[fleet])
+    empire = SimpleNamespace(id=42, fleets=[fleet], deployed_groups=[])
 
     summary = apply_reboard(
         engine=engine,
