@@ -20,15 +20,15 @@
 | 1 | Move planet-modifier engine resolution onto `TurnEngine` | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2 | Move small hook logic onto named `TurnEngine` methods | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3 | Extract the movement-only collaborator | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4 | Add a registry-purity guard | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4 | Add a registry-purity guard | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5 | Validate and document | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 
 **Last Updated:** 2026-05-17
-**Active Phase:** 4 — Registry-purity AST guard
-**Last Action:** Phase 3 — `MovementPhaseCollaborator` created with `snapshot_before` / `resolve_after` and private `_diff_moved_fleets` / `_mark_boosters_dirty` / `_resolve_minefields` / `_prune_destroyed_fleet_contents`. TurnEngine constructs the collaborator; descriptor hooks repointed; module-level `_capture_move_queue` + `_derive_moved_fleet_ids` deleted. 152 turn_engine tests + 11 FMS-B integration tests green.
-**Next Action:** Phase 4 — registry purity AST guard.
+**Active Phase:** 5 — Validate and document
+**Last Action:** Phase 4 — registry-purity AST guard added at `tests/unit/strategy/turn_engine/test_turn_phase_registry_purity.py` (5 tests: zero module-level functions, no forbidden gameplay-engine module imports, no forbidden imported names, golden tick/end-of-turn phase orderings).
+**Next Action:** Phase 5 — run the full sharded suite + final doc check.
 **Blockers:** None
 
 ## Overview

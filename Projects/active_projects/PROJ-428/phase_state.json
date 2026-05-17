@@ -98,7 +98,7 @@
       ],
       "merged_into_project_at_sha": null,
       "phase_base_sha": null,
-      "phase_branch": null,
+      "phase_branch": "proj/PROJ-428/main",
       "phase_head_sha": null,
       "planned_files": [
         "tests/unit/strategy/turn_engine/test_turn_phase_registry_purity.py"
@@ -107,7 +107,7 @@
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_5": {
