@@ -150,6 +150,30 @@
       "scrap_history": [],
       "status": "complete",
       "verifying_review_id": null
+    },
+    "phase_5": {
+      "depends_on": [
+        "phase_4"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": "fdc3f476b",
+      "phase_branch": "proj/PROJ-431/main",
+      "phase_head_sha": "4cb0db29f2f6238d3968c097884b2baaa99f14f9",
+      "planned_files": [
+        "game/strategy/engine/conflict_resolution_engine.py",
+        "game/strategy/combat/battle_assembly.py",
+        "game/strategy/combat/post_battle_hook_builder.py",
+        "game/strategy/combat/pre_tick_setup/mine_setup.py",
+        "game/strategy/engine/commands/__init__.py",
+        "tests/unit/strategy/engine/test_conflict_deployed_group_trigger.py",
+        "tests/unit/strategy/combat/test_battle_assembly_third_party_mines.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "complete",
+      "verifying_review_id": null
     }
   },
   "project_branch": "proj/PROJ-431/main",
