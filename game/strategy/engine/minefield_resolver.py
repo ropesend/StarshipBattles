@@ -1,7 +1,7 @@
-"""MinefieldResolver — PROJ-FMS-B Phases 1 + 2.
+"""MinefieldResolver — PROJ-FMS-B Phases 1 + 2 + PROJ-431 Phase 2.
 
-Resolves strategic-entry damage from enemy ``mine_group`` Fleets when
-an opposing fleet moves into a mined hex. Runs in the turn-engine
+Resolves strategic-entry damage from enemy ``MineGroup``s when an
+opposing fleet moves into a mined hex. Runs in the turn-engine
 movement phase BEFORE :class:`ConflictResolutionEngine` so a fleet
 destroyed by mines never reaches the conflict dispatch.
 
@@ -21,7 +21,11 @@ Per the design:
 - ``P_trigger_pass > 0`` when N >= 1 and p_trigger > 0.
 - Friendly fleets never trigger.
 
-PROJ-FMS-B Phase 2 wires the laserhead pass in :meth:`_resolve_laserhead_pass`.
+PROJ-431 Phase 2: mines live on ``empire.deployed_groups`` as typed
+:class:`MineGroup` instances. The resolver no longer walks
+``empire.fleets`` looking for a synthetic carrier — it filters
+``empire.deployed_groups`` by ``isinstance(g, MineGroup)`` and reads
+``mine_group.mines`` (homogeneous ``list[CarriedVehicle]``) directly.
 """
 from __future__ import annotations
 
@@ -31,6 +35,7 @@ import random
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
 
+from game.strategy.data.deployed_group import MineGroup
 from game.strategy.engine.minefield_balance import (
     MinefieldBalance,
     load_minefield_balance,
@@ -141,42 +146,24 @@ def _sigmoid(x: float) -> float:
 # ---------------------------------------------------------------------------
 
 
-def _iter_mines(mine_group: "Fleet") -> List[Dict[str, Any]]:
-    """Return the mine entries on a mine_group Fleet as dicts.
+def _iter_mines(mine_group: MineGroup) -> List[Dict[str, Any]]:
+    """Return the mine entries on a ``MineGroup`` as dicts.
 
-    Mines on a ``mine_group`` live on its first ship as
-    :class:`CarriedVehicle` entries in ``ship.bay_inventory.bay`` (per
-    PROJ-431 Phase 1's typed substrate). The mine_group's ``ships`` list
-    holds a single carrier instance that doubles as the mine container —
-    this keeps the existing serializer/DTO surface usable.
-
-    The resolver's downstream helpers (``_mine_has_warhead``,
-    ``_get_warhead_damage``, ``_mine_has_laserhead``,
-    ``_get_laserhead_attrs``, ``_mine_sensor_bonus``) read the mine's
-    ``design_data`` as a dict, so this function returns dict views via
-    ``CarriedVehicle.to_dict()``. Sub-phase 1b: the read path now routes
-    through ``ship.bay_inventory`` instead of ``ship.carried_items``.
+    PROJ-431 Phase 2: mines live directly on ``mine_group.mines`` as
+    :class:`CarriedVehicle` entries — no synthetic carrier, no
+    ``bay_inventory`` indirection. The resolver's downstream helpers
+    (``_mine_has_warhead``, ``_get_warhead_damage``,
+    ``_mine_has_laserhead``, ``_get_laserhead_attrs``,
+    ``_mine_sensor_bonus``) read the mine's ``design_data`` as a dict,
+    so this function returns dict views via ``CarriedVehicle.to_dict()``.
     """
-    if not mine_group.ships:
-        return []
-    carrier = mine_group.ships[0]
-    return [cv.to_dict() for cv in carrier.bay_inventory.bay]
+    return [cv.to_dict() for cv in mine_group.mines]
 
 
-def _set_mines(mine_group: "Fleet", mines: List[Dict[str, Any]]) -> None:
-    """Replace the mine inventory on the mine_group's carrier.
-
-    Rebuilds a typed :class:`BayInventory` from the (possibly mutated)
-    list of mine dicts and writes it through
-    :meth:`ShipInstance.set_bay_inventory` so the substrate stays typed
-    end-to-end.
-    """
-    if not mine_group.ships:
-        return
-    from game.strategy.data.bay_inventory import BayInventory
-    from game.strategy.data.carried_vehicle import CarriedVehicle
-    bay = [CarriedVehicle.from_dict(m) for m in mines if isinstance(m, dict)]
-    mine_group.ships[0].set_bay_inventory(BayInventory(bay=bay))
+def _pop_mine_at(mine_group: MineGroup, index: int) -> None:
+    """Remove the mine at ``index`` from the group's typed inventory."""
+    if 0 <= index < len(mine_group.mines):
+        mine_group.mines.pop(index)
 
 
 def _mine_has_warhead(mine_dict: Dict[str, Any]) -> bool:
@@ -420,13 +407,14 @@ class MinefieldResolver:
         fleet: "Fleet",
         registries: Optional["GameRegistries"] = None,
     ) -> MinefieldResolutionResult:
-        """Resolve all enemy mine_groups at ``fleet.location`` against ``fleet``.
+        """Resolve all enemy ``MineGroup``s at ``fleet.location`` against ``fleet``.
 
         Args:
             galaxy: Optional galaxy reference (kept for future hooks; not
                 currently used).
             empires: List of all empires — used to enumerate enemy
-                ``mine_group`` Fleets at the same hex.
+                ``MineGroup``s at the same hex via
+                ``empire.deployed_groups_of(MineGroup)``.
             fleet: The entering fleet (must have a ``location``, ``ships``,
                 and ``owner_id``).
             registries: Optional registries for stats calculation.
@@ -435,18 +423,22 @@ class MinefieldResolver:
             :class:`MinefieldResolutionResult` summarising detonations,
             damage applied, ships destroyed, and mine_groups removed.
         """
+        del galaxy  # unused — kept for future hooks / API parity.
         result = MinefieldResolutionResult()
 
         if fleet is None or not getattr(fleet, "ships", None):
             return result
 
-        # Collect enemy mine_groups at the hex.
-        mine_groups: List[Tuple[Any, "Fleet"]] = []
+        # PROJ-431 Phase 2: enumerate ``MineGroup``s through the typed
+        # ``Empire.deployed_groups`` collection instead of filtering
+        # ``empire.fleets`` by ``group_kind``.
+        mine_groups: List[Tuple[Any, MineGroup]] = []
         for empire in empires:
             if getattr(empire, "id", None) == getattr(fleet, "owner_id", None):
                 continue
-            for other in getattr(empire, "fleets", []) or []:
-                if getattr(other, "group_kind", "fleet") != "mine_group":
+            deployed = getattr(empire, "deployed_groups", None) or []
+            for other in deployed:
+                if not isinstance(other, MineGroup):
                     continue
                 if other.location != fleet.location:
                     continue
@@ -464,7 +456,7 @@ class MinefieldResolver:
             for owner_empire, mine_group in mine_groups:
                 # Re-check liveness of the mine_group each iteration —
                 # an earlier ship may have removed it.
-                if mine_group not in (owner_empire.fleets or []):
+                if mine_group not in (owner_empire.deployed_groups or []):
                     continue
                 self._resolve_warhead_pass(
                     ship, mine_group, fleet, owner_empire, registries, result
@@ -478,11 +470,11 @@ class MinefieldResolver:
             if not ship.is_alive and ship.instance_id not in result.destroyed_ship_ids:
                 result.destroyed_ship_ids.append(ship.instance_id)
 
-        # Sweep empty mine_groups out of their empire's fleet list.
+        # Sweep empty mine_groups out of their empire's deployed_groups.
         for owner_empire, mine_group in mine_groups:
-            if not _iter_mines(mine_group):
-                if mine_group in (owner_empire.fleets or []):
-                    owner_empire.fleets.remove(mine_group)
+            if not mine_group.mines:
+                if mine_group in (owner_empire.deployed_groups or []):
+                    owner_empire.deployed_groups.remove(mine_group)
                     result.removed_mine_groups.append(mine_group.id)
 
         return result
@@ -494,15 +486,16 @@ class MinefieldResolver:
     def _resolve_warhead_pass(
         self,
         ship: "ShipInstance",
-        mine_group: "Fleet",
+        mine_group: MineGroup,
         attacking_fleet: "Fleet",
         owner_empire: Any,
         registries: Optional["GameRegistries"],
         result: MinefieldResolutionResult,
     ) -> None:
         """Run the warhead-pass roll for ``ship`` against ``mine_group``."""
-        # Pull the mine list once and track positions within it so we can
-        # mutate-then-write-through cleanly via the typed bay_inventory.
+        # PROJ-431 Phase 2: read directly off the typed
+        # ``mine_group.mines`` list. Track indices so the consumed
+        # mine can be popped without rebuilding the substrate.
         mines = _iter_mines(mine_group)
         warhead_indices = [i for i, m in enumerate(mines) if _mine_has_warhead(m)]
         n = len(warhead_indices)
@@ -538,12 +531,10 @@ class MinefieldResolver:
             )
         )
 
-        # Remove the chosen mine from the carrier's inventory by index
-        # and write the updated list back through the typed substrate.
+        # Remove the chosen mine from the typed inventory.
         mine_id = chosen.get("design_id", "")
         result.consumed_mine_ids.append(str(mine_id))
-        mines.pop(chosen_idx)
-        _set_mines(mine_group, mines)
+        _pop_mine_at(mine_group, chosen_idx)
 
     # ------------------------------------------------------------------
     # Laserhead pass — Phase 2
@@ -552,7 +543,7 @@ class MinefieldResolver:
     def _resolve_laserhead_pass(
         self,
         ship: "ShipInstance",
-        mine_group: "Fleet",
+        mine_group: MineGroup,
         attacking_fleet: "Fleet",
         owner_empire: Any,
         registries: Optional["GameRegistries"],
@@ -639,12 +630,15 @@ class MinefieldResolver:
             if not ship.is_alive:
                 break
 
-        # Write back once, removing every consumed mine in descending
-        # index order so earlier pops don't shift later indices.
-        if consumed_indices:
-            for idx in sorted(consumed_indices, reverse=True):
-                full_mines.pop(idx)
-            _set_mines(mine_group, full_mines)
+        # Remove every consumed mine in descending index order so earlier
+        # pops don't shift later indices. PROJ-431 Phase 2: pop directly
+        # off the typed ``mine_group.mines`` list.
+        for idx in sorted(consumed_indices, reverse=True):
+            _pop_mine_at(mine_group, idx)
+        # full_mines was a dict snapshot taken at the top of the pass;
+        # we discard it after the pass — the typed inventory is the
+        # source of truth.
+        del full_mines
 
 
 def _mine_sensor_bonus(mine_dict: Dict[str, Any]) -> float:

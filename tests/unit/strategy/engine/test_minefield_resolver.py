@@ -18,6 +18,7 @@ import pytest
 from game.core.hex_math import HexCoord
 from game.strategy.data.bay_inventory import BayInventory
 from game.strategy.data.carried_vehicle import CarriedVehicle
+from game.strategy.data.deployed_group import MineGroup
 from game.strategy.data.fleet import Fleet
 from game.strategy.engine.minefield_balance import MinefieldBalance
 from game.strategy.engine.minefield_resolver import (
@@ -81,11 +82,16 @@ class _StubShip:
         }
 
 
-def _make_empire(empire_id: int, fleets=None) -> SimpleNamespace:
+def _make_empire(
+    empire_id: int,
+    fleets=None,
+    deployed_groups=None,
+) -> SimpleNamespace:
     return SimpleNamespace(
         id=empire_id,
         name=f"E{empire_id}",
         fleets=list(fleets or []),
+        deployed_groups=list(deployed_groups or []),
     )
 
 
@@ -160,23 +166,16 @@ def _make_mine_group_at(
     fleet_id: int = 100000,
     sensitivity: str = "MED",
     threshold: float = 0.30,
-) -> Fleet:
-    """Build a populated mine_group with synthetic carrier."""
-    group = Fleet(
-        fleet_id=fleet_id,
+) -> MineGroup:
+    """PROJ-431 Phase 2: build a typed :class:`MineGroup`."""
+    group = MineGroup(
+        group_id=fleet_id,
         owner_id=owner_id,
         location=hex_coord,
-        speed=0.0,
-        group_kind="mine_group",
+        sensitivity=sensitivity,
+        expected_hit_chance_threshold=threshold,
     )
-    group.sensitivity = sensitivity
-    group.expected_hit_chance_threshold = threshold
-    carrier = _StubShip(f"mine_carrier_{fleet_id}", max_hp=10.0)
-    carrier.owner_id = owner_id
-    carrier.set_bay_inventory(
-        BayInventory(bay=[CarriedVehicle.from_dict(m) for m in mine_dicts])
-    )
-    group.ships.append(carrier)
+    group.mines = [CarriedVehicle.from_dict(m) for m in mine_dicts]
     return group
 
 
@@ -324,11 +323,11 @@ def test_friendly_fleet_does_not_trigger_mines():
     ship = _StubShip("ship_1", max_hp=200)
     fleet = _make_fleet_at(hex_c, owner_id=1, ships=[ship], fleet_id=10)
 
-    emp = _make_empire(1, fleets=[mg, fleet])
+    emp = _make_empire(1, fleets=[fleet], deployed_groups=[mg])
     r = MinefieldResolver(rng=random.Random(0))
     result = r.resolve_minefield_entry(galaxy=None, empires=[emp], fleet=fleet)
     assert result.detonations == []
-    assert len(mg.ships[0].bay_inventory.bay) == 5  # mines untouched
+    assert len(mg.mines) == 5  # mines untouched
 
 
 def test_warhead_pass_consumes_one_mine_on_trigger():
@@ -339,7 +338,7 @@ def test_warhead_pass_consumes_one_mine_on_trigger():
 
     ship = _StubShip("ship_1", max_hp=400)
     fleet = _make_fleet_at(hex_c, owner_id=0, ships=[ship], fleet_id=10)
-    enemy_emp = _make_empire(1, fleets=[mg])
+    enemy_emp = _make_empire(1, deployed_groups=[mg])
     player_emp = _make_empire(0, fleets=[fleet])
 
     # rng=0 first call returns ~0.844, but with high sensitivity *
@@ -356,7 +355,7 @@ def test_warhead_pass_consumes_one_mine_on_trigger():
     # In a forced-trigger run with 5 warhead mines the resolver triggers
     # at most once per ship per group.
     assert len([d for d in result.detonations if d.pass_kind == "warhead"]) == 1
-    assert len(mg.ships[0].bay_inventory.bay) == 4
+    assert len(mg.mines) == 4
     assert ship.current_hp < 400  # damage applied
 
 
@@ -369,7 +368,7 @@ def test_mine_group_removed_when_emptied():
 
     ship = _StubShip("ship_1", max_hp=200)
     fleet = _make_fleet_at(hex_c, owner_id=0, ships=[ship], fleet_id=10)
-    enemy_emp = _make_empire(1, fleets=[mg])
+    enemy_emp = _make_empire(1, deployed_groups=[mg])
     player_emp = _make_empire(0, fleets=[fleet])
 
     forced_rng = random.Random()
@@ -380,7 +379,7 @@ def test_mine_group_removed_when_emptied():
     r.resolve_minefield_entry(
         galaxy=None, empires=[enemy_emp, player_emp], fleet=fleet,
     )
-    assert mg not in enemy_emp.fleets, "Empty mine_group should be pruned"
+    assert mg not in enemy_emp.deployed_groups, "Empty mine_group should be pruned"
 
 
 def test_module_helper_resolve_minefield_entry():
@@ -391,7 +390,7 @@ def test_module_helper_resolve_minefield_entry():
 
     ship = _StubShip("ship_1")
     fleet = _make_fleet_at(hex_c, owner_id=0, ships=[ship], fleet_id=10)
-    enemy_emp = _make_empire(1, fleets=[mg])
+    enemy_emp = _make_empire(1, deployed_groups=[mg])
     player_emp = _make_empire(0, fleets=[fleet])
 
     # Use a custom balance to drive p_trigger == 0 — no detonations.
@@ -451,7 +450,7 @@ def test_laserhead_skipped_below_threshold():
     # -> expected_hit_chance ~= 0 -> below any practical threshold.
     ship = _StubShip("s", total_defense_score=100.0)
     fleet = _make_fleet_at(hex_c, owner_id=0, ships=[ship], fleet_id=10)
-    enemy = _make_empire(1, fleets=[mg])
+    enemy = _make_empire(1, deployed_groups=[mg])
     player = _make_empire(0, fleets=[fleet])
 
     r = MinefieldResolver(rng=random.Random(0))
@@ -463,7 +462,7 @@ def test_laserhead_skipped_below_threshold():
     ]
     assert laserhead_detonations == []
     # Laserhead NOT consumed.
-    assert len(mg.ships[0].bay_inventory.bay) == 1
+    assert len(mg.mines) == 1
 
 
 def test_laserhead_fires_above_threshold():
@@ -476,7 +475,7 @@ def test_laserhead_fires_above_threshold():
     )
     ship = _StubShip("s", total_defense_score=0.0)
     fleet = _make_fleet_at(hex_c, owner_id=0, ships=[ship], fleet_id=10)
-    enemy = _make_empire(1, fleets=[mg])
+    enemy = _make_empire(1, deployed_groups=[mg])
     player = _make_empire(0, fleets=[fleet])
 
     # Force standard beam roll to hit.
@@ -494,7 +493,7 @@ def test_laserhead_fires_above_threshold():
     assert len(laserhead_detonations) == 1
     assert laserhead_detonations[0].hit
     # Laserhead consumed.
-    assert len(mg.ships[0].bay_inventory.bay) == 0
+    assert len(mg.mines) == 0
 
 
 def test_laserhead_threshold_zero_always_fires():
@@ -506,7 +505,7 @@ def test_laserhead_threshold_zero_always_fires():
     )
     ship = _StubShip("s", total_defense_score=0.0)
     fleet = _make_fleet_at(hex_c, owner_id=0, ships=[ship], fleet_id=10)
-    enemy = _make_empire(1, fleets=[mg])
+    enemy = _make_empire(1, deployed_groups=[mg])
     player = _make_empire(0, fleets=[fleet])
 
     rng = random.Random()
@@ -519,7 +518,7 @@ def test_laserhead_threshold_zero_always_fires():
     )
     lh = [d for d in result.detonations if d.pass_kind == "laserhead"]
     assert len(lh) == 2
-    assert len(mg.ships[0].bay_inventory.bay) == 0  # both consumed
+    assert len(mg.mines) == 0  # both consumed
 
 
 def test_laserhead_threshold_one_never_fires():
@@ -531,7 +530,7 @@ def test_laserhead_threshold_one_never_fires():
     )
     ship = _StubShip("s", total_defense_score=0.0)
     fleet = _make_fleet_at(hex_c, owner_id=0, ships=[ship], fleet_id=10)
-    enemy = _make_empire(1, fleets=[mg])
+    enemy = _make_empire(1, deployed_groups=[mg])
     player = _make_empire(0, fleets=[fleet])
 
     r = MinefieldResolver(rng=random.Random(0))
@@ -541,7 +540,7 @@ def test_laserhead_threshold_one_never_fires():
     lh = [d for d in result.detonations if d.pass_kind == "laserhead"]
     assert lh == []
     # Nothing consumed.
-    assert len(mg.ships[0].bay_inventory.bay) == 2
+    assert len(mg.mines) == 2
 
 
 def test_per_ship_interleaving_warhead_then_laserhead():
@@ -557,7 +556,7 @@ def test_per_ship_interleaving_warhead_then_laserhead():
     )
     ship = _StubShip("s", max_hp=400, total_defense_score=0.0)
     fleet = _make_fleet_at(hex_c, owner_id=0, ships=[ship], fleet_id=10)
-    enemy = _make_empire(1, fleets=[mg])
+    enemy = _make_empire(1, deployed_groups=[mg])
     player = _make_empire(0, fleets=[fleet])
 
     rng = random.Random()
@@ -586,7 +585,7 @@ def test_statistical_dread_triggers_more_than_destroyer():
             )
             ship = ship_factory(f"s_{seed}")
             fleet = _make_fleet_at(hex_c, owner_id=0, ships=[ship], fleet_id=seed + 1)
-            enemy_emp = _make_empire(1, fleets=[mg])
+            enemy_emp = _make_empire(1, deployed_groups=[mg])
             player_emp = _make_empire(0, fleets=[fleet])
             r = MinefieldResolver(rng=random.Random(seed))
             res = r.resolve_minefield_entry(

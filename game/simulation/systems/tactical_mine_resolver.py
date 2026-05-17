@@ -408,11 +408,10 @@ class TacticalMineResolver:
         battle_boundary: Optional[Tuple[float, float, float, float]] = None,
         rng: Optional[random.Random] = None,
     ) -> "TacticalMineResolver":
-        """Construct a resolver from a strategic ``mine_group`` Fleet.
+        """Construct a resolver from a strategic ``MineGroup``.
 
         Args:
-            mine_group: The strategic-layer Fleet with
-                ``group_kind == "mine_group"``.
+            mine_group: The strategic-layer :class:`MineGroup` instance.
             balance: Optional :class:`MinefieldBalance`.
             battle_boundary: Optional ``(xmin, ymin, xmax, ymax)``
                 bounding rect for the tactical map. When provided,
@@ -429,17 +428,15 @@ class TacticalMineResolver:
             )
             balance = load_minefield_balance()
 
-        # Inventory comes from the mine_group's synthetic carrier.
-        # PROJ-431 Phase 1f: read from the typed BayInventory.bay slot.
-        # The bay is homogeneous CarriedVehicle; we materialise each as
-        # a dict so the existing per-mine extraction helpers below
-        # (``_sum_warhead_damage`` / ``_extract_laserhead`` /
-        # ``_extract_hull_hp``) keep operating on the original
+        # PROJ-431 Phase 2: inventory comes directly off the typed
+        # ``MineGroup.mines`` list — no synthetic carrier. Materialise
+        # each entry as a dict so the existing per-mine extraction
+        # helpers (``_sum_warhead_damage`` / ``_extract_laserhead`` /
+        # ``_extract_hull_hp``) keep operating on the
         # ``CarriedVehicle.to_dict()`` shape.
-        mines_data: List[Dict[str, Any]] = []
-        if getattr(mine_group, "ships", None):
-            for cv in mine_group.ships[0].bay_inventory.bay:
-                mines_data.append(cv.to_dict())
+        mines_data: List[Dict[str, Any]] = [
+            cv.to_dict() for cv in getattr(mine_group, "mines", [])
+        ]
 
         # Choose scatter coordinates.
         if battle_boundary is not None and mine_group.scatter_seed is not None:
@@ -480,42 +477,34 @@ class TacticalMineResolver:
         return cls(mine_entities=entities, balance=balance, rng=rng)
 
     def writeback_to_mine_group(self, mine_group: Any) -> None:
-        """Update the strategic mine_group's inventory after the battle.
+        """Update the strategic ``MineGroup``'s inventory after the battle.
 
         Drops any mine entries marked ``consumed`` (or HP <= 0) from
-        the mine_group's synthetic carrier. Mirrors the strategic-layer
+        the group's typed ``mines`` list. Mirrors the strategic-layer
         consumption semantics so post-battle the strategic state
         matches what happened tactically.
 
-        PROJ-FMS-B audit Fix 6: always assigns the new bay inventory —
-        even when the resulting list is empty. Pre-fix the function
-        silently no-op'd when every mine was consumed, leaving a zombie
-        inventory on the strategic mine_group and making the selective-
-        self-destruct UI show stale entries.
+        PROJ-FMS-B audit Fix 6: always replaces the inventory — even
+        when the resulting list is empty. Pre-fix the function silently
+        no-op'd when every mine was consumed, leaving a zombie
+        inventory on the strategic mine_group.
 
-        PROJ-431 Phase 1f: writeback now operates on the typed
-        ``bay_inventory.bay`` slot directly. Survivors are matched by
-        positional index (mine entities and the strategic bay slot were
-        zipped 1:1 at :meth:`from_mine_group` construction time, in
-        deterministic ``CarriedVehicle.to_dict()`` order).
+        PROJ-431 Phase 2: writeback now operates directly on
+        ``mine_group.mines``. Survivors are matched by positional index
+        (mine entities and the strategic mines list were zipped 1:1 at
+        :meth:`from_mine_group` construction time).
         """
-        if not getattr(mine_group, "ships", None):
+        mines_attr = getattr(mine_group, "mines", None)
+        if mines_attr is None:
             return
-        carrier = mine_group.ships[0]
-        current_bay = list(carrier.bay_inventory.bay)
+        current_mines = list(mines_attr)
         kept_indices = {
             i for i, m in enumerate(self.mines)
-            if not m.consumed and m.hp > 0 and i < len(current_bay)
+            if not m.consumed and m.hp > 0 and i < len(current_mines)
         }
-        new_bay = [cv for i, cv in enumerate(current_bay) if i in kept_indices]
-        # Always assign — even when empty — so a fully-consumed battle
-        # clears the strategic inventory and the mine_group's count
-        # reflects reality. The strategic-layer caller is then free to
-        # prune the empty mine_group from its empire's fleets.
-        from game.strategy.data.bay_inventory import BayInventory
-        carrier.set_bay_inventory(
-            BayInventory(bay=new_bay, pods=list(carrier.bay_inventory.pods))
-        )
+        mine_group.mines = [
+            cv for i, cv in enumerate(current_mines) if i in kept_indices
+        ]
 
 
 # ---------------------------------------------------------------------------

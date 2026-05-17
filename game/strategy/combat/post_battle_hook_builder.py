@@ -133,20 +133,19 @@ class PostBattleHookBuilder:
 
             for mg in captured_mine_groups:
                 if not _mine_group_has_inventory(mg):
+                    # PROJ-431 Phase 2: mine groups live in
+                    # ``empire.deployed_groups``, not ``empire.fleets``.
                     for empire in empires_by_team_id.values():
-                        fleets_list = getattr(empire, "fleets", None)
-                        if fleets_list is None:
+                        deployed = getattr(empire, "deployed_groups", None)
+                        if deployed is None:
                             continue
-                        if mg in fleets_list:
-                            fleets_list.remove(mg)
+                        if mg in deployed:
+                            deployed.remove(mg)
                             break
 
         return _hook
 
 
-def _mine_group_has_inventory(mine_group: "Fleet") -> bool:
-    """True iff the mine_group's synthetic carrier still has any mines."""
-    ships = getattr(mine_group, "ships", None) or []
-    if not ships:
-        return False
-    return bool(getattr(ships[0], "carried_items", None))
+def _mine_group_has_inventory(mine_group: Any) -> bool:
+    """True iff the ``MineGroup`` still has at least one mine."""
+    return bool(getattr(mine_group, "mines", None))

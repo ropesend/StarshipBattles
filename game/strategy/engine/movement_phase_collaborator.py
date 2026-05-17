@@ -123,10 +123,11 @@ class MovementPhaseCollaborator:
         ``engine`` without ``_registries`` get ``None`` via ``getattr``
         and the resolver falls back gracefully.
 
-        Defensive: only invoke for fleet objects that expose ``ships``
-        and have ``group_kind == 'fleet'`` — SimpleNamespace test doubles
-        without ``ships`` short-circuit cleanly so existing descriptor
-        tests keep passing.
+        PROJ-431 Phase 2: deployed groups (mine groups etc.) no longer
+        live in ``empire.fleets`` and never appear in ``moved_fleets``,
+        so a ``group_kind`` filter is moot. The lightweight ``hasattr``
+        ``ships`` guard keeps SimpleNamespace test doubles short-circuiting
+        cleanly so existing descriptor tests keep passing.
         """
         # Local import: ``MinefieldResolver`` lives under
         # ``game.strategy.engine``; importing it at module top is fine
@@ -137,7 +138,6 @@ class MovementPhaseCollaborator:
         runnable_movers = [
             (emp, f) for (emp, f) in moved_fleets
             if hasattr(f, "ships") and getattr(f, "ships", None)
-            and getattr(f, "group_kind", "fleet") == "fleet"
         ]
         if not runnable_movers:
             return

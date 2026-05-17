@@ -88,47 +88,26 @@ def _mine_dict_laserhead(damage=40.0, beam_range=600, hull_hp=30.0):
 
 def _make_mine_group(mines, owner_id=1, mine_positions=None, threshold=0.30,
                      sensitivity="HIGH"):
-    """Build a SimpleNamespace mine_group mirroring Fleet's mine surface.
+    """PROJ-431 Phase 2: build a typed :class:`MineGroup`.
 
-    PROJ-431 Phase 1f: ``ShipInstance.carried_items`` is now a legacy
-    projection over the typed ``bay_inventory`` substrate. Production
-    callers (including :class:`TacticalMineResolver`) read directly
-    from ``ship.bay_inventory.bay``, so this fake carrier exposes the
-    typed slot too. The mine entries arrive as
-    ``CarriedVehicle.to_dict()`` dicts; we promote each to a typed
-    ``CarriedVehicle`` for the bay slot and stash a back-compat list
-    proxy under ``carried_items`` for any test inspection of the legacy
-    surface.
+    The synthetic carrier ``ShipInstance`` is gone. Mines live directly
+    on ``mine_group.mines`` as :class:`CarriedVehicle` entries — the
+    same shape :meth:`TacticalMineResolver.from_mine_group` now reads.
     """
-    from game.strategy.data.bay_inventory import BayInventory
+    from game.core.hex_math import HexCoord
     from game.strategy.data.carried_vehicle import CarriedVehicle
-    bay = [CarriedVehicle.from_dict(m) for m in mines]
-    bay_inventory = BayInventory(bay=bay, pods=[])
-
-    class _StubCarrier:
-        def __init__(self) -> None:
-            self.instance_id = "carrier"
-            self.owner_id = owner_id
-            self.bay_inventory = bay_inventory
-
-        @property
-        def carried_items(self) -> list:
-            return [cv.to_dict() for cv in self.bay_inventory.bay]
-
-        def set_bay_inventory(self, bi: BayInventory) -> None:
-            self.bay_inventory = bi
-
-    carrier = _StubCarrier()
-    return SimpleNamespace(
-        id=42,
+    from game.strategy.data.deployed_group import MineGroup
+    mg = MineGroup(
+        group_id=42,
         owner_id=owner_id,
-        group_kind="mine_group",
-        ships=[carrier],
-        mine_positions=mine_positions or [(0.0, 0.0)] * len(mines),
-        scatter_seed=12345,
+        location=HexCoord(0, 0),
         sensitivity=sensitivity,
         expected_hit_chance_threshold=threshold,
     )
+    mg.mines = [CarriedVehicle.from_dict(m) for m in mines]
+    mg.mine_positions = list(mine_positions or [(0.0, 0.0)] * len(mines))
+    mg.scatter_seed = 12345
+    return mg
 
 
 # ---------------------------------------------------------------------------
@@ -297,12 +276,9 @@ def test_per_tick_scaling_is_smaller_than_strategic_pass():
 
 
 def test_writeback_clears_carrier_when_all_mines_consumed():
-    """PROJ-FMS-B audit Fix 6: when every mine is consumed/destroyed in a
-    battle, ``writeback_to_mine_group`` must assign ``carried_items = []``
-    rather than leaving the original inventory in place. Pre-fix the
-    function only assigned ``new_items`` when ``new_items or kept_dicts``
-    was truthy, so a fully-consumed battle left a zombie inventory on the
-    strategic mine_group.
+    """PROJ-FMS-B audit Fix 6 + PROJ-431 Phase 2: when every mine is
+    consumed/destroyed in a battle, ``writeback_to_mine_group`` must
+    leave ``mine_group.mines`` empty (no zombie inventory).
     """
     mines = [_mine_dict_warhead(damage=80) for _ in range(5)]
     mg = _make_mine_group(mines, mine_positions=[(0.0, 0.0)] * 5)
@@ -316,7 +292,7 @@ def test_writeback_clears_carrier_when_all_mines_consumed():
     resolver.writeback_to_mine_group(mg)
 
     # Inventory must be cleared — no zombie mine entries.
-    assert mg.ships[0].carried_items == []
+    assert mg.mines == []
 
 
 def test_battle_engine_ticks_multiple_mine_resolvers():
@@ -457,4 +433,4 @@ def test_writeback_clears_carrier_when_all_mines_hp_zero():
         entity.hp = 0.0
 
     resolver.writeback_to_mine_group(mg)
-    assert mg.ships[0].carried_items == []
+    assert mg.mines == []

@@ -1,14 +1,18 @@
-"""MineGroupService — PROJ-FMS-B Phase 4.
+"""MineGroupService — PROJ-FMS-B Phase 4 + PROJ-431 Phase 2.
 
-Player-facing operations on ``mine_group`` Fleets:
+Player-facing operations on :class:`MineGroup` instances:
 
 - Set sensitivity (LOW / MED / HIGH).
 - Set laserhead expected-hit-chance threshold (continuous slider).
 - Selective self-destruct (pick designs / counts to destroy).
 
-UI screens call into this service rather than mutating Fleet state
+UI screens call into this service rather than mutating MineGroup state
 directly. Keeps the validation/strict-domain rules in one place and
 gives Phase 5's E2E tests a single seam to exercise.
+
+PROJ-431 Phase 2: every method operates on :class:`MineGroup` directly.
+The legacy ``_is_mine_group(fleet)`` runtime check is gone — the
+runtime type IS the discriminator (``isinstance(group, MineGroup)``).
 """
 from __future__ import annotations
 
@@ -16,8 +20,8 @@ import logging
 from typing import Any, Dict, List, Tuple
 
 from game.core.validation import ValidationResult
-from game.strategy.data.bay_inventory import BayInventory
 from game.strategy.data.carried_vehicle import CarriedVehicle
+from game.strategy.data.deployed_group import MineGroup
 
 logger = logging.getLogger(__name__)
 
@@ -26,16 +30,16 @@ _VALID_SENSITIVITIES: Tuple[str, ...] = ("LOW", "MED", "HIGH")
 
 
 class MineGroupService:
-    """Operations on ``Fleet`` objects whose ``group_kind == "mine_group"``."""
+    """Operations on :class:`MineGroup` instances."""
 
     # ------------------------------------------------------------------
     # Setters
     # ------------------------------------------------------------------
 
     def set_sensitivity(self, mine_group: Any, label: str) -> ValidationResult:
-        """Change the LOW / MED / HIGH sensitivity on a mine_group."""
-        if not self._is_mine_group(mine_group):
-            return ValidationResult.error("Target is not a mine_group fleet.")
+        """Change the LOW / MED / HIGH sensitivity on a MineGroup."""
+        if not isinstance(mine_group, MineGroup):
+            return ValidationResult.error("Target is not a MineGroup.")
         label_norm = str(label).upper()
         if label_norm not in _VALID_SENSITIVITIES:
             return ValidationResult.error(
@@ -47,8 +51,8 @@ class MineGroupService:
 
     def set_threshold(self, mine_group: Any, value: float) -> ValidationResult:
         """Change the continuous laserhead expected_hit_chance_threshold."""
-        if not self._is_mine_group(mine_group):
-            return ValidationResult.error("Target is not a mine_group fleet.")
+        if not isinstance(mine_group, MineGroup):
+            return ValidationResult.error("Target is not a MineGroup.")
         try:
             v = float(value)
         except (TypeError, ValueError):
@@ -67,12 +71,11 @@ class MineGroupService:
     # ------------------------------------------------------------------
 
     def get_mine_counts_by_design(self, mine_group: Any) -> Dict[str, int]:
-        """Return ``{design_id: count}`` for the mine_group's inventory."""
-        if not self._is_mine_group(mine_group) or not mine_group.ships:
+        """Return ``{design_id: count}`` for the MineGroup's inventory."""
+        if not isinstance(mine_group, MineGroup):
             return {}
         counts: Dict[str, int] = {}
-        # PROJ-431 Phase 1b: read through the typed BayInventory substrate.
-        for cv in mine_group.ships[0].bay_inventory.bay:
+        for cv in mine_group.mines:
             if cv.vehicle_type != "mine":
                 continue
             counts[cv.design_id] = counts.get(cv.design_id, 0) + 1
@@ -87,8 +90,9 @@ class MineGroupService:
         """Selectively destroy mines without triggering damage.
 
         Args:
-            mine_group: Owner-side mine_group Fleet.
-            empire: The owning empire (used for fleet-list cleanup).
+            mine_group: Owner-side :class:`MineGroup`.
+            empire: The owning empire (used for ``deployed_groups``
+                cleanup).
             selections: ``{design_id: count_to_destroy}``. Counts above
                 inventory are clamped; missing design_ids are skipped.
 
@@ -96,42 +100,45 @@ class MineGroupService:
             ValidationResult with the number of mines destroyed in
             ``warning_message`` when partial.
         """
-        if not self._is_mine_group(mine_group):
-            return ValidationResult.error("Target is not a mine_group fleet.")
-        if not mine_group.ships:
-            return ValidationResult.error("mine_group has no carrier ship.")
+        if not isinstance(mine_group, MineGroup):
+            return ValidationResult.error("Target is not a MineGroup.")
 
-        carrier = mine_group.ships[0]
-        # PROJ-431 Phase 1b: read & write through the typed BayInventory
-        # substrate. The bay is homogeneous CarriedVehicle (mines on a
-        # mine_group never carry pods), so no from_any() discrimination
-        # is needed.
-        current_bay = carrier.bay_inventory.bay
-        remaining_bay: List[CarriedVehicle] = []
+        current_mines: List[CarriedVehicle] = list(mine_group.mines)
+        remaining: List[CarriedVehicle] = []
         budget: Dict[str, int] = {
             k: max(0, int(v)) for k, v in (selections or {}).items()
         }
         destroyed = 0
-        for cv in current_bay:
+        for cv in current_mines:
             design = cv.design_id if cv.vehicle_type == "mine" else None
             if design and budget.get(design, 0) > 0:
                 budget[design] -= 1
                 destroyed += 1
                 continue
-            remaining_bay.append(cv)
-        carrier.set_bay_inventory(BayInventory(bay=remaining_bay))
+            remaining.append(cv)
+        mine_group.mines = remaining
 
         # Re-sync mine_positions so they stay consistent with inventory.
-        new_count = len(remaining_bay)
+        new_count = len(remaining)
         if new_count < len(mine_group.mine_positions):
             mine_group.mine_positions = mine_group.mine_positions[:new_count]
 
         # Drop the mine_group entirely if empty.
-        if not remaining_bay:
-            try:
-                empire.fleets.remove(mine_group)
-            except (ValueError, AttributeError):
-                pass
+        if not remaining:
+            # PROJ-431 Phase 2: prefer the typed ``deployed_groups``
+            # collection. Fall back gracefully if the host empire is a
+            # legacy test stub that still uses ``fleets``.
+            for attr in ("deployed_groups", "fleets"):
+                container = getattr(empire, attr, None)
+                if container is None:
+                    continue
+                try:
+                    container.remove(mine_group)
+                    break
+                except ValueError:
+                    continue
+                except AttributeError:
+                    continue
 
         logger.info(
             "MineGroupService.self_destruct: destroyed %d mines from group %s",
@@ -139,14 +146,6 @@ class MineGroupService:
             getattr(mine_group, "id", "?"),
         )
         return ValidationResult.success()
-
-    # ------------------------------------------------------------------
-    # Internal
-    # ------------------------------------------------------------------
-
-    @staticmethod
-    def _is_mine_group(fleet: Any) -> bool:
-        return getattr(fleet, "group_kind", "fleet") == "mine_group"
 
 
 __all__ = ["MineGroupService"]
