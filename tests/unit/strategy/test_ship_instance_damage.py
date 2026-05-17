@@ -11,9 +11,9 @@ from game.core.component_state import (
     ComponentState,
     component_state_key,
 )
-from game.strategy.data.ship_instance import (
-    ShipInstance,
-    _build_full_hp_components_from_design,
+from game.strategy.data.ship_instance import ShipInstance
+from game.strategy.services.ship_instance_factory import (
+    build_full_hp_components_from_design as _build_full_hp_components_from_design,
 )
 
 

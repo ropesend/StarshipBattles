@@ -71,3 +71,20 @@ Added to `game/strategy/services/component_inspector.py`:
 - Focused suite: **155 passed**.
 - `ship_instance.py` LOC: **722** (was 830; -108 this phase, -123 cumulative).
 - `component_inspector.py` LOC: 537 (was 391; +146). Above the 500-LOC guideline but already-shared infrastructure module — split deferred as the additions are cohesive ship-introspection helpers; revisit if it grows further.
+
+## Phase 3 — Factory extraction (2026-05-17)
+
+Created `game/strategy/services/ship_instance_factory.py` (166 LOC):
+
+- `ShipInstanceFactory.create(...)` — extracted body of `ShipInstance.create(...)`.
+- `build_full_hp_components_from_design(...)` — extracted from the module-level `_build_full_hp_components_from_design` helper in `ship_instance.py`.
+
+`ShipInstance.create(...)` retained as a thin shim per TD-06 Guardrail #1.
+
+Grep gate `rg -n "ShipInstance\.create\(" game tests` → 33 occurrences across 16 files. Shim must remain.
+
+Fixed one broken import: `tests/unit/strategy/test_ship_instance_damage.py` had `from game.strategy.data.ship_instance import _build_full_hp_components_from_design`; redirected to `ship_instance_factory` as `build_full_hp_components_from_design`.
+
+- New test file: `tests/unit/strategy/services/test_ship_instance_factory.py` (7 tests).
+- `tests/unit/strategy/` → **4557 passed**.
+- `ship_instance.py` LOC: **629** (was 722; -93 this phase, -216 cumulative).

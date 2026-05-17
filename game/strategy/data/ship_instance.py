@@ -15,22 +15,20 @@ Delegates:
 - ShipDisplayFormatter: display string formatting
 - ShipInstanceBridge: simulation bridge (to_ship, update_from_ship)
 - ShipInstanceSerializer: serialization (to_dict, from_dict, clone)
+- ShipStatsCache: stats calculation + cache rule (PROJ-425 Phase 1)
+- ShipInstanceFactory: construction path (PROJ-425 Phase 3)
+- component_inspector: per-instance layer views (PROJ-425 Phase 2)
 """
 import logging
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, Tuple, List, TYPE_CHECKING
-import uuid
 
 from game.core.protocols import IPostBattleShip
 from game.strategy.data.ship_consumable_manager import ShipConsumableManager
 from game.strategy.data.ship_cargo_manager import ShipCargoManager
 from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
 from game.strategy.data.ship_instance_bridge import ShipInstanceBridge
-from game.core.component_state import (
-    ComponentInstanceView,
-    ComponentState,
-    component_state_key,
-)
+from game.core.component_state import ComponentInstanceView, ComponentState
 
 logger = logging.getLogger(__name__)
 
@@ -40,58 +38,6 @@ _DEFAULT_MAX_HP = 100
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
     from game.core.registry import GameRegistries
-
-
-def _build_full_hp_components_from_design(
-    design_data: Dict[str, Any],
-    registries: Optional['GameRegistries'],
-) -> Dict[str, ComponentState]:
-    """Build a full-HP `ComponentState` dict from a ship design.
-
-    Walks the design's layers and creates one entry per component
-    instance, keyed by `component_state_key(component_id, instance_index)`.
-    `instance_index` resets per `component_id` (so three identical
-    components produce indices 0, 1, 2).
-
-    Uses `ShipSerializer.from_dict(...)` to materialize the ship so
-    each component's `max_hp` is computed from the real formula pipeline
-    (same source of truth as Ship stat calculation). Returns an empty
-    dict if `registries` is None or the design has no layers.
-    """
-    if registries is None:
-        return {}
-    # INTENTIONAL LATE IMPORT: Cross-layer boundary (strategy -> simulation)
-    # Same pattern as `ShipInstanceBridge.to_ship`.
-    from game.simulation.entities.ship_serialization import ShipSerializer
-
-    try:
-        ship = ShipSerializer.from_dict(design_data, registries=registries)
-    except Exception as e:  # Intentional broad catch: ShipSerializer.from_dict() may raise various exception types on corrupt/incomplete design data; falling back to empty components is safe — callers treat empty dict as "no per-component data available".
-        logger.warning(
-            f"Could not materialize ship from design for component-state "
-            f"population: {e}. Falling back to empty components."
-        )
-        return {}
-
-    components: Dict[str, ComponentState] = {}
-    per_id_index: Dict[str, int] = {}
-    for _layer_type, layer_data in ship.layers.items():
-        for comp in getattr(layer_data, "components", []):
-            comp_id = getattr(comp, "id", None)
-            if not comp_id:
-                continue
-            idx = per_id_index.get(comp_id, 0)
-            per_id_index[comp_id] = idx + 1
-            key = component_state_key(comp_id, idx)
-            comp_max_hp = float(getattr(comp, "max_hp", 0))
-            components[key] = ComponentState(
-                component_id=comp_id,
-                instance_index=idx,
-                current_hp=float(getattr(comp, "current_hp", comp_max_hp)),
-                max_hp=comp_max_hp,
-                is_active=bool(getattr(comp, "is_active", True)),
-            )
-    return components
 
 
 @dataclass
@@ -240,74 +186,35 @@ class ShipInstance:
         empire: Optional['Empire'] = None,
         registries: Optional['GameRegistries'] = None,
     ) -> 'ShipInstance':
-        """
-        Create a new ship instance from a design.
+        """Create a new ship instance from a design.
+
+        Thin shim around `ShipInstanceFactory.create` (PROJ-425 Phase 3).
+        The shim remains until grep shows no callers still using
+        `ShipInstance.create(...)` directly.
 
         Args:
-            design_data: Full ship design dictionary (from ShipSerializer.to_dict())
-            owner_id: Empire that owns this ship
-            name: Instance name (defaults to design name)
-            design_id: Design identifier (defaults to design name)
-            empire: Empire to get serial number from. If None, no serial will be
-                    assigned and a warning will be logged. Provide empire for proper
-                    tracking of ships by serial number within empire fleets.
-            registries: GameRegistries for stats calculation. Required for proper
-                       DI. If None, get_calculated_stats() will raise an error.
+            design_data: Full ship design dictionary
+                (from `ShipSerializer.to_dict()`).
+            owner_id: Empire that owns this ship.
+            name: Instance name (defaults to design name).
+            design_id: Design identifier (defaults to design name).
+            empire: Empire to draw the serial number from. If None, no
+                serial is assigned and a warning is logged.
+            registries: `GameRegistries` for stats calculation. Required
+                for proper DI. Without it, `get_calculated_stats()` raises.
 
         Returns:
-            New ShipInstance with unique instance_id.
-
-        Note:
-            Serial numbers are unique per design_id within an empire, allowing
-            identification like "USS Enterprise (NCC-1701)". Without an empire,
-            the ship will have serial=None which may affect fleet tracking.
+            New `ShipInstance` with unique `instance_id`.
         """
-        design_name = design_data.get('name', 'Unknown Ship')
-        actual_design_id = design_id or design_name
-
-        # Get serial number from empire if provided
-        serial = None
-        if empire is not None:
-            serial = empire.get_next_serial(actual_design_id)
-        else:
-            # PROJ-40/NEW-STRAT-008: Log warning when empire not provided
-            logger.warning(f"ShipInstance.create() called without empire - "
-                       f"serial will be None for '{actual_design_id}'")
-
-        instance = cls(
-            instance_id=str(uuid.uuid4()),
-            design_id=actual_design_id,
-            name=name or design_name,
-            owner_id=owner_id,
+        from game.strategy.services.ship_instance_factory import ShipInstanceFactory
+        return ShipInstanceFactory.create(
             design_data=design_data,
+            owner_id=owner_id,
+            name=name,
+            design_id=design_id,
+            empire=empire,
+            registries=registries,
         )
-        instance.serial = serial
-        instance._registries = registries
-
-        # Initialize all resources to full capacity
-        stats = instance.get_calculated_stats()
-        storage = stats.get('resource_storage', {})
-        instance.consumable_levels = {name: float(val) for name, val in storage.items()}
-
-        # Initialize cargo from design data (Phase 2: colony pods as cargo)
-        initial_cargo = design_data.get('cargo', {})
-        for cargo_type, amount in initial_cargo.items():
-            instance.cargo_contents[cargo_type] = int(amount)
-
-        # PROJ-269 Phase 2: populate per-component-instance state with
-        # full-HP defaults from the design. Safe to skip if design has no
-        # layers (e.g. minimal test designs).
-        instance.components = _build_full_hp_components_from_design(
-            design_data, registries
-        )
-
-        # PROJ-269 Phase 4: mirror the design's role on the instance so
-        # downstream consumers (FormationResolver defaults, strategy UI
-        # filters, etc.) see it without reaching into `design_data`.
-        if instance.design_role is None:
-            instance.design_role = design_data.get("design_role")
-
-        return instance
 
     def is_damaged(self) -> bool:
         """Check if ship has any damage — hull, per-component, or derelict."""
