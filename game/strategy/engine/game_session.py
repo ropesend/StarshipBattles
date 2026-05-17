@@ -53,6 +53,9 @@ if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
     from game.strategy.data.empire import Empire
     from game.strategy.data.planet import Planet
+    from game.strategy.engine.session.runtime_services import (
+        SessionBootstrapState,
+    )
 
 import logging
 
@@ -82,140 +85,46 @@ class GameSession:
         if config is None:
             config = GameConfig()
 
-        self.config = config
         self.turn_number = 1
         self.save_path = None  # Set when save game is created/loaded (Phase 3)
 
-        # Event log (PROJ-77) — PROJ-252: session-scoped EventBus
-        self._event_log = EventLog()
-        self._event_bus = EventBus(self._create_event_handler())
-
-        # PROJ-211: Resolve registries at init time, pass to TurnEngine
-        self._registries = self._resolve_registries()
-
-        # PROJ-291 C3: race registry is session-scoped so the engines
-        # (HappinessEngine, PopulationEngine) share one cached
-        # RaceLibrary wrapper for the life of the session. Lazy-init via
-        # the `race_registry` property below; eager construction here
-        # keeps all engines reading the same instance.
+        # PROJ-291 C3: race registry stays lazy on GameSession (see the
+        # `race_registry` property). The bootstrap's
+        # `race_registry_provider` callback resolves through that property
+        # so the cached instance is the same one engines see.
         self._race_registry: Optional['IRaceRegistry'] = None
 
-        # PROJ-370: Construct strategy mutator services. These are the named
-        # owner-service seams for writes to Fleet/Planet/Empire/ShipInstance.
-        # Engines and hooks pull them via TurnEngineConfig (post-PROJ-369) or
-        # accept them directly via constructor kwargs.
-        from game.strategy.services.fleet_navigation_service import (
-            FleetNavigationService,
-        )
-        from game.strategy.services.fleet_write_service import FleetWriteService
-        from game.strategy.services.planet_write_service import (
-            PlanetWriteService,
-        )
-        from game.strategy.services.empire_write_service import (
-            EmpireWriteService,
-        )
-        from game.strategy.services.ship_instance_write_service import (
-            ShipInstanceWriteService,
-        )
-        self._fleet_nav_service = FleetNavigationService()
-        self._fleet_mutator = FleetWriteService(
-            navigation_service=self._fleet_nav_service,
-        )
-        self._planet_mutator = PlanetWriteService()
-        self._empire_mutator = EmpireWriteService()
-        self._ship_mutator = ShipInstanceWriteService()
-
-        # Engine
-        # PROJ-239: ai_factory is passed through to TurnEngine → SimulationBattleResolver.
-        # Callers in the UI/app layer provide it; tests inject mocks.
-        # PROJ-369 Phase 3: TurnEngine ctor now requires `config`; build
-        # eagerly via TurnEngineConfig.create_default(...).
-        _turn_engine_config = TurnEngineConfig.create_default(
-            self._registries,
-            ai_factory=ai_factory,
-            race_registry=self.race_registry,
-            event_bus=self._event_bus,
-            fleet_mutator=self._fleet_mutator,
-            planet_mutator=self._planet_mutator,
-            empire_mutator=self._empire_mutator,
-            ship_mutator=self._ship_mutator,
-        )
-        self.turn_engine = TurnEngine(
-            registries=self._registries,
-            config=_turn_engine_config,
-            ai_factory=ai_factory,
-            event_bus=self._event_bus,
-            race_registry=self.race_registry,
-        )
-        self._command_registry = create_default_registry()
-
-        # Initialization via GameInitializer (PROJ-87 Phase 6).
-        # PROJ-370 review MAJ-002: thread planet_mutator + empire_mutator so
-        # GameInitializer's homeworld population seeding + colony reset writes
-        # route through the mutator surface (no allowlist exception needed).
-        # PROJ-381 Phase 2 (B-11): wrap so an init failure leaves the
-        # session in a deterministic null-object state rather than
-        # partially constructed (galaxy unset, empires undefined). The
-        # caller still sees the failure via SessionInitializationError.
+        # PROJ-423 Phase 2: route construction through SessionBootstrap so
+        # the wired-service bag has a single canonical assembly point
+        # (eliminates the PROJ-396 CRIT-002 drift surface). Phase 4
+        # collapses this into the canonical `_apply_bootstrap_state(...)`
+        # method.
+        #
+        # PROJ-381 Phase 2 (B-11): SessionInitializationError null-object
+        # substitution is still applied at the `self` boundary so the
+        # partially-constructed session a caller sees lands in a
+        # deterministic null-object state. The bootstrap re-raises the
+        # typed error; this catch only sets the visible null-object slots
+        # on `self` before propagating.
         from game.core.exceptions import SessionInitializationError
-        from game.strategy.engine.game_initializer import GameInitializer
+        from game.strategy.engine.session.bootstrap import SessionBootstrap
         try:
-            self.galaxy, self.empires = GameInitializer.initialize(
+            state = SessionBootstrap.new_game_state(
                 config,
-                planet_mutator=self._planet_mutator,
-                empire_mutator=self._empire_mutator,
+                ai_factory=ai_factory,
+                race_registry_provider=lambda: self.race_registry,
+                event_handler_factory=lambda log: self._build_event_handler(log),
             )
-        except Exception as e:  # Intentional broad catch: any init failure must leave the session in a null-object state and re-raise as SessionInitializationError so callers see a typed strategy-layer error.
-            # PROJ-395 MAJ-005: surface the failure at ERROR level with
-            # exc_info so the operator log shows the root cause and
-            # traceback. Without this log, the null-object substitution
-            # is invisible to anyone reading the log file — only the
-            # typed re-raise reaches the caller.
-            logger.error(
-                "GameSession initialization failed: %s",
-                e,
-                exc_info=True,
-            )
+        except SessionInitializationError:
+            self.config = config
             self.galaxy = None
             self.empires = []
             self.systems = []
             self.human_player_ids = []
             self.active_empire = None
-            raise SessionInitializationError(
-                f"GameSession initialization failed: {e}",
-                context={"original_type": type(e).__name__},
-            ) from e
-        self.systems = list(self.galaxy.systems.values())
-
-        # Human player IDs based on is_human flag
-        self.human_player_ids = [
-            i for i, p in enumerate(config.players) if p.is_human
-        ]
-
-        # BUG-125: `active_empire` is the empire whose turn it currently is.
-        # Defaults to empires[0] at session creation; rotated by
-        # `StrategyGameStateManager.advance_turn` on each hot-seat turn change.
-        # Authorization gates in command handlers read this — never the
-        # original session creator. Save/load resets to empires[0]; the UI
-        # rotation index lives in `StrategyScreen.current_player_index`.
-        self.active_empire = self.empires[0] if len(self.empires) > 0 else None
-        self.enemy_empire = self.empires[1] if len(self.empires) > 1 else None
-
-        # PROJ-423 Phase 1: assemble the SessionRuntimeServices bag from the
-        # already-constructed services. Phase 2 routes both __init__ and
-        # from_dict through a shared SessionBootstrap._build_services(...)
-        # to eliminate the PROJ-396 CRIT-002 drift surface.
-        self._services = SessionRuntimeServices(
-            registries=self._registries,
-            event_log=self._event_log,
-            event_bus=self._event_bus,
-            fleet_mutator=self._fleet_mutator,
-            planet_mutator=self._planet_mutator,
-            empire_mutator=self._empire_mutator,
-            ship_mutator=self._ship_mutator,
-            turn_engine=self.turn_engine,
-            command_registry=self._command_registry,
-        )
+            self.enemy_empire = None
+            raise
+        self._apply_provisional_state(state)
 
     @staticmethod
     def _resolve_registries() -> GameRegistries:
@@ -303,11 +212,24 @@ class GameSession:
         return self._race_registry
 
     def _create_event_handler(self) -> Callable[..., None]:
-        """Create a callback for the global log_event() system.
+        """Backwards-compatible event-handler factory.
 
-        Returns a closure that captures this session, creating Event objects
-        from structured kwargs and appending them to the session's EventLog.
+        Captures `self._event_log` implicitly via `self._build_event_handler`.
+        Kept for any direct callers; production paths now route through the
+        SessionBootstrap event-handler factory which also stamps the current
+        `self.turn_number` onto each event.
         """
+        return self._build_event_handler(self._event_log)
+
+    def _build_event_handler(self, event_log: EventLog) -> Callable[..., None]:
+        """Create the closure handler the global log_event() system calls.
+
+        Capturing `event_log` as a parameter (rather than implicitly via
+        `self._event_log`) lets `SessionBootstrap._build_services(...)`
+        construct the EventBus *before* `self._event_log` is set during
+        rehydration. Turn stamping still reads `self.turn_number`.
+        """
+
         def handler(event_type: str, **kwargs) -> None:
             category = kwargs.pop('category', 'other')
             message = kwargs.pop('message', '')
@@ -323,8 +245,45 @@ class GameSession:
                 message=message,
                 details=kwargs,
             )
-            self._event_log.append(event)
+            event_log.append(event)
         return handler
+
+    def _apply_provisional_state(self, state: 'SessionBootstrapState') -> None:
+        """Copy a SessionBootstrapState onto self (PROJ-423 Phase 2 / 3).
+
+        Provisional assignment path used by `__init__` and `from_dict`
+        until Phase 4 introduces the canonical `_apply_bootstrap_state(...)`.
+        Sets `self.config`, the session-scoped service attribute set, the
+        `self._services` bag, owned domain state, and the
+        `active_empire` / `enemy_empire` seed (BUG-125).
+        """
+        self.config = state.config
+        self._registries = state.services.registries
+        self._event_log = state.services.event_log
+        self._event_bus = state.services.event_bus
+        self._fleet_mutator = state.services.fleet_mutator
+        self._planet_mutator = state.services.planet_mutator
+        self._empire_mutator = state.services.empire_mutator
+        self._ship_mutator = state.services.ship_mutator
+        self.turn_engine = state.services.turn_engine
+        self._command_registry = state.services.command_registry
+        self._services = state.services
+
+        self.turn_number = state.turn_number
+        self.save_path = state.save_path
+        self.galaxy = state.galaxy
+        self.empires = state.empires
+        self.human_player_ids = list(state.human_player_ids)
+        self.systems = (
+            list(state.galaxy.systems.values()) if state.galaxy is not None else []
+        )
+        # BUG-125: see __init__ for `active_empire` contract.
+        self.active_empire = (
+            self.empires[0] if len(self.empires) > 0 else None
+        )
+        self.enemy_empire = (
+            self.empires[1] if len(self.empires) > 1 else None
+        )
 
     def process_turn(
         self,
@@ -501,69 +460,38 @@ class GameSession:
         # PROJ-211: Resolve registries at init time, pass to TurnEngine
         session._registries = GameSession._resolve_registries()
 
-        # Initialize turn engine and command registry
-        # PROJ-239: ai_factory=None is OK here — TurnEngine will raise if
-        # a battle_resolver is needed but no ai_factory was provided. In practice,
-        # the conflict_engine is lazy-initialized and will only need it during
-        # actual combat. SaveGameService.load_game callers must provide ai_factory
-        # or inject a battle_resolver if combat will occur.
-        # Restore event log (PROJ-77) — PROJ-252: session-scoped EventBus
-        session._event_log = EventLog.from_dict(data.get('event_log', {'events': []}))
-        session._event_bus = EventBus(session._create_event_handler())
-
-        # PROJ-291 C3: propagate the session-scoped race registry into
-        # TurnEngine so restored saves also resolve multi-species
-        # RaceConfig correctly during process_turn.
-        # PROJ-369 Phase 3: ditto — `config=` required.
+        # PROJ-291 C3: race registry stays lazy on GameSession; the
+        # bootstrap's `race_registry_provider` lambda routes to
+        # `session.race_registry` so the cached instance is the same one
+        # engines see post-load.
         session._race_registry = None
 
-        # PROJ-396 CRIT-002: deserialized sessions MUST construct the same
-        # mutator services as ``__init__`` (lines 104-123). Without these,
-        # any command handler that pulls ``session.fleet_mutator`` /
-        # ``planet_mutator`` / ``empire_mutator`` / ``ship_mutator`` after
-        # a load raises ``AttributeError``. Mirrors the ctor pattern
-        # exactly so the session is functionally identical regardless of
-        # whether it was constructed or deserialized (Pattern #2 boundary
-        # invariant).
-        from game.strategy.services.fleet_navigation_service import (
-            FleetNavigationService,
+        # Restore event log (PROJ-77) — PROJ-252: session-scoped EventBus
+        restored_event_log = EventLog.from_dict(
+            data.get('event_log', {'events': []})
         )
-        from game.strategy.services.fleet_write_service import FleetWriteService
-        from game.strategy.services.planet_write_service import (
-            PlanetWriteService,
-        )
-        from game.strategy.services.empire_write_service import (
-            EmpireWriteService,
-        )
-        from game.strategy.services.ship_instance_write_service import (
-            ShipInstanceWriteService,
-        )
-        session._fleet_nav_service = FleetNavigationService()
-        session._fleet_mutator = FleetWriteService(
-            navigation_service=session._fleet_nav_service,
-        )
-        session._planet_mutator = PlanetWriteService()
-        session._empire_mutator = EmpireWriteService()
-        session._ship_mutator = ShipInstanceWriteService()
 
-        _turn_engine_config = TurnEngineConfig.create_default(
-            session._registries,
-            ai_factory=ai_factory,
-            race_registry=session.race_registry,
-            event_bus=session._event_bus,
-            fleet_mutator=session._fleet_mutator,
-            planet_mutator=session._planet_mutator,
-            empire_mutator=session._empire_mutator,
-            ship_mutator=session._ship_mutator,
-        )
-        session.turn_engine = TurnEngine(
+        # PROJ-423 Phase 2: route service construction through the same
+        # canonical wiring path as __init__. This is the structural fix
+        # for the PROJ-396 CRIT-002 drift surface — no more hand-mirrored
+        # service block in from_dict.
+        from game.strategy.engine.session.bootstrap import SessionBootstrap
+        services = SessionBootstrap._build_services(
             registries=session._registries,
-            config=_turn_engine_config,
+            event_log=restored_event_log,
             ai_factory=ai_factory,
-            event_bus=session._event_bus,
-            race_registry=session.race_registry,
+            race_registry_provider=lambda: session.race_registry,
+            event_handler_factory=lambda log: session._build_event_handler(log),
         )
-        session._command_registry = create_default_registry()
+        session._event_log = services.event_log
+        session._event_bus = services.event_bus
+        session._fleet_mutator = services.fleet_mutator
+        session._planet_mutator = services.planet_mutator
+        session._empire_mutator = services.empire_mutator
+        session._ship_mutator = services.ship_mutator
+        session.turn_engine = services.turn_engine
+        session._command_registry = services.command_registry
+        session._services = services
 
         # Step 1: Load Galaxy (creates all planets with IDs)
         try:

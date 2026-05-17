@@ -14,16 +14,16 @@
 |-------|--------|-----------|
 | 0. Preflight and contract freeze | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Add `SessionRuntimeServices` + `SessionBootstrapState` | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Extract canonical service construction into `SessionBootstrap` | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Extract canonical service construction into `SessionBootstrap` | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Extract `SessionPersistenceAdapter` | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Collapse `GameSession` to a thin shell | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Docs update | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 2 — Extract canonical service construction into `SessionBootstrap`
-**Last Action:** Phase 1 complete — `SessionRuntimeServices` + `SessionBootstrapState` frozen dataclasses landed; `GameSession.services` returns the bag assembled from existing wiring in both `__init__` and `from_dict`; 7 new tests + 29 regression tests green
-**Next Action:** Phase 2 — author red tests for `SessionBootstrap._build_services(...)` + anti-drift test, implement `SessionBootstrap`, route both `__init__` and `from_dict` through `_build_services`
+**Active Phase:** Phase 3 — Extract `SessionPersistenceAdapter`
+**Last Action:** Phase 2 complete — `SessionBootstrap` lives at `game/strategy/engine/session/bootstrap.py` with `_build_services(...)` + `new_game_state(...)`. Both `__init__` and `from_dict` now route service construction through `_build_services`. Anti-drift regression test landed and passes. 70 tests green across `tests/unit/strategy/`, `tests/integration/strategy/` (game_session / from_dict slice).
+**Next Action:** Phase 3 — author red tests for `SessionPersistenceAdapter`, implement `serialize(...)` + `rehydrate_state(...)`, make `to_dict`/`from_dict` thin delegates
 **Blockers:** None
 
 ## Overview
