@@ -267,9 +267,11 @@ class IssueRecoverFightersCommand(Command):
             exclusive with ``planet_id``).
         ship_instance_id: The carrier ship that will receive the
             fighters. Required for fleet-issued, unused for planet-issued.
-        fighter_group_id: Specific fighter_group fleet id to recover from.
-            ``None`` => the first fighter_group at the issuer's hex owned
-            by the same empire.
+        fighter_group_id: Specific :class:`FighterWing` id to recover from.
+            ``None`` => the first :class:`FighterWing` at the issuer's hex
+            owned by the same empire. PROJ-431 Phase 3: fighter groups
+            live on ``empire.deployed_groups`` as typed FighterWings
+            (sibling of Fleet), not as ``Fleet(group_kind=...)`` synthetics.
         count: Number of fighters to recover. ``None`` => recover all
             available (capped by bay/staging capacity).
         planet_id: Recovering planet (mutually exclusive with
@@ -324,9 +326,12 @@ class IssueRecoverSatellitesCommand(Command):
             exclusive with ``planet_id``).
         ship_instance_id: The carrier ship that will receive the
             satellites. Required for fleet-issued, unused for planet-issued.
-        satellite_group_id: Specific ``satellite_group`` fleet id to
-            recover from. ``None`` => the first satellite_group at the
-            issuer's hex owned by the same empire.
+        satellite_group_id: Specific :class:`SatelliteConstellation` id to
+            recover from. ``None`` => the first :class:`SatelliteConstellation`
+            at the issuer's hex owned by the same empire. PROJ-431 Phase 3:
+            satellite groups live on ``empire.deployed_groups`` as typed
+            SatelliteConstellations (sibling of Fleet), not as
+            ``Fleet(group_kind=...)`` synthetics.
         count: Number of satellites to recover. ``None`` => recover all
             available (capped by bay/staging capacity).
         planet_id: Recovering planet (mutually exclusive with

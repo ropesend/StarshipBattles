@@ -21,6 +21,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 if TYPE_CHECKING:
+    from game.strategy.data.deployed_group import MineGroup
     from game.strategy.data.fleet import Fleet
 
 
@@ -35,7 +36,7 @@ class PostBattleHookBuilder:
         fleets: List["Fleet"],
         empires: Mapping[Any, Any],
         *,
-        mine_groups: Optional[Sequence["Fleet"]] = None,
+        mine_groups: Optional[Sequence["MineGroup"]] = None,
         engine_ref: Optional[List[Any]] = None,
         owner_to_team_id: Optional[Mapping[Any, int]] = None,
     ) -> Callable[[Any], None]:
@@ -82,7 +83,7 @@ class PostBattleHookBuilder:
             if empire is not None:
                 empires_by_team_id[team_id] = empire
 
-        captured_mine_groups: Tuple["Fleet", ...] = tuple(mine_groups or ())
+        captured_mine_groups: Tuple["MineGroup", ...] = tuple(mine_groups or ())
         captured_engine_ref: List[Any] = (
             engine_ref if engine_ref is not None else []
         )

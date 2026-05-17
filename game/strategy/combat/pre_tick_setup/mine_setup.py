@@ -8,14 +8,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable, Dict, Mapping, Optional, Sequence, Tuple
 
 if TYPE_CHECKING:
-    from game.strategy.data.fleet import Fleet
+    from game.strategy.data.deployed_group import MineGroup
 
 
 __all__ = ["build_mine_resolver_setup"]
 
 
 def build_mine_resolver_setup(
-    mine_groups: Sequence["Fleet"],
+    mine_groups: Sequence["MineGroup"],
     owner_to_team_id: Mapping[Any, int],
     *,
     battle_boundary: Optional[Tuple[float, float, float, float]] = None,
@@ -23,10 +23,10 @@ def build_mine_resolver_setup(
     """Build a `pre_tick_loop_callback` that wires mine resolvers.
 
     Returns a closure that, given the constructed `BattleEngine`,
-    constructs a `TacticalMineResolver` per `mine_group`, seeds its
+    constructs a `TacticalMineResolver` per `MineGroup`, seeds its
     `_owner_team_id` from `owner_to_team_id`, attaches it to
     `engine.mine_resolvers`, and parks a back-reference on each
-    `mine_group` (`_tactical_resolver`) so the post-battle hook can call
+    `MineGroup` (`_tactical_resolver`) so the post-battle hook can call
     `writeback_to_mine_group` cleanly.
 
     Returns `None` when there are no `mine_groups`.
@@ -40,7 +40,7 @@ def build_mine_resolver_setup(
         TacticalMineResolver,
     )
 
-    captured_groups: Tuple["Fleet", ...] = tuple(mine_groups)
+    captured_groups: Tuple["MineGroup", ...] = tuple(mine_groups)
     captured_owner_map: Dict[Any, int] = dict(owner_to_team_id)
     captured_boundary = battle_boundary
 
