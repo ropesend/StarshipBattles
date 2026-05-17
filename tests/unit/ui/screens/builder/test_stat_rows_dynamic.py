@@ -240,3 +240,54 @@ def test_planetary_defense_rows_include_scope_drain_and_activation() -> None:
     assert rows[0].label == "Planet Shield (system)"
     assert rows[0].get_value(ship) == 4.0
     assert rows[1].get_value(ship) == 12
+
+
+class GravityModifier:
+    """PROJ-435: stand-in for ``GravityModifierAbility`` in UI builder tests."""
+
+    def __init__(self) -> None:
+        self.energy_drain_rate = 2.0
+        self.activation_time = 8
+        self.scope = "self"
+
+
+class RadiationShield:
+    """PROJ-435: stand-in for ``RadiationShieldAbility``."""
+
+    def __init__(self) -> None:
+        self.energy_drain_rate = 1.5
+        self.activation_time = 6
+        self.scope = "self"
+
+
+def test_activatable_abilities_literal_is_gone() -> None:
+    """PROJ-435: the hardcoded ``_ACTIVATABLE_ABILITIES`` literal is
+    replaced by registry-driven iteration. UI labels live in a
+    label-only dict; ability membership comes from
+    ``AbilityMetadataRegistry`` via ``StrategicKind.ENERGY_DRAINING``.
+    """
+    assert not hasattr(stat_rows_dynamic, "_ACTIVATABLE_ABILITIES"), (
+        "_ACTIVATABLE_ABILITIES is a hardcoded literal that mixes "
+        "membership semantics with display strings; replace it with "
+        "registry-driven iteration plus a UI-only label dict "
+        "(PROJ-435)."
+    )
+
+
+def test_planetary_defense_rows_pick_up_gravity_modifier_and_radiation_shield() -> None:
+    """PROJ-435: after registering ``GravityModifier`` and
+    ``RadiationShield`` in ``AbilityMetadataRegistry`` with the
+    ``ENERGY_DRAINING`` tag, ``get_planetary_defense_rows`` must surface
+    rows for both — driven by registry iteration, not a hardcoded
+    literal.
+    """
+    ship = FakeShip(components=[
+        FakeComponent({"GravityModifier": GravityModifier()}),
+        FakeComponent({"RadiationShield": RadiationShield()}),
+    ])
+
+    rows = stat_rows_dynamic.get_planetary_defense_rows(ship)
+    row_ids = {row.key for row in rows}
+
+    assert "defense_gravitymodifier" in row_ids
+    assert "defense_radiationshield" in row_ids

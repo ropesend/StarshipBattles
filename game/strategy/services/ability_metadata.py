@@ -327,6 +327,28 @@ _ENTRIES: tuple[AbilityMetadata, ...] = (
         }),
     ),
 
+    # ----- Other planet-scope energy-draining activatable abilities (PROJ-435) -----
+    #
+    # ``GravityModifier`` and ``RadiationShield`` are real activatable
+    # energy-draining facility abilities (see
+    # ``game/simulation/components/abilities/planetary/`` and queries in
+    # ``planet_modifier_effect_engine._has_active_ability``). They were
+    # absent from the registry pre-PROJ-435 because no strategy-layer
+    # tag-based query needed them; PROJ-435 adds them so the builder UI
+    # can discover the full ENERGY_DRAINING set from the registry rather
+    # than from a hardcoded literal in ``stat_rows_dynamic.py``.
+
+    AbilityMetadata(
+        name="GravityModifier",
+        energy=_energy_drain(),
+        kind_tags=frozenset({StrategicKind.ENERGY_DRAINING}),
+    ),
+    AbilityMetadata(
+        name="RadiationShield",
+        energy=_energy_drain(),
+        kind_tags=frozenset({StrategicKind.ENERGY_DRAINING}),
+    ),
+
     # ----- Role-tagged abilities (replaces design_role.py frozensets) -----
 
     AbilityMetadata(

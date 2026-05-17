@@ -378,7 +378,13 @@ _PLANETARY_ABILITIES = {
     'WaterModifier': ('Water Rate', 'modification_rate', '/turn'),
 }
 
-_ACTIVATABLE_ABILITIES = {
+# PROJ-435: UI-side label dict for activatable energy-draining abilities.
+# Membership is driven by ``AbilityMetadataRegistry`` via
+# ``StrategicKind.ENERGY_DRAINING`` (see ``get_planetary_defense_rows``);
+# this dict carries display strings only. The pattern mirrors
+# ``_SUPERWEAPON_LABELS`` in ``stat_getters.py``. Names not in this dict
+# fall back to the registry name for display.
+_ACTIVATABLE_ABILITY_LABELS = {
     'GravityModifier': 'Gravity Mod',
     'RadiationShield': 'Rad Shield',
     'PlanetaryShield': 'Planet Shield',
@@ -413,11 +419,33 @@ def get_planetary_engineering_rows(ship) -> Any:
     return rows
 
 
+def _activatable_ability_iteration_order() -> list[str]:
+    """Iteration order for activatable energy-draining abilities.
+
+    Membership: ``abilities_with_kind_tag(StrategicKind.ENERGY_DRAINING)``
+    (PROJ-435 — registry-driven, no hardcoded UI literal).
+
+    Order: names that appear in the UI label dict come first in label-dict
+    insertion order (preserves the pre-PROJ-435 display order); any extra
+    registered names not in the label dict are appended in sorted order
+    so future additions surface in the UI deterministically.
+    """
+    from game.strategy.services.ability_metadata import (
+        StrategicKind, abilities_with_kind_tag,
+    )
+
+    registered = abilities_with_kind_tag(StrategicKind.ENERGY_DRAINING)
+    ordered = [n for n in _ACTIVATABLE_ABILITY_LABELS if n in registered]
+    extras = sorted(registered - set(ordered))
+    return ordered + extras
+
+
 def get_planetary_defense_rows(ship) -> Any:
     """Generate rows for planetary defense/stabilizer abilities."""
     rows = []
 
-    for ab_name, label in _ACTIVATABLE_ABILITIES.items():
+    for ab_name in _activatable_ability_iteration_order():
+        label = _ACTIVATABLE_ABILITY_LABELS.get(ab_name, ab_name)
         for comp in ship.get_all_components():
             if comp.has_ability(ab_name):
                 ab = comp.get_ability(ab_name)
@@ -451,18 +479,46 @@ def get_planetary_defense_rows(ship) -> Any:
 
 # --- Strategic Modifiers Dynamic Rows ---
 
+# PROJ-435: UI-side label dict for the strategic-modifier section.
+# Membership is the intersection of the registry tag union
+# ``COMBAT_MODIFIER ∪ BUILD_RATE_BOOSTER ∪ RESOURCE_BOOSTER`` with this
+# dict (filtering preserves pre-PROJ-435 behaviour: ``ThrustModifier``
+# and ``QualityImprovement`` carry those tags but are intentionally
+# hidden from this section).
+_MODIFIER_ABILITY_LABELS = {
+    'ShieldModifier': ('Shield Mult', 'multiplier'),
+    'DamageModifier': ('Damage Mult', 'multiplier'),
+    'BuildRateBooster': ('Build Rate', 'multiplier'),
+    'ResourceHarvestBooster': ('Harvest Boost', 'multiplier'),
+}
+
+
+def _modifier_ability_iteration_order() -> list[str]:
+    """Iteration order for the strategic-modifier UI section (PROJ-435).
+
+    Registry tags decide membership candidates; the UI label dict decides
+    which of those are surfaced and in what order. Label-dict insertion
+    order is preserved so the displayed sequence matches the pre-PROJ-435
+    UI.
+    """
+    from game.strategy.services.ability_metadata import (
+        StrategicKind, abilities_with_kind_tag,
+    )
+
+    candidates = (
+        abilities_with_kind_tag(StrategicKind.COMBAT_MODIFIER)
+        | abilities_with_kind_tag(StrategicKind.BUILD_RATE_BOOSTER)
+        | abilities_with_kind_tag(StrategicKind.RESOURCE_BOOSTER)
+    )
+    return [n for n in _MODIFIER_ABILITY_LABELS if n in candidates]
+
+
 def get_strategic_modifier_rows(ship) -> Any:
     """Generate rows for shield/damage modifiers with scope."""
     rows = []
 
-    modifier_abilities = {
-        'ShieldModifier': ('Shield Mult', 'multiplier'),
-        'DamageModifier': ('Damage Mult', 'multiplier'),
-        'BuildRateBooster': ('Build Rate', 'multiplier'),
-        'ResourceHarvestBooster': ('Harvest Boost', 'multiplier'),
-    }
-
-    for ab_name, (label, mult_attr) in modifier_abilities.items():
+    for ab_name in _modifier_ability_iteration_order():
+        label, mult_attr = _MODIFIER_ABILITY_LABELS[ab_name]
         for comp in ship.get_all_components():
             if comp.has_ability(ab_name):
                 ab = comp.get_ability(ab_name)

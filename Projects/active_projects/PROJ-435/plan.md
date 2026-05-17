@@ -10,13 +10,13 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Audit gap + propose registry shape | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Implement migration | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Implement migration | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 2 — Implementation
-**Last Action:** Phase 1 audit + policy decision. Picked hybrid C+B: register `GravityModifier` and `RadiationShield` in `AbilityMetadataRegistry` with `ENERGY_DRAINING` tag + `EnergyFacet`; iterate the tag from the UI; keep labels UI-side per `_SUPERWEAPON_LABELS` precedent. For `modifier_abilities`, iterate `COMBAT_MODIFIER ∪ BUILD_RATE_BOOSTER ∪ RESOURCE_BOOSTER` ∩ UI label dict.
-**Next Action:** Phase 2 — implement per `phase_2_checklist.md`.
+**Active Phase:** All phases complete; awaiting user verification.
+**Last Action:** Phase 2 — registered `GravityModifier` and `RadiationShield` in `AbilityMetadataRegistry` (ENERGY_DRAINING + EnergyFacet); replaced `_ACTIVATABLE_ABILITIES` literal with `_ACTIVATABLE_ABILITY_LABELS` (label-only) + `_activatable_ability_iteration_order()` registry-driven helper; replaced inline `modifier_abilities` literal with `_MODIFIER_ABILITY_LABELS` + `_modifier_ability_iteration_order()` filtering `COMBAT_MODIFIER ∪ BUILD_RATE_BOOSTER ∪ RESOURCE_BOOSTER` by UI label presence. Full sharded suite green (21129/21129).
+**Next Action:** User verification.
 **Blockers:** None
 
 ## Phase 2 plan

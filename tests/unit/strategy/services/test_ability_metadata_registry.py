@@ -128,6 +128,35 @@ def test_energy_facet_typed() -> None:
     assert isinstance(meta.energy, EnergyFacet)
 
 
+def test_gravity_modifier_is_energy_draining(
+) -> None:
+    """PROJ-435: ``GravityModifier`` is a real planet-scope activatable
+    energy-draining ability (component class
+    ``GravityModifierAbility``; queried by
+    ``planet_modifier_effect_engine._has_active_ability``). It must
+    appear in ``AbilityMetadataRegistry`` with the ``ENERGY_DRAINING``
+    kind tag and an ``EnergyFacet(drains_energy=True)`` so the UI can
+    iterate it from the registry instead of from a hardcoded literal.
+    """
+    meta = get_ability_metadata("GravityModifier")
+    assert meta is not None, "GravityModifier must be registered (PROJ-435)"
+    assert ability_has_kind_tag("GravityModifier", StrategicKind.ENERGY_DRAINING)
+    assert ability_drains_energy("GravityModifier") is True
+    assert "GravityModifier" in abilities_with_kind_tag(StrategicKind.ENERGY_DRAINING)
+
+
+def test_radiation_shield_is_energy_draining() -> None:
+    """PROJ-435: companion to ``test_gravity_modifier_is_energy_draining``.
+    Same rationale — ``RadiationShield`` is a real activatable
+    energy-draining planet ability and must be registered.
+    """
+    meta = get_ability_metadata("RadiationShield")
+    assert meta is not None, "RadiationShield must be registered (PROJ-435)"
+    assert ability_has_kind_tag("RadiationShield", StrategicKind.ENERGY_DRAINING)
+    assert ability_drains_energy("RadiationShield") is True
+    assert "RadiationShield" in abilities_with_kind_tag(StrategicKind.ENERGY_DRAINING)
+
+
 # ---------------------------------------------------------------------------
 # Parity: every name currently hardcoded in any strategy-layer ability-name
 # set has at least one tag in the unified registry. PERMANENT regression
