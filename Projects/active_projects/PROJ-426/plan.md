@@ -19,14 +19,14 @@
 | 1. Introduce typed assembly DTOs | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Extract pure builders out of `spec_compiler.py` | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Extract pre-tick setup registry and setup builders | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Migrate the adapter to `StrategyBattleAssembly` and remove side-channels | In Progress | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Reduce `spec_compiler.py` to a thin public facade and update docs | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 4. Migrate the adapter to `StrategyBattleAssembly` and remove side-channels | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Reduce `spec_compiler.py` to a thin public facade and update docs | In Progress | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete — pre_tick_setup/{mine,reboard}_setup.py extracted; registry tested; assembler populates registry. spec_compiler down to 193 LOC.
-**Next Action:** Begin Phase 4 (adapter migration + side-channel deletion).
+**Active Phase:** Phase 5
+**Last Action:** Phase 4 complete — adapter consumes StrategyBattleAssembly; 4 side-channel writes deleted; full sharded suite 20953/20953 green.
+**Next Action:** Phase 5 final shrink + docs sync.
 **Blockers:** None
 
 ## Overview

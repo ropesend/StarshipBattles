@@ -101,8 +101,8 @@
         "phase_3"
       ],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
-      "phase_branch": null,
+      "phase_base_sha": "062f00069",
+      "phase_branch": "proj/PROJ-426/main",
       "phase_head_sha": null,
       "planned_files": [
         "game/strategy/adapters/simulation_adapter.py",
@@ -115,7 +115,7 @@
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_5": {

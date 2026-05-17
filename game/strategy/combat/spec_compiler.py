@@ -1,29 +1,25 @@
 """Strategy spec compiler — fleets on a hex → BattleSpec.
 
-PROJ-426: post extraction, this module is a thinning facade. The actual
-team / modifier / hook / mine / reboard construction lives in:
+PROJ-426: this module preserves the public import path
+`game.strategy.combat.spec_compiler.build_strategy_battle_spec`. The
+actual team / modifier / hook / mine / reboard construction lives in:
 
 - `team_spec_builder.TeamSpecBuilder`
 - `strategy_modifier_stack_builder.StrategyModifierStackBuilder`
 - `post_battle_hook_builder.PostBattleHookBuilder`
-- `pre_tick_setup/` (Phase 3 lands the mine + reboard setups here)
+- `pre_tick_setup/` (mine + reboard setup builders)
 - `battle_assembly.StrategyBattleAssembler` (orchestrator)
 
-This file preserves the public import path
-`game.strategy.combat.spec_compiler.build_strategy_battle_spec` and —
-through Phase 3 — still writes the four `object.__setattr__(spec, ...)`
-side-channels so the adapter can read them. Phase 4 removes those writes
-and Phase 5 shrinks this file to the orchestration-only target
-(<= 120 LOC).
-
-PROJ-FMS-B / PROJ-FMS-C history: the side-channels carry `_mine_groups`,
-`_owner_to_team_id`, `_engine_ref`, and `_combat_fleets` — see
-`Projects/active_projects/PROJ-426/design.md` for the typed-replacement
-plan via `BattleSpecExtensions`.
+Strategy-only state (`mine_groups`, `owner_to_team_id`, `combat_fleets`,
+`engine_ref`) lives on `BattleSpecExtensions` inside
+`StrategyBattleAssembly`. `BattleSpec` itself remains a frozen
+simulation-layer DTO. The `_compile_spec_with_state` internal helper
+surfaces the intermediate state for the assembler.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Tuple
 
 from game.simulation.battle_spec import BattleSpec
 from game.simulation.combat.boundary import UnboundedRegion
@@ -57,6 +53,23 @@ _MIN_TEAMS = 2
 _MAX_TEAMS = 8
 
 
+@dataclass(frozen=True)
+class _SpecCompilationState:
+    """Internal intermediate state surfaced by `_compile_spec_with_state`.
+
+    `StrategyBattleAssembler` consumes this to populate
+    `BattleSpecExtensions` without reaching back into the now-deleted
+    `object.__setattr__(spec, ...)` side-channels. The fields here are
+    the same four pieces of state that used to live as private attrs
+    on `BattleSpec`; capturing them in a typed tuple keeps the
+    extension surface explicit.
+    """
+    combat_fleets: Tuple["Fleet", ...]
+    mine_groups: Tuple["Fleet", ...]
+    owner_to_team_id: Dict[Any, int]
+    engine_ref: List[Any]
+
+
 def build_strategy_battle_spec(
     fleets: List["Fleet"],
     *,
@@ -70,6 +83,35 @@ def build_strategy_battle_spec(
     team_modifiers: Optional[Mapping[int, Any]] = None,
     max_ticks: Optional[int] = None,
 ) -> BattleSpec:
+    """Public entry point — compile fleets into a `BattleSpec`."""
+    spec, _state = _compile_spec_with_state(
+        fleets,
+        empires=empires,
+        settings=settings,
+        registries=registries,
+        seed=seed,
+        end_condition=end_condition,
+        post_battle_hook=post_battle_hook,
+        environmental_effects=environmental_effects,
+        team_modifiers=team_modifiers,
+        max_ticks=max_ticks,
+    )
+    return spec
+
+
+def _compile_spec_with_state(
+    fleets: List["Fleet"],
+    *,
+    empires: Optional[Mapping[Any, Any]] = None,
+    settings: Any = None,
+    registries: "GameRegistries",
+    seed: Optional[int] = None,
+    end_condition: Optional["IEndCondition"] = None,
+    post_battle_hook: Optional[Any] = None,
+    environmental_effects: Any = None,
+    team_modifiers: Optional[Mapping[int, Any]] = None,
+    max_ticks: Optional[int] = None,
+) -> Tuple[BattleSpec, "_SpecCompilationState"]:
     """Compile fleets-on-hex + environment into a `BattleSpec`.
 
     See `Projects/active_projects/PROJ-426/design.md` for the full
@@ -169,6 +211,10 @@ def build_strategy_battle_spec(
             mine_groups=mine_groups, engine_ref=engine_ref,
         )
 
+    # PROJ-426 Phase 4: side-channels deleted. Strategy-only state
+    # (mine_groups, owner_to_team_id, combat_fleets, engine_ref) now
+    # surfaces via `_SpecCompilationState` for the assembler to thread
+    # onto `BattleSpecExtensions` inside `StrategyBattleAssembly`.
     spec = BattleSpec(
         seed=seed if seed is not None else 0,
         telemetry_level=TelemetryLevel.NORMAL,
@@ -179,15 +225,13 @@ def build_strategy_battle_spec(
         modifier_stack=modifier_stack,
         post_battle_hook=effective_hook,
     )
-    # PROJ-426 Phase 1-3 compat: the four side-channels remain written
-    # so the adapter (until Phase 4) can read them. PROJ-426 Phase 4
-    # deletes these four writes and the adapter consumes
-    # `BattleSpecExtensions` via `StrategyBattleAssembly` instead.
-    object.__setattr__(spec, "_mine_groups", tuple(mine_groups))
-    object.__setattr__(spec, "_owner_to_team_id", dict(empire_to_team_id))
-    object.__setattr__(spec, "_engine_ref", engine_ref)
-    object.__setattr__(spec, "_combat_fleets", tuple(combat_fleets))
-    return spec
+    state = _SpecCompilationState(
+        combat_fleets=tuple(combat_fleets),
+        mine_groups=tuple(mine_groups),
+        owner_to_team_id=dict(empire_to_team_id),
+        engine_ref=engine_ref,
+    )
+    return spec, state
 
 
 __all__ = ["build_strategy_battle_spec"]

@@ -29,8 +29,8 @@ from game.strategy.interfaces.battle_resolver import BattleResult, IBattleResolv
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from game.simulation.battle_spec import BattleSpec
     from game.simulation.entities.ship import Ship
+    from game.strategy.combat.battle_assembly import StrategyBattleAssembly
     from game.strategy.data.fleet import Fleet
     from game.core.registry import GameRegistries
     from game.simulation.interfaces.ai_controller import IAIControllerFactory
@@ -41,8 +41,8 @@ def _resolve_registries(registries: Optional['GameRegistries']) -> 'GameRegistri
 
     PROJ-361 audit (CQ-01/CQ-02): downstream call sites
     (``_instances_to_ships`` → ``ShipInstance.to_ship`` → ``ShipSerializer``;
-    ``_build_spec`` → ``build_strategy_battle_spec``) all require non-None
-    registries. Centralizing the ``None`` fallback here keeps the
+    ``_build_assembly`` → ``build_strategy_battle_assembly``) all require
+    non-None registries. Centralizing the ``None`` fallback here keeps the
     PROJ-306-permitted boundary call in one place and lets the rest of the
     adapter operate on a guaranteed non-None value.
     """
@@ -261,7 +261,7 @@ class SimulationBattleResolver(IBattleResolver):
         case; ``None`` keeps the strategy default.
         """
         battle_seed = self._resolve_seed(seed)
-        spec = self._build_spec(
+        assembly = self._build_assembly(
             fleet_list,
             seed=battle_seed,
             registries=registries,
@@ -270,6 +270,7 @@ class SimulationBattleResolver(IBattleResolver):
             empires=empires,
             max_ticks=max_ticks,
         )
+        spec = assembly.spec
         # PROJ-274: no ship_builder closure needed. The strategy compiler
         # sets `ShipSpec.instance_ref = ship_instance` on each spec; the
         # default InstanceBackedMaterializer (context-registered) reads
@@ -306,44 +307,11 @@ class SimulationBattleResolver(IBattleResolver):
             SimulationException,
             ValidationException,
         )
-        # PROJ-FMS-B audit Fix 2: when the spec compiler tagged the
-        # spec with mine_groups, build the ``pre_tick_loop_callback``
-        # that attaches per-mine_group :class:`TacticalMineResolver`
-        # instances to the constructed :class:`BattleEngine` before
-        # the first tick. Without this hook mines list as Fleets at the
-        # hex but never participate in tactical combat.
-        mine_groups = getattr(spec, "_mine_groups", ()) or ()
-        owner_to_team_id = getattr(spec, "_owner_to_team_id", {}) or {}
-        mine_resolver_setup = None
-        if mine_groups:
-            from game.strategy.combat.pre_tick_setup import (
-                build_mine_resolver_setup,
-            )
-            battle_boundary = self._boundary_to_box(spec.boundary)
-            mine_resolver_setup = build_mine_resolver_setup(
-                mine_groups,
-                owner_to_team_id,
-                battle_boundary=battle_boundary,
-            )
-
-        # PROJ-FMS-C Phase 3: build the reboard pre-tick callback. It
-        # installs a ReboardTracker on the engine and parks the engine
-        # on the spec's ``_engine_ref`` side-channel so the post-battle
-        # hook can call ``apply_reboard``.
-        reboard_setup = None
-        combat_fleets = getattr(spec, "_combat_fleets", ()) or ()
-        engine_ref = getattr(spec, "_engine_ref", None)
-        if combat_fleets:
-            from game.strategy.combat.pre_tick_setup import (
-                build_fighter_reboard_setup,
-            )
-            reboard_setup = build_fighter_reboard_setup(
-                combat_fleets, engine_ref=engine_ref,
-            )
-
-        pre_tick_loop_callback = self._compose_setup_callbacks(
-            mine_resolver_setup, reboard_setup,
-        )
+        # PROJ-426 Phase 4: the typed `StrategyBattleAssembly` carries a
+        # `PreTickBattleSetupRegistry` that already knows how to compose
+        # the mine + reboard setup callbacks in deterministic order.
+        # `composed_callback()` returns `None` when nothing registered.
+        pre_tick_loop_callback = assembly.pre_tick_setup.composed_callback()
 
         try:
             outcome = run_battle(
@@ -407,56 +375,6 @@ class SimulationBattleResolver(IBattleResolver):
     # Helpers
     # ------------------------------------------------------------------
 
-    @staticmethod
-    def _compose_setup_callbacks(*callbacks: Any) -> Optional[Any]:
-        """Compose multiple pre_tick_loop_callbacks into a single callable.
-
-        PROJ-FMS-C Phase 3: ``run_battle`` accepts exactly one
-        ``pre_tick_loop_callback``. Mine resolver setup AND fighter
-        reboard setup both need to install state on the engine before
-        the first tick, so we compose them sequentially. ``None``
-        entries are filtered out so callers can pass unconditionally.
-        """
-        non_null = [cb for cb in callbacks if cb is not None]
-        if not non_null:
-            return None
-        if len(non_null) == 1:
-            return non_null[0]
-
-        def _composed(engine: Any) -> None:
-            for cb in non_null:
-                cb(engine)
-
-        return _composed
-
-    @staticmethod
-    def _boundary_to_box(
-        boundary: Any,
-    ) -> Optional[Tuple[float, float, float, float]]:
-        """PROJ-FMS-B audit Fix 2: derive an axis-aligned scatter box.
-
-        The tactical mine scatter takes a ``(xmin, ymin, xmax, ymax)``
-        rect to place mines uniformly inside. ``UnboundedRegion`` and
-        non-rectangular boundaries fall back to ``None`` so the
-        scatter pulls from the mine_group's stored ``mine_positions``
-        (the strategic-layer fallback-circle layout). Circles are
-        approximated by their bounding square — close enough for
-        scatter, and keeps the resolver from rejecting non-rect
-        boundaries entirely.
-        """
-        if boundary is None:
-            return None
-        # CircleBoundary exposes ``radius`` centered at (0, 0).
-        radius = getattr(boundary, "radius", None)
-        if radius is not None:
-            r = float(radius)
-            return (-r, -r, r, r)
-        # Generic ``bounds`` attribute, when present, is preferred.
-        bounds = getattr(boundary, "bounds", None)
-        if bounds is not None and len(bounds) == 4:
-            return tuple(float(v) for v in bounds)  # type: ignore[return-value]
-        return None
-
     def _resolve_seed(self, seed: Optional[int]) -> int:
         if seed is not None:
             return seed
@@ -465,7 +383,7 @@ class SimulationBattleResolver(IBattleResolver):
             self._seed_rng = _random_mod.Random()
         return self._seed_rng.randint(0, 1000000)
 
-    def _build_spec(
+    def _build_assembly(
         self,
         fleets: List['Fleet'],
         *,
@@ -475,8 +393,19 @@ class SimulationBattleResolver(IBattleResolver):
         modifiers: Optional[Mapping[int, Any]],
         empires: Optional[Mapping[int, Any]] = None,
         max_ticks: Optional[int] = None,
-    ) -> BattleSpec:
-        from game.strategy.combat.spec_compiler import build_strategy_battle_spec
+    ) -> "StrategyBattleAssembly":
+        """PROJ-426 Phase 4: compile fleets into a typed `StrategyBattleAssembly`.
+
+        Replaces the old `_build_spec` path. Returns the typed wrapper
+        bundling `spec`, `extensions` (mine_groups, owner_to_team_id,
+        combat_fleets, engine_ref) and the populated
+        `PreTickBattleSetupRegistry`. The simulation engine still
+        receives `assembly.spec`; pre-tick setup composition comes from
+        `assembly.pre_tick_setup.composed_callback()`.
+        """
+        from game.strategy.combat.battle_assembly import (
+            build_strategy_battle_assembly,
+        )
 
         team_modifiers: Optional[Dict[int, Any]] = None
         if modifiers:
@@ -484,7 +413,7 @@ class SimulationBattleResolver(IBattleResolver):
             if not team_modifiers:
                 team_modifiers = None
 
-        return build_strategy_battle_spec(
+        return build_strategy_battle_assembly(
             fleets,
             empires=empires,
             registries=registries,

@@ -168,11 +168,10 @@ class StrategyBattleAssembler:
         max_ticks: Optional[int] = None,
     ) -> StrategyBattleAssembly:
         # Local import keeps the strategy-combat package free of any import
-        # cycle with `spec_compiler.py` (which imports nothing from this
-        # module).
-        from game.strategy.combat.spec_compiler import build_strategy_battle_spec
+        # cycle with `spec_compiler.py`.
+        from game.strategy.combat.spec_compiler import _compile_spec_with_state
 
-        spec = build_strategy_battle_spec(
+        spec, state = _compile_spec_with_state(
             fleets,
             empires=empires,
             settings=settings,
@@ -185,16 +184,15 @@ class StrategyBattleAssembler:
             max_ticks=max_ticks,
         )
 
-        # Phase 1-3 compat: read the four side-channels off the already-built
-        # spec. Phase 4 removes the writes; this orchestrator then populates
-        # extensions directly from the intermediate state without any
-        # getattr coupling.
-        combat_fleets = getattr(spec, "_combat_fleets", ()) or ()
-        mine_groups = getattr(spec, "_mine_groups", ()) or ()
-        owner_to_team_id = getattr(spec, "_owner_to_team_id", {}) or {}
-        engine_ref = getattr(spec, "_engine_ref", None)
-        if engine_ref is None:
-            engine_ref = []
+        # PROJ-426 Phase 4: extensions populated directly from the
+        # compiler's typed intermediate state (`_SpecCompilationState`).
+        # The post-battle hook captured `state.engine_ref`, so reusing
+        # that exact list reference here is essential — the pre-tick
+        # reboard setup will append to it and the hook will read it.
+        combat_fleets = state.combat_fleets
+        mine_groups = state.mine_groups
+        owner_to_team_id = state.owner_to_team_id
+        engine_ref = state.engine_ref
 
         # Phase 3: populate the pre-tick setup registry with the mine and
         # reboard setups. The registry composes them into the single

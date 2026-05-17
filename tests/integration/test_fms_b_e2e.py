@@ -336,7 +336,9 @@ def test_spec_compiler_filters_mine_groups_and_wires_resolver():
        mine_group, and empty groups are pruned from their empire.
     """
     from unittest.mock import MagicMock
-    from game.strategy.combat.spec_compiler import build_strategy_battle_spec
+    from game.strategy.combat.battle_assembly import (
+        build_strategy_battle_assembly,
+    )
     from game.strategy.combat.pre_tick_setup import build_mine_resolver_setup
     from game.strategy.data.fleet import Fleet
 
@@ -390,15 +392,16 @@ def test_spec_compiler_filters_mine_groups_and_wires_resolver():
     assert len(mine_groups_at_hex) == 1
     mg = mine_groups_at_hex[0]
 
-    # Build the spec. We use registries=MagicMock() since we are not
+    # Build the assembly. We use registries=MagicMock() since we are not
     # going to materialize ships — we only inspect the spec's structure
     # and the wiring callbacks.
-    spec = build_strategy_battle_spec(
+    assembly = build_strategy_battle_assembly(
         [enemy_fleet, mg, owner_combat_fleet],
         empires={0: enemy_empire, 1: owner_empire},
         registries=MagicMock(),
         post_battle_hook=None,  # let the compiler build the real hook
     )
+    spec = assembly.spec
 
     # (1) Mine_group is NOT a team in the spec — only the two combat
     # fleets produce teams.
@@ -408,14 +411,15 @@ def test_spec_compiler_filters_mine_groups_and_wires_resolver():
         f"{team_count}."
     )
 
-    # (2) Spec carries mine_groups + owner_to_team_id side-channel.
-    assert getattr(spec, "_mine_groups", None) == (mg,)
-    owner_map = getattr(spec, "_owner_to_team_id", {})
+    # (2) PROJ-426: mine_groups + owner_to_team_id now live on
+    # `assembly.extensions`, no longer on the spec.
+    assert assembly.extensions.mine_groups == (mg,)
+    owner_map = assembly.extensions.owner_to_team_id
     assert 1 in owner_map  # owner empire is in the battle
 
     # (3) build_mine_resolver_setup returns a callable that populates
     # engine.mine_resolvers.
-    setup = build_mine_resolver_setup(spec._mine_groups, owner_map)
+    setup = build_mine_resolver_setup(assembly.extensions.mine_groups, owner_map)
     assert setup is not None
     fake_engine = SimpleNamespace(mine_resolvers=[])
     setup(fake_engine)
@@ -435,7 +439,9 @@ def test_post_battle_hook_calls_writeback_and_prunes_empty_mine_group():
     inventory.
     """
     from unittest.mock import MagicMock
-    from game.strategy.combat.spec_compiler import build_strategy_battle_spec
+    from game.strategy.combat.battle_assembly import (
+        build_strategy_battle_assembly,
+    )
     from game.strategy.combat.pre_tick_setup import build_mine_resolver_setup
     from game.strategy.data.fleet import Fleet
 
@@ -477,16 +483,18 @@ def test_post_battle_hook_calls_writeback_and_prunes_empty_mine_group():
     LayMinesOrderHandler().execute_action_order(lay_fleet, owner_empire, galaxy)
     mg = [f for f in owner_empire.fleets if f.group_kind == "mine_group"][0]
 
-    spec = build_strategy_battle_spec(
+    assembly = build_strategy_battle_assembly(
         [enemy_combat, mg, owner_combat],
         empires={0: enemy_empire, 1: owner_empire},
         registries=MagicMock(),
     )
+    spec = assembly.spec
 
     # Wire the resolver onto the mine_group then simulate "all mines
     # consumed during battle" by marking every tactical entity consumed.
     setup = build_mine_resolver_setup(
-        spec._mine_groups, spec._owner_to_team_id,
+        assembly.extensions.mine_groups,
+        assembly.extensions.owner_to_team_id,
     )
     fake_engine = SimpleNamespace(mine_resolvers=[])
     setup(fake_engine)
