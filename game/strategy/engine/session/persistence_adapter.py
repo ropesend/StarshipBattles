@@ -55,7 +55,7 @@ class SessionPersistenceAdapter:
             "galaxy": session.galaxy.to_dict(),
             "empires": [e.to_dict() for e in session.empires],
             "human_player_ids": session.human_player_ids.copy(),
-            "event_log": session._event_log.to_dict(),
+            "event_log": session.services.event_log.to_dict(),
         }
 
     @staticmethod

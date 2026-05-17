@@ -75,15 +75,17 @@ class TurnStateSnapshot:
         and resolves order references.
 
         Args:
-            session: GameSession-like object with .galaxy, .empires,
-                ._registries attributes.
+            session: GameSession-like object with .galaxy, .empires, and
+                .services.registries (public services accessor).
         """
         from game.strategy.data.galaxy import Galaxy
         from game.strategy.data.empire import Empire
 
         session.galaxy = Galaxy.from_dict(self.galaxy_dict)
         session.empires = [
-            Empire.from_dict(d, galaxy=session.galaxy, registries=session._registries)
+            Empire.from_dict(
+                d, galaxy=session.galaxy, registries=session.services.registries
+            )
             for d in self.empire_dicts
         ]
 

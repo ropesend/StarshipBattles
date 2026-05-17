@@ -25,4 +25,13 @@ The decisions below are pre-committed by the source plan; they are recorded here
 
 ## Implementation decisions
 
-_(Append entries here as phases progress.)_
+### 2026-05-17 — Phase 6 added from Codex consult
+
+A post-merge Codex consult on the shipped PROJ-423 work surfaced three findings. Two are landed here as Phase 6; the third is tracked as a separate project (PROJ-432).
+
+| Decision | Rationale |
+|----------|-----------|
+| Migrate the two **production** underscore-alias readers (`persistence_adapter.py`'s `session._event_log` and `turn_state_snapshot.py`'s `session._registries`) to the public `session.services.<accessor>` form. | These were the last production-side readers of the PROJ-423 backwards-compat underscore aliases. The migration is mechanical (one read per file). Codex consult finding #1. |
+| **Keep** the underscore-aliased properties on `GameSession` itself (`_event_log`, `_registries`, `_event_bus`, `_fleet_mutator`, `_planet_mutator`, `_empire_mutator`, `_ship_mutator`). | Test code still depends on them; removing them is a separate, larger cleanup with its own blast radius. PROJ-423 was a structural extraction, not an alias-removal pass. Codex consult finding #1, scope decision. |
+| Replace the self-delegating `test_serialize_matches_to_dict_output` companion with `test_serialize_matches_frozen_schema_fixture`. The new test builds a deterministic minimal session (empty `Galaxy`, no empires, `asset_base_path=""`) and asserts `SessionPersistenceAdapter.serialize()` equals a hardcoded reference-dict literal. The earlier test was retained for documentation, since it still pins the `to_dict()` → `serialize()` delegate. | Post-PROJ-423, `GameSession.to_dict()` is a one-line forward to `serialize()`, so the original assertion `adapter_data == session.to_dict()` was a tautology. The intent (guarding the save schema's exact shape, key ordering, optional-field handling) needed a frozen literal. Codex consult finding #2. |
+| Land the `TurnStateSnapshot.restore()` rehydrate-path-alignment work as a **separate project (PROJ-432)**, not as a PROJ-423 phase. | Codex's explicit recommendation. The asymmetry between `TurnStateSnapshot.restore()` and `SessionPersistenceAdapter.rehydrate_state()` (missing `empire.set_galaxy(...)` + pursuer-tracker rebuild) is a real risk but a behavioral change of its own, not a structural follow-up to the lifecycle extraction. Keeping the scopes separate keeps each project's blast radius and review surface coherent. Codex consult finding #3. |

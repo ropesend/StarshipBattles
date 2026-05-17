@@ -18,12 +18,13 @@
 | 3. Extract `SessionPersistenceAdapter` | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Collapse `GameSession` to a thin shell | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Docs update | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Codex consult follow-ups (underscore-alias migration + frozen schema fixture) | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** All phases complete
-**Last Action:** Phase 5 complete — docs updated (`01_ARCHITECTURE.md` adds session-lifecycle section; `02_PATTERNS.md` adds Pattern #41 Bootstrap-State Single Assignment Path; `systems/strategy_layer.md` adds session-lifecycle subsection; `systems/save_load.md` documents the SessionPersistenceAdapter delegation). Final sharded run: 20890/20890 green.
-**Next Action:** None
+**Active Phase:** All phases complete (including Codex consult follow-up Phase 6)
+**Last Action:** Phase 6 complete — migrated the two remaining production underscore-alias readers to the public `services` accessor (`persistence_adapter.py`'s `session._event_log` → `session.services.event_log`; `turn_state_snapshot.py`'s `session._registries` → `session.services.registries`), and replaced the now-self-delegating `test_serialize_matches_to_dict_output` companion with `test_serialize_matches_frozen_schema_fixture` — a hardcoded reference-dict literal pinning the save schema's exact shape, key ordering, and types. Underscore-aliased properties on `GameSession` itself are intentionally retained (tests still rely on them; a broader cleanup is out of scope).
+**Next Action:** None — TurnStateSnapshot rehydrate-path alignment (the third Codex finding) is being tracked as a separate project (PROJ-432).
 **Blockers:** None
 
 ## Overview
@@ -93,6 +94,14 @@ Add `_apply_bootstrap_state(...)` and route both public entry paths through it. 
 
 ### Phase 5: Docs update
 Document `SessionRuntimeServices`, `SessionBootstrap`, and `SessionPersistenceAdapter` as internal collaborators. Explicitly state that the public API and save schema are unchanged.
+
+### Phase 6: Codex consult follow-ups (underscore-alias migration + frozen schema fixture)
+Added after a Codex consult on the shipped PROJ-423 work. Two changes:
+
+1. Migrate the two remaining **production** underscore-alias readers to the public `services` accessor: `persistence_adapter.py:58` now reads `session.services.event_log.to_dict()` (was `session._event_log.to_dict()`); `turn_state_snapshot.py:86` now reads `session.services.registries` (was `session._registries`). The underscore-aliased properties on `GameSession` itself are deliberately retained — tests still rely on them and removing them is a separate, larger cleanup.
+2. Replace the now-self-delegating `test_serialize_matches_to_dict_output` companion with `test_serialize_matches_frozen_schema_fixture`: a hand-rolled deterministic minimal session (empty `Galaxy`, no empires, `asset_base_path=""`) feeds `SessionPersistenceAdapter.serialize()` and the result is asserted against a hardcoded reference-dict literal. Future regressions that change key names, nesting, ordering, default values, or types will break this test.
+
+A third finding — `TurnStateSnapshot.restore()` is a parallel rehydrate path that does not mirror `SessionPersistenceAdapter.rehydrate_state()`'s wiring (`empire.set_galaxy(...)`, pursuer-tracker rebuild) — is being tracked as the new project PROJ-432 per Codex's explicit recommendation; it is not landed here.
 
 ## Related Documents
 - Source plan: [`TD-02_game_session_lifecycle.md`](../../../Reviews/results/2026-05-16_strategy-layer-tech-debt-review/Verified%20Problem%20Remediation%20Plans/TD-02_game_session_lifecycle.md)

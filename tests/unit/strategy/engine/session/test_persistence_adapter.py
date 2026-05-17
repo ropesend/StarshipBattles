@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
+from game.strategy.data.galaxy import Galaxy
 from game.strategy.data.order_types import Order, OrderType
 from game.strategy.engine.game_config import GameConfig, PlayerConfig
 from game.strategy.engine.game_session import GameSession
@@ -28,6 +29,35 @@ def _small_config() -> GameConfig:
         ],
         system_count=2,
     )
+
+
+def _frozen_fixture_session() -> GameSession:
+    """A fully deterministic minimal session for schema-shape pinning.
+
+    Builds a normal `GameSession`, then swaps in a hand-rolled empty
+    `Galaxy` and clears empires so the resulting `serialize()` output is
+    byte-for-byte deterministic and free of stochastic galaxy generation
+    (planet names, star image_ids, image_rotation, etc.). `asset_base_path`
+    is forced to `""` to avoid leaking machine-specific paths into the
+    frozen literal.
+    """
+    config = GameConfig(
+        players=[
+            PlayerConfig(name="A", theme="Federation", color=(255, 0, 0)),
+            PlayerConfig(name="B", theme="Atlantians", color=(0, 255, 0)),
+        ],
+        system_count=2,
+        galaxy_seed=42,
+        galaxy_radius=100,
+        asset_base_path="",
+    )
+    session = GameSession(config=config)
+    # Replace the stochastic galaxy + empires with deterministic empties so
+    # the serialize() output equals a hardcoded reference literal.
+    session.galaxy = Galaxy(radius=100)
+    session.empires = []
+    session.human_player_ids = [0, 1]
+    return session
 
 
 _EXPECTED_SAVE_KEYS = {
@@ -62,6 +92,67 @@ class TestSerialize:
         adapter_data = SessionPersistenceAdapter.serialize(session)
         legacy_data = session.to_dict()
         assert adapter_data == legacy_data
+
+    def test_serialize_matches_frozen_schema_fixture(self) -> None:
+        """Pin the on-disk save schema to a frozen reference dict.
+
+        The post-PROJ-423 `to_dict()` simply forwards to `serialize()`, so
+        the earlier `test_serialize_matches_to_dict_output` is a
+        self-delegate check. The real schema guard is **this** test: it
+        builds a deterministic minimal session (empty galaxy, no empires,
+        `asset_base_path=""`) and asserts `serialize()` equals a
+        hand-written reference literal. Future regressions that change
+        key names, nesting, ordering, default values, or types break
+        this test and force the change to be explicit.
+
+        Per PROJ-423 decisions.md: the save schema is unchanged from the
+        pre-extraction shape. This fixture pins it.
+        """
+        session = _frozen_fixture_session()
+
+        expected = {
+            "turn_number": 1,
+            "save_path": None,
+            "config": {
+                "asset_base_path": "",
+                "galaxy_radius": 100,
+                "system_count": 2,
+                "galaxy_type": "random",
+                "galaxy_seed": 42,
+                "save_name": "",
+                "players": [
+                    {
+                        "name": "A",
+                        "theme": "Federation",
+                        "color": [255, 0, 0],
+                        "is_human": True,
+                    },
+                    {
+                        "name": "B",
+                        "theme": "Atlantians",
+                        "color": [0, 255, 0],
+                        "is_human": True,
+                    },
+                ],
+            },
+            "galaxy": {
+                "radius": 100,
+                "systems": [],
+                "_next_planet_id": 1,
+                "_next_fleet_id": 1,
+            },
+            "empires": [],
+            "human_player_ids": [0, 1],
+            "event_log": {"events": []},
+        }
+
+        actual = SessionPersistenceAdapter.serialize(session)
+        assert actual == expected, (
+            "Save schema drift: serialize() output no longer matches the "
+            "frozen reference dict. If this change is intentional, update "
+            "the literal above; otherwise the change is an inadvertent "
+            "schema regression."
+        )
 
 
 class TestRehydrate:

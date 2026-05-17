@@ -123,6 +123,26 @@
       "scrap_history": [],
       "status": "complete",
       "verifying_review_id": null
+    },
+    "phase_6": {
+      "depends_on": [
+        "phase_5"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-423/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/engine/session/persistence_adapter.py",
+        "game/strategy/engine/turn_state_snapshot.py",
+        "tests/unit/strategy/engine/session/test_persistence_adapter.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "complete",
+      "verifying_review_id": null
     }
   },
   "project_branch": "proj/PROJ-423/main",
