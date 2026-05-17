@@ -27,11 +27,13 @@ import logging
 import os
 import tempfile
 from dataclasses import dataclass
+from datetime import datetime
 from json import JSONDecodeError
-from typing import List, Optional, Tuple, TYPE_CHECKING
+from typing import Any, List, Optional, Set, Tuple, TYPE_CHECKING
 
 from game.core.exceptions import ValidationException
 from game.core.json_utils import load_json_required, save_json
+from game.core.string_utils import slugify
 from game.strategy.data.design_metadata import DesignMetadata
 
 if TYPE_CHECKING:
@@ -347,6 +349,122 @@ class DesignRepository:
                 design_id, e,
             )
             return False, f"Failed to update design: {e}"
+
+    # ------------------------------------------------------------------
+    # UI-facing methods (PROJ-434 Phase 0) — parity with DesignLibrary
+    # ------------------------------------------------------------------
+
+    def get_design_path(self, design_id: str) -> str:
+        """Return the full path to ``<design_id>.json``.
+
+        Mirrors ``DesignLibrary.get_design_path``. Used by
+        ``BuildQueuePortraitLoader`` for portrait cache keying.
+        """
+        return os.path.join(self.designs_folder, f"{design_id}.json")
+
+    def has_design(self, design_id: str) -> bool:
+        """Return ``True`` if the design file exists on disk."""
+        return os.path.exists(self.get_design_path(design_id))
+
+    @staticmethod
+    def _sanitize_design_id(name: str) -> str:
+        """Convert a design name to a safe filename slug.
+
+        Mirrors ``DesignLibrary._sanitize_design_id`` byte-for-byte.
+        """
+        result = slugify(name)
+        return result if result else "unnamed_design"
+
+    def save_design(
+        self, ship: Any, design_name: str, built_designs: Set[str]
+    ) -> Tuple[bool, str]:
+        """Rich workshop-save flow (metadata embedding + overwrite guard).
+
+        Parity contract with ``DesignLibrary.save_design``:
+
+        - Returns ``(success, message)``.
+        - Refuses to overwrite a design whose slug is in
+          ``built_designs`` (the design has been built in-game).
+        - Preserves ``created_date`` / ``times_built`` / ``is_obsolete``
+          from the existing on-disk metadata when updating.
+        - Embeds the fresh metadata via
+          ``DesignMetadata.embed_in_ship_data``.
+
+        Does NOT touch any catalog cache — that's the catalog wrapper's
+        responsibility (``DesignCatalog.save_design`` delegates here
+        then calls ``upsert_design`` / ``invalidate``).
+        """
+        if self.designs_folder is None:
+            return False, "Design repository not properly initialized"
+
+        design_id = self._sanitize_design_id(design_name)
+        filepath = os.path.join(self.designs_folder, f"{design_id}.json")
+
+        if os.path.exists(filepath) and design_id in built_designs:
+            return (
+                False,
+                f"Cannot overwrite '{design_name}' - this design has "
+                "been built in-game",
+            )
+
+        try:
+            metadata = DesignMetadata.from_ship(ship, design_id)
+
+            if os.path.exists(filepath):
+                old_data = load_json_required(filepath)
+                old_metadata = old_data.get("_metadata", {})
+                metadata.created_date = old_metadata.get(
+                    "created_date", metadata.created_date
+                )
+                metadata.times_built = old_metadata.get("times_built", 0)
+                metadata.is_obsolete = old_metadata.get("is_obsolete", False)
+
+            metadata.last_modified = datetime.now().isoformat()
+
+            ship_data = ship.to_dict()
+            ship_data = metadata.embed_in_ship_data(ship_data)
+
+            save_json(filepath, ship_data, indent=4)
+            return True, f"Saved design: {design_name}"
+        except PermissionError as e:
+            logger.error(
+                "DesignRepository.save_design: permission denied "
+                "writing '%s': %s",
+                filepath, e,
+            )
+            return False, "Failed to save design: Permission denied"
+        except OSError as e:
+            logger.error(
+                "DesignRepository.save_design: OS error writing '%s': %s",
+                filepath, e,
+            )
+            return False, f"Failed to save design: {e}"
+        except ValidationException as e:
+            logger.exception(
+                "DesignRepository.save_design: serialization error for "
+                "'%s': %s",
+                design_name, e,
+            )
+            return False, "Failed to save design: Invalid design data"
+        except (AttributeError, KeyError) as e:
+            logger.exception(
+                "DesignRepository.save_design: unexpected error for "
+                "'%s': %s",
+                design_name, e,
+            )
+            return False, f"Failed to save design: {e}"
+
+    def mark_obsolete(
+        self, design_id: str, is_obsolete: bool
+    ) -> Tuple[bool, str]:
+        """UI-facing alias for :meth:`mark_design_obsolete`.
+
+        ``DesignLibrary`` callers used ``library.mark_obsolete(id, flag)``;
+        the lower-level method on the repository is named
+        ``mark_design_obsolete`` to keep the disk-mutation verb obvious.
+        Both expose the same contract.
+        """
+        return self.mark_design_obsolete(design_id, is_obsolete)
 
     def increment_built_count(self, design_id: str) -> bool:
         """Bump ``_metadata.times_built`` by one and persist to disk.

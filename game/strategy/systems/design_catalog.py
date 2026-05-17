@@ -19,7 +19,7 @@ The catalog plus its owning ``DesignRepository`` is exposed through
 """
 from __future__ import annotations
 
-from typing import Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, TYPE_CHECKING
 
 from game.strategy.data.design_metadata import DesignMetadata
 
@@ -48,6 +48,11 @@ class DesignCatalog:
         self._data_by_id: Dict[str, dict] = {}
         self._list_view: List[DesignMetadata] = []
         self._pending_built: Dict[str, int] = {}
+        # PROJ-434 Phase 0: optional repository handle bound at
+        # bootstrap so save / mark-obsolete / portrait-path / data-load
+        # calls can route through the catalog without forcing every
+        # caller to thread the repository separately.
+        self._repository: Optional["DesignRepository"] = None
 
     # ------------------------------------------------------------------
     # Lookup / list
@@ -137,10 +142,168 @@ class DesignCatalog:
         Called at session bootstrap and after explicit refresh events
         (workshop saves, etc.). Phase 3 asserts via integration test
         that this method is NOT called during a production tick.
+
+        PROJ-434 Phase 0: also caches the repository handle so the
+        catalog can serve UI-facing methods (``save_design``,
+        ``load_design_data``, ``mark_obsolete``, ``get_design_path``)
+        without forcing every caller to keep a separate reference.
         """
         pairs = repository.scan_designs_with_data()
         self._by_id = {meta.design_id: meta for meta, _ in pairs}
         self._data_by_id = {meta.design_id: data for meta, data in pairs}
+        self._list_view = list(self._by_id.values())
+        self._repository = repository
+
+    def attach_repository(self, repository: "DesignRepository") -> None:
+        """Bind a repository handle without forcing a full rescan.
+
+        PROJ-434 Phase 0: used in tests and by code paths that want
+        catalog UI methods (``save_design`` / ``mark_obsolete`` / etc.)
+        without paying for a fresh ``repopulate_from`` scan. The
+        existing in-memory state is left intact.
+        """
+        self._repository = repository
+
+    @property
+    def repository(self) -> "DesignRepository":
+        """Return the bound ``DesignRepository``.
+
+        Raises ``RuntimeError`` if no repository was attached — guard
+        against UI callers reaching the catalog before bootstrap wired
+        it up.
+        """
+        if self._repository is None:
+            raise RuntimeError(
+                "DesignCatalog has no repository attached. Call "
+                "repopulate_from(...) or attach_repository(...) first."
+            )
+        return self._repository
+
+    # ------------------------------------------------------------------
+    # UI-facing surface (PROJ-434 Phase 0) — parity with DesignLibrary
+    # ------------------------------------------------------------------
+
+    def filter_designs(
+        self,
+        ship_class: Optional[str] = None,
+        vehicle_type: Optional[str] = None,
+        design_role: Optional[str] = None,
+        show_obsolete: bool = False,
+    ) -> List[DesignMetadata]:
+        """Filter the catalog's in-memory designs by criteria.
+
+        Mirrors ``DesignLibrary.filter_designs`` byte-for-byte.
+        """
+        designs = list(self._list_view)
+        if ship_class:
+            designs = [d for d in designs if d.ship_class == ship_class]
+        if vehicle_type:
+            designs = [d for d in designs if d.vehicle_type == vehicle_type]
+        if design_role:
+            designs = [d for d in designs if d.design_role == design_role]
+        if not show_obsolete:
+            designs = [d for d in designs if not d.is_obsolete]
+        return designs
+
+    def search_designs(
+        self, name_query: str, filters: Optional[dict] = None
+    ) -> List[DesignMetadata]:
+        """Search designs by name + optional filters.
+
+        Mirrors ``DesignLibrary.search_designs``: case-insensitive
+        substring match on ``DesignMetadata.name`` after filter chain.
+        """
+        filters = filters or {}
+        designs = self.filter_designs(
+            ship_class=filters.get("ship_class"),
+            vehicle_type=filters.get("vehicle_type"),
+            design_role=filters.get("design_role"),
+            show_obsolete=filters.get("show_obsolete", False),
+        )
+        if name_query:
+            search_lower = name_query.lower()
+            designs = [d for d in designs if search_lower in d.name.lower()]
+        return designs
+
+    def scan_designs(self) -> List[DesignMetadata]:
+        """Return the current in-memory list view.
+
+        ``DesignLibrary.scan_designs`` callers expect a list; the
+        catalog already keeps one. Matches the existing UI contract.
+        """
+        return self._list_view
+
+    def load_design_data(self, design_id: str):
+        """Load raw design data — delegates to the bound repository.
+
+        Returns ``DesignLoadResult`` (same shape as
+        ``DesignLibrary.load_design_data`` today).
+        """
+        return self.repository.load_design_data(design_id)
+
+    def get_design_path(self, design_id: str) -> str:
+        """Return the on-disk path for ``design_id`` (delegates to
+        the bound repository).
+
+        Used by ``BuildQueuePortraitLoader`` cache keying.
+        """
+        return self.repository.get_design_path(design_id)
+
+    def has_design(self, design_id: str) -> bool:
+        """Return ``True`` if the catalog (or the bound repository)
+        knows about ``design_id``."""
+        if design_id in self._by_id:
+            return True
+        if self._repository is None:
+            return False
+        return self._repository.has_design(design_id)
+
+    def save_design(
+        self, ship, design_name: str, built_designs: set
+    ) -> tuple[bool, str]:
+        """Workshop save flow: write through the repository, then
+        invalidate the in-memory cache for the new design id so the
+        next read repopulates from disk (QA-Obs-3 contract).
+
+        Returns ``(success, message)`` — identical contract to
+        ``DesignLibrary.save_design``.
+        """
+        repo = self.repository
+        ok, msg = repo.save_design(ship, design_name, built_designs)
+        if ok:
+            design_id = repo._sanitize_design_id(design_name)
+            # Re-read disk for this single design so the catalog has
+            # the embedded ``_metadata`` (created_date / last_modified
+            # / times_built) the workshop just wrote.
+            load_result = repo.load_design_data(design_id)
+            if load_result.success and load_result.data is not None:
+                self.upsert_design(design_id, load_result.data)
+        return ok, msg
+
+    def mark_obsolete(
+        self, design_id: str, is_obsolete: bool
+    ) -> tuple[bool, str]:
+        """Mark a design obsolete on disk + refresh the catalog entry."""
+        ok, msg = self.repository.mark_obsolete(design_id, is_obsolete)
+        if ok:
+            load_result = self.repository.load_design_data(design_id)
+            if load_result.success and load_result.data is not None:
+                self.upsert_design(design_id, load_result.data)
+        return ok, msg
+
+    def invalidate(self, design_id: Optional[str] = None) -> None:
+        """Drop ``design_id`` from the catalog (or wipe everything when
+        ``None``). The next read re-populates from the repository.
+
+        QA-Obs-3 cache-invalidation hook for the workshop-save flow.
+        """
+        if design_id is None:
+            self._by_id.clear()
+            self._data_by_id.clear()
+            self._list_view = []
+            return
+        self._by_id.pop(design_id, None)
+        self._data_by_id.pop(design_id, None)
         self._list_view = list(self._by_id.values())
 
     def flush_pending_built_counts(self, repository: "DesignRepository") -> int:

@@ -118,6 +118,30 @@ class FacadeSessionState:
         return self.planet_index.get(planet_id)
 
     # ------------------------------------------------------------------
+    # Per-empire designs (PROJ-434 Phase 0)
+    # ------------------------------------------------------------------
+
+    def get_designs_for_empire(self, empire_id: int) -> List["DesignMetadata"]:
+        """Return the per-empire ``DesignMetadata`` list via the session's
+        ``DesignCatalog`` (PROJ-427 Phase 6 / PROJ-434 Phase 0).
+
+        Routes through ``session.services.design_catalogs_by_empire[empire_id]``
+        so workshop saves flowing through ``DesignCatalog.save_design``
+        (which invalidates the catalog cache) are immediately visible to
+        the same-empire viewer on the next read — the QA-Obs-3 cache
+        contract. Returns ``[]`` when no catalog is wired for the
+        requested empire (early bootstrap / tests).
+        """
+        services = getattr(self.session, "services", None)
+        if services is None:
+            return []
+        catalogs = getattr(services, "design_catalogs_by_empire", None) or {}
+        catalog = catalogs.get(empire_id)
+        if catalog is None:
+            return []
+        return catalog.list_designs()
+
+    # ------------------------------------------------------------------
     # Test-only seeding seam (PROJ-430 / TD-08 Phase 4)
     # ------------------------------------------------------------------
     #
