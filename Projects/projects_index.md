@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-432 | Strategy tech-debt follow-up: TurnStateSnapshot rehydrate alignment (PROJ-423 consult) | Planning | 2026-05-17 | 2026-05-17 |
 | PROJ-431 | Strategy tech-debt #10/10: Deployable substrate redesign (TD-10) | Planning | 2026-05-16 | 2026-05-16 |
 | PROJ-430 | Strategy tech-debt #09/10: Facade API reduction (TD-08) | Planning | 2026-05-16 | 2026-05-16 |
 | PROJ-429 | Strategy tech-debt #08/10: Ability metadata unification (TD-07) | Planning | 2026-05-16 | 2026-05-16 |
