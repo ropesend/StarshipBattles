@@ -2,12 +2,29 @@
 
 import pytest
 from unittest.mock import MagicMock
+from game.strategy.engine import planet_energy_engine as planet_energy_engine_mod
 from game.strategy.engine.planet_energy_engine import (
     PlanetEnergyEngine,
     _is_ability_active,
     get_activatable_ability_info,
     get_shield_info,
 )
+
+
+def test_module_does_not_export_activatable_abilities_constant() -> None:
+    """PROJ-429 Phase 3: the dead ``_ACTIVATABLE_ABILITIES`` constant is
+    deleted. Energy-draining classification — when a consumer needs it —
+    is now answered by ``ability_drains_energy(name)`` /
+    ``abilities_with_kind_tag(StrategicKind.ENERGY_DRAINING)`` against
+    the unified ``AbilityMetadataRegistry``. The live drain path uses
+    ``ComponentActivationState.is_draining_energy`` and remains
+    metadata-free at runtime.
+    """
+    assert not hasattr(planet_energy_engine_mod, "_ACTIVATABLE_ABILITIES"), (
+        "_ACTIVATABLE_ABILITIES is dead code and must be deleted "
+        "(PROJ-429 / TD-07 Phase 3). Consumers should query the unified "
+        "AbilityMetadataRegistry instead."
+    )
 from game.strategy.data.component_activation_state import (
     ActivationPhase,
     ComponentActivationState,

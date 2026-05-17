@@ -19,7 +19,7 @@
 | 0. Scope-bounding read + design decision | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Establish the unified `AbilityMetadataRegistry` skeleton | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Migrate `design_role` classification | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Migrate `planet_energy_engine` (delete dead `_ACTIVATABLE_ABILITIES`) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Migrate `planet_energy_engine` (delete dead `_ACTIVATABLE_ABILITIES`) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate `action_time_resolver` (TD-03 coupling) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Migrate `combat_modifier_collector` and `spec_compiler` | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Migrate `build_queue_source`; stabilizer/superweapon parity contracts | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
@@ -28,9 +28,9 @@
 ## Current State
 
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 complete — `design_role.py` reads every role-classification set live from `abilities_with_role_tag(...)`; seven frozensets deleted; new-carrier-without-edit TDD test green.
-**Next Action:** Phase 3 — delete dead `_ACTIVATABLE_ABILITIES`, route `PlanetaryShield` literal through the registry.
+**Active Phase:** Phase 4
+**Last Action:** Phase 3 complete — dead `_ACTIVATABLE_ABILITIES` deleted; `get_shield_info` now resolves the planetary-shield ability name through `abilities_with_kind_tag(StrategicKind.PLANETARY_SHIELD)`; public surface (`_is_ability_active`, `get_activatable_ability_info`, `get_shield_info`) preserved.
+**Next Action:** Phase 4 — facet-drive `action_time_resolver` activate/deactivate branches and add the CommandSpec contract test.
 **Blockers:** None.
 
 ## Overview

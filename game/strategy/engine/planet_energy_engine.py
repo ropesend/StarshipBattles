@@ -21,6 +21,10 @@ from typing import List, Optional, TYPE_CHECKING
 import logging
 
 from game.core.registry import GameRegistries
+from game.strategy.services.ability_metadata import (
+    StrategicKind,
+    abilities_with_kind_tag,
+)
 from game.strategy.services.component_inspector import iter_facility_ability_entries
 from game.strategy.data.component_activation_state import (
     ComponentActivationState,
@@ -39,15 +43,24 @@ if TYPE_CHECKING:
 
 
 def get_shield_info(comp, registries: Optional[GameRegistries] = None) -> Optional[dict]:
-    """Extract PlanetaryShield info from a component entry.
+    """Extract planetary-shield info from a component entry.
 
     Returns:
         Dict with 'energy_drain_rate', 'activation_time', 'deactivation_time', or None.
+
+    PROJ-429 / TD-07 Phase 3: the ability name (`"PlanetaryShield"`) is no
+    longer hardcoded here; it comes from
+    ``abilities_with_kind_tag(StrategicKind.PLANETARY_SHIELD)``. Today
+    that set is a singleton and we materialise the first match. If a
+    second PLANETARY_SHIELD-tagged ability is registered in the future
+    this function will need to decide between them — surface that as a
+    deliberate design choice rather than a silent literal.
     """
     abilities = _extract_abilities(comp, registries)
-    shield_data = abilities.get('PlanetaryShield')
-    if isinstance(shield_data, dict):
-        return shield_data
+    for shield_name in abilities_with_kind_tag(StrategicKind.PLANETARY_SHIELD):
+        shield_data = abilities.get(shield_name)
+        if isinstance(shield_data, dict):
+            return shield_data
     return None
 
 
@@ -76,17 +89,14 @@ def _extract_abilities(comp, registries: Optional[GameRegistries] = None) -> dic
     return extract_abilities_from_component(comp, registries)
 
 
-# Activatable strategic abilities that drain energy (beyond PlanetaryShield)
-_ACTIVATABLE_ABILITIES = [
-    'GeologicStabilizer',
-    'StellarStabilizer',
-    'WarpFieldStabilizer',
-    'GravityModifier',
-    'RadiationShield',
-    'ShieldModifier',
-    'DamageModifier',
-    'ShieldProjection',
-]
+# PROJ-429 / TD-07 Phase 3: deleted dead ``_ACTIVATABLE_ABILITIES`` list.
+# The constant had no in-code readers (only doc references) and the live
+# drain path at ``_compute_activation_drain`` reads
+# ``ComponentActivationState.is_draining_energy`` directly, so this
+# classification surface had decayed to inert. Consumers that need
+# "is this ability energy-draining?" should call
+# ``game.strategy.services.ability_metadata.ability_drains_energy(name)``
+# or ``abilities_with_kind_tag(StrategicKind.ENERGY_DRAINING)``.
 
 
 def _is_ability_active(planet, ability_key: str) -> bool:
