@@ -306,8 +306,18 @@ class ConflictResolutionEngine(IConflictEngine):
         (fresh after any preceding round's `apply_outcome_to_fleets`)
         rather than reusing a cached snapshot.
 
-        Determinism: iteration order is `(empire_id, fleet_id)` so the
-        deterministic `_battle_seed_counter` produces stable replays.
+        PROJ-431 Phase 5 (Finding 1): combat triggers also come from
+        combat-capable deployed groups (FighterWing /
+        SatelliteConstellation). Two opposing deployed groups at a hex
+        with NO fleet present must still battle. Deployed groups have
+        no `speed` and therefore no movement-opportunity gating — they
+        trigger every tick they share a hex with an opposing combat
+        participant. Hex deduplication ensures a fleet + deployed-group
+        co-located trigger does not double-fire.
+
+        Determinism: iteration order is `(empire_id, fleet_id)` and
+        `(empire_id, group_id)` so the deterministic
+        `_battle_seed_counter` produces stable replays.
         """
         # Snapshot the (empire, fleet) pairs at the start of the tick in
         # deterministic `(empire_id, fleet_id)` order for replay stability.
@@ -317,6 +327,28 @@ class ConflictResolutionEngine(IConflictEngine):
             ((emp, f) for emp in empires for f in emp.fleets),
             key=lambda pair: (pair[0].id, pair[1].id),
         )
+
+        # PROJ-431 Phase 5 (Finding 1): track hexes already resolved this
+        # tick so a deployed-group-only trigger does not double-fire at a
+        # hex where a fleet already drove combat.
+        resolved_hexes: set = set()
+
+        def _resolve_at(triggering_location) -> None:
+            """Build occupants at a hex and dispatch combat if contested."""
+            if triggering_location in resolved_hexes:
+                return
+            occupants: List[Any] = []
+            for other_empire in empires:
+                for other_fleet in other_empire.fleets:
+                    if other_fleet.location == triggering_location:
+                        occupants.append((other_empire, other_fleet))
+                for other_group in self._combat_participating_groups(other_empire):
+                    if other_group.location == triggering_location:
+                        occupants.append((other_empire, other_group))
+            if len({emp.id for emp, _ in occupants}) < 2:
+                return
+            resolved_hexes.add(triggering_location)
+            self._resolve_combat_at_hex(occupants)
 
         for triggering_empire, fleet in sorted_fleet_refs:
             # Re-derive liveness — an earlier round in this tick may have
@@ -330,21 +362,32 @@ class ConflictResolutionEngine(IConflictEngine):
                 fleet, tick, moved_fleet_ids,
             ):
                 continue
-            # Build current occupants list at this fleet's hex from LIVE
-            # empire.fleets state + deployed_groups (PROJ-431 Phase 3:
-            # FighterWings / SatelliteConstellations participate
-            # alongside Fleets). Skip if no opposing empire is present.
-            occupants = []
-            for other_empire in empires:
-                for other_fleet in other_empire.fleets:
-                    if other_fleet.location == fleet.location:
-                        occupants.append((other_empire, other_fleet))
-                for other_group in self._combat_participating_groups(other_empire):
-                    if other_group.location == fleet.location:
-                        occupants.append((other_empire, other_group))
-            if len({emp.id for emp, _ in occupants}) < 2:
+            _resolve_at(fleet.location)
+
+        # PROJ-431 Phase 5 (Finding 1): deployed-group triggers. A
+        # FighterWing or SatelliteConstellation at a contested hex must
+        # drive combat even with no fleet present. Deployed groups have
+        # no speed → no movement-opportunity gating → they trigger on
+        # every tick. Hex dedup above ensures we don't double-fire at
+        # hexes already resolved via a fleet trigger this tick.
+        sorted_group_refs: List[Any] = sorted(
+            (
+                (emp, g)
+                for emp in empires
+                for g in self._combat_participating_groups(emp)
+            ),
+            key=lambda pair: (pair[0].id, pair[1].id),
+        )
+        for triggering_empire, group in sorted_group_refs:
+            # Liveness re-check: a previous round may have wiped this
+            # group's ships. The post-battle hook removes destroyed
+            # ships from FighterWing/SatelliteConstellation via the
+            # same IFleetMutator plumbing used for Fleets.
+            if group not in getattr(triggering_empire, "deployed_groups", ()):
                 continue
-            self._resolve_combat_at_hex(occupants)
+            if not getattr(group, "ships", None):
+                continue
+            _resolve_at(group.location)
 
     def _resolve_combat_at_hex(self, occupants) -> None:
         """Resolve a multi-empire conflict at one hex as a single N-team battle.
