@@ -169,6 +169,29 @@
       "scrap_history": [],
       "status": "complete",
       "verifying_review_id": null
+    },
+    "phase_8": {
+      "depends_on": [
+        "phase_7"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-429/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "tests/unit/strategy/services/test_ability_metadata_contracts.py",
+        "game/strategy/facade/dto/planet_dto.py",
+        "game/strategy/services/action_time_resolver.py",
+        "tests/unit/strategy/services/test_action_time_resolver.py",
+        "tests/unit/strategy/engine/test_planet_action_engine.py",
+        "Projects/active_projects/PROJ-435/"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "complete",
+      "verifying_review_id": null
     }
   },
   "project_branch": "proj/PROJ-429/main",

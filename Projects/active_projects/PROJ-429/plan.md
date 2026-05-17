@@ -24,12 +24,13 @@
 | 5. Migrate `combat_modifier_collector` and `spec_compiler` | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Migrate `build_queue_source`; stabilizer/superweapon parity contracts | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Documentation update and final validation | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
+| 8. Codex consult follow-ups (post-Phase 7) | Complete | [phase_8_checklist.md](phase_8_checklist.md) |
 
 ## Current State
 
 **Last Updated:** 2026-05-17
 **Active Phase:** Complete
-**Last Action:** Phase 7 complete — `docs/systems/strategy_layer.md` adds an "Ability Metadata Registry (PROJ-429 / TD-07)" section describing the unified registry as the canonical source of truth; `docs/guides/adding_abilities.md` updated to point at the unified registry; stale `_ACTIVATABLE_ABILITIES` references replaced. **Full sharded suite: 21079 / 21079 passed (wall time 154s).**
+**Last Action:** Phase 8 complete — Codex consult follow-ups landed: (1) reverse-direction parity tests for STABILIZER/SUPERWEAPON kind tags, (2) `planet_dto.shield_active` migrated to PLANETARY_SHIELD registry tag, (3) `action_time_resolver` fails fast on unregistered energy abilities (literal `'activation_time'`/`'deactivation_time'` fallback removed), (4) UI `_ACTIVATABLE_ABILITIES` migration spawned as PROJ-435 because the UI map mixes registered + unregistered abilities and carries UI-specific display labels that don't fit the registry shape. Three commits + one scaffold commit.
 **Next Action:** Ready for final audit.
 **Blockers:** None.
 
@@ -106,8 +107,18 @@ Both projects converge on the same end-state property — one cycle-safe, lazily
 | 5 | Replace `combat_ability_names = {...}` at `spec_compiler.py:827` with a registry query. Replace the two iterated tuples + literal `"ShieldProjection"` in `combat_modifier_collector.py`. Add `ShieldProjection` to the registry with a `COMBAT_FLAT_BONUS`-style tag (not `COMBAT_MODIFIER`). |
 | 6 | Replace literal `"BuildRateBooster"` at `build_queue_source.py:114` with a tag query. Add contract tests: every `STABILIZERS[*].ability_name` and `SUPERWEAPONS[*].ability_name` has the matching `kind_tag`. Do not collapse the spec tables themselves. |
 | 7 | Update `docs/systems/strategy_layer.md` to make `AbilityMetadataRegistry` the canonical source of truth. Update `docs/guides/adding_abilities.md` (only if it has a live successor). Run the full sharded suite. Mark TD-07 source plan COMPLETED. |
+| 8 | **Codex consult follow-ups** (post-Phase 7). Reverse-direction parity tests for STABILIZER / SUPERWEAPON. Migrate `planet_dto.shield_active` to PLANETARY_SHIELD tag. Fail-fast in `action_time_resolver` for unregistered energy abilities (delete literal `'activation_time'` / `'deactivation_time'` fallback). Decide UI `_ACTIVATABLE_ABILITIES` migration (executed inline OR spun off as PROJ-435). |
 
-Phase-by-phase dependency edges (intra-project): `0 → 1 → 2 → 3 → 4 → 5 → 6 → 7`. No parallelism within the project; this is a sequential consumer migration.
+Phase-by-phase dependency edges (intra-project): `0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8`. No parallelism within the project; this is a sequential consumer migration.
+
+### Phase 8 — Codex consult follow-ups
+
+The original eight-phase TD-07 plan ended at Phase 7 (docs + final sharded validation). After Phase 7 a Codex consult on the unified-registry migration surfaced four follow-up items not in the original plan; Phase 8 lands them so the registry-driven design is closed end-to-end before final audit:
+
+1. **Two-way parity** (test-only). The existing contract proves every spec-table `ability_name` is registry-tagged, but not the reverse direction (every kind-tagged ability has a matching spec row). The reverse direction is a regression guard against "tag drifts after spec row removed". Implemented in `test_ability_metadata_contracts.py`. STELLERATE_STAR's `ability_name=None` row is documented in the test as an exception (`DestroyStar` is registry-tagged but has no spec row).
+2. **`planet_dto.py:107` literal**. `shield_active` read `active_abilities.get('PlanetaryShield', False)` directly. Migrated to iterate `abilities_with_kind_tag(StrategicKind.PLANETARY_SHIELD)`, mirroring Phase 3's `planet_energy_engine.get_shield_info` pattern.
+3. **`action_time_resolver._activate_time_field` fallback**. The historical literals `'activation_time'` / `'deactivation_time'` were the fallback for unregistered energy abilities. The fallback was safe today only because `EnergyFacet`'s default field names match the literals — drift would silently degrade. Replaced with `ValueError` raises with actionable messages. Two TDD test cases (unregistered + registered-but-no-EnergyFacet, plus the deactivate mirror). Three pre-existing test_planet_action_engine tests that used synthetic `AbilityA`/`AbilityB` names were updated to use real registered stabilizers.
+4. **UI `_ACTIVATABLE_ABILITIES` in `stat_rows_dynamic.py:381-463`**. The UI map mixes registered (4) + unregistered (2) abilities and carries display labels with no current home in the registry; the closest kind tag has 4 of 6 members. Not a mechanical inline migration — spun off as PROJ-435 with a populated scaffold (plan, design, decisions, phase 1 checklist, phase_state.json).
 
 ## Related Documents
 
