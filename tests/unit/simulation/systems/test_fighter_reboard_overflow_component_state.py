@@ -113,8 +113,7 @@ def test_fighter_overflow_preserves_component_states():
     hex_c = HexCoord(0, 0)
     carrier = _make_carrier(capacity=0)
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(carrier)
 
@@ -158,8 +157,7 @@ def test_satellite_overflow_preserves_component_states():
     hex_c = HexCoord(0, 0)
     carrier = _make_carrier(capacity=0)
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(carrier)
 
@@ -197,8 +195,7 @@ def test_overflow_no_components_is_fine():
     hex_c = HexCoord(0, 0)
     carrier = _make_carrier(capacity=0)
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(carrier)
 

@@ -109,8 +109,7 @@ def test_reboard_one_survivor_onto_friendly_carrier():
     hex_c = HexCoord(0, 0)
     carrier = _make_carrier("carrier_1", capacity=10)
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(carrier)
 
@@ -135,8 +134,7 @@ def test_dead_fighter_is_discarded():
     hex_c = HexCoord(0, 0)
     carrier = _make_carrier("carrier_1", capacity=10)
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(carrier)
     dead = _stub_launched_ship(alive=False, hp=0, team_id=0)
@@ -226,8 +224,7 @@ def test_carrier_destroyed_finds_other_friendly_with_bay_space():
     dead_carrier.is_alive = False  # dead
     backup = _make_carrier("backup", capacity=10)
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(dead_carrier)
     fleet.ships.append(backup)

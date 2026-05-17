@@ -49,7 +49,6 @@ class Fleet:
         speed=5.0,
         component_registry: Optional[Dict[str, Any]] = None,
         display_name: str = "",
-        group_kind: str = "fleet",
     ):
         self.id = fleet_id
         self.owner_id = owner_id  # 0=Player, 1=Enemy, etc
@@ -57,23 +56,13 @@ class Fleet:
         self._component_registry = component_registry
         self.display_name = display_name  # Renamable label; empty = fallback to "Fleet {id}"
 
-        # PROJ-FMS-A Phase 4: discriminator for fleet-vs-deployed-group.
-        # Values: "fleet" (real fleet, full Move/Build/Warp surface),
-        # "fighter_group" / "satellite_group" (deployed groups —
-        # auto-joinable to combat, but reject strategic movement / build
-        # / warp). Enforced at command-validation time in
-        # game/strategy/engine/handlers/{movement,build}.py.
-        # PROJ-431 Phase 2: ``"mine_group"`` is removed from the legal
-        # set. Mines live on ``empire.deployed_groups`` as a typed
-        # :class:`~game.strategy.data.deployed_group.MineGroup` — they
-        # are not ``Fleet``s at all. Phase 3 will drop the remaining
-        # two markers and delete this field entirely.
-        if group_kind not in ("fleet", "fighter_group", "satellite_group"):
-            raise ValueError(
-                f"Fleet.group_kind={group_kind!r} must be one of "
-                f"fleet/fighter_group/satellite_group"
-            )
-        self.group_kind = group_kind
+        # PROJ-431 Phase 3 (2026-05-17): the legacy ``group_kind``
+        # discriminator is GONE. Every Fleet is a real fleet. Deployed
+        # mines / fighters / satellites are typed sibling models
+        # (:class:`MineGroup`, :class:`FighterWing`,
+        # :class:`SatelliteConstellation`) on ``empire.deployed_groups``
+        # — they are structurally not ``Fleet``s and cannot reach the
+        # fleet-action surface (Move / Warp / Build / Join).
 
         # Master ship list (flat, canonical list of all ships in the fleet)
         self.ships: List[ShipInstance] = []
@@ -113,16 +102,15 @@ class Fleet:
 
     @property
     def can_strategic_move(self) -> bool:
-        """PROJ-FMS-A Phase 4 + PROJ-431 Phase 2: only ``group_kind ==
-        "fleet"`` may move.
+        """PROJ-431 Phase 3: every Fleet is a real fleet.
 
-        Deployed groups (``fighter_group`` / ``satellite_group``)
-        reject Move / Intercept / Warp / Build / Join-Fleet at command
-        validation time. ``MineGroup`` is a separate type entirely
-        (sibling of ``Fleet``) and structurally cannot reach the move
-        handlers.
+        Deployed groups (:class:`FighterWing`,
+        :class:`SatelliteConstellation`, :class:`MineGroup`) are typed
+        siblings of Fleet on ``empire.deployed_groups`` and cannot
+        reach Move / Intercept / Warp / Build / Join-Fleet — those
+        handlers are typed against :class:`Fleet`.
         """
-        return self.group_kind == "fleet"
+        return True
 
     @property
     def task_forces(self) -> List['TaskForce']:
@@ -496,8 +484,6 @@ class Fleet:
             'path': [{'q': p.q, 'r': p.r} if isinstance(p, HexCoord) else list(p) if isinstance(p, tuple) else p for p in self.path],
             'construction_queue': self.construction_queue,
             'construction_queue_paused': self.construction_queue_paused,
-            # PROJ-FMS-A Phase 4: discriminator for fleet vs deployed group.
-            'group_kind': self.group_kind,
         }
 
         # PROJ-431 Phase 2: minefield runtime state moved to ``MineGroup``.
@@ -548,6 +534,9 @@ class Fleet:
         # PROJ-211: Extract component_registry from registries for DI
         component_registry = registries.components if registries else None
 
+        # PROJ-431 Phase 3: ``group_kind`` field deleted from Fleet. Any
+        # value in a save predating Phase 3 is silently ignored — saves are
+        # disposable per CLAUDE.md (no migration shim).
         fleet = cls(
             fleet_id=data['id'],
             owner_id=data['owner_id'],
@@ -555,9 +544,6 @@ class Fleet:
             speed=data.get('speed', 5.0),
             component_registry=component_registry,
             display_name=data.get('display_name', ''),
-            # PROJ-FMS-A Phase 4. Defaulted to "fleet" so saves predating
-            # this field still deserialise (no migration shim required).
-            group_kind=data.get('group_kind', 'fleet'),
         )
 
         # PROJ-431 Phase 2: ``Fleet`` no longer carries minefield runtime

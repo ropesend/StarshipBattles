@@ -42,8 +42,7 @@ def test_team_spec_for_fleet_group_returns_team_spec_with_expected_shape():
     builder = TeamSpecBuilder()
     hex_c = HexCoord(0, 0)
     fleet = Fleet(
-        fleet_id=42, owner_id=10, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=42, owner_id=10, location=hex_c, speed=5.0
     )
     fleet.ships.append(_make_ship("a-1", owner_id=10))
     fleet.ships.append(_make_ship("a-2", owner_id=10))
@@ -89,7 +88,7 @@ def test_pick_formation_for_fleet_returns_default_when_no_tf_formation():
     builder = TeamSpecBuilder()
     hex_c = HexCoord(0, 0)
     fleet = Fleet(
-        fleet_id=1, owner_id=10, location=hex_c, speed=5.0, group_kind="fleet",
+        fleet_id=1, owner_id=10, location=hex_c, speed=5.0,
     )
     fleet.ships.append(_make_ship("z-1", owner_id=10))
 

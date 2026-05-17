@@ -49,7 +49,7 @@ def test_set_sensitivity_rejects_invalid_label():
 def test_set_sensitivity_rejects_non_mine_group():
     svc = MineGroupService()
     # A real Fleet is structurally not a MineGroup — the typed check rejects it.
-    f = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0), group_kind="fleet")
+    f = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
     result = svc.set_sensitivity(f, "HIGH")
     assert not result.is_valid
 

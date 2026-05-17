@@ -137,21 +137,22 @@ class TestOrderTypeReservations:
 
 
 class TestFleetGroupKindIntegration:
-    def test_group_kind_rejects_move_at_validation_time(self):
-        """Programmatic check — the actual rejection runs through
-        BaseCommandHandler._reject_if_non_fleet_group; here we just
-        verify can_strategic_move is wired.
-
-        PROJ-431 Phase 2: ``"mine_group"`` is gone from
-        ``Fleet.group_kind``'s legal-values set — mines are a separate
-        type (:class:`MineGroup`) and cannot be a Fleet at all.
+    def test_deployed_group_types_are_not_fleets(self):
+        """PROJ-431 Phase 3: deployed groups (fighters / satellites /
+        mines) are typed siblings of :class:`Fleet`, not Fleets with a
+        string discriminator. The ``group_kind`` field + the
+        ``_reject_if_non_fleet_group`` guard are deleted; structural
+        type prevents reach.
         """
-        for kind in ("fighter_group", "satellite_group"):
-            f = Fleet(
-                fleet_id=1, owner_id=0, location=HexCoord(0, 0),
-                group_kind=kind,
-            )
-            assert not f.can_strategic_move
+        from game.strategy.data.deployed_group import (
+            FighterWing,
+            MineGroup,
+            SatelliteConstellation,
+        )
+
+        for cls in (FighterWing, SatelliteConstellation, MineGroup):
+            g = cls(group_id=1, owner_id=0, location=HexCoord(0, 0))
+            assert not isinstance(g, Fleet)
 
     def test_signature_bonus_visible_on_mine_class(self, fresh_registries):
         mine = Ship(

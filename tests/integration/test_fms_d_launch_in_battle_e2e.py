@@ -165,8 +165,7 @@ def test_launch_satellites_in_battle_then_all_survive_reboards_all(
     hex_c = HexCoord(0, 0)
     strategy_carrier = _make_carrier_strategy_inst(capacity=10)
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(strategy_carrier)
     empire = SimpleNamespace(id=42, fleets=[fleet], deployed_groups=[])
@@ -213,8 +212,7 @@ def test_launch_satellites_overflow_spills_to_sector_satellite_group(
         capacity=2, accepts=("satellite",),
     )
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(strategy_carrier)
     empire = SimpleNamespace(id=42, fleets=[fleet], deployed_groups=[])
@@ -228,18 +226,19 @@ def test_launch_satellites_overflow_spills_to_sector_satellite_group(
     assert summary["reboarded"] == 2
     assert summary["overflowed"] == 2
 
+    from game.strategy.data.deployed_group import (
+        FighterWing,
+        SatelliteConstellation,
+    )
     sgs = [
-        f for f in empire.fleets
-        if getattr(f, "group_kind", "fleet") == "satellite_group"
+        g for g in empire.deployed_groups
+        if isinstance(g, SatelliteConstellation)
     ]
     assert len(sgs) == 1
     assert sgs[0].location == hex_c
     assert len(sgs[0].ships) == 2
-    # No spurious fighter_group.
-    assert not any(
-        getattr(f, "group_kind", "fleet") == "fighter_group"
-        for f in empire.fleets
-    )
+    # No spurious FighterWing.
+    assert not any(isinstance(g, FighterWing) for g in empire.deployed_groups)
 
 
 def test_launch_satellites_dead_satellites_discarded(fresh_registries):
@@ -267,8 +266,7 @@ def test_launch_satellites_dead_satellites_discarded(fresh_registries):
     hex_c = HexCoord(0, 0)
     strategy_carrier = _make_carrier_strategy_inst(capacity=10)
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(strategy_carrier)
     empire = SimpleNamespace(id=42, fleets=[fleet], deployed_groups=[])

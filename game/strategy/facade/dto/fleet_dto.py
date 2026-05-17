@@ -106,11 +106,9 @@ class FleetInfo:
     # all combat-capable ships in this fleet.
     vehicle_bay_capacity_used: float = 0.0
     vehicle_bay_capacity_max: float = 0.0
-    # PROJ-FMS-A Phase 4: fleet vs deployed-group discriminator.
-    # "fleet" / "fighter_group" / "satellite_group". PROJ-431 Phase 2
-    # dropped "mine_group" from the legal set — mines no longer flow
-    # through ``Fleet``.
-    group_kind: str = "fleet"
+    # PROJ-431 Phase 3 (2026-05-17): ``group_kind`` deleted. Every
+    # FleetInfo describes a real Fleet — deployed mines / fighters /
+    # satellites flow through their own DTO surfaces.
 
     @classmethod
     def from_fleet(cls, fleet: 'Fleet') -> 'FleetInfo':
@@ -232,7 +230,6 @@ class FleetInfo:
             pod_storage_used=fleet.resources.get_fleet_pod_mass_used(),
             vehicle_bay_capacity_used=cls._sum_vehicle_bay_used(fleet),
             vehicle_bay_capacity_max=cls._sum_vehicle_bay_max(fleet),
-            group_kind=getattr(fleet, "group_kind", "fleet"),
         )
 
     @staticmethod

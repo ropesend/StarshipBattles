@@ -34,18 +34,20 @@ def _make_fleet(
     fleet_id: int,
     owner_id: int,
     *,
-    group_kind: str = "fleet",
     ships: tuple[Any, ...] = (),
 ) -> MagicMock:
-    """Build a Fleet-shaped mock the spec compiler accepts."""
+    """Build a Fleet-shaped mock the spec compiler accepts.
+
+    PROJ-431 Phase 3: ``group_kind`` is gone from :class:`Fleet`.
+    Every Fleet-shaped mock is a real combat fleet.
+    """
     fleet = MagicMock(spec_set=[
-        "id", "owner_id", "ships", "task_forces", "group_kind", "location",
+        "id", "owner_id", "ships", "task_forces", "location",
     ])
     fleet.id = fleet_id
     fleet.owner_id = owner_id
     fleet.ships = list(ships)
     fleet.task_forces = []
-    fleet.group_kind = group_kind
     fleet.location = None
     return fleet
 

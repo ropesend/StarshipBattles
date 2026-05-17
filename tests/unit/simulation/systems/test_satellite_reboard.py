@@ -113,8 +113,7 @@ def test_satellite_reboards_into_universal_bay():
         "carrier_1", capacity=5, accepts=("fighter", "satellite"),
     )
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(carrier)
 
@@ -141,8 +140,7 @@ def test_satellite_overflows_into_new_satellite_group():
         "carrier_1", capacity=0, accepts=("fighter", "satellite"),
     )
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(carrier)
 
@@ -174,8 +172,7 @@ def test_satellite_overflow_merges_into_existing_satellite_group():
         "carrier_1", capacity=0, accepts=("fighter", "satellite"),
     )
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(carrier)
 
@@ -207,8 +204,7 @@ def test_mixed_fighter_satellite_batch_uses_correct_overflow_kinds():
         "carrier_1", capacity=0, accepts=("fighter", "satellite"),
     )
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(carrier)
 
@@ -243,8 +239,7 @@ def test_satellite_only_bay_rejects_fighter_overflow():
         "carrier_1", capacity=5, accepts=("satellite",),
     )
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(carrier)
 

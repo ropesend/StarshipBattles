@@ -348,20 +348,31 @@ def _make_galaxy_with_groups(
     *,
     groups_at_hex: list[tuple[str, int, object]] | None = None,
 ) -> SimpleNamespace:
-    """Galaxy returning fleets-at-hex matching ``(group_kind, owner_id, hex)``."""
+    """PROJ-431 Phase 3: builds typed FighterWing / SatelliteConstellation
+    instances on each empire's ``deployed_groups`` so the UI helpers
+    find them via isinstance dispatch.
+    """
+    from game.strategy.data.deployed_group import (
+        FighterWing,
+        SatelliteConstellation,
+    )
     items = list(groups_at_hex or ())
 
     def get_planets_at_global_hex(_h: object) -> list[object]:
         return []
 
-    by_empire: dict[int, list[SimpleNamespace]] = {}
+    by_empire: dict[int, list[object]] = {}
     for kind, oid, loc in items:
-        by_empire.setdefault(oid, []).append(
-            SimpleNamespace(group_kind=kind, owner_id=oid, location=loc, id=0)
-        )
+        if kind == "fighter_group":
+            g = FighterWing(group_id=0, owner_id=oid, location=loc)
+        elif kind == "satellite_group":
+            g = SatelliteConstellation(group_id=0, owner_id=oid, location=loc)
+        else:
+            continue
+        by_empire.setdefault(oid, []).append(g)
     empires = [
-        SimpleNamespace(id=oid, fleets=flts)
-        for oid, flts in by_empire.items()
+        SimpleNamespace(id=oid, fleets=[], deployed_groups=gs)
+        for oid, gs in by_empire.items()
     ]
     return SimpleNamespace(
         get_planets_at_global_hex=get_planets_at_global_hex,

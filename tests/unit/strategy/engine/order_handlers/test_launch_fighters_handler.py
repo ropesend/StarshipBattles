@@ -108,8 +108,7 @@ def setup_carrier_with_fighters():
     carrier.carried_items.append(_make_fighter_dict("fighter_bravo", hp=60))
 
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(carrier)
 

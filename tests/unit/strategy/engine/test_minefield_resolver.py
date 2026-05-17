@@ -189,8 +189,7 @@ def _make_fleet_at(
         fleet_id=fleet_id,
         owner_id=owner_id,
         location=hex_coord,
-        speed=5.0,
-        group_kind="fleet",
+        speed=5.0
     )
     for s in ships:
         f.ships.append(s)

@@ -22,6 +22,7 @@ import pytest
 
 from game.core.hex_math import HexCoord
 from game.strategy.combat.spec_compiler import build_strategy_battle_spec
+from game.strategy.data.deployed_group import FighterWing
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.ship_instance import ShipInstance
 
@@ -65,22 +66,17 @@ def test_fighter_group_joins_owner_team_in_spec(fresh_registries):
     hex_c = HexCoord(0, 0)
     # Empire 10's main fleet + their fighter_group at the same hex.
     main_fleet = Fleet(
-        fleet_id=1, owner_id=10, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=10, location=hex_c, speed=5.0
     )
     main_fleet.ships.append(_make_enemy_ship("alpha", owner_id=10))
 
-    fg = Fleet(
-        fleet_id=200001, owner_id=10, location=hex_c, speed=0.0,
-        group_kind="fighter_group",
-    )
+    fg = FighterWing(group_id=200001, owner_id=10, location=hex_c)
     fg.ships.append(_make_fighter_ship("f1", owner_id=10))
     fg.ships.append(_make_fighter_ship("f2", owner_id=10))
 
     # Enemy empire's fleet so we have 2 unique owners.
     enemy_fleet = Fleet(
-        fleet_id=2, owner_id=20, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=2, owner_id=20, location=hex_c, speed=5.0
     )
     enemy_fleet.ships.append(_make_enemy_ship("beta", owner_id=20))
 
@@ -103,15 +99,11 @@ def test_fighter_group_alone_vs_enemy_fleet_makes_2_team_spec(fresh_registries):
     """An empire whose only presence at the hex is a fighter_group still
     fields a team — fighter_groups are full combat entities."""
     hex_c = HexCoord(0, 0)
-    fg = Fleet(
-        fleet_id=200001, owner_id=10, location=hex_c, speed=0.0,
-        group_kind="fighter_group",
-    )
+    fg = FighterWing(group_id=200001, owner_id=10, location=hex_c)
     fg.ships.append(_make_fighter_ship("f1", owner_id=10))
 
     enemy_fleet = Fleet(
-        fleet_id=2, owner_id=20, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=2, owner_id=20, location=hex_c, speed=5.0
     )
     enemy_fleet.ships.append(_make_enemy_ship("beta", owner_id=20))
 

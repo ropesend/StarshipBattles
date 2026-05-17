@@ -61,9 +61,6 @@ class LaunchSatellitesCommandHandler(BaseCommandHandler):
         fleet, error = self._resolve_player_fleet(session, cmd.fleet_id)
         if error:
             return error
-        reject = self._reject_if_non_fleet_group(fleet, "Launch Satellites")
-        if reject is not None:
-            return reject
         if not cmd.ship_instance_id:
             return ValidationResult.error(
                 "Launch Satellites (fleet) requires ship_instance_id."

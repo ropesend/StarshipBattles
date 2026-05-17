@@ -51,9 +51,6 @@ class BuildOrderCommandHandler(BaseCommandHandler):
             return error
 
         # PROJ-FMS-A Phase 4: deployed groups have no build queue.
-        reject = self._reject_if_non_fleet_group(fleet, "Build Order")
-        if reject is not None:
-            return reject
 
         # 2. Create BUILD order and insert at front
         build_order = Order(OrderType.BUILD)

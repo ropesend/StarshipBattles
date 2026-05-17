@@ -184,8 +184,7 @@ def test_lay_mines_then_enemy_enters_takes_damage():
 
     # 2. Build a fleet containing the carrier (owner empire).
     fleet = Fleet(
-        fleet_id=10, owner_id=1, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=10, owner_id=1, location=hex_c, speed=5.0
     )
     fleet.ships.append(carrier)
     owner_empire = SimpleNamespace(id=1, name="Owner", fleets=[fleet], deployed_groups=[])
@@ -211,8 +210,7 @@ def test_lay_mines_then_enemy_enters_takes_damage():
     # 4. Build an enemy fleet that enters the same hex.
     enemy_ship = _StubEnemyShip("dread_1", max_hp=2000.0)
     enemy_fleet = Fleet(
-        fleet_id=20, owner_id=0, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=20, owner_id=0, location=hex_c, speed=5.0
     )
     enemy_fleet.ships.append(enemy_ship)
     enemy_empire = SimpleNamespace(id=0, name="Invader", fleets=[enemy_fleet], deployed_groups=[])
@@ -389,7 +387,7 @@ def test_spec_compiler_filters_mine_groups_and_wires_resolver():
     owner_combat_carrier = _StubCarrier("owner_carrier")
     owner_combat_carrier.owner_id = 1
     owner_combat_fleet = Fleet(
-        fleet_id=11, owner_id=1, location=hex_c, speed=5.0, group_kind="fleet",
+        fleet_id=11, owner_id=1, location=hex_c, speed=5.0,
     )
     owner_combat_fleet.ships.append(owner_combat_carrier)
     owner_combat_carrier.design_id = "ship_with_layers"
@@ -402,7 +400,7 @@ def test_spec_compiler_filters_mine_groups_and_wires_resolver():
     enemy_ship.name = "Enemy"
     enemy_ship.design_data = {"theme_id": "Federation"}
     enemy_fleet = Fleet(
-        fleet_id=20, owner_id=0, location=hex_c, speed=5.0, group_kind="fleet",
+        fleet_id=20, owner_id=0, location=hex_c, speed=5.0,
     )
     enemy_fleet.ships.append(enemy_ship)
 

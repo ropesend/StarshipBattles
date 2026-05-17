@@ -105,8 +105,7 @@ def setup_empire_and_fleet():
         carrier.carried_items.append(_make_mine_dict("mine_warhead_small"))
 
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(carrier)
 

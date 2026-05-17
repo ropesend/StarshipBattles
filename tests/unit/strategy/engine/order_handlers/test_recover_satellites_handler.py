@@ -126,8 +126,7 @@ def setup_carrier_and_satellite_group():
     carrier = _StubCarrier("carrier_1", owner_id=42, capacity=10,
                             accepts_satellite=True, accepts_fighter=False)
     main_fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     main_fleet.ships.append(carrier)
 

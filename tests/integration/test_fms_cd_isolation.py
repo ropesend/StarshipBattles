@@ -136,8 +136,7 @@ def test_fighter_only_bay_cannot_recover_satellites():
         "carrier_1", owner_id=42, capacity=10, accepts=("fighter",),
     )
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(carrier)
     sg = SatelliteConstellation(group_id=300001, owner_id=42, location=hex_c)
@@ -169,8 +168,7 @@ def test_satellite_only_bay_cannot_recover_fighters():
         "carrier_1", owner_id=42, capacity=10, accepts=("satellite",),
     )
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(carrier)
     fg = FighterWing(group_id=200001, owner_id=42, location=hex_c)
@@ -285,8 +283,7 @@ def test_universal_bay_handles_both_types():
         accepts=("fighter", "satellite"),
     )
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(carrier)
 
@@ -346,8 +343,7 @@ def test_launch_handlers_filter_by_vehicle_type():
         carrier.carried_items.append(_satellite_dict())
 
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(carrier)
     empire = SimpleNamespace(id=42, name="E42", fleets=[fleet], deployed_groups=[])

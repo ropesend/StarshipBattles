@@ -126,8 +126,7 @@ def test_reboard_captures_component_states_into_carried_vehicle(monkeypatch):
 
     carrier_inst = _make_carrier_inst()
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=HexCoord(0, 0), speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=HexCoord(0, 0), speed=5.0
     )
     fleet.ships.append(carrier_inst)
     empire = SimpleNamespace(id=42, fleets=[fleet], deployed_groups=[])

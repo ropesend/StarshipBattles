@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from game.core.hex_math import HexCoord
 from game.strategy.combat.spec_compiler import build_strategy_battle_spec
+from game.strategy.data.deployed_group import SatelliteConstellation
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.ship_instance import ShipInstance
 
@@ -53,21 +54,16 @@ def test_satellite_group_joins_owner_team_in_spec(fresh_registries):
     """A satellite_group merges onto its owner's team (allies by owner_id)."""
     hex_c = HexCoord(0, 0)
     main_fleet = Fleet(
-        fleet_id=1, owner_id=10, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=10, location=hex_c, speed=5.0
     )
     main_fleet.ships.append(_make_enemy_ship("alpha", owner_id=10))
 
-    sg = Fleet(
-        fleet_id=300001, owner_id=10, location=hex_c, speed=0.0,
-        group_kind="satellite_group",
-    )
+    sg = SatelliteConstellation(group_id=300001, owner_id=10, location=hex_c)
     sg.ships.append(_make_satellite_ship("s1", owner_id=10))
     sg.ships.append(_make_satellite_ship("s2", owner_id=10))
 
     enemy_fleet = Fleet(
-        fleet_id=2, owner_id=20, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=2, owner_id=20, location=hex_c, speed=5.0
     )
     enemy_fleet.ships.append(_make_enemy_ship("beta", owner_id=20))
 
@@ -87,15 +83,11 @@ def test_satellite_group_joins_owner_team_in_spec(fresh_registries):
 def test_satellite_group_alone_vs_enemy_fleet_makes_2_team_spec(fresh_registries):
     """A satellite_group is a full combat entity even without a parent fleet."""
     hex_c = HexCoord(0, 0)
-    sg = Fleet(
-        fleet_id=300001, owner_id=10, location=hex_c, speed=0.0,
-        group_kind="satellite_group",
-    )
+    sg = SatelliteConstellation(group_id=300001, owner_id=10, location=hex_c)
     sg.ships.append(_make_satellite_ship("s1", owner_id=10))
 
     enemy_fleet = Fleet(
-        fleet_id=2, owner_id=20, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=2, owner_id=20, location=hex_c, speed=5.0
     )
     enemy_fleet.ships.append(_make_enemy_ship("beta", owner_id=20))
 

@@ -92,7 +92,7 @@ class _StubShip:
 def _make_fleet(carrier: _StubShip, hex_c: HexCoord) -> Fleet:
     fleet = Fleet(
         fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        display_name="Test Fleet", group_kind="fleet",
+        display_name="Test Fleet",
     )
     fleet.ships.append(carrier)
     return fleet

@@ -126,8 +126,7 @@ def test_strategic_launch_then_recover_round_trip_preserves_hp():
         )
 
     main_fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     main_fleet.ships.append(carrier)
     empire = SimpleNamespace(id=42, name="E42", fleets=[main_fleet], deployed_groups=[])
@@ -170,8 +169,7 @@ def test_partial_recovery_leaves_overflow_in_satellite_group():
     hex_c = HexCoord(0, 0)
     carrier = _StubCarrier("carrier_1", owner_id=42, capacity=2)
     main_fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     main_fleet.ships.append(carrier)
 
@@ -210,8 +208,7 @@ def test_satellite_group_id_namespace_distinct_from_fighter_group():
     carrier.carried_items.append(_make_satellite_dict("sat_alpha"))
 
     main_fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     main_fleet.ships.append(carrier)
     empire = SimpleNamespace(id=42, name="E42", fleets=[main_fleet], deployed_groups=[])
@@ -239,8 +236,7 @@ def test_launched_satellite_group_satellites_have_no_battle_tag():
     carrier.carried_items.append(_make_satellite_dict("sat_alpha"))
 
     main_fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     main_fleet.ships.append(carrier)
     empire = SimpleNamespace(id=42, name="E42", fleets=[main_fleet], deployed_groups=[])

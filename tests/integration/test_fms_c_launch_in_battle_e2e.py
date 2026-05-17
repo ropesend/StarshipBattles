@@ -149,8 +149,7 @@ def test_launch_in_battle_then_all_survive_reboards_all(fresh_registries):
     hex_c = HexCoord(0, 0)
     strategy_carrier = _make_carrier_strategy_inst(capacity=10)
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(strategy_carrier)
     empire = SimpleNamespace(id=42, fleets=[fleet], deployed_groups=[])
@@ -190,8 +189,7 @@ def test_launch_in_battle_overflow_spills_to_sector_group(fresh_registries):
     hex_c = HexCoord(0, 0)
     strategy_carrier = _make_carrier_strategy_inst(capacity=2)
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(strategy_carrier)
     empire = SimpleNamespace(id=42, fleets=[fleet], deployed_groups=[])
@@ -205,8 +203,9 @@ def test_launch_in_battle_overflow_spills_to_sector_group(fresh_registries):
     assert summary["reboarded"] == 2
     assert summary["overflowed"] == 2
 
-    # New fighter_group exists at the sector with 2 fighters.
-    fgs = [f for f in empire.fleets if getattr(f, "group_kind", "fleet") == "fighter_group"]
+    # New FighterWing exists at the sector with 2 fighters.
+    from game.strategy.data.deployed_group import FighterWing
+    fgs = [g for g in empire.deployed_groups if isinstance(g, FighterWing)]
     assert len(fgs) == 1
     assert fgs[0].location == hex_c
     assert len(fgs[0].ships) == 2
@@ -235,8 +234,7 @@ def test_launch_in_battle_dead_fighters_discarded(fresh_registries):
     hex_c = HexCoord(0, 0)
     strategy_carrier = _make_carrier_strategy_inst(capacity=10)
     fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     fleet.ships.append(strategy_carrier)
     empire = SimpleNamespace(id=42, fleets=[fleet], deployed_groups=[])

@@ -205,34 +205,12 @@ class BaseCommandHandler:
 
         return fleet
 
-    @staticmethod
-    def _reject_if_non_fleet_group(fleet, action: str) -> 'ValidationResult | None':
-        """PROJ-FMS-A Phase 4: reject fleet-manipulation commands on
-        non-fleet ``group_kind`` discriminators (fighter_group /
-        satellite_group).
-
-        PROJ-431 Phase 2: ``"mine_group"`` is gone from the legal set —
-        mines are a separate type (:class:`MineGroup`) that can never
-        reach a fleet-typed handler parameter. Phase 3 will remove the
-        remaining markers and delete this guard entirely.
-
-        Returns a ``ValidationResult.error(...)`` when the fleet is a
-        deployed group; returns ``None`` to indicate the action may
-        proceed (real fleet).
-        """
-        kind = getattr(fleet, "group_kind", "fleet")
-        # Only string values are valid discriminators. Mocked / partial
-        # fleets without an explicit ``group_kind`` (e.g. tests) are
-        # treated as real fleets.
-        if not isinstance(kind, str) or kind == "fleet":
-            return None
-        if kind not in ("fighter_group", "satellite_group"):
-            return None
-        return ValidationResult.error(
-            f"{action} is not allowed for group_kind={kind!r}: "
-            f"deployed groups (fighters / satellites) "
-            f"cannot move, warp, build, or join."
-        )
+    # PROJ-431 Phase 3 (2026-05-17): `_reject_if_non_fleet_group` deleted.
+    # Deployed fighters/satellites/mines are typed siblings of Fleet
+    # (:class:`FighterWing`, :class:`SatelliteConstellation`,
+    # :class:`MineGroup`) on ``empire.deployed_groups``. They never
+    # reach a fleet-typed handler parameter via the action surface, so
+    # the runtime guard is structurally redundant.
 
     @staticmethod
     def _resolve_player_planet(session: 'GameSession', planet_id: int) -> tuple:

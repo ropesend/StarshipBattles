@@ -21,6 +21,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from game.strategy.data.deployed_group import FighterWing, SatelliteConstellation
 from game.strategy.services.ability_sources.facility import FacilityAbilitySource
 
 
@@ -73,10 +74,14 @@ def _global_hex(planet: Any, galaxy: Any) -> Any:
     return planet.location
 
 
-def _matching_group_at_hex(
-    planet: Any, galaxy: Any, group_kind: str,
+def _matching_deployed_group_at_hex(
+    planet: Any, galaxy: Any, group_cls: type,
 ) -> bool:
-    """True if any owner-owned ``group_kind`` Fleet sits at the planet's hex."""
+    """True if any owner-owned deployed group of ``group_cls`` is at hex.
+
+    PROJ-431 Phase 3: walks ``empire.deployed_groups`` and matches on
+    the concrete :class:`DeployedGroup` subclass.
+    """
     if galaxy is None:
         return False
     target_hex = _global_hex(planet, galaxy)
@@ -84,10 +89,10 @@ def _matching_group_at_hex(
     for emp in empires:
         if emp.id != planet.owner_id:
             continue
-        for f in getattr(emp, "fleets", []):
-            if getattr(f, "group_kind", "fleet") != group_kind:
+        for g in getattr(emp, "deployed_groups", []) or ():
+            if not isinstance(g, group_cls):
                 continue
-            if f.location == target_hex:
+            if g.location == target_hex:
                 return True
     return False
 
@@ -125,13 +130,15 @@ def build_menu_items(
             "Recover Fighters",
             "recover_fighters",
             _facility_has_ability(planet, "RecoverFighters")
-            and _matching_group_at_hex(planet, galaxy, "fighter_group"),
+            and _matching_deployed_group_at_hex(planet, galaxy, FighterWing),
         ),
         (
             "Recover Satellites",
             "recover_satellites",
             _facility_has_ability(planet, "RecoverSatellites")
-            and _matching_group_at_hex(planet, galaxy, "satellite_group"),
+            and _matching_deployed_group_at_hex(
+                planet, galaxy, SatelliteConstellation,
+            ),
         ),
     ]
     items: list[PlanetMenuItem] = []

@@ -129,8 +129,7 @@ def test_strategic_launch_then_recover_round_trip_preserves_hp():
         carrier.carried_items.append(_make_fighter_dict("fighter_alpha", hp=80 - i * 5))
 
     main_fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     main_fleet.ships.append(carrier)
     empire = SimpleNamespace(id=42, name="E42", fleets=[main_fleet], deployed_groups=[])
@@ -175,8 +174,7 @@ def test_partial_recovery_when_bay_too_small():
     hex_c = HexCoord(0, 0)
     carrier = _StubCarrier("carrier_1", owner_id=42, capacity=2)
     main_fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     main_fleet.ships.append(carrier)
 
@@ -220,8 +218,7 @@ def test_strategic_launch_creates_fighter_group_visible_to_conflict_resolution()
     for _ in range(2):
         carrier.carried_items.append(_make_fighter_dict("fighter_alpha"))
     main_fleet = Fleet(
-        fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=1, owner_id=42, location=hex_c, speed=5.0
     )
     main_fleet.ships.append(carrier)
     empire = SimpleNamespace(id=42, name="E42", fleets=[main_fleet], deployed_groups=[])

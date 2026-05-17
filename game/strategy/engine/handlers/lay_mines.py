@@ -67,9 +67,6 @@ class LayMinesCommandHandler(BaseCommandHandler):
         if error:
             return error
 
-        reject = self._reject_if_non_fleet_group(fleet, "Lay Mines")
-        if reject is not None:
-            return reject
 
         if not cmd.ship_instance_id:
             return ValidationResult.error(

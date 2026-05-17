@@ -139,8 +139,7 @@ def _trial(seed: int, ship: _StubShip, mine_count: int, sensitivity: str) -> boo
         fleet_id=100000 + seed,
     )
     fleet = Fleet(
-        fleet_id=seed + 1, owner_id=0, location=hex_c, speed=5.0,
-        group_kind="fleet",
+        fleet_id=seed + 1, owner_id=0, location=hex_c, speed=5.0
     )
     # Need to attach a fresh stub each trial because the resolver mutates HP.
     fresh = _StubShip(

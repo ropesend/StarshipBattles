@@ -93,22 +93,15 @@ class FleetCapabilityCalculator:
         self._component_registry = component_registry
 
     def _is_real_fleet(self) -> bool:
-        """PROJ-FMS-A + PROJ-431 Phase 2: True only for
-        ``group_kind == "fleet"`` groups.
+        """PROJ-431 Phase 3: every Fleet is a real fleet.
 
-        Non-fleet groups (``fighter_group`` / ``satellite_group``)
-        cannot perform strategic-layer actions; their ships are tactical
-        entities loaned to the strategy layer via the
-        VehicleBay/staging-yard substrate. Mines are a separate type
-        (:class:`MineGroup`) entirely and never reach this calculator.
-        Resilient to mock fleets in tests: only string discriminators
-        in the recognised set trigger rejection. Treats anything else
-        (including missing attribute, Mock objects) as a real fleet so
-        existing tests don't have to wire ``group_kind``.
+        Deployed mines / fighters / satellites are typed sibling models
+        (:class:`MineGroup`, :class:`FighterWing`,
+        :class:`SatelliteConstellation`) on ``empire.deployed_groups``
+        — they never reach this calculator because they are not Fleets.
+        The early-return is retained as a degenerate no-op so existing
+        call sites don't need a churn-only edit.
         """
-        kind = getattr(self._fleet, "group_kind", "fleet")
-        if isinstance(kind, str):
-            return kind == "fleet"
         return True
 
     @property

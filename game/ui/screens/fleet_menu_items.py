@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Optional, Protocol
 
 from game.core.input_actions import InputAction
+from game.strategy.data.deployed_group import FighterWing, SatelliteConstellation
 
 
 @dataclass(frozen=True)
@@ -111,13 +112,14 @@ def _fleet_has_carried_vehicle(fleet: Any, vehicle_type: str) -> bool:
     return False
 
 
-def _matching_group_at_fleet_hex(
-    fleet: Any, galaxy: Any, group_kind: str,
+def _matching_deployed_group_at_fleet_hex(
+    fleet: Any, galaxy: Any, group_cls: type,
 ) -> bool:
-    """True if a same-empire ``group_kind`` fleet sits at ``fleet.location``.
+    """True if a same-empire deployed group of ``group_cls`` sits at hex.
 
-    Walks ``galaxy.empires`` so it works on the same in-memory model the
-    rest of the strategy layer uses. Falls back to ``False`` on mocks
+    PROJ-431 Phase 3: dispatch on the concrete
+    :class:`DeployedGroup` subclass (FighterWing / SatelliteConstellation),
+    not on a string ``group_kind``. Falls back to ``False`` on mocks
     that lack ``empires``.
     """
     if galaxy is None:
@@ -130,8 +132,8 @@ def _matching_group_at_fleet_hex(
     for emp in empires:
         if getattr(emp, "id", None) != owner_id:
             continue
-        for other in getattr(emp, "fleets", None) or ():
-            if getattr(other, "group_kind", "fleet") != group_kind:
+        for other in getattr(emp, "deployed_groups", None) or ():
+            if not isinstance(other, group_cls):
                 continue
             if other.location == target_hex:
                 return True
@@ -240,13 +242,17 @@ def build_menu_items(
                 "Recover Fighters",
                 "recover_fighters",
                 _has(fleet, "RecoverFighters")
-                and _matching_group_at_fleet_hex(fleet, galaxy, "fighter_group"),
+                and _matching_deployed_group_at_fleet_hex(
+                    fleet, galaxy, FighterWing,
+                ),
             ),
             (
                 "Recover Satellites",
                 "recover_satellites",
                 _has(fleet, "RecoverSatellites")
-                and _matching_group_at_fleet_hex(fleet, galaxy, "satellite_group"),
+                and _matching_deployed_group_at_fleet_hex(
+                    fleet, galaxy, SatelliteConstellation,
+                ),
             ),
         ]
         for label, key, visible in fms_rows:

@@ -115,67 +115,20 @@ class TestPodStorageBleedRegression:
 # ---------------------------------------------------------------------------
 
 
-class TestCapabilityCalculatorGatesOnGroupKind:
-    @pytest.mark.parametrize(
-        "kind", ["fighter_group", "satellite_group"]
-    )
-    def test_non_fleet_kind_cannot_warp(self, kind):
-        f = Fleet(fleet_id=99, owner_id=0, location=HexCoord(0, 0),
-                  group_kind=kind)
-        calc = FleetCapabilityCalculator(f, component_registry={})
-        assert calc.can_use_warp() is False
+class TestCapabilityCalculatorOnRealFleet:
+    """PROJ-431 Phase 3: Fleet.group_kind is GONE. Every Fleet is a real
+    fleet — :meth:`FleetCapabilityCalculator._is_real_fleet` is a
+    degenerate no-op that always returns True. The previous "non-fleet
+    group_kind kills warp/build" surface is replaced structurally: a
+    :class:`FighterWing` / :class:`SatelliteConstellation` /
+    :class:`MineGroup` is not a Fleet at all, so it cannot reach this
+    calculator.
+    """
 
-    @pytest.mark.parametrize(
-        "kind", ["fighter_group", "satellite_group"]
-    )
-    def test_non_fleet_kind_cannot_build_any(self, kind):
-        f = Fleet(fleet_id=100, owner_id=0, location=HexCoord(0, 0),
-                  group_kind=kind)
-        calc = FleetCapabilityCalculator(f, component_registry={})
-        # All vehicle types rejected regardless of yard presence.
-        assert calc.can_build_type("ship") is False
-        assert calc.can_build_type("fighter") is False
-        assert calc.can_build_type("mine") is False
-        assert calc.can_build_type("satellite") is False
-
-    @pytest.mark.parametrize(
-        "kind", ["fighter_group", "satellite_group"]
-    )
-    def test_non_fleet_kind_has_no_space_shipyard(self, kind):
-        f = Fleet(fleet_id=101, owner_id=0, location=HexCoord(0, 0),
-                  group_kind=kind)
-        calc = FleetCapabilityCalculator(f, component_registry={})
-        assert calc.has_space_shipyard is False
-
-    def test_real_fleet_still_allows_capabilities(self):
-        # group_kind defaults to "fleet" — gate should not trip.
+    def test_real_fleet_is_a_real_fleet(self):
         f = Fleet(fleet_id=102, owner_id=0, location=HexCoord(0, 0))
         calc = FleetCapabilityCalculator(f, component_registry={})
-        # Empty fleet still returns False for warp (no ships), but the
-        # gate is not the reason — verify by checking _is_real_fleet.
         assert calc._is_real_fleet() is True
-
-
-# ---------------------------------------------------------------------------
-# Fix 3 (UI): fleet_menu_items respects group_kind
-# ---------------------------------------------------------------------------
-
-
-class TestFleetMenuItemsGateOnGroupKind:
-    def test_non_fleet_group_omits_move_and_join(self):
-        from game.ui.screens.fleet_menu_items import build_menu_items
-        from game.core.input_actions import InputAction
-
-        class _Mapper:
-            def get_display_text(self, action):
-                return ""
-
-        f = Fleet(fleet_id=200, owner_id=0, location=HexCoord(0, 0),
-                  group_kind="fighter_group")
-        items = build_menu_items(f, galaxy=None, mapper=_Mapper())
-        actions = {it.action for it in items}
-        assert InputAction.FLEET_MOVE not in actions
-        assert InputAction.FLEET_JOIN not in actions
 
 
 # ---------------------------------------------------------------------------
