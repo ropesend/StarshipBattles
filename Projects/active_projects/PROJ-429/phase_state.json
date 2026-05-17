@@ -96,18 +96,19 @@
       ],
       "merged_into_project_at_sha": null,
       "phase_base_sha": null,
-      "phase_branch": null,
+      "phase_branch": "proj/PROJ-429/main",
       "phase_head_sha": null,
       "planned_files": [
         "game/strategy/services/action_time_resolver.py",
         "tests/unit/strategy/services/test_action_time_resolver.py",
-        "tests/unit/strategy/services/test_ability_metadata_contracts.py"
+        "tests/unit/strategy/services/test_ability_metadata_contracts.py",
+        "tests/unit/strategy/engine/test_command_registry_contract.py"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_5": {

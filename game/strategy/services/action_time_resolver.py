@@ -8,6 +8,11 @@ removed. The resolver now reads ``order_metadata.order_to_ability_map`` at
 CALL time, so ``command_registry.register(..., replace=True)`` mod overlays
 are visible immediately. The previous import-time snapshot was the single
 most dangerous stale-snapshot in the codebase (TD-03).
+PROJ-429 / TD-07 Phase 4: ``ORDER_TO_TIME_FIELD`` removed entirely.
+The per-ability action-time field name comes from
+``ability_metadata.ability_action_time_field(name)``; for
+ACTIVATE_ABILITY / DEACTIVATE_ABILITY the per-ability ``EnergyFacet``
+declares ``activation_time_field`` and ``deactivation_time_field``.
 
 This service looks up the action_time for a given order by finding the
 relevant ability on the entity's components. Each strategic action has an
@@ -22,6 +27,10 @@ etc.
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from game.core.patterns.layer_iterator import iter_components
+from game.strategy.services.ability_metadata import (
+    ability_action_time_field,
+    get_ability_metadata,
+)
 from game.strategy.services.component_inspector import (
     iterate_design_components,
 )
@@ -34,10 +43,24 @@ if TYPE_CHECKING:
     from game.strategy.data.order_types import Order
 
 
-# PROJ-238: Order types that use a non-standard time field name.
-# If not listed here, 'action_time' is used (the default).
-ORDER_TO_TIME_FIELD: Dict[OrderType, str] = {
-}
+def _activate_time_field(ability_name: str, *, activating: bool) -> str:
+    """Return the ``ability_data`` field name to read for an
+    ACTIVATE_ABILITY / DEACTIVATE_ABILITY order.
+
+    Sources the field name from the per-ability ``EnergyFacet`` in the
+    unified ``AbilityMetadataRegistry``. Falls back to the historical
+    literals (``'activation_time'`` / ``'deactivation_time'``) for
+    abilities that are not registered with an ``EnergyFacet`` — the
+    facet itself defaults to those same literal names.
+    """
+    meta = get_ability_metadata(ability_name)
+    if meta is not None and meta.energy is not None:
+        return (
+            meta.energy.activation_time_field
+            if activating
+            else meta.energy.deactivation_time_field
+        )
+    return 'activation_time' if activating else 'deactivation_time'
 
 
 class ActionTimeResolver:
@@ -71,13 +94,19 @@ class ActionTimeResolver:
         if order.type in order_metadata.movement_order_types:
             return 0
 
-        # Generic ability toggle: read ability name from order target
+        # Generic ability toggle: read ability name from order target.
+        # PROJ-429 / TD-07 Phase 4: the time-field name is read from the
+        # per-ability ``EnergyFacet`` in the unified registry, not a
+        # hardcoded literal.
         if order.type in (OrderType.ACTIVATE_ABILITY, OrderType.DEACTIVATE_ABILITY):
             target = order.target if isinstance(order.target, dict) else {}
             ability_name = target.get('ability_name', '')
-            time_field = 'activation_time' if order.type == OrderType.ACTIVATE_ABILITY else 'deactivation_time'
             if not ability_name:
                 return 1
+            time_field = _activate_time_field(
+                ability_name,
+                activating=(order.type == OrderType.ACTIVATE_ABILITY),
+            )
             return ActionTimeResolver._find_planet_ability_time(
                 entity, order, ability_name, time_field, component_registry
             )
@@ -90,8 +119,10 @@ class ActionTimeResolver:
         if ability_name is None:
             return 1
 
-        # Determine the time field to extract
-        time_field = ORDER_TO_TIME_FIELD.get(order.type, 'action_time')
+        # Determine the time field to extract. PROJ-429 / TD-07 Phase 4
+        # deletes the empty ``ORDER_TO_TIME_FIELD`` extension point. The
+        # per-ability field is read from the unified registry.
+        time_field = ability_action_time_field(ability_name)
 
         # Search entity's components (ships for fleets, facilities for planets)
         # PROJ-238: Use order type to determine search path (avoids MagicMock hasattr issues).

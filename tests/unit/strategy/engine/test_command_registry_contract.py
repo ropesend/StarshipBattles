@@ -24,10 +24,14 @@ import pytest
 import game.strategy.engine.commands as commands_module
 from game.strategy.data.order_types import Order, OrderType
 from game.strategy.engine.commands.order_metadata_view import order_metadata
+from game.strategy.engine.commands.registry import command_registry
 from game.strategy.engine.handlers.registry_factory import create_default_registry
-from game.strategy.services.action_time_resolver import (
-    ORDER_TO_TIME_FIELD,
-)
+# PROJ-429 / TD-07 Phase 4: ``ORDER_TO_TIME_FIELD`` was deleted from
+# ``action_time_resolver``. The per-ability action-time field name now
+# comes from ``ability_action_time_field`` in the unified
+# ``AbilityMetadataRegistry``. The contract test below that pinned the
+# empty extension dict is replaced by an existence-and-coverage test
+# against the registry.
 
 
 # ---------------------------------------------------------------------------
@@ -244,13 +248,28 @@ def test_order_to_ability_map_values_are_known_abilities() -> None:
     }
 
 
-def test_order_to_time_field_is_currently_empty() -> None:
-    """ORDER_TO_TIME_FIELD has no entries today.
+def test_action_time_field_resolves_through_unified_registry() -> None:
+    """PROJ-429 / TD-07 Phase 4: the empty ``ORDER_TO_TIME_FIELD``
+    extension point is replaced by per-ability metadata in
+    ``AbilityMetadataRegistry``.
 
-    Pins the current state. If a future order needs a non-default
-    time field, this test will surface the change explicitly.
+    Pins the current state: every action-ability registered in a
+    ``CommandSpec`` resolves to a non-empty time-field name through
+    ``ability_action_time_field``. The default is ``'action_time'``.
     """
-    assert ORDER_TO_TIME_FIELD == {}
+    from game.strategy.services.ability_metadata import ability_action_time_field
+
+    seen: set[str] = set()
+    for spec in command_registry.all():
+        name = spec.action_ability_name
+        if name is None:
+            continue
+        seen.add(name)
+        field_name = ability_action_time_field(name)
+        assert field_name, (
+            f"ability_action_time_field({name!r}) returned empty"
+        )
+    assert seen, "command_registry has no action_ability_name entries — unexpected"
 
 
 # ---------------------------------------------------------------------------

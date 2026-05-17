@@ -472,3 +472,101 @@ class TestActionTimeResolverMultipleShips:
 
         # Should use ship1's action_time (first ship)
         assert result == 2
+
+
+# ---------------------------------------------------------------------------
+# PROJ-429 Phase 4 — facet-driven activation/deactivation time field.
+# ---------------------------------------------------------------------------
+
+
+class TestFacetDrivenActivationTimeField:
+    """The ACTIVATE_ABILITY / DEACTIVATE_ABILITY branch reads the time-field
+    name from ``AbilityMetadataRegistry.EnergyFacet`` rather than hardcoding
+    ``'activation_time'`` / ``'deactivation_time'``.
+    """
+
+    def test_activate_ability_uses_facet_activation_time_field(
+        self, mock_component_registry
+    ) -> None:
+        from game.strategy.data.planet import Planet  # noqa: F401 (typing)
+
+        # Build a planet with a facility carrying PlanetaryShield ability.
+        # The facet declares activation_time_field='activation_time'.
+        planet = MagicMock()
+        facility = MagicMock()
+        facility.is_operational = True
+        facility.design_data = {
+            'layers': {
+                'core': [{
+                    'id': 'shield_generator',
+                    'abilities': {
+                        'PlanetaryShield': {
+                            'activation_time': 42,
+                            'deactivation_time': 7,
+                        },
+                    },
+                }],
+            },
+        }
+        facility.instance_id = 'fac-shield'
+        planet.facilities = [facility]
+
+        order = Order(
+            OrderType.ACTIVATE_ABILITY,
+            target={'ability_name': 'PlanetaryShield', 'facility_instance_id': 'fac-shield'},
+        )
+
+        result = ActionTimeResolver.resolve_action_time(
+            planet, order, mock_component_registry
+        )
+
+        # 42 is the activation_time on the ability data; the resolver
+        # picked the activation_time_field from the EnergyFacet.
+        assert result == 42
+
+    def test_deactivate_ability_uses_facet_deactivation_time_field(
+        self, mock_component_registry
+    ) -> None:
+        planet = MagicMock()
+        facility = MagicMock()
+        facility.is_operational = True
+        facility.design_data = {
+            'layers': {
+                'core': [{
+                    'id': 'shield_generator',
+                    'abilities': {
+                        'PlanetaryShield': {
+                            'activation_time': 42,
+                            'deactivation_time': 7,
+                        },
+                    },
+                }],
+            },
+        }
+        facility.instance_id = 'fac-shield'
+        planet.facilities = [facility]
+
+        order = Order(
+            OrderType.DEACTIVATE_ABILITY,
+            target={'ability_name': 'PlanetaryShield', 'facility_instance_id': 'fac-shield'},
+        )
+
+        result = ActionTimeResolver.resolve_action_time(
+            planet, order, mock_component_registry
+        )
+
+        assert result == 7
+
+    def test_module_does_not_export_order_to_time_field(self) -> None:
+        """``ORDER_TO_TIME_FIELD`` is deleted (PROJ-429 / TD-07 Phase 4).
+
+        ``_extract_time`` now reads the per-ability action-time field
+        name from the unified ``AbilityMetadataRegistry`` via
+        ``ability_action_time_field(name)``.
+        """
+        from game.strategy.services import action_time_resolver as resolver_mod
+        assert not hasattr(resolver_mod, 'ORDER_TO_TIME_FIELD'), (
+            'ORDER_TO_TIME_FIELD must be deleted; ability_action_time_field '
+            'is the single answer to "which ability_data field carries the '
+            'time?".'
+        )
