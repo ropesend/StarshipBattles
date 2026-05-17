@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional, TYPE_CHECKING, Tuple
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.carried_vehicle import CarriedVehicle
+from game.strategy.data.deployed_group import SatelliteConstellation
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import OrderType
 from game.strategy.data.ship_instance import ShipInstance
@@ -229,22 +230,27 @@ class LaunchSatellitesOrderHandler(BaseOrderHandler):
 
     def _create_satellite_group(
         self, *, empire: "Empire", target_hex: HexCoord,
-    ) -> Fleet:
-        new_id = self._mint_fleet_id(empire)
-        group = Fleet(
-            fleet_id=new_id,
+    ) -> SatelliteConstellation:
+        """Mint a new :class:`SatelliteConstellation` for this launch.
+
+        PROJ-431 Phase 3: deployed satellites land in a typed sibling-of-
+        Fleet container on ``empire.deployed_groups``.
+        """
+        new_id = self._mint_group_id(empire)
+        group = SatelliteConstellation(
+            group_id=new_id,
             owner_id=empire.id,
             location=target_hex,
-            speed=0.0,
             display_name=f"Satellite Group {new_id}",
-            group_kind="satellite_group",
         )
-        empire.fleets.append(group)
+        empire.deployed_groups.append(group)
         return group
 
     @staticmethod
-    def _mint_fleet_id(empire: "Empire") -> int:
-        existing = {f.id for f in empire.fleets if isinstance(f.id, int)}
+    def _mint_group_id(empire: "Empire") -> int:
+        existing = {
+            g.id for g in empire.deployed_groups if isinstance(g.id, int)
+        }
         candidate = 300000
         while candidate in existing:
             candidate += 1

@@ -11,6 +11,7 @@ import pytest
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.carried_vehicle import CarriedVehicle
+from game.strategy.data.deployed_group import SatelliteConstellation
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.ship_instance import ShipInstance
@@ -129,7 +130,8 @@ def test_strategic_launch_then_recover_round_trip_preserves_hp():
         group_kind="fleet",
     )
     main_fleet.ships.append(carrier)
-    empire = SimpleNamespace(id=42, name="E42", fleets=[main_fleet])
+    empire = SimpleNamespace(id=42, name="E42", fleets=[main_fleet], deployed_groups=[])
+    empire.deployed_groups_of = lambda cls, _e=empire: [g for g in _e.deployed_groups if isinstance(g, cls)]
     galaxy = SimpleNamespace(current_turn=1)
 
     # Strategic launch all 4 satellites.
@@ -143,7 +145,7 @@ def test_strategic_launch_then_recover_round_trip_preserves_hp():
     result = launch.execute_action_order(main_fleet, empire, galaxy)
     assert result.success
     assert len(carrier.carried_items) == 0
-    sg = next(f for f in empire.fleets if f.group_kind == "satellite_group")
+    sg = empire.deployed_groups_of(SatelliteConstellation)[0]
     assert len(sg.ships) == 4
     pre_recovery_hps = sorted(s.current_hp for s in sg.ships)
 
@@ -173,10 +175,7 @@ def test_partial_recovery_leaves_overflow_in_satellite_group():
     )
     main_fleet.ships.append(carrier)
 
-    sg = Fleet(
-        fleet_id=300042, owner_id=42, location=hex_c, speed=0.0,
-        group_kind="satellite_group",
-    )
+    sg = SatelliteConstellation(group_id=300042, owner_id=42, location=hex_c)
     for i in range(3):
         sg.ships.append(ShipInstance(
             instance_id=f"sat_{i}",
@@ -187,7 +186,8 @@ def test_partial_recovery_leaves_overflow_in_satellite_group():
             current_hp=70 - i * 5,
         ))
 
-    empire = SimpleNamespace(id=42, name="E42", fleets=[main_fleet, sg])
+    empire = SimpleNamespace(id=42, name="E42", fleets=[main_fleet], deployed_groups=[sg])
+    empire.deployed_groups_of = lambda cls, _e=empire: [g for g in _e.deployed_groups if isinstance(g, cls)]
     galaxy = SimpleNamespace(current_turn=1)
 
     main_fleet.add_order(Order(OrderType.RECOVER_SATELLITES, target={
@@ -200,7 +200,7 @@ def test_partial_recovery_leaves_overflow_in_satellite_group():
     assert result.success
     assert len(carrier.carried_items) == 2
     assert len(sg.ships) == 1
-    assert sg in empire.fleets
+    assert sg in empire.deployed_groups
 
 
 def test_satellite_group_id_namespace_distinct_from_fighter_group():
@@ -214,7 +214,8 @@ def test_satellite_group_id_namespace_distinct_from_fighter_group():
         group_kind="fleet",
     )
     main_fleet.ships.append(carrier)
-    empire = SimpleNamespace(id=42, name="E42", fleets=[main_fleet])
+    empire = SimpleNamespace(id=42, name="E42", fleets=[main_fleet], deployed_groups=[])
+    empire.deployed_groups_of = lambda cls, _e=empire: [g for g in _e.deployed_groups if isinstance(g, cls)]
     galaxy = SimpleNamespace(current_turn=1)
 
     main_fleet.add_order(Order(OrderType.LAUNCH_SATELLITES, target={
@@ -226,7 +227,7 @@ def test_satellite_group_id_namespace_distinct_from_fighter_group():
     LaunchSatellitesOrderHandler().execute_action_order(
         main_fleet, empire, galaxy,
     )
-    sg = next(f for f in empire.fleets if f.group_kind == "satellite_group")
+    sg = empire.deployed_groups_of(SatelliteConstellation)[0]
     assert sg.id >= 300000
     assert sg.id < 400000
 
@@ -242,7 +243,8 @@ def test_launched_satellite_group_satellites_have_no_battle_tag():
         group_kind="fleet",
     )
     main_fleet.ships.append(carrier)
-    empire = SimpleNamespace(id=42, name="E42", fleets=[main_fleet])
+    empire = SimpleNamespace(id=42, name="E42", fleets=[main_fleet], deployed_groups=[])
+    empire.deployed_groups_of = lambda cls, _e=empire: [g for g in _e.deployed_groups if isinstance(g, cls)]
     galaxy = SimpleNamespace(current_turn=1)
 
     main_fleet.add_order(Order(OrderType.LAUNCH_SATELLITES, target={
@@ -254,6 +256,6 @@ def test_launched_satellite_group_satellites_have_no_battle_tag():
     LaunchSatellitesOrderHandler().execute_action_order(
         main_fleet, empire, galaxy,
     )
-    sg = next(f for f in empire.fleets if f.group_kind == "satellite_group")
+    sg = empire.deployed_groups_of(SatelliteConstellation)[0]
     for ship in sg.ships:
         assert getattr(ship, "launched_in_battle_id", None) is None

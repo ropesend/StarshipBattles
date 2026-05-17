@@ -127,7 +127,12 @@ def setup_carrier_with_satellites():
         group_kind="fleet",
     )
     fleet.ships.append(carrier)
-    empire = SimpleNamespace(id=42, name="E42", fleets=[fleet])
+    empire = SimpleNamespace(
+        id=42, name="E42", fleets=[fleet], deployed_groups=[],
+    )
+    empire.deployed_groups_of = lambda cls, _emp=empire: [
+        g for g in _emp.deployed_groups if isinstance(g, cls)
+    ]
     galaxy = SimpleNamespace(current_turn=1)
     return empire, fleet, carrier, galaxy
 
@@ -150,10 +155,8 @@ def test_launch_creates_satellite_group(setup_carrier_with_satellites):
     assert result.success
     # Started with 5 alpha + 1 bravo + 2 fighters = 8. 3 alpha launched -> 5 remain.
     assert len(carrier.carried_items) == 5
-    sat_groups = [
-        f for f in empire.fleets
-        if getattr(f, "group_kind", "fleet") == "satellite_group"
-    ]
+    from game.strategy.data.deployed_group import SatelliteConstellation
+    sat_groups = empire.deployed_groups_of(SatelliteConstellation)
     assert len(sat_groups) == 1
     sg = sat_groups[0]
     assert sg.location == fleet.location
@@ -174,7 +177,8 @@ def test_hp_carries_through_launch(setup_carrier_with_satellites):
     }))
     handler = LaunchSatellitesOrderHandler()
     handler.execute_action_order(fleet, empire, galaxy)
-    sg = [f for f in empire.fleets if f.group_kind == "satellite_group"][0]
+    from game.strategy.data.deployed_group import SatelliteConstellation
+    sg = empire.deployed_groups_of(SatelliteConstellation)[0]
     hps = sorted(ship.current_hp for ship in sg.ships)
     assert hps == [78, 79, 80]
 
@@ -193,9 +197,8 @@ def test_insufficient_satellites_fails_cleanly(setup_carrier_with_satellites):
     assert "insufficient" in result.message.lower()
     # No partial consumption.
     assert len(carrier.carried_items) == 8
-    sat_groups = [
-        f for f in empire.fleets if f.group_kind == "satellite_group"
-    ]
+    from game.strategy.data.deployed_group import SatelliteConstellation
+    sat_groups = empire.deployed_groups_of(SatelliteConstellation)
     assert sat_groups == []
 
 
@@ -212,9 +215,8 @@ def test_same_hex_launches_do_not_auto_merge(setup_carrier_with_satellites):
         }))
         handler.execute_action_order(fleet, empire, galaxy)
 
-    sat_groups = [
-        f for f in empire.fleets if f.group_kind == "satellite_group"
-    ]
+    from game.strategy.data.deployed_group import SatelliteConstellation
+    sat_groups = empire.deployed_groups_of(SatelliteConstellation)
     assert len(sat_groups) == 2
     assert sorted(len(g.ships) for g in sat_groups) == [2, 2]
 
@@ -247,7 +249,8 @@ def test_satellite_group_uses_300000_id_namespace(setup_carrier_with_satellites)
         "target_hex": fleet.location,
     }))
     LaunchSatellitesOrderHandler().execute_action_order(fleet, empire, galaxy)
-    sg = [f for f in empire.fleets if f.group_kind == "satellite_group"][0]
+    from game.strategy.data.deployed_group import SatelliteConstellation
+    sg = empire.deployed_groups_of(SatelliteConstellation)[0]
     assert sg.id >= 300000
 
 
@@ -275,6 +278,7 @@ def test_launched_satellites_have_no_launched_in_battle_id_tag(
         "target_hex": fleet.location,
     }))
     LaunchSatellitesOrderHandler().execute_action_order(fleet, empire, galaxy)
-    sg = [f for f in empire.fleets if f.group_kind == "satellite_group"][0]
+    from game.strategy.data.deployed_group import SatelliteConstellation
+    sg = empire.deployed_groups_of(SatelliteConstellation)[0]
     for ship in sg.ships:
         assert getattr(ship, "launched_in_battle_id", None) is None

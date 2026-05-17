@@ -22,6 +22,7 @@ import pytest
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.carried_vehicle import CarriedVehicle
+from game.strategy.data.deployed_group import FighterWing, SatelliteConstellation
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.ship_instance import ShipInstance
@@ -139,14 +140,12 @@ def test_fighter_only_bay_cannot_recover_satellites():
         group_kind="fleet",
     )
     fleet.ships.append(carrier)
-    sg = Fleet(
-        fleet_id=300001, owner_id=42, location=hex_c, speed=0.0,
-        group_kind="satellite_group",
-    )
+    sg = SatelliteConstellation(group_id=300001, owner_id=42, location=hex_c)
     for i in range(3):
         sg.ships.append(_deployed_satellite(f"sat_{i}"))
 
-    empire = SimpleNamespace(id=42, name="E42", fleets=[fleet, sg])
+    empire = SimpleNamespace(id=42, name="E42", fleets=[fleet], deployed_groups=[sg])
+    empire.deployed_groups_of = lambda cls, _e=empire: [g for g in _e.deployed_groups if isinstance(g, cls)]
     galaxy = SimpleNamespace(current_turn=1)
 
     fleet.add_order(Order(OrderType.RECOVER_SATELLITES, target={
@@ -160,7 +159,7 @@ def test_fighter_only_bay_cannot_recover_satellites():
     assert not result.success
     assert len(carrier.carried_items) == 0
     assert len(sg.ships) == 3
-    assert sg in empire.fleets
+    assert sg in empire.deployed_groups
 
 
 def test_satellite_only_bay_cannot_recover_fighters():
@@ -174,14 +173,12 @@ def test_satellite_only_bay_cannot_recover_fighters():
         group_kind="fleet",
     )
     fleet.ships.append(carrier)
-    fg = Fleet(
-        fleet_id=200001, owner_id=42, location=hex_c, speed=0.0,
-        group_kind="fighter_group",
-    )
+    fg = FighterWing(group_id=200001, owner_id=42, location=hex_c)
     for i in range(3):
         fg.ships.append(_deployed_fighter(f"fighter_{i}"))
 
-    empire = SimpleNamespace(id=42, name="E42", fleets=[fleet, fg])
+    empire = SimpleNamespace(id=42, name="E42", fleets=[fleet], deployed_groups=[fg])
+    empire.deployed_groups_of = lambda cls, _e=empire: [g for g in _e.deployed_groups if isinstance(g, cls)]
     galaxy = SimpleNamespace(current_turn=1)
 
     fleet.add_order(Order(OrderType.RECOVER_FIGHTERS, target={
@@ -195,7 +192,7 @@ def test_satellite_only_bay_cannot_recover_fighters():
     assert not result.success
     assert len(carrier.carried_items) == 0
     assert len(fg.ships) == 3
-    assert fg in empire.fleets
+    assert fg in empire.deployed_groups
 
 
 def test_mixed_bay_carrier_isolates_per_type_capacity(fresh_registries):
@@ -293,19 +290,14 @@ def test_universal_bay_handles_both_types():
     )
     fleet.ships.append(carrier)
 
-    fg = Fleet(
-        fleet_id=200001, owner_id=42, location=hex_c, speed=0.0,
-        group_kind="fighter_group",
-    )
+    fg = FighterWing(group_id=200001, owner_id=42, location=hex_c)
     fg.ships.append(_deployed_fighter("fighter_0"))
 
-    sg = Fleet(
-        fleet_id=300001, owner_id=42, location=hex_c, speed=0.0,
-        group_kind="satellite_group",
-    )
+    sg = SatelliteConstellation(group_id=300001, owner_id=42, location=hex_c)
     sg.ships.append(_deployed_satellite("sat_0"))
 
-    empire = SimpleNamespace(id=42, name="E42", fleets=[fleet, fg, sg])
+    empire = SimpleNamespace(id=42, name="E42", fleets=[fleet], deployed_groups=[fg, sg])
+    empire.deployed_groups_of = lambda cls, _e=empire: [g for g in _e.deployed_groups if isinstance(g, cls)]
     galaxy = SimpleNamespace(current_turn=1)
 
     # Recover fighter.
@@ -358,7 +350,8 @@ def test_launch_handlers_filter_by_vehicle_type():
         group_kind="fleet",
     )
     fleet.ships.append(carrier)
-    empire = SimpleNamespace(id=42, name="E42", fleets=[fleet])
+    empire = SimpleNamespace(id=42, name="E42", fleets=[fleet], deployed_groups=[])
+    empire.deployed_groups_of = lambda cls, _e=empire: [g for g in _e.deployed_groups if isinstance(g, cls)]
     galaxy = SimpleNamespace(current_turn=1)
 
     fleet.add_order(Order(OrderType.LAUNCH_SATELLITES, target={
@@ -374,7 +367,7 @@ def test_launch_handlers_filter_by_vehicle_type():
     # 2 fighters remain in the bay; 2 satellites are in a satellite_group.
     assert len(carrier.carried_items) == 2
     assert all(item["vehicle_type"] == "fighter" for item in carrier.carried_items)
-    sg = [f for f in empire.fleets if f.group_kind == "satellite_group"][0]
+    sg = empire.deployed_groups_of(SatelliteConstellation)[0]
     assert len(sg.ships) == 2
 
     # Now launch the fighters — they go into a fighter_group.
@@ -388,5 +381,5 @@ def test_launch_handlers_filter_by_vehicle_type():
         fleet, empire, galaxy,
     )
     assert len(carrier.carried_items) == 0
-    fg = [f for f in empire.fleets if f.group_kind == "fighter_group"][0]
+    fg = empire.deployed_groups_of(FighterWing)[0]
     assert len(fg.ships) == 2

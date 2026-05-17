@@ -15,6 +15,7 @@ from typing import Any
 import pytest
 
 from game.core.hex_math import HexCoord
+from game.strategy.data.deployed_group import FighterWing
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.ship_instance import ShipInstance
@@ -131,14 +132,18 @@ def setup_carrier_and_group():
     )
     main_fleet.ships.append(carrier)
 
-    fg = Fleet(
-        fleet_id=200001, owner_id=42, location=hex_c, speed=0.0,
-        group_kind="fighter_group",
+    fg = FighterWing(
+        group_id=200001, owner_id=42, location=hex_c,
     )
     for i in range(5):
         fg.ships.append(_make_deployed_fighter(f"fighter_{i}", hp=80 - i * 5))
 
-    empire = SimpleNamespace(id=42, name="E42", fleets=[main_fleet, fg])
+    empire = SimpleNamespace(
+        id=42, name="E42", fleets=[main_fleet], deployed_groups=[fg],
+    )
+    empire.deployed_groups_of = lambda cls, _emp=empire: [
+        g for g in _emp.deployed_groups if isinstance(g, cls)
+    ]
     galaxy = SimpleNamespace(current_turn=1)
     return empire, main_fleet, carrier, fg, galaxy
 
@@ -162,7 +167,7 @@ def test_recover_all_fighters_into_bay(setup_carrier_and_group):
     # All 5 fighters in the carrier's bay (CarriedVehicle dicts).
     assert len(carrier.carried_items) == 5
     # Empty fighter_group pruned from empire's fleets list.
-    assert fg not in empire.fleets
+    assert fg not in empire.deployed_groups
 
 
 def test_partial_recovery_when_bay_capacity_limits(setup_carrier_and_group):
@@ -183,7 +188,7 @@ def test_partial_recovery_when_bay_capacity_limits(setup_carrier_and_group):
     # 2 fighters remain in the group.
     assert len(fg.ships) == 2
     # fighter_group still in empire.fleets (non-empty).
-    assert fg in empire.fleets
+    assert fg in empire.deployed_groups
 
 
 def test_hp_preserved_through_round_trip(setup_carrier_and_group):
@@ -213,7 +218,7 @@ def test_recover_count_limit(setup_carrier_and_group):
     assert result.success
     assert len(carrier.carried_items) == 2
     assert len(fg.ships) == 3
-    assert fg in empire.fleets
+    assert fg in empire.deployed_groups
 
 
 def test_missing_fighter_group_fails_cleanly(setup_carrier_and_group):

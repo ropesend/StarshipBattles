@@ -94,7 +94,14 @@ class _StubPlanet:
 
 
 def _empire_with(planet: _StubPlanet) -> SimpleNamespace:
-    return SimpleNamespace(id=planet.owner_id, name="E", fleets=[], colonies=[planet])
+    empire = SimpleNamespace(
+        id=planet.owner_id, name="E",
+        fleets=[], colonies=[planet], deployed_groups=[],
+    )
+    empire.deployed_groups_of = lambda cls, _e=empire: [
+        g for g in _e.deployed_groups if isinstance(g, cls)
+    ]
+    return empire
 
 
 # ---------------------------------------------------------------------------
@@ -132,7 +139,8 @@ def test_planet_issued_launch_fighters_creates_fighter_group() -> None:
 
     assert result.success, result.message
     assert planet.staging_yard == []
-    fgs = [f for f in empire.fleets if getattr(f, "group_kind", "fleet") == "fighter_group"]
+    from game.strategy.data.deployed_group import FighterWing
+    fgs = empire.deployed_groups_of(FighterWing)
     assert len(fgs) == 1
     fg = fgs[0]
     assert fg.location == hex_c
@@ -167,7 +175,8 @@ def test_planet_issued_launch_satellites_creates_satellite_group() -> None:
 
     assert result.success, result.message
     assert planet.staging_yard == []
-    sgs = [f for f in empire.fleets if getattr(f, "group_kind", "fleet") == "satellite_group"]
+    from game.strategy.data.deployed_group import SatelliteConstellation
+    sgs = empire.deployed_groups_of(SatelliteConstellation)
     assert len(sgs) == 1
     assert len(sgs[0].ships) == 2
 
@@ -202,7 +211,6 @@ def test_planet_launch_rejects_when_staging_yard_insufficient() -> None:
     # Staging yard fighters returned (since pop_carried/append_carried round-trips
     # leftover items when shortfall is detected).
     assert len(planet.staging_yard) == 2
-    # No fighter_group created.
-    assert not any(
-        getattr(f, "group_kind", "fleet") == "fighter_group" for f in empire.fleets
-    )
+    # No FighterWing created.
+    from game.strategy.data.deployed_group import FighterWing
+    assert empire.deployed_groups_of(FighterWing) == []

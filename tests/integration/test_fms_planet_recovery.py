@@ -11,7 +11,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from game.core.hex_math import HexCoord
-from game.strategy.data.fleet import Fleet
+from game.strategy.data.deployed_group import FighterWing, SatelliteConstellation
 from game.strategy.data.ship_instance import ShipInstance
 from game.strategy.engine.issuer_adapter import PlanetStagingYardIssuerAdapter
 from game.strategy.engine.order_handlers.recover_fighters import (
@@ -93,12 +93,10 @@ def test_planet_issued_recover_fighters_drains_fighter_group_into_staging() -> N
     hex_c = HexCoord(0, 0)
     planet = _StubPlanet(planet_id=1, owner_id=42, location=hex_c)
 
-    fg = Fleet(
-        fleet_id=200001, owner_id=42, location=hex_c, speed=0.0,
-        group_kind="fighter_group",
-    )
+    fg = FighterWing(group_id=200001, owner_id=42, location=hex_c)
     fg.ships.extend(_fighter_ship(f"f_{i}", 42, hp=70 + i) for i in range(3))
-    empire = SimpleNamespace(id=42, name="E", fleets=[fg])
+    empire = SimpleNamespace(id=42, name="E", fleets=[], deployed_groups=[fg])
+    empire.deployed_groups_of = lambda cls, _e=empire: [g for g in _e.deployed_groups if isinstance(g, cls)]
 
     planet.add_order(Order(OrderType.RECOVER_FIGHTERS, target={
         "fighter_group_id": fg.id,
@@ -114,7 +112,7 @@ def test_planet_issued_recover_fighters_drains_fighter_group_into_staging() -> N
 
     assert result.success, result.message
     # Group fully drained -> removed from empire.fleets.
-    assert fg not in empire.fleets
+    assert fg not in empire.deployed_groups
     assert len(planet.staging_yard) == 3
     # HP preserved on the staged items.
     assert sorted(int(item["current_hp"]) for item in planet.staging_yard) == [70, 71, 72]
@@ -126,12 +124,10 @@ def test_planet_issued_recover_satellites_drains_into_staging() -> None:
     hex_c = HexCoord(1, 2)
     planet = _StubPlanet(planet_id=2, owner_id=7, location=hex_c)
 
-    sg = Fleet(
-        fleet_id=210001, owner_id=7, location=hex_c, speed=0.0,
-        group_kind="satellite_group",
-    )
+    sg = SatelliteConstellation(group_id=210001, owner_id=7, location=hex_c)
     sg.ships.extend(_satellite_ship(f"s_{i}", 7, hp=55 + i) for i in range(2))
-    empire = SimpleNamespace(id=7, name="E", fleets=[sg])
+    empire = SimpleNamespace(id=7, name="E", fleets=[], deployed_groups=[sg])
+    empire.deployed_groups_of = lambda cls, _e=empire: [g for g in _e.deployed_groups if isinstance(g, cls)]
 
     planet.add_order(Order(OrderType.RECOVER_SATELLITES, target={
         "satellite_group_id": sg.id,
@@ -146,7 +142,7 @@ def test_planet_issued_recover_satellites_drains_into_staging() -> None:
     )
 
     assert result.success, result.message
-    assert sg not in empire.fleets
+    assert sg not in empire.deployed_groups
     assert len(planet.staging_yard) == 2
     assert sorted(int(item["current_hp"]) for item in planet.staging_yard) == [55, 56]
 
@@ -162,12 +158,10 @@ def test_planet_recovery_partial_when_staging_capacity_caps() -> None:
     # Each fighter is 20 mass. Cap to fit exactly 2.
     planet.max_staging_mass = 40.0
 
-    fg = Fleet(
-        fleet_id=220001, owner_id=11, location=hex_c, speed=0.0,
-        group_kind="fighter_group",
-    )
+    fg = FighterWing(group_id=220001, owner_id=11, location=hex_c)
     fg.ships.extend(_fighter_ship(f"f_{i}", 11, hp=80) for i in range(5))
-    empire = SimpleNamespace(id=11, name="E", fleets=[fg])
+    empire = SimpleNamespace(id=11, name="E", fleets=[], deployed_groups=[fg])
+    empire.deployed_groups_of = lambda cls, _e=empire: [g for g in _e.deployed_groups if isinstance(g, cls)]
 
     planet.add_order(Order(OrderType.RECOVER_FIGHTERS, target={
         "fighter_group_id": fg.id,
@@ -184,5 +178,5 @@ def test_planet_recovery_partial_when_staging_capacity_caps() -> None:
     assert result.success, result.message
     assert len(planet.staging_yard) == 2
     # Group still present with remaining ships.
-    assert fg in empire.fleets
+    assert fg in empire.deployed_groups
     assert len(fg.ships) == 3

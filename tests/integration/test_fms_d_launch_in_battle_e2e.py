@@ -169,7 +169,8 @@ def test_launch_satellites_in_battle_then_all_survive_reboards_all(
         group_kind="fleet",
     )
     fleet.ships.append(strategy_carrier)
-    empire = SimpleNamespace(id=42, fleets=[fleet])
+    empire = SimpleNamespace(id=42, fleets=[fleet], deployed_groups=[])
+    empire.deployed_groups_of = lambda cls, _e=empire: [g for g in _e.deployed_groups if isinstance(g, cls)]
 
     summary = apply_reboard(
         engine=engine,
@@ -216,7 +217,8 @@ def test_launch_satellites_overflow_spills_to_sector_satellite_group(
         group_kind="fleet",
     )
     fleet.ships.append(strategy_carrier)
-    empire = SimpleNamespace(id=42, fleets=[fleet])
+    empire = SimpleNamespace(id=42, fleets=[fleet], deployed_groups=[])
+    empire.deployed_groups_of = lambda cls, _e=empire: [g for g in _e.deployed_groups if isinstance(g, cls)]
 
     summary = apply_reboard(
         engine=engine,
@@ -269,7 +271,8 @@ def test_launch_satellites_dead_satellites_discarded(fresh_registries):
         group_kind="fleet",
     )
     fleet.ships.append(strategy_carrier)
-    empire = SimpleNamespace(id=42, fleets=[fleet])
+    empire = SimpleNamespace(id=42, fleets=[fleet], deployed_groups=[])
+    empire.deployed_groups_of = lambda cls, _e=empire: [g for g in _e.deployed_groups if isinstance(g, cls)]
 
     summary = apply_reboard(
         engine=engine,

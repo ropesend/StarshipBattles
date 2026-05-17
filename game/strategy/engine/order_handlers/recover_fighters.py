@@ -19,6 +19,7 @@ import logging
 from typing import Any, Dict, List, Optional, TYPE_CHECKING, Tuple
 
 from game.strategy.data.carried_vehicle import CarriedVehicle
+from game.strategy.data.deployed_group import FighterWing
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import OrderType
 from game.strategy.data.ship_instance import ShipInstance
@@ -139,7 +140,7 @@ class RecoverFightersOrderHandler(BaseOrderHandler):
         fighter_group_id = payload.get("fighter_group_id")
         count = payload.get("count")  # None => recover all
 
-        source = self._find_fighter_group(
+        source = self._find_fighter_wing(
             empire, hex_=issuer.location, fighter_group_id=fighter_group_id,
         )
         if source is None:
@@ -147,7 +148,7 @@ class RecoverFightersOrderHandler(BaseOrderHandler):
             return OrderExecutionResult(
                 success=False,
                 message=(
-                    f"No matching fighter_group at {issuer.location} "
+                    f"No matching FighterWing at {issuer.location} "
                     f"(group_id={fighter_group_id})"
                 ),
             )
@@ -176,7 +177,7 @@ class RecoverFightersOrderHandler(BaseOrderHandler):
 
         if not source.ships:
             try:
-                empire.fleets.remove(source)
+                empire.deployed_groups.remove(source)
             except ValueError:
                 pass
 
@@ -231,21 +232,22 @@ class RecoverFightersOrderHandler(BaseOrderHandler):
         return None
 
     @staticmethod
-    def _find_fighter_group(
+    def _find_fighter_wing(
         empire: "Empire",
         *,
         hex_: Any,
         fighter_group_id: Optional[int],
-    ) -> Optional[Fleet]:
-        for f in empire.fleets:
-            if getattr(f, "group_kind", "fleet") != "fighter_group":
+    ) -> Optional[FighterWing]:
+        """PROJ-431 Phase 3: walk ``empire.deployed_groups`` filtered by
+        the concrete :class:`FighterWing` type instead of a string
+        discriminator on ``Fleet.group_kind``.
+        """
+        for g in empire.deployed_groups_of(FighterWing):
+            if fighter_group_id is not None and g.id != fighter_group_id:
                 continue
-            if fighter_group_id is not None:
-                if f.id != fighter_group_id:
-                    continue
-            if f.location != hex_:
+            if g.location != hex_:
                 continue
-            return f
+            return g
         return None
 
     @staticmethod

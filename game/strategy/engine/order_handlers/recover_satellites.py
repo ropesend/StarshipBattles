@@ -10,6 +10,7 @@ import logging
 from typing import Any, Dict, List, Optional, TYPE_CHECKING, Tuple
 
 from game.strategy.data.carried_vehicle import CarriedVehicle
+from game.strategy.data.deployed_group import SatelliteConstellation
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import OrderType
 from game.strategy.data.ship_instance import ShipInstance
@@ -122,7 +123,7 @@ class RecoverSatellitesOrderHandler(BaseOrderHandler):
         satellite_group_id = payload.get("satellite_group_id")
         count = payload.get("count")
 
-        source = self._find_satellite_group(
+        source = self._find_satellite_constellation(
             empire, hex_=issuer.location, satellite_group_id=satellite_group_id,
         )
         if source is None:
@@ -130,7 +131,7 @@ class RecoverSatellitesOrderHandler(BaseOrderHandler):
             return OrderExecutionResult(
                 success=False,
                 message=(
-                    f"No matching satellite_group at {issuer.location} "
+                    f"No matching SatelliteConstellation at {issuer.location} "
                     f"(group_id={satellite_group_id})"
                 ),
             )
@@ -159,7 +160,7 @@ class RecoverSatellitesOrderHandler(BaseOrderHandler):
 
         if not source.ships:
             try:
-                empire.fleets.remove(source)
+                empire.deployed_groups.remove(source)
             except ValueError:
                 pass
 
@@ -214,21 +215,21 @@ class RecoverSatellitesOrderHandler(BaseOrderHandler):
         return None
 
     @staticmethod
-    def _find_satellite_group(
+    def _find_satellite_constellation(
         empire: "Empire",
         *,
         hex_: Any,
         satellite_group_id: Optional[int],
-    ) -> Optional[Fleet]:
-        for f in empire.fleets:
-            if getattr(f, "group_kind", "fleet") != "satellite_group":
+    ) -> Optional[SatelliteConstellation]:
+        """PROJ-431 Phase 3: walk ``empire.deployed_groups`` filtered
+        by the concrete :class:`SatelliteConstellation` type.
+        """
+        for g in empire.deployed_groups_of(SatelliteConstellation):
+            if satellite_group_id is not None and g.id != satellite_group_id:
                 continue
-            if satellite_group_id is not None:
-                if f.id != satellite_group_id:
-                    continue
-            if f.location != hex_:
+            if g.location != hex_:
                 continue
-            return f
+            return g
         return None
 
     @staticmethod

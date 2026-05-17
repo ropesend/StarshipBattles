@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from game.core.hex_math import HexCoord
+from game.strategy.data.deployed_group import SatelliteConstellation
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.ship_instance import ShipInstance
@@ -130,14 +131,18 @@ def setup_carrier_and_satellite_group():
     )
     main_fleet.ships.append(carrier)
 
-    sg = Fleet(
-        fleet_id=300001, owner_id=42, location=hex_c, speed=0.0,
-        group_kind="satellite_group",
+    sg = SatelliteConstellation(
+        group_id=300001, owner_id=42, location=hex_c,
     )
     for i in range(5):
         sg.ships.append(_make_deployed_satellite(f"sat_{i}", hp=80 - i * 5))
 
-    empire = SimpleNamespace(id=42, name="E42", fleets=[main_fleet, sg])
+    empire = SimpleNamespace(
+        id=42, name="E42", fleets=[main_fleet], deployed_groups=[sg],
+    )
+    empire.deployed_groups_of = lambda cls, _emp=empire: [
+        g for g in _emp.deployed_groups if isinstance(g, cls)
+    ]
     galaxy = SimpleNamespace(current_turn=1)
     return empire, main_fleet, carrier, sg, galaxy
 
@@ -159,7 +164,7 @@ def test_recover_all_satellites_into_bay(setup_carrier_and_satellite_group):
     assert result.success
     assert len(carrier.carried_items) == 5
     # Empty satellite_group pruned.
-    assert sg not in empire.fleets
+    assert sg not in empire.deployed_groups
 
 
 def test_partial_recovery_when_bay_capacity_limits(setup_carrier_and_satellite_group):
@@ -177,7 +182,7 @@ def test_partial_recovery_when_bay_capacity_limits(setup_carrier_and_satellite_g
     assert result.success
     assert len(carrier.carried_items) == 3
     assert len(sg.ships) == 2
-    assert sg in empire.fleets
+    assert sg in empire.deployed_groups
 
 
 def test_hp_preserved_through_round_trip(setup_carrier_and_satellite_group):
@@ -205,7 +210,7 @@ def test_recover_count_limit(setup_carrier_and_satellite_group):
     assert result.success
     assert len(carrier.carried_items) == 2
     assert len(sg.ships) == 3
-    assert sg in empire.fleets
+    assert sg in empire.deployed_groups
 
 
 def test_missing_satellite_group_fails_cleanly(setup_carrier_and_satellite_group):
@@ -254,4 +259,4 @@ def test_carrier_with_fighter_only_bay_cannot_recover_satellites(
     # Satellites still in their group; nothing loaded.
     assert len(carrier.carried_items) == 0
     assert len(sg.ships) == 5
-    assert sg in empire.fleets
+    assert sg in empire.deployed_groups

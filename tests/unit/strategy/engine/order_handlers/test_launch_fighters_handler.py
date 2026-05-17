@@ -113,7 +113,14 @@ def setup_carrier_with_fighters():
     )
     fleet.ships.append(carrier)
 
-    empire = SimpleNamespace(id=42, name="E42", fleets=[fleet])
+    empire = SimpleNamespace(
+        id=42, name="E42", fleets=[fleet], deployed_groups=[],
+        deployed_groups_of=lambda cls, _e=None: [],
+    )
+    # bound version of deployed_groups_of mirroring Empire.deployed_groups_of
+    empire.deployed_groups_of = lambda cls, _emp=empire: [
+        g for g in _emp.deployed_groups if isinstance(g, cls)
+    ]
     galaxy = SimpleNamespace(current_turn=1)
     return empire, fleet, carrier, galaxy
 
@@ -138,10 +145,8 @@ def test_launch_creates_fighter_group(setup_carrier_with_fighters):
     # 6 alpha + 1 bravo total. 4 alpha launched -> 2 alpha + 1 bravo remain.
     assert len(carrier.carried_items) == 3
 
-    fighter_groups = [
-        f for f in empire.fleets
-        if getattr(f, "group_kind", "fleet") == "fighter_group"
-    ]
+    from game.strategy.data.deployed_group import FighterWing
+    fighter_groups = empire.deployed_groups_of(FighterWing)
     assert len(fighter_groups) == 1
     fg = fighter_groups[0]
     assert fg.location == fleet.location
@@ -166,7 +171,8 @@ def test_hp_carries_through_launch(setup_carrier_with_fighters):
     handler = LaunchFightersOrderHandler()
     handler.execute_action_order(fleet, empire, galaxy)
 
-    fg = [f for f in empire.fleets if f.group_kind == "fighter_group"][0]
+    from game.strategy.data.deployed_group import FighterWing
+    fg = empire.deployed_groups_of(FighterWing)[0]
     hps = sorted(ship.current_hp for ship in fg.ships)
     assert hps == [77, 78, 79, 80]
 
@@ -186,9 +192,8 @@ def test_insufficient_fighters_fails_cleanly(setup_carrier_with_fighters):
     assert "insufficient" in result.message.lower()
     # No partial consumption.
     assert len(carrier.carried_items) == 7
-    fighter_groups = [
-        f for f in empire.fleets if f.group_kind == "fighter_group"
-    ]
+    from game.strategy.data.deployed_group import FighterWing
+    fighter_groups = empire.deployed_groups_of(FighterWing)
     assert fighter_groups == []
 
 
@@ -210,9 +215,8 @@ def test_same_hex_launches_do_not_auto_merge(setup_carrier_with_fighters):
         }))
         handler.execute_action_order(fleet, empire, galaxy)
 
-    fighter_groups = [
-        f for f in empire.fleets if f.group_kind == "fighter_group"
-    ]
+    from game.strategy.data.deployed_group import FighterWing
+    fighter_groups = empire.deployed_groups_of(FighterWing)
     assert len(fighter_groups) == 2
     counts = sorted(len(fg.ships) for fg in fighter_groups)
     assert counts == [2, 2]
@@ -231,7 +235,8 @@ def test_mixed_design_launch_with_design_filter(setup_carrier_with_fighters):
     result = handler.execute_action_order(fleet, empire, galaxy)
     assert result.success
 
-    fg = [f for f in empire.fleets if f.group_kind == "fighter_group"][0]
+    from game.strategy.data.deployed_group import FighterWing
+    fg = empire.deployed_groups_of(FighterWing)[0]
     assert len(fg.ships) == 1
     assert fg.ships[0].design_id == "fighter_bravo"
 
@@ -264,7 +269,8 @@ def test_launched_fighters_tagged_with_launched_in_battle_id_none(
     }))
     handler = LaunchFightersOrderHandler()
     handler.execute_action_order(fleet, empire, galaxy)
-    fg = [f for f in empire.fleets if f.group_kind == "fighter_group"][0]
+    from game.strategy.data.deployed_group import FighterWing
+    fg = empire.deployed_groups_of(FighterWing)[0]
     for ship in fg.ships:
         # None or absence both are acceptable: this is a strategic launch.
         assert getattr(ship, "launched_in_battle_id", None) is None

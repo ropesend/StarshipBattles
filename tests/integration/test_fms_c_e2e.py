@@ -13,6 +13,7 @@ import pytest
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.carried_vehicle import CarriedVehicle
+from game.strategy.data.deployed_group import FighterWing
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.ship_instance import ShipInstance
@@ -132,7 +133,8 @@ def test_strategic_launch_then_recover_round_trip_preserves_hp():
         group_kind="fleet",
     )
     main_fleet.ships.append(carrier)
-    empire = SimpleNamespace(id=42, name="E42", fleets=[main_fleet])
+    empire = SimpleNamespace(id=42, name="E42", fleets=[main_fleet], deployed_groups=[])
+    empire.deployed_groups_of = lambda cls, _e=empire: [g for g in _e.deployed_groups if isinstance(g, cls)]
     galaxy = SimpleNamespace(current_turn=1)
 
     # Strategic launch all 4.
@@ -146,7 +148,7 @@ def test_strategic_launch_then_recover_round_trip_preserves_hp():
     result = launch.execute_action_order(main_fleet, empire, galaxy)
     assert result.success
     assert len(carrier.carried_items) == 0
-    fg = next(f for f in empire.fleets if f.group_kind == "fighter_group")
+    fg = empire.deployed_groups_of(FighterWing)[0]
     assert len(fg.ships) == 4
     pre_recovery_hps = sorted(s.current_hp for s in fg.ships)
 
@@ -160,7 +162,7 @@ def test_strategic_launch_then_recover_round_trip_preserves_hp():
     result = recover.execute_action_order(main_fleet, empire, galaxy)
     assert result.success
     # Group destroyed (empty).
-    assert fg not in empire.fleets
+    assert fg not in empire.deployed_groups
     # Carrier got 4 CarriedVehicle entries with preserved HP.
     assert len(carrier.carried_items) == 4
     post_recovery_hps = sorted(int(c["current_hp"]) for c in carrier.carried_items)
@@ -178,11 +180,8 @@ def test_partial_recovery_when_bay_too_small():
     )
     main_fleet.ships.append(carrier)
 
-    # Pre-existing fighter_group of 5 at the hex.
-    fg = Fleet(
-        fleet_id=200001, owner_id=42, location=hex_c, speed=0.0,
-        group_kind="fighter_group",
-    )
+    # Pre-existing FighterWing of 5 at the hex.
+    fg = FighterWing(group_id=200001, owner_id=42, location=hex_c)
     for i in range(5):
         fg.ships.append(ShipInstance(
             instance_id=f"f_{i}",
@@ -193,7 +192,8 @@ def test_partial_recovery_when_bay_too_small():
             current_hp=70 + i,
         ))
 
-    empire = SimpleNamespace(id=42, name="E42", fleets=[main_fleet, fg])
+    empire = SimpleNamespace(id=42, name="E42", fleets=[main_fleet], deployed_groups=[fg])
+    empire.deployed_groups_of = lambda cls, _e=empire: [g for g in _e.deployed_groups if isinstance(g, cls)]
     galaxy = SimpleNamespace(current_turn=1)
 
     main_fleet.add_order(Order(OrderType.RECOVER_FIGHTERS, target={
@@ -206,8 +206,8 @@ def test_partial_recovery_when_bay_too_small():
     assert result.success
     assert len(carrier.carried_items) == 2
     assert len(fg.ships) == 3
-    # Group still in empire.fleets (not empty).
-    assert fg in empire.fleets
+    # Group still in empire.deployed_groups (not empty).
+    assert fg in empire.deployed_groups
 
 
 def test_strategic_launch_creates_fighter_group_visible_to_conflict_resolution():
@@ -224,7 +224,8 @@ def test_strategic_launch_creates_fighter_group_visible_to_conflict_resolution()
         group_kind="fleet",
     )
     main_fleet.ships.append(carrier)
-    empire = SimpleNamespace(id=42, name="E42", fleets=[main_fleet])
+    empire = SimpleNamespace(id=42, name="E42", fleets=[main_fleet], deployed_groups=[])
+    empire.deployed_groups_of = lambda cls, _e=empire: [g for g in _e.deployed_groups if isinstance(g, cls)]
     galaxy = SimpleNamespace(current_turn=1)
 
     main_fleet.add_order(Order(OrderType.LAUNCH_FIGHTERS, target={
@@ -236,12 +237,12 @@ def test_strategic_launch_creates_fighter_group_visible_to_conflict_resolution()
     launch = LaunchFightersOrderHandler()
     launch.execute_action_order(main_fleet, empire, galaxy)
 
-    fg = next(f for f in empire.fleets if f.group_kind == "fighter_group")
+    fg = empire.deployed_groups_of(FighterWing)[0]
     # Same hex as the carrier fleet — conflict resolution iterates
-    # ``empire.fleets`` and includes anything at the contested hex.
+    # ``empire.fleets`` + ``empire.deployed_groups`` and includes
+    # anything at the contested hex.
     assert fg.location == main_fleet.location
-    # group_kind != "fleet" means non-merge, but conflict iteration
-    # will still pick this up.
-    assert fg.group_kind == "fighter_group"
+    # PROJ-431 Phase 3: FighterWing is its own type, no string discriminator.
+    assert isinstance(fg, FighterWing)
     # Owner matches so it joins the owner's team in the spec compiler.
     assert fg.owner_id == empire.id

@@ -26,6 +26,7 @@ from typing import Any, Dict, List, Optional, TYPE_CHECKING, Tuple
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.carried_vehicle import CarriedVehicle
+from game.strategy.data.deployed_group import FighterWing
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import OrderType
 from game.strategy.data.ship_instance import ShipInstance
@@ -246,23 +247,29 @@ class LaunchFightersOrderHandler(BaseOrderHandler):
 
     def _create_fighter_group(
         self, *, empire: "Empire", target_hex: HexCoord,
-    ) -> Fleet:
-        """Mint a new ``fighter_group`` Fleet for this launch action."""
-        new_id = self._mint_fleet_id(empire)
-        group = Fleet(
-            fleet_id=new_id,
+    ) -> FighterWing:
+        """Mint a new :class:`FighterWing` for this launch action.
+
+        PROJ-431 Phase 3: a deployed fighter wing is a sibling of
+        :class:`Fleet`, not a Fleet. The wing lands on
+        ``empire.deployed_groups`` and the fleet-action surface (Move,
+        Warp, Build, Join) is structurally unreachable on this type.
+        """
+        new_id = self._mint_group_id(empire)
+        wing = FighterWing(
+            group_id=new_id,
             owner_id=empire.id,
             location=target_hex,
-            speed=0.0,
             display_name=f"Fighter Wing {new_id}",
-            group_kind="fighter_group",
         )
-        empire.fleets.append(group)
-        return group
+        empire.deployed_groups.append(wing)
+        return wing
 
     @staticmethod
-    def _mint_fleet_id(empire: "Empire") -> int:
-        existing = {f.id for f in empire.fleets if isinstance(f.id, int)}
+    def _mint_group_id(empire: "Empire") -> int:
+        existing = {
+            g.id for g in empire.deployed_groups if isinstance(g.id, int)
+        }
         candidate = 200000
         while candidate in existing:
             candidate += 1
