@@ -182,3 +182,41 @@ class TestSpawnLocation:
                     assert call_args[2] == expected_loc
 
 
+# ---------------------------------------------------------------------------
+# PROJ-427 Phase 0: characterization — pin current save_path threading in
+# ProductionEngine. Phase 3 will drop save_path from the runtime production
+# call chain entirely; these tests fail at that point and get rewritten.
+# ---------------------------------------------------------------------------
+
+
+def test_proj427_phase0_production_engine_process_takes_save_path_kwarg():
+    """PROJ-427 Phase 0: ProductionEngine.process_construction_tick
+    currently accepts a `save_path` keyword argument. This pins the
+    threading Phase 3 will remove."""
+    import inspect as _inspect
+    from game.strategy.engine.production_engine import ProductionEngine
+
+    sig = _inspect.signature(ProductionEngine.process_construction_tick)
+    assert "save_path" in sig.parameters, (
+        "Current ProductionEngine signature must accept save_path; "
+        "this characterization pins that today."
+    )
+
+
+def test_proj427_phase0_production_engine_threads_save_path_into_spawner(fresh_registries):
+    """PROJ-427 Phase 0: when an item completes during tick processing,
+    ProductionEngine threads save_path through to ProductionSpawner.
+    Phase 3 replaces this with a DesignCatalog lookup that needs no
+    save_path."""
+    import inspect as _inspect
+    from game.strategy.engine.production_engine import ProductionEngine
+
+    engine = ProductionEngine(registries=fresh_registries)
+
+    sig = _inspect.signature(engine._complete_item)
+    assert "save_path" in sig.parameters, (
+        "_complete_item must take save_path on the current code path; "
+        "Phase 3 drops this."
+    )
+
+

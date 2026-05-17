@@ -327,3 +327,82 @@ class TestSaveGameServiceMetadata:
 
         assert "Alpha Empire" in metadata['empire_names']
         assert "Beta Empire" in metadata['empire_names']
+
+
+# ---------------------------------------------------------------------------
+# PROJ-427 Phase 0: characterization — pin current module-global replay-store
+# ownership in save_game_service. Phase 5 will convert this to instance-owned
+# wiring; these tests pin today's behavior so the conversion is observably
+# diff-able.
+# ---------------------------------------------------------------------------
+
+
+class TestProj427Phase0ReplayStoreModuleGlobal:
+    """Pin the present-day `_replay_store` module-global contract."""
+
+    @pytest.fixture(autouse=True)
+    def setup_tmpdir(self):
+        tmpdir = tempfile.mkdtemp()
+        saves_dir = os.path.join(tmpdir, "saves")
+        os.makedirs(saves_dir, exist_ok=True)
+        with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
+            yield tmpdir
+        shutil.rmtree(tmpdir)
+
+    def test_set_get_replay_store_round_trip(self):
+        """Phase 0 characterization: set_replay_store registers via the
+        module-global; get_replay_store returns the same instance.
+        Phase 5 removes both functions in favor of constructor injection."""
+        from game.strategy.systems import save_game_service as sgs_mod
+
+        sentinel = MagicMock()
+        try:
+            sgs_mod.set_replay_store(sentinel)
+            assert sgs_mod.get_replay_store() is sentinel
+            assert sgs_mod._replay_store is sentinel
+        finally:
+            sgs_mod.set_replay_store(None)
+
+    def test_save_notifies_module_global_replay_store(self):
+        """Phase 0 characterization: SaveGameService.save_game notifies
+        the registered module-global replay store via set_save_root.
+        Phase 5 replaces this with an instance field on SaveGameService."""
+        from game.strategy.systems import save_game_service as sgs_mod
+
+        spy = MagicMock()
+        try:
+            sgs_mod.set_replay_store(spy)
+            session = MockGameSession()
+            success, _, save_path = SaveGameService.save_game(
+                session, "Proj427CharSave"
+            )
+            assert success
+            spy.set_save_root.assert_called()
+        finally:
+            sgs_mod.set_replay_store(None)
+
+    def test_delete_notifies_module_global_replay_store_clear(self):
+        """Phase 0 characterization: SaveGameService.delete_save notifies
+        the registered module-global replay store via clear_save_root."""
+        from game.strategy.systems import save_game_service as sgs_mod
+
+        session = MockGameSession()
+        success, _, save_path = SaveGameService.save_game(
+            session, "Proj427CharDelete"
+        )
+        assert success
+
+        spy = MagicMock()
+        try:
+            sgs_mod.set_replay_store(spy)
+            # The current API exposes delete_save on SaveGameService.
+            if hasattr(SaveGameService, "delete_save"):
+                SaveGameService.delete_save(save_path)
+                spy.clear_save_root.assert_called()
+            else:
+                # If delete API not surfaced, at minimum prove
+                # _notify_replay_store_save_deleted notifies the global.
+                sgs_mod._notify_replay_store_save_deleted()
+                spy.clear_save_root.assert_called()
+        finally:
+            sgs_mod.set_replay_store(None)

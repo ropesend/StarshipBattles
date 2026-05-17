@@ -253,3 +253,29 @@ def test_workshop_save_invalidates_cache_so_build_queue_sees_new_design(
             f"Build queue rescan should include the workshop-saved design. "
             f"Got: {names}"
         )
+
+
+# ---------------------------------------------------------------------------
+# PROJ-427 Phase 0: characterization — pin current per-turn UI cache reuse.
+# Today the cache lives on FacadeSessionState.designs_by_empire and is
+# threaded into DesignLibrary via the `facade_state=` kwarg. Phase 2 moves
+# this ownership into DesignCatalog; Phase 6 removes the kwarg entirely.
+# ---------------------------------------------------------------------------
+
+
+def test_proj427_phase0_ui_scan_reuses_cache_within_turn(empire_0_savegame, fake_state):
+    """Phase 0 characterization: a second scan_designs() within the same
+    turn returns the cached list (object identity) without re-reading
+    disk. Phase 2 moves this responsibility into DesignCatalog."""
+    lib = DesignLibrary(empire_0_savegame, empire_id=0, facade_state=fake_state)
+    first = lib.scan_designs()
+    second = lib.scan_designs()
+    # Object identity: the cache returned the same list instance.
+    assert second is first, (
+        "Phase 0 pins per-turn cache reuse: scan_designs must return the "
+        "same list object on the second call within the same facade-state "
+        "scope."
+    )
+    # The cache is stored under the per-empire key.
+    assert 0 in fake_state.designs_by_empire
+    assert fake_state.designs_by_empire[0] is first

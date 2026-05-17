@@ -17,7 +17,7 @@
 
 | Phase | Status | Checklist | Depends on |
 |-------|--------|-----------|------------|
-| 0. Lock current behavior with red tests | Not Started | [phase_0_checklist.md](phase_0_checklist.md) | — |
+| 0. Lock current behavior with red tests | Complete | [phase_0_checklist.md](phase_0_checklist.md) | — |
 | 1. Introduce `DesignRepository` (additive, no caller migration) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) | Phase 0 |
 | 2. Introduce `DesignCatalog` and move cache ownership | Not Started | [phase_2_checklist.md](phase_2_checklist.md) | Phase 1 |
 | 3. Migrate runtime production to the catalog | Not Started | [phase_3_checklist.md](phase_3_checklist.md) | Phase 2 |
@@ -27,10 +27,10 @@
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 0 (red-tests baseline) — halted at entry.
-**Last Action:** Logged a scope-vs-budget blocker in `decisions.md` after reading the seven phase checklists, the live `DesignLibrary`/`production_spawner`/`save_game_service`/`game_session`/`session/bootstrap` code, `SessionRuntimeServices` (PROJ-423), and the existing test patches against `game.strategy.engine.production_spawner.DesignLibrary`.
-**Next Action:** Resumption with a wider budget. Start at Phase 0 task 0.1 unchanged. The cross-plan absorption target (`SessionRuntimeServices.design_repository`, `SessionRuntimeServices.design_catalogs_by_empire` or `SessionBootstrapState`-side per-empire map) and the discipline guardrails (no `Empire.designs_built_count`, no save-schema bump, no premature `DesignLibrary` deletion, explicit no-disk-read tick test) all remain the correct contracts.
-**Blockers:** Single-slot operator budget insufficient to complete phases 0-6 with strict TDD plus a full sharded-suite final gate without leaving partial state. See `decisions.md` 2026-05-17 entry. No code or test changes were committed; `proj/PROJ-427/main` is a clean branch from `proj/PROJ-426/main`.
+**Active Phase:** Phase 0 complete. Phase 1 next.
+**Last Action:** Added PROJ-427 characterization tests pinning the four current coupling points (DesignLibrary module import + save_path threading in ProductionSpawner; save_path kwarg in `ProductionEngine.process_construction_tick` + `_complete_item`; module-global `_replay_store` set/get/notify behavior in SaveGameService; per-turn UI cache reuse via `FacadeSessionState.designs_by_empire`) and the new `tests/integration/strategy/production/test_no_design_disk_read_during_tick.py` marked `xfail(strict=True)` as the explicit no-disk-read guard (flips to expected-pass in Phase 3).
+**Next Action:** Phase 1 — TDD-introduce `game/strategy/systems/design_repository.py` with the six methods documented in `phase_1_checklist.md`. Purely additive; no caller migration.
+**Blockers:** None for phases 0-2 (additive scope only). Split-execution: phases 3-6 (runtime migration, replay-store conversion, deletion) are deferred to a separate execution slot per the rationale in `decisions.md`.
 
 ## Overview
 

@@ -588,3 +588,59 @@ def test_spawn_fleet_complex_returns_when_fleet_not_at_planet_hex():
 
     galaxy.get_planets_at_global_hex.assert_called_once_with(fleet.location)
     mock_create.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# PROJ-427 Phase 0: characterization — pin current DesignLibrary + save_path
+# coupling. These tests assert the present-day (pre-refactor) behavior and
+# must pass on the current codebase. Phase 3 will replace them.
+# ---------------------------------------------------------------------------
+
+
+def test_proj427_phase0_production_spawner_imports_design_library():
+    """PROJ-427 Phase 0: ProductionSpawner currently imports DesignLibrary
+    at module scope. This coupling is what Phase 3 removes."""
+    import inspect
+    import game.strategy.engine.production_spawner as ps_mod
+
+    assert hasattr(ps_mod, "DesignLibrary"), (
+        "Current code path imports DesignLibrary at module scope; "
+        "this characterization test pins that today."
+    )
+    # Pin the textual import too (defensive against re-exports).
+    src = inspect.getsource(ps_mod)
+    assert "from game.strategy.systems.design_library import DesignLibrary" in src
+
+
+def test_proj427_phase0_load_design_helpers_require_save_path():
+    """PROJ-427 Phase 0: spawn helpers currently short-circuit when no
+    save_path is provided. This pins the save_path coupling Phase 3
+    removes by routing through DesignCatalog instead."""
+    spawner = ProductionSpawner(registries=MagicMock())
+    empire = _empire()
+
+    # _load_design with no save_path returns {} (current behavior).
+    assert spawner._load_design("any_id", empire, None) == {}
+    # _load_and_create_ship with no save_path returns None.
+    assert spawner._load_and_create_ship("any_id", empire, None) is None
+
+
+def test_proj427_phase0_spawn_triggers_design_library_construction():
+    """PROJ-427 Phase 0: a colony complex spawn currently constructs a
+    DesignLibrary(save_path, empire.id) directly. This pins the
+    instantiation surface Phase 3 removes."""
+    spawner = ProductionSpawner(registries=MagicMock())
+    item = {"design_id": "ferrite_mine", "type": "complex"}
+    planet = _planet()
+    empire = _empire()
+    cls, library, _ = _stub_design_library({"name": "Ferrite Mine"})
+
+    with patch(
+        "game.strategy.engine.production_spawner.DesignLibrary", cls,
+    ):
+        spawner.spawn_completed_item(
+            item, empire, planet, MagicMock(), "/tmp", 1
+        )
+
+    cls.assert_called_once_with("/tmp", empire.id)
+    library.load_design_data.assert_called_once_with("ferrite_mine")
