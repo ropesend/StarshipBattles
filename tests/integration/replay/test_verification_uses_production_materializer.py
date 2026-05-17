@@ -40,7 +40,7 @@ from game.strategy.services.replay_verification_sidecar import (
     VerificationStatus,
     read_verification_sidecar,
 )
-from game.strategy.systems.save_game_service import set_replay_store
+from game.strategy.systems.save_game_service import SaveGameService
 from tests.fixtures.battle import make_minimal_spec
 from tests.fixtures.ships import create_test_ship
 
@@ -74,7 +74,7 @@ def replay_globals_cleanup():
     yield
     shutdown_all_coordinators(timeout=5.0)
     reset_default_capture_sink()
-    set_replay_store(None)
+    SaveGameService.default().set_replay_store(None)
 
 
 def test_coordinator_calls_build_replay_ship_builder_from_source_module(
@@ -118,7 +118,7 @@ def test_coordinator_calls_build_replay_ship_builder_from_source_module(
     store = ReplayStore(settings=settings)
     store.set_save_root(save_root)
     set_default_capture_sink(store)
-    set_replay_store(store)
+    SaveGameService.default().set_replay_store(store)
 
     provider = get_default_registry_provider()
     # The coordinator's constructor binds `ship_builder_factory`'s default

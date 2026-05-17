@@ -53,11 +53,11 @@ def _drain_replay_globals():
     from game.strategy.services.replay_verification_coordinator import (
         shutdown_all_coordinators,
     )
-    from game.strategy.systems.save_game_service import set_replay_store
+    from game.strategy.systems.save_game_service import SaveGameService
 
     shutdown_all_coordinators(timeout=5.0)
     reset_default_capture_sink()
-    set_replay_store(None)
+    SaveGameService.default().set_replay_store(None)
 
 
 @pytest.fixture
@@ -146,8 +146,12 @@ def _patched_bootstrap(call_order: list[str]):
         call_order.append("set_default_capture_sink")
         return real_set_sink(sink)
 
-    from game.strategy.systems import save_game_service as save_game_service_mod
-    real_set_store = save_game_service_mod.set_replay_store
+    # PROJ-427 Phase 5: replay-store wiring is instance-owned on the
+    # SaveGameService default singleton. We spy on the bound instance
+    # method to record bootstrap's call without changing semantics.
+    from game.strategy.systems.save_game_service import SaveGameService as _SaveGameService
+    _default_svc = _SaveGameService.default()
+    real_set_store = _default_svc.set_replay_store
 
     def record_set_store(store):
         call_order.append("set_replay_store")
@@ -176,7 +180,7 @@ def _patched_bootstrap(call_order: list[str]):
                       record_ensure_derivatives), \
          patch.object(replay_capture_mod, "set_default_capture_sink",
                       record_set_sink), \
-         patch.object(save_game_service_mod, "set_replay_store",
+         patch.object(_default_svc, "set_replay_store",
                       record_set_store), \
          patch.object(rvc_mod.ReplayVerificationCoordinator, "start",
                       record_coord_start):

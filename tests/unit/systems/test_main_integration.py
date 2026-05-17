@@ -30,11 +30,11 @@ def _drain_replay_globals():
     from game.strategy.services.replay_verification_coordinator import (
         shutdown_all_coordinators,
     )
-    from game.strategy.systems.save_game_service import set_replay_store
+    from game.strategy.systems.save_game_service import SaveGameService
 
     shutdown_all_coordinators(timeout=5.0)
     reset_default_capture_sink()
-    set_replay_store(None)
+    SaveGameService.default().set_replay_store(None)
 
 
 class TestMainIntegration:

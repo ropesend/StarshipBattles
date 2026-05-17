@@ -4,10 +4,20 @@ Save Game Service - Handles game state persistence
 This service provides centralized save/load functionality for the strategy layer.
 Manages save folder structure, metadata, and version compatibility.
 
-Save Format Version 2.0.0:
+Save Format Version 3.0.0:
 - Turn-based saves: turns/turn_N.json
 - Per-empire design folders: designs/empire_N/
 - Strict version checking (rejects all old saves)
+
+PROJ-427 Phase 5: replay-store wiring is instance-owned. The module-globals
+``_replay_store`` / ``set_replay_store`` / ``get_replay_store`` /
+``_notify_replay_store_*`` are removed. A process-level default singleton
+exposed by ``SaveGameService.default()`` keeps static ``save_game`` /
+``load_game`` / ``delete_save`` callsites working — they consult that
+singleton for replay-store notifications. Tests and bootstrap interact
+with the replay-store hook through ``SaveGameService.set_replay_store(...)``
+(a classmethod that delegates to the default singleton) or by constructing
+an explicit instance with ``SaveGameService(replay_store=...)``.
 """
 import logging
 from json import JSONDecodeError
@@ -22,49 +32,63 @@ from game.core.exceptions import PersistenceException, ValidationException, Stat
 logger = logging.getLogger(__name__)
 
 
-# PROJ-312: optional ReplayStore hook. Wired from app bootstrap via
-# `set_replay_store(...)`. Static SaveGameService methods invoke
-# `_notify_replay_store_*` so save lifecycle (create / load / delete) keeps
-# the store's `save_root` aligned with the active save folder. When no
-# store is registered, every notification is a no-op.
-_replay_store: Optional[object] = None
-
-
-def set_replay_store(store: Optional[object]) -> None:
-    """Register a ``ReplayStore`` (or any object with the same lifecycle
-    methods). Pass ``None`` to detach. Production wiring lives in
-    ``ApplicationContext.create_production`` (Phase 4)."""
-    global _replay_store
-    _replay_store = store
-
-
-def get_replay_store() -> Optional[object]:
-    return _replay_store
-
-
-def _notify_replay_store_save_or_load(save_path: str) -> None:
-    if _replay_store is None:
-        return
-    try:
-        from pathlib import Path as _Path
-        _replay_store.set_save_root(_Path(save_path))  # type: ignore[attr-defined]
-    except Exception:  # Intentional broad catch: store hooks must not crash save/load
-        logger.exception("PROJ-312 replay-store save_root hook failed")
-
-
-def _notify_replay_store_save_deleted() -> None:
-    if _replay_store is None:
-        return
-    try:
-        _replay_store.clear_save_root()  # type: ignore[attr-defined]
-    except Exception:  # Intentional broad catch: store hooks must not crash delete
-        logger.exception("PROJ-312 replay-store clear_save_root hook failed")
-
-
 class SaveGameService:
-    """Manages saving and loading complete game state"""
+    """Manages saving and loading complete game state.
+
+    PROJ-427 Phase 5: each instance owns its replay-store hook. A
+    process-level default singleton (see ``default()``) holds the
+    bootstrap-wired replay store so static save / load / delete continue
+    to notify the registered store without forcing every caller to plumb
+    a constructed instance.
+    """
 
     SAVE_VERSION = "3.0.0"
+
+    # PROJ-427 Phase 5: process-level default singleton — created lazily
+    # by ``default()``. Bootstrap wires the replay store through
+    # ``SaveGameService.set_replay_store(store)``, which targets this
+    # instance. Tests can ``set_replay_store(None)`` to detach.
+    _default_singleton: "Optional[SaveGameService]" = None
+
+    def __init__(self, *, replay_store: Optional[object] = None) -> None:
+        self._replay_store: Optional[object] = replay_store
+
+    # ------------------------------------------------------------------
+    # Replay-store wiring (instance-owned)
+    # ------------------------------------------------------------------
+
+    def set_replay_store(self, store: Optional[object]) -> None:
+        """Attach (or detach with ``None``) the replay store for this
+        instance. Static save / load / delete methods consult the
+        default-singleton instance via ``SaveGameService.default()``."""
+        self._replay_store = store
+
+    def get_replay_store(self) -> Optional[object]:
+        return self._replay_store
+
+    def _notify_replay_store_save_or_load(self, save_path: str) -> None:
+        if self._replay_store is None:
+            return
+        try:
+            from pathlib import Path as _Path
+            self._replay_store.set_save_root(_Path(save_path))  # type: ignore[attr-defined]
+        except Exception:  # Intentional broad catch: store hooks must not crash save/load
+            logger.exception("PROJ-312 replay-store save_root hook failed")
+
+    def _notify_replay_store_save_deleted(self) -> None:
+        if self._replay_store is None:
+            return
+        try:
+            self._replay_store.clear_save_root()  # type: ignore[attr-defined]
+        except Exception:  # Intentional broad catch: store hooks must not crash delete
+            logger.exception("PROJ-312 replay-store clear_save_root hook failed")
+
+    @classmethod
+    def default(cls) -> "SaveGameService":
+        """Return (lazily creating) the process-level default singleton."""
+        if cls._default_singleton is None:
+            cls._default_singleton = cls()
+        return cls._default_singleton
 
     @staticmethod
     def save_game(game_session, save_name: Optional[str] = None) -> Tuple[bool, str, Optional[str]]:
@@ -144,8 +168,10 @@ class SaveGameService:
                 return False, "Failed to save metadata", None
 
             logger.info(f"SaveGameService: Saved turn {game_session.turn_number} to {os.path.basename(save_path)}")
-            # PROJ-312: keep the replay store pointed at the active save.
-            _notify_replay_store_save_or_load(save_path)
+            # PROJ-312 / PROJ-427 Phase 5: keep the replay store pointed at
+            # the active save. The default-singleton owns the replay-store
+            # hook (instance-owned, not module-global).
+            SaveGameService.default()._notify_replay_store_save_or_load(save_path)
             return True, f"Game saved: Turn {game_session.turn_number}", save_path
 
         except PermissionError as e:
@@ -190,8 +216,9 @@ class SaveGameService:
         # Resolve turn number for logging
         loaded_turn = game_state.get('turn_number', turn_number or 1)
         logger.info(f"SaveGameService: Loaded turn {loaded_turn} from {os.path.basename(resolved_path)}")
-        # PROJ-312: keep the replay store pointed at the active save.
-        _notify_replay_store_save_or_load(resolved_path)
+        # PROJ-312 / PROJ-427 Phase 5: keep the replay store pointed at the
+        # active save (default-singleton instance owns the hook).
+        SaveGameService.default()._notify_replay_store_save_or_load(resolved_path)
         return game_session, f"Game loaded: Turn {loaded_turn}"
 
     @staticmethod
@@ -304,9 +331,10 @@ class SaveGameService:
             shutil.rmtree(save_path)
 
             logger.info(f"SaveGameService: Deleted save {os.path.basename(save_path)}")
-            # PROJ-312: detach the replay store so it doesn't keep pointing
-            # at a deleted folder. The `replays/` subfolder went with rmtree.
-            _notify_replay_store_save_deleted()
+            # PROJ-312 / PROJ-427 Phase 5: detach the replay store so it
+            # doesn't keep pointing at a deleted folder. The default-singleton
+            # owns the hook (instance-owned).
+            SaveGameService.default()._notify_replay_store_save_deleted()
             return True, "Save deleted successfully"
 
         except PermissionError as e:

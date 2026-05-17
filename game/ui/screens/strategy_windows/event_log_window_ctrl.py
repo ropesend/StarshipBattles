@@ -123,9 +123,10 @@ class EventLogRegistrar:
         that case (resolver=None ⇒ click is a no-op per
         ``EventLogWindow._handle_replay_click``).
         """
-        from game.strategy.systems.save_game_service import get_replay_store
+        from game.strategy.systems.save_game_service import SaveGameService
 
-        store = get_replay_store()
+        # PROJ-427 Phase 5: replay-store is owned by the default singleton.
+        store = SaveGameService.default().get_replay_store()
         if store is None:
             return None
         try:

@@ -279,12 +279,14 @@ def bootstrap(args: argparse.Namespace | None = None) -> BootstrapResult:
     with _timed_phase("replay.construct_store", ctx.profiler):
         from game.simulation.replay.replay_capture import set_default_capture_sink
         from game.strategy.services.replay_store import ReplayStore, load_replay_settings
-        from game.strategy.systems.save_game_service import set_replay_store
+        from game.strategy.systems.save_game_service import SaveGameService
 
         replay_settings = load_replay_settings()
         replay_store = ReplayStore(settings=replay_settings)
         set_default_capture_sink(replay_store)
-        set_replay_store(replay_store)
+        # PROJ-427 Phase 5: replay-store wiring is instance-owned by the
+        # SaveGameService default singleton (module-globals removed).
+        SaveGameService.default().set_replay_store(replay_store)
 
     # PROJ-366 Phase 2: construct the verification coordinator with the
     # Combat Lab fallback adapter and start its worker thread.

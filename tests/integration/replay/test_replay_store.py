@@ -459,20 +459,21 @@ class TestReplayStoreAsCaptureSink:
 
 
 class TestSaveGameServiceHooks:
-    """Verify the module-level set_replay_store / hook helpers."""
+    """PROJ-427 Phase 5: replay-store hooks are instance-owned on the
+    SaveGameService default singleton (module-globals removed)."""
 
     def setup_method(self):
-        from game.strategy.systems import save_game_service
-        save_game_service.set_replay_store(None)
+        from game.strategy.systems.save_game_service import SaveGameService
+        SaveGameService.default().set_replay_store(None)
 
     def teardown_method(self):
-        from game.strategy.systems import save_game_service
-        save_game_service.set_replay_store(None)
+        from game.strategy.systems.save_game_service import SaveGameService
+        SaveGameService.default().set_replay_store(None)
 
     def test_set_replay_store_is_called_by_save_path(self, tmp_path: Path):
-        """The module-level _notify_replay_store_save_or_load should call
+        """The instance _notify_replay_store_save_or_load should call
         set_save_root on a registered store."""
-        from game.strategy.systems import save_game_service
+        from game.strategy.systems.save_game_service import SaveGameService
 
         recorded = []
 
@@ -483,12 +484,13 @@ class TestSaveGameServiceHooks:
             def clear_save_root(self):
                 recorded.append(("clear",))
 
-        save_game_service.set_replay_store(_Spy())
-        save_game_service._notify_replay_store_save_or_load(str(tmp_path))
+        svc = SaveGameService.default()
+        svc.set_replay_store(_Spy())
+        svc._notify_replay_store_save_or_load(str(tmp_path))
         assert recorded[0][0] == "set"
 
     def test_clear_called_after_delete(self):
-        from game.strategy.systems import save_game_service
+        from game.strategy.systems.save_game_service import SaveGameService
 
         recorded = []
 
@@ -499,13 +501,16 @@ class TestSaveGameServiceHooks:
             def clear_save_root(self):
                 recorded.append(("clear",))
 
-        save_game_service.set_replay_store(_Spy())
-        save_game_service._notify_replay_store_save_deleted()
+        svc = SaveGameService.default()
+        svc.set_replay_store(_Spy())
+        svc._notify_replay_store_save_deleted()
         assert recorded == [("clear",)]
 
     def test_hooks_tolerate_missing_store(self):
         """When no store is registered, the helpers are silent no-ops."""
-        from game.strategy.systems import save_game_service
+        from game.strategy.systems.save_game_service import SaveGameService
+
+        svc = SaveGameService.default()
         # Should not raise.
-        save_game_service._notify_replay_store_save_or_load("/nope")
-        save_game_service._notify_replay_store_save_deleted()
+        svc._notify_replay_store_save_or_load("/nope")
+        svc._notify_replay_store_save_deleted()

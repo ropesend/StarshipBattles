@@ -402,7 +402,7 @@ class TestProductionWiringEndToEnd:
             ReplaySettings,
             ReplayStore,
         )
-        from game.strategy.systems.save_game_service import set_replay_store
+        from game.strategy.systems.save_game_service import SaveGameService
 
         save_root: Path = tmp_path / "qs_save"
         save_root.mkdir()
@@ -422,7 +422,7 @@ class TestProductionWiringEndToEnd:
         # Mirror app_bootstrap.py:286-287 production wiring exactly:
         # source-module functions, not lazy-import sites.
         set_default_capture_sink(store)
-        set_replay_store(store)
+        SaveGameService.default().set_replay_store(store)
 
         try:
             resolver = SimulationBattleResolver(ai_factory=MagicMock())
@@ -478,7 +478,7 @@ class TestProductionWiringEndToEnd:
             )
         finally:
             reset_default_capture_sink()
-            set_replay_store(None)
+            SaveGameService.default().set_replay_store(None)
 
     def test_null_sink_baseline_still_yields_none_replay_id(self):
         """Baseline sanity: without production wiring, ``replay_id`` is
