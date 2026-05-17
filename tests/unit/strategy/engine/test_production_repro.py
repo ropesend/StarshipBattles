@@ -13,7 +13,7 @@ from game.ui.panels.build_queue_controller import BuildQueueController
 from game.strategy.engine.production_engine import ProductionEngine
 from game.strategy.data.build_queue_source import BuildQueueSource
 from game.strategy.services.design_cost_calculator import DesignCostCalculator
-from game.strategy.systems.design_library import DesignLoadResult
+from game.strategy.systems.design_repository import DesignLoadResult
 
 
 def _make_add_callback(entity_registry: dict, design_data_registry: dict = None):
@@ -112,7 +112,7 @@ class TestBuildQueueReproduction:
         return context
 
     @pytest.fixture
-    def mock_design_library(self):
+    def mock_design_catalog(self):
         lib = MagicMock()
         lib.load_design_data.return_value = DesignLoadResult.ok(_TEST_DESIGN_DATA)
         return lib
@@ -133,7 +133,7 @@ class TestBuildQueueReproduction:
             "test_design_id_2": _TEST_DESIGN_DATA,
         }
 
-    def test_queue_item_has_populated_cost(self, mock_build_context, mock_design_library, mock_design_loader, design_data_registry):
+    def test_queue_item_has_populated_cost(self, mock_build_context, mock_design_catalog, mock_design_loader, design_data_registry):
         """
         PROJ-213: Verify that queue items are created with populated total_cost
         and zero-initialized resources_consumed, not empty dicts.
@@ -149,7 +149,7 @@ class TestBuildQueueReproduction:
 
         controller = BuildQueueController(
             build_context=mock_build_context,
-            design_library=mock_design_library,
+            design_catalog=mock_design_catalog,
             design_loader=mock_design_loader,
             design_report=MagicMock(),
             on_queue_changed=MagicMock(),
@@ -185,7 +185,7 @@ class TestBuildQueueReproduction:
         # PROJ-213: resources_consumed must be zero-initialized for each resource
         assert item["resources_consumed"] == {"A": 0.0, "B": 0.0, "C": 0.0}
 
-    def test_multiple_queue_additions_have_cost(self, mock_build_context, mock_design_library, mock_design_loader, design_data_registry):
+    def test_multiple_queue_additions_have_cost(self, mock_build_context, mock_design_catalog, mock_design_loader, design_data_registry):
         """
         PROJ-213: Verify that multiple queue additions all get populated costs.
         """
@@ -200,7 +200,7 @@ class TestBuildQueueReproduction:
 
         controller = BuildQueueController(
             build_context=mock_build_context,
-            design_library=mock_design_library,
+            design_catalog=mock_design_catalog,
             design_loader=mock_design_loader,
             design_report=MagicMock(),
             on_queue_changed=MagicMock(),

@@ -95,7 +95,7 @@ class TestBuildQueuePortraitLogging:
     PROJ-40: Updated to use DI injection for dependencies.
     """
 
-    def test_portrait_load_failure_logs_warning(self, caplog, mock_design_library, mock_design_loader, mock_registries, ui_manager):
+    def test_portrait_load_failure_logs_warning(self, caplog, mock_design_catalog, mock_design_loader, mock_registries, ui_manager):
         """Portrait loading failure should log warning with path context."""
         manager = ui_manager
 
@@ -133,7 +133,7 @@ class TestBuildQueuePortraitLogging:
             manager,
             planet,
             on_close,
-            design_library=mock_design_library,
+            design_catalog=mock_design_catalog,
             design_loader=mock_design_loader,
             hex_coord=hex_coord,
             galaxy=galaxy,
@@ -167,7 +167,7 @@ class TestBuildQueuePortraitLogging:
         assert 'portrait' in warning_text.lower() or 'load' in warning_text.lower(), \
             f"Warning should mention portrait load failure. Got: {warning_text}"
 
-    def test_portrait_placeholder_fallback_no_spam(self, caplog, mock_design_library, mock_design_loader, mock_registries, ui_manager):
+    def test_portrait_placeholder_fallback_no_spam(self, caplog, mock_design_catalog, mock_design_loader, mock_registries, ui_manager):
         """When no portrait exists, fallback to placeholder without log spam."""
         manager = ui_manager
 
@@ -203,7 +203,7 @@ class TestBuildQueuePortraitLogging:
             manager,
             planet,
             lambda: None,
-            design_library=mock_design_library,
+            design_catalog=mock_design_catalog,
             design_loader=mock_design_loader,
             hex_coord=hex_coord,
             galaxy=galaxy,

@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from game.core.hex_math import HexCoord
     from game.strategy.data.galaxy import Galaxy
     from game.strategy.data.empire import Empire
-    from game.strategy.systems.design_library import DesignLibrary
+    from game.strategy.systems.design_catalog import DesignCatalog
     from game.ui.services.design_loader_adapter import DesignLoaderAdapter
 
 
@@ -53,7 +53,7 @@ class BuildQueueScreen:
         build_context=None,  # Planet, Fleet, or BuildContext (legacy positional yard)
         on_close_callback: Optional[Callable] = None,
         portrait_surface: Optional[pygame.Surface] = None,
-        design_library: 'DesignLibrary' = None,
+        design_catalog: 'DesignCatalog' = None,
         design_loader: 'DesignLoaderAdapter' = None,
         hex_coord: 'HexCoord' = None,
         galaxy: 'Galaxy' = None,
@@ -110,7 +110,7 @@ class BuildQueueScreen:
 
         # Dependencies (some yard-specific defaults are seeded here so shell-
         # only construction has a defined attribute surface).
-        self.design_library = design_library
+        self.design_catalog = design_catalog
         self.design_loader = design_loader
         self.galaxy = galaxy
         self.empire = empire
@@ -125,10 +125,10 @@ class BuildQueueScreen:
         self.selected_queue_indices: Set[int] = set()
         self.active_queue_source: Optional[BuildQueueSource] = None
 
-        # Portrait loading — needs design_library + a narrow theme-id
+        # Portrait loading — needs design_catalog + a narrow theme-id
         # supplier for empire-theme lookup (PROJ-396 MAJ-002).
         self.portrait_loader = BuildQueuePortraitLoader(
-            design_library, self._theme_id_supplier
+            design_catalog, self._theme_id_supplier
         )
 
         # Get screen dimensions (stable across yards; cheap and idempotent).
@@ -228,7 +228,7 @@ class BuildQueueScreen:
         )
         self.controller = BuildQueueController(
             build_context=yard,
-            design_library=self.design_library,
+            design_catalog=self.design_catalog,
             design_loader=self.design_loader,
             design_report=self.panels.design_report,
             on_queue_changed=self._refresh_queue_display,
@@ -242,7 +242,7 @@ class BuildQueueScreen:
         # PROJ-208: drag handler wires through controller's add/refresh.
         self.drag_handler = BuildQueueDragHandler(
             portrait_loader=self.portrait_loader,
-            design_library=self.design_library,
+            design_catalog=self.design_catalog,
             on_add_to_queue=self.controller.add_to_queue,
             on_refresh_queue=self._refresh_queue_display,
             on_refresh_design_report=self.controller.refresh_design_report,
@@ -370,16 +370,16 @@ class BuildQueueScreen:
 
         # Reset drag handler transient state.
         self.drag_handler.reset_state()
-        # PROJ-376: design_library may differ between Planet and Fleet manager
-        # call sites (each constructs a fresh DesignLibrary). Rebind so the
+        # PROJ-376: design_catalog may differ between Planet and Fleet manager
+        # call sites (each constructs a fresh DesignCatalog). Rebind so the
         # drag handler always reflects the current manager's library.
-        self.drag_handler.design_library = self.design_library
+        self.drag_handler.design_catalog = self.design_catalog
         # QA Obs 2 (2026-05-16): same rebind for the controller. PROJ-410
-        # Phase 4 Task 4.2 covers screen.design_library + drag_handler but
+        # Phase 4 Task 4.2 covers screen.design_catalog + drag_handler but
         # missed the controller's own reference set in _rebuild_panels
         # (~line 229). Without this, controller.scan_designs() reads from
         # the previous empire's designs folder after a hot-seat swap.
-        self.controller.design_library = self.design_library
+        self.controller.design_catalog = self.design_catalog
         self.controller.design_loader = self.design_loader
 
         # Refresh queue selector against the new sources.

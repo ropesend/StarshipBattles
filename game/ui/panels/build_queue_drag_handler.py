@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.ui.panels.build_queue_portraits import BuildQueuePortraitLoader
-    from game.strategy.systems.design_library import DesignLibrary
+    from game.strategy.systems.design_catalog import DesignCatalog
     import pygame_gui.elements as ui
 
 # PROJ-208: Type alias for remove-from-queue callback
@@ -46,7 +46,7 @@ class BuildQueueDragHandler:
     def __init__(
         self,
         portrait_loader: 'BuildQueuePortraitLoader',
-        design_library: 'DesignLibrary',
+        design_catalog: 'DesignCatalog',
         on_add_to_queue: Callable[[str, Optional[float], str, Optional[int]], None],
         on_refresh_queue: Callable[[], None],
         on_refresh_design_report: Callable[[str], None],
@@ -57,14 +57,14 @@ class BuildQueueDragHandler:
 
         Args:
             portrait_loader: BuildQueuePortraitLoader instance for loading icons
-            design_library: DesignLibrary for scanning designs during drag start
+            design_catalog: DesignCatalog for scanning designs during drag start
             on_add_to_queue: Callback(design_id, turns, category, index) to add item to queue
             on_refresh_queue: Callback to refresh queue display after reorder
             on_refresh_design_report: Callback(design_id) to update design report on selection
             on_remove_from_queue: PROJ-208 callback(item_index) to dispatch RemoveFromConstructionQueueCommand. Required (PROJ-393 removed legacy fallback).
         """
         self.portrait_loader = portrait_loader
-        self.design_library = design_library
+        self.design_catalog = design_catalog
         self.on_add_to_queue = on_add_to_queue
         self.on_refresh_queue = on_refresh_queue
         self.on_refresh_design_report = on_refresh_design_report
@@ -143,7 +143,7 @@ class BuildQueueDragHandler:
                     self.on_refresh_design_report(design_id)
 
                     # Start dragging
-                    designs = self.design_library.scan_designs()
+                    designs = self.design_catalog.scan_designs()
                     design = next((d for d in designs if d.design_id == design_id), None)
                     if design:
                         # Load portrait icon for drag preview (48px for cursor visibility)

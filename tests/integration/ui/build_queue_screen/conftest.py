@@ -9,7 +9,7 @@ from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 from game.core.validation import ValidationResult
-from game.strategy.systems.design_library import DesignLoadResult
+from game.strategy.systems.design_repository import DesignLoadResult
 
 
 class MockGalaxy:
@@ -164,7 +164,7 @@ class MockSession:
 
 
 @pytest.fixture
-def mock_design_library():
+def mock_design_catalog():
     """Mock DesignLibrary for testing.
 
     PROJ-40: Updated to create mock directly instead of patching.
@@ -211,7 +211,7 @@ def mock_design_loader():
 
 
 @pytest.fixture
-def build_queue_screen(mock_design_library, mock_design_loader, mock_registries, ui_manager):
+def build_queue_screen(mock_design_catalog, mock_design_loader, mock_registries, ui_manager):
     """Create BuildQueueScreen for testing.
 
     PROJ-40: Updated to use DI injection for dependencies.
@@ -268,7 +268,7 @@ def build_queue_screen(mock_design_library, mock_design_loader, mock_registries,
         manager,
         planet,
         on_close_callback=on_close,
-        design_library=mock_design_library,
+        design_catalog=mock_design_catalog,
         design_loader=mock_design_loader,
         hex_coord=hex_coord,
         galaxy=galaxy,

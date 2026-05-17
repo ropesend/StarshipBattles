@@ -85,9 +85,9 @@ def mock_dependencies():
     build_context.can_build_type.return_value = True
     build_context.id = 1  # PROJ-208: Needed for callback
 
-    design_library = MagicMock()
-    design_library.scan_designs.return_value = []
-    design_library.designs_folder = "test"
+    design_catalog = MagicMock()
+    design_catalog.scan_designs.return_value = []
+    design_catalog.designs_folder = "test"
 
     design_loader = MagicMock()
     design_report = MagicMock()
@@ -98,7 +98,7 @@ def mock_dependencies():
 
     return {
         "build_context": build_context,
-        "design_library": design_library,
+        "design_catalog": design_catalog,
         "design_loader": design_loader,
         "design_report": design_report,
         "on_queue_changed": on_queue_changed,
@@ -111,7 +111,7 @@ def controller(mock_dependencies):
     """Create a BuildQueueController instance."""
     return BuildQueueController(
         build_context=mock_dependencies["build_context"],
-        design_library=mock_dependencies["design_library"],
+        design_catalog=mock_dependencies["design_catalog"],
         design_loader=mock_dependencies["design_loader"],
         design_report=mock_dependencies["design_report"],
         on_queue_changed=mock_dependencies["on_queue_changed"],

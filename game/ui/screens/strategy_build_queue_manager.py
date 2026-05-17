@@ -109,7 +109,7 @@ class StrategyBuildQueueManager:
                 build_context=None,
                 on_close_callback=self._on_build_queue_close,
                 portrait_surface=portrait_surface,
-                design_library=design_library,
+                design_catalog=design_library,
                 design_loader=design_loader,
                 hex_coord=None,
                 galaxy=self._screen.galaxy,
@@ -139,7 +139,7 @@ class StrategyBuildQueueManager:
             if (self._last_active_empire_id is not None
                     and current_empire_id != self._last_active_empire_id):
                 screen.on_active_player_changed()
-            screen.design_library = design_library
+            screen.design_catalog = design_library
             screen.design_loader = design_loader
             screen.portrait_loader = BuildQueuePortraitLoader(
                 design_library, self._active_theme_id

@@ -79,8 +79,8 @@ def _make_handler(*, with_remove_callback: bool = True):
     portrait_loader.load_design_portrait.return_value = pygame.Surface((48, 48))
     portrait_loader.load_queue_item_portrait.return_value = pygame.Surface((48, 48))
 
-    design_library = MagicMock()
-    design_library.scan_designs.return_value = []
+    design_catalog = MagicMock()
+    design_catalog.scan_designs.return_value = []
 
     on_add = MagicMock()
     on_refresh_q = MagicMock()
@@ -89,7 +89,7 @@ def _make_handler(*, with_remove_callback: bool = True):
 
     handler = BuildQueueDragHandler(
         portrait_loader=portrait_loader,
-        design_library=design_library,
+        design_catalog=design_catalog,
         on_add_to_queue=on_add,
         on_refresh_queue=on_refresh_q,
         on_refresh_design_report=on_refresh_dr,
@@ -246,7 +246,7 @@ class TestMouseDownDesignList:
     def test_mouse_down_on_design_button_starts_drag_with_portrait(self):
         h = _make_handler()
         design = _make_design("DSN-1", name="Frigate")
-        h.design_library.scan_designs.return_value = [design]
+        h.design_catalog.scan_designs.return_value = [design]
 
         btn = _make_design_button("DSN-1", pygame.Rect(40, 40, 100, 30))
         scrollable = _make_scrollable([btn])
@@ -272,7 +272,7 @@ class TestMouseDownDesignList:
     def test_mouse_down_on_design_button_with_no_matching_design_skips_dragged_item(self):
         h = _make_handler()
         # scan_designs returns nothing matching the button's design_id
-        h.design_library.scan_designs.return_value = []
+        h.design_catalog.scan_designs.return_value = []
         btn = _make_design_button("DSN-MISSING", pygame.Rect(40, 40, 100, 30))
         scrollable = _make_scrollable([btn])
         vt = MagicMock()
@@ -293,7 +293,7 @@ class TestMouseDownDesignList:
     def test_mouse_down_on_design_button_uses_48px_portrait_for_cursor(self):
         h = _make_handler()
         design = _make_design("DSN-2")
-        h.design_library.scan_designs.return_value = [design]
+        h.design_catalog.scan_designs.return_value = [design]
         btn = _make_design_button("DSN-2", pygame.Rect(40, 40, 100, 30))
         scrollable = _make_scrollable([btn])
         vt = MagicMock()

@@ -24,7 +24,7 @@ from game.core.validation import ValidationResult
 from game.strategy.data.empire import Empire
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.planetary_facility import PlanetaryFacility
-from game.strategy.systems.design_library import DesignLoadResult
+from game.strategy.systems.design_repository import DesignLoadResult
 
 
 # -------------------------------------------------------------------------
@@ -161,7 +161,7 @@ def _make_planet(name: str, planet_id: int, hex_coord: HexCoord) -> Planet:
 
 
 @pytest.fixture
-def design_library_mock():
+def design_catalog_mock():
     mock = MagicMock()
     complex_design = MagicMock()
     complex_design.design_id = "mining_complex_mk1"
@@ -238,7 +238,7 @@ def _make_fleet(fleet_id: int, hex_coord: HexCoord, name: str = "Test Fleet"):
 
 
 def test_init_with_no_yard_constructs_ui_shell_only(
-    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    ui_manager, session_with_planet, design_catalog_mock, design_loader_mock,
     galaxy_with_planet, empire,
 ):
     """`BuildQueueScreen(initial_yard=None)` leaves yard state empty + no panels."""
@@ -250,7 +250,7 @@ def test_init_with_no_yard_constructs_ui_shell_only(
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=None,
         galaxy=galaxy_with_planet,
@@ -270,7 +270,7 @@ def test_init_with_no_yard_constructs_ui_shell_only(
 
 
 def test_open_for_yard_populates_state_for_planet(
-    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    ui_manager, session_with_planet, design_catalog_mock, design_loader_mock,
     galaxy_with_planet, empire, planet_a, hex_a,
 ):
     """After ``open_for_yard``, all 12 yard-specific attributes are set."""
@@ -283,7 +283,7 @@ def test_open_for_yard_populates_state_for_planet(
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=None,
         galaxy=galaxy_with_planet,
@@ -312,7 +312,7 @@ def test_open_for_yard_populates_state_for_planet(
 
 
 def test_open_for_yard_initial_yard_kwarg_matches_post_open_state(
-    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    ui_manager, session_with_planet, design_catalog_mock, design_loader_mock,
     galaxy_with_planet, empire, planet_a, hex_a,
 ):
     """Behavior parity: eager (`initial_yard=`) vs lazy (`open_for_yard`)
@@ -325,7 +325,7 @@ def test_open_for_yard_initial_yard_kwarg_matches_post_open_state(
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
         galaxy=galaxy_with_planet,
@@ -339,7 +339,7 @@ def test_open_for_yard_initial_yard_kwarg_matches_post_open_state(
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=None,
         galaxy=galaxy_with_planet,
@@ -364,7 +364,7 @@ def test_open_for_yard_initial_yard_kwarg_matches_post_open_state(
 
 
 def test_open_for_yard_planet_to_fleet_rebuilds_panels(
-    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    ui_manager, session_with_planet, design_catalog_mock, design_loader_mock,
     galaxy_with_planet, empire, planet_a, hex_a, hex_b,
 ):
     """Cross-context-type (planet→fleet) kills + reconstructs the panel tree."""
@@ -377,7 +377,7 @@ def test_open_for_yard_planet_to_fleet_rebuilds_panels(
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
         galaxy=galaxy_with_planet,
@@ -402,7 +402,7 @@ def test_open_for_yard_planet_to_fleet_rebuilds_panels(
 
 
 def test_open_for_yard_planet_to_planet_does_not_rebuild_panels(
-    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    ui_manager, session_with_planet, design_catalog_mock, design_loader_mock,
     galaxy_with_planet, empire, planet_a, planet_b, hex_a, hex_b,
 ):
     """Same-context-type opens reuse the existing panel tree."""
@@ -416,7 +416,7 @@ def test_open_for_yard_planet_to_planet_does_not_rebuild_panels(
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
         galaxy=galaxy_with_planet,
@@ -451,7 +451,7 @@ def test_open_for_yard_planet_to_planet_does_not_rebuild_panels(
 
 
 def test_obs2_open_for_yard_planet_to_planet_refreshes_planet_report(
-    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    ui_manager, session_with_planet, design_catalog_mock, design_loader_mock,
     galaxy_with_planet, empire, planet_a, planet_b, hex_a, hex_b,
 ):
     """Open on Planet A → open on Planet B → panels.planet_report.planet
@@ -466,7 +466,7 @@ def test_obs2_open_for_yard_planet_to_planet_refreshes_planet_report(
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
         galaxy=galaxy_with_planet,
@@ -490,7 +490,7 @@ def test_obs2_open_for_yard_planet_to_planet_refreshes_planet_report(
 
 
 def test_obs2_open_for_yard_fleet_to_planet_rebuilds_panels(
-    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    ui_manager, session_with_planet, design_catalog_mock, design_loader_mock,
     galaxy_with_planet, empire, planet_a, hex_a, hex_b,
 ):
     """Fleet → Planet transition: panels.planet_report is None before
@@ -509,7 +509,7 @@ def test_obs2_open_for_yard_fleet_to_planet_rebuilds_panels(
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_b,
         galaxy=galaxy_with_planet,
@@ -530,7 +530,7 @@ def test_obs2_open_for_yard_fleet_to_planet_rebuilds_panels(
 
 
 def test_obs2_open_for_yard_planet_to_fleet_round_trip_back_to_planet(
-    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    ui_manager, session_with_planet, design_catalog_mock, design_loader_mock,
     galaxy_with_planet, empire, planet_a, planet_b, hex_a, hex_b,
 ):
     """Planet → Fleet → Planet round trip: the final planet_report must
@@ -549,7 +549,7 @@ def test_obs2_open_for_yard_planet_to_fleet_round_trip_back_to_planet(
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
         galaxy=galaxy_with_planet,
@@ -573,25 +573,25 @@ def test_obs2_open_for_yard_planet_to_fleet_round_trip_back_to_planet(
 
 
 # =========================================================================
-# QA Obs 2 (2026-05-16): BuildQueueController.design_library not rebound
+# QA Obs 2 (2026-05-16): BuildQueueController.design_catalog not rebound
 # on cached BuildQueueScreen reuse across player swap
 # =========================================================================
 #
-# PROJ-410 Phase 4 Task 4.2 rebinds screen.design_library + drag_handler.design_library
+# PROJ-410 Phase 4 Task 4.2 rebinds screen.design_catalog + drag_handler.design_catalog
 # on the cached BuildQueueScreen when the manager calls open_for_yard with a
 # fresh DesignLibrary (e.g. on hot-seat player swap). But the controller was
 # constructed once in _rebuild_panels with the original DesignLibrary and its
-# own self.design_library is never updated. Result: controller.scan_designs()
+# own self.design_catalog is never updated. Result: controller.scan_designs()
 # reads from the original empire's folder even after the screen "thinks" it's
 # bound to the new empire's library.
 # =========================================================================
 
 
-def test_obs_p2_design_library_open_for_yard_rebinds_controller_design_library(
-    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+def test_obs_p2_design_catalog_open_for_yard_rebinds_controller_design_catalog(
+    ui_manager, session_with_planet, design_catalog_mock, design_loader_mock,
     galaxy_with_planet, empire, planet_a, planet_b, hex_a, hex_b,
 ):
-    """Caller (strategy_build_queue_manager) sets screen.design_library to a
+    """Caller (strategy_build_queue_manager) sets screen.design_catalog to a
     new instance before open_for_yard. The controller must follow."""
     from game.ui.screens.build_queue_screen import BuildQueueScreen
 
@@ -603,7 +603,7 @@ def test_obs_p2_design_library_open_for_yard_rebinds_controller_design_library(
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
         galaxy=galaxy_with_planet,
@@ -612,23 +612,23 @@ def test_obs_p2_design_library_open_for_yard_rebinds_controller_design_library(
     )
 
     # Initial controller library matches the construction-time library.
-    assert screen.controller.design_library is design_library_mock
+    assert screen.controller.design_catalog is design_catalog_mock
 
     # Caller swaps to a new empire's library + loader (manager flow).
     new_library = MagicMock()
     new_library.scan_designs.return_value = []
     new_library.designs_folder = "test_designs_empire_2"
     new_library.load_design_data.return_value = (
-        design_library_mock.load_design_data.return_value
+        design_catalog_mock.load_design_data.return_value
     )
     new_loader = MagicMock()
-    screen.design_library = new_library
+    screen.design_catalog = new_library
     screen.design_loader = new_loader
 
     screen.open_for_yard(planet_b, hex_coord=hex_b)
 
-    assert screen.controller.design_library is new_library, (
-        "QA Obs 2: open_for_yard must rebind controller.design_library to "
+    assert screen.controller.design_catalog is new_library, (
+        "QA Obs 2: open_for_yard must rebind controller.design_catalog to "
         "the screen's current library. Without this, the cached controller "
         "keeps scanning the previous empire's designs folder after a "
         "hot-seat player swap (and rebind by the manager)."
@@ -645,7 +645,7 @@ def test_drag_handler_reset_state_clears_all_5_fields():
 
     handler = BuildQueueDragHandler(
         portrait_loader=MagicMock(),
-        design_library=MagicMock(),
+        design_catalog=MagicMock(),
         on_add_to_queue=MagicMock(),
         on_refresh_queue=MagicMock(),
         on_refresh_design_report=MagicMock(),
@@ -667,7 +667,7 @@ def test_drag_handler_reset_state_clears_all_5_fields():
 
 
 def test_hide_makes_panels_invisible_but_alive(
-    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    ui_manager, session_with_planet, design_catalog_mock, design_loader_mock,
     galaxy_with_planet, empire, planet_a, hex_a,
 ):
     from game.ui.screens.build_queue_screen import BuildQueueScreen
@@ -678,7 +678,7 @@ def test_hide_makes_panels_invisible_but_alive(
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
         galaxy=galaxy_with_planet,
@@ -693,7 +693,7 @@ def test_hide_makes_panels_invisible_but_alive(
 
 
 def test_show_after_hide_makes_panels_visible(
-    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    ui_manager, session_with_planet, design_catalog_mock, design_loader_mock,
     galaxy_with_planet, empire, planet_a, hex_a,
 ):
     from game.ui.screens.build_queue_screen import BuildQueueScreen
@@ -704,7 +704,7 @@ def test_show_after_hide_makes_panels_visible(
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
         galaxy=galaxy_with_planet,
@@ -719,7 +719,7 @@ def test_show_after_hide_makes_panels_visible(
 
 
 def test_is_visible_reflects_panel_visibility(
-    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    ui_manager, session_with_planet, design_catalog_mock, design_loader_mock,
     galaxy_with_planet, empire, planet_a, hex_a,
 ):
     """``is_visible()`` covers shell-only / opened / hidden / shown."""
@@ -731,7 +731,7 @@ def test_is_visible_reflects_panel_visibility(
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=None,
         galaxy=galaxy_with_planet,
@@ -751,7 +751,7 @@ def test_is_visible_reflects_panel_visibility(
 
 
 def test_hide_kills_planet_selection_window_if_open(
-    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    ui_manager, session_with_planet, design_catalog_mock, design_loader_mock,
     galaxy_with_planet, empire, planet_a, hex_a,
 ):
     from game.ui.screens.build_queue_screen import BuildQueueScreen
@@ -762,7 +762,7 @@ def test_hide_kills_planet_selection_window_if_open(
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
         galaxy=galaxy_with_planet,
@@ -785,7 +785,7 @@ def test_hide_kills_planet_selection_window_if_open(
 
 
 def test_request_close_hides_and_invokes_on_close(
-    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    ui_manager, session_with_planet, design_catalog_mock, design_loader_mock,
     galaxy_with_planet, empire, planet_a, hex_a,
 ):
     """PROJ-376 Phase 2: ``_request_close`` is the close-button entry point.
@@ -801,7 +801,7 @@ def test_request_close_hides_and_invokes_on_close(
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=on_close,
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
         galaxy=galaxy_with_planet,
@@ -902,7 +902,7 @@ def _spy_invalidate(vt):
 
 
 def test_PROJ410_task_1_2_yard_switch_invalidates_widget_caches(
-    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    ui_manager, session_with_planet, design_catalog_mock, design_loader_mock,
     galaxy_with_planet, empire, planet_a, hex_a,
 ):
     """Task 1.2: switching the active queue source on the same planet must
@@ -919,7 +919,7 @@ def test_PROJ410_task_1_2_yard_switch_invalidates_widget_caches(
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
         galaxy=galaxy_with_planet,
@@ -942,7 +942,7 @@ def test_PROJ410_task_1_2_yard_switch_invalidates_widget_caches(
 
 
 def test_PROJ410_task_1_3_close_and_reopen_invalidates_cache(
-    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    ui_manager, session_with_planet, design_catalog_mock, design_loader_mock,
     galaxy_with_planet, empire, planet_a, hex_a,
 ):
     """Task 1.3: close + reopen on the same yard must flush widget caches.
@@ -959,7 +959,7 @@ def test_PROJ410_task_1_3_close_and_reopen_invalidates_cache(
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
         galaxy=galaxy_with_planet,
@@ -989,7 +989,7 @@ def test_PROJ410_task_1_3_close_and_reopen_invalidates_cache(
 
 
 def test_PROJ410_task_1_5_ship_yard_to_planetary_yard_invalidates(
-    ui_manager, design_library_mock, design_loader_mock, empire, hex_a, mock_registries,
+    ui_manager, design_catalog_mock, design_loader_mock, empire, hex_a, mock_registries,
 ):
     """Task 1.5: switching between ship-yard and planetary-yard on the
     SAME planet must invalidate widget caches between yard activations.
@@ -1007,7 +1007,7 @@ def test_PROJ410_task_1_5_ship_yard_to_planetary_yard_invalidates(
         facade=session,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
         galaxy=galaxy,
@@ -1035,7 +1035,7 @@ def test_PROJ410_task_1_5_ship_yard_to_planetary_yard_invalidates(
 
 
 def test_PROJ410_task_1_7_yard_selector_renders_for_second_empire(
-    ui_manager, design_library_mock, design_loader_mock, hex_a, mock_registries,
+    ui_manager, design_catalog_mock, design_loader_mock, hex_a, mock_registries,
 ):
     """Task 1.7: when the cached BuildQueueScreen is reused for a second
     empire's planet, the yard selector must enumerate the second empire's
@@ -1078,7 +1078,7 @@ def test_PROJ410_task_1_7_yard_selector_renders_for_second_empire(
         facade=session,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
         galaxy=galaxy,
@@ -1132,7 +1132,7 @@ def test_PROJ410_task_1_7_yard_selector_renders_for_second_empire(
 
 
 def test_PROJ410_task_1_9_zero_source_yard_clears_controller_queue_refs(
-    ui_manager, design_library_mock, design_loader_mock, empire, hex_a, hex_b, mock_registries,
+    ui_manager, design_catalog_mock, design_loader_mock, empire, hex_a, hex_b, mock_registries,
 ):
     """Task 1.9: when switching to a planet with NO yard facilities,
     controller.active_queue_source AND controller.selected_queue_sources
@@ -1158,7 +1158,7 @@ def test_PROJ410_task_1_9_zero_source_yard_clears_controller_queue_refs(
         facade=session,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
         galaxy=galaxy,
@@ -1188,7 +1188,7 @@ def test_PROJ410_task_1_9_zero_source_yard_clears_controller_queue_refs(
 
 
 def test_request_close_can_be_re_opened(
-    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    ui_manager, session_with_planet, design_catalog_mock, design_loader_mock,
     galaxy_with_planet, empire, planet_a, planet_b, hex_a, hex_b,
 ):
     """PROJ-376 Phase 2: the cached instance is reusable after _request_close."""
@@ -1202,7 +1202,7 @@ def test_request_close_can_be_re_opened(
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
         galaxy=galaxy_with_planet,
@@ -1247,7 +1247,7 @@ def test_request_close_can_be_re_opened(
 
 
 def test_issue17_open_for_yard_invokes_update_queue_header(
-    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    ui_manager, session_with_planet, design_catalog_mock, design_loader_mock,
     galaxy_with_planet, empire, planet_a, hex_a,
 ):
     """Issue #17 (header path): ``open_for_yard`` must invoke
@@ -1267,7 +1267,7 @@ def test_issue17_open_for_yard_invokes_update_queue_header(
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
         galaxy=galaxy_with_planet,
@@ -1297,7 +1297,7 @@ def test_issue17_open_for_yard_invokes_update_queue_header(
 
 
 def test_issue17_reopen_after_yard_switch_clears_stale_label_text(
-    ui_manager, design_library_mock, design_loader_mock, empire, hex_a, mock_registries,
+    ui_manager, design_catalog_mock, design_loader_mock, empire, hex_a, mock_registries,
 ):
     """Issue #17 (row content path): close+reopen after a yard switch
     with items must leave NO stale label text on pool rows beyond
@@ -1323,7 +1323,7 @@ def test_issue17_reopen_after_yard_switch_clears_stale_label_text(
         facade=session,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
         galaxy=galaxy,
@@ -1420,7 +1420,7 @@ def test_issue17_reopen_after_yard_switch_clears_stale_label_text(
 
 
 def test_issue17_show_reasserts_row_visibility_after_panel_show(
-    ui_manager, design_library_mock, design_loader_mock, empire, hex_a, mock_registries,
+    ui_manager, design_catalog_mock, design_loader_mock, empire, hex_a, mock_registries,
 ):
     """Issue #17 follow-up: ``BuildQueueScreen.show()`` must re-run the
     virtual table's visibility pass AFTER ``panels.background.show()``
@@ -1450,7 +1450,7 @@ def test_issue17_show_reasserts_row_visibility_after_panel_show(
         facade=session,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
         galaxy=galaxy,
@@ -1499,7 +1499,7 @@ def test_issue17_show_reasserts_row_visibility_after_panel_show(
 
 
 def test_issue17_show_reasserts_child_widget_visibility_after_panel_show(
-    ui_manager, design_library_mock, design_loader_mock, empire, hex_a, mock_registries,
+    ui_manager, design_catalog_mock, design_loader_mock, empire, hex_a, mock_registries,
 ):
     """Issue #17 follow-up: the child widgets inside hidden rows
     (action buttons, image, label) must also be hidden after
@@ -1529,7 +1529,7 @@ def test_issue17_show_reasserts_child_widget_visibility_after_panel_show(
         facade=session,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
-        design_library=design_library_mock,
+        design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
         galaxy=galaxy,

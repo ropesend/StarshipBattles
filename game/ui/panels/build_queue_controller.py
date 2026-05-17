@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from game.strategy.data.galaxy import Galaxy
     from game.strategy.data.empire import Empire
     from game.core.hex_math import HexCoord
-    from game.strategy.systems.design_library import DesignLibrary
+    from game.strategy.systems.design_catalog import DesignCatalog
     from game.ui.services.design_loader_adapter import DesignLoaderAdapter
     from game.ui.panels.design_report_panel import DesignReportPanel
 
@@ -66,7 +66,7 @@ class BuildQueueController:
     def __init__(
         self,
         build_context: Union['Planet', 'Fleet', 'BuildContext'],
-        design_library: 'DesignLibrary',
+        design_catalog: 'DesignCatalog',
         design_loader: 'DesignLoaderAdapter',
         design_report: 'DesignReportPanel',
         on_queue_changed: Callable[[], None],
@@ -82,7 +82,7 @@ class BuildQueueController:
 
         Args:
             build_context: Planet or Fleet whose construction_queue is managed (fallback)
-            design_library: For scanning/loading designs
+            design_catalog: For scanning/loading designs
             design_loader: DesignLoaderAdapter for creating ship objects
             design_report: DesignReportPanel for updating display
             on_queue_changed: Callback to trigger queue display refresh
@@ -94,7 +94,7 @@ class BuildQueueController:
             registries: GameRegistries for design validation
         """
         self.build_context = build_context
-        self.design_library = design_library
+        self.design_catalog = design_catalog
         self._registries = registries
         self.design_loader = design_loader
         self.design_report = design_report
@@ -160,8 +160,15 @@ class BuildQueueController:
         Returns:
             List of design objects matching the category
         """
-        all_designs = self.design_library.scan_designs()
-        logger.debug(f"BuildQueue: Scanned {len(all_designs)} total designs from {self.design_library.designs_folder}")
+        all_designs = self.design_catalog.scan_designs()
+        # PROJ-434 Phase 1: ``designs_folder`` was a DesignLibrary attribute
+        # but DesignCatalog has no filesystem field; log the empire id instead
+        # so debug output still identifies the source.
+        logger.debug(
+            "BuildQueue: Scanned %d total designs (empire=%s)",
+            len(all_designs),
+            getattr(self.design_catalog, "empire_id", "?"),
+        )
 
         type_map = {
             "complex": "Planetary Complex",
@@ -214,11 +221,11 @@ class BuildQueueController:
         microseconds; mtime changes on every save, so editing a design
         (workshop save) naturally invalidates that one cache entry.
 
-        Routes through DesignLibrary.get_design_path so path logic stays in
+        Routes through DesignCatalog.get_design_path so path logic stays in
         the library — the controller never builds filesystem paths itself.
         """
         try:
-            path = self.design_library.get_design_path(design_id)
+            path = self.design_catalog.get_design_path(design_id)
             # PROJ-373 review MIN-002: legacy HFS+ has 1-second mtime resolution.
             # Two saves within the same second on HFS+ produce identical fingerprints
             # → cache returns stale validation. Self-corrects on next open per
@@ -253,7 +260,7 @@ class BuildQueueController:
                 continue
 
             try:
-                load_result = self.design_library.load_design_data(d.design_id)
+                load_result = self.design_catalog.load_design_data(d.design_id)
                 if not load_result.success:
                     d.design_valid = False
                     self._validation_cache[d.design_id] = (fingerprint, False)
@@ -319,7 +326,7 @@ class BuildQueueController:
             Dict of resource type -> amount, empty dict on error.
         """
         try:
-            load_result = self.design_library.load_design_data(design_id)
+            load_result = self.design_catalog.load_design_data(design_id)
             if not load_result.success:
                 return {}
             ship = self.design_loader.load_ship_from_design_data(load_result.data, 0, 0)
@@ -687,8 +694,8 @@ class BuildQueueController:
             design_id: Design ID to load and display
         """
         try:
-            # Load design data using DesignLibrary (strategy layer)
-            load_result = self.design_library.load_design_data(design_id)
+            # Load design data using DesignCatalog (strategy layer)
+            load_result = self.design_catalog.load_design_data(design_id)
 
             if not load_result.success:
                 logger.warning(f"Could not load design {design_id}: {load_result.error}")

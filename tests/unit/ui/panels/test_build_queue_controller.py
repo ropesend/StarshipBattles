@@ -13,7 +13,7 @@ from typing import Optional
 
 from game.ui.panels.build_queue_controller import BuildQueueController
 from game.strategy.data.build_queue_source import BuildQueueSource, get_default_production_rates
-from game.strategy.systems.design_library import DesignLoadResult
+from game.strategy.systems.design_repository import DesignLoadResult
 
 
 # PROJ-208: Registry for tracking entities by ID for callback resolution
@@ -79,7 +79,7 @@ def _make_controller(build_context=None, entity_registry=None) -> BuildQueueCont
 
     return BuildQueueController(
         build_context=build_context,
-        design_library=mock_library,
+        design_catalog=mock_library,
         design_loader=mock_loader,
         design_report=mock_report,
         on_queue_changed=on_changed,
@@ -509,7 +509,7 @@ class TestBuildTimeCalculation:
 
         return BuildQueueController(
             build_context=build_context,
-            design_library=mock_library,
+            design_catalog=mock_library,
             design_loader=mock_loader,
             design_report=mock_report,
             on_queue_changed=on_changed,
@@ -691,7 +691,7 @@ class TestBuildTimeCalculation:
 
         controller = BuildQueueController(
             build_context=build_context,
-            design_library=mock_library,
+            design_catalog=mock_library,
             design_loader=mock_loader,
             design_report=MagicMock(),
             on_queue_changed=MagicMock(),
@@ -741,7 +741,7 @@ class TestPlanetSelectionForFleetComplexes:
 
         controller = BuildQueueController(
             build_context=build_context,
-            design_library=mock_library,
+            design_catalog=mock_library,
             design_loader=mock_loader,
             design_report=mock_report,
             on_queue_changed=on_changed,
@@ -991,7 +991,7 @@ class TestPerResourceBuildRates:
 
         return BuildQueueController(
             build_context=build_context,
-            design_library=mock_library,
+            design_catalog=mock_library,
             design_loader=mock_loader,
             design_report=mock_report,
             on_queue_changed=on_changed,
@@ -1129,7 +1129,7 @@ class TestControllerRoleFiltering:
 
         return BuildQueueController(
             build_context=build_context,
-            design_library=mock_library,
+            design_catalog=mock_library,
             design_loader=MagicMock(),
             design_report=MagicMock(),
             on_queue_changed=MagicMock(),
@@ -1224,7 +1224,7 @@ class TestCharacterizationCoverageGaps:
 
         return BuildQueueController(
             build_context=build_context,
-            design_library=mock_library,
+            design_catalog=mock_library,
             design_loader=MagicMock(),
             design_report=MagicMock(),
             on_queue_changed=MagicMock(),
@@ -1325,7 +1325,7 @@ class TestCharacterizationCoverageGaps:
         d.design_id = "DSN-X"
         load_result = MagicMock()
         load_result.success = False
-        controller.design_library.load_design_data.return_value = load_result
+        controller.design_catalog.load_design_data.return_value = load_result
         # Patch DesignValidator so __init__ succeeds; validate is never reached
         # because load_result.success is False.
         from unittest.mock import patch
@@ -1340,7 +1340,7 @@ class TestCharacterizationCoverageGaps:
         d = MagicMock()
         d.design_id = "DSN-X"
         # load_design_data raises → broad-catch sets design_valid=True
-        controller.design_library.load_design_data.side_effect = RuntimeError("boom")
+        controller.design_catalog.load_design_data.side_effect = RuntimeError("boom")
         from unittest.mock import patch
         with patch("game.strategy.services.design_validator.DesignValidator"):
             controller._validate_designs([d])
@@ -1351,7 +1351,7 @@ class TestCharacterizationCoverageGaps:
     def test_calculate_build_turns_no_cost_returns_one(self):
         controller = self._make_controller([])
         # Make _get_design_cost return empty
-        controller.design_library.load_design_data.return_value = MagicMock(success=False)
+        controller.design_catalog.load_design_data.return_value = MagicMock(success=False)
         turns = controller._calculate_build_turns("DSN-X", {"metals": 100.0})
         assert turns == 1.0
 
@@ -1361,7 +1361,7 @@ class TestCharacterizationCoverageGaps:
         load_result = MagicMock()
         load_result.success = True
         load_result.data = {}
-        controller.design_library.load_design_data.return_value = load_result
+        controller.design_catalog.load_design_data.return_value = load_result
         ship = MagicMock()
         ship.construction_cost = {"metals": 100}
         controller.design_loader.load_ship_from_design_data.return_value = ship
@@ -1374,7 +1374,7 @@ class TestCharacterizationCoverageGaps:
         load_result = MagicMock()
         load_result.success = True
         load_result.data = {}
-        controller.design_library.load_design_data.return_value = load_result
+        controller.design_catalog.load_design_data.return_value = load_result
         ship = MagicMock()
         ship.construction_cost = {"metals": 100, "exotics": 50}
         controller.design_loader.load_ship_from_design_data.return_value = ship
@@ -1388,7 +1388,7 @@ class TestCharacterizationCoverageGaps:
         load_result = MagicMock()
         load_result.success = True
         load_result.data = {}
-        controller.design_library.load_design_data.return_value = load_result
+        controller.design_catalog.load_design_data.return_value = load_result
         ship = MagicMock()
         ship.construction_cost = {"metals": 1}
         controller.design_loader.load_ship_from_design_data.return_value = ship
@@ -1398,14 +1398,14 @@ class TestCharacterizationCoverageGaps:
 
     def test_get_design_cost_load_failure_returns_empty_dict(self):
         controller = self._make_controller([])
-        controller.design_library.load_design_data.return_value = MagicMock(success=False)
+        controller.design_catalog.load_design_data.return_value = MagicMock(success=False)
         cost = controller._get_design_cost("DSN-X")
         assert cost == {}
 
     def test_get_design_cost_oserror_caught_returns_empty_dict(self):
         """Broad-catch path on (OSError, ValueError, KeyError)."""
         controller = self._make_controller([])
-        controller.design_library.load_design_data.side_effect = OSError("disk")
+        controller.design_catalog.load_design_data.side_effect = OSError("disk")
         cost = controller._get_design_cost("DSN-X")
         assert cost == {}
 
@@ -1413,7 +1413,7 @@ class TestCharacterizationCoverageGaps:
 
     def test_refresh_design_report_load_failure_shows_placeholder(self):
         controller = self._make_controller([])
-        controller.design_library.load_design_data.return_value = MagicMock(
+        controller.design_catalog.load_design_data.return_value = MagicMock(
             success=False, error="not found"
         )
         controller.refresh_design_report("DSN-X")
@@ -1422,14 +1422,14 @@ class TestCharacterizationCoverageGaps:
 
     def test_refresh_design_report_ship_load_returns_none_shows_placeholder(self):
         controller = self._make_controller([])
-        controller.design_library.load_design_data.return_value = MagicMock(success=True, data={})
+        controller.design_catalog.load_design_data.return_value = MagicMock(success=True, data={})
         controller.design_loader.load_ship_from_design_data.return_value = None
         controller.refresh_design_report("DSN-X")
         controller.design_report.show_placeholder.assert_called_once()
 
     def test_refresh_design_report_success_calls_update_design(self):
         controller = self._make_controller([])
-        controller.design_library.load_design_data.return_value = MagicMock(success=True, data={})
+        controller.design_catalog.load_design_data.return_value = MagicMock(success=True, data={})
         ship = MagicMock()
         ship.name = "Frigate"
         controller.design_loader.load_ship_from_design_data.return_value = ship
@@ -1440,7 +1440,7 @@ class TestCharacterizationCoverageGaps:
     def test_refresh_design_report_exception_shows_placeholder(self):
         """OSError/ValueError/KeyError inside the try-block triggers placeholder."""
         controller = self._make_controller([])
-        controller.design_library.load_design_data.side_effect = ValueError("bad data")
+        controller.design_catalog.load_design_data.side_effect = ValueError("bad data")
         controller.refresh_design_report("DSN-X")
         controller.design_report.show_placeholder.assert_called_once()
 
@@ -1484,7 +1484,7 @@ class TestValidationCache:
 
         controller = BuildQueueController(
             build_context=build_context,
-            design_library=mock_library,
+            design_catalog=mock_library,
             design_loader=MagicMock(),
             design_report=MagicMock(),
             on_queue_changed=MagicMock(),
@@ -1593,14 +1593,14 @@ class TestValidationCache:
         monkeypatch.setattr("os.stat", lambda _path: MagicMock(st_mtime_ns=1))
 
         # First call: load_design_data raises → broad-catch fallback (design_valid=True)
-        controller.design_library.load_design_data.side_effect = RuntimeError("boom")
+        controller.design_catalog.load_design_data.side_effect = RuntimeError("boom")
         d = self._design("DSN-1")
         controller._validate_designs([d])
         assert d.design_valid is True
 
         # Second call: load_design_data succeeds → must run validator (no stale cache)
-        controller.design_library.load_design_data.side_effect = None
-        controller.design_library.load_design_data.return_value = MagicMock(success=True, data={})
+        controller.design_catalog.load_design_data.side_effect = None
+        controller.design_catalog.load_design_data.return_value = MagicMock(success=True, data={})
         d2 = self._design("DSN-1")
         controller._validate_designs([d2])
         assert counter["count"] == 1  # Validator ran on the second call only
@@ -1622,7 +1622,7 @@ class TestValidationCache:
         """Cache load-failure as design_valid=False so repeats don't re-attempt."""
         controller, counter = self._make_controller_with_validator_spy(monkeypatch)
         monkeypatch.setattr("os.stat", lambda _path: MagicMock(st_mtime_ns=1))
-        controller.design_library.load_design_data.return_value = MagicMock(success=False)
+        controller.design_catalog.load_design_data.return_value = MagicMock(success=False)
         d1 = self._design("DSN-1")
         controller._validate_designs([d1])
         d2 = self._design("DSN-1")
@@ -1630,7 +1630,7 @@ class TestValidationCache:
         assert d1.design_valid is False
         assert d2.design_valid is False
         # load_design_data should be called once (cache hit on second call)
-        assert controller.design_library.load_design_data.call_count == 1
+        assert controller.design_catalog.load_design_data.call_count == 1
 
     def test_validator_constructed_lazily_on_first_miss_only(self, monkeypatch):
         """DesignValidator is constructed at most once per controller, lazily."""

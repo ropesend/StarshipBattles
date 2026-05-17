@@ -17,7 +17,7 @@ from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 from game.strategy.data.build_queue_source import BuildQueueSource
 from game.core.validation import ValidationResult
-from game.strategy.systems.design_library import DesignLoadResult
+from game.strategy.systems.design_repository import DesignLoadResult
 
 
 class MockGalaxy:
@@ -102,7 +102,7 @@ class MockSession:
 
 
 @pytest.fixture
-def mock_design_library():
+def mock_design_catalog():
     mock_instance = MagicMock()
     design = MagicMock()
     design.design_id = "mining_complex_mk1"
@@ -120,7 +120,7 @@ def mock_design_loader():
 
 
 @pytest.fixture
-def build_queue_screen(ui_manager, mock_design_library, mock_design_loader, mock_registries):
+def build_queue_screen(ui_manager, mock_design_catalog, mock_design_loader, mock_registries):
     """Create BuildQueueScreen for testing queue selector."""
     manager = ui_manager
 
@@ -164,7 +164,7 @@ def build_queue_screen(ui_manager, mock_design_library, mock_design_loader, mock
         manager,
         planet,
         on_close,
-        design_library=mock_design_library,
+        design_catalog=mock_design_catalog,
         design_loader=mock_design_loader,
         hex_coord=hex_coord,
         galaxy=galaxy,
@@ -297,7 +297,7 @@ def test_multiple_queue_sources_create_buttons(ui_manager):
     from game.ui.screens.build_queue_screen import BuildQueueScreen
     bq = BuildQueueScreen(
         manager, planet, lambda: None,
-        design_library=mock_lib, design_loader=MagicMock(),
+        design_catalog=mock_lib, design_loader=MagicMock(),
         hex_coord=hex_coord,
         galaxy=galaxy,
         empire=empire,
@@ -353,7 +353,7 @@ def test_multi_select_sets_active_to_none(ui_manager):
     from game.ui.screens.build_queue_screen import BuildQueueScreen
     bq = BuildQueueScreen(
         manager, planet, lambda: None,
-        design_library=mock_lib, design_loader=MagicMock(),
+        design_catalog=mock_lib, design_loader=MagicMock(),
         hex_coord=hex_coord,
         galaxy=galaxy,
         empire=empire,
@@ -430,7 +430,7 @@ def test_queue_display_shows_active_source_items(ui_manager):
     from game.ui.screens.build_queue_screen import BuildQueueScreen
     bq = BuildQueueScreen(
         manager, planet, lambda: None,
-        design_library=mock_lib, design_loader=MagicMock(),
+        design_catalog=mock_lib, design_loader=MagicMock(),
         hex_coord=hex_coord,
         galaxy=galaxy,
         empire=empire,

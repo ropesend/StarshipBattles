@@ -292,7 +292,7 @@ def test_bottom_bar_exists(build_queue_screen):
     assert build_queue_screen.panels.btn_close is not None
 
 
-def test_no_savegame_path_handled_gracefully(mock_design_library, mock_design_loader, mock_registries, ui_manager):
+def test_no_savegame_path_handled_gracefully(mock_design_catalog, mock_design_loader, mock_registries, ui_manager):
     """Test that BuildQueueScreen handles None savegame_path without crashing.
 
     PROJ-40: Updated to use DI injection for dependencies.
@@ -338,7 +338,7 @@ def test_no_savegame_path_handled_gracefully(mock_design_library, mock_design_lo
         manager,
         planet,
         lambda: None,
-        design_library=mock_design_library,
+        design_catalog=mock_design_catalog,
         design_loader=mock_design_loader,
         hex_coord=hex_coord,
         galaxy=galaxy,
@@ -347,9 +347,9 @@ def test_no_savegame_path_handled_gracefully(mock_design_library, mock_design_lo
         theme_id_supplier=lambda: "Federation",
     )
 
-    # Should create with design_library injected
+    # Should create with design_catalog injected
     assert screen_obj is not None
-    assert screen_obj.design_library is not None
+    assert screen_obj.design_catalog is not None
 
 
 def test_add_to_queue_defaults_to_1_turn(build_queue_screen):
@@ -384,7 +384,7 @@ def test_drag_item_uses_1_turn_default(build_queue_screen):
     assert turns == 1
 
 
-def test_add_ship_to_queue_with_shipyard(mock_design_library, mock_design_loader, mock_registries, ui_manager):
+def test_add_ship_to_queue_with_shipyard(mock_design_catalog, mock_design_loader, mock_registries, ui_manager):
     """Test that ships can be added when planet has a shipyard facility.
 
     Regression test for BUG-24: Ships couldn't be added to build queue
@@ -453,7 +453,7 @@ def test_add_ship_to_queue_with_shipyard(mock_design_library, mock_design_loader
         manager,
         planet,
         lambda: None,
-        design_library=mock_design_library,
+        design_catalog=mock_design_catalog,
         design_loader=mock_design_loader,
         hex_coord=hex_coord,
         galaxy=galaxy,

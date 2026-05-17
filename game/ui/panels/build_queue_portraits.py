@@ -49,7 +49,7 @@ RESOURCE_FALLBACK_COLORS = {
 }
 
 if TYPE_CHECKING:
-    from game.strategy.systems.design_library import DesignLibrary
+    from game.strategy.systems.design_catalog import DesignCatalog
 
 
 # Vehicle type color map for placeholder generation
@@ -78,13 +78,13 @@ class BuildQueuePortraitLoader:
 
     def __init__(
         self,
-        design_library: DesignLibrary,
+        design_catalog: DesignCatalog,
         theme_id_supplier: Callable[[], str],
     ) -> None:
         """Initialize the portrait loader.
 
         Args:
-            design_library: DesignLibrary for looking up designs.
+            design_catalog: DesignCatalog for looking up designs.
             theme_id_supplier: Zero-arg callable returning the current empire's
                 ``empire_theme_id`` string. The loader resolves the theme on
                 every render so hotseat empire-rotation is reflected without
@@ -94,9 +94,9 @@ class BuildQueuePortraitLoader:
         (a Pattern #5 facade-bypass backdoor renamed ``portrait_session=``
         at the call site) with a narrow callable that returns only the
         single string the loader actually needs. The class no longer
-        holds a reference to anything mutable beyond ``design_library``.
+        holds a reference to anything mutable beyond ``design_catalog``.
         """
-        self.design_library = design_library
+        self.design_catalog = design_catalog
         self._theme_id_supplier = theme_id_supplier
 
     def load_design_portrait(self, design, size: int) -> Optional[pygame.Surface]:
@@ -136,7 +136,7 @@ class BuildQueuePortraitLoader:
             Scaled pygame.Surface or None if not found
         """
         # Try to find design metadata for this design_id
-        designs = self.design_library.scan_designs()
+        designs = self.design_catalog.scan_designs()
         design = next((d for d in designs if d.design_id == design_id), None)
 
         if design:

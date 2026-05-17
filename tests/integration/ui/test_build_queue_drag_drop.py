@@ -6,7 +6,7 @@ from game.strategy.data.planet import Planet, PlanetType
 from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 from game.ui.screens.build_queue_screen import BuildQueueScreen
-from game.strategy.systems.design_library import DesignLoadResult
+from game.strategy.systems.design_repository import DesignLoadResult
 
 class MockGalaxy:
     """Minimal mock Galaxy for BuildQueueScreen tests."""
@@ -150,7 +150,7 @@ class MockSession:
         return getattr(entity, 'construction_queue', None)
 
 @pytest.fixture
-def mock_design_library():
+def mock_design_catalog():
     """Mock DesignLibrary for testing.
 
     PROJ-40: Updated to create mock directly instead of patching.
@@ -181,7 +181,7 @@ def mock_design_loader():
 
 
 @pytest.fixture
-def build_queue_screen(mock_design_library, mock_design_loader, mock_registries, ui_manager):
+def build_queue_screen(mock_design_catalog, mock_design_loader, mock_registries, ui_manager):
     """Create BuildQueueScreen for testing.
 
     PROJ-40: Updated to use DI injection.
@@ -221,7 +221,7 @@ def build_queue_screen(mock_design_library, mock_design_loader, mock_registries,
         manager,
         planet,
         on_close,
-        design_library=mock_design_library,
+        design_catalog=mock_design_catalog,
         design_loader=mock_design_loader,
         hex_coord=hex_coord,
         galaxy=galaxy,

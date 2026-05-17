@@ -29,8 +29,8 @@ def drag_handler(single_queue_source):
     portrait_loader.load_design_portrait.return_value = None
     portrait_loader.load_queue_item_portrait.return_value = None
 
-    design_library = MagicMock()
-    design_library.scan_designs.return_value = []
+    design_catalog = MagicMock()
+    design_catalog.scan_designs.return_value = []
 
     def _remove_from_queue(idx: int) -> None:
         if 0 <= idx < len(single_queue_source.construction_queue):
@@ -38,7 +38,7 @@ def drag_handler(single_queue_source):
 
     handler = BuildQueueDragHandler(
         portrait_loader=portrait_loader,
-        design_library=design_library,
+        design_catalog=design_catalog,
         on_add_to_queue=MagicMock(),
         on_refresh_queue=MagicMock(),
         on_refresh_design_report=MagicMock(),
