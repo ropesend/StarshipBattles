@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Depends on:** none — preflight phase
 **Review Mode:** lightweight
 **Files (planned):** none (read-only baseline capture)
@@ -31,16 +31,16 @@
 **File:** N/A (read-only)
 **Tests:** N/A
 
-- [ ] Run the first guardrail grep:
+- [x] Run the first guardrail grep:
   ```bash
   rg -n "build_strategy_battle_spec|object\.__setattr__\(spec|_mine_groups|_owner_to_team_id|_combat_fleets|_engine_ref" game tests
   ```
-- [ ] Run the second guardrail grep:
+- [x] Run the second guardrail grep:
   ```bash
   rg -n "from game\.strategy\.combat\.spec_compiler import build_strategy_battle_spec|build_strategy_battle_spec\(" game tests docs
   ```
-- [ ] Record the counts of `object.__setattr__(spec, ...)` writes in `spec_compiler.py`. Confirm there are exactly **4** (`_mine_groups`, `_owner_to_team_id`, `_engine_ref`, `_combat_fleets` at `spec_compiler.py:271-279`). If a 5th has appeared since verification, extend the touch list and surface to coordinator before starting Phase 1.
-- [ ] Capture the result in this phase's session file under `.agent_reports/proj-phase-session/PROJ-426/phase_0/baseline.md`.
+- [x] Record the counts of `object.__setattr__(spec, ...)` writes in `spec_compiler.py`. Confirmed exactly **4** at lines 271-279.
+- [x] Capture the result in `.agent_reports/proj-phase-session/PROJ-426/phase_0/baseline.md`.
 
 **Notes:**
 
@@ -48,9 +48,9 @@
 **File:** N/A (read-only)
 **Tests:** N/A
 
-- [ ] Confirm `game/strategy/adapters/simulation_adapter.py` is still the only production runtime caller of `build_strategy_battle_spec(...)`.
-- [ ] Confirm `game/strategy/engine/conflict_resolution_engine.py` mentions the compiler **in comments only** (no runtime call).
-- [ ] If a new runtime caller appears, surface to coordinator and extend the touch list before Phase 1.
+- [x] Confirm `game/strategy/adapters/simulation_adapter.py` is still the only production runtime caller of `build_strategy_battle_spec(...)`.
+- [x] Confirm `game/strategy/engine/conflict_resolution_engine.py` mentions the compiler **in comments only** (no runtime call).
+- [x] No new runtime caller appeared.
 
 **Notes:**
 
@@ -58,10 +58,10 @@
 **File:** N/A (read-only)
 **Tests:** N/A
 
-- [ ] Record exact line numbers of `spec._mine_groups`, `spec._owner_to_team_id`, `spec._combat_fleets`, `spec._engine_ref` reads in `tests/integration/test_fms_b_e2e.py` (verification cited `:414, 415, 420, 493`; confirm current state).
-- [ ] Confirm `tests/unit/strategy/combat/test_fighter_group_combat_join.py` and `tests/unit/strategy/combat/test_satellite_group_combat_join.py` still import `_split_mine_groups_from_fleets` from `spec_compiler`.
-- [ ] Confirm `tests/unit/strategy/adapters/test_simulation_adapter.py` reads side-channels off the spec.
-- [ ] Record line-level inventory in the session file so Phase 4's migration commit has an authoritative target list.
+- [x] Recorded `:414, 415, 420, 493` in `tests/integration/test_fms_b_e2e.py` (current state matches verification).
+- [x] Confirmed both `*_combat_join.py` tests still import `_split_mine_groups_from_fleets`.
+- [x] `tests/unit/strategy/adapters/test_simulation_adapter.py` does NOT directly read side-channels — it mocks `_build_spec` plumbing. (Captured in baseline.md.)
+- [x] Line-level inventory recorded in `.agent_reports/proj-phase-session/PROJ-426/phase_0/baseline.md`.
 
 **Notes:**
 
@@ -69,9 +69,9 @@
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked.
-- [ ] Grep results match expectations (4 side-channels, 1 production caller, 3 test files reaching into private state).
-- [ ] Session file `.agent_reports/proj-phase-session/PROJ-426/phase_0/baseline.md` captured.
-- [ ] Update status at top of this file to `Complete`.
-- [ ] Update plan.md phase table row to `Complete`.
-- [ ] Update plan.md Current State to point to Phase 1.
+- [x] All task checkboxes above are checked.
+- [x] Grep results match expectations (4 side-channels, 1 production caller, 3 test files reaching into private state).
+- [x] Session file `.agent_reports/proj-phase-session/PROJ-426/phase_0/baseline.md` captured.
+- [x] Status updated to Complete.
+- [x] plan.md phase table row updated to Complete.
+- [x] plan.md Current State updated.

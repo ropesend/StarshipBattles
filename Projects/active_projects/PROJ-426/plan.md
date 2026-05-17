@@ -15,18 +15,18 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Preflight and baseline capture | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. Introduce typed assembly DTOs | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 0. Preflight and baseline capture | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
+| 1. Introduce typed assembly DTOs | In Progress | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Extract pure builders out of `spec_compiler.py` | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Extract pre-tick setup registry and setup builders | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate the adapter to `StrategyBattleAssembly` and remove side-channels | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Reduce `spec_compiler.py` to a thin public facade and update docs | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-16
-**Active Phase:** Phase 1 (Phase 0 is read-only baseline capture; treat as preflight)
-**Last Action:** Project initialized from TD-01 plan
-**Next Action:** Execute Phase 0 preflight (re-run grep baselines from Executor Guardrails) then begin Phase 1 TDD red
+**Last Updated:** 2026-05-17
+**Active Phase:** Phase 1
+**Last Action:** Phase 0 preflight complete — baseline grep confirmed exactly 4 side-channels; sole runtime caller is simulation_adapter.py.
+**Next Action:** Begin Phase 1 TDD red (battle_assembly.py + test_battle_assembly.py)
 **Blockers:** None
 
 ## Overview

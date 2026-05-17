@@ -13,15 +13,15 @@
     "phase_0": {
       "depends_on": [],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
-      "phase_branch": null,
-      "phase_head_sha": null,
+      "phase_base_sha": "22bccca215258e3091ddbe6c9377a0f4bba98439",
+      "phase_branch": "proj/PROJ-426/main",
+      "phase_head_sha": "22bccca215258e3091ddbe6c9377a0f4bba98439",
       "planned_files": [],
       "review_dispatch_failed": false,
       "review_mode": "lightweight",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_1": {
