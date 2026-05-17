@@ -609,17 +609,18 @@ class EventLogWindow(StrategyModalWindow):
             vt.force_update()
             vt.update_visible_rows()
 
-    def open_for_events(
+    def update_events_only(
         self,
         events: list[dict],
         *,
         empire_name: Optional[str] = None,
     ) -> None:
-        """Rebind events, reset filter, refresh data source, show.
+        """Refresh data source + title without changing visibility.
 
-        Hot-seat-safe — ``EventLogDataSource.update_events`` swaps the
-        events list cleanly. ``empire_name`` is propagated to the window
-        title so the user sees the active empire's name reflected.
+        QA Obs 3 (2026-05-16): the per-player turn-start hook must be
+        able to rebind a cached window's data even when the incoming
+        player has nothing to display, so the previous player's rows
+        do not leak through. Visibility is the caller's concern.
         """
         self.all_events = events
         self.current_filter = "all"
@@ -633,8 +634,22 @@ class EventLogWindow(StrategyModalWindow):
                 else "Event Log"
             )
             self.set_display_title(title)
-        self.show()
         self._rebuild_list()
+
+    def open_for_events(
+        self,
+        events: list[dict],
+        *,
+        empire_name: Optional[str] = None,
+    ) -> None:
+        """Rebind events, reset filter, refresh data source, show.
+
+        Hot-seat-safe — ``EventLogDataSource.update_events`` swaps the
+        events list cleanly. ``empire_name`` is propagated to the window
+        title so the user sees the active empire's name reflected.
+        """
+        self.update_events_only(events, empire_name=empire_name)
+        self.show()
 
     # ---- end PROJ-411 Task 2.4 ----
 

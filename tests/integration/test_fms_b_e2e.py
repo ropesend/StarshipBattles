@@ -45,7 +45,7 @@ def _warhead_mine(design_id="mine_warhead_small", damage=80, hull_hp=30):
                     "components": [
                         {"id": "hull_mine_small",
                          "abilities": {"StructuralIntegrity": {"hp": hull_hp}}},
-                        {"id": "warhead_small",
+                        {"id": "warhead",
                          "abilities": {"Warhead": {"damage": damage}}},
                     ],
                 },
@@ -68,7 +68,7 @@ def _laserhead_mine(design_id="mine_laserhead_small", damage=40, beam_range=600)
                     "components": [
                         {"id": "hull_mine_small",
                          "abilities": {"StructuralIntegrity": {"hp": 30}}},
-                        {"id": "laserhead_small",
+                        {"id": "laserhead",
                          "abilities": {"Laserhead": {
                              "damage": damage,
                              "range": beam_range,

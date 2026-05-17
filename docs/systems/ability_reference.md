@@ -597,7 +597,10 @@ python Tools/test_sharded/test_sharded.py
 |---|---|---|---|---|
 | `Warhead` | `WarheadAbility` | BOTH | `warhead.py` | Single attr `damage`. Always hits when triggered; behavior wired in PROJ-FMS-B. |
 | `Laserhead` | `LaserheadAbility(BeamWeaponAbility)` | BOTH | `warhead.py` | Subclass of `BeamWeaponAbility` so MRO + family detection at `weapon_registry.py:78-94` works unchanged. Adds `consume_on_fire` (default true). |
-| `RamTarget` | `RamTargetAbility` | COMBAT | `warhead.py` | Marker — combat engine sets `target_id` at runtime. Detonates carried Warheads on collision (PROJ-FMS-B). |
+<!-- ``RamTarget`` (formerly in this row) was removed by QA 2026-05-16
+Obs 1b. Ramming is now a universal tactical action — any vehicle can
+be assigned a ram target via ``RamTargetResolver.set_ram_target``;
+no ability / component gate. See ``game/simulation/combat/ram_target_resolver.py``. -->
 | `VehicleBay` | `VehicleBayAbility` | STRATEGIC | `vehicle_bay.py` | `capacity_mass`, `allowed_types` (defaults to mine/fighter/satellite). Aggregated by `stat_contributors/launch.py::contribute_vehicle_bay` into `ship.bay_capacity_mass`. |
 | `StrategicMineLayer` | `StrategicMineLayerAbility` | STRATEGIC | `launch.py` | Skeleton; behavior in PROJ-FMS-B Phase 1 via `OrderType.LAY_MINES`. |
 | `StrategicFighterLaunch` | `StrategicFighterLaunchAbility` | STRATEGIC | `launch.py` | Skeleton; behavior in PROJ-FMS-C Phase 1 via `OrderType.LAUNCH_FIGHTERS`. |
@@ -670,9 +673,9 @@ end-to-end system design.
 
 | Registry key | Ability class | Layer | Source file | Behaviour landed in |
 |---|---|---|---|---|
-| `Warhead` | `WarheadAbility` | BOTH | `abilities/warhead.py` | Detonation routed through `DamageCalculator.apply_damage`; applied by `MinefieldResolver` (strategic), `TacticalMineResolver` (tactical), and `RamTargetResolver` (collision). |
+| `Warhead` | `WarheadAbility` | BOTH | `abilities/warhead.py` | Detonation routed through `DamageCalculator.apply_damage`; applied by `MinefieldResolver` (strategic), `TacticalMineResolver` (tactical), and `RamTargetResolver` (collision — symmetric exchange contributes to both sides). |
 | `Laserhead` | `LaserheadAbility(BeamWeaponAbility)` | BOTH | `abilities/warhead.py` | Continuous expected-hit-chance threshold gate before the standard beam roll; consume-on-fire. |
-| `RamTarget` | `RamTargetAbility` | COMBAT | `abilities/warhead.py` | Explicit set-target action; collision detonates every `Warhead` component on the rammer against the target via the damage pipeline; rammer destroyed. |
+<!-- ``RamTarget`` removed by QA 2026-05-16 Obs 1b — see `RamTargetResolver` for the universal symmetric model. -->
 | `StrategicMineLayer` | `StrategicMineLayerAbility` | STRATEGIC | `abilities/launch.py` | Wired via `OrderType.LAY_MINES` -> `LayMinesOrderHandler`. Pops mines from `VehicleBay` -> creates / extends a `mine_group` Fleet at the target hex. |
 | `TacticalMineLayer` | `TacticalMineLayerAbility` | COMBAT | `abilities/launch.py` | Wired via the battle-engine `mine_resolver` hook. Mid-battle-laid mines persist to the laying empire's `mine_group`. |
 

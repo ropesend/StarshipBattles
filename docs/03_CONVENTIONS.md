@@ -319,6 +319,18 @@ pytest tests/ --cov=game -n 12
 
 `data/components.json` has a top-level `"components"` array. Each component requires a unique snake_case `id`. `mass` and `hp` may be numbers or formulas prefixed with `=`. `abilities` maps ability class names to `true`, a number, a formula string, or `{"value": N}`. `allowed_vehicle_types` restricts valid vehicles.
 
+#### One component per role; scale via `simple_size_mount`
+
+Ship one component per role and let `simple_size_mount` (the canonical size scaler, see `data/modifiers.json`) drive size variation through `*_mult` stat keys: `damage_mult`, `mass_mult`, `hp_mult`, `cost_mult`, `launch_rate_mult`, `recovery_rate_mult`, `bay_capacity_mult`, `range_mult`, etc.
+
+Do **not** ship per-size-tier component variants like `<role>_small / <role>_medium / <role>_large`. The size mount exists precisely to make this proliferation unnecessary, and tier triples are fragile — every balance change touches multiple JSON entries, every test fixture has to pick a tier, and every doc has to enumerate the tiers.
+
+**Exception**: sizes that are *radically* different in role / mass / interface. A fighter-grade component and a ship-grade component differ enough in mass class, allowed-vehicle types, and ability surface that they are two distinct parts (e.g. `mini_railgun` vs the full `railgun`). When in doubt, prefer a single component plus a size-mount param over splitting.
+
+Stat-binding requirement: an ability whose primary value should scale with the size mount must declare the matching `*_mult` binding in its `STAT_BINDINGS` and apply it in `recalculate()` (mirror `WeaponAbility` / `BeamWeaponAbility` / `WarheadAbility`). Without the binding, dropping `simple_size_mount` on the component has no effect on the ability's value.
+
+Established by QA 2026-05-16 Obs 1 after `warhead_{small,medium,large}` and `laserhead_{small,medium,large}` were collapsed to single `warhead` / `laserhead` components in line with the earlier Round 3 bay / launch-bay consolidation. See [`feedback_one_component_per_role`](../C:/Users/rossr/.claude/projects/c--Developer-StarshipBattles/memory/feedback_one_component_per_role.md) in the auto-memory store for the originating preference.
+
 Example shape:
 
 ```json

@@ -573,12 +573,14 @@ class BattleEngine:
         return spawned
 
     def set_ram_target(self, rammer: 'Ship', target: 'Ship') -> bool:
-        """PROJ-FMS-B audit Fix 3: action-surface for "set ram target".
+        """Action surface for "set ram target".
 
         Routes through the engine-owned :class:`RamTargetResolver`.
-        Returns False if the rammer lacks ``RamTargetAbility`` or
-        either ship is dead. UI / AI callers use this rather than
-        poking ship attributes directly.
+        Returns False if either ship is dead or ``rammer is target``.
+        QA 2026-05-16 Obs 1b: ramming is no longer gated on a
+        ``RamTargetAbility`` component — any vehicle can be assigned a
+        ram target. UI / AI callers use this method rather than poking
+        ship attributes directly.
         """
         return self.ram_resolver.set_ram_target(rammer, target)
 

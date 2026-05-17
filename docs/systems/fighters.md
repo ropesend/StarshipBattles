@@ -57,8 +57,9 @@ owner's team alongside any regular fleets.
         |
         v
 BattleEngine ticks; FighterAIController drives each fighter ("target
-nearest enemy"); kamikaze fighters with RamTargetAbility defer to the
-engine's RamTargetResolver.
+nearest enemy"); kamikaze fighters (set via
+BattleEngine.set_ram_target on spawn) defer to the engine's
+RamTargetResolver for the symmetric collision exchange.
         |
         v  battle ends
 Post-battle hook → fighter_reboard.apply_reboard(engine, fleets, empires)
@@ -172,9 +173,11 @@ implements the minimal "target nearest enemy" behavior:
    nearest threat).
 2. Set it as the current target so the weapon firing system fires.
 3. Turn toward it and thrust forward via `AIController.navigate_to`.
-4. When a `RamTargetAbility` has its `target_id` set (kamikaze flow),
-   defer movement to the engine's `RamTargetResolver`; still pull the
-   trigger so any non-ram weapons fire on the ram target en-route.
+4. When `ship.ram_target` is set (kamikaze flow — see Obs 1b: ramming
+   is now a universal tactical action set by
+   `BattleEngine.set_ram_target`, no component gate), defer movement
+   to the engine's `RamTargetResolver`; still pull the trigger so any
+   non-ram weapons fire on the ram target en-route.
 
 `AIControllerFactory.create_for_ship` dispatches based on
 `ship.vehicle_type`: `Fighter` gets `FighterAIController`; everything

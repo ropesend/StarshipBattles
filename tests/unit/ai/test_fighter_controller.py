@@ -52,6 +52,12 @@ def _make_controllable(adapter_pos: Vector2 = Vector2(0, 0)):
     adapter.ship = MagicMock()
     adapter.ship.ship = adapter  # circumvent the unwrap in check_avoidance
     adapter.get_all_components.return_value = []
+    # QA 2026-05-16 Obs 1b: FighterAIController checks ``ship.ram_target``
+    # to decide whether to defer to RamTargetResolver. MagicMock returns
+    # a truthy MagicMock for any attribute access, which would falsely
+    # trigger the kamikaze branch; explicitly clear it to None so the
+    # default-AI path runs unless a test sets it.
+    adapter.ram_target = None
     return adapter
 
 
@@ -104,33 +110,27 @@ def test_targets_nearest_enemy_and_fires(monkeypatch):
 
 
 def test_kamikaze_with_ram_target_defers_movement(monkeypatch):
-    """When RamTargetAbility has a target_id set, FighterAIController
-    delegates movement to the engine's RamTargetResolver and only sets
-    the current target + trigger so non-ram weapons keep firing."""
+    """QA 2026-05-16 Obs 1b: when ``ship.ram_target`` is set (by
+    ``RamTargetResolver.set_ram_target``), FighterAIController delegates
+    movement to the engine's RamTargetResolver and only sets the current
+    target + trigger so non-ram weapons keep firing en-route. The
+    kamikaze gate is the ship-level attribute, not a ``RamTargetAbility``
+    component lookup."""
     enemy = _stub_ship(Vector2(80, 0), team_id=1)
     grid = _StubGrid([enemy])
-    enemy.id = 12345  # match the ram target_id below
 
     monkeypatch.setattr(
         "game.ai.controller.is_combatant", lambda obj: True,
     )
 
     adapter = _make_controllable(Vector2(0, 0))
-
-    # Build a fake RamTargetAbility-like ability with a set target_id.
-    ram_ability = MagicMock()
-    type(ram_ability).__name__ = "RamTargetAbility"
-    ram_ability.target_id = 12345
-
-    fake_comp = MagicMock()
-    fake_comp.is_active = True
-    fake_comp.ability_instances = [ram_ability]
-    adapter.get_all_components.return_value = [fake_comp]
+    # The resolver sets ``ship.ram_target`` to the entity object directly.
+    adapter.ram_target = enemy
 
     ctrl = FighterAIController(adapter, grid, enemy_team_id=1)
     ctrl.update()
 
-    # The controller sets the target + trigger.
+    # Target + trigger set on the ram target.
     adapter.set_current_target.assert_called_with(enemy)
     adapter.set_trigger_pulled.assert_called_with(True)
     # Movement is NOT driven by FighterAIController on this tick — the

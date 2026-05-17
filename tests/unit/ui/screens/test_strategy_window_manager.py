@@ -301,6 +301,75 @@ class TestEventLogWindow:
 
 
 # =============================================================================
+# QA Obs 3 (2026-05-16): per-player event-log data rebind on player swap
+# =============================================================================
+
+class TestEventLogSyncForEmpire:
+    """``sync_event_log_for_empire`` (added for QA Obs 3) refreshes a
+    cached EventLogWindow's data on player swap regardless of whether
+    the incoming player has events — so a window alive from the previous
+    player's turn does not surface stale rows on the new player's
+    screen. Behaviour delegated to ``EventLogRegistrar.sync_for_empire``.
+    """
+
+    def test_sync_with_no_alive_window_is_noop(self, window_manager):
+        """No cached window → no-op. Auto-open is the only entry that
+        constructs a new window; sync never creates one."""
+        window_manager.event_log_window = None
+
+        window_manager.sync_event_log_for_empire([], empire_name="Chimera")
+
+        assert window_manager.event_log_window is None
+
+    def test_sync_with_alive_window_refreshes_data(self, window_manager):
+        """Cached window alive → ``update_events_only`` is called with
+        the new player's events + name."""
+        cached = Mock()
+        cached.alive.return_value = True
+        cached.visible = True
+        window_manager.event_log_window = cached
+        events = [{"category": "production", "turn": 1}]
+
+        window_manager.sync_event_log_for_empire(events, empire_name="Chimera")
+
+        cached.update_events_only.assert_called_once_with(
+            events, empire_name="Chimera",
+        )
+
+    def test_sync_with_visible_window_and_empty_events_hides(self, window_manager):
+        """Cached window visible AND incoming events empty → ``hide()``
+        so the previous player's rows do not stay on screen."""
+        cached = Mock()
+        cached.alive.return_value = True
+        cached.visible = True
+        window_manager.event_log_window = cached
+
+        window_manager.sync_event_log_for_empire([], empire_name="Chimera")
+
+        cached.update_events_only.assert_called_once_with(
+            [], empire_name="Chimera",
+        )
+        cached.hide.assert_called_once()
+
+    def test_sync_with_visible_window_and_nonempty_events_does_not_hide(
+        self, window_manager,
+    ):
+        """Cached window visible AND incoming events non-empty → refresh
+        data but leave visibility alone (the conditional auto-open hook
+        handles re-showing if needed)."""
+        cached = Mock()
+        cached.alive.return_value = True
+        cached.visible = True
+        window_manager.event_log_window = cached
+        events = [{"category": "production", "turn": 1}]
+
+        window_manager.sync_event_log_for_empire(events, empire_name="Chimera")
+
+        cached.update_events_only.assert_called_once()
+        cached.hide.assert_not_called()
+
+
+# =============================================================================
 # PROJ-215 Phase 4: Event Log Navigation Tests
 # =============================================================================
 

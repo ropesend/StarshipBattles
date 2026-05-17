@@ -31,14 +31,18 @@ Authored in `data/vehicleclasses.json` and `data/vehiclelayers.json`
 
 Component data (in `data/components.json`):
 
-- `warhead_{small,medium,large}` — explosive payload.
-- `laserhead_{small,medium,large}` — single-shot beam.
+- `warhead` — explosive payload. Single component; explosive yield scales
+  via `simple_size_mount` (`damage_mult` binding on `WarheadAbility`). QA
+  Obs 1 (2026-05-16) consolidated the former `warhead_small/medium/large`
+  tier triple into this one entry.
+- `laserhead` — single-shot beam. Single component; damage / range / etc.
+  inherit `BeamWeaponAbility`'s STAT_BINDINGS so `simple_size_mount`
+  drives the tier. QA Obs 1 (2026-05-16) consolidated the former
+  `laserhead_small/medium/large` triple.
 - `small_targeting_sensor` / `small_targeting_sensor_advanced` —
   ToHitAttackModifier without `RequiresCommandAndControl`.
 - `hull_mine_{small,medium,large,heavy}` — provides mine HP via
   `StructuralIntegrity`.
-- `ram_target_module` — designates the mine / fighter / ship as
-  able to set a ram target.
 - `mine_deployer` — carries `StrategicMineLayer` /
   `TacticalMineLayer` (Round 4 Obs C renamed from
   `mine_launcher_small`; capacity / launch rate scale via
@@ -47,14 +51,19 @@ Component data (in `data/components.json`):
   `allowed_types=["mine"]`; added in Round 4 Obs C alongside
   the `fighter_bay` / `satellite_bay` typed bays).
 
-Three new ability classes (PROJ-FMS-A Phase 2):
+Note: the legacy `ram_target_module` component was deleted by QA
+2026-05-16 Obs 1b — ramming is now a universal tactical action with no
+component gate. See the "Ramming" section below.
 
-- `WarheadAbility` — single `damage` attribute. Always hits on
-  trigger (no second accuracy roll).
+Ability classes (originally PROJ-FMS-A Phase 2):
+
+- `WarheadAbility` — single `damage` attribute, scales via
+  `simple_size_mount` `damage_mult` (Obs 1). Always hits on trigger
+  (no second accuracy roll). Exposes a `consumed: bool` flag set by
+  `RamTargetResolver` after a ramming collision (one-shot).
 - `LaserheadAbility(BeamWeaponAbility)` — inherits beam targeting /
-  range / hit-chance sigmoid; adds `consume_on_fire=True`.
-- `RamTargetAbility` — explicit set-target action; collision
-  detonates all warheads on the rammer.
+  range / hit-chance sigmoid; adds `consume_on_fire=True`. Single
+  component scaled via `simple_size_mount` (Obs 1).
 
 ## Strategic mine laying
 
@@ -225,20 +234,43 @@ the staging yard holds at least one mine.
 
 ## Ramming
 
-`game/simulation/combat/ram_target_resolver.py::RamTargetResolver`:
+`game/simulation/combat/ram_target_resolver.py::RamTargetResolver`
+(symmetric universal model — QA 2026-05-16 Obs 1b):
 
-- `set_ram_target(rammer, target)` — requires `RamTargetAbility` on
-  the rammer; stashes `ram_target` + `ram_target_id` on the ship and
-  on the ability instance.
+- `set_ram_target(rammer, target)` — ungated by ability / component;
+  any alive ship can be assigned a ram target. Stashes
+  `ram_target` + `ram_target_id` on the rammer. Returns False only
+  if either ship is dead or `rammer is target`.
 - `process_ramming_tick(ships)` — for each ship with an assigned
-  ram_target: collision-checks hull radii; on intersection, every
-  `WarheadAbility` on the rammer detonates against the target via
-  the damage pipeline; the rammer is destroyed regardless of damage
-  outcome. If the target dies before collision, the rammer's ram
-  target clears and it reverts to default AI.
+  `ram_target`: collision-checks hull radii; on intersection, applies
+  a **symmetric simultaneous damage exchange**:
 
-Designs without `RamTargetAbility` cannot ram. Warheads on such
-designs are inert payload (still cargo).
+      rammer_delivered = rammer.current_shields + rammer.hp +
+                         sum(warhead.damage on rammer)
+      target_delivered = target.current_shields + target.hp +
+                         sum(warhead.damage on target)
+
+  Both values sampled at collision instant; applied through
+  `DamageCalculator.apply_damage` in parallel so the rammer's state
+  going to zero does not reduce the damage it delivers. All warheads
+  on both sides are consumed (one-shot, mirroring `consume_on_fire`
+  on beam laserheads). The rammer's `ram_target` is cleared after
+  collision so a survivor does not auto-re-collide on the next tick.
+
+- If the target dies before collision, the rammer's `ram_target`
+  clears and it reverts to default AI.
+
+Survival is possible: a heavy ship with ample shields/HP ramming a
+fighter eats little; a kamikaze fighter ramming a dreadnought is
+annihilated but does big damage if it carries warheads. Kamikaze
+behaviour comes from the AI controller calling `set_ram_target` on
+spawn (see `FighterAIController.update`), not from a component on
+the design.
+
+Pre-2026-05-16 ramming was gated on a `RamTargetAbility` /
+`ram_target_module` component and auto-destroyed the rammer; that
+model was replaced after user feedback during the 2026-05-16 QA
+session.
 
 ## Balance constants
 

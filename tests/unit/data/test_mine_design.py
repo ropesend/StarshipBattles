@@ -31,18 +31,20 @@ class TestMineVehicleClasses:
                     "hull_mine_large", "hull_mine_heavy"):
             assert hid in comps, hid
 
-    def test_warhead_components_loaded(self, fresh_registries):
+    def test_warhead_component_loaded(self, fresh_registries):
+        """QA Obs 1 (2026-05-16): single ``warhead`` component; size
+        tiers come from ``simple_size_mount`` scaling, not per-tier
+        component variants."""
         comps = fresh_registries.components
-        for cid in ("warhead_small", "warhead_medium", "warhead_large"):
-            assert cid in comps
-            assert "Mine" in comps[cid].allowed_vehicle_types
-            assert "Fighter" in comps[cid].allowed_vehicle_types
+        assert "warhead" in comps
+        assert "Mine" in comps["warhead"].allowed_vehicle_types
+        assert "Fighter" in comps["warhead"].allowed_vehicle_types
 
-    def test_laserhead_components_loaded(self, fresh_registries):
+    def test_laserhead_component_loaded(self, fresh_registries):
+        """QA Obs 1 (2026-05-16): single ``laserhead`` component."""
         comps = fresh_registries.components
-        for cid in ("laserhead_small", "laserhead_medium", "laserhead_large"):
-            assert cid in comps
-            assert comps[cid].allowed_vehicle_types == ["Mine"]
+        assert "laserhead" in comps
+        assert comps["laserhead"].allowed_vehicle_types == ["Mine"]
 
     def test_small_targeting_sensor_has_no_command_control(self, fresh_registries):
         comps = fresh_registries.components
@@ -57,11 +59,12 @@ class TestMineVehicleClasses:
         ab = mini.data.get("abilities", {})
         assert ab.get("RequiresCommandAndControl") is True
 
-    def test_ram_target_component_loaded(self, fresh_registries):
+    def test_ram_target_component_removed(self, fresh_registries):
+        """QA 2026-05-16 Obs 1b: ``ram_target_module`` deleted when
+        ramming became a universal tactical action (no component
+        gate)."""
         comps = fresh_registries.components
-        rt = comps["ram_target_module"]
-        assert set(rt.allowed_vehicle_types) >= {"Fighter", "Ship"}
-        assert "RamTarget" in rt.data.get("abilities", {})
+        assert "ram_target_module" not in comps
 
 
 class TestMineLayerValidation:
@@ -76,7 +79,7 @@ class TestMineLayerValidation:
 
     def test_warhead_allowed_in_mine_core(self, fresh_registries):
         mine = self._build_mine(fresh_registries)
-        warhead = create_component("warhead_small", registries=fresh_registries)
+        warhead = create_component("warhead", registries=fresh_registries)
         assert warhead is not None
         assert mine.add_component(warhead, LayerType.CORE), (
             "Warhead component must be allowed in Mine_Standard CORE")
@@ -95,7 +98,7 @@ class TestMineLayerValidation:
 
     def test_laserhead_allowed_in_mine_core(self, fresh_registries):
         mine = self._build_mine(fresh_registries, "Mine (Large)")
-        laser = create_component("laserhead_small", registries=fresh_registries)
+        laser = create_component("laserhead", registries=fresh_registries)
         assert laser is not None
         assert mine.add_component(laser, LayerType.CORE)
 

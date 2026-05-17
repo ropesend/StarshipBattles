@@ -295,6 +295,18 @@ class StrategyWindowManager:
         """
         self._event_log.open_with_events(events, empire_name=empire_name)
 
+    def sync_event_log_for_empire(
+        self, events: list, *, empire_name: "str | None" = None
+    ) -> None:
+        """QA Obs 3 (2026-05-16): unconditional per-player data rebind.
+
+        Called from the turn-start hook regardless of whether the
+        incoming player has events, so a cached window from the
+        previous player does not show stale rows. See
+        ``EventLogRegistrar.sync_for_empire`` for the case matrix.
+        """
+        self._event_log.sync_for_empire(events, empire_name=empire_name)
+
     def open_empire_panel(self) -> None:
         """Open the Empire Panel Window."""
         self._empire_panel.open()

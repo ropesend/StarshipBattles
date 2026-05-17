@@ -11,6 +11,33 @@
 > audit Fix 1). All `file:line` citations in this document that point
 > to since-deleted symbols are annotated inline.
 
+> **Status update (Round 5, 2026-05-16 QA pass):** Two cross-cutting
+> changes layered on top of the Round 4 banner below.
+>
+> - **Component consolidation extended (Obs 1):** `warhead_{small,medium,large}`
+>   collapsed to a single `warhead` component scaled via
+>   `simple_size_mount` (`damage_mult` binding added to
+>   `WarheadAbility`); `laserhead_{small,medium,large}` collapsed to
+>   single `laserhead` (scaling inherited via `BeamWeaponAbility`).
+>   General principle "one component per role, scale via modifier"
+>   added to `docs/03_CONVENTIONS.md`.
+> - **Ramming redesign (Obs 1b):** the canonical PROJ-FMS-B ram model
+>   (gated on `RamTargetAbility` / `ram_target_module`, rammer always
+>   destroyed) was replaced. Ramming is now a universal tactical
+>   action — any vehicle can be assigned a ram target via
+>   `RamTargetResolver.set_ram_target(rammer, target)`; on collision
+>   BOTH sides exchange damage simultaneously
+>   (`current_shields + hp + sum(warhead.damage)` each side, sampled
+>   at collision instant, applied in parallel). All warheads on both
+>   sides are consumed (one-shot). Survival is possible. The
+>   `RamTargetAbility` class, `ram_target_module` component, and
+>   `RamTarget` ABILITY_REGISTRY entry were deleted. Kamikaze
+>   behaviour comes from the AI controller calling `set_ram_target`
+>   on spawn, not from a design component. See
+>   `game/simulation/combat/ram_target_resolver.py`,
+>   `docs/systems/minefields.md` "Ramming" section, and
+>   `project_ramming_redesign` in the auto-memory store.
+>
 > **Status update (Round 4, 2026-05-17):** Four QA rounds shipped
 > after the original PROJ-FMS-{A,B,C,D} series. Round 4 in particular
 > made substantive cross-cutting changes:
@@ -68,7 +95,7 @@ Design produced via a two-party inter-agent discussion between claude and codex 
 
 ## Vehicle types & component model
 
-- **Fighters & Satellites**: reuse existing classes in `vehicleclasses.json` and `vehiclelayers.json`. Fighter layer allow-list extended to include `Warhead` and `RamTarget` for kamikaze fighter designs.
+- **Fighters & Satellites**: reuse existing classes in `vehicleclasses.json` and `vehiclelayers.json`. Fighter layer allow-list extended to include `Warhead` for kamikaze fighter designs (the `RamTarget` ability previously listed here was deleted by Round 5 Obs 1b — ramming is now ungated).
 - **Mines**: new `mine_small / mine_medium / mine_large / mine_heavy` vehicle classes plus a `Mine_Standard` layer with a single CORE layer. **Component whitelist**: `Warhead`, `Laserhead`, `Hull`, `SmallTargetingSensor` (new — see below). Everything else blocked at layer validation.
 - **Mine HP** comes from the slotted `Hull` component.
 - **Mine class-level `signature_bonus`** feeds `total_defense_score` via [`ship_stats.py`](../../../game/simulation/entities/ship_stats.py) (`signature_bonus` aggregation block); combined with their tiny `size_score`, mines are very hard to hit by conventional weapons.
@@ -81,7 +108,10 @@ Design produced via a two-party inter-agent discussion between claude and codex 
 | `Warhead` | `WarheadAbility` | BOTH | Single attribute: `damage`. **Always hits when triggered** — no second accuracy roll. Damage via [`damage_calculator.py::apply_damage`](../../../game/simulation/combat/damage_calculator.py). Also placeable on fighters/ships for ramming. |
 | `Laserhead` | `LaserheadAbility(BeamWeaponAbility)` | BOTH | Subclass of `BeamWeaponAbility`. Inherits beam targeting / range / hit-chance sigmoid at [`weapons.py::calculate_hit_chance`](../../../game/simulation/components/abilities/weapons.py). MRO-based lookup at [`ability_manager.py`](../../../game/simulation/components/ability_manager.py); family detection at [`weapon_registry.py`](../../../game/simulation/combat/weapon_registry.py) — both transparent to the subclass. Adds `consume_on_fire=True` honored by the tactical fire path. |
 | `SmallTargetingSensor` | (uses existing `ToHitAttackModifier`) | COMBAT | New mine/small-craft sensor **without** `RequiresCommandAndControl`. The existing `mini_sensor` (in [`components.json`](../../../data/components.json)) requires C&C which crewless mines fail. Boosts laserhead hit chance via existing stat aggregator. |
-| `RamTarget` | `RamTargetAbility` | COMBAT | Explicit "set ram target" action only — no collision-driven auto-detonation. On collision with the assigned target, every `Warhead` on the rammer detonates against it via the damage pipeline; rammer is destroyed. Designs without `RamTargetAbility` carry warheads inertly. |
+<!-- `RamTarget` row removed by Round 5 Obs 1b (2026-05-16). Ramming is
+now a universal tactical action via `RamTargetResolver.set_ram_target`
+with symmetric simultaneous damage (shields+HP+warheads, both sides),
+no component / ability gate. See `docs/systems/minefields.md`. -->
 
 ### New storage / launch / recovery abilities
 

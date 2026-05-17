@@ -63,7 +63,7 @@ def _warhead_mine(damage=10.0):
             "layers": {
                 "CORE": {
                     "components": [
-                        {"id": "warhead_small",
+                        {"id": "warhead",
                          "abilities": {"Warhead": {"damage": damage}}},
                     ],
                 },

@@ -374,6 +374,13 @@ class BuildQueueScreen:
         # call sites (each constructs a fresh DesignLibrary). Rebind so the
         # drag handler always reflects the current manager's library.
         self.drag_handler.design_library = self.design_library
+        # QA Obs 2 (2026-05-16): same rebind for the controller. PROJ-410
+        # Phase 4 Task 4.2 covers screen.design_library + drag_handler but
+        # missed the controller's own reference set in _rebuild_panels
+        # (~line 229). Without this, controller.scan_designs() reads from
+        # the previous empire's designs folder after a hot-seat swap.
+        self.controller.design_library = self.design_library
+        self.controller.design_loader = self.design_loader
 
         # Refresh queue selector against the new sources.
         self._queue_selector.queue_sources = self.queue_sources

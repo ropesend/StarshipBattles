@@ -44,7 +44,7 @@ def _make_mine_dict(design_id: str, damage: float = 50.0):
                 "CORE": {
                     "components": [
                         {
-                            "id": "warhead_small",
+                            "id": "warhead",
                             "abilities": {"Warhead": {"damage": damage}},
                         },
                     ],

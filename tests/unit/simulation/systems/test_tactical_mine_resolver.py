@@ -47,7 +47,7 @@ def _mine_dict_warhead(damage=80.0, hull_hp=30.0):
                     "components": [
                         {"id": "hull_mine_small",
                          "abilities": {"StructuralIntegrity": {"hp": hull_hp}}},
-                        {"id": "warhead_small",
+                        {"id": "warhead",
                          "abilities": {"Warhead": {"damage": damage}}},
                     ],
                 },
@@ -68,7 +68,7 @@ def _mine_dict_laserhead(damage=40.0, beam_range=600, hull_hp=30.0):
                     "components": [
                         {"id": "hull_mine_small",
                          "abilities": {"StructuralIntegrity": {"hp": hull_hp}}},
-                        {"id": "laserhead_small",
+                        {"id": "laserhead",
                          "abilities": {"Laserhead": {
                              "damage": damage,
                              "range": beam_range,

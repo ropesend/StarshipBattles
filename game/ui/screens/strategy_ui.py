@@ -492,6 +492,16 @@ class StrategyUI:
             events, empire_name=empire_name
         )
 
+    def sync_event_log_for_empire(
+        self, events: list, *, empire_name: "str | None" = None
+    ) -> None:
+        """QA Obs 3 (2026-05-16): refresh a cached EventLogWindow on
+        player swap, regardless of whether the incoming player has
+        events. Pairs with the conditional auto-open above."""
+        self.window_manager.sync_event_log_for_empire(
+            events, empire_name=empire_name,
+        )
+
     def open_orders_window(self, entity, entity_type: str = "fleet") -> None:
         """Open the Orders Window for a fleet or planet.
 

@@ -25,10 +25,10 @@
     },
     "claude-discuss-start": {
       "agents": {
-        "claude": 9
+        "claude": 10
       },
-      "count": 9,
-      "last_used": "2026-05-16T04:10:53Z"
+      "count": 10,
+      "last_used": "2026-05-17T05:25:52Z"
     },
     "claude-fix-crash": {
       "agents": {
@@ -88,10 +88,10 @@
     },
     "claude-qa-feedback": {
       "agents": {
-        "claude": 3
+        "claude": 4
       },
-      "count": 3,
-      "last_used": "2026-05-17T00:27:47Z"
+      "count": 4,
+      "last_used": "2026-05-17T03:48:50Z"
     },
     "claude-qa-triage": {
       "agents": {

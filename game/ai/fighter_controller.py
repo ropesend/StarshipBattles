@@ -13,11 +13,13 @@ Why a dedicated controller?
     behavior: pick the nearest enemy, turn toward it, thrust, fire
     when in range / cooldown allows.
 
-Kamikaze fighters with :class:`RamTargetAbility` follow the engine's
-:class:`RamTargetResolver` (PROJ-FMS-B audit Fix 3) instead — when
-``set_ram_target`` has been called, this controller short-circuits its
-movement update so the resolver's intercept-and-pursue path can run
-without interference.
+Kamikaze fighters follow the engine's :class:`RamTargetResolver`
+instead — when ``BattleEngine.set_ram_target`` has been called on the
+fighter, ``ship.ram_target`` is set and this controller short-circuits
+its movement update so the resolver's intercept-and-pursue path can
+run without interference. QA 2026-05-16 Obs 1b: ramming is no longer
+gated on a ``RamTargetAbility`` component; the controller checks the
+ship-level ``ram_target`` attribute that ``set_ram_target`` sets.
 """
 from __future__ import annotations
 
@@ -65,8 +67,9 @@ class FighterAIController(AIController):
         Stages (in order):
           - Liveness check.
           - Default throttle setup.
-          - Kamikaze short-circuit: if a ram target is set, defer to
-            the engine's RamTargetResolver.
+          - Kamikaze short-circuit: if a ram target is set on the
+            ship (``ship.ram_target``), defer to the engine's
+            RamTargetResolver.
           - Nearest-enemy acquisition; idle when none.
           - Navigate toward the target (turn + thrust) via the base
             class's ``navigate_to`` helper.
@@ -79,15 +82,16 @@ class FighterAIController(AIController):
         self.ship.set_turn_throttle(1.0)
         self.ship.set_throttle(1.0)
 
-        # Kamikaze: when RamTargetAbility has an active target, defer
-        # to BattleEngine._run_ramming_tick / RamTargetResolver. We
-        # still pull the trigger so any non-ram weapons can fire on
-        # the ram target en-route.
-        if self._has_active_ram_target():
-            ram_target = self._get_ram_target_entity()
-            if ram_target is not None:
-                self.ship.set_current_target(ram_target)
-                self.ship.set_trigger_pulled(True)
+        # Kamikaze: when ``ship.ram_target`` is set (via
+        # ``BattleEngine.set_ram_target``), defer movement to
+        # ``RamTargetResolver`` and just keep the trigger pulled so
+        # non-ram weapons fire en-route. QA 2026-05-16 Obs 1b: the
+        # ram-intent check is now the ship-level attribute, not an
+        # ability lookup.
+        ram_target = getattr(self.ship, "ram_target", None)
+        if ram_target is not None:
+            self.ship.set_current_target(ram_target)
+            self.ship.set_trigger_pulled(True)
             return
 
         # Standard target acquisition: nearest enemy from spatial grid.
@@ -131,57 +135,6 @@ class FighterAIController(AIController):
                 nearest = e
         return nearest
 
-    def _has_active_ram_target(self) -> bool:
-        """True iff the fighter ship mounts an active RamTargetAbility.
-
-        Uses class-name lookup so this controller doesn't need to
-        import :class:`RamTargetAbility` (mirrors
-        :class:`RamTargetResolver`'s pattern from PROJ-FMS-B Phase 4).
-        """
-        try:
-            comps = self.ship.get_all_components()
-        except (AttributeError, TypeError):
-            return False
-        for comp in comps:
-            if not getattr(comp, "is_active", True):
-                continue
-            abilities = getattr(comp, "ability_instances", None) or []
-            for ab in abilities:
-                if type(ab).__name__ != "RamTargetAbility":
-                    continue
-                target_id = getattr(ab, "target_id", None)
-                if target_id is not None:
-                    return True
-        return False
-
-    def _get_ram_target_entity(self) -> Optional[Any]:
-        """Resolve the ram target's entity object from the spatial grid."""
-        try:
-            comps = self.ship.get_all_components()
-        except (AttributeError, TypeError):
-            return None
-        target_id: Optional[Any] = None
-        for comp in comps:
-            if not getattr(comp, "is_active", True):
-                continue
-            for ab in getattr(comp, "ability_instances", None) or []:
-                if type(ab).__name__ != "RamTargetAbility":
-                    continue
-                target_id = getattr(ab, "target_id", None)
-                if target_id is not None:
-                    break
-            if target_id is not None:
-                break
-        if target_id is None:
-            return None
-        # Look up the entity object via the spatial grid contents.
-        enemies = self._find_enemies_in_radius()
-        for e in enemies:
-            if getattr(e, "id", None) == target_id:
-                return e
-            if id(e) == target_id:
-                return e
-        return None
 
 
 __all__ = ["FighterAIController"]

@@ -220,11 +220,6 @@ class TestSelectModeRightClick:
         handler._fleet_router = MagicMock()
 
         dispatcher = ClickModeDispatcher(handler)
-        # ``_friendly_fleet_at_screen`` iterates empires; force the
-        # "no friendly fleet under cursor" branch so the click lands on
-        # an empty hex regardless of upstream mock state.
-        dispatcher._friendly_fleet_at_screen = MagicMock(return_value=None)
-
         return dispatcher, handler, scene
 
     def test_select_mode_right_click_on_empty_hex_with_fleet_is_silent_no_op(self):

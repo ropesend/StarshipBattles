@@ -43,9 +43,17 @@ class ConfirmResult:
         aborted_for_correction: True when the controller short-circuited on
             input-validation grounds (no source/target, both endpoints
             non-fleet, all pending zero) and the dialog should stay open.
+        rejection_message: First rejection message captured when EVERY
+            dispatched command was rejected by the facade (QA Obs 5
+            follow-up, 2026-05-16). The dialog surfaces this via
+            ``scene.ui.show_error_message`` so the user sees why
+            "Confirm All" appeared to do nothing. ``None`` for input-
+            validation aborts (no commands dispatched) and for mixed-
+            accept paths.
     """
     orders_issued: int
     aborted_for_correction: bool = False
+    rejection_message: Optional[str] = None
 
 if TYPE_CHECKING:
     from game.ui.screens.transfer_view_model import TransferViewModel
@@ -179,6 +187,8 @@ class TransferController:
         """
         if cargo_key.startswith("drop_pod:"):
             return "drop_pod", cargo_key[len("drop_pod:"):]
+        if cargo_key.startswith("vehicle:"):
+            return "vehicle", cargo_key[len("vehicle:"):]
         if cargo_key.startswith("passengers_"):
             return "passengers", cargo_key[len("passengers_"):]
         if cargo_key == "passengers":
@@ -262,6 +272,7 @@ class TransferController:
         fleet_id, planet_id, target_fleet_id, source_is_fleet, target_is_fleet = endpoints
 
         orders_issued = 0
+        first_rejection: Optional[str] = None
         for cargo_key, amount in vm.pending_transfers.items():
             if amount == 0:
                 logger.debug(
@@ -302,6 +313,12 @@ class TransferController:
                     "TransferDialog: Command REJECTED for %s: %s",
                     cargo_type, result.message,
                 )
+                # QA Obs 5 follow-up (2026-05-16): capture the first
+                # rejection message so the dialog can surface it when
+                # every command was rejected. Without this the user sees
+                # a no-op button and the only feedback is in the log.
+                if first_rejection is None:
+                    first_rejection = getattr(result, "message", None)
 
         if orders_issued > 0:
             logger.info(
@@ -317,7 +334,11 @@ class TransferController:
             "TransferDialog: No orders issued (pending had %d entries)",
             len(vm.pending_transfers),
         )
-        return ConfirmResult(orders_issued=0, aborted_for_correction=True)
+        return ConfirmResult(
+            orders_issued=0,
+            aborted_for_correction=True,
+            rejection_message=first_rejection,
+        )
 
 
 __all__ = ["ConfirmResult", "TransferController"]

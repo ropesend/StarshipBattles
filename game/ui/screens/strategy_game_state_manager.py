@@ -291,11 +291,21 @@ class StrategyGameStateManager:
         # just-completed turn explicitly so the popup actually fires.
         turn = screen._facade.get_turn_number() - 1
         events = screen._facade.get_turn_events(turn=turn, empire_id=empire.id)
-        if events and not self._suppress_event_log:
-            screen.ui.open_event_log_with_events(
+        empire_name = getattr(empire, "name", None)
+        # QA Obs 3 (2026-05-16): unconditional rebind first so a cached
+        # window from the previous player's turn cannot surface stale
+        # rows when the incoming player has empty events. Conditional
+        # auto-open below stays gated on a non-empty events list.
+        if not self._suppress_event_log:
+            screen.ui.sync_event_log_for_empire(
                 events,
-                empire_name=getattr(empire, "name", None),
+                empire_name=empire_name,
             )
+            if events:
+                screen.ui.open_event_log_with_events(
+                    events,
+                    empire_name=empire_name,
+                )
 
     def process_full_turn(self) -> list:
         """Process the turn for all empires simultaneously.

@@ -86,7 +86,7 @@ def _make_mine_dict(design_id: str, damage: float = 50.0, mass: float = 5.0):
                             "abilities": {"StructuralIntegrity": {"hp": 30}},
                         },
                         {
-                            "id": "warhead_small",
+                            "id": "warhead",
                             "abilities": {"Warhead": {"damage": damage}},
                         },
                     ],
@@ -114,7 +114,7 @@ def _make_laserhead_mine(design_id: str, damage: float = 40.0):
                             "abilities": {"StructuralIntegrity": {"hp": 30}},
                         },
                         {
-                            "id": "laserhead_small",
+                            "id": "laserhead",
                             "abilities": {
                                 "Laserhead": {
                                     "damage": damage,

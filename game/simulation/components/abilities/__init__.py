@@ -78,7 +78,6 @@ from .weapons import (
 from .warhead import (
     WarheadAbility,
     LaserheadAbility,
-    RamTargetAbility,
 )
 
 # PROJ-FMS-A Phase 3: VehicleBay substrate for design-backed carried vehicles.
@@ -143,7 +142,6 @@ ABILITY_REGISTRY = {
     # PROJ-FMS-A Phase 2 (mine / kamikaze surface).
     "Warhead": WarheadAbility,
     "Laserhead": LaserheadAbility,
-    "RamTarget": RamTargetAbility,
     # PROJ-FMS-A Phase 3 (vehicle bay substrate).
     "VehicleBay": VehicleBayAbility,
     # PROJ-FMS-A Phase 5 (launch / recovery skeletons).
@@ -326,7 +324,6 @@ __all__ = [
     # PROJ-FMS-A Phase 2
     'WarheadAbility',
     'LaserheadAbility',
-    'RamTargetAbility',
     # PROJ-FMS-A Phase 3
     'VehicleBayAbility',
     # PROJ-FMS-A Phase 5

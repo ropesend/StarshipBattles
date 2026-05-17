@@ -25,6 +25,61 @@ from unittest.mock import MagicMock
 from game.ui.screens.transfer_dialog import TransferDialog
 
 
+def test_dialog_surfaces_rejection_message_via_scene_ui():
+    """QA Obs 5 follow-up (2026-05-16): when ``confirm_pending`` returns
+    a ``rejection_message`` (every command rejected by the facade), the
+    dialog calls ``scene.ui.show_error_message`` so the user actually
+    sees why "Confirm All" appeared to do nothing. Pre-fix the message
+    was logged but silently swallowed at the UI."""
+    dialog = TransferDialog.__new__(TransferDialog)
+
+    confirm_result = MagicMock()
+    confirm_result.orders_issued = 0
+    confirm_result.aborted_for_correction = True
+    confirm_result.rejection_message = "Invalid cargo type 'vehicle:qs_mine'."
+
+    controller = MagicMock()
+    controller.confirm_pending.return_value = confirm_result
+    dialog._controller = controller
+    dialog.kill = MagicMock()
+
+    # Wire the scene → ui.show_error_message surface the dialog uses.
+    scene = MagicMock()
+    scene.ui.show_error_message = MagicMock()
+    dialog.scene = scene
+
+    dialog._on_confirm()
+
+    scene.ui.show_error_message.assert_called_once_with(
+        "Transfer failed: Invalid cargo type 'vehicle:qs_mine'.",
+    )
+    dialog.kill.assert_not_called()  # validation abort stays open.
+
+
+def test_dialog_no_message_call_when_no_rejection_message():
+    """Validation abort with no rejection (e.g. all pending zero) must
+    NOT trigger an error popup. The dialog stays open silently."""
+    dialog = TransferDialog.__new__(TransferDialog)
+
+    confirm_result = MagicMock()
+    confirm_result.orders_issued = 0
+    confirm_result.aborted_for_correction = True
+    confirm_result.rejection_message = None
+
+    controller = MagicMock()
+    controller.confirm_pending.return_value = confirm_result
+    dialog._controller = controller
+    dialog.kill = MagicMock()
+
+    scene = MagicMock()
+    scene.ui.show_error_message = MagicMock()
+    dialog.scene = scene
+
+    dialog._on_confirm()
+
+    scene.ui.show_error_message.assert_not_called()
+
+
 def test_dialog_stays_open_when_controller_signals_validation_abort():
     """Validation-abort path (e.g., no source/target picked) must keep the
     dialog open — `kill()` is NOT called.

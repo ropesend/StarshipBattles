@@ -102,6 +102,13 @@ def test_discover_pod_designs_falls_back_to_empty_list_on_library_error(
         ("passengers", ("passengers", None)),
         ("passengers_human", ("passengers", "human")),
         ("metals", ("metals", None)),
+        # QA Obs 5 (2026-05-16): vehicle:<design_id> rows emitted by
+        # TransferViewModel._build_pod_rows must split into the bare
+        # "vehicle" cargo_type the order-handler dispatch and validator
+        # recognise, with the design_id surfaced as species_id.
+        ("vehicle:qs_mine", ("vehicle", "qs_mine")),
+        ("vehicle:qs_fighter", ("vehicle", "qs_fighter")),
+        ("vehicle:qs_satellite", ("vehicle", "qs_satellite")),
     ],
 )
 def test_parse_cargo_key(cargo_key: str, expected: tuple[str, str | None]) -> None:
@@ -130,6 +137,51 @@ def test_confirm_pending_aborts_when_endpoints_are_not_fleet_backed() -> None:
 
     assert result == ConfirmResult(orders_issued=0, aborted_for_correction=True)
     facade.handle_command.assert_not_called()
+
+
+def test_confirm_pending_carries_rejection_message_when_all_rejected() -> None:
+    """QA Obs 5 follow-up (2026-05-16): when every IssueTransferCommand
+    is rejected by the facade (e.g. INVALID_CARGO_TYPE for a missing
+    parse branch), the dialog needs to surface the rejection so the user
+    sees why "Confirm All" appeared to do nothing. The controller
+    forwards the first rejection's message on the ConfirmResult."""
+    controller, facade, view_model = _controller()
+    view_model.current_source = {"type": "fleet", "id": 10}
+    view_model.current_target = {"type": "colony", "id": 2}
+    view_model.pending_transfers = {"vehicle:qs_mine": TransferViewModel.MAX_LOAD}
+    facade.handle_command.return_value = SimpleNamespace(
+        is_valid=False,
+        message="Invalid cargo type 'vehicle:qs_mine'.",
+    )
+
+    result = controller.confirm_pending()
+
+    assert result.orders_issued == 0
+    assert result.aborted_for_correction is True
+    assert result.rejection_message == "Invalid cargo type 'vehicle:qs_mine'."
+
+
+def test_confirm_pending_no_rejection_message_when_some_accepted() -> None:
+    """Mixed-accept case: rejection_message stays None when at least
+    one order was accepted — the user got partial success and doesn't
+    need the failure popup."""
+    controller, facade, view_model = _controller()
+    view_model.current_source = {"type": "fleet", "id": 10}
+    view_model.current_target = {"type": "fleet", "id": 20}
+    view_model.pending_transfers = {
+        "metals": 25,
+        "vehicle:qs_mine": TransferViewModel.MAX_LOAD,
+    }
+    facade.handle_command.side_effect = [
+        SimpleNamespace(is_valid=True),
+        SimpleNamespace(is_valid=False, message="rejected"),
+    ]
+
+    result = controller.confirm_pending()
+
+    assert result.orders_issued == 1
+    assert result.aborted_for_correction is False
+    assert result.rejection_message is None
 
 
 def test_confirm_pending_emits_commands_and_counts_only_accepted_results() -> None:

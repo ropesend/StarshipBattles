@@ -16,7 +16,7 @@
     "layers": {
         "CORE": [
             {
-                "id": "warhead_small",
+                "id": "warhead",
                 "modifiers": [
                     {
                         "id": "hardened_mount",
@@ -29,7 +29,7 @@
                 ]
             },
             {
-                "id": "warhead_small",
+                "id": "warhead",
                 "modifiers": [
                     {
                         "id": "hardened_mount",

@@ -1,20 +1,23 @@
-"""PROJ-FMS-A Phase 2 — mine warheads, laserheads, and ram-target abilities.
+"""Mine warheads and laserheads — explosive and beam payloads.
 
-These three classes are data-bearing skeletons. They expose their config
-attributes for the validator, design library, and stat aggregator, but
-combat behavior (mine trigger, beam fire, ram damage) lands in PROJ-FMS-B.
+Originally PROJ-FMS-A Phase 2 also defined ``RamTargetAbility`` here as
+a marker for kamikaze-capable designs. That gate was removed by the
+QA 2026-05-16 Obs 1b ramming redesign — ramming is now a universal
+tactical action driven by ``RamTargetResolver.set_ram_target(...)``
+rather than an ability-gated capability. See
+``game/simulation/combat/ram_target_resolver.py``.
 
-Files split out from ``weapons.py`` to keep that module under the 500-LOC
-ceiling and to keep the mine-specific surface area discoverable from a
-single module.
+``WarheadAbility`` exposes a ``consumed: bool`` flag so the resolver
+can mark warheads as one-shot detonated at collision time (mirrors
+``BeamWeaponAbility.consume_on_fire`` for laserheads).
 """
 from __future__ import annotations
 
 from typing import Any, Dict, List
 
 from .base import Ability, AbilityLayer
-from .stat_keys import AbilityStatBinding
-from .ui_colors import HINT_DAMAGE, HINT_NEUTRAL
+from .stat_keys import AbilityStatBinding, StatKey
+from .ui_colors import HINT_DAMAGE
 from .weapons import BeamWeaponAbility
 
 
@@ -23,30 +26,53 @@ class WarheadAbility(Ability):
 
     Carried by mines (primary use) and by fighters/ships for kamikaze /
     ram-attack designs. Detonation is unconditional once triggered — there
-    is no second accuracy roll. Behavior wired in PROJ-FMS-B Phase 3 (mine
-    resolver + ram pipeline). For PROJ-FMS-A this is purely a data carrier.
+    is no second accuracy roll.
 
     Data shape:
         Dict: ``{"damage": <int>}``
         Scalar: ``50`` (treated as ``damage``)
 
     Attributes:
-        damage: Detonation damage value, applied via the damage pipeline.
+        damage: Effective detonation damage (``_base_damage`` scaled by
+            ``damage_mult`` modifiers — e.g. ``simple_size_mount``).
+        _base_damage: Authored damage value before modifier scaling.
+
+    QA Obs 1 (2026-05-16): ``DAMAGE_MULT`` binding lets warheads scale
+    through the same ``simple_size_mount`` modifier the rest of the
+    weapon abilities use. Removes the need for parallel
+    ``warhead_small / medium / large`` component tiers — one component
+    plus a size-mount param produces any explosive yield.
     """
 
     layer = AbilityLayer.BOTH
 
-    # No modifier stat bindings — warheads carry static damage.
-    STAT_BINDINGS: List[AbilityStatBinding] = []
+    STAT_BINDINGS: List[AbilityStatBinding] = [
+        AbilityStatBinding(StatKey.DAMAGE_MULT, 'damage', 'multiply', '_base_damage'),
+    ]
 
     def _parse_attrs(self, data: Any) -> None:
         """Parse ``damage`` from dict or scalar data."""
         if isinstance(data, dict):
-            self.damage = float(data.get("damage", 0))
+            self._base_damage = float(data.get("damage", 0))
         elif isinstance(data, (int, float)):
-            self.damage = float(data)
+            self._base_damage = float(data)
         else:
-            self.damage = 0.0
+            self._base_damage = 0.0
+        self.damage = self._base_damage
+        # QA Obs 1b (2026-05-16): one-shot consumption flag set by
+        # ``RamTargetResolver`` after a ram collision (and reusable by
+        # any future one-shot detonation path). Once True, the warhead
+        # contributes 0 damage; the resolver also zeros ``damage`` so
+        # subsequent collisions see no contribution.
+        self.consumed = False
+
+    def recalculate(self) -> None:
+        """Re-apply ``damage_mult`` after modifier stats change."""
+        if self.consumed:
+            return
+        self.damage = self._base_damage * self.get_effective_stat(
+            'damage_mult', 1.0,
+        )
 
     def get_primary_value(self) -> float:
         return float(self.damage)
@@ -88,37 +114,10 @@ class LaserheadAbility(BeamWeaponAbility):
             self.consume_on_fire = bool(data["consume_on_fire"])
 
 
-class RamTargetAbility(Ability):
-    """Marks a vehicle as able to designate a ram target.
-
-    On collision with the assigned target, every :class:`WarheadAbility`
-    on the rammer detonates against it via the damage pipeline; rammer
-    is destroyed. Designs that carry warheads without a ``RamTarget``
-    ability cannot self-detonate on contact — they remain inert.
-
-    Behavior wired in PROJ-FMS-B Phase 4 (ram resolver hook). For
-    PROJ-FMS-A this class only stores the optional ``target_id`` runtime
-    state so designs can validate and the engine has a place to hang
-    state onto.
-    """
-
-    layer = AbilityLayer.COMBAT
-
-    STAT_BINDINGS: List[AbilityStatBinding] = []
-
-    def __init__(self, component, data: Dict[str, Any]):
-        super().__init__(component, data)
-        # Runtime state — not data-derived, not serialised through ``data``.
-        # Combat engine sets this when the player picks a target; resolver
-        # reads it on collision.
-        self.target_id: str | None = None
-
-    def get_primary_value(self) -> float:
-        return 1.0
-
-    def get_ui_rows(self) -> List[Dict[str, Any]]:
-        return [{
-            "label": "Ram Target",
-            "value": "Active" if self.target_id else "Idle",
-            "color_hint": HINT_NEUTRAL,
-        }]
+# NOTE: ``RamTargetAbility`` and its ``ram_target_module`` component were
+# removed by the QA 2026-05-16 Obs 1b ramming redesign. Ramming is now a
+# universal tactical action — any vehicle with movement can be assigned a
+# ram target through ``RamTargetResolver.set_ram_target(rammer, target)``,
+# and the resolver applies symmetric damage on collision. Kamikaze
+# behaviour comes from the AI controller setting the ram target on spawn,
+# not from a component on the design.

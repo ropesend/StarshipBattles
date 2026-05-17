@@ -535,6 +535,73 @@ def test_obs2_open_for_yard_planet_to_fleet_round_trip_back_to_planet(
     assert screen.panels.planet_report.planet is planet_b
 
 
+# =========================================================================
+# QA Obs 2 (2026-05-16): BuildQueueController.design_library not rebound
+# on cached BuildQueueScreen reuse across player swap
+# =========================================================================
+#
+# PROJ-410 Phase 4 Task 4.2 rebinds screen.design_library + drag_handler.design_library
+# on the cached BuildQueueScreen when the manager calls open_for_yard with a
+# fresh DesignLibrary (e.g. on hot-seat player swap). But the controller was
+# constructed once in _rebuild_panels with the original DesignLibrary and its
+# own self.design_library is never updated. Result: controller.scan_designs()
+# reads from the original empire's folder even after the screen "thinks" it's
+# bound to the new empire's library.
+# =========================================================================
+
+
+def test_obs_p2_design_library_open_for_yard_rebinds_controller_design_library(
+    ui_manager, session_with_planet, design_library_mock, design_loader_mock,
+    galaxy_with_planet, empire, planet_a, planet_b, hex_a, hex_b,
+):
+    """Caller (strategy_build_queue_manager) sets screen.design_library to a
+    new instance before open_for_yard. The controller must follow."""
+    from game.ui.screens.build_queue_screen import BuildQueueScreen
+
+    galaxy_with_planet._global_hex_planets[hex_b] = [planet_b]
+
+    screen = BuildQueueScreen(
+        ui_manager,
+        build_context=None,
+        facade=session_with_planet,
+        theme_id_supplier=lambda: "Federation",
+        on_close_callback=MagicMock(),
+        design_library=design_library_mock,
+        design_loader=design_loader_mock,
+        hex_coord=hex_a,
+        galaxy=galaxy_with_planet,
+        empire=empire,
+        initial_yard=planet_a,
+    )
+
+    # Initial controller library matches the construction-time library.
+    assert screen.controller.design_library is design_library_mock
+
+    # Caller swaps to a new empire's library + loader (manager flow).
+    new_library = MagicMock()
+    new_library.scan_designs.return_value = []
+    new_library.designs_folder = "test_designs_empire_2"
+    new_library.load_design_data.return_value = (
+        design_library_mock.load_design_data.return_value
+    )
+    new_loader = MagicMock()
+    screen.design_library = new_library
+    screen.design_loader = new_loader
+
+    screen.open_for_yard(planet_b, hex_coord=hex_b)
+
+    assert screen.controller.design_library is new_library, (
+        "QA Obs 2: open_for_yard must rebind controller.design_library to "
+        "the screen's current library. Without this, the cached controller "
+        "keeps scanning the previous empire's designs folder after a "
+        "hot-seat player swap (and rebind by the manager)."
+    )
+    assert screen.controller.design_loader is new_loader, (
+        "QA Obs 2: open_for_yard must rebind controller.design_loader for "
+        "parity with the library rebind."
+    )
+
+
 def test_drag_handler_reset_state_clears_all_5_fields():
     """``BuildQueueDragHandler.reset_state()`` zeros the 5 transient fields."""
     from game.ui.panels.build_queue_drag_handler import BuildQueueDragHandler

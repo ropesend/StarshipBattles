@@ -3988,8 +3988,8 @@
             }
         },
         {
-            "id": "warhead_small",
-            "name": "Small Warhead",
+            "id": "warhead",
+            "name": "Warhead",
             "type": "Warhead",
             "mass": 2,
             "hp": 1,
@@ -4011,54 +4011,8 @@
             }
         },
         {
-            "id": "warhead_medium",
-            "name": "Medium Warhead",
-            "type": "Warhead",
-            "mass": 6,
-            "hp": 1,
-            "allowed_vehicle_types": [
-                "Mine",
-                "Fighter",
-                "Ship"
-            ],
-            "sprite_index": 0,
-            "abilities": {
-                "Warhead": {
-                    "damage": 200
-                }
-            },
-            "major_classification": "Weapons",
-            "resource_cost": {
-                "metals": 15,
-                "exotics": 5
-            }
-        },
-        {
-            "id": "warhead_large",
-            "name": "Large Warhead",
-            "type": "Warhead",
-            "mass": 18,
-            "hp": 1,
-            "allowed_vehicle_types": [
-                "Mine",
-                "Fighter",
-                "Ship"
-            ],
-            "sprite_index": 0,
-            "abilities": {
-                "Warhead": {
-                    "damage": 800
-                }
-            },
-            "major_classification": "Weapons",
-            "resource_cost": {
-                "metals": 40,
-                "exotics": 15
-            }
-        },
-        {
-            "id": "laserhead_small",
-            "name": "Small Laserhead",
+            "id": "laserhead",
+            "name": "Laserhead",
             "type": "Laserhead",
             "mass": 2,
             "hp": 1,
@@ -4080,58 +4034,6 @@
             "resource_cost": {
                 "metals": 8,
                 "exotics": 4
-            }
-        },
-        {
-            "id": "laserhead_medium",
-            "name": "Medium Laserhead",
-            "type": "Laserhead",
-            "mass": 6,
-            "hp": 1,
-            "allowed_vehicle_types": [
-                "Mine"
-            ],
-            "sprite_index": 0,
-            "abilities": {
-                "Laserhead": {
-                    "damage": 120,
-                    "range": 900,
-                    "reload": 1.0,
-                    "base_accuracy": 1.0,
-                    "accuracy_falloff": 0.0015,
-                    "consume_on_fire": true
-                }
-            },
-            "major_classification": "Weapons",
-            "resource_cost": {
-                "metals": 20,
-                "exotics": 10
-            }
-        },
-        {
-            "id": "laserhead_large",
-            "name": "Large Laserhead",
-            "type": "Laserhead",
-            "mass": 18,
-            "hp": 1,
-            "allowed_vehicle_types": [
-                "Mine"
-            ],
-            "sprite_index": 0,
-            "abilities": {
-                "Laserhead": {
-                    "damage": 480,
-                    "range": 1200,
-                    "reload": 1.0,
-                    "base_accuracy": 1.0,
-                    "accuracy_falloff": 0.001,
-                    "consume_on_fire": true
-                }
-            },
-            "major_classification": "Weapons",
-            "resource_cost": {
-                "metals": 60,
-                "exotics": 30
             }
         },
         {
@@ -4380,26 +4282,6 @@
                 "metals": 140,
                 "organics": 18,
                 "exotics": 10
-            }
-        },
-        {
-            "id": "ram_target_module",
-            "name": "Ram Target Module",
-            "type": "RamTarget",
-            "mass": 1,
-            "hp": 5,
-            "allowed_vehicle_types": [
-                "Fighter",
-                "Ship"
-            ],
-            "sprite_index": 0,
-            "abilities": {
-                "RamTarget": {}
-            },
-            "major_classification": "Special",
-            "resource_cost": {
-                "metals": 5,
-                "exotics": 3
             }
         },
         {

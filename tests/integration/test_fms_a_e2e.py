@@ -4,7 +4,8 @@ Pure-Python integration test (no rendering, no save/load round-trip
 beyond what's needed for fleet group_kind serialisation). Covers:
 
   - Designing a mine with Warhead + Hull + SmallTargetingSensor validates.
-  - Designing a fighter with Warhead + RamTarget validates.
+  - Designing a fighter with Warhead validates (ramming is universal
+    after QA 2026-05-16 Obs 1b — no ``RamTarget`` ability gate).
   - Designing a capital ship with VehicleBay + Strategic launch +
     Recover abilities validates.
   - All eight Phase-5 skeleton abilities instantiate cleanly from
@@ -24,7 +25,6 @@ from game.simulation.components.abilities import (
     ABILITY_REGISTRY,
     BeamWeaponAbility,
     LaserheadAbility,
-    RamTargetAbility,
     RecoverFightersAbility,
     RecoverSatellitesAbility,
     StrategicFighterLaunchAbility,
@@ -55,20 +55,22 @@ class TestPhase1DataValidationE2E:
             ship_class="Mine (Medium)", registries=fresh_registries,
         )
         _add(mine, "hull_mine_medium", LayerType.CORE, fresh_registries)
-        _add(mine, "warhead_small", LayerType.CORE, fresh_registries)
+        _add(mine, "warhead", LayerType.CORE, fresh_registries)
         _add(mine, "small_targeting_sensor", LayerType.CORE, fresh_registries)
         # All three components placed within Mine_Standard CORE whitelist.
         assert len(mine.layers[LayerType.CORE].components) >= 3
 
-    def test_fighter_with_warhead_and_ram_validates(self, fresh_registries):
+    def test_fighter_with_warhead_validates(self, fresh_registries):
+        """QA 2026-05-16 Obs 1b: ramming is a universal tactical
+        action — a kamikaze fighter only needs a warhead. The previous
+        ``ram_target_module`` component was deleted alongside the
+        gate."""
         fighter = Ship(
             "RammerProto", 0, 0, (255, 255, 255),
             ship_class="Fighter (Medium)", registries=fresh_registries,
         )
-        # Fighter_Standard CORE blocks Armor only; warhead + ram_target
-        # both allowed via their per-component `allowed_vehicle_types`.
-        _add(fighter, "warhead_small", LayerType.CORE, fresh_registries)
-        _add(fighter, "ram_target_module", LayerType.CORE, fresh_registries)
+        _add(fighter, "warhead", LayerType.CORE, fresh_registries)
+        assert len(fighter.layers[LayerType.CORE].components) >= 1
 
 
 class TestPhase5AbilitySkeletons:
@@ -159,7 +161,7 @@ class TestLaserheadFamilyDetection:
     def test_laserhead_is_beam_weapon_ability_subclass(self, fresh_registries):
         """Critical wiring — beam family detection at weapon_registry.py
         relies on isinstance(ability, BeamWeaponAbility)."""
-        comp = create_component("laserhead_small", registries=fresh_registries)
+        comp = create_component("laserhead", registries=fresh_registries)
         assert comp is not None
         lasers = comp.get_abilities("Laserhead")
         assert lasers

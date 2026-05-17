@@ -404,6 +404,46 @@ class TestApplyTurnStartState:
 
         screen.ui.open_event_log_with_events.assert_not_called()
 
+    def test_obs3_syncs_event_log_unconditionally_on_player_swap(self):
+        """QA Obs 3 (2026-05-16): the data-source rebind must fire EVERY
+        player swap, regardless of whether the incoming player has events.
+        Without this, a cached EventLogWindow alive from the previous
+        player's turn keeps showing that player's rows when the new player
+        has nothing to display.
+
+        ``sync_event_log_for_empire(events, empire_name)`` is the
+        unconditional rebind hook; ``open_event_log_with_events(...)``
+        remains conditional on a non-empty events list (the auto-popup
+        gate)."""
+        # Case A: incoming player has events.
+        manager, screen = _make_game_state_manager()
+        events = [MagicMock()]
+        screen._facade.get_turn_events.return_value = events
+        empire = screen.empires[1]
+
+        manager._apply_turn_start_state(empire)
+
+        screen.ui.sync_event_log_for_empire.assert_called_once_with(
+            events, empire_name=empire.name,
+        )
+        screen.ui.open_event_log_with_events.assert_called_once_with(
+            events, empire_name=empire.name,
+        )
+
+        # Case B: incoming player has NO events. sync still fires (so a
+        # cached visible window from the previous player is refreshed to
+        # empty + hidden); auto-open does not.
+        manager, screen = _make_game_state_manager()
+        screen._facade.get_turn_events.return_value = []
+        empire = screen.empires[1]
+
+        manager._apply_turn_start_state(empire)
+
+        screen.ui.sync_event_log_for_empire.assert_called_once_with(
+            [], empire_name=empire.name,
+        )
+        screen.ui.open_event_log_with_events.assert_not_called()
+
     def test_respects_suppress_event_log_flag(self):
         """``_suppress_event_log`` (FEAT-20) gates the popup so dev-loop
         ``run_n_turns`` can surface a single combined log at the end
@@ -1284,7 +1324,7 @@ class TestApplyTurnStartStateRestoresIncomingState:
         empire = screen.empires[0]
 
         # Strip the registry hook.
-        screen.ui = MagicMock(spec=["lbl_current_player", "manager", "width", "height", "show_detailed_report", "open_event_log_with_events"])
+        screen.ui = MagicMock(spec=["lbl_current_player", "manager", "width", "height", "show_detailed_report", "open_event_log_with_events", "sync_event_log_for_empire"])
         screen.ui.lbl_current_player = MagicMock()
         screen.ui.manager = MagicMock()
         screen.ui.width = 1920

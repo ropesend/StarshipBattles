@@ -385,6 +385,17 @@ class TransferDialog(StrategyModalWindow):
             # leak; let the exception propagate to the caller.
             self.kill()
             raise
+        # QA Obs 5 follow-up (2026-05-16): when every dispatched command
+        # was rejected by the facade, surface the first rejection to the
+        # user so "Confirm All" does not appear to silently no-op. The
+        # dialog stays open for correction. Guard chain falls through
+        # cleanly on bypass-init test dialogs (no ``scene``) and scenes
+        # without ``ui.show_error_message``.
+        if result.rejection_message:
+            scene = getattr(self, "scene", None)
+            shower = getattr(getattr(scene, "ui", None), "show_error_message", None)
+            if shower is not None:
+                shower(f"Transfer failed: {result.rejection_message}")
         if not result.aborted_for_correction:
             self.kill()
 

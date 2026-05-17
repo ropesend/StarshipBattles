@@ -58,6 +58,32 @@ class EventLogRegistrar:
         """
         self._open_with(events, empire_name=empire_name)
 
+    def sync_for_empire(
+        self, events: list, *, empire_name: Optional[str] = None
+    ) -> None:
+        """Refresh a cached EventLogWindow's data on player swap.
+
+        QA Obs 3 (2026-05-16): called unconditionally from
+        ``StrategyGameStateManager._apply_turn_start_state`` so a window
+        alive from the previous player's turn does not surface stale
+        rows when the incoming player has no events. Behaviour:
+
+        * Window not alive → no-op. (Auto-open is owned by
+          ``open_with_events`` and only fires when events are non-empty.)
+        * Window alive → refresh the data source + title to the new
+          empire's events via ``update_events_only`` (no show).
+        * Window alive AND visible AND incoming events are empty →
+          additionally ``hide()`` the window so the empty rows do not
+          stay on screen. The user can re-open via the log button.
+        """
+        c = self._composer
+        existing = c.event_log_window
+        if existing is None or not existing.alive():
+            return
+        existing.update_events_only(events, empire_name=empire_name)
+        if not events and getattr(existing, "visible", True):
+            existing.hide()
+
     # ---------------------------------------------------------------- helpers
 
     def _open_with(
