@@ -45,6 +45,28 @@ __all__ = [
 # it as a parameter (the temporary handoff to PROJ-431 Phase 2). Once that
 # project's deployable substrate redesign lands, the filter is no longer
 # needed and the parameter collapses away.
+def _boundary_to_box(
+    boundary: Any,
+) -> Optional[Tuple[float, float, float, float]]:
+    """Derive an axis-aligned scatter box from a battle boundary.
+
+    Mirrors the helper currently on `SimulationBattleResolver`: tactical
+    mine scatter takes a `(xmin, ymin, xmax, ymax)` rect. `UnboundedRegion`
+    and non-rectangular boundaries fall back to `None` so the resolver
+    pulls from the mine_group's stored `mine_positions`.
+    """
+    if boundary is None:
+        return None
+    radius = getattr(boundary, "radius", None)
+    if radius is not None:
+        r = float(radius)
+        return (-r, -r, r, r)
+    bounds = getattr(boundary, "bounds", None)
+    if bounds is not None and len(bounds) == 4:
+        return tuple(float(v) for v in bounds)  # type: ignore[return-value]
+    return None
+
+
 def _default_mine_group_filter(
     fleets: Sequence["Fleet"],
 ) -> Tuple[List["Fleet"], List["Fleet"]]:
@@ -163,7 +185,7 @@ class StrategyBattleAssembler:
             max_ticks=max_ticks,
         )
 
-        # Phase 1 compat: read the four side-channels off the already-built
+        # Phase 1-3 compat: read the four side-channels off the already-built
         # spec. Phase 4 removes the writes; this orchestrator then populates
         # extensions directly from the intermediate state without any
         # getattr coupling.
@@ -174,9 +196,30 @@ class StrategyBattleAssembler:
         if engine_ref is None:
             engine_ref = []
 
-        # Phase 1: the registry is empty. Phase 3 wires the mine + reboard
-        # setup callbacks into it.
+        # Phase 3: populate the pre-tick setup registry with the mine and
+        # reboard setups. The registry composes them into the single
+        # `pre_tick_loop_callback` that `run_battle` accepts.
         registry = PreTickBattleSetupRegistry()
+        if combat_fleets:
+            from game.strategy.combat.pre_tick_setup import (
+                build_fighter_reboard_setup,
+            )
+            reboard_setup = build_fighter_reboard_setup(
+                combat_fleets, engine_ref=engine_ref,
+            )
+            if reboard_setup is not None:
+                registry.register("reboard", reboard_setup)
+        if mine_groups:
+            from game.strategy.combat.pre_tick_setup import (
+                build_mine_resolver_setup,
+            )
+            battle_boundary = _boundary_to_box(spec.boundary)
+            mine_setup = build_mine_resolver_setup(
+                mine_groups, owner_to_team_id,
+                battle_boundary=battle_boundary,
+            )
+            if mine_setup is not None:
+                registry.register("mine", mine_setup)
 
         extensions = BattleSpecExtensions(
             mine_groups=tuple(mine_groups),

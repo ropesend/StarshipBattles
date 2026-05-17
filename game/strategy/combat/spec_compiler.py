@@ -23,7 +23,7 @@ plan via `BattleSpecExtensions`.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional
 
 from game.simulation.battle_spec import BattleSpec
 from game.simulation.combat.boundary import UnboundedRegion
@@ -190,81 +190,4 @@ def build_strategy_battle_spec(
     return spec
 
 
-def build_fighter_reboard_setup(
-    participating_fleets: Sequence["Fleet"],
-    *,
-    engine_ref: Optional[List[Any]] = None,
-) -> Optional[Callable[[Any], None]]:
-    """Build a ``pre_tick_loop_callback`` that installs a reboard tracker.
-
-    PROJ-FMS-C Phase 3 — kept here temporarily during the Phase 2 split.
-    Phase 3 moves the implementation under
-    `game/strategy/combat/pre_tick_setup/reboard_setup.py` and removes
-    this function from `spec_compiler.py`.
-    """
-    if not participating_fleets:
-        return None
-
-    from game.simulation.systems.fighter_reboard import ReboardTracker
-
-    captured_engine_ref = engine_ref
-
-    def _setup(engine: Any) -> None:
-        tracker = ReboardTracker(battle_id=id(engine))
-        try:
-            setattr(engine, "reboard_tracker", tracker)
-        except (AttributeError, TypeError):
-            pass
-        if captured_engine_ref is not None:
-            captured_engine_ref.append(engine)
-
-    return _setup
-
-
-def build_mine_resolver_setup(
-    mine_groups: Sequence["Fleet"],
-    owner_to_team_id: Mapping[Any, int],
-    *,
-    battle_boundary: Optional[Tuple[float, float, float, float]] = None,
-) -> Optional[Callable[[Any], None]]:
-    """Build a ``pre_tick_loop_callback`` that wires mine resolvers.
-
-    PROJ-FMS-B audit Fix 2 — kept here temporarily during the Phase 2
-    split. Phase 3 moves the implementation under
-    `game/strategy/combat/pre_tick_setup/mine_setup.py` and removes
-    this function from `spec_compiler.py`.
-    """
-    if not mine_groups:
-        return None
-
-    from game.simulation.systems.tactical_mine_resolver import (
-        TacticalMineResolver,
-    )
-
-    captured_groups: Tuple["Fleet", ...] = tuple(mine_groups)
-    captured_owner_map: Dict[Any, int] = dict(owner_to_team_id)
-    captured_boundary = battle_boundary
-
-    def _setup(engine: Any) -> None:
-        for mg in captured_groups:
-            owner_id = getattr(mg, "owner_id", None)
-            if owner_id not in captured_owner_map:
-                continue
-            resolver = TacticalMineResolver.from_mine_group(
-                mg, battle_boundary=captured_boundary,
-            )
-            resolver._owner_team_id = captured_owner_map[owner_id]
-            engine.mine_resolvers.append(resolver)
-            try:
-                setattr(mg, "_tactical_resolver", resolver)
-            except (AttributeError, TypeError):
-                pass
-
-    return _setup
-
-
-__all__ = [
-    "build_strategy_battle_spec",
-    "build_mine_resolver_setup",
-    "build_fighter_reboard_setup",
-]
+__all__ = ["build_strategy_battle_spec"]

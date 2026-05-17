@@ -18,15 +18,15 @@
 | 0. Preflight and baseline capture | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Introduce typed assembly DTOs | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Extract pure builders out of `spec_compiler.py` | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Extract pre-tick setup registry and setup builders | In Progress | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Migrate the adapter to `StrategyBattleAssembly` and remove side-channels | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 3. Extract pre-tick setup registry and setup builders | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Migrate the adapter to `StrategyBattleAssembly` and remove side-channels | In Progress | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Reduce `spec_compiler.py` to a thin public facade and update docs | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 complete — TeamSpecBuilder, StrategyModifierStackBuilder, PostBattleHookBuilder extracted; spec_compiler 959 -> 270 LOC; private helpers gone; combat_join + integration tests migrated.
-**Next Action:** Begin Phase 3 (PreTickBattleSetupRegistry tests + pre_tick_setup/ package).
+**Active Phase:** Phase 4
+**Last Action:** Phase 3 complete — pre_tick_setup/{mine,reboard}_setup.py extracted; registry tested; assembler populates registry. spec_compiler down to 193 LOC.
+**Next Action:** Begin Phase 4 (adapter migration + side-channel deletion).
 **Blockers:** None
 
 ## Overview

@@ -336,10 +336,8 @@ def test_spec_compiler_filters_mine_groups_and_wires_resolver():
        mine_group, and empty groups are pruned from their empire.
     """
     from unittest.mock import MagicMock
-    from game.strategy.combat.spec_compiler import (
-        build_strategy_battle_spec,
-        build_mine_resolver_setup,
-    )
+    from game.strategy.combat.spec_compiler import build_strategy_battle_spec
+    from game.strategy.combat.pre_tick_setup import build_mine_resolver_setup
     from game.strategy.data.fleet import Fleet
 
     hex_c = HexCoord(0, 0)
@@ -437,10 +435,8 @@ def test_post_battle_hook_calls_writeback_and_prunes_empty_mine_group():
     inventory.
     """
     from unittest.mock import MagicMock
-    from game.strategy.combat.spec_compiler import (
-        build_strategy_battle_spec,
-        build_mine_resolver_setup,
-    )
+    from game.strategy.combat.spec_compiler import build_strategy_battle_spec
+    from game.strategy.combat.pre_tick_setup import build_mine_resolver_setup
     from game.strategy.data.fleet import Fleet
 
     hex_c = HexCoord(0, 0)

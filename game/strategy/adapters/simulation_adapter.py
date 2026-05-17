@@ -316,7 +316,7 @@ class SimulationBattleResolver(IBattleResolver):
         owner_to_team_id = getattr(spec, "_owner_to_team_id", {}) or {}
         mine_resolver_setup = None
         if mine_groups:
-            from game.strategy.combat.spec_compiler import (
+            from game.strategy.combat.pre_tick_setup import (
                 build_mine_resolver_setup,
             )
             battle_boundary = self._boundary_to_box(spec.boundary)
@@ -334,7 +334,7 @@ class SimulationBattleResolver(IBattleResolver):
         combat_fleets = getattr(spec, "_combat_fleets", ()) or ()
         engine_ref = getattr(spec, "_engine_ref", None)
         if combat_fleets:
-            from game.strategy.combat.spec_compiler import (
+            from game.strategy.combat.pre_tick_setup import (
                 build_fighter_reboard_setup,
             )
             reboard_setup = build_fighter_reboard_setup(
