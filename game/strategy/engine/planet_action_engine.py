@@ -16,7 +16,8 @@ import logging
 
 from game.core.registry import GameRegistries
 from game.core.patterns.layer_iterator import iter_keyed_components
-from game.strategy.data.order_types import OrderType, PLANET_ACTION_ORDER_TYPES
+from game.strategy.data.order_types import OrderType
+from game.strategy.engine.commands.order_metadata_view import order_metadata
 from game.strategy.data.component_activation_state import (
     ActivationPhase,
     ComponentActivationState,
@@ -128,7 +129,7 @@ class PlanetActionEngine(IPlanetActionEngine):
             if order is None:
                 break
 
-            if order.type not in PLANET_ACTION_ORDER_TYPES:
+            if order.type not in order_metadata.planet_action_order_types:
                 break
 
             # Validate target facility still exists

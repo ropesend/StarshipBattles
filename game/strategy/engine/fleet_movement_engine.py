@@ -18,7 +18,8 @@ from typing import Optional, List, Tuple, TYPE_CHECKING
 import logging
 
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import OrderType, ACTION_ORDER_TYPES
+from game.strategy.data.order_types import OrderType
+from game.strategy.engine.commands.order_metadata_view import order_metadata
 from game.strategy.interfaces.engines import IMovementEngine
 from game.strategy.services.fleet_speed_calculator import get_tick_interval
 
@@ -272,7 +273,7 @@ class FleetMovementEngine(IMovementEngine):
                     # Skip fleets with action orders - they are handled by ActionExecutionEngine
                     # PROJ-187: Action orders (COLONIZE, TRANSFER, superweapons) don't move
                     current_order = fleet.get_current_order()
-                    if current_order and current_order.type in ACTION_ORDER_TYPES:
+                    if current_order and current_order.type in order_metadata.action_order_types:
                         continue
 
                     # Skip fleets with BUILD order - they are stationary

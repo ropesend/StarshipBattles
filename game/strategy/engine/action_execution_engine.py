@@ -18,13 +18,9 @@ from typing import Any, Dict, List, Optional
 import logging
 
 from game.strategy.interfaces.engines import IActionExecutionEngine
-from game.strategy.data.fleet import (
-    Fleet,
-    OrderType,
-    MOVEMENT_ORDER_TYPES,
-    ACTION_ORDER_TYPES,
-)
-from game.strategy.data.order_types import PLANET_FMS_ACTION_ORDER_TYPES
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import OrderType
+from game.strategy.engine.commands.order_metadata_view import order_metadata
 from game.strategy.engine.issuer_adapter import (
     PlanetStagingYardIssuerAdapter,
 )
@@ -166,7 +162,7 @@ class ActionExecutionEngine(IActionExecutionEngine):
             return None
 
         # Skip movement orders (handled by FleetMovementEngine)
-        if order.type in MOVEMENT_ORDER_TYPES:
+        if order.type in order_metadata.movement_order_types:
             return None
 
         # Skip BUILD orders (persistent, handled by ProductionEngine)
@@ -178,7 +174,7 @@ class ActionExecutionEngine(IActionExecutionEngine):
             return None
 
         # Only process action orders
-        if order.type not in ACTION_ORDER_TYPES:
+        if order.type not in order_metadata.action_order_types:
             return None
 
         # Increment execution progress
@@ -265,7 +261,7 @@ class ActionExecutionEngine(IActionExecutionEngine):
         order = get_current()
         if order is None:
             return None
-        if order.type not in PLANET_FMS_ACTION_ORDER_TYPES:
+        if order.type not in order_metadata.planet_fms_action_order_types:
             return None
 
         order.execution_progress += 1

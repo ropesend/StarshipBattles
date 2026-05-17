@@ -9,7 +9,8 @@ PROJ-162: Extract CargoTransferService from UI Dialogs
 
 from typing import List, Dict, Any, Optional, TYPE_CHECKING, Union
 
-from game.strategy.data.order_types import OrderType, MOVEMENT_ORDER_TYPES
+from game.strategy.data.order_types import OrderType
+from game.strategy.engine.commands.order_metadata_view import order_metadata
 
 if TYPE_CHECKING:
     from game.strategy.engine.commands import IssueTransferCommand
@@ -34,7 +35,7 @@ def project_fleet_position(fleet: 'Fleet') -> 'HexCoord':
     """
     position = fleet.location
     for order in fleet.orders:
-        if order.type in MOVEMENT_ORDER_TYPES and order.type != OrderType.MOVE_TO_FLEET:
+        if order.type in order_metadata.movement_order_types and order.type != OrderType.MOVE_TO_FLEET:
             from game.core.hex_math import HexCoord
             if isinstance(order.target, HexCoord):
                 position = order.target

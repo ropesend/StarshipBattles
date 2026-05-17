@@ -16,11 +16,8 @@ from dataclasses import dataclass, replace
 from typing import Any, Dict, Optional, Tuple
 
 from game.core.hex_math import HexCoord, hex_distance
-from game.strategy.data.fleet import (
-    Fleet, OrderType,
-    MOVEMENT_ORDER_TYPES, ACTION_ORDER_TYPES,
-)
-from game.strategy.data.order_types import Order
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import Order, OrderType
 from game.strategy.services.galaxy_pathfinding_service import GalaxyPathfindingService
 
 logger = logging.getLogger(__name__)

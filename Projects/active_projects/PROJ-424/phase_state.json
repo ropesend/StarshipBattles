@@ -103,17 +103,13 @@
         "game/strategy/engine/planet_action_engine.py",
         "game/strategy/services/fleet_navigation_service.py",
         "game/strategy/services/fleet_path_projection.py",
-        "game/strategy/services/cargo_transfer_service.py",
-        "tests/unit/strategy/engine/test_command_registry_thirdparty.py",
-        "tests/unit/strategy/fleet_movement_engine/test_characterization.py",
-        "tests/unit/strategy/engine/order_handlers/test_handler_registry_completeness.py",
-        "tests/unit/strategy/test_fleet_order_processor.py"
+        "game/strategy/services/cargo_transfer_service.py"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_5": {

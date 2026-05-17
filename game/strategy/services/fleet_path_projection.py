@@ -18,10 +18,9 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, Optional, Tuple
 
 from game.core.hex_math import hex_distance
-from game.strategy.data.fleet import (
-    Fleet, OrderType, MOVEMENT_ORDER_TYPES,
-)
-from game.strategy.data.order_types import Order
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import Order, OrderType
+from game.strategy.engine.commands.order_metadata_view import order_metadata
 
 if TYPE_CHECKING:
     from game.strategy.services.fleet_navigation_service import (
@@ -73,7 +72,7 @@ def project_path_inner(
             order = state.orders[0]
 
             # Action orders: consume ticks and advance
-            if order.type not in MOVEMENT_ORDER_TYPES:
+            if order.type not in order_metadata.movement_order_types:
                 state, moves_left_in_turn, current_turn, initial_progress = (
                     project_action_order(
                         svc, state, order, fleet, component_registry,

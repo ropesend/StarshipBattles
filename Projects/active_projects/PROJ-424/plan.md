@@ -19,15 +19,15 @@
 | 1. Explicit `planet_fms` metadata + registry derivation | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Add `OrderMetadataView` (lazy, cycle-safe) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Migrate snapshot consumer (`action_time_resolver.py`) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Migrate remaining production consumers | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Migrate remaining production consumers | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Delete duplicated constants + `fleet.py` re-exports | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Docs convergence + final grep gate | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 landed — `ORDER_TO_ABILITY_MAP` and `_build_order_to_ability_map` deleted from `action_time_resolver.py`. Resolver now reads `order_metadata.movement_order_types`, `order_metadata.planet_action_order_types`, and `order_metadata.order_to_ability_map` at call time. Contract tests in `test_command_specs_contract.py` and `test_command_registry_contract.py` switched to assert against the view. 171 focused tests green
-**Next Action:** Phase 4 — migrate the remaining 6 production consumers off the duplicated frozensets onto `order_metadata`
+**Active Phase:** Phase 5
+**Last Action:** Phase 4 landed — 6 production consumers migrated (`action_execution_engine`, `fleet_movement_engine`, `planet_action_engine`, `fleet_navigation_service`, `fleet_path_projection`, `cargo_transfer_service`). `fleet_navigation_service` had dead imports (frozensets imported but never read); dropped cleanly. 910 focused tests green. Remaining production refs are `fleet.py` re-exports + `order_types.py` definitions only — both Phase 5 targets
+**Next Action:** Phase 5 — write final-guard tests asserting the deleted constants no longer exist; delete the four frozensets in `order_types.py` + the two re-exports in `fleet.py`; clean up tests that still import them; full sharded suite
 **Blockers:** None
 
 ## Overview

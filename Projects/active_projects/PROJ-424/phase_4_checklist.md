@@ -5,7 +5,9 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
+
+**Implementation note:** `fleet_navigation_service.py` was importing `MOVEMENT_ORDER_TYPES` and `ACTION_ORDER_TYPES` but never actually reading them in the body (likely leftover after a refactor). Drop the imports cleanly — no `order_metadata` need either. The other 5 production consumers migrated to `order_metadata.<property>` at call site.
 **Depends on:** phase_3
 **Review Mode:** standard
 **Files (planned):**
