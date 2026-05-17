@@ -790,7 +790,7 @@ class TestRaceRegistryAccessor:
         facade_a = StrategySessionFacade(Mock())
         facade_b = StrategySessionFacade(Mock())
 
-        assert facade_a.get_race_registry() is not facade_b.get_race_registry()
+        assert facade_a.economy.race_registry() is not facade_b.economy.race_registry()
 
 
 class TestProcessTurnErrorConversion:

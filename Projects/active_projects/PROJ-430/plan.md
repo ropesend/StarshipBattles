@@ -19,14 +19,14 @@
 | 2. Introduce grouped accessors | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Migrate UI callers (25 files) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate tests off legacy cache seams | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Delete the legacy surface (root-cause) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Delete the legacy surface (root-cause) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Documentation sync | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 5
-**Last Action:** Phase 4 complete — `FacadeSessionState.seed_planet_index` and `seed_race_registry` public helpers added. `test_colony_demographic_view.py` migrated to use them; `test_facade_indices.py` rewritten to assert caching behavior rather than implementation detail. Repo-wide sweep confirms zero remaining `facade._planet_index` / `_race_registry` / etc. writes in code (only in docstrings).
-**Next Action:** Phase 5 — root-cause delete the 8 cache-forwarder properties, the 32 flat read-method forwarders, the auto-installer's `dispatch_*` setattr loop, and the `_resolve_economy_config` legacy alias.
+**Active Phase:** Phase 6
+**Last Action:** Phase 5 complete — root-cause deletion: 8 cache-forwarder property pairs, 30 flat read methods, the auto-installer's `dispatch_*` setattr loop, and the `_resolve_economy_config` legacy alias all gone. `strategy_session_facade.py` shrunk from 570 to ~245 lines. `test_facade_dispatch.py` migrated to exercise `facade.commands.<verb>`. All 43 contract assertions now green. UI + strategy + facade focused suites (10601 tests) green.
+**Next Action:** Phase 6 — documentation sync in `docs/systems/strategy_layer.md` and PROJ-309 findings.
 **Blockers:** None
 
 ## Overview

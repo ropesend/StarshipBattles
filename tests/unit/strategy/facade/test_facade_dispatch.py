@@ -1,9 +1,11 @@
 """
-Tests for StrategySessionFacade dispatch helper methods.
+Tests for StrategySessionFacade grouped command-dispatch surface.
 
-PROJ-264 Phase 3: Coverage for all dispatch_* methods that wire UI commands
-to the command handler pipeline. Each dispatch method instantiates a Command
-dataclass and passes it to handle_command(). These tests verify the wiring.
+PROJ-264 Phase 3 originally covered each top-level ``dispatch_*`` helper.
+PROJ-430 / TD-08 deleted that top-level surface; the same wiring is now
+reached through ``facade.commands.<verb>(...)`` (prefix stripped). The
+parametrized cases below verify each verb instantiates the correct
+Command dataclass and routes through ``handle_command``.
 """
 
 import pytest
@@ -74,8 +76,11 @@ class TestFacadeDispatch:
     @pytest.mark.parametrize("method_name,kwargs,expected_cmd_class", DISPATCH_CASES,
                              ids=[c[0] for c in DISPATCH_CASES])
     def test_dispatch_creates_correct_command(self, facade, method_name, kwargs, expected_cmd_class):
-        """Each dispatch_* method creates the right Command type and forwards kwargs."""
-        dispatch_method = getattr(facade, method_name)
+        """Each grouped command verb creates the right Command type and forwards kwargs."""
+        # PROJ-430 / TD-08: legacy ``dispatch_<verb>`` reached through
+        # ``facade.commands.<verb>`` with the prefix stripped.
+        verb = method_name[len("dispatch_"):]
+        dispatch_method = getattr(facade.commands, verb)
         result = dispatch_method(**kwargs)
 
         # handle_command was called once
@@ -91,11 +96,12 @@ class TestFacadeDispatch:
     @pytest.mark.parametrize("method_name,kwargs,expected_cmd_class", DISPATCH_CASES,
                              ids=[c[0] for c in DISPATCH_CASES])
     def test_dispatch_propagates_return_value(self, facade, method_name, kwargs, expected_cmd_class):
-        """Dispatch methods return whatever handle_command returns."""
+        """Grouped command verbs return whatever handle_command returns."""
         error_result = ValidationResult.error("test error")
         facade.handle_command.return_value = error_result
 
-        dispatch_method = getattr(facade, method_name)
+        verb = method_name[len("dispatch_"):]
+        dispatch_method = getattr(facade.commands, verb)
         result = dispatch_method(**kwargs)
 
         assert result is error_result
