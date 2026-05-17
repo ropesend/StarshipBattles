@@ -6,9 +6,29 @@ from dataclasses import dataclass, field
 from typing import Optional, Tuple, TYPE_CHECKING
 
 from game.core.hex_math import HexCoord
+from game.strategy.services.ability_metadata import (
+    StrategicKind,
+    abilities_with_kind_tag,
+)
 
 if TYPE_CHECKING:
     from game.strategy.data.planet import Planet
+
+
+def _is_any_planetary_shield_active(active_abilities: object) -> bool:
+    """True iff any PLANETARY_SHIELD-tagged ability is active on the planet.
+
+    PROJ-429 / TD-07 Phase 8 (Codex follow-up): the ability name
+    (``"PlanetaryShield"``) is no longer hardcoded here; it comes from
+    ``abilities_with_kind_tag(StrategicKind.PLANETARY_SHIELD)``. Mirrors
+    the migration in ``planet_energy_engine.get_shield_info``.
+    """
+    if not isinstance(active_abilities, dict):
+        return False
+    for shield_name in abilities_with_kind_tag(StrategicKind.PLANETARY_SHIELD):
+        if active_abilities.get(shield_name, False):
+            return True
+    return False
 
 
 def _dict_to_tuple(d) -> Tuple[Tuple[str, float], ...]:
@@ -104,7 +124,9 @@ class PlanetInfo:
             population_details=pop_details,
             energy=getattr(planet, 'energy', 0.0),
             energy_capacity=getattr(planet, 'energy_capacity', 0.0),
-            shield_active=getattr(planet, 'active_abilities', {}).get('PlanetaryShield', False),
+            shield_active=_is_any_planetary_shield_active(
+                getattr(planet, 'active_abilities', {})
+            ),
             stockpile=_dict_to_tuple(getattr(planet, 'stockpile', None)),
             max_stockpile=_dict_to_tuple(getattr(planet, 'max_stockpile', None)),
             staging_yard_summary=staging_summary,
