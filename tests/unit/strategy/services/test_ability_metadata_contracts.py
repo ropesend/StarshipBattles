@@ -119,3 +119,64 @@ def test_every_superweapon_ability_name_has_superweapon_kind_tag() -> None:
 def test_build_rate_booster_has_kind_tag() -> None:
     """Phase 6: ``BuildRateBooster`` carries the BUILD_RATE_BOOSTER kind tag."""
     assert ability_has_kind_tag("BuildRateBooster", StrategicKind.BUILD_RATE_BOOSTER)
+
+
+# ---------------------------------------------------------------------------
+# Phase 8 — reverse-direction parity: every kind-tagged ability must be
+# represented in its spec table (catches "tag drifts after spec row is
+# removed" regressions). Codex consult follow-up.
+# ---------------------------------------------------------------------------
+
+
+def test_every_stabilizer_kind_tag_has_matching_spec_row() -> None:
+    """Phase 8: every ability tagged ``StrategicKind.STABILIZER`` in the
+    unified registry must have a matching row in
+    ``stabilizer_registry.STABILIZERS``.
+
+    Reverse direction of
+    ``test_every_stabilizer_ability_name_has_stabilizer_kind_tag``: if
+    someone removes a spec row but leaves the registry tag, lookups via
+    ``find_blocking_stabilizer`` would silently miss the ability.
+    """
+    from game.strategy.services.ability_metadata import abilities_with_kind_tag
+    from game.strategy.services.stabilizer_registry import STABILIZERS
+
+    spec_names = {s.ability_name for s in STABILIZERS}
+    tagged_names = set(abilities_with_kind_tag(StrategicKind.STABILIZER))
+    missing_rows = tagged_names - spec_names
+    assert not missing_rows, (
+        f"Abilities tagged STABILIZER in ability_metadata.py have no "
+        f"matching row in stabilizer_registry.STABILIZERS: "
+        f"{sorted(missing_rows)}. Add a StabilizerSpec or remove the tag."
+    )
+
+
+def test_every_superweapon_kind_tag_has_matching_spec_row() -> None:
+    """Phase 8: every ability tagged ``StrategicKind.SUPERWEAPON`` in the
+    unified registry must have a matching row in
+    ``superweapon_registry.SUPERWEAPONS``.
+
+    Reverse direction of
+    ``test_every_superweapon_ability_name_has_superweapon_kind_tag``.
+
+    ``STELLERATE_STAR`` is a documented exception: its spec row has
+    ``ability_name=None`` because it dispatches via ``system_destroyer``
+    rather than ability-ship lookup, but the underlying simulation
+    ability ``DestroyStar`` is still tagged SUPERWEAPON for
+    classification. That single name is allowlisted here.
+    """
+    from game.strategy.services.ability_metadata import abilities_with_kind_tag
+    from game.strategy.services.superweapon_registry import SUPERWEAPONS
+
+    spec_names = {s.ability_name for s in SUPERWEAPONS if s.ability_name is not None}
+    # Documented exception: STELLERATE_STAR has ability_name=None in
+    # SUPERWEAPONS but the simulation ability "DestroyStar" is still
+    # tagged SUPERWEAPON in the unified registry. Allowlist it.
+    documented_none_row_abilities = {"DestroyStar"}
+    tagged_names = set(abilities_with_kind_tag(StrategicKind.SUPERWEAPON))
+    missing_rows = tagged_names - spec_names - documented_none_row_abilities
+    assert not missing_rows, (
+        f"Abilities tagged SUPERWEAPON in ability_metadata.py have no "
+        f"matching row in superweapon_registry.SUPERWEAPONS: "
+        f"{sorted(missing_rows)}. Add a SuperweaponSpec or remove the tag."
+    )
