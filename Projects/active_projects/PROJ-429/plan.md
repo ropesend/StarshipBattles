@@ -23,14 +23,14 @@
 | 4. Migrate `action_time_resolver` (TD-03 coupling) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Migrate `combat_modifier_collector` and `spec_compiler` | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Migrate `build_queue_source`; stabilizer/superweapon parity contracts | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
-| 7. Documentation update and final validation | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
+| 7. Documentation update and final validation | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 7
-**Last Action:** Phase 6 complete — `build_queue_source.get_build_rate_booster_mult` resolves the booster name through `abilities_with_kind_tag(StrategicKind.BUILD_RATE_BOOSTER)`; stabilizer + superweapon + build-rate-booster kind-tag contract tests pinned in `test_ability_metadata_contracts.py`. Last hardcoded ability-name literal in `game/strategy/` is retired. (Pre-existing test_build_queue_source.py failures unrelated to TD-07 — confirmed by HEAD~1 baseline.)
-**Next Action:** Phase 7 — docs + full sharded suite.
+**Active Phase:** Complete
+**Last Action:** Phase 7 complete — `docs/systems/strategy_layer.md` adds an "Ability Metadata Registry (PROJ-429 / TD-07)" section describing the unified registry as the canonical source of truth; `docs/guides/adding_abilities.md` updated to point at the unified registry; stale `_ACTIVATABLE_ABILITIES` references replaced. **Full sharded suite: 21079 / 21079 passed (wall time 154s).**
+**Next Action:** Ready for final audit.
 **Blockers:** None.
 
 ## Overview
@@ -121,16 +121,16 @@ Phase-by-phase dependency edges (intra-project): `0 → 1 → 2 → 3 → 4 → 
 
 ## Verification
 
-- [ ] PROJ-424 (TD-03) is complete and merged to main before any phase of this project starts.
-- [ ] All phase checklists complete (Phases 0 through 7).
-- [ ] No hardcoded ability-name set remains anywhere in `game/strategy/` outside the unified registry. (Sanity grep: the regex from TD-07's Execution Preconditions returns no matches outside `ability_metadata.py`, the simulation layer, and `data/`.)
-- [ ] `_ACTIVATABLE_ABILITIES` is gone; no module references it.
-- [ ] `design_role.py` defines none of `_WEAPON_ABILITIES`, `_SEEKER_ABILITIES`, `_BEAM_PROJECTILE_ABILITIES`, `_SENSOR_ABILITIES`, `_SUPPORT_ABILITIES`, `_CARRIER_ABILITIES`, `_COMMAND_ABILITIES`.
-- [ ] `combat_modifier_collector.py` and `spec_compiler.py` derive their combat-ability sets from the same registry query (no duplicated literals).
-- [ ] `ShieldProjection` is represented in the unified registry with a tag distinct from the multiplier-style combat modifiers.
-- [ ] `effect_ability_metadata.py` still exports `find_metadata`, `is_known_effect_ability`, `all_owner_aware_scopes` with unchanged signatures.
-- [ ] Contract test: every `CommandSpec.action_ability_name` exists in the unified registry.
-- [ ] Contract test: every `STABILIZERS[*].ability_name` and `SUPERWEAPONS[*].ability_name` has the matching `kind_tag`.
-- [ ] `python Tools/test_sharded/test_sharded.py` is green.
-- [ ] `docs/systems/strategy_layer.md` describes the unified registry as the strategy-facing source of truth.
+- [x] PROJ-424 (TD-03) is complete and merged to main before any phase of this project starts.
+- [x] All phase checklists complete (Phases 0 through 7).
+- [x] No hardcoded ability-name set remains anywhere in `game/strategy/` outside the unified registry. (Sanity grep: the regex from TD-07's Execution Preconditions returns no matches outside `ability_metadata.py`, the simulation layer, and `data/`. Remaining hits in `game/strategy/` are docstring/comment references to deleted constants, not live definitions.)
+- [x] `_ACTIVATABLE_ABILITIES` is gone; no module references it (in `game/strategy/`; UI-layer constant in `stat_rows_dynamic.py` is a separate concern out of scope).
+- [x] `design_role.py` defines none of `_WEAPON_ABILITIES`, `_SEEKER_ABILITIES`, `_BEAM_PROJECTILE_ABILITIES`, `_SENSOR_ABILITIES`, `_SUPPORT_ABILITIES`, `_CARRIER_ABILITIES`, `_COMMAND_ABILITIES`.
+- [x] `combat_modifier_collector.py` (COMBAT_FLAT_BONUS) and `strategy_modifier_stack_builder.py` (COMBAT_MODIFIER) derive their combat-ability sets from the unified registry (no duplicated literals across files). Per-accumulator dispatch within the collector is retained per decisions.md row 11.
+- [x] `ShieldProjection` is represented in the unified registry with `StrategicKind.COMBAT_FLAT_BONUS`, distinct from the multiplier-style combat modifiers.
+- [x] `effect_ability_metadata.py` still exports `find_metadata`, `is_known_effect_ability`, `all_owner_aware_scopes` with unchanged signatures.
+- [x] Contract test: every `CommandSpec.action_ability_name` exists in the unified registry (`test_every_command_action_ability_name_exists_in_registry`).
+- [x] Contract test: every `STABILIZERS[*].ability_name` and `SUPERWEAPONS[*].ability_name` has the matching `kind_tag`.
+- [x] `python Tools/test_sharded/test_sharded.py` is green — **21079 / 21079 passed, 154s wall time**.
+- [x] `docs/systems/strategy_layer.md` describes the unified registry as the strategy-facing source of truth (new "Ability Metadata Registry (PROJ-429 / TD-07)" section).
 - [ ] User verified.

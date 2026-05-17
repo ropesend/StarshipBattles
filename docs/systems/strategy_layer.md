@@ -560,11 +560,58 @@ Current activatable abilities:
 | `DamageModifier` | Fleet damage multiplier in combat | varies | Typically 15-25 ticks activate, 5-10 deactivate, 30-50 energy/turn. |
 | `ShieldProjection` | Flat shield bonus in combat | varies | Typically 15-25 ticks activate, 5-10 deactivate, 30-50 energy/turn. |
 
+### Ability Metadata Registry (PROJ-429 / TD-07)
+
+**File:** `game/strategy/services/ability_metadata.py`
+
+The unified `AbilityMetadataRegistry` is the canonical strategy-facing source of truth for non-mechanical, strategy-layer facts about every ability. It answers "is ability X a Y?" questions that were previously fragmented across eleven hardcoded literal sets in `game/strategy/`.
+
+Schema:
+
+- `AbilityMetadata(name, effect, role_tags, energy, action_time_field, kind_tags)` — one record per ability.
+- `EffectFacet` — strategic-effect aggregation (display name, kind=rate|multiplier, grouping_key_field, owner_aware_scopes, value_field_primary/fallback). Drives the legacy `EFFECT_ABILITY_METADATA` shim.
+- `EnergyFacet` — activation cycle (is_activatable, drains_energy, activation_time_field, deactivation_time_field). Drives the action-time resolver's ACTIVATE_ABILITY / DEACTIVATE_ABILITY branch.
+- `RoleTag` — design-role classification (`WEAPON`, `SEEKER`, `BEAM_PROJECTILE`, `SENSOR`, `SUPPORT`, `CARRIER`, `COMMAND`). Drives `design_role.classify_design_role`.
+- `StrategicKind` — strategic categorisation (`COMBAT_MODIFIER`, `COMBAT_FLAT_BONUS`, `STABILIZER`, `SUPERWEAPON`, `ENVIRONMENTAL`, `RESOURCE_BOOSTER`, `BUILD_RATE_BOOSTER`, `PLANETARY_SHIELD`, `ENERGY_DRAINING`). Drives the combat modifier collector, stack builder, build queue source, planet energy engine, and stabilizer / superweapon contract tests.
+
+Public API:
+
+- `get_ability_metadata(name) -> AbilityMetadata | None`
+- `ability_has_role_tag(name, tag) -> bool`
+- `ability_has_kind_tag(name, tag) -> bool`
+- `abilities_with_role_tag(tag) -> frozenset[str]`
+- `abilities_with_kind_tag(tag) -> frozenset[str]`
+- `ability_action_time_field(name) -> str`
+- `ability_drains_energy(name) -> bool`
+
+Cycle-safety invariant: the registry is a leaf — it must NOT import from `game.simulation.components.abilities`. Ability names are strings; metadata is pure data; the registry's job is categorisation, not instantiation. Pinned by `test_ability_metadata_module_does_not_import_simulation_abilities` backed by a hardened AST guard (top-level imports, class-body imports, dynamic `importlib.import_module` / `__import__` calls). The same guard pattern is used by `OrderMetadataView` (PROJ-424) and `TurnPhaseRegistry` (PROJ-428).
+
+Shim: `game/strategy/services/effect_ability_metadata.py` remains importable. It re-derives `EFFECT_ABILITY_METADATA` from the unified registry's `EffectFacet` entries and preserves `find_metadata`, `is_known_effect_ability`, `all_owner_aware_scopes`, and the `EffectAbilityMetadata` symbol so existing consumer chains continue to work unchanged. New entries should be added to `ability_metadata.py` directly; the shim is purely a backward-compatibility surface and is slated for collapse in a follow-up project.
+
+Constants retired by PROJ-429 (DO NOT re-introduce):
+
+- `_WEAPON_ABILITIES`, `_SEEKER_ABILITIES`, `_BEAM_PROJECTILE_ABILITIES`, `_SENSOR_ABILITIES`, `_SUPPORT_ABILITIES`, `_CARRIER_ABILITIES`, `_COMMAND_ABILITIES` (in `design_role.py`) — replaced by `RoleTag` queries.
+- `_ACTIVATABLE_ABILITIES` (in `planet_energy_engine.py`) — dead code; replaced by `ability_drains_energy(name)` / `StrategicKind.ENERGY_DRAINING` if a consumer ever needs the classification (the live drain path uses `ComponentActivationState.is_draining_energy` directly).
+- `ORDER_TO_TIME_FIELD` (in `action_time_resolver.py`) — empty extension point; replaced by `ability_action_time_field(name)`.
+- Hardcoded `{"ShieldModifier","DamageModifier","ThrustModifier"}` set in `strategy_modifier_stack_builder.entries_from_sector_effects` — replaced by `abilities_with_kind_tag(StrategicKind.COMBAT_MODIFIER)`.
+- Hardcoded `"ShieldProjection"` literals in `combat_modifier_collector` — replaced by `abilities_with_kind_tag(StrategicKind.COMBAT_FLAT_BONUS)`.
+- Hardcoded `"BuildRateBooster"` literal in `build_queue_source.get_build_rate_booster_mult` — replaced by `abilities_with_kind_tag(StrategicKind.BUILD_RATE_BOOSTER)`.
+- Hardcoded `"PlanetaryShield"` literal in `planet_energy_engine.get_shield_info` — replaced by `abilities_with_kind_tag(StrategicKind.PLANETARY_SHIELD)`.
+
+Contract tests in `tests/unit/strategy/services/test_ability_metadata_contracts.py` pin:
+
+- Every `CommandSpec.action_ability_name` exists in the registry.
+- Every `STABILIZERS[*].ability_name` carries `StrategicKind.STABILIZER`.
+- Every non-None `SUPERWEAPONS[*].ability_name` carries `StrategicKind.SUPERWEAPON`.
+- `BuildRateBooster` carries `StrategicKind.BUILD_RATE_BOOSTER`.
+
+Shape rationale (vs PROJ-424's `OrderMetadataView`): both projects converge on the same end-state property — one cycle-safe, lazily resolved access path per metadata domain. PROJ-424 builds a *view* over the pre-existing `CommandRegistry`; PROJ-429 builds the *primary store* because ability metadata had no upstream source. The mechanism differs because the domain topologies differ.
+
 ### Activatable Ability Extension Checklist
 
 1. Define ability class in `planetary.py` with energy/activation/deactivation/scope fields.
 2. Register in `ABILITY_REGISTRY`.
-3. Add to `_ACTIVATABLE_ABILITIES` in `planet_energy_engine.py`.
+3. Add the entry to `game/strategy/services/ability_metadata.py` with an `EnergyFacet` (drains_energy=True). PROJ-429 / TD-07 deleted the dead `_ACTIVATABLE_ABILITIES` list; the unified registry is now the discovery surface and `ability_drains_energy(name)` is the consumer-facing query.
 4. Data-driven abilities window discovery requires `activation_time` in component data; add display override only when CamelCase humanization is wrong.
 5. Add display name to `_ACTIVATABLE_DISPLAY_NAMES` in `strategy_detail_fmt.py`.
 6. If it blocks superweapons, add a `StabilizerSpec` in `stabilizer_registry.py`.

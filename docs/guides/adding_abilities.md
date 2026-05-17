@@ -413,13 +413,13 @@ Display surfaces:
 - Add to `_ACTIVATABLE_DISPLAY_NAMES` in `game/ui/screens/strategy_detail_fmt.py` if the planet/system detail panel should show status.
 - Add to `game/ui/screens/builder/stat_rows_dynamic.py` if the design workshop needs a dedicated stat row for the ability.
 
-Do not treat `planet_energy_engine._ACTIVATABLE_ABILITIES` as the discovery surface. The current scanner and activation order path are data-driven.
+The strategy-facing source of truth for ability metadata is `game/strategy/services/ability_metadata.py` (the unified `AbilityMetadataRegistry` introduced by PROJ-429 / TD-07). It owns role classification (`RoleTag`), strategic categorisation (`StrategicKind`), effect aggregation (`EffectFacet`), and energy / activation cycle (`EnergyFacet`). The legacy `_ACTIVATABLE_ABILITIES` list in `planet_energy_engine.py` has been deleted; the activation discovery scanner remains data-driven and pulls `ability_drains_energy(name)` / `abilities_with_kind_tag(StrategicKind.ENERGY_DRAINING)` from the registry when classification is needed.
 
 ### System And Sector Effect Display
 
 Stale reference correction: `SYSTEM_EFFECT_ABILITIES` no longer lives in `system_effects_collector.py`.
 
-Add new system/sector effect ability metadata in `game/strategy/services/effect_ability_metadata.py` via `EFFECT_ABILITY_METADATA`.
+Add new system/sector effect ability metadata in `game/strategy/services/ability_metadata.py` via an `AbilityMetadata` entry with an `EffectFacet`. The legacy `EFFECT_ABILITY_METADATA` tuple in `effect_ability_metadata.py` is now a shim derived from the unified registry — adding new entries there directly is not the supported path.
 
 `EffectAbilityMetadata` controls:
 
