@@ -15,15 +15,15 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Characterization — pin current restore() behavior with focused tests | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
+| 0. Characterization — pin current restore() behavior with focused tests | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Mirror `SessionPersistenceAdapter.rehydrate_state()` wiring inside `TurnStateSnapshot.restore()` | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Docs + final verification | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 0 (planning)
-**Last Action:** Project initialized from a Codex consult on the shipped PROJ-423 work. Codex flagged `TurnStateSnapshot.restore()` as a parallel rehydrate path that does not mirror `SessionPersistenceAdapter.rehydrate_state()`'s wiring steps; this project lands the alignment.
-**Next Action:** Begin Phase 0 — write focused tests that pin the current `TurnStateSnapshot.restore()` behavior (galaxy/empire replacement, fleet re-registration, order-reference resolution) so the wiring additions in Phase 1 land on top of explicit characterization coverage.
+**Active Phase:** Phase 1 (ready)
+**Last Action:** Phase 0 complete. Two new characterization tests added in `TestTurnStateSnapshotRestore` — `test_restore_wires_galaxy_back_refs` and `test_restore_rebuilds_pursuer_trackers`. Both observed failing against today's `restore()` (suite: 2 failed, 11 passed).
+**Next Action:** Begin Phase 1 — add `empire.set_galaxy(...)` and pursuer-tracker rebuild wiring blocks inside `TurnStateSnapshot.restore()` to make the Phase 0 tests pass.
 **Blockers:** None. Predecessor PROJ-423 is complete on `proj/PROJ-423/main`.
 
 ## Overview

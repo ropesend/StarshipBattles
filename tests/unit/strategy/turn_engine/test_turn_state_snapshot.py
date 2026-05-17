@@ -140,6 +140,81 @@ class TestTurnStateSnapshotRestore:
 
         assert len(session.empires) == len(snapshot.empire_dicts)
 
+    def test_restore_wires_galaxy_back_refs(self, minimal_game_session):
+        """PROJ-432: each restored empire must hold a galaxy back-reference.
+
+        Mirrors `test_rehydrate_wires_galaxy_back_refs` on the canonical
+        save-load path. `Empire.set_galaxy(galaxy)` stores into
+        `empire._galaxy`; this test asserts identity (not equality) post-
+        restore so any future regression of the missing wiring step is
+        caught.
+        """
+        from game.strategy.engine.turn_state_snapshot import TurnStateSnapshot
+        session = minimal_game_session
+
+        snapshot = TurnStateSnapshot.capture(
+            turn_number=1, empires=session.empires, galaxy=session.galaxy
+        )
+
+        # Mutate empire back-refs so a restore that fails to re-wire is
+        # observable (without this, the pre-restore back-ref might happen
+        # to still match the freshly-rebuilt galaxy).
+        for empire in session.empires:
+            empire._galaxy = None
+
+        snapshot.restore(session)
+
+        for empire in session.empires:
+            assert empire._galaxy is session.galaxy
+
+    def test_restore_rebuilds_pursuer_trackers(self, minimal_game_session):
+        """PROJ-432: pursuer tracker is rebuilt from resolved order targets.
+
+        Mirrors `test_rehydrate_rebuilds_pursuer_trackers` on the canonical
+        save-load path. Source fleet 9001 carries a `MOVE_TO_FLEET` order
+        at target fleet 9002; after a snapshot round-trip the restored
+        source must appear in the restored target's `pursuer_tracker.pursuers`.
+        """
+        from game.strategy.engine.turn_state_snapshot import TurnStateSnapshot
+        from game.strategy.data.fleet import Fleet
+        from game.strategy.data.order_types import Order, OrderType
+        session = minimal_game_session
+        empire = session.empires[0]
+
+        target = Fleet(
+            fleet_id=9002,
+            owner_id=empire.id,
+            location=HexCoord(2, 2),
+            speed=5.0,
+        )
+        source = Fleet(
+            fleet_id=9001,
+            owner_id=empire.id,
+            location=HexCoord(1, 1),
+            speed=5.0,
+        )
+        source.add_order(Order(OrderType.MOVE_TO_FLEET, target))
+        empire.add_fleet(target)
+        empire.add_fleet(source)
+
+        snapshot = TurnStateSnapshot.capture(
+            turn_number=1, empires=session.empires, galaxy=session.galaxy
+        )
+
+        # Mutate live state to force the restore path to actually rebuild.
+        empire.fleets.clear()
+
+        snapshot.restore(session)
+
+        restored_source = session.galaxy.get_fleet_by_id(9001)
+        restored_target = session.galaxy.get_fleet_by_id(9002)
+        assert restored_source is not None
+        assert restored_target is not None
+        # Order-reference resolution (already wired today) — sanity check.
+        assert restored_source.orders[0].target is restored_target
+        # Pursuer-tracker rebuild — the wiring step Phase 1 adds.
+        assert restored_source in restored_target.pursuer_tracker.pursuers
+
 
 class TestTurnStateSnapshotCrashDump:
     """Tests for crash snapshot disk-writing helpers."""
