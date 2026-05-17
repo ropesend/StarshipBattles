@@ -417,6 +417,7 @@ Test-specific Combat Lab data lives in `combat_lab/data/`:
 - Dependency injection over singletons.
 - Data-driven lookups over hardcoded type/class-name lists.
 - Shared abstractions over copy-paste only when they remove real duplication or clarify ownership.
+- Grouped feature-domain accessors over flat methods on large facade classes. New methods on a multi-domain facade land inside the appropriate group, not at the top level. Example: `StrategySessionFacade` (post-TD-08) exposes 2 top-level callables (`handle_command`, `process_turn`) plus 9 grouped namespace accessors (`commands`, `fleets`, `planets`, `systems`, `empires`, `events`, `session_meta`, `economy`, `validation`). New verbs land inside one of those groups.
 
 ### Error Handling
 

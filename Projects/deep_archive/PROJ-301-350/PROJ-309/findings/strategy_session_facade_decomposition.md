@@ -278,3 +278,21 @@ Alternative considered: put all `_get_*_by_id` helpers on `FacadeSessionState` i
 5. **Type hints / `IRaceRegistry` quoting.** The current file uses quoted forward refs and `TYPE_CHECKING`. Slices should follow the same convention; PROJ-311 requires return-type annotations on every new function — confirm the implementer adds them as the slices are extracted.
 
 6. **Docstring for `StrategySessionFacade` after split.** Update class docstring to mention the composition pattern and link to each slice. Update `docs/02_PATTERNS.md` §5 to add a sub-paragraph on Facade-Slice composition. Update `docs/systems/strategy_layer.md` §1 with the new internal layout (Rule 2: docs in same commit).
+
+---
+
+## TD-08 (PROJ-430) target surface (2026-05-17)
+
+PROJ-309 split `StrategySessionFacade` internally into seven slices but kept the *public boundary* flat (68 top-level methods + 8 cache-forwarder property pairs + 1 legacy alias). PROJ-430 / TD-08 collapses the boundary to its target shape:
+
+- **2 top-level callables:** `handle_command(cmd)`, `process_turn(progress_callback=None)`.
+- **10 public attributes:** `facade_state` plus 9 grouped namespace accessors (`commands`, `fleets`, `planets`, `systems`, `empires`, `events`, `session_meta`, `economy`, `validation`).
+
+The 36 `dispatch_*` helpers now live under `facade.commands.<verb>` (prefix stripped, registry-driven). The 30 flat read methods (`get_fleet`, `get_planets_at_hex`, `get_turn_number`, `get_race_registry`, etc.) live under the appropriate grouped namespace with their final names (`facade.fleets.get`, `facade.planets.at_hex`, `facade.session_meta.turn_number`, `facade.economy.race_registry`, etc.). The cache-forwarder property pairs (`_planet_index`, `_all_stars_cache`, `_all_stars_cache_turn`, `_fleets_by_hex_cache`, `_fleets_by_hex_turn`, `_race_registry`) and the `_resolve_economy_config` legacy alias are root-cause deleted; tests that need to inject cache state use the public `FacadeSessionState.seed_*` helpers added in Phase 4.
+
+Sources of truth going forward:
+- Active project: [PROJ-430](../../../../active_projects/PROJ-430/plan.md) (project scaffold and per-phase checklists).
+- TD-08 source plan: `Reviews/results/2026-05-16_strategy-layer-tech-debt-review/Verified Problem Remediation Plans/TD-08_facade_api_reduction.md`.
+- Doc surface: `docs/systems/strategy_layer.md` §1.
+
+**Architectural invariant set in TD-08:** new facade methods land on a grouped namespace, not on `StrategySessionFacade` directly. The two top-level callables `handle_command` and `process_turn` are the only behavioral entry points that survive at the top level. New domains earn a new grouped namespace; new verbs in an existing domain land on its namespace. This is the source of truth for any future PROJ-309-style facade work — extending the facade is a grouped-namespace decision, not a flat-method decision.

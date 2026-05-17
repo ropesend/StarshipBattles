@@ -164,7 +164,7 @@ Use when a class has multiple independent reasons to change. Keep facade methods
 Where: `game/strategy/facade/`, DTOs under `game/strategy/facade/dto/`, commands under `game/strategy/engine/commands.py`.
 
 Contract:
-- Writes go through command DTOs and command handlers, usually via `facade.handle_command(...)` or generated `dispatch_*` helpers.
+- Writes go through command DTOs and command handlers, usually via `facade.handle_command(...)` or the grouped `facade.commands.<verb>(...)` namespace (TD-08; prefix-stripped command helpers, registry-driven).
 - Reads return frozen/read-only DTOs such as `FleetInfo`, `SystemInfo`, `PlanetInfo`, `EmpireInfo`, `TaskForceInfo`, `SquadronInfo`, and `ShipInfoExtended`.
 - DTOs include display-safe summaries such as `carried_items_summary`, `pod_storage_capacity`, `pod_storage_used`, and `staging_yard_summary` where needed.
 - UI must not hold mutable strategy domain objects as its write surface.
@@ -191,7 +191,7 @@ Contract:
 - `BaseCommandHandler` holds shared entity-resolution helpers like `_resolve_fleet(session, fleet_id) -> (fleet, error)`.
 - `CommandRegistry` stores one `CommandSpec` per command DTO: handler class, `OrderType`, category, execution model, facade helper name, serializer codec.
 - `@command_spec(...)` is metadata-only: it attaches `__command_spec_kwargs__` to the handler class and returns it unchanged. It does NOT call `command_registry.register(...)` at import. Each command module exposes `register(registry)`, and `seed_default_commands(command_registry)` performs registration. Decorator-side registration would break `reset_command_registry()` because Python caches `sys.modules`, so already-imported decorators do not re-fire on a clear+seed cycle.
-- `StrategySessionFacade._install_dispatch_forwarders` auto-installs one bound `dispatch_<facade_helper_name>` method per spec so `hasattr(class, name)` and `inspect.getmembers` stay honest. The dispatch slice's `__getattr__` resolves from `command_registry.specs_by_facade_helper()`.
+- Post-TD-08: `StrategySessionFacade` no longer installs top-level `dispatch_*` methods. The `FacadeCommands` grouped namespace (`facade.commands`) accepts `(helper_name, command_class)` pairs from `command_registry.specs_by_facade_helper()` at facade construction; each verb is the legacy helper name with the `dispatch_` prefix stripped. The dispatch slice's `__getattr__` still resolves the helper closure per call.
 - AST guard: `tests/unit/strategy/engine/test_no_specs_tuple_literal.py` forbids reintroducing a module-level `COMMAND_SPECS = (...)` tuple literal anywhere under `game/`.
 
 Parallel order registry:

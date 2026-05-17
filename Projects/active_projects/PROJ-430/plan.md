@@ -20,13 +20,13 @@
 | 3. Migrate UI callers (25 files) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate tests off legacy cache seams | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Delete the legacy surface (root-cause) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Documentation sync | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. Documentation sync | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 6
-**Last Action:** Phase 5 complete — root-cause deletion: 8 cache-forwarder property pairs, 30 flat read methods, the auto-installer's `dispatch_*` setattr loop, and the `_resolve_economy_config` legacy alias all gone. `strategy_session_facade.py` shrunk from 570 to ~245 lines. `test_facade_dispatch.py` migrated to exercise `facade.commands.<verb>`. All 43 contract assertions now green. UI + strategy + facade focused suites (10601 tests) green.
-**Next Action:** Phase 6 — documentation sync in `docs/systems/strategy_layer.md` and PROJ-309 findings.
+**Active Phase:** All phases complete
+**Last Action:** Phase 6 complete — `docs/systems/strategy_layer.md` §1 rewritten around the post-TD-08 grouped surface (2 top-level callables + 10 grouped attrs) and the `seed_*` test seam; `docs/02_PATTERNS.md` CQRS/command sections updated to point at `facade.commands.<verb>`; `docs/03_CONVENTIONS.md` gained the grouped-facade preference bullet; `docs/systems/minefields.md` updated `dispatch_issue_lay_mines` reference; PROJ-309 facade-decomposition findings file appended with a new "TD-08 (PROJ-430) target surface" section (historical content intact). Final-verification greps clean: no stale references outside the seed-helper file and explanatory doc lines.
+**Next Action:** All phases complete — awaiting user verification.
 **Blockers:** None
 
 ## Overview
@@ -98,12 +98,12 @@ Update `docs/systems/strategy_layer.md` facade-boundary section with the grouped
 
 ## Verification
 Acceptance criteria from the TD-08 plan:
-- [ ] `StrategySessionFacade` exposes only `handle_command(...)`, `process_turn(...)`, `facade_state`, and 9 grouped namespace accessors — total target public surface 12 names (down from 68 + 8 cache forwarders + 1 legacy alias).
-- [ ] No legacy cache-forwarder properties remain on `StrategySessionFacade` (`_planet_index`, `_all_stars_cache`, `_all_stars_cache_turn`, `_fleets_by_hex_cache`, `_fleets_by_hex_turn`, `_race_registry` — get + set on each, all deleted).
-- [ ] `_resolve_economy_config` legacy alias removed; `rg "_resolve_economy_config" game/ tests/` returns zero matches.
-- [ ] Top-level `dispatch_*` facade methods are gone; the grouped `commands` namespace is the only command-helper path; all 36 dispatch helpers reachable through `facade.commands.<verb>` with `dispatch_` stripped.
-- [ ] 25 UI callers use the grouped surface consistently; `rg "facade\.(dispatch_|get_|can_)" game/ui` returns zero matches against the legacy shape.
-- [ ] Tests that previously wrote `_planet_index`, `_all_stars_cache`, `_fleets_by_hex_cache`, or `_race_registry` now go through `FacadeSessionState.seed_*` helpers.
-- [ ] Focused facade and UI suites green before the sharded run (`pytest tests/unit/strategy/facade tests/unit/ui tests/integration/strategy -q`).
-- [ ] `python Tools/test_sharded/test_sharded.py` is green.
-- [ ] `docs/systems/strategy_layer.md` reflects the grouped surface; PROJ-309 findings appended with post-TD-08 target shape.
+- [x] `StrategySessionFacade` exposes only `handle_command(...)`, `process_turn(...)`, `facade_state`, and 9 grouped namespace accessors — total target public surface 12 names (down from 68 + 8 cache forwarders + 1 legacy alias).
+- [x] No legacy cache-forwarder properties remain on `StrategySessionFacade` (`_planet_index`, `_all_stars_cache`, `_all_stars_cache_turn`, `_fleets_by_hex_cache`, `_fleets_by_hex_turn`, `_race_registry` — get + set on each, all deleted).
+- [x] `_resolve_economy_config` legacy alias removed; `rg "_resolve_economy_config" game/ tests/` returns zero matches.
+- [x] Top-level `dispatch_*` facade methods are gone; the grouped `commands` namespace is the only command-helper path; all 36 dispatch helpers reachable through `facade.commands.<verb>` with `dispatch_` stripped.
+- [x] 25 UI callers use the grouped surface consistently; `rg "facade\.(dispatch_|get_|can_)" game/ui` returns zero matches against the legacy shape.
+- [x] Tests that previously wrote `_planet_index`, `_all_stars_cache`, `_fleets_by_hex_cache`, or `_race_registry` now go through `FacadeSessionState.seed_*` helpers.
+- [x] Focused facade and UI suites green before the sharded run (`pytest tests/unit/strategy/facade tests/unit/ui tests/integration/strategy -q`).
+- [x] `python Tools/test_sharded/test_sharded.py` is green.
+- [x] `docs/systems/strategy_layer.md` reflects the grouped surface; PROJ-309 findings appended with post-TD-08 target shape.

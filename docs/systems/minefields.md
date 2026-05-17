@@ -83,7 +83,8 @@ IssueLayMinesCommand(
 Exactly one of `fleet_id` / `planet_id` is set (Round 4 Obs B).
 
 1. UI dispatches `IssueLayMinesCommand(...)` via
-   `dispatch_issue_lay_mines`.
+   `facade.commands.issue_lay_mines` (TD-08 grouped namespace; the
+   former `dispatch_issue_lay_mines` top-level helper was removed).
 2. `LayMinesCommandHandler` validates issuer presence + mine count
    (carrier ship for fleet-issued; facility staging-yard for
    planet-issued) and queues `Order(OrderType.LAY_MINES, target={...})`.

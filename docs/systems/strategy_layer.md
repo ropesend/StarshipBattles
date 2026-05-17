@@ -17,50 +17,73 @@ System documentation for the turn-based strategy layer.
 
 **File:** `game/strategy/facade/strategy_session_facade.py`
 
-CQRS-lite boundary between UI and `GameSession`.
+CQRS-lite boundary between UI and `GameSession`. Post-TD-08 the facade
+exposes a deliberately narrow top-level surface: only two callables and
+ten grouped namespace accessors. Every other public verb lives inside the
+appropriate domain group.
 
-| Path | Contract |
-|------|----------|
-| Write | `handle_command(command) -> ValidationResult`; delegates to `GameSession.handle_command()` and `CommandHandlerRegistry`. |
-| Turn advance | `process_turn(*, progress_callback=None)` delegates to `GameSession.process_turn()`. |
-| Read | Queries return immutable DTOs from `game/strategy/facade/dto/`, never domain objects. |
+### Top-level surface
+
+| Public name | Type | Contract |
+|---|---|---|
+| `handle_command(command)` | callable | The single write entry point. Delegates to `GameSession.handle_command()` and `CommandHandlerRegistry`. Returns `ValidationResult`. |
+| `process_turn(*, progress_callback=None)` | callable | Turn advance. Delegates to `GameSession.process_turn()`, converts `EnginePhaseError` to `TurnFailedError`, invalidates per-turn caches. |
+| `facade_state` | attribute | `FacadeSessionState` per-turn cache holder. UI collaborators (`DesignLibrary`, etc.) share this so per-turn caches stick across opens. Engine-side code must NOT read this — caches are irrelevant inside the turn loop. |
+| `commands` / `fleets` / `planets` / `systems` / `empires` / `events` / `session_meta` / `economy` / `validation` | attributes | Nine grouped namespace accessors. See per-group breakdown below. |
+
+### Grouped namespaces (`game/strategy/facade/grouped_namespaces.py`)
+
+| Group | Verbs |
+|---|---|
+| `commands` | All `dispatch_*` helpers reachable as `commands.<verb>` with the `dispatch_` prefix stripped (e.g. `facade.commands.issue_move(fleet_id=..., target_hex=...)`). Registry-driven — adding a `CommandSpec.facade_helper_name` automatically grows this namespace. |
+| `fleets` | `get(id)`, `at_hex(hex)`, `path_preview(id, hex)`, `path_projection(id, max_turns)`, `remaining_pods(id)` |
+| `planets` | `get(id)`, `at_hex(hex)` |
+| `systems` | `all()`, `all_stars()`, `at_hex(hex)`, `containing_fleet(id)`, `near_hex(hex, max_dist=8)`, `storm_names_at_hex(hex)` |
+| `empires` | `all()`, `get(id)`, `colonies(id)`, `fleets(id)`, `build_queues(id)`, `hex_build_queues(id, hex)` |
+| `events` | `turn_events(turn=None, *, empire_id=None)`, `all(*, empire_id=None)`, `by_category(category, *, empire_id=None)` |
+| `session_meta` | `turn_number()`, `save_path()`, `human_player_ids()` |
+| `economy` | `race_registry()`, `colony_demographic_view(planet_id)`, `resolve_config()`, `registries()` |
+| `validation` | `can_colonize(fleet_id, planet_id)`, `can_move_to(fleet_id, target_hex)` |
 
 DTOs include `FleetInfo`, `FleetSummary`, `StarInfo`, `SystemInfo`, `PlanetInfo`, `EmpireInfo`, `ColonySummary`, `FleetOrderInfo`, `ShipInfo`, `WarpPointInfo`, plus hierarchy DTOs (`TaskForceInfo`, `SquadronInfo`, `ShipInfoExtended`). Each DTO has a `from_<domain_object>()` constructor.
 
-Query groups:
+### Architectural invariant (TD-08)
 
-| Group | Methods |
-|-------|---------|
-| Fleet | `get_fleet`, `get_fleets_at_hex`, path preview/projection, `can_move_to`, pod/cargo state |
-| System | `get_all_systems`, `get_all_stars`, `get_system_at_hex`, `get_system_near_hex`, `get_system_containing_fleet`, storm names |
-| Planet | `get_planet`, `get_planets_at_hex`, `can_colonize` |
-| Empire | `get_all_empires`, `get_empire`, `get_empire_colonies`, `get_empire_fleets` |
-| Game state | `get_turn_number`, `get_human_player_ids`, `get_save_path` |
-| Events | `get_turn_events`, `get_all_events`, `get_events_by_category` |
-| Race/economy | `get_race_registry`, `get_colony_demographic_view(planet_id)` |
+New facade methods land inside the appropriate grouped namespace, not on the top class. The two top-level callables (`handle_command`, `process_turn`) are the only behavioral entry points that survive at the top level. If a new feature needs a new domain — add a new grouped namespace dataclass and one new `@property` accessor; do not add a new top-level method.
 
-Performance/caching contracts:
+### Performance / caching contracts
 
 - `_get_planet_by_id()` uses a lazy planet-index dict.
-- `get_all_stars()` caches per turn.
+- `systems.all_stars()` caches per turn.
 - `FacadeSessionState` owns per-turn shared caches: planet index, fleets-by-hex, all-stars, lazy `IRaceRegistry`.
 - Caches invalidate inside `process_turn()` before the new turn's commands run.
-- Heavy DTO materialization such as `EconomySlice.get_colony_demographic_view` recomputes per call and is expected to be UI-driven.
+- Heavy DTO materialization such as `economy.colony_demographic_view` recomputes per call and is expected to be UI-driven.
 
-Facade slice architecture:
+### Test-seeding seam (TD-08 Phase 4)
+
+Tests that need to inject cache state without driving the full hydration path call public `seed_*` helpers on the session state:
+
+- `facade.facade_state.seed_planet_index({id: planet, ...})` replaces the legacy `facade._planet_index = {...}` write-through.
+- `facade.facade_state.seed_race_registry(registry)` replaces the legacy `facade._race_registry = ...` write-through.
+
+The `seed_` prefix makes the test-only intent visible at the call site. Production code populates the same caches through the slices' own lazy-init paths and must not call these helpers.
+
+### Facade slice architecture (internal)
+
+Slices are implementation detail; external callers go through the grouped namespaces above.
 
 | Slice | File | Responsibility |
 |-------|------|----------------|
-| `FacadeSessionState` | `_facade_state.py` | Shared caches and lazy race registry |
-| `CommandDispatchSlice` | `command_dispatch_slice.py` | `handle_command` and typed `dispatch_*` helpers |
+| `FacadeSessionState` | `_facade_state.py` | Shared per-turn caches, lazy race registry, public `seed_*` test seam |
+| `CommandDispatchSlice` | `command_dispatch_slice.py` | `handle_command` and registry-driven dispatch resolver (wrapped by `FacadeCommands`) |
 | `FleetSlice` | `fleet_slice.py` | Fleet queries, movement validation, pod state |
 | `PlanetSlice` | `planet_slice.py` | Planet queries and colonization validation |
 | `SystemSlice` | `system_slice.py` | System/map queries and storm names |
 | `EmpireSlice` | `empire_slice.py` | Empire queries and build-queue aggregation |
-| `EconomySlice` | `economy_slice.py` | Demographic/economy snapshots |
-| `EventSlice` | `event_slice.py` | Event-log queries and basic session state |
+| `EconomySlice` | `economy_slice.py` | Demographic/economy snapshots, lazy race registry, economy config resolver |
+| `EventSlice` | `event_slice.py` | Event-log queries and plain session-state reads |
 
-Authoring rule: external callers use `StrategySessionFacade`, not slices. Facade properties exposing old private caches exist for legacy tests only.
+Authoring rule: external callers use `StrategySessionFacade`'s grouped namespaces, not slices. No public cache-forwarder properties exist; tests use the `seed_*` seam on `FacadeSessionState`.
 
 ### GameSession Lifecycle (PROJ-423)
 
@@ -961,7 +984,7 @@ Projection helpers:
 
 - `projected_growth_rate(planet, pop, race_config, cfg) -> float`: pure per-capita next-turn growth.
 - `PlanetEconomyProjector.project(planet) -> dict[resource_id, ResourceProjection]`: pure harvest/upkeep/yard/net projection.
-- `StrategySessionFacade.get_colony_demographic_view(planet_id)`: facade DTO combining per-species and per-resource state.
+- `StrategySessionFacade.economy.colony_demographic_view(planet_id)`: grouped facade DTO combining per-species and per-resource state.
 
 Equivalence tests pin projection math to engine math:
 
