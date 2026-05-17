@@ -12,7 +12,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Preflight and contract freeze | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
+| 0. Preflight and contract freeze | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Add `SessionRuntimeServices` + `SessionBootstrapState` | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Extract canonical service construction into `SessionBootstrap` | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Extract `SessionPersistenceAdapter` | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
@@ -20,10 +20,10 @@
 | 5. Docs update | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-16
-**Active Phase:** Phase 0 — Preflight and contract freeze
-**Last Action:** Initialized from TD-02 plan
-**Next Action:** Run baseline test sweep (`python Tools/test_sharded/test_sharded.py`), read the source TD-02 plan in full, then execute Phase 0 (preflight grep + behavioral inventory + characterization tests) before moving to Phase 1
+**Last Updated:** 2026-05-17
+**Active Phase:** Phase 1 — Add `SessionRuntimeServices` + `SessionBootstrapState`
+**Last Action:** Phase 0 complete (guardrail baselines captured in `findings/phase_0_baselines.md`; behavioral inventory recorded)
+**Next Action:** Phase 1 — author red tests in `tests/unit/strategy/engine/session/test_runtime_services.py`, add `runtime_services.py` with the two frozen dataclasses, wire `GameSession.services`
 **Blockers:** None
 
 ## Overview
