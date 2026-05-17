@@ -20,14 +20,14 @@
 | 2. Add `OrderMetadataView` (lazy, cycle-safe) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Migrate snapshot consumer (`action_time_resolver.py`) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate remaining production consumers | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Delete duplicated constants + `fleet.py` re-exports | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Delete duplicated constants + `fleet.py` re-exports | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Docs convergence + final grep gate | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 5
-**Last Action:** Phase 4 landed — 6 production consumers migrated (`action_execution_engine`, `fleet_movement_engine`, `planet_action_engine`, `fleet_navigation_service`, `fleet_path_projection`, `cargo_transfer_service`). `fleet_navigation_service` had dead imports (frozensets imported but never read); dropped cleanly. 910 focused tests green. Remaining production refs are `fleet.py` re-exports + `order_types.py` definitions only — both Phase 5 targets
-**Next Action:** Phase 5 — write final-guard tests asserting the deleted constants no longer exist; delete the four frozensets in `order_types.py` + the two re-exports in `fleet.py`; clean up tests that still import them; full sharded suite
+**Active Phase:** Phase 6
+**Last Action:** Phase 5 landed — `MOVEMENT_ORDER_TYPES`, `ACTION_ORDER_TYPES`, `PLANET_ACTION_ORDER_TYPES`, `PLANET_FMS_ACTION_ORDER_TYPES` all deleted from `order_types.py`; `fleet.py` re-exports deleted; 7 affected test modules migrated to read through `order_metadata`. No compatibility aliases. **Full sharded suite 20903/20903 green.**
+**Next Action:** Phase 6 — update docs (orders_system.md, 04_SERVICES.md, satellites.md), run final grep gate, full sharded suite one more time
 **Blockers:** None
 
 ## Overview

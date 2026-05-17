@@ -12,13 +12,7 @@ from __future__ import annotations
 import pytest
 
 import game.strategy.engine.commands as commands_module
-from game.strategy.data.order_types import (
-    ACTION_ORDER_TYPES,
-    MOVEMENT_ORDER_TYPES,
-    OrderType,
-    PLANET_ACTION_ORDER_TYPES,
-    PLANET_FMS_ACTION_ORDER_TYPES,
-)
+from game.strategy.data.order_types import OrderType
 from game.strategy.engine.commands.order_metadata_view import order_metadata
 from game.strategy.engine.commands.registry import (
     ALLOWED_CATEGORIES,
@@ -167,32 +161,31 @@ def test_spec_table_handler_set_matches_registry() -> None:
     assert spec_command_names == registered
 
 
-def test_movement_order_types_derivation_matches_constant() -> None:
-    """``movement_order_types()`` matches the existing frozenset."""
-    assert movement_order_types() == MOVEMENT_ORDER_TYPES
-
-
-def test_action_order_types_derivation_matches_constant() -> None:
-    """``action_order_types()`` matches the existing frozenset."""
-    assert action_order_types() == ACTION_ORDER_TYPES
-
-
-def test_planet_action_order_types_derivation_matches_constant() -> None:
-    """``planet_action_order_types()`` matches the existing frozenset."""
-    assert planet_action_order_types() == PLANET_ACTION_ORDER_TYPES
-
-
-def test_planet_fms_action_order_types_derivation_matches_constant() -> None:
-    """``planet_fms_action_order_types()`` derives from ``subcategories``
-    tags on the FMS handler command specs and matches the existing
-    ``PLANET_FMS_ACTION_ORDER_TYPES`` constant.
-
-    PROJ-424 Phase 1: closes the fifth duplicated metadata surface by
-    introducing a registry derivation that reads the explicit
-    ``"planet_fms"`` subcategory tag rather than relying on a hardcoded
-    list keyed by handler filename.
+def test_movement_order_types_derivation_matches_view() -> None:
+    """``movement_order_types()`` matches the live ``order_metadata``
+    view. PROJ-424 Phase 5: the duplicated frozensets were deleted; the
+    view is the single read facade.
     """
-    assert planet_fms_action_order_types() == PLANET_FMS_ACTION_ORDER_TYPES
+    assert movement_order_types() == order_metadata.movement_order_types
+
+
+def test_action_order_types_derivation_matches_view() -> None:
+    assert action_order_types() == order_metadata.action_order_types
+
+
+def test_planet_action_order_types_derivation_matches_view() -> None:
+    assert planet_action_order_types() == order_metadata.planet_action_order_types
+
+
+def test_planet_fms_action_order_types_derivation_matches_view() -> None:
+    """``planet_fms_action_order_types()`` derives from ``subcategories``
+    tags on the FMS handler command specs and matches the live
+    ``order_metadata.planet_fms_action_order_types`` view.
+
+    PROJ-424 Phase 1 introduced the derivation; Phase 5 swapped the
+    pinned frozenset for the view.
+    """
+    assert planet_fms_action_order_types() == order_metadata.planet_fms_action_order_types
 
 
 def test_exactly_five_specs_carry_planet_fms_subcategory() -> None:

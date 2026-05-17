@@ -49,76 +49,13 @@ class OrderType(Enum):
     RECOVER_SATELLITES = auto()
 
 
-# PROJ-187: Order type categorization for ActionExecutionEngine.
-#
-# PROJ-363 Phase 3: ``COMMAND_SPECS`` in
-# ``game.strategy.engine.commands.specs`` is the canonical declaration
-# of which OrderType belongs to which category. These three frozensets
-# are *kept here* as plain module-level constants (rather than runtime-
-# derived) so that the ``game.strategy.data`` layer remains a leaf in
-# the import graph — specs.py imports ``OrderType`` from here, and
-# specs.py also transitively imports handler classes that import these
-# constants, so a runtime derivation would create a cycle.
-#
-# The equality of these constants with ``specs.{movement,action,
-# planet_action}_order_types()`` is pinned by the contract test
-# ``test_command_specs_contract.py`` — adding/changing a CommandSpec
-# without updating these constants (or vice versa) is caught by that
-# test before merge.
-
-# Movement orders are handled by FleetMovementEngine.
-MOVEMENT_ORDER_TYPES: frozenset = frozenset({
-    OrderType.MOVE,
-    OrderType.MOVE_TO_FLEET,
-    OrderType.WARP,
-})
-
-# Action orders are handled by ActionExecutionEngine (tick-based execution).
-# Excludes BUILD (persistent, handled by ProductionEngine).
-# PROJ-207: JOIN_FLEET removed - handled by instant path (process_instant_orders) only.
-ACTION_ORDER_TYPES: frozenset = frozenset({
-    OrderType.COLONIZE,
-    OrderType.TRANSFER,
-    OrderType.LOAD_POPULATION,
-    OrderType.UNLOAD_POPULATION,
-    OrderType.IMPLODE_PLANET,
-    OrderType.STELLERATE_STAR,
-    OrderType.OPEN_WARP_POINT,
-    OrderType.CLOSE_WARP_POINT,
-    OrderType.CREATE_DYSON_SPHERE,
-    OrderType.SELF_DESTRUCT,
-    OrderType.ACTIVATE_ABILITY,
-    OrderType.DEACTIVATE_ABILITY,
-    # PROJ-FMS-B Phase 1: strategic mine-laying through ActionExecutionEngine.
-    OrderType.LAY_MINES,
-    # PROJ-FMS-C Phase 1: strategic fighter launch through ActionExecutionEngine.
-    OrderType.LAUNCH_FIGHTERS,
-    # PROJ-FMS-C Phase 3: strategic fighter recovery through ActionExecutionEngine.
-    OrderType.RECOVER_FIGHTERS,
-    # PROJ-FMS-D Phase 1: strategic satellite launch through ActionExecutionEngine.
-    OrderType.LAUNCH_SATELLITES,
-    # PROJ-FMS-D Phase 2: strategic satellite recovery through ActionExecutionEngine.
-    OrderType.RECOVER_SATELLITES,
-})
-
-# Planet-specific action orders (subset of ACTION_ORDER_TYPES).
-PLANET_ACTION_ORDER_TYPES: frozenset = frozenset({
-    OrderType.ACTIVATE_ABILITY,
-    OrderType.DEACTIVATE_ABILITY,
-})
-
-# QA Observation B: FMS order types that planets can issue from a
-# facility (planetary complex with mine_deployer / fighter_launch_bay /
-# satellite_launch_bay components). Ticked by ActionExecutionEngine
-# alongside fleet orders, NOT by PlanetActionEngine (which is reserved
-# for the instant ACTIVATE/DEACTIVATE pop-and-set toggles).
-PLANET_FMS_ACTION_ORDER_TYPES: frozenset = frozenset({
-    OrderType.LAY_MINES,
-    OrderType.LAUNCH_FIGHTERS,
-    OrderType.LAUNCH_SATELLITES,
-    OrderType.RECOVER_FIGHTERS,
-    OrderType.RECOVER_SATELLITES,
-})
+# PROJ-424 Phase 5: the four duplicated metadata frozensets
+# (MOVEMENT_ORDER_TYPES, ACTION_ORDER_TYPES, PLANET_ACTION_ORDER_TYPES,
+# PLANET_FMS_ACTION_ORDER_TYPES) were deleted from this module. The
+# single read facade is now
+# ``game.strategy.engine.commands.order_metadata_view.order_metadata``,
+# which derives all five from the live ``command_registry``. There are
+# no compatibility aliases.
 
 
 class Order:

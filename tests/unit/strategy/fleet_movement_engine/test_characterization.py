@@ -15,7 +15,8 @@ import pytest
 from game.core.exceptions import ValidationException
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import ACTION_ORDER_TYPES, Order, OrderType
+from game.strategy.data.order_types import Order, OrderType
+from game.strategy.engine.commands.order_metadata_view import order_metadata
 from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
 
 
@@ -105,7 +106,7 @@ def test_collect_movements_skips_action_order_fleets(mock_fleet, mock_galaxy):
     engine = FleetMovementEngine()
     mock_fleet.speed = 10.0
     # Pick any ACTION order type.
-    action_type = next(iter(ACTION_ORDER_TYPES))
+    action_type = next(iter(order_metadata.action_order_types))
     order = Order(action_type, MagicMock())
     mock_fleet.get_current_order.return_value = order
     mock_fleet.orders = [order]

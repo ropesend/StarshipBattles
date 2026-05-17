@@ -5,7 +5,10 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
+
+**Sharded suite:** 20903/20903 passed, wall 142.6s, 12 shards.
+**Implementation note:** the `TestOrderTypeCategorization` class in `test_order_types_characterization.py` was dropped in full (per Task 5.4) — the disjointness/subset/size/contents invariants live in `test_command_registry_contract.py` which now asserts them through `order_metadata.<property>`. The previously seen 56 "failures" running a partial subset were pre-existing test-isolation issues; under the full sharded run with the canonical fixtures, all are green.
 **Depends on:** phase_4
 **Review Mode:** standard
 **Files (planned):**

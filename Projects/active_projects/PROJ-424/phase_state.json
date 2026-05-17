@@ -124,13 +124,18 @@
         "game/strategy/data/order_types.py",
         "game/strategy/data/fleet.py",
         "tests/unit/strategy/data/test_order_types_no_duplicated_metadata.py",
-        "tests/unit/strategy/data/test_order_types_characterization.py"
+        "tests/unit/strategy/data/test_order_types_characterization.py",
+        "tests/unit/strategy/engine/test_command_specs_contract.py",
+        "tests/unit/strategy/engine/test_command_registry_contract.py",
+        "tests/unit/strategy/engine/order_handlers/test_handler_registry_completeness.py",
+        "tests/unit/strategy/fleet_movement_engine/test_characterization.py",
+        "tests/unit/strategy/test_fleet_order_processor.py"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_6": {

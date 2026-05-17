@@ -19,14 +19,12 @@ from game.strategy.data.fleet_consumable_aggregator import FleetConsumableAggreg
 from game.strategy.data.fleet_hierarchy import CombatPolicy
 from game.strategy.data.ship_instance import ShipInstance
 
-# PROJ-212: OrderType, Order, and order type sets extracted to order_types.py
+# PROJ-212: OrderType, Order extracted to order_types.py
 # PROJ-238: FleetOrder renamed to Order
-from game.strategy.data.order_types import (
-    OrderType,
-    Order,
-    MOVEMENT_ORDER_TYPES,
-    ACTION_ORDER_TYPES,
-)
+# PROJ-424 Phase 5: MOVEMENT_ORDER_TYPES / ACTION_ORDER_TYPES re-exports
+# deleted. Read through
+# ``game.strategy.engine.commands.order_metadata_view.order_metadata``.
+from game.strategy.data.order_types import OrderType, Order
 
 logger = logging.getLogger(__name__)
 

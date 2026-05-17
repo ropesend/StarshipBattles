@@ -22,14 +22,7 @@ from __future__ import annotations
 import pytest
 
 import game.strategy.engine.commands as commands_module
-from game.strategy.data.order_types import (
-    ACTION_ORDER_TYPES,
-    MOVEMENT_ORDER_TYPES,
-    PLANET_ACTION_ORDER_TYPES,
-    PLANET_FMS_ACTION_ORDER_TYPES,
-    Order,
-    OrderType,
-)
+from game.strategy.data.order_types import Order, OrderType
 from game.strategy.engine.commands.order_metadata_view import order_metadata
 from game.strategy.engine.handlers.registry_factory import create_default_registry
 from game.strategy.services.action_time_resolver import (
@@ -88,39 +81,46 @@ def test_no_orphaned_handler_registrations() -> None:
 # ---------------------------------------------------------------------------
 
 def test_movement_action_order_type_sets_are_disjoint() -> None:
-    """MOVEMENT_ORDER_TYPES and ACTION_ORDER_TYPES never overlap.
+    """movement_order_types and action_order_types never overlap.
 
     Both engines (FleetMovementEngine, ActionExecutionEngine) gate on
     these sets; any overlap silently double-routes an order.
+
+    PROJ-424 Phase 5: read through ``order_metadata`` (frozensets in
+    ``order_types.py`` deleted).
     """
-    assert MOVEMENT_ORDER_TYPES.isdisjoint(ACTION_ORDER_TYPES)
+    assert order_metadata.movement_order_types.isdisjoint(
+        order_metadata.action_order_types
+    )
 
 
 def test_planet_action_is_subset_of_action() -> None:
-    """PLANET_ACTION_ORDER_TYPES is a subset of ACTION_ORDER_TYPES."""
-    assert PLANET_ACTION_ORDER_TYPES.issubset(ACTION_ORDER_TYPES)
+    """planet_action_order_types is a subset of action_order_types."""
+    assert order_metadata.planet_action_order_types.issubset(
+        order_metadata.action_order_types
+    )
 
 
 def test_movement_order_types_contains_expected_members() -> None:
-    """Pin MOVEMENT_ORDER_TYPES contents (used by FleetMovementEngine)."""
-    assert MOVEMENT_ORDER_TYPES == frozenset(
+    """Pin movement_order_types contents (used by FleetMovementEngine)."""
+    assert order_metadata.movement_order_types == frozenset(
         {OrderType.MOVE, OrderType.MOVE_TO_FLEET, OrderType.WARP}
     )
 
 
 def test_planet_action_order_types_contains_expected_members() -> None:
-    """Pin PLANET_ACTION_ORDER_TYPES contents (used by PlanetActionEngine)."""
-    assert PLANET_ACTION_ORDER_TYPES == frozenset(
+    """Pin planet_action_order_types contents (used by PlanetActionEngine)."""
+    assert order_metadata.planet_action_order_types == frozenset(
         {OrderType.ACTIVATE_ABILITY, OrderType.DEACTIVATE_ABILITY}
     )
 
 
 def test_command_registry_planet_fms_action_order_types_derivation() -> None:
     """``CommandRegistry.planet_fms_action_order_types()`` derives from the
-    ``subcategories`` tag and matches the existing PLANET_FMS frozenset.
+    ``subcategories`` tag and matches the planet-FMS member set.
 
-    PROJ-424 Phase 1: registry-side derivation contract. The view in
-    Phase 2 will read this through the lazy facade.
+    PROJ-424 Phase 1: registry-side derivation contract. Phase 5: the
+    expected set is pinned here rather than against a deleted frozenset.
     """
     from game.strategy.engine.commands.registry import (
         command_registry,
@@ -130,16 +130,22 @@ def test_command_registry_planet_fms_action_order_types_derivation() -> None:
     if len(command_registry) == 0:
         seed_default_commands(command_registry)
     derived = command_registry.planet_fms_action_order_types()
-    assert derived == PLANET_FMS_ACTION_ORDER_TYPES
+    assert derived == frozenset({
+        OrderType.LAY_MINES,
+        OrderType.LAUNCH_FIGHTERS,
+        OrderType.LAUNCH_SATELLITES,
+        OrderType.RECOVER_FIGHTERS,
+        OrderType.RECOVER_SATELLITES,
+    })
 
 
 def test_action_order_types_contains_all_known_members() -> None:
-    """Pin ACTION_ORDER_TYPES contents.
+    """Pin action_order_types contents.
 
     Excludes BUILD (production-driven) and JOIN_FLEET (instant-only,
     PROJ-207 EP-001).
     """
-    assert ACTION_ORDER_TYPES == frozenset({
+    assert order_metadata.action_order_types == frozenset({
         OrderType.COLONIZE,
         OrderType.TRANSFER,
         OrderType.LOAD_POPULATION,
@@ -164,13 +170,13 @@ def test_action_order_types_contains_all_known_members() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Section 3 — ORDER_TO_ABILITY_MAP coverage
+# Section 3 — order_to_ability_map coverage
 # ---------------------------------------------------------------------------
 
 # The action-time resolver looks up ability names per OrderType. Movement
 # orders bypass it (return 0). Generic ability toggles read the ability
 # name from the order's target dict, not from the static map.
-_ABILITY_LOOKUP_EXEMPT = MOVEMENT_ORDER_TYPES | {
+_ABILITY_LOOKUP_EXEMPT = order_metadata.movement_order_types | {
     OrderType.ACTIVATE_ABILITY,
     OrderType.DEACTIVATE_ABILITY,
     OrderType.JOIN_FLEET,   # instant path; never hits action-time resolver
@@ -202,7 +208,7 @@ def test_action_orders_have_ability_map_entry() -> None:
     PROJ-424 Phase 3: read through the lazy view rather than the deleted
     import-time ``ORDER_TO_ABILITY_MAP`` snapshot.
     """
-    expected_keys = set(ACTION_ORDER_TYPES) - _ABILITY_LOOKUP_EXEMPT
+    expected_keys = set(order_metadata.action_order_types) - _ABILITY_LOOKUP_EXEMPT
     actual_keys = set(order_metadata.order_to_ability_map.keys())
     assert expected_keys == actual_keys, (
         f"order_to_ability_map coverage drift. Missing: {expected_keys - actual_keys}. "

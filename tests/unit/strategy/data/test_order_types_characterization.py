@@ -25,13 +25,7 @@ from types import SimpleNamespace
 import pytest
 
 from game.core.hex_math import HexCoord
-from game.strategy.data.order_types import (
-    ACTION_ORDER_TYPES,
-    MOVEMENT_ORDER_TYPES,
-    PLANET_ACTION_ORDER_TYPES,
-    Order,
-    OrderType,
-)
+from game.strategy.data.order_types import Order, OrderType
 
 
 # ---------------------------------------------------------------------------
@@ -66,25 +60,14 @@ def patch_domain_classes(monkeypatch):
 # ---------------------------------------------------------------------------
 # Frozenset categorization
 # ---------------------------------------------------------------------------
-
-class TestOrderTypeCategorization:
-    """The three categorization frozensets."""
-
-    def test_movement_and_action_are_disjoint(self):
-        assert MOVEMENT_ORDER_TYPES.isdisjoint(ACTION_ORDER_TYPES)
-
-    def test_planet_action_is_subset_of_action(self):
-        assert PLANET_ACTION_ORDER_TYPES.issubset(ACTION_ORDER_TYPES)
-
-    def test_movement_set_size(self):
-        # MOVE, WARP, MOVE_TO_FLEET
-        assert len(MOVEMENT_ORDER_TYPES) == 3
-
-    def test_planet_action_set_contents(self):
-        assert PLANET_ACTION_ORDER_TYPES == frozenset({
-            OrderType.ACTIVATE_ABILITY,
-            OrderType.DEACTIVATE_ABILITY,
-        })
+#
+# PROJ-424 Phase 5: ``MOVEMENT_ORDER_TYPES`` / ``ACTION_ORDER_TYPES`` /
+# ``PLANET_ACTION_ORDER_TYPES`` were deleted from
+# ``game/strategy/data/order_types.py``. The disjointness / subset /
+# size / contents invariants live in
+# ``tests/unit/strategy/engine/test_command_registry_contract.py``,
+# which now asserts those same shapes through
+# ``order_metadata.<property>``.
 
 
 # ---------------------------------------------------------------------------

@@ -7,11 +7,8 @@ merged with stragglers or unrouted OrderTypes.
 """
 from __future__ import annotations
 
-from game.strategy.data.order_types import (
-    ACTION_ORDER_TYPES,
-    PLANET_ACTION_ORDER_TYPES,
-    OrderType,
-)
+from game.strategy.data.order_types import OrderType
+from game.strategy.engine.commands.order_metadata_view import order_metadata
 from game.strategy.engine.order_handlers.registry_factory import (
     create_default_order_handler_registry,
 )
@@ -21,12 +18,21 @@ from game.strategy.engine.superweapon_order_processor import (
 
 
 def test_every_action_order_type_has_a_handler():
-    """ACTION_ORDER_TYPES (minus planet-only) plus JOIN_FLEET must all be registered."""
+    """``order_metadata.action_order_types`` (minus planet-only) plus
+    JOIN_FLEET must all be registered.
+
+    PROJ-424 Phase 5: reads through the lazy view rather than the
+    deleted ``ACTION_ORDER_TYPES`` / ``PLANET_ACTION_ORDER_TYPES``
+    frozensets.
+    """
     registry = create_default_order_handler_registry(
         event_bus=None,
         superweapon_processor=SuperweaponOrderProcessor(),
     )
-    expected = (ACTION_ORDER_TYPES - PLANET_ACTION_ORDER_TYPES) | {OrderType.JOIN_FLEET}
+    expected = (
+        (order_metadata.action_order_types - order_metadata.planet_action_order_types)
+        | {OrderType.JOIN_FLEET}
+    )
     registered = registry.all_registered()
     missing = expected - registered
     assert not missing, f"OrderTypes missing handlers: {missing}"

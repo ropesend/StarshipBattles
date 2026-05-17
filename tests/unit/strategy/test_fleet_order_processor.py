@@ -428,15 +428,18 @@ class TestInstantOrderProcessing:
         joining_fleet.clear_orders.assert_not_called()
 
     def test_join_fleet_not_in_action_order_types(self):
-        """PROJ-207 EP-001: JOIN_FLEET is NOT in ACTION_ORDER_TYPES.
+        """PROJ-207 EP-001: JOIN_FLEET is NOT in ``action_order_types``.
 
         JOIN_FLEET should only be processed by the instant path, not by
         tick-based action processing via ActionExecutionEngine.
-        """
-        from game.strategy.data.order_types import ACTION_ORDER_TYPES, OrderType
 
-        # JOIN_FLEET should NOT be in ACTION_ORDER_TYPES
-        assert OrderType.JOIN_FLEET not in ACTION_ORDER_TYPES
+        PROJ-424 Phase 5: reads through ``order_metadata.action_order_types``
+        instead of the deleted ``ACTION_ORDER_TYPES`` frozenset.
+        """
+        from game.strategy.data.order_types import OrderType
+        from game.strategy.engine.commands.order_metadata_view import order_metadata
+
+        assert OrderType.JOIN_FLEET not in order_metadata.action_order_types
 
 
 # =============================================================================
