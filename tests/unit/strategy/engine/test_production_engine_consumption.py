@@ -335,7 +335,9 @@ def test_complete_item_pops_queue_and_calls_spawner(engine, empire):
     engine._spawner.spawn_completed_item = MagicMock()
     colony = MagicMock(spec=Planet)
 
-    engine._complete_item(queue, item, empire, colony, MagicMock(), None, 1)
+    # PROJ-427 Phase 3: save_path arg removed; signature is
+    # (queue, item, empire, colony_or_fleet, galaxy, tick).
+    engine._complete_item(queue, item, empire, colony, None, 1)
 
     assert queue[0]["design_id"] == "later"
     engine._spawner.spawn_completed_item.assert_called_once()
