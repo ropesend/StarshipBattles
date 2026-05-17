@@ -22,12 +22,13 @@
 | 3 | Extract the movement-only collaborator | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4 | Add a registry-purity guard | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5 | Validate and document | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6 | Harden registry purity AST guard (Codex follow-up) | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 
 **Last Updated:** 2026-05-17
 **Active Phase:** complete (awaiting final audit)
-**Last Action:** Phase 5 — `docs/systems/minefields.md` updated for the new `MovementPhaseCollaborator.resolve_after` wiring; `docs/systems/strategy_layer.md` was already accurate (only references the registry's pinned descriptor lists, which remain). Full sharded suite ran 21016/21016 green in 149.3s. `turn_phase_registry.py` has zero module-level functions; LOC dropped from 465 to 340.
+**Last Action:** Phase 6 — registry-purity AST guard hardened to mirror PROJ-424 Phase 7. The walker now scans top-level class bodies as well as the module top, and treats top-level `importlib.import_module("...")` / `__import__("...")` calls (in either location) whose string-literal argument names a forbidden gameplay-engine module as violations. Three new synthetic-source regression tests prove each previously-possible bypass is now caught; a fourth pins that function-body (lazy) imports remain allowed. Existing real-registry purity assertion still green; all 8 tests pass.
 **Next Action:** None — project complete, awaiting human verification.
 **Blockers:** None
 
@@ -142,6 +143,20 @@ keys unchanged.
 Run focused turn-engine + FMS-B suites, then the full sharded suite. Update
 `docs/systems/strategy_layer.md` only if it explicitly describes hook
 placement or registry ownership.
+
+### Phase 6: Harden registry purity AST guard (Codex follow-up)
+Codex-consult flagged that the Phase 4 guard inspected only `tree.body`
+top-level `Import` / `ImportFrom` nodes, leaving two bypasses unguarded:
+(a) imports inside the body of a top-level `class` (class bodies execute
+at module load), and (b) top-level dynamic
+`importlib.import_module("...")` / `__import__("...")` calls. Extend the
+walker in
+`tests/unit/strategy/turn_engine/test_turn_phase_registry_purity.py` to
+scan top-level class bodies as well, and to flag dynamic-import calls
+whose string-literal argument names a forbidden gameplay-engine module.
+Function-body imports remain allowed (lazy by design). This mirrors the
+PROJ-424 Phase 7 hardening of the lazy-import guard. Tests-only — no
+production-file changes.
 
 ## Related Documents
 
