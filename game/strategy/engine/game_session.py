@@ -403,170 +403,91 @@ class GameSession:
         return self.galaxy.get_planet_by_id(planet_id)
 
     def to_dict(self) -> Dict[str, Any]:
-        """
-        Serialize GameSession to dict for save system.
+        """Serialize GameSession to dict for save system.
 
-        Returns complete game state including config, galaxy, empires, and turn data.
+        PROJ-423: thin delegate to `SessionPersistenceAdapter.serialize`;
+        save schema (`{turn_number, save_path, config, galaxy, empires,
+        human_player_ids, event_log}`) is unchanged.
         """
-        return {
-            'turn_number': self.turn_number,
-            'save_path': self.save_path,
-            'config': self.config.to_dict(),
-            'galaxy': self.galaxy.to_dict(),
-            'empires': [e.to_dict() for e in self.empires],
-            'human_player_ids': self.human_player_ids.copy(),
-            'event_log': self._event_log.to_dict(),
-        }
+        from game.strategy.engine.session.persistence_adapter import (
+            SessionPersistenceAdapter,
+        )
+        return SessionPersistenceAdapter.serialize(self)
 
     @classmethod
     def from_dict(cls, data: dict, ai_factory=None) -> 'GameSession':
-        """
-        Deserialize GameSession from dict.
+        """Deserialize GameSession from dict.
 
-        Uses two-phase loading:
-        1. Load galaxy (creates all planets with IDs)
-        2. Load empires (resolves planet references via galaxy)
+        PROJ-423: thin delegate. `SessionPersistenceAdapter.rehydrate_state`
+        performs the two-phase galaxy / empire load plus the four
+        load-only operations (galaxy back-refs, fleet registration, order
+        reference resolution, pursuer-tracker rebuild) and returns a
+        `SessionBootstrapState`. The session is then assembled by
+        applying that state through the provisional assignment path; the
+        canonical `_apply_bootstrap_state(...)` arrives in Phase 4.
 
         Args:
-            data: Saved game session data
+            data: Saved game session data.
+            ai_factory: Optional AI factory threaded to the TurnEngine.
 
         Returns:
-            Reconstructed GameSession with all state restored
+            Reconstructed GameSession with all state restored.
 
         Raises:
-            PersistenceException: If required fields are missing or data structures are invalid.
+            PersistenceException: If required fields are missing or data
+                structures are invalid.
         """
-        from game.core.exceptions import PersistenceException
-        from game.core.error_codes import ErrorCode
-        from game.strategy.data.galaxy import Galaxy
-        from game.strategy.data.empire import Empire
+        from game.strategy.engine.session.persistence_adapter import (
+            SessionPersistenceAdapter,
+        )
 
-        # Create empty session (bypass __init__ to avoid generating new galaxy)
+        state = SessionPersistenceAdapter.rehydrate_state(
+            data, ai_factory=ai_factory
+        )
+
         session = cls.__new__(cls)
-
-        # Restore config with context on error
-        try:
-            session.config = GameConfig.from_dict(data['config'])
-        except KeyError as e:
-            raise PersistenceException(
-                f"Missing required config field: {e}",
-                code=ErrorCode.SAVE_FAILED.value,
-                context={"section": "config", "missing_field": str(e)}
-            ) from e
-
-        session.turn_number = data.get('turn_number', 1)
-        session.save_path = data.get('save_path')
-
-        # PROJ-211: Resolve registries at init time, pass to TurnEngine
-        session._registries = GameSession._resolve_registries()
-
-        # PROJ-291 C3: race registry stays lazy on GameSession; the
-        # bootstrap's `race_registry_provider` lambda routes to
-        # `session.race_registry` so the cached instance is the same one
-        # engines see post-load.
         session._race_registry = None
+        session._apply_provisional_state(state)
 
-        # Restore event log (PROJ-77) — PROJ-252: session-scoped EventBus
-        restored_event_log = EventLog.from_dict(
-            data.get('event_log', {'events': []})
+        # PROJ-77 / PROJ-252: the EventBus must capture `self` so global
+        # `log_event` calls stamp the *live* `session.turn_number`. The
+        # bootstrap builds the bus with a placeholder handler during
+        # rehydrate (no `self` yet); rebind it here. The event log is
+        # the deserialized one (preserved by reference through the
+        # SessionRuntimeServices bag), so no events are lost.
+        from game.core.event_logging import EventBus as _EventBus
+        new_bus = _EventBus(session._build_event_handler(session._event_log))
+        session._event_bus = new_bus
+        # Re-wire `_services` to carry the new bus.
+        import dataclasses as _dc
+        session._services = _dc.replace(session._services, event_bus=new_bus)
+        # Re-wire turn_engine so it uses the new bus too (the previous
+        # bus captured during rehydrate has the wrong turn-number
+        # closure). Rebuild via TurnEngineConfig.create_default to mirror
+        # __init__ exactly.
+        from game.strategy.engine.turn_engine import TurnEngine as _TurnEngine
+        from game.strategy.engine.turn_engine_config import (
+            TurnEngineConfig as _TurnEngineConfig,
         )
-
-        # PROJ-423 Phase 2: route service construction through the same
-        # canonical wiring path as __init__. This is the structural fix
-        # for the PROJ-396 CRIT-002 drift surface — no more hand-mirrored
-        # service block in from_dict.
-        from game.strategy.engine.session.bootstrap import SessionBootstrap
-        services = SessionBootstrap._build_services(
-            registries=session._registries,
-            event_log=restored_event_log,
+        _cfg = _TurnEngineConfig.create_default(
+            session._registries,
             ai_factory=ai_factory,
-            race_registry_provider=lambda: session.race_registry,
-            event_handler_factory=lambda log: session._build_event_handler(log),
-        )
-        session._event_log = services.event_log
-        session._event_bus = services.event_bus
-        session._fleet_mutator = services.fleet_mutator
-        session._planet_mutator = services.planet_mutator
-        session._empire_mutator = services.empire_mutator
-        session._ship_mutator = services.ship_mutator
-        session.turn_engine = services.turn_engine
-        session._command_registry = services.command_registry
-        session._services = services
-
-        # Step 1: Load Galaxy (creates all planets with IDs)
-        try:
-            session.galaxy = Galaxy.from_dict(data['galaxy'])
-        except KeyError as e:
-            raise PersistenceException(
-                f"Missing required galaxy field: {e}",
-                code=ErrorCode.LOAD_FAILED.value,
-                context={"section": "galaxy", "missing_field": str(e)}
-            ) from e
-        session.systems = list(session.galaxy.systems.values())
-
-        # Step 2: Load Empires (resolves planet references via galaxy)
-        try:
-            session.empires = [
-                Empire.from_dict(emp_data, galaxy=session.galaxy, registries=session._registries)
-                for emp_data in data.get('empires', [])
-            ]
-        except KeyError as e:
-            raise PersistenceException(
-                f"Missing required empire field: {e}",
-                code=ErrorCode.CORRUPT_DATA.value,
-                context={"section": "empires", "missing_field": str(e)}
-            ) from e
-
-        # Restore human player IDs
-        session.human_player_ids = data.get('human_player_ids', [0, 1])
-
-        # PROJ-219: Set galaxy back-references for auto fleet registration
-        for empire in session.empires:
-            empire.set_galaxy(session.galaxy)
-
-        # PROJ-219: Register deserialized fleets with galaxy for O(1) lookup.
-        # Deserialization bypasses add_fleet(), so explicit registration is needed.
-        for empire in session.empires:
-            for fleet in empire.fleets:
-                session.galaxy.register_fleet(fleet)
-
-        # Step 3: Resolve fleet order references (PROJ-207)
-        # Fleet orders targeting other fleets or planets are stored as marker dicts
-        # (_fleet_ref, _planet_ref) during deserialization. Now that all empires
-        # and galaxy are loaded, resolve these to actual object references.
-        for empire in session.empires:
-            for fleet in empire.fleets:
-                fleet.resolve_order_references(session.galaxy, session.empires)
-
-        # PROJ-222: Rebuild pursuer tracker from resolved order references.
-        # After resolve_order_references(), order targets are live Fleet objects.
-        # Scan all orders and register pursuers with their targets.
-        from game.strategy.data.order_types import OrderType
-        for empire in session.empires:
-            for fleet in empire.fleets:
-                for order in fleet.orders:
-                    if order.type in (OrderType.MOVE_TO_FLEET, OrderType.JOIN_FLEET):
-                        if hasattr(order.target, 'pursuer_tracker'):
-                            order.target.pursuer_tracker.add_pursuer(fleet)
-
-        # BUG-125: see __init__ for `active_empire` contract.
-        session.active_empire = session.empires[0] if len(session.empires) > 0 else None
-        session.enemy_empire = session.empires[1] if len(session.empires) > 1 else None
-
-        # PROJ-423 Phase 1: mirror __init__ in assembling the
-        # SessionRuntimeServices bag from the already-constructed services.
-        # Phase 2 collapses both wirings into a shared
-        # SessionBootstrap._build_services(...) call.
-        session._services = SessionRuntimeServices(
-            registries=session._registries,
-            event_log=session._event_log,
-            event_bus=session._event_bus,
+            race_registry=session.race_registry,
+            event_bus=new_bus,
             fleet_mutator=session._fleet_mutator,
             planet_mutator=session._planet_mutator,
             empire_mutator=session._empire_mutator,
             ship_mutator=session._ship_mutator,
-            turn_engine=session.turn_engine,
-            command_registry=session._command_registry,
+        )
+        session.turn_engine = _TurnEngine(
+            registries=session._registries,
+            config=_cfg,
+            ai_factory=ai_factory,
+            event_bus=new_bus,
+            race_registry=session.race_registry,
+        )
+        session._services = _dc.replace(
+            session._services, turn_engine=session.turn_engine
         )
 
         return session
