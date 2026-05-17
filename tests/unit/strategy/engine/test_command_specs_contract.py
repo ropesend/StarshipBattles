@@ -1,10 +1,11 @@
-"""Spec-table contract tests (PROJ-363 Phase 2).
+"""Spec-table contract tests (PROJ-363 Phase 2 / PROJ-424 Phase 3).
 
 Asserts ``COMMAND_SPECS`` is internally consistent and that every
-existing surface (registry, OrderType frozensets, ORDER_TO_ABILITY_MAP)
-agrees with what the spec table would derive. After Phase 3 wires the
-derivations *back into* those surfaces, these tests act as the
-regression contract.
+existing surface (registry, OrderType frozensets,
+``order_metadata.order_to_ability_map``) agrees with what the spec
+table would derive. PROJ-424 Phase 3 swapped the original
+``ORDER_TO_ABILITY_MAP`` import-time snapshot in
+``action_time_resolver.py`` for a live read through ``order_metadata``.
 """
 from __future__ import annotations
 
@@ -18,6 +19,7 @@ from game.strategy.data.order_types import (
     PLANET_ACTION_ORDER_TYPES,
     PLANET_FMS_ACTION_ORDER_TYPES,
 )
+from game.strategy.engine.commands.order_metadata_view import order_metadata
 from game.strategy.engine.commands.registry import (
     ALLOWED_CATEGORIES,
     ALLOWED_EXECUTION_MODELS,
@@ -26,7 +28,6 @@ from game.strategy.engine.commands.registry import (
     seed_default_commands,
 )
 from game.strategy.engine.handlers.registry_factory import create_default_registry
-from game.strategy.services.action_time_resolver import ORDER_TO_ABILITY_MAP
 
 
 # PROJ-371 Phase 2: COMMAND_SPECS is now ``tuple(command_registry.all())``.
@@ -217,9 +218,15 @@ def test_exactly_five_specs_carry_planet_fms_subcategory() -> None:
     )
 
 
-def test_order_to_ability_map_derivation_matches_constant() -> None:
-    """``order_to_ability_map()`` matches the existing static map."""
-    assert order_to_ability_map() == ORDER_TO_ABILITY_MAP
+def test_order_to_ability_map_derivation_matches_view() -> None:
+    """``order_to_ability_map()`` matches the live ``order_metadata`` view.
+
+    PROJ-424 Phase 3: the import-time ``ORDER_TO_ABILITY_MAP`` snapshot in
+    ``action_time_resolver.py`` was deleted; consumers now read through
+    ``order_metadata.order_to_ability_map`` at call time. This contract
+    pins the registry derivation against the view.
+    """
+    assert order_to_ability_map() == order_metadata.order_to_ability_map
 
 
 # ---------------------------------------------------------------------------

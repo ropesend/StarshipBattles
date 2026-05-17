@@ -2,12 +2,24 @@
 Unit tests for ActionTimeResolver service.
 
 PROJ-187: Resolves action_time for tick-based order execution.
+PROJ-424 Phase 3: regression coverage for the replace-overlay path —
+``ActionTimeResolver`` no longer holds an import-time snapshot of
+``order_to_ability_map``; it reads through ``order_metadata`` at call
+time so ``command_registry.register(..., replace=True)`` is visible
+immediately.
 """
 import pytest
 from unittest.mock import MagicMock
 
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
+from game.strategy.engine.commands.order_metadata_view import order_metadata
+from game.strategy.engine.commands.registry import (
+    CommandSpec,
+    command_registry,
+    reset_command_registry,
+    seed_default_commands,
+)
 from game.strategy.services.action_time_resolver import ActionTimeResolver
 
 
@@ -365,6 +377,66 @@ class TestActionTimeResolverPlanetAbilities:
         result = ActionTimeResolver.resolve_action_time(planet, order, {})
 
         assert result == 1
+
+
+class TestActionTimeResolverReplaceOverlay:
+    """PROJ-424 Phase 3: the resolver reflects ``command_registry``
+    ``replace=True`` overlays at call time.
+
+    Before Phase 3, ``ORDER_TO_ABILITY_MAP`` was an import-time
+    snapshot — any spec re-registered after module load was silently
+    invisible to the resolver. The lazy ``order_metadata`` facade
+    closes that hole.
+    """
+
+    def test_resolve_action_time_reflects_registry_replace(self) -> None:
+        if len(command_registry) == 0:
+            seed_default_commands(command_registry)
+
+        original = command_registry.get("IssueColonizeCommand")
+        assert original is not None
+        assert order_metadata.order_to_ability_map[OrderType.COLONIZE] == "ColonizePlanet"
+
+        # Build a ship that has BOTH the original ability and an overlay
+        # ability with a distinct action_time — the resolver must look up
+        # the OVERLAY ability after the registry is replaced.
+        ship = MagicMock()
+        ship.design_data = {
+            'layers': {
+                'core': [{
+                    'id': 'colony_pod',
+                    'abilities': {
+                        'ColonizePlanet': {'action_time': 2},
+                        'OverlayColonizeAbility': {'action_time': 7},
+                    }
+                }]
+            }
+        }
+        fleet = MagicMock(spec=Fleet)
+        fleet.ships = [ship]
+        order = Order(OrderType.COLONIZE, target=None)
+
+        overlay = CommandSpec(
+            command_class=original.command_class,
+            order_type=original.order_type,
+            handler_class=original.handler_class,
+            category=original.category,
+            subcategories=original.subcategories,
+            action_ability_name="OverlayColonizeAbility",
+            execution_model=original.execution_model,
+            facade_helper_name=original.facade_helper_name,
+            serializer_codec=original.serializer_codec,
+        )
+        command_registry.register(overlay, replace=True)
+        try:
+            result = ActionTimeResolver.resolve_action_time(fleet, order, {})
+            assert result == 7, (
+                "ActionTimeResolver did not pick up replace=True overlay — "
+                "still reading a stale snapshot of order_to_ability_map."
+            )
+        finally:
+            # Reset for downstream tests.
+            reset_command_registry()
 
 
 class TestActionTimeResolverMultipleShips:

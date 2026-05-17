@@ -18,16 +18,16 @@
 | 0. Preflight + remaining-consumer inventory | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Explicit `planet_fms` metadata + registry derivation | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Add `OrderMetadataView` (lazy, cycle-safe) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Migrate snapshot consumer (`action_time_resolver.py`) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Migrate snapshot consumer (`action_time_resolver.py`) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate remaining production consumers | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Delete duplicated constants + `fleet.py` re-exports | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Docs convergence + final grep gate | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 landed — `OrderMetadataView` + `order_metadata` singleton at `game/strategy/engine/commands/order_metadata_view.py`. 8 tests green including AST-based lazy-import guard and replace-overlay live-read guard. No production consumers migrated yet
-**Next Action:** Phase 3 — write failing `test_resolve_action_time_reflects_registry_replace`, switch the order-to-ability contract assertion to `order_metadata.order_to_ability_map`, then delete `_build_order_to_ability_map` + the import-time `ORDER_TO_ABILITY_MAP` snapshot in `action_time_resolver.py`
+**Active Phase:** Phase 4
+**Last Action:** Phase 3 landed — `ORDER_TO_ABILITY_MAP` and `_build_order_to_ability_map` deleted from `action_time_resolver.py`. Resolver now reads `order_metadata.movement_order_types`, `order_metadata.planet_action_order_types`, and `order_metadata.order_to_ability_map` at call time. Contract tests in `test_command_specs_contract.py` and `test_command_registry_contract.py` switched to assert against the view. 171 focused tests green
+**Next Action:** Phase 4 — migrate the remaining 6 production consumers off the duplicated frozensets onto `order_metadata`
 **Blockers:** None
 
 ## Overview

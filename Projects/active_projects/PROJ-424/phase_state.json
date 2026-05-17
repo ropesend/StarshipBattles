@@ -79,13 +79,14 @@
       "planned_files": [
         "game/strategy/services/action_time_resolver.py",
         "tests/unit/strategy/services/test_action_time_resolver.py",
-        "tests/unit/strategy/engine/test_command_specs_contract.py"
+        "tests/unit/strategy/engine/test_command_specs_contract.py",
+        "tests/unit/strategy/engine/test_command_registry_contract.py"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_4": {

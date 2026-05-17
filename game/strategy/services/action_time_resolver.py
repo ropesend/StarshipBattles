@@ -3,6 +3,11 @@ ActionTimeResolver - Resolves action_time for tick-based order execution.
 
 PROJ-187: Strategy Orders Tick-Based Action System
 PROJ-238: Unified to handle both fleet and planet orders.
+PROJ-424 Phase 3: ``ORDER_TO_ABILITY_MAP`` and ``_build_order_to_ability_map``
+removed. The resolver now reads ``order_metadata.order_to_ability_map`` at
+CALL time, so ``command_registry.register(..., replace=True)`` mod overlays
+are visible immediately. The previous import-time snapshot was the single
+most dangerous stale-snapshot in the codebase (TD-03).
 
 This service looks up the action_time for a given order by finding the
 relevant ability on the entity's components. Each strategic action has an
@@ -20,34 +25,14 @@ from game.core.patterns.layer_iterator import iter_components
 from game.strategy.services.component_inspector import (
     iterate_design_components,
 )
-from game.strategy.data.order_types import (
-    MOVEMENT_ORDER_TYPES,
-    OrderType,
-    PLANET_ACTION_ORDER_TYPES,
-)
+from game.strategy.data.order_types import OrderType
+from game.strategy.engine.commands.order_metadata_view import order_metadata
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
     from game.strategy.data.planet import Planet
     from game.strategy.data.order_types import Order
 
-
-# PROJ-371 Phase 2: ``ORDER_TO_ABILITY_MAP`` is derived from the
-# self-registering ``command_registry``. The deferred import keeps
-# this module loadable even before the registry is on the import path
-# (e.g. by tools that import the resolver in isolation).
-def _build_order_to_ability_map() -> Dict[OrderType, str]:
-    from game.strategy.engine.commands.registry import (
-        command_registry,
-        seed_default_commands,
-    )
-
-    if len(command_registry) == 0:
-        seed_default_commands(command_registry)
-    return command_registry.order_to_ability_map()
-
-
-ORDER_TO_ABILITY_MAP: Dict[OrderType, str] = _build_order_to_ability_map()
 
 # PROJ-238: Order types that use a non-standard time field name.
 # If not listed here, 'action_time' is used (the default).
@@ -83,7 +68,7 @@ class ActionTimeResolver:
             Integer action_time (ticks required to complete the action).
         """
         # Movement orders are handled by movement engine, not action engine
-        if order.type in MOVEMENT_ORDER_TYPES:
+        if order.type in order_metadata.movement_order_types:
             return 0
 
         # Generic ability toggle: read ability name from order target
@@ -97,8 +82,11 @@ class ActionTimeResolver:
                 entity, order, ability_name, time_field, component_registry
             )
 
-        # Get the ability name for this order type
-        ability_name = ORDER_TO_ABILITY_MAP.get(order.type)
+        # Get the ability name for this order type. Read the map at call
+        # time — PROJ-424 Phase 3 deletes the import-time snapshot, so a
+        # ``command_registry.register(..., replace=True)`` overlay is
+        # visible here immediately.
+        ability_name = order_metadata.order_to_ability_map.get(order.type)
         if ability_name is None:
             return 1
 
@@ -111,7 +99,7 @@ class ActionTimeResolver:
         # be issued from either a fleet or a planet — detect from the
         # entity itself rather than the order type. ``Planet`` has
         # ``facilities`` (a list); ``Fleet`` has ``ships``.
-        if order.type in PLANET_ACTION_ORDER_TYPES:
+        if order.type in order_metadata.planet_action_order_types:
             return ActionTimeResolver._find_planet_ability_time(
                 entity, order, ability_name, time_field, component_registry
             )

@@ -30,9 +30,9 @@ from game.strategy.data.order_types import (
     Order,
     OrderType,
 )
+from game.strategy.engine.commands.order_metadata_view import order_metadata
 from game.strategy.engine.handlers.registry_factory import create_default_registry
 from game.strategy.services.action_time_resolver import (
-    ORDER_TO_ABILITY_MAP,
     ORDER_TO_TIME_FIELD,
 )
 
@@ -196,13 +196,16 @@ _ABILITY_LOOKUP_EXEMPT = MOVEMENT_ORDER_TYPES | {
 def test_action_orders_have_ability_map_entry() -> None:
     """Every action OrderType that needs a static ability lookup has one.
 
-    Pins the current ORDER_TO_ABILITY_MAP for the 7 superweapon-style
-    actions plus COLONIZE.
+    Pins the live ``order_metadata.order_to_ability_map`` for the 7
+    superweapon-style actions plus COLONIZE.
+
+    PROJ-424 Phase 3: read through the lazy view rather than the deleted
+    import-time ``ORDER_TO_ABILITY_MAP`` snapshot.
     """
     expected_keys = set(ACTION_ORDER_TYPES) - _ABILITY_LOOKUP_EXEMPT
-    actual_keys = set(ORDER_TO_ABILITY_MAP.keys())
+    actual_keys = set(order_metadata.order_to_ability_map.keys())
     assert expected_keys == actual_keys, (
-        f"ORDER_TO_ABILITY_MAP coverage drift. Missing: {expected_keys - actual_keys}. "
+        f"order_to_ability_map coverage drift. Missing: {expected_keys - actual_keys}. "
         f"Unexpected: {actual_keys - expected_keys}."
     )
 
@@ -211,8 +214,10 @@ def test_order_to_ability_map_values_are_known_abilities() -> None:
     """Pin the ability-name strings (catches accidental rename).
 
     These names must match component ability dicts in components.json.
+
+    PROJ-424 Phase 3: read through ``order_metadata.order_to_ability_map``.
     """
-    assert ORDER_TO_ABILITY_MAP == {
+    assert order_metadata.order_to_ability_map == {
         OrderType.COLONIZE: 'ColonizePlanet',
         OrderType.IMPLODE_PLANET: 'DestroyPlanet',
         OrderType.STELLERATE_STAR: 'DestroyStar',
