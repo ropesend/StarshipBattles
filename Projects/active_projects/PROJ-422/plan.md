@@ -15,8 +15,8 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Docs read + structural TDD anchor test | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. Introduce the engines package | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 0. Docs read + structural TDD anchor test | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
+| 1. Introduce the engines package | In Progress | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Align top-level interfaces aggregator | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Validate consumers (regression sweep) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Docs sync | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -25,8 +25,8 @@
 ## Current State
 **Last Updated:** 2026-05-16
 **Active Phase:** Phase 1
-**Last Action:** Project initialized from TD-09 plan
-**Next Action:** Run baseline test suite + read source plan
+**Last Action:** Phase 0 complete — failing layout test authored (RED for the documented reasons: `engines` is still a module, `engines.py` exists, and the outer `interfaces.__all__` is missing 5 names)
+**Next Action:** Phase 1 — split `engines.py` into the 9-leaf `engines/` package and delete the monolith
 **Blockers:** None
 
 ## Overview
