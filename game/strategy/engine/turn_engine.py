@@ -325,6 +325,36 @@ class TurnEngine:
         self._phase_times[key] += time.perf_counter() - t0
         return result
 
+    # ---------------------------------------------------------------------
+    # PROJ-428 Phase 2: tick-phase hook methods.
+    #
+    # These three named methods replace the module-level helpers
+    # ``_log_turn_start_tick_1``, ``_log_after_construction_tick_1``,
+    # and ``_accumulate_env_events`` that previously lived on
+    # ``turn_phase_registry``. The descriptors in
+    # ``DEFAULT_TICK_PHASE_LIST`` resolve to bound versions of these
+    # methods via resolver lambdas at iteration time.
+    # ---------------------------------------------------------------------
+
+    def _tick_phase_log_turn_start(self, ctx: 'TickContext') -> None:
+        """Pre-hook on harvesting: log 'TURN START tick=1' on tick 1."""
+        if ctx.tick == 1:
+            self._log_empire_state(ctx.empires, "TURN START tick=1")
+
+    def _tick_phase_log_after_construction(
+        self, ctx: 'TickContext', _result: Any,
+    ) -> None:
+        """Post-hook on production: log 'Tick 1 AFTER CONSTRUCTION' on tick 1."""
+        if ctx.tick == 1:
+            self._log_empire_state(ctx.empires, "Tick 1 AFTER CONSTRUCTION")
+
+    def _tick_phase_accumulate_env_events(
+        self, ctx: 'TickContext', result: Any,
+    ) -> None:
+        """Post-hook on environmental: append returned events onto ctx."""
+        if result:
+            ctx.last_environmental_events.extend(result)
+
     def _log_empire_state(self, empires, label: str) -> None:
         """Log empire resource state for debugging (BUG-109)."""
         for empire in empires:

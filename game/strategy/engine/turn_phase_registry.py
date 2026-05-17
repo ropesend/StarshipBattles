@@ -110,25 +110,14 @@ class TickPhase:
 # ---------------------------------------------------------------------------
 # Hook helpers (module-level so they keep ``TickPhase`` frozen and hashable
 # without anonymous closures cluttering the registry literal below).
+#
+# PROJ-428 Phase 2: the three small hook helpers (turn-start log,
+# post-production log, env-event accumulator) moved onto TurnEngine as
+# named methods. Their descriptor wiring lives inline in
+# ``DEFAULT_TICK_PHASE_LIST`` below as thin lambdas that adapt the
+# ``(engine, ctx)``/``(engine, ctx, result)`` hook signatures onto the
+# bound-method signatures.
 # ---------------------------------------------------------------------------
-
-
-def _log_turn_start_tick_1(engine, ctx: TickContext) -> None:
-    """Pre-hook on harvesting: only fires on tick==1."""
-    if ctx.tick == 1:
-        engine._log_empire_state(ctx.empires, "TURN START tick=1")
-
-
-def _log_after_construction_tick_1(engine, ctx: TickContext, _result) -> None:
-    """Post-hook on production: only fires on tick==1."""
-    if ctx.tick == 1:
-        engine._log_empire_state(ctx.empires, "Tick 1 AFTER CONSTRUCTION")
-
-
-def _accumulate_env_events(engine, ctx: TickContext, result) -> None:
-    """Post-hook on environmental: push returned events onto ctx."""
-    if result:
-        ctx.last_environmental_events.extend(result)
 
 
 def _capture_move_queue(_engine, ctx: TickContext, result) -> None:
@@ -253,7 +242,7 @@ DEFAULT_TICK_PHASE_LIST: tuple[TickPhase, ...] = (
         callable_target=lambda e: e.harvesting_engine.process_harvesting_tick,
         args_resolver=lambda ctx: ((ctx.tick, ctx.empires, ctx.galaxy), {}),
         tick_gating=TICK_GATE_ONLY_TICK_1,  # hook-only gating
-        pre_exec_hook=_log_turn_start_tick_1,
+        pre_exec_hook=lambda engine, ctx: engine._tick_phase_log_turn_start(ctx),
     ),
     # --- Phase 0b: Per-turn Resource Consumption ---
     TickPhase(
@@ -290,14 +279,14 @@ DEFAULT_TICK_PHASE_LIST: tuple[TickPhase, ...] = (
             {},
         ),
         tick_gating=TICK_GATE_ONLY_TICK_1,  # hook-only gating
-        post_exec_hook=_log_after_construction_tick_1,
+        post_exec_hook=lambda engine, ctx, result: engine._tick_phase_log_after_construction(ctx, result),
     ),
     # --- Phase 0f: Environmental Hazards ---
     TickPhase(
         phase_key='environmental',
         callable_target=lambda e: e.environmental_engine.process_environmental_tick,
         args_resolver=lambda ctx: ((ctx.tick, ctx.empires, ctx.galaxy), {}),
-        post_exec_hook=_accumulate_env_events,
+        post_exec_hook=lambda engine, ctx, result: engine._tick_phase_accumulate_env_events(ctx, result),
     ),
     # --- Phase 1: Instant Orders (JOIN_FLEET) ---
     TickPhase(

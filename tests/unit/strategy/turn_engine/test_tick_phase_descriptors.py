@@ -190,21 +190,27 @@ class TestPhase428Characterization:
     it up via ``DEFAULT_TICK_PHASE_LIST``'s descriptor binding.
     """
 
-    def test_env_hook_accumulates_events_on_ctx(self):
+    def test_env_hook_accumulates_events_on_ctx(self, fresh_registries):
+        from tests.fixtures.turn_engine import build_test_turn_engine
+
+        engine = build_test_turn_engine(fresh_registries)
         ctx = TickContext(tick=3, empires=[], galaxy=object())
         hook = _get_env_post_hook()
 
-        hook(None, ctx, ['evt_a', 'evt_b'])
-        hook(None, ctx, ['evt_c'])
+        hook(engine, ctx, ['evt_a', 'evt_b'])
+        hook(engine, ctx, ['evt_c'])
 
         assert ctx.last_environmental_events == ['evt_a', 'evt_b', 'evt_c']
 
-    def test_env_hook_ignores_falsy_result(self):
+    def test_env_hook_ignores_falsy_result(self, fresh_registries):
+        from tests.fixtures.turn_engine import build_test_turn_engine
+
+        engine = build_test_turn_engine(fresh_registries)
         ctx = TickContext(tick=3, empires=[], galaxy=object())
         hook = _get_env_post_hook()
 
-        hook(None, ctx, [])
-        hook(None, ctx, None)
+        hook(engine, ctx, [])
+        hook(engine, ctx, None)
 
         assert ctx.last_environmental_events == []
 
@@ -273,6 +279,62 @@ class TestPhase428Characterization:
         # Fleet has no ships left → pruned from empire.
         assert moved_fleet.ships == []
         assert moved_fleet not in empire.fleets
+
+
+class TestPhase428TurnEngineHookMethods:
+    """PROJ-428 Phase 2: tick-1 logs and env-event accumulator are
+    named methods on TurnEngine. The registry hooks resolve through
+    these methods rather than module-level helpers.
+    """
+
+    def test_log_turn_start_tick_1_only_logs_on_tick_1(self, fresh_registries):
+        from tests.fixtures.turn_engine import build_test_turn_engine
+
+        engine = build_test_turn_engine(fresh_registries)
+        empires = [SimpleNamespace(id=0)]
+
+        from unittest.mock import patch
+
+        ctx_one = TickContext(tick=1, empires=empires, galaxy=object())
+        ctx_other = TickContext(tick=2, empires=empires, galaxy=object())
+        with patch.object(engine, '_log_empire_state') as mock_log:
+            engine._tick_phase_log_turn_start(ctx_one)
+            engine._tick_phase_log_turn_start(ctx_other)
+
+        assert mock_log.call_count == 1
+        # Label must match the existing 'TURN START tick=1' contract.
+        assert mock_log.call_args.args[1] == "TURN START tick=1"
+
+    def test_log_after_construction_tick_1_only_logs_on_tick_1(
+        self, fresh_registries,
+    ):
+        from tests.fixtures.turn_engine import build_test_turn_engine
+
+        engine = build_test_turn_engine(fresh_registries)
+        empires = [SimpleNamespace(id=0)]
+
+        from unittest.mock import patch
+
+        ctx_one = TickContext(tick=1, empires=empires, galaxy=object())
+        ctx_other = TickContext(tick=2, empires=empires, galaxy=object())
+        with patch.object(engine, '_log_empire_state') as mock_log:
+            engine._tick_phase_log_after_construction(ctx_one, None)
+            engine._tick_phase_log_after_construction(ctx_other, None)
+
+        assert mock_log.call_count == 1
+        assert mock_log.call_args.args[1] == "Tick 1 AFTER CONSTRUCTION"
+
+    def test_accumulate_env_events_appends_to_ctx(self, fresh_registries):
+        from tests.fixtures.turn_engine import build_test_turn_engine
+
+        engine = build_test_turn_engine(fresh_registries)
+        ctx = TickContext(tick=3, empires=[], galaxy=object())
+
+        engine._tick_phase_accumulate_env_events(ctx, ['a', 'b'])
+        engine._tick_phase_accumulate_env_events(ctx, [])
+        engine._tick_phase_accumulate_env_events(ctx, ['c'])
+
+        assert ctx.last_environmental_events == ['a', 'b', 'c']
 
 
 class TestDefaultTickPhaseList:
