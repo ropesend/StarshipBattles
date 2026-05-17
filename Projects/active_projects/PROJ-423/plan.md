@@ -13,7 +13,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 0. Preflight and contract freeze | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. Add `SessionRuntimeServices` + `SessionBootstrapState` | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Add `SessionRuntimeServices` + `SessionBootstrapState` | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Extract canonical service construction into `SessionBootstrap` | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Extract `SessionPersistenceAdapter` | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Collapse `GameSession` to a thin shell | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -21,9 +21,9 @@
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 1 — Add `SessionRuntimeServices` + `SessionBootstrapState`
-**Last Action:** Phase 0 complete (guardrail baselines captured in `findings/phase_0_baselines.md`; behavioral inventory recorded)
-**Next Action:** Phase 1 — author red tests in `tests/unit/strategy/engine/session/test_runtime_services.py`, add `runtime_services.py` with the two frozen dataclasses, wire `GameSession.services`
+**Active Phase:** Phase 2 — Extract canonical service construction into `SessionBootstrap`
+**Last Action:** Phase 1 complete — `SessionRuntimeServices` + `SessionBootstrapState` frozen dataclasses landed; `GameSession.services` returns the bag assembled from existing wiring in both `__init__` and `from_dict`; 7 new tests + 29 regression tests green
+**Next Action:** Phase 2 — author red tests for `SessionBootstrap._build_services(...)` + anti-drift test, implement `SessionBootstrap`, route both `__init__` and `from_dict` through `_build_services`
 **Blockers:** None
 
 ## Overview

@@ -65,6 +65,9 @@ from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.engine.turn_engine_config import TurnEngineConfig
 from game.strategy.engine.game_config import GameConfig
 from game.strategy.engine.handlers import create_default_registry
+from game.strategy.engine.session.runtime_services import (
+    SessionRuntimeServices,
+)
 from game.strategy.data.empire import Empire
 from game.strategy.data.galaxy import Galaxy
 
@@ -198,6 +201,22 @@ class GameSession:
         self.active_empire = self.empires[0] if len(self.empires) > 0 else None
         self.enemy_empire = self.empires[1] if len(self.empires) > 1 else None
 
+        # PROJ-423 Phase 1: assemble the SessionRuntimeServices bag from the
+        # already-constructed services. Phase 2 routes both __init__ and
+        # from_dict through a shared SessionBootstrap._build_services(...)
+        # to eliminate the PROJ-396 CRIT-002 drift surface.
+        self._services = SessionRuntimeServices(
+            registries=self._registries,
+            event_log=self._event_log,
+            event_bus=self._event_bus,
+            fleet_mutator=self._fleet_mutator,
+            planet_mutator=self._planet_mutator,
+            empire_mutator=self._empire_mutator,
+            ship_mutator=self._ship_mutator,
+            turn_engine=self.turn_engine,
+            command_registry=self._command_registry,
+        )
+
     @staticmethod
     def _resolve_registries() -> GameRegistries:
         """Resolve game registries from the default provider.
@@ -214,6 +233,17 @@ class GameSession:
             resources=provider.get_resources(),
             resource_catalog=ResourceCatalog.from_json(),
         )
+
+    @property
+    def services(self) -> SessionRuntimeServices:
+        """The wired runtime-services bag (PROJ-423).
+
+        Both `__init__` and `from_dict` populate `self._services` from the
+        same set of constructed services. Phase 2 routes both paths
+        through a shared `SessionBootstrap._build_services(...)` so the
+        bag is the single source of truth and there is no drift surface.
+        """
+        return self._services
 
     @property
     def event_log(self) -> EventLog:
@@ -594,5 +624,21 @@ class GameSession:
         # BUG-125: see __init__ for `active_empire` contract.
         session.active_empire = session.empires[0] if len(session.empires) > 0 else None
         session.enemy_empire = session.empires[1] if len(session.empires) > 1 else None
+
+        # PROJ-423 Phase 1: mirror __init__ in assembling the
+        # SessionRuntimeServices bag from the already-constructed services.
+        # Phase 2 collapses both wirings into a shared
+        # SessionBootstrap._build_services(...) call.
+        session._services = SessionRuntimeServices(
+            registries=session._registries,
+            event_log=session._event_log,
+            event_bus=session._event_bus,
+            fleet_mutator=session._fleet_mutator,
+            planet_mutator=session._planet_mutator,
+            empire_mutator=session._empire_mutator,
+            ship_mutator=session._ship_mutator,
+            turn_engine=session.turn_engine,
+            command_registry=session._command_registry,
+        )
 
         return session
