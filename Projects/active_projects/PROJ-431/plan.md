@@ -15,17 +15,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Typed `BayInventory` on `ShipInstance` | Blocked (partial) | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Typed `BayInventory` on `ShipInstance` | In Progress (sub-phase 1a complete) | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. `MineGroup` extraction (DeployedGroup family 1) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. `FighterWing` + `SatelliteConstellation` (families 2 & 3) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Polish + docs + dead-code sweep | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 1 (blocked — partial)
-**Last Action:** Landed typed `BayInventory` + `DropPod` substrate in `game/strategy/data/bay_inventory.py` and a backwards-compatible `ShipInstance.bay_inventory` view + `set_bay_inventory()` setter. 8 RED→GREEN tests pass; existing bay/vehicle tests (37 total) still green.
-**Next Action:** Complete the caller-migration sweep (sub-steps 1a–1f in decisions.md). See decisions log entry dated 2026-05-17.
-**Blockers:** Phase 1 full acceptance requires migrating 87 production occurrences across 26 files + 331 test occurrences across 53 files of `carried_items` in a single atomic commit (zero-hit grep gate). Exceeded single-conversation execution budget. Recommend splitting into sub-phases per decisions.md.
+**Active Phase:** Phase 1 (in progress — sub-phase 1a complete)
+**Last Action:** Sub-phase 1a complete. `ShipCargoManager` migrated off `carried_items` / `CarriedVehicle.from_any()` and now operates on the typed `BayInventory` substrate exclusively. Reads route through `ship.bay_inventory` (typed projection); writes use `ship.set_bay_inventory(...)` to preserve the pod slot through the round trip. Added AST regression guard at `tests/unit/strategy/data/test_ship_cargo_manager_no_legacy_substrate.py` (3 RED→GREEN tests). All 61 focused tests pass (cargo manager + per-bay + bay inventory + vehicle bay + FMS-A audit fixes). The typed-view bridge on `ShipInstance` remains intact for callers still on the legacy path.
+**Next Action:** Sub-phase 1b — migrate `IssuerAdapter` (`game/strategy/engine/issuer_adapter.py`) and `MineGroupService` (`game/strategy/services/mine_group_service.py`).
+**Blockers:** None for 1a. Phase 1 still requires sub-phases 1b–1f and the final delete-substrate commit per decisions.md.
 
 ## Overview
 Strategy tech-debt #10/10 (final project in the arc). Replace the two overloaded substrates that currently carry every deployable family — `Fleet.group_kind`-string discrimination and `ShipInstance.carried_items: List[Dict[str, Any]]` — with explicit typed models. Today four deployable families (mines, fighters, satellites, drop pods) hang off two abstractions, mine groups invent a synthetic-carrier `ShipInstance` whose only job is to hold mines, and **ten** fleet-action handlers must remember to call `_reject_if_non_fleet_group` to guard against deployed-group dispatch. The redesign introduces a `BayInventory` (typed `bay: list[CarriedVehicle]` + `pods: list[DropPod]`) on `ShipInstance` and a sibling `DeployedGroup` family (`MineGroup`, `FighterWing`, `SatelliteConstellation`) on `Empire`, so runtime type replaces the string discriminator and the handler guard becomes unnecessary.

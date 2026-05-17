@@ -7,8 +7,8 @@ PROJ-FMS-A Phase 3: added carried-vehicle helpers (``load_vehicle``,
 ``unload_vehicle``, ``get_vehicle_bay_capacity``). Bay capacity comes from
 :class:`~game.simulation.components.abilities.vehicle_bay.VehicleBayAbility`
 components in the ship's design; current usage is the sum of
-:class:`~game.strategy.data.carried_vehicle.CarriedVehicle` masses in the
-ship's ``carried_items`` list.
+:class:`~game.strategy.data.carried_vehicle.CarriedVehicle` masses on the
+ship's typed bay.
 
 PROJ-FMS-D audit Fix 2: per-bay typed allocation.
 
@@ -18,13 +18,24 @@ aggregate ``bay_capacity_mass``. A mixed-bay carrier (e.g. one
 fighter-only bay + one satellite-only bay) therefore wrongly accepted
 either type up to the SUM of all bay capacities — defeating the
 separate-capacity design. The cargo manager now enumerates bays
-individually, computes live per-bay usage from ``carried_items``, and
-places each load into a specific accepting bay (first-fit, deterministic
-order).
+individually, computes live per-bay usage from the typed bay inventory,
+and places each load into a specific accepting bay (first-fit,
+deterministic order).
+
+PROJ-431 Phase 1a: this manager operates on the typed
+:class:`~game.strategy.data.bay_inventory.BayInventory` substrate
+exclusively. The legacy ``ShipInstance.carried_items`` list and the
+``CarriedVehicle.from_any()`` runtime discriminator are no longer
+referenced here — the bay slot is homogeneous ``list[CarriedVehicle]``,
+so no discrimination is needed. Reads go through
+``ship.bay_inventory`` (typed projection); writes use
+``ship.set_bay_inventory(...)`` to preserve pod slot contents through
+the round trip.
 """
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Optional, Tuple
 
+from game.strategy.data.bay_inventory import BayInventory
 from game.strategy.data.carried_vehicle import CarriedVehicle
 
 if TYPE_CHECKING:
@@ -152,8 +163,8 @@ class ShipCargoManager:
 
         ``current_mass`` is NOT populated here — callers that need live
         per-bay usage call :meth:`_assign_carried_to_bays` (which packs
-        existing :attr:`carried_items` into bays using the same first-fit
-        rule that :meth:`load_vehicle` uses).
+        the typed ``bay_inventory.bay`` list into bays using the same
+        first-fit rule that :meth:`load_vehicle` uses).
         """
         from game.simulation.components.abilities.vehicle_bay import (
             VehicleBayAbility,
@@ -191,24 +202,25 @@ class ShipCargoManager:
     def _assign_carried_to_bays(
         self, bays: List[_BaySlot],
     ) -> List[Optional[int]]:
-        """Pack existing :attr:`carried_items` into the bay list.
+        """Pack existing bay-inventory vehicles into the bay list.
 
         Mutates each :class:`_BaySlot`'s ``current_mass`` and returns a
-        list parallel to :attr:`carried_items` indicating which bay each
-        carried vehicle was assigned to (``None`` for drop-pod-shaped
-        entries that aren't CarriedVehicles, or vehicles that don't fit
-        any bay — those drop through to the legacy untyped path).
+        list parallel to ``bay_inventory.bay`` indicating which bay each
+        carried vehicle was assigned to (``None`` for vehicles that
+        don't fit any bay).
 
-        Packing rule: first-fit by bay index, iterating carried items
-        in their stored order. Stable across calls so save/load round
-        trips produce identical assignments.
+        Packing rule: first-fit by bay index, iterating
+        ``bay_inventory.bay`` in stored order. Stable across calls so
+        save/load round trips produce identical assignments.
+
+        PROJ-431 Phase 1a: walks the typed ``bay_inventory.bay`` list
+        directly. The bay slot is homogeneous ``list[CarriedVehicle]``
+        so the previous ``from_any`` discriminator (which returned
+        ``None`` for drop-pod-shaped dicts) is no longer needed — pods
+        live in a separate slot and never reach this packer.
         """
         assignments: List[Optional[int]] = []
-        for item in self._ship.carried_items:
-            cv = CarriedVehicle.from_any(item)
-            if cv is None:
-                assignments.append(None)
-                continue
+        for cv in self._ship.bay_inventory.bay:
             placed: Optional[int] = None
             for bay in bays:
                 if not bay.accepts(cv.vehicle_type):
@@ -238,8 +250,10 @@ class ShipCargoManager:
         """Return (current_mass, max_mass) of carried CarriedVehicles.
 
         ``max_mass`` is the SUM of all bay capacities. ``current_mass``
-        sums the masses of ``CarriedVehicle``-shaped entries already
-        stored in ``carried_items``. Drop-pod-shaped entries are ignored.
+        sums the masses of typed ``CarriedVehicle`` entries in
+        ``bay_inventory.bay``. Drop pods live in a separate slot
+        (``bay_inventory.pods``) and are not counted against bay
+        capacity.
 
         PROJ-FMS-D audit Fix 2: now derives ``max_mass`` directly from
         the enumerated bays rather than the cached ``bay_capacity_mass``
@@ -247,7 +261,11 @@ class ShipCargoManager:
         enforcement path. The cached stat (from
         ``stat_contributors/launch.py``) is still computed for design-
         time UI display.
+
+        PROJ-431 Phase 1a: reads typed bay inventory instead of mixed
+        ``carried_items`` list.
         """
+        current = self._ship.bay_inventory.total_bay_mass()
         bays = self._enumerate_bays()
         if not bays:
             # Fall back to the cached stat if registries / design are
@@ -257,18 +275,8 @@ class ShipCargoManager:
                 fallback_max = float(stats.get("bay_capacity_mass", 0.0))
             except Exception:  # Intentional broad catch: stats path raises for ships built without registries (test fixtures); treat as zero capacity.
                 fallback_max = 0.0
-            current = 0.0
-            for item in self._ship.carried_items:
-                cv = CarriedVehicle.from_any(item)
-                if cv is not None:
-                    current += cv.mass
             return current, fallback_max
         max_mass = sum(bay.capacity_mass for bay in bays)
-        current = 0.0
-        for item in self._ship.carried_items:
-            cv = CarriedVehicle.from_any(item)
-            if cv is not None:
-                current += cv.mass
         return current, max_mass
 
     def can_accept_vehicle(self, vehicle: CarriedVehicle) -> bool:
@@ -297,15 +305,20 @@ class ShipCargoManager:
         """Append a CarriedVehicle to the ship's bay (first-fit per type).
 
         Returns False if no bay accepts the vehicle's type with enough
-        remaining capacity. Mutates ``ship.carried_items`` on success —
-        stored as the vehicle's serialised dict, so the existing fleet
-        save/load path can round-trip the entry without a schema change.
+        remaining capacity. Mutates the ship's typed bay inventory on
+        success and writes it back through ``set_bay_inventory`` so the
+        pod slot is preserved.
 
         Placement rule (PROJ-FMS-D audit Fix 2): walk bays in enumeration
         order, place into the first bay that accepts this vehicle's type
         AND has remaining capacity ≥ ``vehicle.mass``. Bay enumeration
         order is stable across calls, so save/load reconstructs the same
         per-bay packing.
+
+        PROJ-431 Phase 1a: typed write through
+        :meth:`BayInventory.add_vehicle` and
+        :meth:`ShipInstance.set_bay_inventory` — no direct
+        ``carried_items`` mutation.
         """
         bays = self._enumerate_bays()
         if not bays:
@@ -316,39 +329,36 @@ class ShipCargoManager:
                 continue
             if bay.remaining() < vehicle.mass:
                 continue
-            self._ship.carried_items.append(vehicle.to_dict())
+            inventory = self._ship.bay_inventory
+            inventory.add_vehicle(vehicle)
+            self._ship.set_bay_inventory(inventory)
             return True
         return False
 
     def unload_vehicle(self, vehicle_index: int) -> CarriedVehicle:
         """Pop and return the vehicle at ``vehicle_index``.
 
-        ``vehicle_index`` indexes into the CarriedVehicle-shaped entries
-        only (drop-pod entries are skipped). Raises IndexError if out of
-        range. HP and component states preserved through the round-trip.
+        ``vehicle_index`` indexes into the typed
+        ``bay_inventory.bay`` list — pods live in a separate slot and
+        do not shift this index. Raises IndexError if out of range. HP
+        and component states preserved through the round-trip.
+
+        PROJ-431 Phase 1a: typed pop + write-through, no
+        ``carried_items`` access.
         """
-        vehicle_entries: list[tuple[int, CarriedVehicle]] = []
-        for raw_idx, item in enumerate(self._ship.carried_items):
-            cv = CarriedVehicle.from_any(item)
-            if cv is not None:
-                vehicle_entries.append((raw_idx, cv))
-        if vehicle_index < 0 or vehicle_index >= len(vehicle_entries):
+        inventory = self._ship.bay_inventory
+        if vehicle_index < 0 or vehicle_index >= len(inventory.bay):
             raise IndexError(
                 f"unload_vehicle: index {vehicle_index} out of range "
-                f"({len(vehicle_entries)} carried vehicles)"
+                f"({len(inventory.bay)} carried vehicles)"
             )
-        raw_idx, cv = vehicle_entries[vehicle_index]
-        self._ship.carried_items.pop(raw_idx)
+        cv = inventory.bay.pop(vehicle_index)
+        self._ship.set_bay_inventory(inventory)
         return cv
 
     def get_carried_vehicles(self) -> List[CarriedVehicle]:
-        """Return all CarriedVehicle entries (skipping drop-pod dicts)."""
-        results: List[CarriedVehicle] = []
-        for item in self._ship.carried_items:
-            cv = CarriedVehicle.from_any(item)
-            if cv is not None:
-                results.append(cv)
-        return results
+        """Return all CarriedVehicle entries from the typed bay slot."""
+        return list(self._ship.bay_inventory.bay)
 
     def get_carried_vehicles_by_type(
         self, vehicle_type: str
