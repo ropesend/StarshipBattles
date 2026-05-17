@@ -17,7 +17,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 0. Scope-bounding read + design decision | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. Establish the unified `AbilityMetadataRegistry` skeleton | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Establish the unified `AbilityMetadataRegistry` skeleton | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Migrate `design_role` classification | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Migrate `planet_energy_engine` (delete dead `_ACTIVATABLE_ABILITIES`) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate `action_time_resolver` (TD-03 coupling) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -28,9 +28,9 @@
 ## Current State
 
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 1
-**Last Action:** Phase 0 complete — inventory verified; one source-plan drift (spec_compiler→strategy_modifier_stack_builder) recorded in decisions.md row 9; superset+shim approach confirmed.
-**Next Action:** Phase 1 — introduce `AbilityMetadataRegistry`, parity test, AST guard, shim.
+**Active Phase:** Phase 2
+**Last Action:** Phase 1 complete — AbilityMetadataRegistry landed at `game/strategy/services/ability_metadata.py`; parity test + hardened AST guard added; `effect_ability_metadata.py` converted to thin shim; all 776 strategy service unit tests green.
+**Next Action:** Phase 2 — migrate `design_role.py` to read role tags from the registry.
 **Blockers:** None.
 
 ## Overview
