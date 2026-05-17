@@ -1,0 +1,151 @@
+{
+  "audit": {
+    "final_audit_request_id": null,
+    "final_audit_status": "not_run",
+    "merge_to_main_at_utc": null,
+    "merge_to_main_sha": null
+  },
+  "buffer_depth": 0,
+  "buffer_depth_override_reason": null,
+  "execution_protocol": "03c-phase-aware-execution",
+  "findings": {},
+  "phases": {
+    "phase_1": {
+      "depends_on": [],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/data/bay_inventory.py",
+        "game/strategy/data/ship_instance.py",
+        "game/strategy/data/ship_cargo_manager.py",
+        "game/strategy/data/ship_instance_serializer.py",
+        "game/strategy/data/carried_vehicle.py",
+        "game/strategy/engine/order_handlers/colonize.py",
+        "game/strategy/engine/order_handlers/lay_mines.py",
+        "game/strategy/engine/order_handlers/launch_fighters.py",
+        "game/strategy/engine/order_handlers/launch_satellites.py",
+        "game/strategy/engine/order_handlers/recover_fighters.py",
+        "game/strategy/engine/order_handlers/recover_satellites.py",
+        "game/strategy/engine/order_handlers/transfer_branches.py",
+        "game/strategy/engine/issuer_adapter.py",
+        "game/strategy/services/mine_group_service.py",
+        "tests/unit/strategy/data/test_bay_inventory.py",
+        "tests/unit/strategy/data/test_ship_cargo_manager_per_bay.py",
+        "tests/unit/strategy/data/test_vehicle_bay.py",
+        "tests/integration/test_fms_a_e2e.py",
+        "tests/integration/test_fms_c_carrier_ai_launch.py",
+        "tests/integration/test_fms_cd_isolation.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_2": {
+      "depends_on": [
+        "phase_1"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/data/deployed_group.py",
+        "game/strategy/data/empire.py",
+        "game/strategy/data/fleet.py",
+        "game/strategy/data/fleet_capability_calculator.py",
+        "game/strategy/engine/minefield_resolver.py",
+        "game/strategy/engine/order_handlers/lay_mines.py",
+        "game/strategy/services/mine_group_service.py",
+        "game/strategy/combat/spec_compiler.py",
+        "game/strategy/engine/turn_phase_registry.py",
+        "game/strategy/facade/dto/fleet_dto.py",
+        "game/strategy/facade/dto/mine_group_dto.py",
+        "game/ui/screens/fleet_menu_items.py",
+        "game/ui/screens/strategy_detail_fmt.py",
+        "tests/unit/strategy/data/test_mine_group.py",
+        "tests/unit/strategy/data/test_empire_deployed_groups.py",
+        "tests/unit/strategy/engine/test_minefield_resolver.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_3": {
+      "depends_on": [
+        "phase_2"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/data/deployed_group.py",
+        "game/strategy/data/empire.py",
+        "game/strategy/data/fleet.py",
+        "game/strategy/data/fleet_capability_calculator.py",
+        "game/strategy/engine/handlers/base.py",
+        "game/strategy/engine/handlers/movement.py",
+        "game/strategy/engine/handlers/build.py",
+        "game/strategy/engine/handlers/lay_mines.py",
+        "game/strategy/engine/handlers/launch_fighters.py",
+        "game/strategy/engine/handlers/launch_satellites.py",
+        "game/strategy/engine/handlers/recover_fighters.py",
+        "game/strategy/engine/handlers/recover_satellites.py",
+        "game/strategy/engine/order_handlers/launch_fighters.py",
+        "game/strategy/engine/order_handlers/launch_satellites.py",
+        "game/strategy/engine/order_handlers/recover_fighters.py",
+        "game/strategy/engine/order_handlers/recover_satellites.py",
+        "game/strategy/combat/spec_compiler.py",
+        "game/strategy/adapters/simulation_adapter.py",
+        "game/simulation/systems/fighter_reboard.py",
+        "game/simulation/systems/tactical_mine_resolver.py",
+        "game/ai/carrier_controller.py",
+        "game/ai/fighter_controller.py",
+        "game/ai/satellite_controller.py",
+        "tests/unit/strategy/data/test_fighter_wing.py",
+        "tests/unit/strategy/data/test_satellite_constellation.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_4": {
+      "depends_on": [
+        "phase_3"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "docs/systems/strategy_layer.md",
+        "docs/systems/minefields.md",
+        "docs/systems/fighters.md",
+        "docs/systems/satellites.md",
+        "docs/01_ARCHITECTURE.md",
+        "docs/02_PATTERNS.md"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    }
+  },
+  "project_branch": "proj/PROJ-431/main",
+  "project_id": "PROJ-431",
+  "reviews": {},
+  "schema_version": 1
+}

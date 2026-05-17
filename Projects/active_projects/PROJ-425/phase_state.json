@@ -1,0 +1,177 @@
+{
+  "audit": {
+    "final_audit_request_id": null,
+    "final_audit_status": "not_run",
+    "merge_to_main_at_utc": null,
+    "merge_to_main_sha": null
+  },
+  "buffer_depth": 0,
+  "buffer_depth_override_reason": null,
+  "execution_protocol": "03c-phase-aware-execution",
+  "findings": {},
+  "phases": {
+    "phase_0": {
+      "depends_on": [],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "tests/unit/strategy/ship_instance/test_convenience_methods.py",
+        "tests/unit/strategy/ship_instance/test_component_toggles.py",
+        "tests/unit/strategy/ship_instance/test_registries_di.py",
+        "tests/unit/strategy/ship_instance/test_ship_instance_bridge.py",
+        "tests/unit/strategy/ship_instance/test_ship_instance_serializer.py",
+        "tests/unit/strategy/ship_instance/test_serialization.py",
+        "tests/unit/strategy/ship_instance/test_cost_queries.py",
+        "Projects/active_projects/PROJ-425/findings_ledger.md"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "in_progress",
+      "verifying_review_id": null
+    },
+    "phase_1": {
+      "depends_on": [
+        "phase_0"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/data/ship_instance.py",
+        "game/strategy/data/ship_stats_cache.py",
+        "tests/unit/strategy/ship_instance/test_registries_di.py",
+        "tests/unit/strategy/ship_instance/test_ship_stats_cache.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_2": {
+      "depends_on": [
+        "phase_1"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/services/component_inspector.py",
+        "game/strategy/data/ship_instance.py",
+        "tests/unit/strategy/fleets/test_ship_instance_components.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_3": {
+      "depends_on": [
+        "phase_2"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/services/ship_instance_factory.py",
+        "game/strategy/data/ship_instance.py",
+        "tests/unit/strategy/services/test_ship_instance_factory.py",
+        "tests/unit/strategy/ship_instance/test_registries_di.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_4": {
+      "depends_on": [
+        "phase_3"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/services/ship_instance_write_service.py",
+        "game/strategy/data/ship_instance.py",
+        "tests/unit/strategy/services/test_ship_instance_write_service.py",
+        "tests/unit/strategy/ship_instance/test_component_toggles.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_5": {
+      "depends_on": [
+        "phase_4"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/data/ship_instance.py",
+        "game/strategy/data/ship_display_formatter.py",
+        "game/strategy/data/ship_consumable_manager.py",
+        "game/strategy/data/ship_instance_serializer.py",
+        "game/strategy/data/ship_instance_bridge.py",
+        "tests/unit/strategy/ship_instance/test_convenience_methods.py",
+        "tests/unit/strategy/ship_instance/test_ship_instance_bridge.py",
+        "tests/unit/strategy/ship_instance/test_ship_instance_serializer.py",
+        "tests/unit/strategy/ship_instance/test_serialization.py",
+        "tests/unit/strategy/fleets/test_ship_instance_roundtrip.py",
+        "tests/integration/test_fms_b_e2e.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_6": {
+      "depends_on": [
+        "phase_5"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/data/ship_instance.py",
+        "game/strategy/data/ship_cargo_manager.py",
+        "tests/unit/strategy/ship_instance/test_capacity_levels.py",
+        "tests/integration/test_fms_c_carrier_ai_launch.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "blocked",
+      "verifying_review_id": null,
+      "cross_project_blockers": [
+        "PROJ-431/phase_1"
+      ],
+      "cross_project_blocker_note": "TD-06 Batch 5c — cargo/deployable forwarder demolition is blocked until PROJ-431 (TD-10) Phase 1 lands typed bay_inventory. Gate also recorded in plan.md Dependencies, plan.md Quick Status row, and phase_6_checklist.md body."
+    }
+  },
+  "project_branch": "proj/PROJ-425/main",
+  "project_id": "PROJ-425",
+  "reviews": {},
+  "schema_version": 1
+}

@@ -316,22 +316,22 @@ Each phase is independently shippable, behavior-preserving, and follows the "fix
 
 ## Dependencies / Order
 
-Verified sequencing correction:
+Reconciled ordering guidance (authoritative — single source of truth for this section):
 
-- TD-06 Phases 0-4 may run before TD-10.
-- TD-10 Phase 1 should land before the TD-06 cargo/deployable forwarder-demolition batch.
+- TD-06 Phases 0–4 may run before TD-10.
+- TD-10 Phase 1 should land before the deferred TD-06 cargo/deployable forwarder-demolition batch.
 - Keep TD-01 ahead of the main TD-10 redesign so deployable changes do not have to preserve current battle-spec side channels.
 - TD-04 is a soft adjacency only, not a blocker.
 
-If the historical narrative later in this section disagrees with these four bullets, follow these bullets. They are the reconciled ordering guidance.
+Per-plan coupling notes (consistent with the reconciled bullets above):
 
-**TD-06 (`ShipInstance` is still an overloaded entity facade):** Coupled. TD-06 wants to shrink `ShipInstance`; TD-10 Phase 1 *removes one of its responsibilities* (the dual-shape `carried_items`). Recommend landing TD-10 Phase 1 first, then doing TD-06 — TD-10 makes TD-06 easier.
+**TD-06 (`ShipInstance` is still an overloaded entity facade):** Phase-gated coupling. The early TD-06 phases (0–4) shrink `ShipInstance` without touching deployable storage and may run before TD-10. Only TD-06's cargo/deployable forwarder-demolition batch is TD-10-sensitive; that batch must wait until TD-10 Phase 1 has typed `bay_inventory` so the forwarders' replacement surface exists.
 
-**TD-01 (Battle spec compilation):** Loosely coupled. The mine-group filter `_split_mine_groups_from_fleets` is one of the side-channels TD-01 wants to clean up. TD-10 Phase 2 *deletes* it, which is strictly helpful. Either order works; if TD-01 lands first the assembler will have a `mine_group_filter` parameter that becomes trivial after TD-10 Phase 2.
+**TD-01 (Battle spec compilation):** Predecessor. TD-01 should land before the main TD-10 redesign. The mine-group filter `_split_mine_groups_from_fleets` is one of the side-channels TD-01 cleans up; TD-10 Phase 2 then deletes the filter entirely. If TD-01 lands first the assembler will carry a `mine_group_filter` parameter that becomes trivial after TD-10 Phase 2.
 
-**TD-04 (Phase registry hooks):** Loosely coupled. The minefield resolver invocation in `turn_phase_registry.py:186-225` will need to consume `empire.deployed_groups` after Phase 2. If TD-04 has already extracted the hook into a dedicated phase class, this is a one-line change inside that class.
+**TD-04 (Phase registry hooks):** Loosely coupled, no ordering requirement either way. The minefield resolver invocation in `turn_phase_registry.py:186-225` will need to consume `empire.deployed_groups` after TD-10 Phase 2. If TD-04 has already extracted the hook into a dedicated phase class, that is a one-line change inside the class; if not, the same change lands on the hook function.
 
-**Order:** TD-10 Phase 1 → TD-06 → TD-10 Phases 2–4 → (TD-01 and TD-04 in parallel, both benefit from a clean DeployedGroup model).
+**Order summary:** TD-01 → TD-06 Phases 0–4 → TD-10 Phase 1 → TD-06 cargo/deployable forwarder cleanup batch → TD-10 Phases 2–4. TD-04 can slot in at any point.
 
 ## Estimated Scope — LLM Time
 

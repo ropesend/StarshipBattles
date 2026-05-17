@@ -177,6 +177,8 @@ class SessionRuntimeServices:
 
 `race_registry` intentionally stays **outside** this bag and remains lazy on `GameSession`. It is not part of the drift problem and changing its lifetime here would create unnecessary behavior risk.
 
+**Cross-plan coupling with TD-05:** If TD-05 has already landed when TD-02 starts, the `DesignRepository` and per-empire `DesignCatalog` ownership that TD-05 placed directly on `GameSession` should be absorbed into `SessionRuntimeServices` (or into `SessionBootstrapState` for the catalogs, since they are per-empire runtime state) as part of TD-02 Phase 1. Leaving them on `GameSession` while every other service migrates into the frozen services bag creates a second service-injection convention that future plans would have to bridge. If TD-05 has not yet landed, no action is required here; TD-05 lands its accessor on `GameSession` and a later cleanup migrates it.
+
 ```python
 @dataclass(frozen=True)
 class SessionBootstrapState:

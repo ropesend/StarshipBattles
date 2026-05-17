@@ -177,6 +177,17 @@ behavior; mechanical behavior (stat contribution, simulation effect)
 continues to live with the ability implementation in
 `game/simulation/components/abilities/`.
 
+**Shape rationale (cross-plan note):** This plan introduces a *registry*
+(primary store), not a *view* over an existing one. That intentionally
+differs from TD-03's `OrderMetadataView`, which is a lazy live reader
+over the pre-existing `CommandRegistry`. The difference is structural,
+not stylistic: order metadata already has an authoritative source
+(`CommandRegistry`) so TD-03 only needs to expose it cycle-safely;
+ability metadata has no upstream primary store, so TD-07 must *be* the
+store. Both plans converge on the same end-state property — one cycle-
+safe, lazily resolved access path per metadata domain — through the
+mechanism appropriate to each domain's existing topology.
+
 ### Schema (target)
 
 ```python

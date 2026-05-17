@@ -4,6 +4,16 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-431 | Strategy tech-debt #10/10: Deployable substrate redesign (TD-10) | Planning | 2026-05-16 | 2026-05-16 |
+| PROJ-430 | Strategy tech-debt #09/10: Facade API reduction (TD-08) | Planning | 2026-05-16 | 2026-05-16 |
+| PROJ-429 | Strategy tech-debt #08/10: Ability metadata unification (TD-07) | Planning | 2026-05-16 | 2026-05-16 |
+| PROJ-428 | Strategy tech-debt #07/10: Phase registry hooks (TD-04) | Planning | 2026-05-16 | 2026-05-16 |
+| PROJ-427 | Strategy tech-debt #06/10: Production/persistence split (TD-05) | Planning | 2026-05-16 | 2026-05-16 |
+| PROJ-426 | Strategy tech-debt #05/10: Battle spec assembly pipeline (TD-01) | Planning | 2026-05-16 | 2026-05-16 |
+| PROJ-425 | Strategy tech-debt #04/10: ShipInstance slimming (TD-06) | Planning | 2026-05-16 | 2026-05-16 |
+| PROJ-424 | Strategy tech-debt #03/10: Order metadata convergence (TD-03) | Planning | 2026-05-16 | 2026-05-16 |
+| PROJ-423 | Strategy tech-debt #02/10: GameSession lifecycle extraction (TD-02) | Planning | 2026-05-16 | 2026-05-16 |
+| PROJ-422 | Strategy tech-debt #01/10: Split engine interface monolith (TD-09) | Planning | 2026-05-16 | 2026-05-16 |
 
 ## Archived Projects
 

@@ -1,0 +1,164 @@
+{
+  "audit": {
+    "final_audit_request_id": null,
+    "final_audit_status": "not_run",
+    "merge_to_main_at_utc": null,
+    "merge_to_main_sha": null
+  },
+  "buffer_depth": 0,
+  "buffer_depth_override_reason": null,
+  "execution_protocol": "03c-phase-aware-execution",
+  "findings": {},
+  "phases": {
+    "phase_0": {
+      "depends_on": [],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [],
+      "review_dispatch_failed": false,
+      "review_mode": "lightweight",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_1": {
+      "depends_on": [
+        "phase_0"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/engine/commands/registry.py",
+        "game/strategy/engine/handlers/lay_mines.py",
+        "game/strategy/engine/handlers/launch_fighters.py",
+        "game/strategy/engine/handlers/launch_satellites.py",
+        "game/strategy/engine/handlers/recover_fighters.py",
+        "game/strategy/engine/handlers/recover_satellites.py",
+        "tests/unit/strategy/engine/test_command_specs_contract.py",
+        "tests/unit/strategy/engine/test_command_registry_contract.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_2": {
+      "depends_on": [
+        "phase_1"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/engine/commands/order_metadata_view.py",
+        "tests/unit/strategy/engine/commands/test_order_metadata_view.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_3": {
+      "depends_on": [
+        "phase_2"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/services/action_time_resolver.py",
+        "tests/unit/strategy/services/test_action_time_resolver.py",
+        "tests/unit/strategy/engine/test_command_specs_contract.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_4": {
+      "depends_on": [
+        "phase_3"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/engine/action_execution_engine.py",
+        "game/strategy/engine/fleet_movement_engine.py",
+        "game/strategy/engine/planet_action_engine.py",
+        "game/strategy/services/fleet_navigation_service.py",
+        "game/strategy/services/fleet_path_projection.py",
+        "game/strategy/services/cargo_transfer_service.py",
+        "tests/unit/strategy/engine/test_command_registry_thirdparty.py",
+        "tests/unit/strategy/fleet_movement_engine/test_characterization.py",
+        "tests/unit/strategy/engine/order_handlers/test_handler_registry_completeness.py",
+        "tests/unit/strategy/test_fleet_order_processor.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_5": {
+      "depends_on": [
+        "phase_4"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/data/order_types.py",
+        "game/strategy/data/fleet.py",
+        "tests/unit/strategy/data/test_order_types_no_duplicated_metadata.py",
+        "tests/unit/strategy/data/test_order_types_characterization.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_6": {
+      "depends_on": [
+        "phase_5"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "docs/systems/orders_system.md",
+        "docs/04_SERVICES.md",
+        "docs/systems/satellites.md"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    }
+  },
+  "project_branch": "proj/PROJ-424/main",
+  "project_id": "PROJ-424",
+  "reviews": {},
+  "schema_version": 1
+}

@@ -1,0 +1,132 @@
+{
+  "audit": {
+    "final_audit_request_id": null,
+    "final_audit_status": "not_run",
+    "merge_to_main_at_utc": null,
+    "merge_to_main_sha": null
+  },
+  "buffer_depth": 0,
+  "buffer_depth_override_reason": null,
+  "execution_protocol": "03c-phase-aware-execution",
+  "findings": {},
+  "phases": {
+    "phase_0": {
+      "depends_on": [],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [],
+      "review_dispatch_failed": false,
+      "review_mode": "lightweight",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_1": {
+      "depends_on": [],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/engine/session/__init__.py",
+        "game/strategy/engine/session/runtime_services.py",
+        "game/strategy/engine/game_session.py",
+        "tests/unit/strategy/engine/session/test_runtime_services.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_2": {
+      "depends_on": [
+        "phase_1"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/engine/session/bootstrap.py",
+        "game/strategy/engine/game_session.py",
+        "tests/unit/strategy/engine/session/test_bootstrap.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_3": {
+      "depends_on": [
+        "phase_2"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/engine/session/persistence_adapter.py",
+        "game/strategy/engine/game_session.py",
+        "game/strategy/systems/save_game_service.py",
+        "tests/unit/strategy/engine/session/test_persistence_adapter.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_4": {
+      "depends_on": [
+        "phase_3"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/engine/game_session.py",
+        "tests/unit/strategy/engine/test_game_session_shape.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_5": {
+      "depends_on": [
+        "phase_4"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "docs/01_ARCHITECTURE.md",
+        "docs/02_PATTERNS.md",
+        "docs/systems/strategy_layer.md",
+        "docs/systems/save_load.md"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "lightweight",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    }
+  },
+  "project_branch": "proj/PROJ-423/main",
+  "project_id": "PROJ-423",
+  "reviews": {},
+  "schema_version": 1
+}

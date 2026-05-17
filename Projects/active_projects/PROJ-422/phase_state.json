@@ -1,0 +1,130 @@
+{
+  "audit": {
+    "final_audit_request_id": null,
+    "final_audit_status": "not_run",
+    "merge_to_main_at_utc": null,
+    "merge_to_main_sha": null
+  },
+  "buffer_depth": 0,
+  "buffer_depth_override_reason": null,
+  "execution_protocol": "03c-phase-aware-execution",
+  "findings": {},
+  "phases": {
+    "phase_0": {
+      "depends_on": [],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "tests/unit/strategy/interfaces/test_engines_package_layout.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_1": {
+      "depends_on": [
+        "phase_0"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/interfaces/engines.py",
+        "game/strategy/interfaces/engines/__init__.py",
+        "game/strategy/interfaces/engines/movement.py",
+        "game/strategy/interfaces/engines/orders.py",
+        "game/strategy/interfaces/engines/combat.py",
+        "game/strategy/interfaces/engines/production.py",
+        "game/strategy/interfaces/engines/logistics.py",
+        "game/strategy/interfaces/engines/population.py",
+        "game/strategy/interfaces/engines/planet_ops.py",
+        "game/strategy/interfaces/engines/terraforming.py",
+        "game/strategy/interfaces/engines/components.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_2": {
+      "depends_on": [
+        "phase_1"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/interfaces/__init__.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "lightweight",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_3": {
+      "depends_on": [
+        "phase_2"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_4": {
+      "depends_on": [
+        "phase_3"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "docs/systems/strategy_layer.md"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "lightweight",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_5": {
+      "depends_on": [
+        "phase_4"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    }
+  },
+  "project_branch": "proj/PROJ-422/main",
+  "project_id": "PROJ-422",
+  "reviews": {},
+  "schema_version": 1
+}

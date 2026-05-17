@@ -1,0 +1,18 @@
+# PROJ-424: Decisions Log
+
+> **LOG ALL DECISIONS HERE**
+> When you make a design choice or the user specifies a preference, add it to this table.
+> Future agents will reference this to understand why things were done a certain way.
+
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| 2026-05-16 | Project initialized from TD-03 plan | Strategy tech-debt #03/10: converge five order-metadata surfaces onto a single cycle-safe `OrderMetadataView`. HARD predecessor of PROJ-429 (TD-07). |
+| 2026-05-16 | Lazy imports inside `OrderMetadataView._registry()` to break the import cycle | `order_types.py` cannot import `command_registry` at module-load time because the registry pulls in handlers that themselves import `Order`/`OrderType` from `order_types.py`. Deferring `from game.strategy.engine.commands.registry import command_registry, seed_default_commands` to inside `_registry()` resolves the cycle while keeping the view callable from any consumer. Pinned by `test_view_is_lazy_at_import_time`. |
+| 2026-05-16 | No caching, no invalidation in the first implementation — live reader only | Performance tuning is a later task only if profiling proves it necessary. A cached view would re-introduce the stale-snapshot bug we are removing from `action_time_resolver.py`. Explicit non-goal in the TD-03 plan. |
+| 2026-05-16 | Seed the registry inside `_registry()` only when empty | Production paths already seed via `seed_default_commands(command_registry)` during their own bootstrap. Tests and clean-state imports get a working view without burdening callers. Guarded by `if len(command_registry) == 0`. |
+| 2026-05-16 | Module-level `order_metadata = OrderMetadataView()` singleton | One canonical instance; consumers do `from ... import order_metadata` rather than constructing their own. Cheap because all state lives in `command_registry`. |
+| 2026-05-16 | Derive `planet_fms_action_order_types()` from explicit `subcategories=frozenset({"planet_fms"})` tags on the five FMS handlers, NOT from handler filenames or a hardcoded list | Filenames are not metadata; hardcoded lists in the registry would just relocate the original sin. Tag-based derivation makes future FMS handlers self-declare via the same mechanism as other registry derivations. Pinned by `test_exactly_five_specs_carry_planet_fms_subcategory`. |
+| 2026-05-16 | Delete duplicates only after all consumers migrate (Phase 5, never earlier) | Phase 4 finishes production migration first; Phase 5 deletes the constants only after focused tests pass. Removes the failure mode where a partial migration breaks an unmigrated consumer. Follows TD-03 Risk Register. |
+| 2026-05-16 | No module-level compatibility aliases in `order_types.py` after deletion | Per AGENTS.md root-cause-fix rule and TD-03 Executor Guardrails: end state is explicit `from game.strategy.engine.commands.order_metadata_view import order_metadata`. No magic proxy attributes. |
+| 2026-05-16 | Migrate `action_time_resolver.py` first (Phase 3), before broader consumer migration | It is the single most dangerous stale-snapshot in the codebase. Closing it before Phase 4's wider migration ensures the highest-value invariant is locked in early and proven by `test_resolve_action_time_reflects_registry_replace`. |
+| 2026-05-16 | Phase 1 closes the fifth duplicated surface (`PLANET_FMS_ACTION_ORDER_TYPES`) before introducing the view in Phase 2 | The TD-03 audit verified that this fourth frozenset was missed by the original review. Tagging the five handlers and adding `CommandRegistry.planet_fms_action_order_types()` before Phase 2 means the view exposes a complete five-property surface on first land, not a four-then-five expansion. |

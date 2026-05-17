@@ -1,0 +1,177 @@
+{
+  "audit": {
+    "final_audit_request_id": null,
+    "final_audit_status": "not_run",
+    "merge_to_main_at_utc": null,
+    "merge_to_main_sha": null
+  },
+  "buffer_depth": 0,
+  "buffer_depth_override_reason": null,
+  "execution_protocol": "03c-phase-aware-execution",
+  "findings": {},
+  "phases": {
+    "phase_0": {
+      "depends_on": [],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "docs/01_ARCHITECTURE.md",
+        "docs/02_PATTERNS.md",
+        "docs/03_CONVENTIONS.md",
+        "docs/systems/strategy_layer.md",
+        "docs/guides/adding_abilities.md"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "lightweight",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_1": {
+      "depends_on": [
+        "phase_0"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/services/ability_metadata.py",
+        "game/strategy/services/effect_ability_metadata.py",
+        "tests/unit/strategy/services/test_ability_metadata_registry.py",
+        "tests/unit/strategy/services/test_ability_metadata_contracts.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_2": {
+      "depends_on": [
+        "phase_1"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/data/design_role.py",
+        "tests/unit/strategy/data/test_design_role.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "lightweight",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_3": {
+      "depends_on": [
+        "phase_2"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/engine/planet_energy_engine.py",
+        "tests/unit/strategy/engine/test_planet_energy_engine.py",
+        "tests/unit/strategy/services/test_planet_query_service.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "lightweight",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_4": {
+      "depends_on": [
+        "phase_3"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/services/action_time_resolver.py",
+        "tests/unit/strategy/services/test_action_time_resolver.py",
+        "tests/unit/strategy/services/test_ability_metadata_contracts.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_5": {
+      "depends_on": [
+        "phase_4"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/combat/spec_compiler.py",
+        "game/strategy/services/combat_modifier_collector.py",
+        "game/strategy/services/ability_metadata.py",
+        "tests/unit/strategy/services/test_combat_modifier_collector.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_6": {
+      "depends_on": [
+        "phase_5"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/data/build_queue_source.py",
+        "tests/unit/strategy/services/test_ability_metadata_contracts.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "lightweight",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_7": {
+      "depends_on": [
+        "phase_6"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "docs/systems/strategy_layer.md",
+        "docs/guides/adding_abilities.md"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    }
+  },
+  "project_branch": "proj/PROJ-429/main",
+  "project_id": "PROJ-429",
+  "reviews": {},
+  "schema_version": 1
+}
