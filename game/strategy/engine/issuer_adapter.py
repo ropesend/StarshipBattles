@@ -181,10 +181,12 @@ class FleetShipIssuerAdapter:
         design_id: Optional[str],
         count: Optional[int],
     ) -> List[Any]:
-        # PROJ-431 Phase 1b: pop from the typed BayInventory.bay slot;
-        # pods are kept untouched on the pods slot. Returned items are
-        # serialised back to dicts so out-of-scope handler callers keep
-        # their existing dict contract.
+        # PROJ-431 Phase 1c: return typed ``CarriedVehicle`` instances
+        # straight from the typed BayInventory.bay slot. The dict-round-
+        # trip from Phase 1b is gone — FMS order handlers now consume
+        # the typed payload directly. Planet adapter's matching method
+        # still yields dicts for the staging-yard substrate (out of
+        # scope until 1d).
         current = self._ship.bay_inventory
         popped: List[CarriedVehicle] = []
         remaining_bay: List[CarriedVehicle] = []
@@ -200,7 +202,7 @@ class FleetShipIssuerAdapter:
         self._ship.set_bay_inventory(
             BayInventory(bay=remaining_bay, pods=list(current.pods))
         )
-        return [cv.to_dict() for cv in popped]
+        return popped
 
     def count_carried(
         self,

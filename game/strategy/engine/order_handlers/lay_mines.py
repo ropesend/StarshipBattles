@@ -7,14 +7,20 @@ issuer kinds via :class:`IIssuerAdapter`:
 
   * Fleet-issued: the order's ``ship_instance_id`` selects a carrier
     ship in the issuing fleet; the adapter wraps that ``(fleet, ship)``
-    pair and the mines come from ``ship.carried_items``.
+    pair and the mines come from the carrier's typed
+    :class:`BayInventory` bay slot.
   * Planet-issued: the engine builds a
     :class:`PlanetStagingYardIssuerAdapter` and the mines come from
-    ``planet.staging_yard``.
+    ``planet.staging_yard`` (still the legacy dict list pending 1d).
 
 The two code paths share :meth:`_run_with_issuer` below; the public
 ``execute_action_order(fleet, ...)`` entry kept for engine/registry
 compatibility builds the fleet adapter from the order payload.
+
+PROJ-431 Phase 1c: deposits into the synthetic mine-carrier route
+through ``ship.bay_inventory`` / ``ship.set_bay_inventory(...)``
+instead of mutating ``carried_items`` directly. The synthetic carrier
+itself is unchanged here — its removal lands in Phase 2.
 
 Order ``target`` payload is a dict::
 
@@ -35,6 +41,8 @@ from typing import Any, Dict, List, Optional, TYPE_CHECKING, Tuple
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import OrderType
+from game.strategy.data.bay_inventory import BayInventory
+from game.strategy.data.carried_vehicle import CarriedVehicle
 from game.strategy.engine.issuer_adapter import (
     FleetShipIssuerAdapter,
     IIssuerAdapter,
@@ -254,8 +262,21 @@ class LayMinesOrderHandler(BaseOrderHandler):
         )
         if not mine_group.ships:
             self._seed_mine_group_carrier(mine_group, empire=empire)
+        # PROJ-431 Phase 1c: deposit through the typed BayInventory
+        # substrate. The fleet-path ``pop_carried`` returns typed
+        # ``CarriedVehicle`` instances; planet-path still returns dicts
+        # pending 1d, so accept both shapes.
+        synthetic_carrier = mine_group.ships[0]
+        current_bay = synthetic_carrier.bay_inventory
+        new_bay = list(current_bay.bay)
         for mine in popped:
-            mine_group.ships[0].carried_items.append(mine)
+            if isinstance(mine, CarriedVehicle):
+                new_bay.append(mine)
+            elif isinstance(mine, dict):
+                new_bay.append(CarriedVehicle.from_dict(mine))
+        synthetic_carrier.set_bay_inventory(
+            BayInventory(bay=new_bay, pods=list(current_bay.pods))
+        )
 
         existing_count = len(mine_group.mine_positions)
         new_total = existing_count + len(popped)
@@ -281,7 +302,7 @@ class LayMinesOrderHandler(BaseOrderHandler):
             mine_design_id,
             target_hex,
             mine_group.id,
-            len(mine_group.ships[0].carried_items) if mine_group.ships else 0,
+            len(mine_group.ships[0].bay_inventory.bay) if mine_group.ships else 0,
         )
         try:
             self._emit_event(

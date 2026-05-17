@@ -20,7 +20,8 @@ from game.strategy.engine.commands.registry import (
 from game.strategy.engine.handlers.base import BaseCommandHandler
 from game.strategy.engine.handlers.fms_shared import (
     check_issuer_invariant,
-    count_matching,
+    count_matching_bay,
+    count_matching_yard,
     resolve_requested,
 )
 
@@ -76,8 +77,8 @@ class LaunchFightersCommandHandler(BaseCommandHandler):
                 f"Ship {cmd.ship_instance_id!r} not found in Fleet {fleet.id}."
             )
 
-        count_available = count_matching(
-            carrier.carried_items, "fighter", cmd.fighter_design_id,
+        count_available = count_matching_bay(
+            carrier.bay_inventory.bay, "fighter", cmd.fighter_design_id,
         )
         requested = resolve_requested(cmd.count, count_available)
         if isinstance(requested, ValidationResult):
@@ -114,7 +115,7 @@ class LaunchFightersCommandHandler(BaseCommandHandler):
         if error:
             return error
 
-        count_available = count_matching(
+        count_available = count_matching_yard(
             planet.staging_yard, "fighter", cmd.fighter_design_id,
         )
         requested = resolve_requested(cmd.count, count_available)

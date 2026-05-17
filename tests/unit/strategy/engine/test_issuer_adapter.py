@@ -141,7 +141,9 @@ def test_fleet_adapter_pop_carried_filters_by_type_and_design():
 
     popped = a.pop_carried("mine", "mine_a", count=2)
     assert len(popped) == 2
-    assert all(p["design_id"] == "mine_a" for p in popped)
+    # PROJ-431 Phase 1c: fleet adapter now returns typed CarriedVehicle.
+    assert all(isinstance(p, CarriedVehicle) for p in popped)
+    assert all(p.design_id == "mine_a" for p in popped)
     # remaining: 1 mine_b + 1 fighter
     assert len(carrier.bay_inventory.bay) == 2
 
@@ -154,6 +156,7 @@ def test_fleet_adapter_pop_all_when_count_none():
 
     popped = a.pop_carried("mine", None, count=None)
     assert len(popped) == 2
+    assert all(isinstance(p, CarriedVehicle) for p in popped)
     # leaves the fighter alone
     remaining = carrier.bay_inventory.bay
     assert len(remaining) == 1

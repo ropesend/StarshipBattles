@@ -168,8 +168,17 @@ class LaunchSatellitesOrderHandler(BaseOrderHandler):
             empire=empire, target_hex=target_hex,
         )
 
+        # PROJ-431 Phase 1c: ``pop_carried`` now returns typed
+        # ``CarriedVehicle`` instances from the fleet bay (planet adapter
+        # still yields dicts pending 1d), so we accept both shapes.
         for raw_item in popped:
-            cv = CarriedVehicle.from_any(raw_item)
+            cv = (
+                raw_item
+                if isinstance(raw_item, CarriedVehicle)
+                else CarriedVehicle.from_dict(raw_item)
+                if isinstance(raw_item, dict)
+                else None
+            )
             if cv is None:
                 continue
             ship = self._carried_vehicle_to_ship_instance(
