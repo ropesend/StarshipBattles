@@ -32,6 +32,17 @@ from game.strategy.facade.dto import (
     StarInfo,
     SystemInfo,
 )
+from game.strategy.facade.grouped_namespaces import (
+    FacadeCommands,
+    FacadeEconomyQueries,
+    FacadeEmpireQueries,
+    FacadeEventQueries,
+    FacadeFleetQueries,
+    FacadePlanetQueries,
+    FacadeSessionInfo,
+    FacadeSystemQueries,
+    FacadeValidation,
+)
 from game.strategy.facade.slices._facade_state import FacadeSessionState
 from game.strategy.facade.slices.command_dispatch_slice import CommandDispatchSlice
 from game.strategy.facade.slices.economy_slice import EconomySlice
@@ -97,6 +108,87 @@ class StrategySessionFacade:
         self._empire_slice = EmpireSlice(self._state)
         self._economy_slice = EconomySlice(self._state)
         self._event_slice = EventSlice(self._state)
+
+        # PROJ-430 Phase 2: grouped namespace accessors. Each wraps the
+        # corresponding slice and exposes the renamed, prefix-stripped
+        # verb set. The legacy flat methods below stay until Phase 5
+        # deletes them root-cause.
+        from game.strategy.engine.commands.registry import (
+            command_registry,
+            seed_default_commands,
+        )
+
+        if len(command_registry) == 0:
+            seed_default_commands(command_registry)
+        helper_pairs = [
+            (helper_name, spec.command_class)
+            for helper_name, spec in command_registry.specs_by_facade_helper().items()
+        ]
+
+        self._commands = FacadeCommands(self._command_slice, helper_pairs)
+        self._fleets = FacadeFleetQueries(self._fleet_slice)
+        self._planets = FacadePlanetQueries(self._planet_slice)
+        self._systems = FacadeSystemQueries(self._system_slice)
+        self._empires = FacadeEmpireQueries(self._empire_slice)
+        self._events = FacadeEventQueries(self._event_slice)
+        self._session_meta = FacadeSessionInfo(self._event_slice)
+        self._economy = FacadeEconomyQueries(self._economy_slice, session)
+        self._validation = FacadeValidation(self._fleet_slice, self._planet_slice)
+
+    # =========================================================================
+    # GROUPED NAMESPACE ACCESSORS (PROJ-430 / TD-08 Phase 2) — the post-TD-08
+    # primary surface. Each property returns the per-facade namespace wrapper
+    # constructed in ``__init__``.
+    # =========================================================================
+
+    @property
+    def commands(self) -> FacadeCommands:
+        """Grouped command-dispatch surface (PROJ-430).
+
+        Replaces the 36 top-level ``dispatch_*`` helpers; verbs are
+        prefix-stripped (e.g. ``facade.commands.issue_move(...)``).
+        """
+        return self._commands
+
+    @property
+    def fleets(self) -> FacadeFleetQueries:
+        """Grouped fleet read surface (PROJ-430)."""
+        return self._fleets
+
+    @property
+    def planets(self) -> FacadePlanetQueries:
+        """Grouped planet read surface (PROJ-430)."""
+        return self._planets
+
+    @property
+    def systems(self) -> FacadeSystemQueries:
+        """Grouped system / star / storm read surface (PROJ-430)."""
+        return self._systems
+
+    @property
+    def empires(self) -> FacadeEmpireQueries:
+        """Grouped empire read surface (PROJ-430)."""
+        return self._empires
+
+    @property
+    def events(self) -> FacadeEventQueries:
+        """Grouped event-log read surface (PROJ-430)."""
+        return self._events
+
+    @property
+    def session_meta(self) -> FacadeSessionInfo:
+        """Grouped session-metadata surface (turn, save path, humans)."""
+        return self._session_meta
+
+    @property
+    def economy(self) -> FacadeEconomyQueries:
+        """Grouped economy / demographics / registries surface."""
+        return self._economy
+
+    @property
+    def validation(self) -> FacadeValidation:
+        """Grouped validation surface (PROJ-430)."""
+        return self._validation
 
     @property
     def facade_state(self) -> FacadeSessionState:

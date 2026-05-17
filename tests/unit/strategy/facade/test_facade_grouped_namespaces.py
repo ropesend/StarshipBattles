@@ -15,11 +15,6 @@ import pytest
 
 from game.core.hex_math import HexCoord
 from game.core.validation import ValidationResult
-from game.strategy.facade.dto import (
-    EmpireInfo,
-    FleetInfo,
-    PlanetInfo,
-)
 from game.strategy.facade.strategy_session_facade import StrategySessionFacade
 
 
@@ -244,14 +239,20 @@ class TestEconomyNamespaceParity:
 # ---------------------------------------------------------------------------
 
 class TestValidationNamespaceParity:
-    def test_validation_can_move_to_unknown_fleet(
-        self, fresh_facade: StrategySessionFacade
-    ) -> None:
-        result = fresh_facade.validation.can_move_to(999, HexCoord(0, 0))
+    def test_validation_can_move_to_unknown_fleet(self) -> None:
+        session = MagicMock()
+        session.galaxy.systems = {}
+        session.empires = []
+        session._get_fleet_by_id = MagicMock(return_value=None)
+        facade = StrategySessionFacade(session)
+        result = facade.validation.can_move_to(999, HexCoord(0, 0))
         assert not result.is_valid
 
-    def test_validation_can_colonize_unknown_fleet(
-        self, fresh_facade: StrategySessionFacade
-    ) -> None:
-        result = fresh_facade.validation.can_colonize(999, None)
+    def test_validation_can_colonize_unknown_fleet(self) -> None:
+        session = MagicMock()
+        session.galaxy.systems = {}
+        session.empires = []
+        session._get_fleet_by_id = MagicMock(return_value=None)
+        facade = StrategySessionFacade(session)
+        result = facade.validation.can_colonize(999, None)
         assert not result.is_valid
