@@ -18,15 +18,15 @@
 | 1. Pin the target surface (red contract first) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Introduce grouped accessors | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Migrate UI callers (25 files) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Migrate tests off legacy cache seams | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Migrate tests off legacy cache seams | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Delete the legacy surface (root-cause) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Documentation sync | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete — UI callers (16 files), strategy service caller (`cargo_transfer_service.py`), and ~50 test files mechanically migrated to the grouped namespace surface. Two production sites (`empire_panel_ctrl.py`, `list_windows.py`) had `hasattr(facade, "get_race_registry")` guards switched to `hasattr(facade, "economy")`. Two SimpleNamespace test doubles (`test_list_windows.py`, `test_empire_panel_ctrl.py`) updated to expose `economy.race_registry`. `MockSession` helpers in 7 build-queue test files gained grouped namespace shims (`economy`, `session_meta` properties). UI + strategy suites green except for the 8 contract assertions intentionally red until Phase 5.
-**Next Action:** Phase 4 — add `seed_*` helpers on `FacadeSessionState` and migrate the 3 cache-forwarder-pinning test files.
+**Active Phase:** Phase 5
+**Last Action:** Phase 4 complete — `FacadeSessionState.seed_planet_index` and `seed_race_registry` public helpers added. `test_colony_demographic_view.py` migrated to use them; `test_facade_indices.py` rewritten to assert caching behavior rather than implementation detail. Repo-wide sweep confirms zero remaining `facade._planet_index` / `_race_registry` / etc. writes in code (only in docstrings).
+**Next Action:** Phase 5 — root-cause delete the 8 cache-forwarder properties, the 32 flat read-method forwarders, the auto-installer's `dispatch_*` setattr loop, and the `_resolve_economy_config` legacy alias.
 **Blockers:** None
 
 ## Overview

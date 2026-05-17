@@ -27,7 +27,14 @@ class TestFacadePlanetIndex:
         assert result is planet
 
     def test_get_planet_by_id_caches_results(self):
-        """Second lookup should use cache, not rescan."""
+        """Second lookup should use cache, not rescan.
+
+        PROJ-430 / TD-08: the previous incarnation of this test pinned an
+        implementation detail (``hasattr(facade, '_planet_index')``). The
+        actual contract is "two consecutive lookups return the same
+        object" — a behavioral assertion that survives any future caching
+        refactor.
+        """
         from game.strategy.facade.strategy_session_facade import StrategySessionFacade
 
         session = MagicMock()
@@ -43,7 +50,10 @@ class TestFacadePlanetIndex:
         result2 = facade._get_planet_by_id(42)
 
         assert result1 is result2
-        assert hasattr(facade, '_planet_index')
+        # Behavioral assertion replaces the old `hasattr(facade,
+        # '_planet_index')` implementation check — caching is what
+        # callers actually rely on.
+        assert facade._get_planet_by_id(42) is result1
 
 
 class TestFacadeStarCache:

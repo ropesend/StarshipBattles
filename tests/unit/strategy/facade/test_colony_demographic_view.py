@@ -90,12 +90,14 @@ def _facade_for(planet: Planet, *, race_registry, economy: EconomyConfig):
     session.registries.components.get = MagicMock(return_value=None)
 
     facade = StrategySessionFacade(session)
-    # Pre-seed the planet index so `_get_planet_by_id` resolves without
-    # depending on the galaxy/system structure.
-    facade._planet_index = {planet.id: planet}
+    # PROJ-430 / TD-08: pre-seed the planet index via the public seam so
+    # ``_get_planet_by_id`` resolves without depending on the galaxy/system
+    # structure. Replaces the legacy ``facade._planet_index = ...``
+    # write-through forwarder.
+    facade.facade_state.seed_planet_index({planet.id: planet})
     # Pin the facade's race_registry accessor to our stub so the projector
     # + DTO builder both see it without going through CachedRaceRegistry.
-    facade._race_registry = race_registry
+    facade.facade_state.seed_race_registry(race_registry)
     # Attach the economy on the facade so the new method can reach it.
     # (Implementation may pull from the session's economy_config — set both.)
     facade._economy_config = economy
@@ -122,7 +124,7 @@ class TestUnownedReturnsNone:
         session = MagicMock()
         session.galaxy.systems.values.return_value = []
         facade = StrategySessionFacade(session)
-        facade._planet_index = {}
+        facade.facade_state.seed_planet_index({})
 
         assert facade.economy.colony_demographic_view(999) is None
 

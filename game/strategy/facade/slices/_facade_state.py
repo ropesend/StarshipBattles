@@ -9,10 +9,12 @@ The `_get_<X>_by_id` helpers also live here because (a) several slices need
 them and (b) the planet-id lookup owns the `_planet_index` cache that
 `tests/unit/strategy/facade/test_facade_indices.py` asserts on.
 
-The composer (`StrategySessionFacade`) exposes the cache attributes
-(`_planet_index`, `_fleets_by_hex_cache`, `_all_stars_cache`, `_race_registry`)
-via property forwarders so existing tests that read/write them on the facade
-keep working.
+PROJ-430 / TD-08: ``seed_*`` public helpers replace the legacy
+``facade._planet_index = {...}`` write-through pattern. Tests call
+``facade.facade_state.seed_planet_index({...})`` (or ``seed_race_registry(...)``)
+to inject cache state explicitly. The ``seed_`` prefix makes the test-only
+intent visible at the call site so the helpers aren't confused with
+production seeding paths.
 """
 
 from __future__ import annotations
@@ -114,3 +116,34 @@ class FacadeSessionState:
         if self.planet_index is None:
             self.planet_index = self.build_planet_index()
         return self.planet_index.get(planet_id)
+
+    # ------------------------------------------------------------------
+    # Test-only seeding seam (PROJ-430 / TD-08 Phase 4)
+    # ------------------------------------------------------------------
+    #
+    # The ``seed_*`` prefix is intentional: these methods are *only* for
+    # tests that need to inject cache state without driving the full
+    # production hydration path. Production code populates the same
+    # caches through the slices' own lazy-init paths and must not call
+    # these helpers.
+
+    def seed_planet_index(self, mapping: dict) -> None:
+        """Test-only: seed the planet-id -> Planet lookup cache.
+
+        Replaces the legacy ``facade._planet_index = {...}`` write through
+        path. Production code populates this cache via
+        :meth:`get_planet_by_id` (lazy build); call sites of this helper
+        should all be inside ``tests/``.
+        """
+        self.planet_index = mapping
+
+    def seed_race_registry(self, registry: "IRaceRegistry") -> None:
+        """Test-only: seed the session-scoped race registry.
+
+        Replaces the legacy ``facade._race_registry = ...`` write-through
+        path. Production code goes through
+        :meth:`EconomySlice.get_race_registry` (lazy build of
+        :class:`CachedRaceRegistry`); call sites of this helper should all
+        be inside ``tests/``.
+        """
+        self.race_registry = registry
