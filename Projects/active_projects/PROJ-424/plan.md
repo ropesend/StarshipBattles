@@ -15,7 +15,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Preflight + remaining-consumer inventory | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
+| 0. Preflight + remaining-consumer inventory | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Explicit `planet_fms` metadata + registry derivation | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Add `OrderMetadataView` (lazy, cycle-safe) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Migrate snapshot consumer (`action_time_resolver.py`) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
@@ -24,10 +24,10 @@
 | 6. Docs convergence + final grep gate | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-16
+**Last Updated:** 2026-05-17
 **Active Phase:** Phase 1
-**Last Action:** Project initialized from TD-03 plan
-**Next Action:** Run Phase 0 preflight (`rg` baselines) then start Phase 1 by tagging the five FMS handler specs with `subcategories={"planet_fms"}` and writing the failing derivation tests
+**Last Action:** Phase 0 baseline captured — reader counts confirmed; manifest is a superset of test imports; 40 (not 41) `@command_spec` decorators total but the 5 FMS handlers are unambiguous
+**Next Action:** Start Phase 1 by writing the failing `test_exactly_five_specs_carry_planet_fms_subcategory` + `test_planet_fms_action_order_types_derivation_matches_constant` tests
 **Blockers:** None
 
 ## Overview
