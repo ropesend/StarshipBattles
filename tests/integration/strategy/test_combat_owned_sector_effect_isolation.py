@@ -22,7 +22,7 @@ This file pins that contract.
 """
 from __future__ import annotations
 
-from game.strategy.combat.spec_compiler import _entries_from_sector_effects
+from game.strategy.combat.strategy_modifier_stack_builder import StrategyModifierStackBuilder
 
 
 def _ownerful_facility_provider(owner_id: int, source_id: str, mult: float):
@@ -77,7 +77,7 @@ class TestOwnerfulSectorEffectIsolation:
             _ownerful_facility_provider(owner_id=1, source_id='fac_a', mult=0.5)
         )]
 
-        global_entries, per_team_entries = _entries_from_sector_effects(
+        global_entries, per_team_entries = StrategyModifierStackBuilder().entries_from_sector_effects(
             effects,
             empire_to_team_id={1: 0, 2: 1},
             team_count=2,
@@ -93,7 +93,7 @@ class TestOwnerfulSectorEffectIsolation:
         """A storm with `owner_id=None` must still apply globally."""
         effects = [_shield_effect(_storm_provider('Ion Storm', 0.5))]
 
-        global_entries, per_team_entries = _entries_from_sector_effects(
+        global_entries, per_team_entries = StrategyModifierStackBuilder().entries_from_sector_effects(
             effects,
             empire_to_team_id={1: 0, 2: 1},
             team_count=2,
@@ -111,7 +111,7 @@ class TestOwnerfulSectorEffectIsolation:
             _ownerful_facility_provider(owner_id=1, source_id='fac_b', mult=0.7),
         )]
 
-        global_entries, per_team_entries = _entries_from_sector_effects(
+        global_entries, per_team_entries = StrategyModifierStackBuilder().entries_from_sector_effects(
             effects,
             empire_to_team_id={1: 0, 2: 1},
             team_count=2,
@@ -130,7 +130,7 @@ class TestOwnerfulSectorEffectIsolation:
             _ownerful_facility_provider(owner_id=99, source_id='ghost', mult=0.5)
         )]
 
-        global_entries, per_team_entries = _entries_from_sector_effects(
+        global_entries, per_team_entries = StrategyModifierStackBuilder().entries_from_sector_effects(
             effects,
             empire_to_team_id={1: 0, 2: 1},
             team_count=2,
@@ -148,7 +148,7 @@ class TestOwnerfulSectorEffectIsolation:
             _ownerful_facility_provider(owner_id=1, source_id='fac_c', mult=0.6),
         )]
 
-        global_entries, per_team_entries = _entries_from_sector_effects(effects)
+        global_entries, per_team_entries = StrategyModifierStackBuilder().entries_from_sector_effects(effects)
 
         # Without mapping, both providers fall through to global (preserving
         # pre-PROJ-343-T1.3-combat semantics for legacy callers).

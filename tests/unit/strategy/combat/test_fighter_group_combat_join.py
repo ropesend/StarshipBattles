@@ -21,10 +21,8 @@ from unittest.mock import MagicMock
 import pytest
 
 from game.core.hex_math import HexCoord
-from game.strategy.combat.spec_compiler import (
-    _split_mine_groups_from_fleets,
-    build_strategy_battle_spec,
-)
+from game.strategy.combat.spec_compiler import build_strategy_battle_spec
+from game.strategy.combat.team_spec_builder import TeamSpecBuilder
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.ship_instance import ShipInstance
 
@@ -57,7 +55,7 @@ def _make_enemy_ship(instance_id: str, owner_id: int) -> ShipInstance:
 
 
 def test_fighter_group_not_filtered_as_mine_group():
-    """``_split_mine_groups_from_fleets`` must only filter mine_group."""
+    """`TeamSpecBuilder.split_mine_groups` must only filter mine_group."""
     hex_c = HexCoord(0, 0)
     fighter_group = Fleet(
         fleet_id=200001, owner_id=10, location=hex_c, speed=0.0,
@@ -75,7 +73,7 @@ def test_fighter_group_not_filtered_as_mine_group():
         group_kind="fleet",
     )
 
-    combat, mine_groups = _split_mine_groups_from_fleets(
+    combat, mine_groups = TeamSpecBuilder().split_mine_groups(
         [regular, fighter_group, mine_group]
     )
     assert mine_group in mine_groups

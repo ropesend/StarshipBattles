@@ -366,13 +366,13 @@ def test_flat_shield_bonus_via_compiler_helper(fresh_registries):
     `_apply_bonuses` → `ship.external_stats` →
     `ShipStats._apply_aggregated_stats`.
     """
-    from game.strategy.combat.spec_compiler import _entries_from_fleet_combat_modifiers
+    from game.strategy.combat.strategy_modifier_stack_builder import StrategyModifierStackBuilder
     from game.strategy.services.combat_modifier_collector import FleetCombatModifiers
 
     modifiers = FleetCombatModifiers(
         shield_mult=1.0, damage_mult=1.0, flat_shield_bonus=100.0,
     )
-    entries = tuple(_entries_from_fleet_combat_modifiers(modifiers, team_id=0))
+    entries = tuple(StrategyModifierStackBuilder().entries_from_fleet_combat_modifiers(modifiers, team_id=0))
     assert entries, "Compiler emitted nothing for flat_shield_bonus=100"
 
     stack = ModifierStack(per_team={0: entries}, global_=())

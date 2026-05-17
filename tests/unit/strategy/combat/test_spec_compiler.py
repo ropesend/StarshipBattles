@@ -366,7 +366,7 @@ class TestStackGroupThreadingInStrategyCompiler:
 
     def test_storm_entry_has_no_stack_group_per_d6(self):
         """PROJ-300 D6: storms emit ungrouped entries so they MULTIPLY, not MAX."""
-        from game.strategy.combat.spec_compiler import _entries_from_sector_effects
+        from game.strategy.combat.strategy_modifier_stack_builder import StrategyModifierStackBuilder
         sector_effects = [{
             'ability_name': 'ShieldModifier',
             'providers': [{
@@ -379,7 +379,7 @@ class TestStackGroupThreadingInStrategyCompiler:
         }]
         # PROJ-343 T1.3-combat: function returns (global, per_team).
         # Storm provider has owner_id=None so it lands in global.
-        entries, _per_team = _entries_from_sector_effects(sector_effects)
+        entries, _per_team = StrategyModifierStackBuilder().entries_from_sector_effects(sector_effects)
         assert entries
         assert entries[0].stack_group is None, (
             "PROJ-300 D6 — overlapping storms now MULTIPLY (no shared "
@@ -387,28 +387,28 @@ class TestStackGroupThreadingInStrategyCompiler:
         )
 
     def test_fleet_shield_mult_has_team_scoped_stack_group(self):
-        from game.strategy.combat.spec_compiler import _entries_from_fleet_combat_modifiers
+        from game.strategy.combat.strategy_modifier_stack_builder import StrategyModifierStackBuilder
         from game.strategy.services.combat_modifier_collector import FleetCombatModifiers
         mods = FleetCombatModifiers(shield_mult=1.5, damage_mult=1.0, flat_shield_bonus=0.0)
-        entries = _entries_from_fleet_combat_modifiers(mods, team_id=0)
+        entries = StrategyModifierStackBuilder().entries_from_fleet_combat_modifiers(mods, team_id=0)
         shield_entries = [e for e in entries if e.effect.stat_key == "shield_capacity_mult"]
         assert shield_entries
         assert shield_entries[0].stack_group == "team0_shield_mult"
 
     def test_fleet_damage_mult_has_team_scoped_stack_group(self):
-        from game.strategy.combat.spec_compiler import _entries_from_fleet_combat_modifiers
+        from game.strategy.combat.strategy_modifier_stack_builder import StrategyModifierStackBuilder
         from game.strategy.services.combat_modifier_collector import FleetCombatModifiers
         mods = FleetCombatModifiers(shield_mult=1.0, damage_mult=0.75, flat_shield_bonus=0.0)
-        entries = _entries_from_fleet_combat_modifiers(mods, team_id=1)
+        entries = StrategyModifierStackBuilder().entries_from_fleet_combat_modifiers(mods, team_id=1)
         damage_entries = [e for e in entries if e.effect.stat_key == "damage_mult"]
         assert damage_entries
         assert damage_entries[0].stack_group == "team1_damage_mult"
 
     def test_fleet_flat_shield_bonus_has_team_scoped_stack_group(self):
-        from game.strategy.combat.spec_compiler import _entries_from_fleet_combat_modifiers
+        from game.strategy.combat.strategy_modifier_stack_builder import StrategyModifierStackBuilder
         from game.strategy.services.combat_modifier_collector import FleetCombatModifiers
         mods = FleetCombatModifiers(shield_mult=1.0, damage_mult=1.0, flat_shield_bonus=50.0)
-        entries = _entries_from_fleet_combat_modifiers(mods, team_id=0)
+        entries = StrategyModifierStackBuilder().entries_from_fleet_combat_modifiers(mods, team_id=0)
         bonus_entries = [e for e in entries if e.effect.stat_key == "shield_bonus_add"]
         assert bonus_entries
         assert bonus_entries[0].stack_group == "team0_flat_shield"
@@ -418,7 +418,7 @@ class TestSectorEffectCompilerBranches:
     """Focused branch coverage for `_entries_from_sector_effects`."""
 
     def test_noncombat_inactive_and_unity_sector_effects_are_skipped(self):
-        from game.strategy.combat.spec_compiler import _entries_from_sector_effects
+        from game.strategy.combat.strategy_modifier_stack_builder import StrategyModifierStackBuilder
 
         sector_effects = [
             {
@@ -453,7 +453,7 @@ class TestSectorEffectCompilerBranches:
             },
         ]
 
-        global_entries, per_team_entries = _entries_from_sector_effects(
+        global_entries, per_team_entries = StrategyModifierStackBuilder().entries_from_sector_effects(
             sector_effects
         )
 
@@ -461,7 +461,7 @@ class TestSectorEffectCompilerBranches:
         assert per_team_entries == {}
 
     def test_damage_modifier_sector_effect_emits_damage_entry(self):
-        from game.strategy.combat.spec_compiler import _entries_from_sector_effects
+        from game.strategy.combat.strategy_modifier_stack_builder import StrategyModifierStackBuilder
 
         sector_effects = [{
             'ability_name': 'DamageModifier',
@@ -475,7 +475,7 @@ class TestSectorEffectCompilerBranches:
             }],
         }]
 
-        global_entries, per_team_entries = _entries_from_sector_effects(
+        global_entries, per_team_entries = StrategyModifierStackBuilder().entries_from_sector_effects(
             sector_effects
         )
 

@@ -49,8 +49,8 @@
         "phase_1"
       ],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
-      "phase_branch": null,
+      "phase_base_sha": "f4195708f",
+      "phase_branch": "proj/PROJ-426/main",
       "phase_head_sha": null,
       "planned_files": [
         "game/strategy/combat/team_spec_builder.py",
@@ -68,7 +68,7 @@
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_3": {
