@@ -1,0 +1,43 @@
+Strategy tech-debt arc — autonomous execution complete
+Branch: proj/PROJ-435/main at e269a9dbf. Sharded suite green throughout (final: 21131/21131).
+
+Original 10 TD projects (PROJ-422 → PROJ-431)
+#	PROJ	TD	Outcome	Sharded
+1	PROJ-422	TD-09 engine interface split	✅ 6 phases + consult phase_6 (leaf-path AST guard)	20857
+2	PROJ-423	TD-02 GameSession lifecycle	✅ 6 phases + consult phase_6 (frozen schema fixture + production caller migration)	20890
+3	PROJ-424	TD-03 order metadata convergence	✅ 7 phases + consult phase_7 (lazy-import AST hardening)	20903
+4	PROJ-425	TD-06 ShipInstance slimming	✅ Phases 0–5 + 7 (shim labels); Phase 6 cargo cleanup landed later after PROJ-431 P1 unblocked	20931 → 21131
+5	PROJ-426	TD-01 battle spec assembly	✅ 6 phases + consult phase_6 (single owner→team derivation + integration tests)	20953 → 20954
+6	PROJ-427	TD-05 production/persistence split	✅ Phases 0–5; Phase 6 spun off to PROJ-434	20996
+7	PROJ-428	TD-04 phase registry hooks	✅ 6 phases + consult phase_6 (AST purity guard hardening)	21016
+8	PROJ-429	TD-07 ability metadata unification	✅ 8 phases + consult phase_8 (two-way parity, planet_dto, action-time fail-fast, UI spun off to PROJ-435)	21079 → 21084
+9	PROJ-430	TD-08 facade API reduction	✅ 6 phases + consult phase_7 (doc alignment + group leak fix). 68 → 12 public methods, 36 → 0 top-level dispatch_*	21122
+10	PROJ-431	TD-10 deployable substrate	✅ 5 phases (1a–1f sub-phases for P1) + final consult + phase_5 (conflict trigger + third-party mines + doc drift)	21138 → 21141
+Consult-derived follow-up projects (PROJ-432–PROJ-435)
+PROJ	Source	Outcome	Sharded
+PROJ-432	PROJ-423 consult	✅ TurnStateSnapshot.restore() now mirrors SessionPersistenceAdapter.rehydrate_state() step-for-step	21141
+PROJ-433	PROJ-425 consult	✅ component_inspector.py 537 LOC → split into component_abilities.py (403) + component_layers.py (168) + 67-line re-export shim	21144
+PROJ-434	PROJ-427 deferral	✅ DesignLibrary deleted (3 UI screens + 4 panel collaborators + ~30 test files migrated; API extensions on DesignRepository/DesignCatalog)	21125
+PROJ-435	PROJ-429 consult	✅ UI _ACTIVATABLE_ABILITIES migrated; GravityModifier/RadiationShield registered in AbilityMetadataRegistry	21129
+Key surface deltas
+game/strategy/interfaces/engines.py 778 LOC monolith → 9-module package
+GameSession 599 LOC + drift-prone init/from_dict → 474 LOC + three internal collaborators (SessionRuntimeServices / SessionBootstrap / SessionPersistenceAdapter) with anti-drift regression test
+5 duplicated order-metadata frozensets + import-time snapshot → single OrderMetadataView lazy live reader
+ShipInstance 845 LOC → 745 LOC (12 forwarders removed plus 6 stats/inspector/factory/write extractions)
+spec_compiler.py 959 LOC + 4 object.__setattr__ side channels → StrategyBattleAssembler + 5 typed builders + BattleSpecExtensions
+DesignLibrary (mixed disk I/O + UI cache + runtime catalog) → DesignRepository (persistence) + DesignCatalog (runtime), absorbed into SessionRuntimeServices; deleted entirely
+turn_phase_registry.py 465 LOC + 6 behavior helpers → 340 LOC descriptors-only + MovementPhaseCollaborator + AST purity guard
+7 design_role.py frozensets + scattered ability literals → single AbilityMetadataRegistry
+StrategySessionFacade 68 methods + 36 dispatch_* + 8 cache forwarders → 12 names (3 core + 9 grouped accessors), no shims
+ShipInstance.carried_items mixed list + synthetic mine-carrier → typed BayInventory + explicit MineGroup/FighterWing/SatelliteConstellation siblings of Fleet on empire.deployed_groups
+Cross-cutting: hardened AST guards (lazy imports, class-body imports, dynamic importlib/__import__) landed in PROJ-422/424/428/429
+Cross-project gates honored
+PROJ-429 waited on PROJ-424 ✓
+PROJ-431 waited on PROJ-426 ✓
+PROJ-425 Phase 6 waited on PROJ-431 Phase 1 ✓ (executed last)
+Items intentionally flagged but not actioned
+_CarriedItemsProxy shim on ShipInstance (test-only, AST-guarded against production use) — documented in PROJ-431 decisions
+Empire.is_eliminated() semantics when empire owns only MineGroups — flagged for product-review in PROJ-431 phase_5 decisions
+The 5 high-value ShipInstance entry points (create, to_dict, clone, to_ship, update_from_ship) — 910 callers across 252 files; kept as documented thin shims per TD-06 Weak-LLM Guardrail #1
+Pre-existing test_cargo_tracking.py failures (30 tests) reproduce on base — unrelated to this arc, flagged for separate investigation
+Stopping per the autonomous-loop directive.
