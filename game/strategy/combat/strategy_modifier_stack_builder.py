@@ -16,6 +16,10 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from game.simulation.combat.ability_stat_registry import emit_entries_for_ability
 from game.simulation.combat.modifier_stack import ModifierEntry, ModifierStack
+from game.strategy.services.ability_metadata import (
+    StrategicKind,
+    abilities_with_kind_tag,
+)
 
 
 __all__ = ["StrategyModifierStackBuilder"]
@@ -74,7 +78,11 @@ class StrategyModifierStackBuilder:
         providers so facility-projected modifiers apply only to the owning
         team's stack.
         """
-        combat_ability_names = {"ShieldModifier", "DamageModifier", "ThrustModifier"}
+        # PROJ-429 / TD-07 Phase 5: read combat-modifier name set from
+        # the unified ``AbilityMetadataRegistry`` rather than re-encoding
+        # it as a literal. Adding a fourth multiplier ability becomes a
+        # single-entry tag edit in ``ability_metadata.py``.
+        combat_ability_names = abilities_with_kind_tag(StrategicKind.COMBAT_MODIFIER)
         global_entries: List[ModifierEntry] = []
         per_team_entries: Dict[int, List[ModifierEntry]] = {}
 

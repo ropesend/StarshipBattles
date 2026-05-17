@@ -14,6 +14,10 @@ import logging
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
+from game.strategy.services.ability_metadata import (
+    StrategicKind,
+    abilities_with_kind_tag,
+)
 from game.strategy.services.strategic_ability_scanner import (
     find_abilities_in_scope,
     aggregate_multipliers,
@@ -104,18 +108,25 @@ def collect_combat_modifiers(
                     if _entry_scope(ability_key, entry) in valid_scopes:
                         entries_list.append(entry)
 
-            # ShieldProjection at strategic scopes (flat bonus)
-            sp_entries = find_abilities_in_scope(
-                "ShieldProjection", ref_planet, galaxy, fleet_empire, scan_scope, registries,
-                require_active=True,
-            )
-            for entry in sp_entries:
-                if _entry_scope("ShieldProjection", entry) in valid_scopes:
-                    value = entry.get('value', 0)
-                    if isinstance(value, dict):
-                        value = value.get('value', 0)
-                    if value > 0:
-                        shield_projection_values.append(float(value))
+            # Flat-bonus combat abilities (COMBAT_FLAT_BONUS) — currently
+            # only ``ShieldProjection``. PROJ-429 / TD-07 Phase 5: read
+            # the name set live from the unified registry rather than
+            # hardcoding ``"ShieldProjection"`` here and in
+            # ``strategy_modifier_stack_builder``.
+            for flat_bonus_name in abilities_with_kind_tag(
+                StrategicKind.COMBAT_FLAT_BONUS
+            ):
+                sp_entries = find_abilities_in_scope(
+                    flat_bonus_name, ref_planet, galaxy, fleet_empire, scan_scope, registries,
+                    require_active=True,
+                )
+                for entry in sp_entries:
+                    if _entry_scope(flat_bonus_name, entry) in valid_scopes:
+                        value = entry.get('value', 0)
+                        if isinstance(value, dict):
+                            value = value.get('value', 0)
+                        if value > 0:
+                            shield_projection_values.append(float(value))
 
     # Collect enemy suppressors (from opponent's facilities that target enemies).
     # Scan opponent's own planets for abilities with enemy_* scope.

@@ -255,3 +255,142 @@ class TestLookupHelpers:
         empires = [MockEmpire(id=0), MockEmpire(id=1)]
 
         assert _find_empire(99, empires) is None
+
+
+# ---------------------------------------------------------------------------
+# PROJ-429 Phase 5 — registry-driven combat-modifier name sets.
+# ---------------------------------------------------------------------------
+
+
+class TestCombatModifierAbilityNamesFromRegistry:
+    """The combat-modifier ability names are read from the unified
+    ``AbilityMetadataRegistry`` rather than re-encoded in literal sets at
+    each call site.
+
+    Two distinct categorisations are tested:
+
+    * ``StrategicKind.COMBAT_MODIFIER`` — multiplier-aggregated combat
+      modifiers consumed by ``StrategyModifierStackBuilder``'s
+      ``entries_from_sector_effects`` filter (includes ThrustModifier).
+    * ``StrategicKind.COMBAT_FLAT_BONUS`` — flat-additive combat
+      modifiers (``ShieldProjection``).
+
+    The collector's per-fleet aggregation path is a STRICT SUBSET of
+    COMBAT_MODIFIER (shield + damage only); a separate test checks the
+    collector iterates exactly those two names.
+    """
+
+    def test_spec_builder_combat_modifier_set_matches_registry(self) -> None:
+        from game.strategy.services.ability_metadata import (
+            StrategicKind,
+            abilities_with_kind_tag,
+        )
+
+        # The set the strategy-side sector-effects filter should iterate.
+        expected = frozenset({"ShieldModifier", "DamageModifier", "ThrustModifier"})
+        assert abilities_with_kind_tag(StrategicKind.COMBAT_MODIFIER) == expected
+
+    def test_shield_projection_is_flat_bonus_not_modifier(self) -> None:
+        from game.strategy.services.ability_metadata import (
+            StrategicKind,
+            ability_has_kind_tag,
+        )
+
+        assert ability_has_kind_tag("ShieldProjection", StrategicKind.COMBAT_FLAT_BONUS)
+        assert not ability_has_kind_tag("ShieldProjection", StrategicKind.COMBAT_MODIFIER)
+
+    def test_collector_uses_registry_for_combat_flat_bonus_resolution(self) -> None:
+        """The collector must consult the unified
+        ``AbilityMetadataRegistry`` for combat-flat-bonus resolution
+        (i.e. import ``abilities_with_kind_tag``).
+
+        Design note: the collector retains its per-accumulator dispatch
+        for shield / damage multipliers (which is structural to
+        ``FleetCombatModifiers``'s three fields). The structural change
+        is that COMBAT_FLAT_BONUS membership is registry-driven, which
+        eliminates the cross-file ``"ShieldProjection"`` literal drift
+        between collector and stack builder.
+        """
+        # Existence: registry knows ShieldProjection as a FLAT_BONUS.
+        from game.strategy.services.ability_metadata import (
+            StrategicKind,
+            abilities_with_kind_tag,
+        )
+
+        assert "ShieldProjection" in abilities_with_kind_tag(
+            StrategicKind.COMBAT_FLAT_BONUS
+        )
+
+        # AST: the collector module imports the registry helper.
+        import ast
+        from pathlib import Path
+
+        from game.strategy.services import combat_modifier_collector as mod
+
+        source = Path(mod.__file__).read_text(encoding="utf-8")
+        tree = ast.parse(source)
+
+        uses_kind_helper = any(
+            isinstance(n, ast.ImportFrom)
+            and n.module == "game.strategy.services.ability_metadata"
+            and any(a.name == "abilities_with_kind_tag" for a in n.names)
+            for n in ast.walk(tree)
+        )
+        assert uses_kind_helper, (
+            "combat_modifier_collector.py must import "
+            "abilities_with_kind_tag from "
+            "game.strategy.services.ability_metadata so the "
+            "ShieldProjection / COMBAT_FLAT_BONUS resolution goes "
+            "through the registry."
+        )
+
+    def test_stack_builder_module_does_not_hardcode_combat_ability_literals(self) -> None:
+        """``strategy_modifier_stack_builder.py`` similarly must not
+        hardcode the COMBAT_MODIFIER name set in
+        ``entries_from_sector_effects``. The literal-emission lines that
+        produce ModifierEntry instances (ShieldModifier / DamageModifier
+        / ShieldProjection per fleet team) are PRESERVED — they emit
+        named entries by design and there is one branch per name. The
+        AST check therefore inspects the function body of
+        ``entries_from_sector_effects`` specifically.
+        """
+        import ast
+        from pathlib import Path
+
+        from game.strategy.combat import strategy_modifier_stack_builder as mod
+
+        source = Path(mod.__file__).read_text(encoding="utf-8")
+        tree = ast.parse(source)
+
+        target_func: ast.FunctionDef | None = None
+        for class_node in tree.body:
+            if not isinstance(class_node, ast.ClassDef):
+                continue
+            for item in class_node.body:
+                if isinstance(item, ast.FunctionDef) and item.name == "entries_from_sector_effects":
+                    target_func = item
+                    break
+            if target_func is not None:
+                break
+
+        assert target_func is not None, (
+            "entries_from_sector_effects not found in strategy_modifier_stack_builder.py"
+        )
+
+        # The filter set inside this function must NOT be a literal
+        # frozenset/set of {"ShieldModifier","DamageModifier","ThrustModifier"}.
+        for node in ast.walk(target_func):
+            if isinstance(node, (ast.Set, ast.SetComp)):
+                # ast.Set has .elts; ast.SetComp doesn't include literal members
+                if isinstance(node, ast.Set):
+                    string_members = {
+                        e.value
+                        for e in node.elts
+                        if isinstance(e, ast.Constant) and isinstance(e.value, str)
+                    }
+                    if string_members & {"ShieldModifier", "DamageModifier", "ThrustModifier"}:
+                        raise AssertionError(
+                            f"entries_from_sector_effects contains a literal "
+                            f"set with combat-modifier names {sorted(string_members)} — "
+                            f"route through abilities_with_kind_tag(...) instead."
+                        )
