@@ -17,13 +17,13 @@
 |-------|--------|-----------|
 | 0. Characterization — pin current `component_inspector` surface with focused tests | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Split `component_inspector.py` into `component_abilities.py` + `component_layers.py` | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Verification + docs | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Verification + docs | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 2 (verification + docs)
-**Last Action:** Phase 1 complete. Created `component_abilities.py` (403 LOC) and `component_layers.py` (168 LOC); `component_inspector.py` rewritten as a 67-LOC re-export shim. Focused suite green (172 passed). `__all__` snapshot test still green — no surface drift.
-**Next Action:** Phase 2 — run the full sharded suite, back-link the split into PROJ-425's findings_ledger, update any doc references to `component_inspector`.
+**Active Phase:** Project execution complete
+**Last Action:** Phase 2 complete. Full sharded suite 21144/21144 passed. `docs/04_SERVICES.md` and `docs/guides/component_system.md` updated to describe the split; PROJ-425 findings_ledger back-link added. Final LOC: `component_abilities.py` = 403, `component_layers.py` = 168, `component_inspector.py` (shim) = 67.
+**Next Action:** Awaiting user verification.
 **Blockers:** None. Predecessor PROJ-425 Phases 0-5 are complete on `proj/PROJ-425/main`.
 
 ## Overview

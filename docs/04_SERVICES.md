@@ -53,7 +53,9 @@ game/strategy/services/
   ability_sources/                 Facility, storm, fleet, planet, star, warp, archetype adapters
   cargo_transfer_service.py        Transfer dialog/business logic
   combat_modifier_collector.py     Pre-battle strategic combat modifiers
-  component_inspector.py           Component/ability inspection utilities
+  component_abilities.py           Ability iteration helpers (Surface A — PROJ-433 split)
+  component_layers.py              Per-instance layer-view helpers (Surface B — PROJ-433 split)
+  component_inspector.py           Thin re-export shim over component_abilities + component_layers (legacy import path)
   deployment_zone_calculator.py    BattleRole -> battlefield positions
   design_cost_calculator.py        Registry-backed design cost calculation
   design_validator.py              Strategy design validation
@@ -461,12 +463,23 @@ centralizes resource cost calculation. It resolves component costs through
 registry-backed ship loading, handles formula/modifier effects, and applies
 vehicle class `cost_multiplier`.
 
-`ComponentInspector` (`game/strategy/services/component_inspector.py`) provides
-module-level inspection utilities. Key API: `get_component_abilities`,
-`extract_abilities_from_component`, `iterate_design_components`,
-`iter_facility_ability_entries`, `ship_has_ability`, `find_ship_with_ability`,
-`count_ability`, `list_ship_abilities`, `get_ability_list`,
-`has_warp_capability`.
+`ComponentInspector` module-level inspection utilities are split (PROJ-433)
+across two modules:
+
+- `game/strategy/services/component_abilities.py` — ability iteration helpers
+  (`get_component_abilities`, `extract_abilities_from_component`,
+  `iterate_design_components`, `iter_facility_ability_entries`,
+  `ship_has_ability`, `find_ship_with_ability`, `count_ability`,
+  `list_ship_abilities`, `get_ability_list`, `has_warp_capability`,
+  `get_component_type`, `get_component_threshold`).
+- `game/strategy/services/component_layers.py` — per-instance layer-view
+  helpers added by PROJ-425 Phase 2 (`iter_components_by_layer`,
+  `damaged_components_by_layer`, `count_damaged_components`,
+  `lookup_design_max_hp`).
+
+`game/strategy/services/component_inspector.py` is preserved as a thin
+re-export shim so the existing import path keeps working. New code should
+import directly from `component_abilities` or `component_layers`.
 
 Critical registry invariant: facility and ship `design_data` often stores only
 component IDs. Ability checks must resolve through the component registry. Do

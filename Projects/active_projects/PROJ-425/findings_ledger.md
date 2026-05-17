@@ -71,6 +71,7 @@ Added to `game/strategy/services/component_inspector.py`:
 - Focused suite: **155 passed**.
 - `ship_instance.py` LOC: **722** (was 830; -108 this phase, -123 cumulative).
 - `component_inspector.py` LOC: 537 (was 391; +146). Above the 500-LOC guideline but already-shared infrastructure module — split deferred as the additions are cohesive ship-introspection helpers; revisit if it grows further.
+- **Split landed in [PROJ-433](../PROJ-433/plan.md) on 2026-05-17:** `component_inspector.py` split into `component_abilities.py` (403 LOC) + `component_layers.py` (168 LOC); the legacy module survives as a 67-LOC re-export shim. Public surface preserved via Option A.
 
 ## Phase 3 — Factory extraction (2026-05-17)
 

@@ -127,7 +127,10 @@ Common strategic payload fields:
 
 Strategy/facility scans must resolve component IDs through the component registry. Facility and design data commonly store components as IDs or `{"id": ...}` references, not inline abilities.
 
-Use helpers from `game/strategy/services/component_inspector.py`:
+Use helpers from `game/strategy/services/component_abilities.py` (ability
+iteration) and `game/strategy/services/component_layers.py` (per-instance
+layer views). Both are re-exported by the legacy `component_inspector`
+import path (PROJ-433 split).
 - `extract_abilities_from_component(comp, registries)`.
 - `iterate_design_components(design_data, component_registry)`.
 - `iter_facility_ability_entries(facility, ability_name, registries)`.

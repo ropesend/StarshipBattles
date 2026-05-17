@@ -21,3 +21,12 @@ _(Generated from phase_state.json. Do not edit by hand.)_
 - Focused suite after split (`test_component_inspector_surface.py + test_component_inspector_layers.py + tests/unit/strategy/test_component_inspector.py + tests/unit/strategy/ship_instance/`): **172 passed**.
 - No function signatures changed; bodies are verbatim moves.
 - No caller files needed updating because Option A (re-export shim) was chosen.
+
+## Phase 2 — Verification + docs (2026-05-17)
+
+- Full sharded suite: **21144 / 21144 passed** (wall time 144.9s, 12 shards).
+- Doc updates:
+  - `docs/04_SERVICES.md` — service listing and inspection section now describe the `component_abilities` + `component_layers` split, with the legacy shim called out.
+  - `docs/guides/component_system.md` — usage section points at the new module pair.
+- PROJ-425 back-link added in `Projects/active_projects/PROJ-425/findings_ledger.md` Phase 2 entry closing the deferred-split note.
+- Final LOC: `component_abilities.py` = 403, `component_layers.py` = 168, `component_inspector.py` (shim) = 67. All materially under the 500-LOC convention.
