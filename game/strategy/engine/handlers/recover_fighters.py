@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     command_class=IssueRecoverFightersCommand,
     order_type=OrderType.RECOVER_FIGHTERS,
     category='action',
+    subcategories=frozenset({"planet_fms"}),
     execution_model='action',
     facade_helper_name='dispatch_issue_recover_fighters',
     serializer_codec='dict',

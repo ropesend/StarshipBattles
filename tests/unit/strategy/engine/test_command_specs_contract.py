@@ -16,6 +16,7 @@ from game.strategy.data.order_types import (
     MOVEMENT_ORDER_TYPES,
     OrderType,
     PLANET_ACTION_ORDER_TYPES,
+    PLANET_FMS_ACTION_ORDER_TYPES,
 )
 from game.strategy.engine.commands.registry import (
     ALLOWED_CATEGORIES,
@@ -57,6 +58,10 @@ def action_order_types():
 
 def planet_action_order_types():
     return command_registry.planet_action_order_types()
+
+
+def planet_fms_action_order_types():
+    return command_registry.planet_fms_action_order_types()
 
 
 def order_to_ability_map():
@@ -174,6 +179,42 @@ def test_action_order_types_derivation_matches_constant() -> None:
 def test_planet_action_order_types_derivation_matches_constant() -> None:
     """``planet_action_order_types()`` matches the existing frozenset."""
     assert planet_action_order_types() == PLANET_ACTION_ORDER_TYPES
+
+
+def test_planet_fms_action_order_types_derivation_matches_constant() -> None:
+    """``planet_fms_action_order_types()`` derives from ``subcategories``
+    tags on the FMS handler command specs and matches the existing
+    ``PLANET_FMS_ACTION_ORDER_TYPES`` constant.
+
+    PROJ-424 Phase 1: closes the fifth duplicated metadata surface by
+    introducing a registry derivation that reads the explicit
+    ``"planet_fms"`` subcategory tag rather than relying on a hardcoded
+    list keyed by handler filename.
+    """
+    assert planet_fms_action_order_types() == PLANET_FMS_ACTION_ORDER_TYPES
+
+
+def test_exactly_five_specs_carry_planet_fms_subcategory() -> None:
+    """Exactly five command specs carry ``"planet_fms"`` in subcategories.
+
+    PROJ-424 Phase 1: the FMS-from-planet derivation must be
+    data-driven via the ``subcategories`` tag. Adding/removing a tag
+    requires touching this test (and the planet_fms order list).
+    """
+    tagged = [
+        s for s in COMMAND_SPECS
+        if "planet_fms" in s.subcategories
+    ]
+    names = sorted(s.command_class.__name__ for s in tagged)
+    assert names == sorted([
+        "IssueLayMinesCommand",
+        "IssueLaunchFightersCommand",
+        "IssueLaunchSatellitesCommand",
+        "IssueRecoverFightersCommand",
+        "IssueRecoverSatellitesCommand",
+    ]), (
+        f"planet_fms subcategory tag drift: {names}"
+    )
 
 
 def test_order_to_ability_map_derivation_matches_constant() -> None:

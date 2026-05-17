@@ -33,6 +33,7 @@ if TYPE_CHECKING:
     command_class=IssueLaunchSatellitesCommand,
     order_type=OrderType.LAUNCH_SATELLITES,
     category='action',
+    subcategories=frozenset({"planet_fms"}),
     execution_model='action',
     facade_helper_name='dispatch_issue_launch_satellites',
     serializer_codec='dict',

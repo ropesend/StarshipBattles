@@ -16,7 +16,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 0. Preflight + remaining-consumer inventory | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. Explicit `planet_fms` metadata + registry derivation | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Explicit `planet_fms` metadata + registry derivation | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Add `OrderMetadataView` (lazy, cycle-safe) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Migrate snapshot consumer (`action_time_resolver.py`) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate remaining production consumers | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -25,9 +25,9 @@
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 1
-**Last Action:** Phase 0 baseline captured — reader counts confirmed; manifest is a superset of test imports; 40 (not 41) `@command_spec` decorators total but the 5 FMS handlers are unambiguous
-**Next Action:** Start Phase 1 by writing the failing `test_exactly_five_specs_carry_planet_fms_subcategory` + `test_planet_fms_action_order_types_derivation_matches_constant` tests
+**Active Phase:** Phase 2
+**Last Action:** Phase 1 landed — 5 FMS handler specs tagged `subcategories=frozenset({"planet_fms"})`, `CommandRegistry.planet_fms_action_order_types()` derivation lives in `registry.py`, contract tests green (152 passed)
+**Next Action:** Phase 2 — write 7 failing tests for `OrderMetadataView`, then implement the lazy, cycle-safe facade
 **Blockers:** None
 
 ## Overview

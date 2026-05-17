@@ -307,6 +307,21 @@ class CommandRegistry:
             OrderType.DEACTIVATE_ABILITY,
         })
 
+    def planet_fms_action_order_types(self) -> frozenset[OrderType]:
+        """Derive the ``PLANET_FMS_ACTION_ORDER_TYPES`` set.
+
+        PROJ-424 Phase 1: the FMS-from-planet order set is now
+        data-driven from the explicit ``"planet_fms"`` subcategory tag
+        on each command spec rather than relying on a hardcoded list
+        keyed by handler filename. Adding a new FMS handler is a single
+        edit to that handler's ``@command_spec(...)`` declaration.
+        """
+        return frozenset(
+            s.order_type for s in self._specs.values()
+            if "planet_fms" in s.subcategories
+            and s.order_type is not None
+        )
+
     def order_to_ability_map(self) -> dict[OrderType, str]:
         """Map OrderType -> ability name for action-time lookups."""
         return {

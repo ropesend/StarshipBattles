@@ -26,6 +26,7 @@ from game.strategy.data.order_types import (
     ACTION_ORDER_TYPES,
     MOVEMENT_ORDER_TYPES,
     PLANET_ACTION_ORDER_TYPES,
+    PLANET_FMS_ACTION_ORDER_TYPES,
     Order,
     OrderType,
 )
@@ -112,6 +113,24 @@ def test_planet_action_order_types_contains_expected_members() -> None:
     assert PLANET_ACTION_ORDER_TYPES == frozenset(
         {OrderType.ACTIVATE_ABILITY, OrderType.DEACTIVATE_ABILITY}
     )
+
+
+def test_command_registry_planet_fms_action_order_types_derivation() -> None:
+    """``CommandRegistry.planet_fms_action_order_types()`` derives from the
+    ``subcategories`` tag and matches the existing PLANET_FMS frozenset.
+
+    PROJ-424 Phase 1: registry-side derivation contract. The view in
+    Phase 2 will read this through the lazy facade.
+    """
+    from game.strategy.engine.commands.registry import (
+        command_registry,
+        seed_default_commands,
+    )
+
+    if len(command_registry) == 0:
+        seed_default_commands(command_registry)
+    derived = command_registry.planet_fms_action_order_types()
+    assert derived == PLANET_FMS_ACTION_ORDER_TYPES
 
 
 def test_action_order_types_contains_all_known_members() -> None:

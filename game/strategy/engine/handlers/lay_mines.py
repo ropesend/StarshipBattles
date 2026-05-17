@@ -36,6 +36,7 @@ if TYPE_CHECKING:
     command_class=IssueLayMinesCommand,
     order_type=OrderType.LAY_MINES,
     category='action',
+    subcategories=frozenset({"planet_fms"}),
     execution_model='action',
     facade_helper_name='dispatch_issue_lay_mines',
     serializer_codec='dict',

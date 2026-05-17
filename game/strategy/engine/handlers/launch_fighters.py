@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     command_class=IssueLaunchFightersCommand,
     order_type=OrderType.LAUNCH_FIGHTERS,
     category='action',
+    subcategories=frozenset({"planet_fms"}),
     execution_model='action',
     facade_helper_name='dispatch_issue_launch_fighters',
     serializer_codec='dict',
