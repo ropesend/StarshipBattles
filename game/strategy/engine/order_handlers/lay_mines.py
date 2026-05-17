@@ -1,9 +1,9 @@
-"""LayMinesOrderHandler — PROJ-FMS-B Phase 1 + QA Observation B.
+"""LayMinesOrderHandler — PROJ-FMS-B + PROJ-431 Phase 2.
 
 Executes ``OrderType.LAY_MINES`` orders.
 
-QA Observation B refactor: the action is now polymorphic across two
-issuer kinds via :class:`IIssuerAdapter`:
+QA Observation B refactor: the action is polymorphic across two issuer
+kinds via :class:`IIssuerAdapter`:
 
   * Fleet-issued: the order's ``ship_instance_id`` selects a carrier
     ship in the issuing fleet; the adapter wraps that ``(fleet, ship)``
@@ -11,16 +11,14 @@ issuer kinds via :class:`IIssuerAdapter`:
     :class:`BayInventory` bay slot.
   * Planet-issued: the engine builds a
     :class:`PlanetStagingYardIssuerAdapter` and the mines come from
-    ``planet.staging_yard`` (still the legacy dict list pending 1d).
+    ``planet.staging_yard`` (still the legacy dict list).
 
-The two code paths share :meth:`_run_with_issuer` below; the public
-``execute_action_order(fleet, ...)`` entry kept for engine/registry
-compatibility builds the fleet adapter from the order payload.
-
-PROJ-431 Phase 1c: deposits into the synthetic mine-carrier route
-through ``ship.bay_inventory`` / ``ship.set_bay_inventory(...)``
-instead of mutating ``carried_items`` directly. The synthetic carrier
-itself is unchanged here — its removal lands in Phase 2.
+PROJ-431 Phase 2: mines now deposit into a typed :class:`MineGroup`
+attached to ``empire.deployed_groups``. The synthetic mine-carrier
+``ShipInstance`` (``mine_carrier_synthetic``) is deleted; the fake
+zero-HP ship is no longer constructed. ``empire.fleets`` carries only
+real fleets; the assembler and minefield resolver read mines off the
+``deployed_groups`` collection.
 
 Order ``target`` payload is a dict::
 
@@ -39,10 +37,10 @@ import random
 from typing import Any, Dict, List, Optional, TYPE_CHECKING, Tuple
 
 from game.core.hex_math import HexCoord
+from game.strategy.data.carried_vehicle import CarriedVehicle
+from game.strategy.data.deployed_group import MineGroup
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import OrderType
-from game.strategy.data.bay_inventory import BayInventory
-from game.strategy.data.carried_vehicle import CarriedVehicle
 from game.strategy.engine.issuer_adapter import (
     FleetShipIssuerAdapter,
     IIssuerAdapter,
@@ -255,43 +253,33 @@ class LayMinesOrderHandler(BaseOrderHandler):
                 ),
             )
 
-        mine_group = self._get_or_create_mine_group(
+        # PROJ-431 Phase 2: deposit into a fresh ``MineGroup``. Each
+        # IssueLayMinesCommand produces its own group — same-hex lays
+        # do NOT auto-merge (PROJ-FMS-B audit Fix 4).
+        mine_group = self._create_mine_group(
             empire=empire,
             target_hex=target_hex,
-            current_turn=self._extract_turn(galaxy),
         )
-        if not mine_group.ships:
-            self._seed_mine_group_carrier(mine_group, empire=empire)
-        # PROJ-431 Phase 1c: deposit through the typed BayInventory
-        # substrate. The fleet-path ``pop_carried`` returns typed
-        # ``CarriedVehicle`` instances; planet-path still returns dicts
-        # pending 1d, so accept both shapes.
-        synthetic_carrier = mine_group.ships[0]
-        current_bay = synthetic_carrier.bay_inventory
-        new_bay = list(current_bay.bay)
         for mine in popped:
             if isinstance(mine, CarriedVehicle):
-                new_bay.append(mine)
+                mine_group.mines.append(mine)
             elif isinstance(mine, dict):
-                new_bay.append(CarriedVehicle.from_dict(mine))
-        synthetic_carrier.set_bay_inventory(
-            BayInventory(bay=new_bay, pods=list(current_bay.pods))
-        )
+                mine_group.mines.append(CarriedVehicle.from_dict(mine))
 
-        existing_count = len(mine_group.mine_positions)
-        new_total = existing_count + len(popped)
-        if mine_group.scatter_seed is None:
-            mine_group.scatter_seed = _stable_scatter_seed(
-                seed_namespace=self._balance.scatter.seed_namespace,
-                owner_id=empire.id,
-                hex_coord=target_hex,
-                launch_turn=self._extract_turn(galaxy),
-            )
+        mine_group.scatter_seed = _stable_scatter_seed(
+            seed_namespace=self._balance.scatter.seed_namespace,
+            owner_id=empire.id,
+            hex_coord=target_hex,
+            launch_turn=self._extract_turn(galaxy),
+        )
         mine_group.mine_positions = _scatter_positions(
-            count=new_total,
+            count=len(mine_group.mines),
             seed=mine_group.scatter_seed,
             fallback_radius_m=self._balance.scatter.fallback_radius_m,
         )
+
+        # Attach to the empire's deployed_groups collection.
+        empire.deployed_groups.append(mine_group)
 
         order_owner.pop_order()
 
@@ -302,7 +290,7 @@ class LayMinesOrderHandler(BaseOrderHandler):
             mine_design_id,
             target_hex,
             mine_group.id,
-            len(mine_group.ships[0].bay_inventory.bay) if mine_group.ships else 0,
+            len(mine_group.mines),
         )
         try:
             self._emit_event(
@@ -340,57 +328,44 @@ class LayMinesOrderHandler(BaseOrderHandler):
                 return t
         return 0
 
-    def _get_or_create_mine_group(
+    def _create_mine_group(
         self,
         empire: "Empire",
         target_hex: HexCoord,
-        current_turn: int,
-    ) -> Fleet:
-        """Create a fresh ``mine_group`` Fleet for this lay action.
+    ) -> MineGroup:
+        """Create a fresh ``MineGroup`` for this lay action.
 
-        PROJ-FMS-B audit Fix 4: each ``IssueLayMinesCommand`` produces
-        its own mine_group — same-hex lays do NOT auto-merge.
+        PROJ-FMS-B audit Fix 4 + PROJ-431 Phase 2: each
+        ``IssueLayMinesCommand`` produces its own group — same-hex lays
+        do NOT auto-merge.
         """
-        new_id = self._mint_fleet_id(empire)
-        group = Fleet(
-            fleet_id=new_id,
+        new_id = self._mint_deployed_group_id(empire)
+        return MineGroup(
+            group_id=new_id,
             owner_id=empire.id,
             location=target_hex,
-            speed=0.0,
             display_name=f"Minefield {new_id}",
-            group_kind="mine_group",
+            sensitivity="MED",
+            expected_hit_chance_threshold=float(
+                self._balance.laserhead.default_threshold
+            ),
         )
-        group.sensitivity = "MED"
-        group.expected_hit_chance_threshold = float(
-            self._balance.laserhead.default_threshold
-        )
-        empire.fleets.append(group)
-        return group
 
     @staticmethod
-    def _mint_fleet_id(empire: "Empire") -> int:
-        existing = {f.id for f in empire.fleets if isinstance(f.id, int)}
+    def _mint_deployed_group_id(empire: "Empire") -> int:
+        """Mint a deployed-group id that does not clash with existing
+        fleets or deployed groups belonging to this empire.
+        """
+        existing = {
+            f.id for f in empire.fleets if isinstance(f.id, int)
+        }
+        existing.update(
+            g.id for g in empire.deployed_groups if isinstance(g.id, int)
+        )
         candidate = 100000
         while candidate in existing:
             candidate += 1
         return candidate
-
-    @staticmethod
-    def _seed_mine_group_carrier(mine_group: Fleet, empire: "Empire") -> None:
-        """Ensure the mine_group has its single synthetic carrier ship."""
-        from game.strategy.data.ship_instance import ShipInstance
-
-        carrier = ShipInstance(
-            instance_id=f"mine_carrier_{mine_group.id}",
-            design_id="mine_carrier_synthetic",
-            name=f"Minefield {mine_group.id} Carrier",
-            owner_id=empire.id,
-            design_data={"name": "Mine Carrier", "vehicle_class": "Mine"},
-            current_hp=0,
-        )
-        carrier.is_alive = True
-        carrier.is_derelict = False
-        mine_group.ships.append(carrier)
 
 
 __all__ = ["LayMinesOrderHandler"]

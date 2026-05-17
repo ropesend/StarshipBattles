@@ -110,8 +110,9 @@ def setup_empire_and_fleet():
     )
     fleet.ships.append(carrier)
 
+    # PROJ-431 Phase 2: empire carries a typed ``deployed_groups`` list.
     empire = SimpleNamespace(
-        id=42, name="E42", fleets=[fleet],
+        id=42, name="E42", fleets=[fleet], deployed_groups=[],
     )
     galaxy = SimpleNamespace(current_turn=1)
     return empire, fleet, carrier, galaxy
@@ -136,14 +137,16 @@ def test_lay_mines_creates_mine_group(setup_empire_and_fleet):
     assert result.success
     assert len(carrier.carried_items) == 2  # 5 - 3
 
-    mine_groups = [
-        f for f in empire.fleets if getattr(f, "group_kind", "fleet") == "mine_group"
-    ]
+    # PROJ-431 Phase 2: mines now deposit into ``empire.deployed_groups``
+    # as a typed ``MineGroup``, NOT a synthetic-carrier ``Fleet``.
+    from game.strategy.data.deployed_group import MineGroup
+    mine_groups = empire.deployed_groups
     assert len(mine_groups) == 1
     mg = mine_groups[0]
+    assert isinstance(mg, MineGroup)
     assert mg.location == fleet.location
     assert mg.owner_id == empire.id
-    assert len(mg.ships[0].carried_items) == 3
+    assert len(mg.mines) == 3
     # Scatter coords populated.
     assert len(mg.mine_positions) == 3
     assert mg.scatter_seed is not None
@@ -168,10 +171,7 @@ def test_insufficient_mines_fails_cleanly(setup_empire_and_fleet):
     # No partial consumption.
     assert len(carrier.carried_items) == 5
     # No mine_group created.
-    mine_groups = [
-        f for f in empire.fleets if getattr(f, "group_kind", "fleet") == "mine_group"
-    ]
-    assert mine_groups == []
+    assert empire.deployed_groups == []
 
 
 def test_same_hex_lays_do_not_auto_merge(setup_empire_and_fleet):
@@ -202,12 +202,10 @@ def test_same_hex_lays_do_not_auto_merge(setup_empire_and_fleet):
     }))
     handler.execute_action_order(fleet, empire, galaxy)
 
-    mine_groups = [
-        f for f in empire.fleets if getattr(f, "group_kind", "fleet") == "mine_group"
-    ]
+    mine_groups = empire.deployed_groups
     # Two separate lay actions => two distinct mine_groups (no auto-merge).
     assert len(mine_groups) == 2
-    counts = sorted(len(mg.ships[0].carried_items) for mg in mine_groups)
+    counts = sorted(len(mg.mines) for mg in mine_groups)
     assert counts == [2, 2]
 
 
@@ -228,11 +226,9 @@ def test_three_separate_lays_at_same_hex_produce_three_groups(setup_empire_and_f
         }))
         handler.execute_action_order(fleet, empire, galaxy)
 
-    mine_groups = [
-        f for f in empire.fleets if getattr(f, "group_kind", "fleet") == "mine_group"
-    ]
+    mine_groups = empire.deployed_groups
     assert len(mine_groups) == 3
-    # Each group must have a unique fleet_id.
+    # Each group must have a unique group id.
     assert len({mg.id for mg in mine_groups}) == 3
 
 
@@ -246,7 +242,7 @@ def test_scatter_seed_is_deterministic(setup_empire_and_fleet):
         "target_hex": fleet.location,
     }))
     handler.execute_action_order(fleet, empire, galaxy)
-    mg1 = [f for f in empire.fleets if getattr(f, "group_kind", "fleet") == "mine_group"][0]
+    mg1 = empire.deployed_groups[0]
     positions_run_1 = list(mg1.mine_positions)
 
     # Build a fresh empire with identical inputs — same seed → same positions.
@@ -256,7 +252,9 @@ def test_scatter_seed_is_deterministic(setup_empire_and_fleet):
         carrier2.carried_items.append(_make_mine_dict("mine_warhead_small"))
     fleet2 = Fleet(fleet_id=2, owner_id=42, location=hex_c, speed=5.0)
     fleet2.ships.append(carrier2)
-    empire2 = SimpleNamespace(id=42, name="E42", fleets=[fleet2])
+    empire2 = SimpleNamespace(
+        id=42, name="E42", fleets=[fleet2], deployed_groups=[],
+    )
     galaxy2 = SimpleNamespace(current_turn=1)
     fleet2.add_order(Order(OrderType.LAY_MINES, target={
         "ship_instance_id": carrier2.instance_id,
@@ -265,7 +263,7 @@ def test_scatter_seed_is_deterministic(setup_empire_and_fleet):
         "target_hex": hex_c,
     }))
     handler.execute_action_order(fleet2, empire2, galaxy2)
-    mg2 = [f for f in empire2.fleets if getattr(f, "group_kind", "fleet") == "mine_group"][0]
+    mg2 = empire2.deployed_groups[0]
     positions_run_2 = list(mg2.mine_positions)
 
     assert positions_run_1 == positions_run_2, "Scatter must be deterministic per seed"
