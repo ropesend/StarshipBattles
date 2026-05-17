@@ -245,11 +245,16 @@ class TestConstructorSignature:
 
 
 class TestEventRouterContract:
-    """`StrategyEventRouter.has_modal_open()` reads the slots directly.
+    """`StrategyEventRouter.has_modal_open()` no longer scans window slots.
 
-    This test guards the read-side contract: each slot it reads must be
-    declared by the composer. If a slot is renamed or removed, this test
-    fails before integration.
+    PROJ-313 Phases 3-6 migrated every formerly-scanned slot to
+    `StrategyModalWindow`; the live modal set is now read via
+    `wm.iter_live_modals()`. The only surviving slot-style check is the
+    base case below (no menu panel, no build-queue screen, no live
+    modals -> not modal). Per-slot True-flip coverage now lives in
+    the StrategyModalWindow tests (e.g. `test_strategy_modal_window.py`,
+    `test_strategy_event_router_esc_modal.py`,
+    `test_strategy_event_router_load_dialog_modal_tracking.py`).
     """
 
     def test_has_modal_open_finds_no_modals_when_all_slots_none(
@@ -265,36 +270,6 @@ class TestEventRouterContract:
 
         router = StrategyEventRouter(ui)
         assert router.has_modal_open() is False
-
-    @pytest.mark.parametrize(
-        "slot",
-        sorted(
-            EXPECTED_WINDOW_SLOTS - {"settings_window"} - PROJ_313_MIGRATED_SLOTS
-        ),
-        # `settings_window` is intentionally NOT scanned by has_modal_open
-        # today (the SettingsWindow has its own modal-blocking via the
-        # settings flow). PROJ_313_MIGRATED_SLOTS are tracked via
-        # wm.iter_live_modals() instead of slot scans. All other slots
-        # flip has_modal_open to True.
-    )
-    def test_has_modal_open_returns_true_when_slot_set(
-        self, window_manager, mock_scene, slot
-    ) -> None:
-        from game.ui.screens.strategy_event_router import StrategyEventRouter
-
-        ui = Mock()
-        ui.window_manager = window_manager
-        ui.menu_panel = None
-        ui.scene = mock_scene
-        ui.scene.build_queue_screen = None
-
-        setattr(window_manager, slot, Mock())
-
-        router = StrategyEventRouter(ui)
-        assert router.has_modal_open() is True, (
-            f"has_modal_open() did not return True with {slot} set; "
-            f"the slot may have been dropped from the modal-detection scan."
-        )
 
 
 # Slots that StrategyEventRouter._handle_window_close clears directly when

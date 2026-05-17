@@ -173,15 +173,24 @@ class TestShipResourceConsumption:
             registries=fresh_registries
         )
 
-        # Ship should have some resource capacity from components
-        # (exact values depend on component data)
+        # Add real ResourceStorage-bearing components so the ship's resource
+        # registry hydrates with non-zero capacities. `fuel_tank` and `battery`
+        # are production components carrying ResourceStorage abilities (see
+        # data/components.json).
+        fuel_tank = create_component("fuel_tank", registries=fresh_registries)
+        battery = create_component("battery", registries=fresh_registries)
+        assert fuel_tank is not None, "fuel_tank component must exist in registry"
+        assert battery is not None, "battery component must exist in registry"
+        ship.add_component(fuel_tank, LayerType.OUTER)
+        ship.add_component(battery, LayerType.OUTER)
+        ship.recalculate_stats()
+
         fuel_max = ship.resources.get_max_value("fuel")
         energy_max = ship.resources.get_max_value("energy")
 
-        # At least one should be > 0 if components have resource abilities
-        # Skip if no resource abilities in test components
-        if fuel_max == 0 and energy_max == 0:
-            pytest.skip("Test components don't have ResourceStorage abilities")
+        # Both ResourceStorage components should contribute capacity.
+        assert fuel_max > 0, "fuel_tank should hydrate non-zero fuel capacity"
+        assert energy_max > 0, "battery should hydrate non-zero energy capacity"
 
     def test_ship_resource_consumption_reduces_current_value(self, fresh_registries):
         """Consuming ship resources reduces current value."""

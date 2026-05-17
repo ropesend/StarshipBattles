@@ -460,26 +460,33 @@ class TestSaveLoadPreservesFleetRegistry:
         """Fleets removed after save/load are automatically unregistered."""
         session = small_game_session
 
+        # A fresh GameSession starts empires with colonies but no fleets,
+        # so we explicitly seed one before the save/load cycle to exercise
+        # the post-restore removal path. Constructed inline rather than
+        # via a shared save fixture to keep this test self-contained.
+        pre_save_empire = session.empires[0]
+        seeded_fleet = Fleet(8888, pre_save_empire.id, HexCoord(3, 3), speed=15.0)
+        seeded_fleet.ships = [
+            make_mock_ship_instance(
+                "Scout", pre_save_empire.id, registries=fresh_registries
+            )
+        ]
+        pre_save_empire.add_fleet(seeded_fleet)
+
         data = session.to_dict()
         restored = GameSession.from_dict(data)
 
-        # Find an empire with at least one fleet
-        empire = None
-        target_fleet = None
-        for emp in restored.empires:
-            if emp.fleets:
-                empire = emp
-                target_fleet = emp.fleets[0]
-                break
-
-        if empire is None or target_fleet is None:
-            pytest.skip("No fleets in restored session to test removal")
+        # Locate the same fleet in the restored session.
+        restored_empire = next(
+            emp for emp in restored.empires if emp.id == pre_save_empire.id
+        )
+        target_fleet = next(f for f in restored_empire.fleets if f.id == 8888)
 
         fleet_id = target_fleet.id
         _assert_registered(restored.galaxy, target_fleet)
 
         # Remove fleet
-        empire.remove_fleet(target_fleet)
+        restored_empire.remove_fleet(target_fleet)
 
         # Should be unregistered
         _assert_not_registered(restored.galaxy, fleet_id)

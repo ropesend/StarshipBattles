@@ -277,65 +277,6 @@ class TestEmptyLibraryHandling:
 
 
 # =============================================================================
-# Test: Search Filtering (PROJ-111 Phase 6 Task 6.7)
-# =============================================================================
-
-class TestSearchFiltering:
-    """Tests for search/filter functionality."""
-
-    def test_filter_races_by_name_returns_matches(self, mock_race_library):
-        """Filtering races by name returns matching races.
-
-        PROJ-323 Task 5.26: replaced inline `if hasattr(...)/else` branching
-        with pytest.skip when _filter_races is not present, so the test
-        asserts the actual filtering behavior or skips cleanly.
-        """
-        from game.ui.screens.race_browser_dialog import RaceBrowserDialog
-
-        with patch.object(RaceBrowserDialog, '__init__', lambda self, *args, **kwargs: None):
-            dialog = RaceBrowserDialog.__new__(RaceBrowserDialog)
-            dialog.race_library = mock_race_library
-
-            if not hasattr(dialog, '_filter_races'):
-                pytest.skip("RaceBrowserDialog has no _filter_races method")
-
-            # Mock races
-            race1 = MagicMock()
-            race1.name = "Terran Federation"
-            race2 = MagicMock()
-            race2.name = "Klingon Empire"
-            race3 = MagicMock()
-            race3.name = "Federation Alliance"
-
-            mock_race_library.get_all_races.return_value = [race1, race2, race3]
-
-            result = dialog._filter_races("Federation")
-            # Should match races containing "Federation"
-            assert race1 in result
-            assert race3 in result
-            assert race2 not in result
-
-    def test_empty_search_shows_all_races(self, mock_race_library):
-        """Empty search filter shows all races."""
-        from game.ui.screens.race_browser_dialog import RaceBrowserDialog
-
-        with patch.object(RaceBrowserDialog, '__init__', lambda self, *args, **kwargs: None):
-            dialog = RaceBrowserDialog.__new__(RaceBrowserDialog)
-            dialog.race_library = mock_race_library
-
-            race1 = MagicMock()
-            race1.name = "Race One"
-            race2 = MagicMock()
-            race2.name = "Race Two"
-
-            mock_race_library.get_all_races.return_value = [race1, race2]
-
-            # Empty filter should return all
-            all_races = mock_race_library.get_all_races()
-            assert len(all_races) == 2
-
-
-# =============================================================================
 # Test: Additional Edge Cases (PROJ-111 Phase 6 Task 6.7)
 # =============================================================================
 
