@@ -16,6 +16,8 @@ from types import SimpleNamespace
 import pytest
 
 from game.core.hex_math import HexCoord
+from game.strategy.data.bay_inventory import BayInventory
+from game.strategy.data.carried_vehicle import CarriedVehicle
 from game.strategy.data.fleet import Fleet
 from game.strategy.engine.minefield_balance import MinefieldBalance
 from game.strategy.engine.minefield_resolver import (
@@ -46,12 +48,28 @@ class _StubShip:
         self.current_hp = int(max_hp)
         self.is_alive = True
         self.is_derelict = False
-        self.carried_items = []
+        # PROJ-431 Phase 1b: stub uses the typed BayInventory substrate.
+        self._bay_inventory = BayInventory()
         self._size_diameter = size_diameter
         self._accel = accel
         self._turn_speed = turn_speed
         self._defense = total_defense_score
         self.owner_id = 0
+
+    @property
+    def bay_inventory(self) -> BayInventory:
+        # Return a fresh projection mirroring ShipInstance.bay_inventory
+        # (callers should not mutate the returned lists directly).
+        return BayInventory(
+            bay=list(self._bay_inventory.bay),
+            pods=list(self._bay_inventory.pods),
+        )
+
+    def set_bay_inventory(self, bay_inventory: BayInventory) -> None:
+        self._bay_inventory = BayInventory(
+            bay=list(bay_inventory.bay),
+            pods=list(bay_inventory.pods),
+        )
 
     def get_calculated_stats(self):
         return {
@@ -155,7 +173,9 @@ def _make_mine_group_at(
     group.expected_hit_chance_threshold = threshold
     carrier = _StubShip(f"mine_carrier_{fleet_id}", max_hp=10.0)
     carrier.owner_id = owner_id
-    carrier.carried_items = list(mine_dicts)
+    carrier.set_bay_inventory(
+        BayInventory(bay=[CarriedVehicle.from_dict(m) for m in mine_dicts])
+    )
     group.ships.append(carrier)
     return group
 
@@ -308,7 +328,7 @@ def test_friendly_fleet_does_not_trigger_mines():
     r = MinefieldResolver(rng=random.Random(0))
     result = r.resolve_minefield_entry(galaxy=None, empires=[emp], fleet=fleet)
     assert result.detonations == []
-    assert len(mg.ships[0].carried_items) == 5  # mines untouched
+    assert len(mg.ships[0].bay_inventory.bay) == 5  # mines untouched
 
 
 def test_warhead_pass_consumes_one_mine_on_trigger():
@@ -336,7 +356,7 @@ def test_warhead_pass_consumes_one_mine_on_trigger():
     # In a forced-trigger run with 5 warhead mines the resolver triggers
     # at most once per ship per group.
     assert len([d for d in result.detonations if d.pass_kind == "warhead"]) == 1
-    assert len(mg.ships[0].carried_items) == 4
+    assert len(mg.ships[0].bay_inventory.bay) == 4
     assert ship.current_hp < 400  # damage applied
 
 
@@ -443,7 +463,7 @@ def test_laserhead_skipped_below_threshold():
     ]
     assert laserhead_detonations == []
     # Laserhead NOT consumed.
-    assert len(mg.ships[0].carried_items) == 1
+    assert len(mg.ships[0].bay_inventory.bay) == 1
 
 
 def test_laserhead_fires_above_threshold():
@@ -474,7 +494,7 @@ def test_laserhead_fires_above_threshold():
     assert len(laserhead_detonations) == 1
     assert laserhead_detonations[0].hit
     # Laserhead consumed.
-    assert len(mg.ships[0].carried_items) == 0
+    assert len(mg.ships[0].bay_inventory.bay) == 0
 
 
 def test_laserhead_threshold_zero_always_fires():
@@ -499,7 +519,7 @@ def test_laserhead_threshold_zero_always_fires():
     )
     lh = [d for d in result.detonations if d.pass_kind == "laserhead"]
     assert len(lh) == 2
-    assert len(mg.ships[0].carried_items) == 0  # both consumed
+    assert len(mg.ships[0].bay_inventory.bay) == 0  # both consumed
 
 
 def test_laserhead_threshold_one_never_fires():
@@ -521,7 +541,7 @@ def test_laserhead_threshold_one_never_fires():
     lh = [d for d in result.detonations if d.pass_kind == "laserhead"]
     assert lh == []
     # Nothing consumed.
-    assert len(mg.ships[0].carried_items) == 2
+    assert len(mg.ships[0].bay_inventory.bay) == 2
 
 
 def test_per_ship_interleaving_warhead_then_laserhead():

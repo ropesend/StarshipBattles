@@ -12,10 +12,14 @@ implementations:
 
 - :class:`FleetShipIssuerAdapter` wraps the existing
   ``(Fleet, ShipInstance)`` shape so order handlers can keep operating
-  through one accessor surface.
+  through one accessor surface. PROJ-431 Phase 1b routes all reads &
+  writes through :attr:`ShipInstance.bay_inventory` /
+  :meth:`ShipInstance.set_bay_inventory` instead of the legacy
+  ``carried_items`` mixed list.
 - :class:`PlanetStagingYardIssuerAdapter` wraps a :class:`Planet`'s
   ``staging_yard`` so the same handlers can serve planet-issued FMS
-  actions without a parallel handler family.
+  actions without a parallel handler family. The staging yard is
+  out-of-scope for PROJ-431 Phase 1b and remains a dict list for now.
 
 The adapter intentionally exposes the *minimum* set of fields the five
 handlers touch today. New ops must extend this surface explicitly so the
@@ -26,6 +30,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, List, Optional, Protocol, runtime_checkable
 
 from game.core.hex_math import HexCoord
+from game.strategy.data.bay_inventory import BayInventory, DropPod
 from game.strategy.data.carried_vehicle import CarriedVehicle
 
 if TYPE_CHECKING:
@@ -105,9 +110,24 @@ class IIssuerAdapter(Protocol):
 
 
 def _matches(item: Any, vehicle_type: str, design_id: Optional[str]) -> bool:
-    """Shared filter predicate used by both adapters."""
+    """Shared filter predicate used by both adapters.
+
+    Accepts both raw dict items (planet staging yard — pre-Phase-1b
+    substrate) and typed :class:`CarriedVehicle` instances (fleet-ship
+    bay — Phase-1b substrate).
+    """
     cv = CarriedVehicle.from_any(item)
     if cv is None or cv.vehicle_type != vehicle_type:
+        return False
+    if design_id and design_id != "auto":
+        if cv.design_id != design_id:
+            return False
+    return True
+
+
+def _cv_matches(cv: CarriedVehicle, vehicle_type: str, design_id: Optional[str]) -> bool:
+    """Typed predicate for the fleet-ship adapter's bay reads."""
+    if cv.vehicle_type != vehicle_type:
         return False
     if design_id and design_id != "auto":
         if cv.design_id != design_id:
@@ -118,8 +138,14 @@ def _matches(item: Any, vehicle_type: str, design_id: Optional[str]) -> bool:
 class FleetShipIssuerAdapter:
     """IIssuerAdapter wrapping a fleet + carrier ship.
 
-    Mirrors the legacy contract of the FMS order handlers: pop / append
-    against ``ship.carried_items``; location/owner/label from the fleet.
+    PROJ-431 Phase 1b: reads and writes route through the typed
+    :class:`BayInventory` substrate
+    (``ship.bay_inventory`` / ``ship.set_bay_inventory(...)``) instead
+    of the legacy ``carried_items`` mixed list. ``pop_carried`` still
+    returns dict items so the FMS order handlers (out of scope for 1b)
+    continue to operate on their existing dict contract; ``append_carried``
+    accepts both dict and :class:`CarriedVehicle` inputs so callers can
+    migrate independently.
     """
 
     def __init__(self, fleet: "Fleet", ship: "ShipInstance") -> None:
@@ -155,20 +181,26 @@ class FleetShipIssuerAdapter:
         design_id: Optional[str],
         count: Optional[int],
     ) -> List[Any]:
-        target = self._ship.carried_items
-        popped: List[Any] = []
-        remaining: List[Any] = []
+        # PROJ-431 Phase 1b: pop from the typed BayInventory.bay slot;
+        # pods are kept untouched on the pods slot. Returned items are
+        # serialised back to dicts so out-of-scope handler callers keep
+        # their existing dict contract.
+        current = self._ship.bay_inventory
+        popped: List[CarriedVehicle] = []
+        remaining_bay: List[CarriedVehicle] = []
         limit = count if (count is not None and count >= 0) else None
-        for item in target:
+        for cv in current.bay:
             if limit is not None and len(popped) >= limit:
-                remaining.append(item)
+                remaining_bay.append(cv)
                 continue
-            if _matches(item, vehicle_type, design_id):
-                popped.append(item)
+            if _cv_matches(cv, vehicle_type, design_id):
+                popped.append(cv)
             else:
-                remaining.append(item)
-        self._ship.carried_items = remaining
-        return popped
+                remaining_bay.append(cv)
+        self._ship.set_bay_inventory(
+            BayInventory(bay=remaining_bay, pods=list(current.pods))
+        )
+        return [cv.to_dict() for cv in popped]
 
     def count_carried(
         self,
@@ -176,14 +208,40 @@ class FleetShipIssuerAdapter:
         design_id: Optional[str],
     ) -> int:
         return sum(
-            1 for item in self._ship.carried_items
-            if _matches(item, vehicle_type, design_id)
+            1 for cv in self._ship.bay_inventory.bay
+            if _cv_matches(cv, vehicle_type, design_id)
         )
 
     def append_carried(self, items: List[Any]) -> int:
+        # PROJ-431 Phase 1b: route writes through the typed BayInventory.
+        # Items arrive from out-of-scope handlers as dicts (vehicle dicts
+        # or pod dicts) or as already-typed CarriedVehicle instances;
+        # accept both and route each into the correct typed slot.
+        current = self._ship.bay_inventory
+        new_bay = list(current.bay)
+        new_pods = list(current.pods)
+        appended = 0
         for item in items:
-            self._ship.carried_items.append(item)
-        return len(items)
+            if isinstance(item, CarriedVehicle):
+                new_bay.append(item)
+                appended += 1
+                continue
+            cv = CarriedVehicle.from_any(item)
+            if cv is not None:
+                new_bay.append(cv)
+                appended += 1
+                continue
+            if isinstance(item, DropPod):
+                new_pods.append(item)
+                appended += 1
+                continue
+            if isinstance(item, dict):
+                # Drop-pod-shaped dict (or other non-vehicle payload) —
+                # preserve in the pods slot.
+                new_pods.append(DropPod.from_dict(item))
+                appended += 1
+        self._ship.set_bay_inventory(BayInventory(bay=new_bay, pods=new_pods))
+        return appended
 
     def append_recovered(self, vehicle: CarriedVehicle) -> bool:
         cargo_mgr = getattr(self._ship, "_cargo_mgr", None)

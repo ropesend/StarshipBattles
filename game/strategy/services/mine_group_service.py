@@ -16,6 +16,7 @@ import logging
 from typing import Any, Dict, List, Tuple
 
 from game.core.validation import ValidationResult
+from game.strategy.data.bay_inventory import BayInventory
 from game.strategy.data.carried_vehicle import CarriedVehicle
 
 logger = logging.getLogger(__name__)
@@ -70,9 +71,9 @@ class MineGroupService:
         if not self._is_mine_group(mine_group) or not mine_group.ships:
             return {}
         counts: Dict[str, int] = {}
-        for item in mine_group.ships[0].carried_items:
-            cv = CarriedVehicle.from_any(item)
-            if cv is None or cv.vehicle_type != "mine":
+        # PROJ-431 Phase 1b: read through the typed BayInventory substrate.
+        for cv in mine_group.ships[0].bay_inventory.bay:
+            if cv.vehicle_type != "mine":
                 continue
             counts[cv.design_id] = counts.get(cv.design_id, 0) + 1
         return counts
@@ -101,28 +102,32 @@ class MineGroupService:
             return ValidationResult.error("mine_group has no carrier ship.")
 
         carrier = mine_group.ships[0]
-        remaining: List[Any] = []
+        # PROJ-431 Phase 1b: read & write through the typed BayInventory
+        # substrate. The bay is homogeneous CarriedVehicle (mines on a
+        # mine_group never carry pods), so no from_any() discrimination
+        # is needed.
+        current_bay = carrier.bay_inventory.bay
+        remaining_bay: List[CarriedVehicle] = []
         budget: Dict[str, int] = {
             k: max(0, int(v)) for k, v in (selections or {}).items()
         }
         destroyed = 0
-        for item in carrier.carried_items:
-            cv = CarriedVehicle.from_any(item)
-            design = cv.design_id if (cv and cv.vehicle_type == "mine") else None
+        for cv in current_bay:
+            design = cv.design_id if cv.vehicle_type == "mine" else None
             if design and budget.get(design, 0) > 0:
                 budget[design] -= 1
                 destroyed += 1
                 continue
-            remaining.append(item)
-        carrier.carried_items = remaining
+            remaining_bay.append(cv)
+        carrier.set_bay_inventory(BayInventory(bay=remaining_bay))
 
         # Re-sync mine_positions so they stay consistent with inventory.
-        new_count = len(remaining)
+        new_count = len(remaining_bay)
         if new_count < len(mine_group.mine_positions):
             mine_group.mine_positions = mine_group.mine_positions[:new_count]
 
         # Drop the mine_group entirely if empty.
-        if not remaining:
+        if not remaining_bay:
             try:
                 empire.fleets.remove(mine_group)
             except (ValueError, AttributeError):

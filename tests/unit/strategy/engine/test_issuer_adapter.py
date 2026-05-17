@@ -11,6 +11,7 @@ from types import SimpleNamespace
 import pytest
 
 from game.core.hex_math import HexCoord
+from game.strategy.data.bay_inventory import BayInventory
 from game.strategy.data.carried_vehicle import CarriedVehicle
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.planet import Planet, PlanetType
@@ -51,10 +52,33 @@ class _StubShip:
         self.name = "Carrier"
         self.design_data = {}
         self.current_hp = 100
-        self.carried_items: list[dict] = []
+        # PROJ-431 Phase 1b: stub uses the typed BayInventory substrate.
+        self._bay_inventory = BayInventory()
         self.is_alive = True
         self.is_derelict = False
         self._cargo_mgr = None  # filled in tests as needed
+
+    @property
+    def bay_inventory(self) -> BayInventory:
+        return BayInventory(
+            bay=list(self._bay_inventory.bay),
+            pods=list(self._bay_inventory.pods),
+        )
+
+    def set_bay_inventory(self, bay_inventory: BayInventory) -> None:
+        self._bay_inventory = BayInventory(
+            bay=list(bay_inventory.bay),
+            pods=list(bay_inventory.pods),
+        )
+
+    def _seed_bay_dicts(self, items: list[dict]) -> None:
+        """Test helper: seed the bay from a list of vehicle/pod dicts."""
+        bay: list[CarriedVehicle] = []
+        for d in items:
+            cv = CarriedVehicle.from_any(d)
+            if cv is not None:
+                bay.append(cv)
+        self._bay_inventory = BayInventory(bay=bay)
 
 
 def _make_fleet(carrier: _StubShip, hex_c: HexCoord) -> Fleet:
@@ -106,12 +130,12 @@ def test_fleet_adapter_location_owner_label():
 
 def test_fleet_adapter_pop_carried_filters_by_type_and_design():
     carrier = _StubShip()
-    carrier.carried_items = [
+    carrier._seed_bay_dicts([
         _mine_dict("mine_a"),
         _mine_dict("mine_b"),
         _fighter_dict(),
         _mine_dict("mine_a"),
-    ]
+    ])
     fleet = _make_fleet(carrier, HexCoord(0, 0))
     a = FleetShipIssuerAdapter(fleet, carrier)
 
@@ -119,25 +143,26 @@ def test_fleet_adapter_pop_carried_filters_by_type_and_design():
     assert len(popped) == 2
     assert all(p["design_id"] == "mine_a" for p in popped)
     # remaining: 1 mine_b + 1 fighter
-    assert len(carrier.carried_items) == 2
+    assert len(carrier.bay_inventory.bay) == 2
 
 
 def test_fleet_adapter_pop_all_when_count_none():
     carrier = _StubShip()
-    carrier.carried_items = [_mine_dict(), _mine_dict(), _fighter_dict()]
+    carrier._seed_bay_dicts([_mine_dict(), _mine_dict(), _fighter_dict()])
     fleet = _make_fleet(carrier, HexCoord(0, 0))
     a = FleetShipIssuerAdapter(fleet, carrier)
 
     popped = a.pop_carried("mine", None, count=None)
     assert len(popped) == 2
     # leaves the fighter alone
-    assert len(carrier.carried_items) == 1
-    assert carrier.carried_items[0]["vehicle_type"] == "fighter"
+    remaining = carrier.bay_inventory.bay
+    assert len(remaining) == 1
+    assert remaining[0].vehicle_type == "fighter"
 
 
 def test_fleet_adapter_count_carried():
     carrier = _StubShip()
-    carrier.carried_items = [_mine_dict(), _mine_dict("mine_b"), _fighter_dict()]
+    carrier._seed_bay_dicts([_mine_dict(), _mine_dict("mine_b"), _fighter_dict()])
     fleet = _make_fleet(carrier, HexCoord(0, 0))
     a = FleetShipIssuerAdapter(fleet, carrier)
     assert a.count_carried("mine", None) == 2
@@ -153,7 +178,7 @@ def test_fleet_adapter_append_carried_roundtrip():
     items = [_mine_dict(), _mine_dict()]
     n = a.append_carried(items)
     assert n == 2
-    assert len(carrier.carried_items) == 2
+    assert len(carrier.bay_inventory.bay) == 2
 
 
 # --------------------------------------------------------------------- planet adapter

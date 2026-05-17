@@ -16,6 +16,8 @@ from types import SimpleNamespace
 import pytest
 
 from game.core.hex_math import HexCoord
+from game.strategy.data.bay_inventory import BayInventory, DropPod
+from game.strategy.data.carried_vehicle import CarriedVehicle
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
 from game.strategy.engine.order_handlers.launch_satellites import (
@@ -24,7 +26,13 @@ from game.strategy.engine.order_handlers.launch_satellites import (
 
 
 class _StubShipInstance:
-    """Minimal stand-in for a ShipInstance carrier."""
+    """Minimal stand-in for a ShipInstance carrier.
+
+    Mirrors :class:`ShipInstance`'s PROJ-431 typed bay surface: the
+    ``bay_inventory`` property is a fresh projection over
+    ``self.carried_items``; ``set_bay_inventory`` writes back through
+    ``carried_items`` so legacy assertions on the dict list still work.
+    """
 
     def __init__(self, instance_id: str, owner_id: int = 0):
         self.instance_id = instance_id
@@ -35,7 +43,33 @@ class _StubShipInstance:
         self.current_hp = 100
         self.is_alive = True
         self.is_derelict = False
-        self.carried_items = []
+        self.carried_items: list[dict] = []
+
+    @property
+    def bay_inventory(self) -> BayInventory:
+        bay: list[CarriedVehicle] = []
+        pods: list[DropPod] = []
+        for item in self.carried_items:
+            cv = CarriedVehicle.from_any(item)
+            if cv is not None:
+                bay.append(cv)
+            elif isinstance(item, dict):
+                pods.append(DropPod.from_dict(item))
+        return BayInventory(bay=bay, pods=pods)
+
+    def set_bay_inventory(self, bay_inventory: BayInventory) -> None:
+        new_items: list = []
+        for cv in bay_inventory.bay:
+            new_items.append(cv.to_dict())
+        for pod in bay_inventory.pods:
+            entry = {
+                "design_id": pod.design_id,
+                "design_data": pod.design_data,
+                "mass": pod.mass,
+            }
+            entry.update(pod.payload)
+            new_items.append(entry)
+        self.carried_items = new_items
 
 
 def _make_satellite_dict(design_id: str, hp: int = 80, mass: float = 30.0):

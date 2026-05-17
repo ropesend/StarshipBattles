@@ -6,18 +6,41 @@ from types import SimpleNamespace
 import pytest
 
 from game.core.hex_math import HexCoord
+from game.strategy.data.bay_inventory import BayInventory
+from game.strategy.data.carried_vehicle import CarriedVehicle
 from game.strategy.data.fleet import Fleet
 from game.strategy.services.mine_group_service import MineGroupService
 
 
-def _mine_dict(design_id: str):
-    return {
-        "design_id": design_id,
-        "design_data": {"name": design_id, "layers": {}},
-        "vehicle_type": "mine",
-        "mass": 5.0,
-        "current_hp": 30,
-    }
+def _mine_cv(design_id: str) -> CarriedVehicle:
+    return CarriedVehicle(
+        design_id=design_id,
+        design_data={"name": design_id, "layers": {}},
+        vehicle_type="mine",
+        mass=5.0,
+        current_hp=30,
+    )
+
+
+class _StubCarrier:
+    """Minimal carrier stub exposing the typed BayInventory surface."""
+
+    def __init__(self, mines: list[CarriedVehicle]) -> None:
+        self.instance_id = "carrier"
+        self._bay_inventory = BayInventory(bay=list(mines))
+
+    @property
+    def bay_inventory(self) -> BayInventory:
+        return BayInventory(
+            bay=list(self._bay_inventory.bay),
+            pods=list(self._bay_inventory.pods),
+        )
+
+    def set_bay_inventory(self, bay_inventory: BayInventory) -> None:
+        self._bay_inventory = BayInventory(
+            bay=list(bay_inventory.bay),
+            pods=list(bay_inventory.pods),
+        )
 
 
 def _make_mine_group(empire_id: int = 1, designs=None) -> Fleet:
@@ -26,10 +49,7 @@ def _make_mine_group(empire_id: int = 1, designs=None) -> Fleet:
         fleet_id=42, owner_id=empire_id, location=hex_c, speed=0.0,
         group_kind="mine_group",
     )
-    carrier = SimpleNamespace(
-        carried_items=[_mine_dict(d) for d in (designs or [])],
-        instance_id="carrier",
-    )
+    carrier = _StubCarrier([_mine_cv(d) for d in (designs or [])])
     fleet.ships.append(carrier)
     return fleet
 
@@ -98,7 +118,7 @@ def test_self_destruct_all_removes_group():
     mg = _make_mine_group(designs=["a", "b"])
     empire = SimpleNamespace(fleets=[mg])
     svc.self_destruct(mg, empire, selections={"a": 1, "b": 1})
-    assert mg.ships[0].carried_items == []
+    assert mg.ships[0].bay_inventory.bay == []
     # Group pruned from empire.fleets.
     assert mg not in empire.fleets
 

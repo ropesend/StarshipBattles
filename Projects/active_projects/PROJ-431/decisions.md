@@ -29,7 +29,7 @@ Phase 1 was split into six sub-phases per the 2026-05-17 blocker entry above. Ea
 | Sub-phase | Scope | Status | Commit |
 |-----------|-------|--------|--------|
 | 1a | `ShipCargoManager` migrated off `carried_items` / `from_any()`; reads via `ship.bay_inventory`, writes via `set_bay_inventory()`. AST guard test `test_ship_cargo_manager_no_legacy_substrate.py` pins the no-legacy-substrate invariant. | Complete (2026-05-17) | (this commit) |
-| 1b | `IssuerAdapter` (`game/strategy/engine/issuer_adapter.py`) + `MineGroupService` (`game/strategy/services/mine_group_service.py`). | Not started | — |
+| 1b | `IssuerAdapter` (`FleetShipIssuerAdapter` half — planet half stays on legacy substrate, out of scope), `MineGroupService` (`game/strategy/services/mine_group_service.py`), and `minefield_resolver.py` (`_iter_mines` / `_set_mines` + warhead/laserhead consume-by-index rework). AST guard `test_minefield_resolver_no_legacy_substrate.py`. FMS-handler test stubs updated to mirror `ShipInstance.bay_inventory` view-over-`carried_items` so the now-migrated `IssuerAdapter` works against them without touching the handlers themselves. | Complete (2026-05-17) | (this commit) |
 | 1c | FMS order handlers: `lay_mines.py`, `launch_fighters.py`, `launch_satellites.py`, `recover_fighters.py`, `recover_satellites.py`. | Not started | — |
 | 1d | `colonize.py` + `transfer_branches.py` + `ship_instance_serializer.py`. | Not started | — |
 | 1e | Test-file sweep (53 files). | Not started | — |
