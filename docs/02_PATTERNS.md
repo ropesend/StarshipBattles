@@ -63,7 +63,7 @@ side-channel pattern.
 | 34 | Weapon Family Registry | Weapon family handlers dispatch attacks; no central branch edits for new families. |
 | 35 | Stat Contributor Registry | Per-component stat contributors run through one typed accumulator pipeline. |
 | 36 | Re-Export Shim | Thin module shim preserves a legacy import path during decomposition; tied to a tracked migration project. |
-| 37 | Group-Kind Fleet Discriminator | `Fleet.group_kind` plus `BaseCommandHandler._reject_if_non_fleet_group` constrain non-`fleet` Fleet kinds (`mine_group` / `fighter_group` / `satellite_group`) from movement / build / warp / intercept / join commands. |
+| 37 | Typed `DeployedGroup` Family (sibling of `Fleet`) | `Empire.deployed_groups: list[DeployedGroup]` (`MineGroup` / `FighterWing` / `SatelliteConstellation`) holds deployable battlefield assets as concrete typed dataclasses, NOT `Fleet`s. The fleet-action surface (Move / Warp / Build / Join) is structurally unreachable because the methods don't exist on `DeployedGroup`. Replaces the retired `Fleet.group_kind` string discriminator + `_reject_if_non_fleet_group` guard (PROJ-431 / TD-10). |
 | 38 | CarriedVehicle Substrate | `VehicleBayAbility` (`capacity_mass`, `allowed_types`) plus the `CarriedVehicle` payload and shared `carried_vehicle_to_ship_instance` helper carry design-backed vehicles through bay storage, strategic launch / recovery, and end-of-battle reboard. |
 | 39 | Typed-Sidecar Extensions on Frozen DTOs | A frozen cross-layer DTO (e.g. `BattleSpec`) is paired with a typed extensions dataclass (`BattleSpecExtensions`) inside a wrapper (`StrategyBattleAssembly`) constructed by a single orchestrator. Replaces the `object.__setattr__(frozen_dto, "_attr", ...)` side-channel anti-pattern eliminated by PROJ-426 (TD-01). |
 | 40 | Named Pre-Tick Setup Registry | `PreTickBattleSetupRegistry` chains battle-setup closures (`mine_setup`, `reboard_setup`, etc.) by string name in registration order. `composed_callback()` returns the single `run_battle(..., pre_tick_loop_callback=...)` callable or `None` when empty. Independent subsystems register their own setup without coupling to others or fighting for the single hook slot. |
@@ -871,40 +871,67 @@ Retirement:
   caller. Audit guard: a periodic grep for shim contents is the
   current detection mechanism; a future audit may add a static check.
 
-## 37. Group-Kind Fleet Discriminator
+## 37. Typed `DeployedGroup` Family (sibling of `Fleet`)
 
-Where: `game/strategy/data/fleet.py::Fleet.group_kind`;
-`game/strategy/engine/handlers/base.py::BaseCommandHandler._reject_if_non_fleet_group`;
-order handlers under `game/strategy/engine/order_handlers/`
+Where: `game/strategy/data/deployed_group.py` (`DeployedGroup`
+abstract base + `MineGroup` / `FighterWing` /
+`SatelliteConstellation`); `game/strategy/data/empire.py`
+(`Empire.deployed_groups`, `add_deployed_group`,
+`remove_deployed_group`, `deployed_groups_of`); the five FMS order
+handlers under `game/strategy/engine/order_handlers/`
 (`lay_mines.py`, `launch_fighters.py`, `launch_satellites.py`,
-`recover_fighters.py`, `recover_satellites.py`).
+`recover_fighters.py`, `recover_satellites.py`); combat seam at
+`game/strategy/combat/spec_compiler.py` /
+`game/strategy/combat/team_spec_builder.py`; minefield seam at
+`game/strategy/engine/minefield_resolver.py`.
+
+Replaces the retired (PROJ-431 / TD-10) "Group-Kind Fleet
+Discriminator" pattern in which `Fleet.group_kind` ∈
+`{"fleet", "mine_group", "fighter_group", "satellite_group"}` plus
+`BaseCommandHandler._reject_if_non_fleet_group` constrained
+non-`fleet` Fleet kinds from movement / build / warp / intercept /
+join commands. `Fleet.group_kind`, the guard, and the synthetic
+mine-carrier `ShipInstance` are all DELETED.
 
 Contract:
-- `Fleet.group_kind` ∈ `{"fleet", "mine_group", "fighter_group",
-  "satellite_group"}`. Default is `"fleet"`.
-- Non-`fleet` kinds carry a `can_strategic_move = False` invariant —
-  movement, intercept, join, warp, and build commands reject them at
-  validation via `_reject_if_non_fleet_group`.
-- Combat membership is unchanged: the conflict-resolution engine
-  iterates `empire.fleets` and pulls every Fleet at the contested hex
-  regardless of `group_kind` (mine_groups are split back out by
-  `TeamSpecBuilder.split_mine_groups` inside the strategy assembler).
+- Concrete subclasses register their `type` discriminator string via
+  `@_register_type("<name>")` and implement `_from_dict_payload(data)`
+  for polymorphic round-trip via `DeployedGroup.from_dict`.
+- The base class deliberately exposes a NARROW surface: identity
+  (`id`, `owner_id`, `location: HexCoord`, `display_name`) only.
+  Fleet-action methods (Move / Warp / Build / Join) are NOT present.
+  The runtime type IS the model; there is no string discriminator
+  and no validation guard — deployed groups never reach fleet-action
+  handlers because they are not `Fleet`s.
+- `Empire.fleets` and `Empire.deployed_groups` are disjoint
+  collections. Combat membership: the spec compiler walks both
+  `empire.fleets` and `empire.deployed_groups_of(FighterWing |
+  SatelliteConstellation)` for the at-hex participant set;
+  `MineGroup`s are routed into the typed `mine_groups` sidecar on
+  `StrategyBattleAssembly.extensions`.
 - Strategic launch / lay actions mint a fresh group every time — no
-  same-hex auto-merge (PROJ-FMS-B audit Fix 4; mirrored by PROJ-FMS-C
-  fighter launch and PROJ-FMS-D satellite launch).
-- Fleet-id namespace conventions: `mine_group` 100000+,
-  `fighter_group` 200000+, `satellite_group` 300000+.
+  same-hex auto-merge for new launches (PROJ-FMS-B audit Fix 4;
+  mirrored by PROJ-FMS-C / PROJ-FMS-D). End-of-battle fighter /
+  satellite overflow DOES merge into a pre-existing same-type group
+  at the sector when present.
+- ID namespace conventions: `MineGroup` 100000+, `FighterWing`
+  200000+, `SatelliteConstellation` 300000+.
 
-Use for: any new "presence on the strategic map but not a freely
-moving fleet" entity. Extend `group_kind` with a new value, add the
-matching reject-guard in command handlers that should not apply, and
-let the existing conflict-resolution / DTO / serialization paths pick
-it up for free.
+`_ShipBearingDeployedGroup` is an internal (non-registered) base
+for groups whose `ships` are real `ShipInstance` entries
+(`FighterWing`, `SatelliteConstellation`). It supplies
+`remove_ship` so the PROJ-269 post-battle hook prunes destroyed
+ships via the same `IFleetMutator` plumbing used for real Fleets.
 
-Boundary: this pattern is for entities that conceptually ARE Fleets
-(location, owner, ship roster, contested-hex inclusion). Entities that
-need a fundamentally different data shape should not piggy-back on
-Fleet.
+Use for: any new "empire-owned, hex-located deployable" entity that
+conceptually is NOT a Fleet (no orders, no strategic move, no
+shipyard). Add a new subclass under `deployed_group.py`, register
+its `type`, and let the combat / DTO / serialisation paths pick it
+up via `empire.deployed_groups_of(<NewType>)`.
+
+Boundary: real fleets (have orders, can move, can build) remain
+`Fleet`s on `empire.fleets`. Do not bolt a deployable concept onto
+`Fleet` — extend the `DeployedGroup` family instead.
 
 ## 38. CarriedVehicle Substrate
 

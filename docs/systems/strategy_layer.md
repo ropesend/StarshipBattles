@@ -325,6 +325,78 @@ Key hierarchy files:
 - `game/strategy/data/squadron.py`
 - `game/strategy/facade/dto/fleet_hierarchy_dto.py`: `TaskForceInfo`, `SquadronInfo`, `ShipInfoExtended`.
 
+### Deployed Groups (PROJ-431 / TD-10)
+
+**File:** `game/strategy/data/deployed_group.py`
+
+Deployable battlefield assets (mines / fighters / satellites) are
+**siblings** of `Fleet`, NOT `Fleet`s themselves. They live on
+`Empire.deployed_groups: list[DeployedGroup]` alongside
+`Empire.fleets: list[Fleet]`. There is no `group_kind` string
+discriminator — the runtime type IS the model. The fleet-action
+surface (Move / Warp / Build / Join / Colonize) is structurally
+unreachable on deployed groups because the methods simply do not
+exist on `DeployedGroup`.
+
+Class hierarchy:
+
+- `DeployedGroup` — abstract base. Identity only (`id`, `owner_id`,
+  `location: HexCoord`, `display_name`). Owns the polymorphic
+  `to_dict` / `from_dict` round-trip via a per-subclass `type`
+  discriminator registered with `@_register_type(...)`.
+- `MineGroup(DeployedGroup)` — strategic minefield. Owns
+  `mines: list[CarriedVehicle]`, `sensitivity`,
+  `expected_hit_chance_threshold`, `mine_positions`,
+  `scatter_seed`. Replaces the synthetic mine-carrier
+  `ShipInstance` pattern; see `docs/systems/minefields.md`.
+- `FighterWing(_ShipBearingDeployedGroup)` — deployed fighters.
+  Owns `ships: list[ShipInstance]` (real combat-capable entities).
+  Replaces the previous `Fleet(group_kind="fighter_group")` pattern;
+  see `docs/systems/fighters.md`.
+- `SatelliteConstellation(_ShipBearingDeployedGroup)` — deployed
+  satellites. Mirrors `FighterWing` for the satellite family; see
+  `docs/systems/satellites.md`.
+
+`_ShipBearingDeployedGroup` is an internal base (not registered)
+that provides the minimal Fleet-like surface
+(`remove_ship`) so the PROJ-269 post-battle hook can prune
+destroyed ships from fighter wings and satellite constellations
+via the same `IFleetMutator` plumbing used for real Fleets.
+
+Empire helpers (`game/strategy/data/empire.py`):
+
+- `empire.add_deployed_group(group)` — append.
+- `empire.remove_deployed_group(group)` — remove (returns `bool`).
+- `empire.deployed_groups_of(cls)` — generator filtered by concrete
+  subclass; used by combat assembler / order handlers /
+  minefield resolver.
+- `empire.is_eliminated` returns `True` only when both `fleets` and
+  `deployed_groups` are empty.
+
+Combat / mine integration:
+
+- `build_strategy_battle_spec` walks both `empire.fleets` and
+  `empire.deployed_groups_of(FighterWing | SatelliteConstellation)`
+  for the participating-at-hex set; the spec compiler merges
+  each into its owner's team via `fleets_by_owner` grouping.
+  Mines are pulled from `empire.deployed_groups_of(MineGroup)`
+  into the `mine_groups` typed sidecar on
+  `StrategyBattleAssembly.extensions`.
+- `MovementPhaseCollaborator.resolve_after` runs minefield
+  resolution against `empire.deployed_groups_of(MineGroup)`; the
+  resolver consumes `mine_group.mines` directly (no
+  `ship.carried_items` indirection).
+- `fighter_reboard.apply_reboard` overflow mints typed
+  `FighterWing` / `SatelliteConstellation` on
+  `empire.deployed_groups` (matching the CarriedVehicle
+  `vehicle_type`), with merge-on-same-hex policy.
+
+Save schema: version 4.1.0 (PROJ-431 Phase 2). Deployed groups
+round-trip through the `type` discriminator on each entry; saves
+predating Phase 3 with `group_kind` set on Fleet entries
+deserialise without error (the field is silently dropped — saves
+are disposable per CLAUDE.md).
+
 ### Design Roles
 
 Files:

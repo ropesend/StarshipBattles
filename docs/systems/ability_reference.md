@@ -653,10 +653,16 @@ Reserved `OrderType` enum values (no handlers attached yet, reserved for
 the PROJ-FMS-B/C/D handlers): `LAY_MINES`, `LAUNCH_FIGHTERS`,
 `LAUNCH_SATELLITES`, `RECOVER_FIGHTERS`, `RECOVER_SATELLITES`.
 
-Fleet discriminator: `Fleet.group_kind` ∈ `{"fleet", "fighter_group",
-"satellite_group", "mine_group"}`; non-fleet kinds reject Move /
-Intercept / Join / Warp / Build at command validation
-(`BaseCommandHandler._reject_if_non_fleet_group`).
+Deployable-group container: PROJ-431 / TD-10 retired the
+`Fleet.group_kind` string discriminator. Mines / fighters /
+satellites now live on `Empire.deployed_groups: list[DeployedGroup]`
+as typed siblings of `Fleet` (`MineGroup`, `FighterWing`,
+`SatelliteConstellation`) — see
+`game/strategy/data/deployed_group.py`. The fleet-action surface
+(Move / Intercept / Join / Warp / Build) is structurally unreachable
+on deployed groups because the methods do not exist on
+`DeployedGroup`. The previous
+`BaseCommandHandler._reject_if_non_fleet_group` guard is DELETED.
 
 `SmallTargetingSensor` (PROJ-FMS-A) is **not** a new ability class — it is
 a new component (`small_targeting_sensor` / `small_targeting_sensor_advanced`
@@ -676,8 +682,8 @@ end-to-end system design.
 | `Warhead` | `WarheadAbility` | BOTH | `abilities/warhead.py` | Detonation routed through `DamageCalculator.apply_damage`; applied by `MinefieldResolver` (strategic), `TacticalMineResolver` (tactical), and `RamTargetResolver` (collision — symmetric exchange contributes to both sides). |
 | `Laserhead` | `LaserheadAbility(BeamWeaponAbility)` | BOTH | `abilities/warhead.py` | Continuous expected-hit-chance threshold gate before the standard beam roll; consume-on-fire. |
 <!-- ``RamTarget`` removed by QA 2026-05-16 Obs 1b — see `RamTargetResolver` for the universal symmetric model. -->
-| `StrategicMineLayer` | `StrategicMineLayerAbility` | STRATEGIC | `abilities/launch.py` | Wired via `OrderType.LAY_MINES` -> `LayMinesOrderHandler`. Pops mines from `VehicleBay` -> creates / extends a `mine_group` Fleet at the target hex. |
-| `TacticalMineLayer` | `TacticalMineLayerAbility` | COMBAT | `abilities/launch.py` | Wired via the battle-engine `mine_resolver` hook. Mid-battle-laid mines persist to the laying empire's `mine_group`. |
+| `StrategicMineLayer` | `StrategicMineLayerAbility` | STRATEGIC | `abilities/launch.py` | Wired via `OrderType.LAY_MINES` -> `LayMinesOrderHandler`. Pops mines from `VehicleBay` -> mints a `MineGroup` on `empire.deployed_groups` at the target hex. |
+| `TacticalMineLayer` | `TacticalMineLayerAbility` | COMBAT | `abilities/launch.py` | Wired via the battle-engine `mine_resolver` hook. Mid-battle-laid mines persist to the laying empire's `MineGroup`. |
 
 `LAY_MINES` was moved to the reachable-via-command set in PROJ-FMS-B
 Phase 1. `LAUNCH_FIGHTERS` and `RECOVER_FIGHTERS` were moved to the
@@ -685,16 +691,19 @@ reachable-via-command set in PROJ-FMS-C Phase 1+3. `LAUNCH_SATELLITES`
 and `RECOVER_SATELLITES` followed in PROJ-FMS-D Phase 1+2 — see the
 PROJ-FMS-D section below for the full wiring summary.
 
-Mine-group runtime fields on `Fleet` (only meaningful when
-`group_kind == "mine_group"`):
+`MineGroup` runtime fields (live on
+`game/strategy/data/deployed_group.py::MineGroup`, not on
+`Fleet`):
 
 - `sensitivity` — `"LOW" | "MED" | "HIGH"` (default `"MED"`).
 - `expected_hit_chance_threshold` — float `0.0..1.0` (default
   `0.30` from `data/balance/mines.json::laserhead.default_threshold`).
 - `mine_positions` — `List[(float, float)]` scatter coords.
 - `scatter_seed` — stable PRNG seed for the scatter layout.
+- `mines: list[CarriedVehicle]` — homogeneous mine inventory.
 
-These fields serialise through `Fleet.to_dict` / `Fleet.from_dict`.
+These fields serialise through `MineGroup.to_dict` / `MineGroup.from_dict`
+(polymorphic dispatch from `DeployedGroup.from_dict`).
 
 ## PROJ-FMS-C — Fighters runtime behaviour
 
@@ -808,8 +817,10 @@ backwards-compat) is now vehicle-type aware:
 - The CarriedVehicle's `vehicle_type` is read from the spawned Sim
   Ship's `vehicle_type` attribute (`Fighter` -> `"fighter"`,
   `Satellite` -> `"satellite"`).
-- Overflow uses the matching `group_kind` (`fighter_group` /
-  `satellite_group`) and the matching id namespace (200000+ / 300000+).
+- Overflow mints the matching `DeployedGroup` subclass on
+  `empire.deployed_groups` — `FighterWing` (id namespace 200000+)
+  for `"fighter"` overflow, `SatelliteConstellation`
+  (id namespace 300000+) for `"satellite"` overflow.
 - The bay-side `load_vehicle` honours `allowed_types`, so a fighter
   reboard never lands in a satellite-only bay (and vice versa).
 

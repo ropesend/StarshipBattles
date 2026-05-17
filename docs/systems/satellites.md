@@ -31,17 +31,19 @@ LaunchSatellitesCommandHandler
         | ability gate: carrier must mount StrategicSatelliteLaunchAbility
         v
 LaunchSatellitesOrderHandler
-        | pops N matching satellite CarriedVehicles, creates a
-        | satellite_group Fleet (id namespace 300000+)
+        | pops N matching satellite CarriedVehicles, mints a
+        | SatelliteConstellation on empire.deployed_groups
+        | (id namespace 300000+)
         v
-satellite_group Fleet (group_kind="satellite_group")
-        |  ships: List[ShipInstance]   ← real combat-capable entities
+SatelliteConstellation (DeployedGroup; see
+game/strategy/data/deployed_group.py)
+        |  ships: list[ShipInstance]   ← real combat-capable entities
         |  HP preserved from CarriedVehicle.current_hp
         |
         v  contested-hex combat → build_strategy_battle_spec
-spec compiler groups fleets by owner_id; satellite_group merges onto the
-owner's team alongside any regular fleets (only mine_groups are filtered
-out by `TeamSpecBuilder.split_mine_groups`).
+spec compiler groups fleets by owner_id and walks
+empire.deployed_groups_of(SatelliteConstellation) so constellations
+merge onto the owner's team alongside any regular fleets.
         |
         v
 BattleEngine ticks; SatelliteAIController forces zero throttle / zero
@@ -56,16 +58,16 @@ Post-battle hook → fighter_reboard.apply_reboard(engine, fleets, empires)
 Mid-battle launches (tagged launched_in_battle_id) auto-reboard onto
 friendly bays whose allowed_types accept the vehicle's type; overflow
 spills into a new (or pre-existing) sector group of matching kind.
-Pre-existing satellite_group satellites stay in their group unless
-explicitly recovered.
+Pre-existing SatelliteConstellation satellites stay in their group
+unless explicitly recovered.
         |
         v  IssueRecoverSatellitesCommand → OrderType.RECOVER_SATELLITES
 RecoverSatellitesOrderHandler
-        | pops N ShipInstances from the target satellite_group, converts
-        | each back to a CarriedVehicle (HP + component states preserved),
-        | loads into bay (allowed_types filter enforced)
+        | pops N ShipInstances from the target SatelliteConstellation,
+        | converts each back to a CarriedVehicle (HP + component
+        | states preserved), loads into bay (allowed_types filter enforced)
         v
-ShipInstance.carried_items[*]   ← back where we started.
+ShipInstance.bay_inventory.bay[*]   ← back where we started.
 ```
 
 ## Differences from fighters
@@ -78,8 +80,8 @@ ShipInstance.carried_items[*]   ← back where we started.
 | Tactical launch | `BattleEngine.launch_fighters_in_battle` | `BattleEngine.launch_satellites_in_battle` |
 | Carrier AI | `CarrierAIController._maybe_launch_fighter_wave()` → shared `_maybe_launch_wave("TacticalFighterLaunch", "fighter", "launch_fighters_in_battle")` | `CarrierAIController._maybe_launch_satellite_wave()` → same shared `_maybe_launch_wave("TacticalSatelliteLaunch", "satellite", "launch_satellites_in_battle")` |
 | Launch bay collocates recovery | `fighter_launch_bay` carries `RecoverFighters` (Round 4 Obs C) | `satellite_launch_bay` carries `RecoverSatellites` (Round 4 Obs C) |
-| Fleet group | `fighter_group` (id namespace 200000+) | `satellite_group` (id namespace 300000+) |
-| Overflow into | `fighter_group` | `satellite_group` |
+| Deployed group | `FighterWing` (id namespace 200000+) | `SatelliteConstellation` (id namespace 300000+) |
+| Overflow into | `FighterWing` | `SatelliteConstellation` |
 
 ## Strategic launch (`OrderType.LAUNCH_SATELLITES`)
 
@@ -95,26 +97,29 @@ IssueLaunchSatellitesCommand(
 ```
 
 Exactly one of `fleet_id` / `planet_id` is set (Round 4 Obs B). The
-validator (`LaunchSatellitesCommandHandler`) rejects non-fleet
-`group_kind` callers (for fleet-issued) and verifies the issuer holds
+validator (`LaunchSatellitesCommandHandler`) verifies the issuer holds
 at least one matching satellite `CarriedVehicle` (or `count` matching
-when count is positive). `satellite_design_id = "auto"` matches any
+when count is positive). PROJ-431 Phase 3 retired the `group_kind`
+non-fleet rejection — deployed groups are not Fleets and never reach
+fleet-action handlers. `satellite_design_id = "auto"` matches any
 satellite-type CarriedVehicle.
 
 `LaunchSatellitesOrderHandler.execute_action_order`:
 
 1. Re-resolves the carrier and the requested count from the order
    payload.
-2. Pops `count` matching CarriedVehicles from `carrier.carried_items`
-   using the same vehicle-type filter (`cv.vehicle_type == "satellite"`).
-3. Mints a fresh `satellite_group` Fleet at the target hex — same
-   no-auto-merge policy PROJ-FMS-C uses for fighter_groups.
+2. Pops `count` matching CarriedVehicles from
+   `carrier.bay_inventory.bay` using the same vehicle-type filter
+   (`cv.vehicle_type == "satellite"`).
+3. Mints a fresh `SatelliteConstellation` at the target hex on
+   `empire.deployed_groups` — same no-auto-merge policy PROJ-FMS-C
+   uses for `FighterWing`s.
 4. Materialises one `ShipInstance` per popped CarriedVehicle, preserving
    `current_hp` and `component_states`.
 
 Same-hex launches do NOT auto-merge: each launch action produces its
-own `satellite_group`. Players (or the AI) consolidate via the strategic
-recover action.
+own `SatelliteConstellation`. Players (or the AI) consolidate via the
+strategic recover action.
 
 ## Tactical launch (mid-battle)
 

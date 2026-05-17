@@ -92,26 +92,37 @@ Exactly one of `fleet_id` / `planet_id` is set (Round 4 Obs B).
    `planet.orders` (widened in Round 4 Obs B); the registered
    `LayMinesOrderHandler` operates on an `IIssuerAdapter` (see
    Pattern #40), popping mine `CarriedVehicle`s via
-   `adapter.pop_carried(...)` — `ship.carried_items` for fleet-issued,
-   `planet.staging_yard` for planet-issued — and creates / extends a
-   `mine_group` Fleet at the target hex.
+   `adapter.pop_carried(...)` — `ship.bay_inventory.bay` for
+   fleet-issued, `planet.staging_yard` for planet-issued — and
+   creates / extends a `MineGroup` at the target hex.
 
-A `mine_group` Fleet has `group_kind == "mine_group"` (PROJ-FMS-A
-Phase 4). New `mine_group`s default to:
+A `MineGroup` (PROJ-431 Phase 2; `game/strategy/data/deployed_group.py`)
+is a typed sibling of `Fleet`, NOT a `Fleet` itself. It lives on
+`empire.deployed_groups: list[DeployedGroup]` alongside `FighterWing`
+and `SatelliteConstellation`. There is no `group_kind` string
+discriminator — the runtime type IS the model, so the strategic
+fleet-action surface (Move / Warp / Build / Join) is structurally
+unreachable on a mine group. The synthetic mine-carrier
+`ShipInstance` pattern is gone (PROJ-431 Phase 2 deleted the
+`mine_carrier_synthetic` design and `_seed_mine_group_carrier`);
+mines live directly on `MineGroup.mines` as `CarriedVehicle` entries.
+
+New `MineGroup`s default to:
 
 - Sensitivity `MED` (warhead trigger multiplier 1.0).
 - `expected_hit_chance_threshold = 0.30` (from
   `data/balance/mines.json`).
 
-The mine_group stores:
+The `MineGroup` stores:
 
+- `mines: list[CarriedVehicle]` — homogeneous mine inventory.
 - `sensitivity` (LOW / MED / HIGH).
 - `expected_hit_chance_threshold` (continuous 0.0..1.0).
 - `mine_positions` (List[(x, y)]) — scatter coords.
 - `scatter_seed` (int) — stable PRNG seed for the layout.
 
-Multiple `mine_group`s per owner per hex are allowed; each
-`IssueLayMinesCommand` mints a fresh `mine_group` — no auto-merge
+Multiple `MineGroup`s per owner per hex are allowed; each
+`IssueLayMinesCommand` mints a fresh `MineGroup` — no auto-merge
 (PROJ-FMS-B audit Fix 4).
 
 ## Strategic detonation math

@@ -41,19 +41,21 @@ The `simple_size_mount` modifier dials per-component:
 Workshop / Build queue
         |
         v  (Fighter design as a CarriedVehicle in the carrier's bay)
-ShipInstance.carried_items[*]  ← VehicleBayAbility caps total mass
+ShipInstance.bay_inventory.bay[*]  ← VehicleBayAbility caps total mass
         |
         v  IssueLaunchFightersCommand → OrderType.LAUNCH_FIGHTERS
 LaunchFightersOrderHandler
-        | pops N matching CarriedVehicles, creates a fighter_group Fleet
+        | pops N matching CarriedVehicles, mints a FighterWing on
+        | empire.deployed_groups (NOT a Fleet)
         v
-fighter_group Fleet (group_kind="fighter_group")
-        |  ships: List[ShipInstance]   ← real combat-capable entities
+FighterWing (DeployedGroup; see game/strategy/data/deployed_group.py)
+        |  ships: list[ShipInstance]   ← real combat-capable entities
         |  HP preserved from CarriedVehicle.current_hp
         |
         v  contested-hex combat → build_strategy_battle_spec
-spec compiler groups fleets by owner_id; fighter_group merges onto the
-owner's team alongside any regular fleets.
+spec compiler groups fleets by owner_id and walks
+empire.deployed_groups_of(FighterWing) so wings merge onto the owner's
+team alongside any regular fleets.
         |
         v
 BattleEngine ticks; FighterAIController drives each fighter ("target
@@ -67,15 +69,15 @@ Post-battle hook → fighter_reboard.apply_reboard(engine, fleets, empires)
         v
 Mid-battle launches (tagged launched_in_battle_id) auto-reboard onto
 friendly bays; overflow spills into a new (or pre-existing) sector
-fighter_group. Pre-existing fighter_group fighters stay in their
-group unless explicitly recovered.
+FighterWing. Pre-existing FighterWing fighters stay in their group
+unless explicitly recovered.
         |
         v  IssueRecoverFightersCommand → OrderType.RECOVER_FIGHTERS
 RecoverFightersOrderHandler
-        | pops N ShipInstances from the target fighter_group, converts
+        | pops N ShipInstances from the target FighterWing, converts
         | each back to a CarriedVehicle (HP preserved), loads into bay
         v
-ShipInstance.carried_items[*]   ← back where we started.
+ShipInstance.bay_inventory.bay[*]   ← back where we started.
 ```
 
 ## Strategic launch (`OrderType.LAUNCH_FIGHTERS`)
@@ -94,24 +96,27 @@ IssueLaunchFightersCommand(
 Exactly one of `fleet_id` / `planet_id` is set (Round 4 Obs B); planet-
 issued launches operate against the planet's staging yard via
 `PlanetStagingYardIssuerAdapter` instead of a carrier ship. The
-validator (`LaunchFightersCommandHandler`) rejects non-fleet
-`group_kind` callers (for fleet-issued) and verifies the issuer holds
+validator (`LaunchFightersCommandHandler`) verifies the issuer holds
 at least `count` matching fighter `CarriedVehicle`s (or ≥1 when
-`count is None`).
+`count is None`). PROJ-431 Phase 3 retired the `group_kind`
+non-fleet rejection — deployed groups (FighterWing /
+SatelliteConstellation / MineGroup) are not Fleets and never reach
+fleet-action handlers.
 
 `LaunchFightersOrderHandler.execute_action_order` operates on an
 `IIssuerAdapter` (see Pattern #40):
 
 1. Pops the matching `CarriedVehicle`s via `adapter.pop_carried(...)`
    (atomic — partial pops are restored on failure). For a fleet ship
-   the adapter drains `ship.carried_items`; for a planet it drains
+   the adapter drains `ship.bay_inventory.bay`; for a planet it drains
    `planet.staging_yard`.
-2. Mints a fresh `fighter_group` Fleet at `adapter.location` (no
-   auto-merge — mirrors PROJ-FMS-B audit Fix 4 for mine_groups).
+2. Mints a fresh `FighterWing` at `adapter.location` (no auto-merge
+   — mirrors PROJ-FMS-B audit Fix 4 for `MineGroup`s).
 3. Builds a deployed `ShipInstance` per CarriedVehicle, preserving
    `current_hp` and `component_states` when present.
-4. Adds the group to `empire.fleets`. Conflict-resolution picks it up
-   automatically via the existing `empire.fleets` iteration.
+4. Adds the wing to `empire.deployed_groups`. Conflict-resolution
+   picks it up via `empire.deployed_groups_of(FighterWing)` walked
+   by the combat spec assembler.
 
 Files: [`game/strategy/engine/handlers/launch_fighters.py`](../../game/strategy/engine/handlers/launch_fighters.py),
 [`game/strategy/engine/order_handlers/launch_fighters.py`](../../game/strategy/engine/order_handlers/launch_fighters.py),
@@ -151,18 +156,20 @@ counts as the budget refills, with no cycle gate.
 `launched_in_battle_id`, and registers it on the engine's `ReboardTracker`
 for end-of-battle reboard.
 
-## Combat join via `group_kind`
+## Combat join via typed `FighterWing`
 
-`fighter_group` Fleets are real combat fleets — unlike `mine_group`s
-they ARE combat-capable entities and translate to `ShipSpec` entries on
-the owner's team in `build_strategy_battle_spec` /
-`build_strategy_battle_assembly`. The strategy assembler's
-`TeamSpecBuilder.split_mine_groups` only filters mine groups; fighter_groups
-fall through to the normal `fleets_by_owner` grouping.
+`FighterWing`s are combat-capable deployable groups — unlike
+`MineGroup`s they hold real `ShipInstance` entries and translate to
+`ShipSpec` entries on the owner's team. The strategy spec compiler
+walks `empire.deployed_groups_of(FighterWing)` alongside `empire.fleets`
+in `build_strategy_battle_spec` / `build_strategy_battle_assembly` and
+merges each wing onto its owner's team via the standard `fleets_by_owner`
+grouping. There is no `group_kind` string discriminator — the runtime
+type IS the model (PROJ-431 Phase 3).
 
-Each `ShipInstance` in the fighter_group becomes a tactical entity
-through the standard materialiser pipeline
-(`InstanceBackedMaterializer` calls `ShipInstance.to_ship(...)`).
+Each `ShipInstance` in the wing becomes a tactical entity through the
+standard materialiser pipeline (`InstanceBackedMaterializer` calls
+`ShipInstance.to_ship(...)`).
 
 ## Fighter AI
 
@@ -199,15 +206,16 @@ IssueRecoverFightersCommand(
 Exactly one of `fleet_id` / `planet_id` is set (Round 4 Obs B). The
 handler:
 
-1. Locates the source `fighter_group` (by id, or first owner-owned
-   group at the recovering fleet's hex).
+1. Locates the source `FighterWing` on `empire.deployed_groups_of(FighterWing)`
+   (by id, or first owner-owned wing at the recovering fleet's hex).
 2. Pops up to `count` ShipInstances (or all when `count is None`).
 3. Converts each into a CarriedVehicle preserving `current_hp` and
    per-component damage state.
 4. Loads each into the carrier's bay via `ShipCargoManager.load_vehicle`.
    Partial recovery is allowed — fighters that don't fit stay in the
-   group.
-5. If the source group ends up empty, removes it from `empire.fleets`.
+   wing.
+5. If the source wing ends up empty, removes it from
+   `empire.deployed_groups`.
 
 Files: [`game/strategy/engine/handlers/recover_fighters.py`](../../game/strategy/engine/handlers/recover_fighters.py),
 [`game/strategy/engine/order_handlers/recover_fighters.py`](../../game/strategy/engine/order_handlers/recover_fighters.py).
@@ -220,7 +228,7 @@ complex facilities via the `IIssuerAdapter` seam (Pattern #40 in
 `StrategicFighterLaunch` can issue `IssueLaunchFightersCommand(planet_id=...)`
 (no `ship_instance_id`); the same `LaunchFightersOrderHandler.execute_for_issuer`
 method ticks the order through `PlanetStagingYardIssuerAdapter`, popping
-fighters from the planet's `staging_yard` and producing a `fighter_group`
+fighters from the planet's `staging_yard` and producing a `FighterWing`
 at the planet's hex. `ActionExecutionEngine` was widened in Round 4 to
 tick BOTH `fleet.orders` and `planet.orders` so the same handler
 executes for either issuer kind. Planet-side capability gates check the
@@ -228,7 +236,7 @@ facility's components for the required `StrategicFighterLaunch` /
 `RecoverFighters` ability before the order is accepted. Recovery
 mirrors that: a facility with `RecoverFighters` issues
 `IssueRecoverFightersCommand(planet_id=...)`, drains the matching
-`fighter_group` at the hex, and re-stages recovered fighters back into
+`FighterWing` at the hex, and re-stages recovered fighters back into
 the planet's `staging_yard` (capacity-checked by `max_staging_mass`). The
 right-click planet menu (built by
 [`planet_menu_items.build_menu_items`](../../game/ui/screens/planet_menu_items.py),
@@ -249,9 +257,11 @@ Policy:
 - **Survivors tagged `launched_in_battle_id == this_battle_id`** auto-
   reboard onto any friendly ship in the battle that has bay space.
   Walks the participating fleets in order (carrier's home fleet first).
-- **Overflow** spills into a new `fighter_group` Fleet at the sector.
-  If a pre-existing fighter_group at that hex already belongs to the
-  same empire, overflow MERGES into it rather than fragmenting.
+- **Overflow** spills into a new `FighterWing` (or
+  `SatelliteConstellation` for satellite overflow) on the owner's
+  `empire.deployed_groups` at the sector. If a pre-existing group of
+  the same type at that hex already belongs to the same empire,
+  overflow MERGES into it rather than fragmenting.
 - **Dead-on-arrival** fighters (HP <= 0 or `is_alive == False` at battle
   end) are discarded.
 - **Carrier destroyed mid-battle** is handled implicitly — the destroyed
