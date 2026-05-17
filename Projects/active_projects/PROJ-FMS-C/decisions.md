@@ -321,3 +321,45 @@ constructor LAUNCH path were migrated to the design-instance shape:
   simple "any enemy in launch radius + cooldown ready" trigger. Wave-
   size tuning, target priorities (escort vs intercept), and combat-
   state-aware launch holds are follow-up AI work.
+
+## 2026-05-17 — Round 4 follow-up
+
+Banner: the per-phase decisions above describe PROJ-FMS-C as
+shipped. Round 4 QA made substantive cross-cutting changes that
+supersede / refine several of them. The historical decisions remain
+accurate at their snapshot time; this block documents the deltas.
+
+- **Tactical launch model rewritten (Obs C):** the
+  `CarrierAIController._maybe_launch_wave` "any enemy in launch
+  radius + cooldown ready + count_per_action" model was replaced
+  with a per-tick mass-tons/sec budget. `_maybe_launch_wave` is now
+  parameterised on `(ability_name, vehicle_type,
+  launch_method_name)` and is shared with PROJ-FMS-D's satellite
+  path; per-vehicle-type budgets are accumulated from
+  `launch_rate_tons_per_sec` and any carried CarriedVehicle whose
+  mass fits the residual budget is launched. Variable-mass
+  fighters from the same bay therefore launch at variable counts
+  per tick. The `fighters_per_wave` / `launch_cycle` ship-stat
+  fields were renamed to a single `fighter_launch_rate_tons_per_sec`.
+- **Bay components consolidated (Obs C):** `fighter_launch_bay_small`
+  → `fighter_launch_bay`, which now ALSO carries `RecoverFighters`
+  (the standalone `fighter_recovery_bay_small` was deleted).
+  `fighter_bay_small` → `fighter_bay`; `vehicle_bay_small/medium/large`
+  → single `vehicle_bay`. Capacity / launch rate scale via
+  `simple_size_mount` (`launch_rate_mult`, `recovery_rate_mult`,
+  `bay_capacity_mult` stat keys).
+- **Polymorphic order issuer (Obs B):** `IssueLaunchFightersCommand`
+  and `IssueRecoverFightersCommand` were widened to accept
+  `planet_id` alongside `fleet_id` (exactly one set), and `count` is
+  now `Optional[int] = None` (None = ALL matching). The
+  `LaunchFightersOrderHandler` and `RecoverFightersOrderHandler`
+  operate on `IIssuerAdapter`
+  (`game/strategy/engine/issuer_adapter.py`) so the same handler
+  serves a fleet ship's carried_items or a planet's staging_yard.
+  `ActionExecutionEngine` was widened to tick both `fleet.orders`
+  and `planet.orders`. See Pattern #40 in `docs/02_PATTERNS.md`.
+
+(Reader note: the historical phase decisions above still reference
+the old `fighter_launch_bay_small` and `vehicle_bay_medium` names —
+those names are accurate as of PROJ-FMS-C ship time but were
+further consolidated in Round 4.)

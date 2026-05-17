@@ -11,6 +11,44 @@
 > audit Fix 1). All `file:line` citations in this document that point
 > to since-deleted symbols are annotated inline.
 
+> **Status update (Round 4, 2026-05-17):** Four QA rounds shipped
+> after the original PROJ-FMS-{A,B,C,D} series. Round 4 in particular
+> made substantive cross-cutting changes:
+>
+> - **Component consolidation (Obs C):** `mine_launcher_small` →
+>   `mine_deployer`; `fighter_launch_bay_small` →
+>   `fighter_launch_bay` (now also carries `RecoverFighters`);
+>   `satellite_launch_bay_small` → `satellite_launch_bay` (now also
+>   carries `RecoverSatellites`); `vehicle_bay_small/medium/large` →
+>   single `vehicle_bay`; `fighter_bay_small` → `fighter_bay`;
+>   `satellite_bay_small/medium/large` → single `satellite_bay`;
+>   new mine-only `mine_bay`. Capacity / launch rate now scale via
+>   the `simple_size_mount` modifier (`launch_rate_mult`,
+>   `recovery_rate_mult`, `bay_capacity_mult`). The standalone
+>   `fighter_recovery_bay_small` and `satellite_recovery_bay_small`
+>   are deleted — recovery is collocated on the launch bay component.
+> - **Polymorphic order issuer (Obs B):** `IIssuerAdapter`
+>   (`game/strategy/engine/issuer_adapter.py`) with two
+>   implementations (`FleetShipIssuerAdapter`,
+>   `PlanetStagingYardIssuerAdapter`) widens the five FMS
+>   `Issue*Command` DTOs to accept `planet_id` alongside `fleet_id`
+>   (exactly one set). `count` is now `Optional[int] = None`
+>   (None = ALL matching). `ActionExecutionEngine` ticks both
+>   `fleet.orders` and `planet.orders`. See Pattern #40 in
+>   `docs/02_PATTERNS.md`.
+> - **Tactical launch model (Obs C):** `CarrierAIController._maybe_launch_wave`
+>   rewritten from count-per-cycle + cooldown to a per-tick mass-tons/sec
+>   budget keyed by ability name; carrier-side ship-stat fields
+>   renamed (`fighters_per_wave` / `launch_cycle` → single
+>   `fighter_launch_rate_tons_per_sec`; same for satellites).
+> - **Maintenance abstraction (Obs 5):** `CrewRequired` →
+>   `RequiresMaintenance`; new `ProvidesMaintenance`; strict
+>   validator rejection rather than runtime degradation
+>   (see `docs/03_CONVENTIONS.md` "Capability validation is hard, not soft").
+> - **UI surface:** new fleet right-click + planet right-click rows
+>   for the five FMS actions via `planet_menu_items.py`,
+>   `planet_context_menu.py`, and shared `fms_menu_callbacks.py`.
+
 The game already exposes **fighter** and **satellite** vehicle classes in the workshop ([vehicleclasses.json](../../../data/vehicleclasses.json), [vehiclelayers.json](../../../data/vehiclelayers.json)) but has no plumbing to carry, deploy, fight with, or recover them at the unit level. **Mines do not exist at all.** A tactical-only `VehicleLaunchAbility` existed at [markers.py](../../../game/simulation/components/abilities/markers.py) (removed in PROJ-FMS-C audit Fix 1) that auto-launched when a ship had a target, but there is no recovery code anywhere in the repo and nothing at the strategic layer.
 
 This project sequence adds the three unit types end-to-end: workshop → cargo → strategic launch → sector presence → tactical participation → recovery (fighters/sats only — mines are one-way). Construction reuses the existing `SpaceShipyard` component. All deployed units visible to all empires for now; fog-of-war is later, once sensors land.

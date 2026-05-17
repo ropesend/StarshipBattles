@@ -11,7 +11,7 @@
 Per the shared design (`../PROJ-FMS-shared/design.md` "Separate ability gates per unit type"), fighters and satellites need **distinct bay / recovery ability gates**, so a fighter-only carrier cannot recover satellites and vice versa. The chosen mechanism: a single `VehicleBayAbility` class (already added in PROJ-FMS-A) with an `allowed_types: List[str]` data attribute. Per-component values declare the bay's accepted types.
 
 - [x] Add `allowed_types: List[str]` data attribute parsing in `VehicleBayAbility._parse_attrs()` (extends PROJ-FMS-A Phase 3). Default = `["fighter", "satellite", "mine"]` (universal) for backwards compatibility with bays that pre-date this field.
-- [x] Add `satellite_bay_small` / `medium` / `large` components to [`data/components.json`](../../../data/components.json) with `allowed_types: ["satellite"]`.
+- [x] Add `satellite_bay_small` / `medium` / `large` components to [`data/components.json`](../../../data/components.json) with `allowed_types: ["satellite"]`. **(Superseded by Round 4 Obs C — the per-tier variants were consolidated to a single `satellite_bay` whose capacity scales via the `simple_size_mount` modifier and the new `bay_capacity_mult` stat key. The `allowed_types=["satellite"]` filter remains. See `decisions.md` "2026-05-17 — Round 4 follow-up".)**
 - [x] (Optional housekeeping during this phase) Retro-tag existing fighter-only bay components added in PROJ-FMS-A Phase 5 with `allowed_types: ["fighter"]` if the design intent is to keep them fighter-only. Bays explicitly intended to be universal can omit the field.
 - [x] Cargo load (`ShipCargoManager.load_vehicle()` from PROJ-FMS-A Phase 3) checks the filter: a satellite design cannot load into a fighter-only bay.
 
@@ -31,7 +31,7 @@ Per the shared design (`../PROJ-FMS-shared/design.md` "Separate ability gates pe
 - [x] If a satellite is destroyed, remove from `satellite_group` and the tactical map as with fighters.
 
 ### Stat aggregation
-- [x] Update [`game/simulation/entities/stat_contributors/launch.py`](../../../game/simulation/entities/stat_contributors/launch.py) to aggregate satellite-specific stats (satellite_capacity, satellites_per_wave, satellite_launch_cycle) separately from fighter equivalents.
+- [x] Update [`game/simulation/entities/stat_contributors/launch.py`](../../../game/simulation/entities/stat_contributors/launch.py) to aggregate satellite-specific stats (satellite_capacity, satellites_per_wave, satellite_launch_cycle) separately from fighter equivalents. **(Superseded by Round 4 Obs C — `satellites_per_wave` / `satellite_launch_cycle` were renamed to a single `satellite_launch_rate_tons_per_sec` field; the cycle-based cooldown stat is gone. `satellite_capacity` survives under its original name.)**
 
 ### Combat join
 - [x] Confirm `satellite_group` Fleets join contested-hex combat the same way `fighter_group` does (free if PROJ-FMS-A `group_kind` + PROJ-FMS-C combat-join wiring are in place).

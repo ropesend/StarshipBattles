@@ -1,5 +1,11 @@
 # Minefields (PROJ-FMS-B)
 
+> **Last verified:** 2026-05-17 — PROJ-FMS-B end-to-end mine system
+> shipped; Round 4 QA pass renamed `mine_launcher_small` to
+> `mine_deployer`, added mine-only `mine_bay` storage, and widened
+> `IssueLayMinesCommand` for planet-issued laying via the polymorphic
+> `IIssuerAdapter` seam (see Pattern #40).
+
 End-to-end mine system. Players design mines in the workshop, build them
 through standard shipyard production, load them into a ship's
 ``VehicleBay``, and lay them strategically into a hex via the
@@ -33,6 +39,13 @@ Component data (in `data/components.json`):
   `StructuralIntegrity`.
 - `ram_target_module` — designates the mine / fighter / ship as
   able to set a ram target.
+- `mine_deployer` — carries `StrategicMineLayer` /
+  `TacticalMineLayer` (Round 4 Obs C renamed from
+  `mine_launcher_small`; capacity / launch rate scale via
+  `simple_size_mount`).
+- `mine_bay` — typed mine-only storage (`VehicleBay` with
+  `allowed_types=["mine"]`; added in Round 4 Obs C alongside
+  the `fighter_bay` / `satellite_bay` typed bays).
 
 Three new ability classes (PROJ-FMS-A Phase 2):
 
@@ -47,15 +60,31 @@ Three new ability classes (PROJ-FMS-A Phase 2):
 
 Command -> Order -> Handler chain (mirrors `ColonizeHandler`):
 
-1. UI dispatches `IssueLayMinesCommand(fleet_id, ship_instance_id,
-   mine_design_id, count, target_hex)` via
+```python
+IssueLayMinesCommand(
+    fleet_id:          Optional[int] = None,
+    ship_instance_id:  Optional[str] = None,
+    mine_design_id:    str            = "",
+    count:             Optional[int]  = None,   # None = lay ALL matching
+    target_hex:        Optional[HexCoord] = None,
+    planet_id:         Optional[int] = None,    # planet-issued alternative
+)
+```
+
+Exactly one of `fleet_id` / `planet_id` is set (Round 4 Obs B).
+
+1. UI dispatches `IssueLayMinesCommand(...)` via
    `dispatch_issue_lay_mines`.
-2. `LayMinesCommandHandler` validates carrier presence + mine count
-   and queues `Order(OrderType.LAY_MINES, target={...})`.
-3. `ActionExecutionEngine` ticks the order; the registered
-   `LayMinesOrderHandler` pops the mines from the carrier's
-   `VehicleBay` and creates / extends a `mine_group` Fleet at the
-   target hex.
+2. `LayMinesCommandHandler` validates issuer presence + mine count
+   (carrier ship for fleet-issued; facility staging-yard for
+   planet-issued) and queues `Order(OrderType.LAY_MINES, target={...})`.
+3. `ActionExecutionEngine` ticks both `fleet.orders` and
+   `planet.orders` (widened in Round 4 Obs B); the registered
+   `LayMinesOrderHandler` operates on an `IIssuerAdapter` (see
+   Pattern #40), popping mine `CarriedVehicle`s via
+   `adapter.pop_carried(...)` — `ship.carried_items` for fleet-issued,
+   `planet.staging_yard` for planet-issued — and creates / extends a
+   `mine_group` Fleet at the target hex.
 
 A `mine_group` Fleet has `group_kind == "mine_group"` (PROJ-FMS-A
 Phase 4). New `mine_group`s default to:
@@ -179,15 +208,18 @@ The UI screens hook into these methods rather than mutating Fleet
 state directly. (Pygame screen wiring is intentionally minimal; the
 service layer is the testable boundary.)
 
-## Planet-issued mine laying (QA Observation B)
+## Planet-issued mine laying (QA Observation B / Pattern #40)
 
 A planetary-complex facility component exposing `StrategicMineLayer`
 lets a planet issue `IssueLayMinesCommand(planet_id=...)`; the same
-`LayMinesOrderHandler` ticks via `PlanetStagingYardIssuerAdapter`,
-popping mine `CarriedVehicle`s from the planet's `staging_yard` and
-producing a `mine_group` at the planet's hex (or merging into an
-existing one). The planet right-click menu
-([`planet_menu_items.build_menu_items`](../../game/ui/screens/planet_menu_items.py))
+`LayMinesOrderHandler` ticks via the `IIssuerAdapter` seam (see
+Pattern #40 in `docs/02_PATTERNS.md`) using
+`PlanetStagingYardIssuerAdapter`, popping mine `CarriedVehicle`s from
+the planet's `staging_yard` and producing a `mine_group` at the
+planet's hex (or merging into an existing one). The planet right-click
+menu ([`planet_menu_items.build_menu_items`](../../game/ui/screens/planet_menu_items.py),
+wired through [`fms_menu_callbacks`](../../game/ui/screens/fms_menu_callbacks.py)
+and [`planet_context_menu`](../../game/ui/screens/planet_context_menu.py))
 exposes the "Lay Mines" row when the facility ability gate passes and
 the staging yard holds at least one mine.
 
@@ -234,9 +266,13 @@ designs are inert payload (still cargo).
 | `data/balance/mines.json` | Balance constants |
 | `game/strategy/engine/minefield_balance.py` | Balance loader + dataclasses |
 | `game/strategy/engine/minefield_resolver.py` | Strategic-entry resolver |
-| `game/strategy/engine/order_handlers/lay_mines.py` | LAY_MINES order handler |
+| `game/strategy/engine/order_handlers/lay_mines.py` | LAY_MINES order handler (operates on `IIssuerAdapter`) |
 | `game/strategy/engine/handlers/lay_mines.py` | LayMines command handler |
-| `game/strategy/engine/commands/__init__.py` | `IssueLayMinesCommand` |
+| `game/strategy/engine/commands/__init__.py` | `IssueLayMinesCommand` (carries `planet_id`) |
+| `game/strategy/engine/issuer_adapter.py` | `IIssuerAdapter` + `FleetShipIssuerAdapter` / `PlanetStagingYardIssuerAdapter` (Round 4 Obs B) |
+| `game/ui/screens/planet_menu_items.py` | Planet right-click menu items (FMS rows) |
+| `game/ui/screens/fms_menu_callbacks.py` | Shared FMS menu callbacks (Lay Mines / Launch * / Recover *) |
+| `game/ui/screens/planet_context_menu.py` | Planet context-menu wiring |
 | `game/strategy/engine/turn_phase_registry.py` | Turn-engine wiring (post-hook on movement_apply) |
 | `game/strategy/services/mine_group_service.py` | Player operations on mine_groups |
 | `game/simulation/systems/tactical_mine_resolver.py` | Per-tick tactical mine logic |

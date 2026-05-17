@@ -1,8 +1,13 @@
 # Satellites System
 
-> **Last verified:** 2026-05-16 — PROJ-FMS-D end-to-end satellite system
-> shipped. Satellites are the third PROJ-FMS unit type, completing the
-> Fighters / Mines / Satellites sequence.
+> **Last verified:** 2026-05-17 — PROJ-FMS-D end-to-end satellite
+> system shipped (completing the Fighters / Mines / Satellites
+> sequence); Round 4 QA pass re-architected the system:
+> `satellite_bay_small/medium/large` consolidated to single
+> `satellite_bay` scaled by `simple_size_mount`; `satellite_launch_bay`
+> now collocates `RecoverSatellites`; tactical launch rewritten from
+> count-per-cycle/cooldown to mass-tons/sec budget; planet-issued
+> launch/recovery first-class via `IIssuerAdapter` (Pattern #40).
 
 End-to-end satellite lifecycle: design → bay → strategic launch →
 tactical combat (stationary AI) → strategic recovery, with mid-battle
@@ -71,18 +76,29 @@ ShipInstance.carried_items[*]   ← back where we started.
 | Ability gate | `StrategicFighterLaunch` / `RecoverFighters` | `StrategicSatelliteLaunch` / `RecoverSatellites` (cross-type isolation) |
 | Bay accepts | `allowed_types` filter; fighter-only bays available | `allowed_types` filter; satellite-only bays available |
 | Tactical launch | `BattleEngine.launch_fighters_in_battle` | `BattleEngine.launch_satellites_in_battle` |
-| Carrier AI | `CarrierAIController._maybe_launch_fighter_wave` | `CarrierAIController._maybe_launch_satellite_wave` (same controller, separate ability lookup) |
+| Carrier AI | `CarrierAIController._maybe_launch_fighter_wave()` → shared `_maybe_launch_wave("TacticalFighterLaunch", "fighter", "launch_fighters_in_battle")` | `CarrierAIController._maybe_launch_satellite_wave()` → same shared `_maybe_launch_wave("TacticalSatelliteLaunch", "satellite", "launch_satellites_in_battle")` |
+| Launch bay collocates recovery | `fighter_launch_bay` carries `RecoverFighters` (Round 4 Obs C) | `satellite_launch_bay` carries `RecoverSatellites` (Round 4 Obs C) |
 | Fleet group | `fighter_group` (id namespace 200000+) | `satellite_group` (id namespace 300000+) |
 | Overflow into | `fighter_group` | `satellite_group` |
 
 ## Strategic launch (`OrderType.LAUNCH_SATELLITES`)
 
-`IssueLaunchSatellitesCommand(fleet_id, ship_instance_id,
-satellite_design_id, count, target_hex)` queues a `LAUNCH_SATELLITES`
-order on the issuing fleet. The validator
-(`LaunchSatellitesCommandHandler`) rejects non-fleet `group_kind`
-callers and verifies the carrier has at least `count` matching satellite
-`CarriedVehicle`s. `satellite_design_id = "auto"` matches any
+```python
+IssueLaunchSatellitesCommand(
+    fleet_id:            Optional[int] = None,
+    ship_instance_id:    Optional[str] = None,
+    satellite_design_id: str            = "auto",
+    count:               Optional[int]  = None,   # None = launch ALL matching
+    target_hex:          Optional[HexCoord] = None,
+    planet_id:           Optional[int] = None,    # planet-issued alternative
+)
+```
+
+Exactly one of `fleet_id` / `planet_id` is set (Round 4 Obs B). The
+validator (`LaunchSatellitesCommandHandler`) rejects non-fleet
+`group_kind` callers (for fleet-issued) and verifies the issuer holds
+at least one matching satellite `CarriedVehicle` (or `count` matching
+when count is positive). `satellite_design_id = "auto"` matches any
 satellite-type CarriedVehicle.
 
 `LaunchSatellitesOrderHandler.execute_action_order`:
@@ -104,7 +120,17 @@ recover action.
 
 `BattleEngine.launch_satellites_in_battle(carrier, [CarriedVehicle, ...])`
 is the explicit action surface. Production caller:
-`CarrierAIController._maybe_launch_satellite_wave`, which:
+`CarrierAIController._maybe_launch_satellite_wave()`, a thin wrapper
+that delegates to the shared helper `_maybe_launch_wave(ability_name,
+vehicle_type, launch_method_name)`:
+
+QA-C (Round 4): the entire tactical-launch path was rewritten from the
+older count-per-cycle + cooldown model (which PROJ-FMS-D originally
+shipped) to the mass-tons/sec budget below. The same shared helper now
+serves both fighters and satellites, parameterised on ability name and
+vehicle type.
+
+The helper:
 
 - Sums `launch_rate_tons_per_sec` across active
   `TacticalSatelliteLaunchAbility` components on the carrier and
@@ -116,10 +142,9 @@ is the explicit action surface. Production caller:
   satellites with components / weapons / HP and tags each with
   `launched_in_battle_id` for the end-of-battle reboard pipeline.
 
-QA-C: the per-tick mass budget replaces the older count-per-cycle +
-cooldown model. The same budget accumulator is used for both fighters
-and satellites, keyed by ability name; a carrier mounting both bays
-launches each type independently as its respective budget refills.
+The budget accumulator is keyed by ability name; a carrier mounting
+both bays launches each type independently as its respective budget
+refills.
 
 ## Stationary tactical AI
 
@@ -142,8 +167,17 @@ inherits a non-zero throttle from a prior controller swap.
 
 ## Strategic recovery (`OrderType.RECOVER_SATELLITES`)
 
-`IssueRecoverSatellitesCommand(fleet_id, ship_instance_id,
-satellite_group_id, count)` queues a `RECOVER_SATELLITES` order.
+```python
+IssueRecoverSatellitesCommand(
+    fleet_id:            Optional[int] = None,
+    ship_instance_id:    Optional[str] = None,
+    satellite_group_id:  Optional[int] = None,
+    count:               Optional[int] = None,   # None = recover ALL (capped by capacity)
+    planet_id:           Optional[int] = None,   # planet-issued alternative
+)
+```
+
+Exactly one of `fleet_id` / `planet_id` is set (Round 4 Obs B).
 
 `RecoverSatellitesOrderHandler.execute_action_order`:
 
@@ -162,19 +196,24 @@ The ability-gate test pins that a carrier with only
 resolution, and the bay-side `allowed_types` filter rejects satellites
 into a fighter-only bay even if the order somehow slipped through.
 
-## Planet-issued launch / recovery (QA Observation B)
+## Planet-issued launch / recovery (QA Observation B / Pattern #40)
 
 A planetary-complex facility component exposing
 `StrategicSatelliteLaunch` lets a planet issue
 `IssueLaunchSatellitesCommand(planet_id=...)`; the same
-`LaunchSatellitesOrderHandler` ticks via `PlanetStagingYardIssuerAdapter`,
-popping satellites from the planet's `staging_yard` and spawning a
-`satellite_group` at the planet's hex. Recovery mirrors it: a facility
-with `RecoverSatellites` issues
+`LaunchSatellitesOrderHandler.execute_for_issuer` method ticks via
+`PlanetStagingYardIssuerAdapter`, popping satellites from the planet's
+`staging_yard` and spawning a `satellite_group` at the planet's hex.
+`ActionExecutionEngine` was widened in Round 4 to tick BOTH
+`fleet.orders` and `planet.orders` so the same handler executes for
+either issuer kind; planet-side capability gates check the facility
+for the required ability before accepting the order. Recovery mirrors
+it: a facility with `RecoverSatellites` issues
 `IssueRecoverSatellitesCommand(planet_id=...)`; recovered satellites
 re-stage to `staging_yard` (capacity-checked by `max_staging_mass`). The
 planet right-click menu
-([`planet_menu_items.build_menu_items`](../../game/ui/screens/planet_menu_items.py))
+([`planet_menu_items.build_menu_items`](../../game/ui/screens/planet_menu_items.py),
+wired through [`fms_menu_callbacks`](../../game/ui/screens/fms_menu_callbacks.py))
 exposes both rows when capability gates pass.
 
 ## End-of-battle reboard
@@ -199,7 +238,12 @@ group unless explicitly recovered via the strategic action.
 ### Production code
 
 - `game/strategy/engine/commands/__init__.py` — `IssueLaunchSatellitesCommand`,
-  `IssueRecoverSatellitesCommand` DTOs.
+  `IssueRecoverSatellitesCommand` DTOs (both carry `planet_id`).
+- `game/strategy/engine/issuer_adapter.py` — `IIssuerAdapter`,
+  `FleetShipIssuerAdapter`, `PlanetStagingYardIssuerAdapter` (shared
+  with all five FMS order handlers).
+- `game/ui/screens/planet_menu_items.py`, `fms_menu_callbacks.py`,
+  `planet_context_menu.py` — planet right-click menu wiring.
 - `game/strategy/engine/handlers/launch_satellites.py` —
   `LaunchSatellitesCommandHandler`.
 - `game/strategy/engine/handlers/recover_satellites.py` —
@@ -218,19 +262,26 @@ group unless explicitly recovered via the strategic action.
   vehicle-type aware reboard (handles fighters and satellites in one
   hook).
 - `game/ai/satellite_controller.py` — `SatelliteAIController`.
-- `game/ai/carrier_controller.py` — extended with
-  `_maybe_launch_satellite_wave` + shared `_maybe_launch_wave` helper.
+- `game/ai/carrier_controller.py` — per-type wrappers
+  `_maybe_launch_fighter_wave()` / `_maybe_launch_satellite_wave()`
+  delegate to the shared `_maybe_launch_wave(ability_name,
+  vehicle_type, launch_method_name)` helper, rewritten in Round 4 to a
+  per-tick mass-tons/sec budget (replacing the original count-per-cycle
+  + cooldown model).
 - `game/ai/ai_factory.py` — factory dispatches `Satellite`-typed ships
   to `SatelliteAIController`; carriers with either `TacticalFighterLaunch`
   OR `TacticalSatelliteLaunch` get the `CarrierAIController`.
 - `game/simulation/entities/stat_contributors/launch.py` —
   `contribute_tactical_satellite_launch` writes to
-  `ship.satellites_per_wave` / `ship.satellite_launch_cycle` /
-  `ship.satellite_capacity`.
+  `ship.satellite_launch_rate_tons_per_sec` /
+  `ship.satellite_capacity` (Round 4 renamed `satellites_per_wave` /
+  `satellite_launch_cycle` to the single `*_launch_rate_tons_per_sec`
+  field; the cycle-based cooldown stat is gone).
 - `game/simulation/entities/stat_contributors/registry.py` — seeded as
   `TacticalSatelliteLaunch` -> `contribute_tactical_satellite_launch`.
-- `game/simulation/entities/ship_stats.py` — resets the three satellite
-  stat fields each recalculation.
+- `game/simulation/entities/ship_stats.py` — resets the satellite
+  stat fields (`satellite_launch_rate_tons_per_sec`,
+  `satellite_capacity`) each recalculation.
 - `game/strategy/data/design_role.py` — `_CARRIER_ABILITIES` extended
   to include the satellite launch abilities.
 - `data/components.json` — ships the consolidated `fighter_bay`,

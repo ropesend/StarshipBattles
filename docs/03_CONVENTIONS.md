@@ -1,6 +1,6 @@
 # Conventions
 
-> **Last verified:** 2026-05-12 - Added Planets_V3 / stellar-objects split note to Image Assets section.
+> **Last verified:** 2026-05-17 - Round 4 doc-audit fixes: corrected `markers.py` listing (removed retired `VehicleLaunchAbility`), added the "polymorphic FMS commands (`planet_id` rule)" convention, the right-click context-menu triple convention, and the "Capability validation is hard, not soft" convention.
 
 Compact convention reference for Starship Battles. Use this with `docs/01_ARCHITECTURE.md` and `docs/02_PATTERNS.md` before coding.
 
@@ -53,6 +53,25 @@ Compact convention reference for Starship Battles. Use this with `docs/01_ARCHIT
 - The `controller` / `renderer` / `ui_builder` split follows compositional construction and the UI widget factory/two-stage UIWindow retrofit in `docs/02_PATTERNS.md`.
 - UI builder test fixtures live under `tests/fixtures/` with the same base name, for example `tests/fixtures/transfer_ui_builder.py`.
 
+#### Right-click context menus
+
+Per-entity right-click menus follow the
+`<entity>_menu_items.build_menu_items(...)` + `<entity>_context_menu`
++ shared `<feature>_menu_callbacks` triple:
+
+- Fleet precedent: `game/ui/screens/fleet_menu_items.py`.
+- Planet (Round 4): `game/ui/screens/planet_menu_items.py`,
+  `planet_context_menu.py`, and the shared
+  `fms_menu_callbacks.py` (Lay Mines / Launch * / Recover *).
+
+`build_menu_items` returns a flat list of menu rows derived from
+capability gates and the issuer's current state (carrier present,
+staging-yard contents, etc.). The shared `*_menu_callbacks` module
+dispatches the matching `IssueCommand` via the facade — UI menu code
+never builds DTOs inline. Reuse this triple when adding context-menu
+entries for new entity kinds rather than wiring callbacks directly
+into the context menu.
+
 ### Ability Module Names
 
 All ability modules live in `game/simulation/components/abilities/`.
@@ -64,7 +83,7 @@ All ability modules live in `game/simulation/components/abilities/`.
 - `crew.py`: `CrewCapacity`, `LifeSupportCapacity`, `RequiresMaintenance`, `ProvidesMaintenance`.
 - `defense.py`: `ShieldProjection`, `ShieldRegeneration`, `EmissiveArmor`, `ToHit*Modifier`.
 - `harvester.py`: `ResourceHarvesterAbility`, `SpaceShipyardAbility`, `LocalStorageAbility`.
-- `markers.py`: `VehicleLaunchAbility`, `CommandAndControl`, `StructuralIntegrity`.
+- `markers.py`: `CommandAndControl`, `StructuralIntegrity`, `RequiresCommandAndControl`, `RequiresCombatMovement`, `MultiplexTrackingAbility`, `VehicleStorageAbility`, `PodStorageAbility` (the legacy `VehicleLaunchAbility` was removed in PROJ-FMS-C audit Fix 1; tactical launch lives in `launch.py::TacticalFighterLaunchAbility`).
 - `propulsion.py`: `CombatPropulsion`, `ManeuveringThruster`, `StrategicMovement`, `WarpJump`.
 - `resources.py`: component-level `ResourceConsumption`, `ResourceStorage`, `ResourceGeneration`; `game/core/resources.py` owns `ResourceCatalog`.
 - `stat_keys.py`: `StatKey`, `AbilityStatBinding`.
@@ -90,6 +109,27 @@ Use the unified order API:
 - `OrdersWindow` from `orders_window.py`.
 
 Old fleet-only names and compatibility alias modules are deleted. Do not reintroduce `FleetOrder`, `PlanetOrderType`, `FleetOrderProcessor`, `FleetOrderSerializer`, or `FleetOrdersWindow`.
+
+### Polymorphic FMS commands (`planet_id` rule)
+
+All five FMS `Issue*Command` DTOs in
+`game/strategy/engine/commands/__init__.py` accept an optional
+`planet_id: Optional[int] = None` alongside the existing
+`fleet_id: Optional[int] = None`:
+
+- `IssueLayMinesCommand`
+- `IssueLaunchFightersCommand`
+- `IssueLaunchSatellitesCommand`
+- `IssueRecoverFightersCommand`
+- `IssueRecoverSatellitesCommand`
+
+Exactly one of `fleet_id` / `planet_id` must be set per command;
+`count` is `Optional[int] = None` (None = lay/launch/recover ALL
+matching, positive int = partial). Order handlers operate on
+`IIssuerAdapter` (`game/strategy/engine/issuer_adapter.py`) so the
+same handler family serves fleet-ship and planet-facility issuers —
+see Pattern #40 in `docs/02_PATTERNS.md`. Do not add a parallel
+`PlanetIssue*Command` family or fork the order handlers.
 
 ## File Organization
 
@@ -374,6 +414,32 @@ Test-specific Combat Lab data lives in `combat_lab/data/`:
 - Any `except Exception` must carry `# Intentional broad catch: <reason>` on the same line.
 - Design library uses `DesignLoadResult` objects for non-critical file loading.
 - Full rules live in `docs/05_ERROR_HANDLING.md`.
+
+### Capability validation is hard, not soft
+
+When a design specifies a component that requires a capability the
+ship/complex cannot provide, the validator MUST reject the design at
+design-time rather than silently degrade runtime behaviour. Examples:
+
+- `RequiresMaintenance` total > `ProvidesMaintenance` total — hard reject.
+- A ship has `CrewCapacity` components but no `LifeSupportCapacity` —
+  hard reject (crew without life support is invalid, not "crew that
+  slowly suffocates").
+- A weapon requires `CommandAndControl` (via `RequiresCommandAndControl`)
+  but the design has none — hard reject.
+- `RequiresCombatMovement` without combat propulsion — hard reject.
+
+Validators live under `game/strategy/validation/` and
+`game/simulation/validation/`; they raise `ValidationException` (or
+return a failing `ValidationResult`) at the design-load /
+design-edit boundary. Do not invent runtime degradation modes
+("inoperative when over budget", "fires at half rate when crew is
+short", etc.) — those are mode switches that hide configuration
+bugs from the player. Bump capacities in the design, or rebalance,
+or reject.
+
+This matches the QA Round-2 observation captured in the
+user-memory note `feedback_capability_missing_rejects_not_degrades.md`.
 
 ### No Hardcoded Type Lists
 

@@ -24,7 +24,7 @@ All in [`game/simulation/components/abilities/`](../../../game/simulation/compon
 
 ### Registration
 - [x] Register all eight ability classes in [`abilities/__init__.py`](../../../game/simulation/components/abilities/__init__.py).
-- [x] Add at least one component definition per ability in [`data/components.json`](../../../data/components.json) so designs can include them — e.g., `mine_launcher_small`, `fighter_launch_bay_small`, `fighter_recovery_bay_small`. (Components for these abilities — what `SpaceShipyard` is to capital construction.) Tier sizes determine `capacity_per_action`.
+- [x] Add at least one component definition per ability in [`data/components.json`](../../../data/components.json) so designs can include them — e.g., `mine_launcher_small`, `fighter_launch_bay_small`, `fighter_recovery_bay_small`. (Components for these abilities — what `SpaceShipyard` is to capital construction.) Tier sizes determine `capacity_per_action`. **(Superseded by Round 4 Obs C — `mine_launcher_small` → `mine_deployer`; `fighter_launch_bay_small` → `fighter_launch_bay` (now collocates `RecoverFighters`); standalone `fighter_recovery_bay_small` DELETED. Capacity / launch rate scale via the `simple_size_mount` modifier and the new `launch_rate_mult` / `recovery_rate_mult` / `bay_capacity_mult` stat keys. See `PROJ-FMS-shared/design.md` Round 4 status update.)**
 - [x] Extend per-ship layer / classification rules in [`vehiclelayers.json`](../../../data/vehiclelayers.json) and each component's `allowed_vehicle_types` so the new components can be slotted on capital ships and planets.
 
 ### `OrderType` enum reservations (no behavior, just enum values)

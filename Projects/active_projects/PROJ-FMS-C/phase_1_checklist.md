@@ -35,7 +35,7 @@ The existing tactical fighter launch lives in the weapon-firing-system per-tick 
 - [x] Backwards-compatibility shim: if PROJ-FMS-A left the old `VehicleLaunchAbility` in place, leave its code as-is (no callers will hit it once existing designs migrate); add a deprecation log warning on use. Plan to remove fully in a follow-up housekeeping pass once no designs reference it.
 
 ### Stat aggregator
-- [x] Update [`game/simulation/entities/stat_contributors/launch.py:29-61`](../../../game/simulation/entities/stat_contributors/launch.py#L29) to read from the new tactical launch ability shape. Aggregate per-ship `fighter_launch_capacity`, `fighter_launch_cycle`, etc. from `TacticalFighterLaunchAbility` instances.
+- [x] Update [`game/simulation/entities/stat_contributors/launch.py:29-61`](../../../game/simulation/entities/stat_contributors/launch.py#L29) to read from the new tactical launch ability shape. Aggregate per-ship `fighter_launch_capacity`, `fighter_launch_cycle`, etc. from `TacticalFighterLaunchAbility` instances. **(Superseded by Round 4 Obs C — `fighter_launch_capacity` / `fighter_launch_cycle` / `fighters_per_wave` were renamed to a single `fighter_launch_rate_tons_per_sec` field. The cycle-based cooldown stat is gone; the contributor now aggregates `launch_rate_tons_per_sec`. See `decisions.md` "2026-05-17 — Round 4 follow-up".)**
 
 ### Tests
 - [x] Strategic: load 6 fighters into a carrier's bay (mixed designs allowed), launch 4 into the current hex → `fighter_group` appears with 4 entries, carrier's bay now has 2.

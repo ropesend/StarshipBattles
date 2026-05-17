@@ -52,6 +52,12 @@ details.
 - Data: `satellite_bay_small` (300 mass / satellite-only),
   `satellite_bay_medium` (800), `satellite_bay_large` (2100), and
   matching `fighter_bay_small` for clean cross-type pairing in tests.
+  **Superseded by Round 4 Obs C:** the per-tier
+  `satellite_bay_small/medium/large` set was collapsed to a single
+  `satellite_bay` (and `fighter_bay_small` to `fighter_bay`) whose
+  capacity scales via the `simple_size_mount` modifier and the new
+  `bay_capacity_mult` stat key. A new mine-only `mine_bay` was added
+  in the same pass. See `decisions.md` "2026-05-17 — Round 4 follow-up".
 - `OrderType.LAUNCH_SATELLITES` added to `ACTION_ORDER_TYPES`; spec
   compiler passes `satellite_group` fleets through (filter excludes
   only `mine_group`).
@@ -171,10 +177,16 @@ in `Projects/active_projects/PROJ-FMS-C/findings/implementation_report.md`:
 
 ## Known limitations
 
-- No pygame UI binding for player-facing satellite launch / recover
+- ~~No pygame UI binding for player-facing satellite launch / recover
   actions. Facade dispatch helpers and the strategic command surface
   are production-reachable via the AI path (CarrierAIController);
-  pygame UI binding is a follow-up.
+  pygame UI binding is a follow-up.~~ **Partially closed by Round 4
+  (Obs B):** the fleet right-click menu and the new planet right-click
+  menu now expose Launch Satellites / Recover Satellites rows (plus
+  the Lay Mines / Launch Fighters / Recover Fighters peers) via
+  `game/ui/screens/planet_menu_items.py`,
+  `game/ui/screens/planet_context_menu.py`, and the shared
+  `game/ui/screens/fms_menu_callbacks.py`.
 - Carrier auto-launch policy is naive: the
   `_maybe_launch_wave` helper fires whenever an enemy is within
   launch radius + cooldown is ready. No wave-size targeting,
@@ -183,3 +195,14 @@ in `Projects/active_projects/PROJ-FMS-C/findings/implementation_report.md`:
   design → bay → launch → fight → reboard → recover → save/load loop
   is deferred; the integration tests cover each leg in isolation +
   the FMS-D e2e tests stitch them together programmatically.
+
+## Postscript (2026-05-17 final state)
+
+The sharded-suite numbers earlier in this report (20646 / 20627, etc.)
+are an accurate snapshot at PROJ-FMS-D ship time. The final clean
+baseline after the dedicated test-baseline cleanup pass plus the
+four QA rounds is **20840 / 20840 passed / 0 failed / 0 errors /
+0 skipped** — see `decisions.md` "Post-PROJ-FMS test-baseline
+cleanup pass" and "2026-05-17 — Round 4 follow-up". Intermediate
+baselines quoted in A/B/C implementation reports (20460, 20525,
+20568) are likewise correct at their respective snapshot times.

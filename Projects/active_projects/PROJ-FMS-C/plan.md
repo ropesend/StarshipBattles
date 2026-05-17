@@ -22,9 +22,16 @@ production caller + legacy `VehicleLaunchAbility` removal; P2 component-
 state round trip; P2 artifact correction; inline ability-gating fix.
 See [`findings/audit_fix_report.md`](findings/audit_fix_report.md).
 **Sharded suite:** 20568 / 20549 passed, 9 failed / 6 errors / 4
-skipped — pre-existing baseline only; zero new failures.
-**Next Action:** Pygame UI binding for player-facing launch/recover
-(deferred follow-up); PROJ-FMS-D (satellites) may now begin.
+skipped — pre-existing baseline at PROJ-FMS-C ship time; zero new
+failures. **Post-shipping (Round 4, 2026-05-17):** final clean
+baseline is 20840/20840 passed / 0 failed / 0 errors / 0 skipped
+after the dedicated PROJ-FMS-D test-baseline cleanup pass.
+**Next Action:** ~~Pygame UI binding for player-facing launch/recover
+(deferred follow-up);~~ Round 4 partially closed this: the fleet
+right-click menu and the planet right-click menu now expose Launch
+Fighters / Recover Fighters rows via the shared
+`fms_menu_callbacks.py` (plus the LayMines / LaunchSatellites /
+RecoverSatellites peers). PROJ-FMS-D (satellites) shipped.
 **Blockers:** None for backend. UI smoke verification deferred — see
 "Known limitations" in [`findings/implementation_report.md`](findings/implementation_report.md).
 

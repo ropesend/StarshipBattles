@@ -23,6 +23,9 @@ documents per-phase deliverables, production wiring, and the sharded
 suite status vs PROJ-FMS-C baseline (20646 / 20627 / 9 / 6 / 4 —
 +78 net, zero new regressions). Audit-fix details at
 [`findings/audit_fix_report.md`](findings/audit_fix_report.md).
+**Final baseline post-cleanup (2026-05-17):** 20840 / 20840 passed /
+0 failed / 0 errors / 0 skipped (after the dedicated PROJ-FMS-D
+test-baseline cleanup pass documented in `decisions.md`).
 **Next Action:** ship the four-project sequence (PROJ-FMS-A/B/C/D).
 **Blockers:** None.
 
@@ -53,8 +56,8 @@ Satellites mirror fighters but stay stationary in tactical combat and use a **se
 | `game/strategy/engine/order_handlers/launch_satellites.py` (new) | Production | `LaunchSatellitesOrderHandler` | 1 |
 | `game/strategy/engine/order_handlers/recover_satellites.py` (new) | Production | `RecoverSatellitesOrderHandler` | 2 |
 | `game/strategy/data/fleet.py` | Production | Support `satellite_group` `group_kind` (already added in A) | 1 |
-| `game/ai/controller.py` | Production | Stationary satellite AI variant ([`controller.py:361-363`](../../../game/ai/controller.py#L361) is the existing satellite ref) | 1 |
-| `data/components.json` | Data | Add `satellite_bay_*` components (separate from fighter bays) | 1 |
+| `game/ai/satellite_controller.py` (new in shipped impl) | Production | Stationary satellite AI controller. The base `AIController.update()` in `controller.py` retains a short-circuit for `Satellite`-typed ships; the dedicated controller is the canonical surface. | 1 |
+| `data/components.json` | Data | Add `satellite_bay_*` components (separate from fighter bays). **(Superseded by Round 4 Obs C — the per-tier `satellite_bay_small/medium/large` set was consolidated to a single `satellite_bay` whose capacity scales via `simple_size_mount` and the new `bay_capacity_mult` stat key.)** | 1 |
 | `game/simulation/entities/stat_contributors/launch.py` | Production | Aggregate satellite launch / bay stats separately from fighters | 1 |
 | `game/ui/screens/<sector_action_menu>.py` | Production | Strategic launch + recovery UI for satellites | 1, 2 |
 

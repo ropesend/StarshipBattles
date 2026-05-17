@@ -20,7 +20,7 @@
 **Active Phase:** All 5 phases complete; ready for PROJ-FMS-B handoff
 **Last Action:** Phase 5 — launch/recovery skeletons + OrderType reservations + integration tests + ability_reference.md docs update
 **Next Action:** Hand off to PROJ-FMS-B (mine end-to-end). All foundation plumbing in place.
-**Blockers:** None. Pre-existing test failures on main (6 errors + 1 ship_instance_damage flake + 5 quickstart metadata + 3 ship_stats_golden) are unchanged by FMS-A.
+**Blockers:** None. (The pre-existing test failures noted at PROJ-FMS-A ship-time — 6 errors + 1 ship_instance_damage flake + 5 quickstart metadata + 3 ship_stats_golden — were all resolved during the PROJ-FMS-D post-shipping test-baseline cleanup pass; final sharded baseline is 20840/20840 passed / 0 failed / 0 errors / 0 skipped. See `PROJ-FMS-D/decisions.md` "Post-PROJ-FMS test-baseline cleanup pass".)
 
 ## Overview
 Foundation phase for the four-project Fighters/Mines/Satellites sequence. Establishes the data, components, abilities, and storage substrate that PROJ-FMS-B/C/D all build on. **No user-facing behavior in this project** — everything is plumbing.
@@ -47,7 +47,7 @@ See [`../PROJ-FMS-shared/design.md`](../PROJ-FMS-shared/design.md#proj-fms-a-fou
 | `data/vehiclelayers.json` | Data | Add `Mine_Standard` layer + extend `Fighter_Standard` allow-list |
 | `data/components.json` | Data | Add `Warhead`, `Laserhead`, `SmallTargetingSensor`, `RamTarget` |
 | `game/simulation/components/abilities/__init__.py` | Production | Register new ability classes |
-| `game/simulation/components/abilities/markers.py` | Production | Refactor `VehicleLaunchAbility`; add launch ability skeletons |
+| `game/simulation/components/abilities/markers.py` | Production | (PROJ-FMS-A originally planned to refactor `VehicleLaunchAbility`; PROJ-FMS-C audit Fix 1 superseded that and REMOVED `VehicleLaunchAbility` entirely.) Add launch ability skeletons in `launch.py`. |
 | `game/simulation/components/abilities/cargo.py` or new file | Production | `VehicleBayAbility` |
 | `game/strategy/data/ship_instance.py:135-136` | Production | Typed `carried_items` for vehicles |
 | `game/strategy/data/ship_cargo_manager.py` | Production | `load_vehicle()`, `unload_vehicle()` |

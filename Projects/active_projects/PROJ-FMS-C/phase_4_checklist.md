@@ -20,7 +20,7 @@
   - Overflow scenario: launch 4, only 2 bay slots free at end → 2 reboard, 2 spill into new sector `fighter_group`.
 
 ### Stat correctness
-- [x] Verify `fighter_capacity` / `fighters_per_wave` / `launch_cycle` stats from [`launch.py:29-61`](../../../game/simulation/entities/stat_contributors/launch.py#L29) are correct after the Phase 1 stat-contributor update.
+- [x] Verify `fighter_capacity` / `fighters_per_wave` / `launch_cycle` stats from [`launch.py:29-61`](../../../game/simulation/entities/stat_contributors/launch.py#L29) are correct after the Phase 1 stat-contributor update. **(Superseded by Round 4 Obs C — `fighters_per_wave` / `launch_cycle` were renamed to a single `fighter_launch_rate_tons_per_sec` field; only `fighter_capacity` survives under its original name. See `decisions.md` "2026-05-17 — Round 4 follow-up".)**
 
 ### Hand verification (gameplay smoke)
 > **PROJ-FMS-C audit Fix 3 (2026-05-16):** these items were marked `[x]`

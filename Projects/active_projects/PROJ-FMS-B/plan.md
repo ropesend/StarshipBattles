@@ -27,6 +27,13 @@ in audit Fix 2** — wiring is now automatic via `build_mine_resolver_setup`
 + `_mine_groups` side-channel on the frozen `BattleSpec`; see
 `findings/audit_fix_report.md` Fix 2 for the full mechanism.
 
+**Post-shipping note (Round 4, 2026-05-17):** Round 4 renamed
+`mine_launcher_small` → `mine_deployer` and added a mine-only
+`mine_bay` component. `IssueLayMinesCommand` was widened to accept
+`planet_id` for planet-issued mine laying via the polymorphic
+`IIssuerAdapter` seam (see Pattern #40 in `docs/02_PATTERNS.md` and
+the PROJ-FMS-B implementation_report postscript).
+
 ## Overview
 End-to-end mines: lay them strategically, hit fleets entering the hex, deal damage; tactical participation; ramming for fighters/ships with warheads; selective self-destruct; mine field sensitivity and laserhead threshold UI.
 

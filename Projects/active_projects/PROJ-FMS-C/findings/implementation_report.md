@@ -36,7 +36,13 @@ errors / 4 skipped (PROJ-FMS-B post-audit; verified against
   tagged with `launched_in_battle_id` for end-of-battle reboard.
 - Stat-contributor `contribute_vehicle_launch` extended to also read
   `TacticalFighterLaunchAbility` (capacity_per_action / cycle_time)
-  alongside the legacy `VehicleLaunchAbility`.
+  alongside the legacy `VehicleLaunchAbility`. **Superseded twice:**
+  (a) audit Fix 1 simplified the contributor to
+  `TacticalFighterLaunch` only (legacy class deleted); (b) Round 4
+  renamed the per-ship fields from `fighters_per_wave` /
+  `launch_cycle` to a single `fighter_launch_rate_tons_per_sec` (the
+  cycle-based cooldown stat is gone). See decisions.md "2026-05-17 —
+  Round 4 follow-up".
 - `OrderType.LAUNCH_FIGHTERS` moved from
   "reserved-no-command-yet" to the reachable-via-command set in
   `test_command_registry_contract.py`. `ACTION_ORDER_TYPES` extended.
@@ -420,3 +426,21 @@ production-AI-driven fighter system. Items that remain follow-up:
    `test_ship_stats_golden::acceleration_rate` on qs_escort,
    qs_frigate_gc, qs_battleship. Documented in PROJ-FMS-A and
    PROJ-FMS-B reports as the same drift.
+
+## Postscript (2026-05-17 final state)
+
+The sharded-suite numbers earlier in this report (20525 / 20506,
+etc.) are accurate at PROJ-FMS-C ship time. The final clean baseline
+after all four FMS projects + four QA rounds + the PROJ-FMS-D
+test-baseline cleanup pass is **20840 / 20840 passed / 0 failed /
+0 errors / 0 skipped** — see `PROJ-FMS-D/decisions.md`
+"Post-PROJ-FMS test-baseline cleanup pass". Intermediate baselines
+quoted in A/B/D implementation reports (20460, 20525, 20646) are
+likewise correct at their respective snapshot times.
+
+Round 4 follow-up notes specific to PROJ-FMS-C are in
+`PROJ-FMS-C/decisions.md` "2026-05-17 — Round 4 follow-up":
+tactical-launch rewritten from count-per-cycle/cooldown to
+mass-tons/sec budget; bay components consolidated
+(`fighter_launch_bay` now also carries `RecoverFighters`); FMS
+commands polymorphic via `IIssuerAdapter` (Pattern #40).

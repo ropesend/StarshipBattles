@@ -301,3 +301,29 @@ sections cover:
   all `[x]`.
 - `Projects/active_projects/PROJ-FMS-B/findings/implementation_report.md`
   — this file, NEW.
+
+## Postscript (2026-05-17 final state)
+
+The sharded-suite numbers earlier in this report (20525 / 20506) are
+an accurate snapshot at PROJ-FMS-B ship time. The final clean
+baseline after all four FMS projects + four QA rounds + the
+test-baseline cleanup pass is **20840 / 20840 passed / 0 failed /
+0 errors / 0 skipped** — see `PROJ-FMS-D/decisions.md`
+"Post-PROJ-FMS test-baseline cleanup pass". Intermediate baselines
+quoted in A/C/D implementation reports (20460, 20568, 20646) are
+likewise correct at their respective snapshot times.
+
+Round 4 follow-up notes specific to PROJ-FMS-B:
+
+- `mine_launcher_small` was renamed to `mine_deployer`; capacity /
+  launch rate scale via `simple_size_mount` and the new
+  `launch_rate_mult` / `bay_capacity_mult` stat keys.
+- A new mine-only `mine_bay` typed storage component was added
+  (`VehicleBay` with `allowed_types=["mine"]`).
+- `IssueLayMinesCommand` was widened to accept `planet_id` alongside
+  `fleet_id` (exactly one set) and `count: Optional[int] = None`
+  (None = lay ALL matching). The `LayMinesOrderHandler` now operates
+  on `IIssuerAdapter` (`game/strategy/engine/issuer_adapter.py`) so a
+  planet facility with `StrategicMineLayer` can lay mines from its
+  `staging_yard` via the same handler. See Pattern #40 in
+  `docs/02_PATTERNS.md`.

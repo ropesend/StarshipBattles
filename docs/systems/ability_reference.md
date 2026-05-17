@@ -1,6 +1,6 @@
 # Ability Reference
 
-> **Last verified:** 2026-05-16 - Verified against `game/simulation/components/abilities/`, strategic ability services, and the compact ability reference. Current live registry has 72 keys (PROJ-FMS-A added 11 new abilities — `Warhead`, `Laserhead`, `RamTarget`, `VehicleBay`, and the six launch + two recovery skeletons; PROJ-FMS-C audit Fix 1 removed `VehicleLaunch`; QA Observation 5 renamed `CrewRequired` to `RequiresMaintenance` and added `ProvidesMaintenance`).
+> **Last verified:** 2026-05-17 - Verified against `game/simulation/components/abilities/`, strategic ability services, and the compact ability reference. Current live registry has 72 keys (PROJ-FMS-A added 11 new abilities — `Warhead`, `Laserhead`, `RamTarget`, `VehicleBay`, and the six launch + two recovery skeletons; PROJ-FMS-C audit Fix 1 removed `VehicleLaunch`; QA Observation 5 renamed `CrewRequired` to `RequiresMaintenance` and added `ProvidesMaintenance`; Round 4 added the `launch_rate_mult` / `recovery_rate_mult` / `bay_capacity_mult` stat keys for `simple_size_mount` scaling and made all five FMS launch/recover commands polymorphic via `IIssuerAdapter`).
 
 Compact agent reference for the component ability system. It preserves live registry keys, data shapes, contracts, invariants, extension recipes, warnings, stale-reference corrections, and validation commands while omitting release-note history.
 
@@ -139,7 +139,16 @@ File: `game/simulation/components/abilities/stat_keys.py`
 
 Multiplicative default `1.0`:
 
-`mass_mult`, `hp_mult`, `damage_mult`, `range_mult`, `cost_mult`, `thrust_mult`, `turn_mult`, `strategic_mult`, `energy_gen_mult`, `capacity_mult`, `shield_capacity_mult`, `crew_capacity_mult`, `life_support_capacity_mult`, `consumption_mult`, `reload_mult`, `endurance_mult`, `projectile_hp_mult`, `projectile_damage_mult`, `crew_req_mult`.
+`mass_mult`, `hp_mult`, `damage_mult`, `range_mult`, `cost_mult`, `thrust_mult`, `turn_mult`, `strategic_mult`, `energy_gen_mult`, `capacity_mult`, `shield_capacity_mult`, `crew_capacity_mult`, `life_support_capacity_mult`, `consumption_mult`, `reload_mult`, `endurance_mult`, `projectile_hp_mult`, `projectile_damage_mult`, `crew_req_mult`, `launch_rate_mult`, `recovery_rate_mult`, `bay_capacity_mult`.
+
+The three Round 4 mult keys scale FMS dials via `simple_size_mount`:
+
+- `launch_rate_mult` — multiplies `launch_rate_tons_per_sec` on
+  `TacticalFighterLaunch` / `TacticalSatelliteLaunch` /
+  `TacticalMineLayer`.
+- `recovery_rate_mult` — multiplies `recovery_per_action` on
+  `RecoverFighters` / `RecoverSatellites`.
+- `bay_capacity_mult` — multiplies `capacity_mass` on `VehicleBay`.
 
 Additive default `0.0`:
 
@@ -780,10 +789,13 @@ policy, no behaviour tree, no avoidance, no kamikaze handling.
 ### Stat aggregation
 
 `stat_contributors/launch.py::contribute_tactical_satellite_launch`
-aggregates into `ship.satellites_per_wave` /
-`ship.satellite_launch_cycle` / `ship.satellite_capacity`, kept
-distinct from the fighter equivalents so a carrier mounting both bays
-shows both stat sets independently.
+aggregates into `ship.satellite_launch_rate_tons_per_sec` /
+`ship.satellite_capacity` (Round 4 renamed `satellites_per_wave` /
+`satellite_launch_cycle` to the single
+`*_launch_rate_tons_per_sec` field; the cycle-based cooldown stat is
+gone). The fighter equivalent is
+`fighter_launch_rate_tons_per_sec`; both stat sets stay distinct so a
+carrier mounting both bays shows both independently.
 
 ### End-of-battle reboard — generalised
 
@@ -800,3 +812,25 @@ backwards-compat) is now vehicle-type aware:
 
 The same reboard hook handles fighters and satellites in a single
 pass; there is no parallel `satellite_reboard.py`.
+
+## QA Round 4 — Polymorphic order issuer
+
+All five FMS `Issue*Command` DTOs (`IssueLayMinesCommand`,
+`IssueLaunchFightersCommand`, `IssueLaunchSatellitesCommand`,
+`IssueRecoverFightersCommand`, `IssueRecoverSatellitesCommand`) now
+accept an optional `planet_id` alongside the existing `fleet_id`;
+exactly one of the two must be set. `count` was widened to
+`Optional[int] = None` (`None` = launch/recover ALL matching). Order
+handlers operate on `IIssuerAdapter` (`game/strategy/engine/issuer_adapter.py`)
+with two implementations: `FleetShipIssuerAdapter` (carrier ship in a
+fleet) and `PlanetStagingYardIssuerAdapter` (planet facility +
+`staging_yard`). `ActionExecutionEngine` ticks both `fleet.orders` and
+`planet.orders` so the same five handlers serve both issuer kinds. See
+Pattern #40 in `docs/02_PATTERNS.md` for the canonical pattern recipe.
+
+The `RequiresMaintenance` / `ProvidesMaintenance` validator change
+(QA Obs 5) follows the "validator rejects, doesn't degrade" convention
+captured in `docs/03_CONVENTIONS.md`: capability requirements
+(`RequiresMaintenance` total vs `ProvidesMaintenance` total, crew
+without life support, C&C requirements, etc.) produce hard design-time
+errors rather than silent runtime degradation.

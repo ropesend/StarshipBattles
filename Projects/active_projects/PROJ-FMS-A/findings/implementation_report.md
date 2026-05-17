@@ -132,7 +132,13 @@ components, ability skeletons, and substrate.
 - 5 new component definitions to slot the skeletons:
   `mine_launcher_small`, `fighter_launch_bay_small`,
   `satellite_launch_bay_small`, `fighter_recovery_bay_small`,
-  `satellite_recovery_bay_small`.
+  `satellite_recovery_bay_small`. **Superseded by Round 4 Obs C:**
+  these were consolidated to `mine_deployer`, `fighter_launch_bay`
+  (now collocates `RecoverFighters`), and `satellite_launch_bay`
+  (now collocates `RecoverSatellites`); the two standalone
+  `*_recovery_bay_small` components were deleted. New mine-only
+  `mine_bay` was added alongside `fighter_bay` / `satellite_bay`.
+  See `PROJ-FMS-shared/design.md` "Status update (Round 4, 2026-05-17)".
 - `docs/systems/ability_reference.md` updated with the PROJ-FMS-A
   section (data shapes, layer, file, "where behavior lands later").
 - `test_command_registry_contract.py` updated to exempt the five new
@@ -302,3 +308,16 @@ dict shapes" decision (no schema migration).
 - `Projects/active_projects/PROJ-FMS-A/plan.md` — Quick Status table updated
 - `Projects/active_projects/PROJ-FMS-A/phase_{1..5}_checklist.md` — all `[x]`
 - `Projects/active_projects/PROJ-FMS-A/findings/implementation_report.md` (this file, NEW)
+
+## Postscript (2026-05-17 final state)
+
+The sharded-suite numbers in "Sharded Suite Status" above (20460
+tests / 9 failed / 6 errors / 4 skipped) are an accurate snapshot at
+PROJ-FMS-A ship time. All four FMS projects, plus four QA rounds and
+a dedicated test-baseline cleanup pass, have shipped since. The final
+clean baseline is **20840 / 20840 passed / 0 failed / 0 errors /
+0 skipped** — see `PROJ-FMS-D/decisions.md` "Post-PROJ-FMS
+test-baseline cleanup pass" for the per-failure resolution detail.
+The intermediate baselines quoted in B/C/D implementation reports
+(20525, 20568, 20646) are also correct at their respective snapshot
+times.

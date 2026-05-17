@@ -172,3 +172,49 @@ Outcomes (all four were fixture/snapshot drift, not engine regressions):
 **Final sharded suite after cleanup**:
 `20822 tests | 20818 passed | 0 failed | 0 errors | 4 skipped`.
 First fully-green baseline since before the PROJ-FMS sequence began.
+
+> **Round 4 update (2026-05-17):** the four-round QA pass that
+> followed (maintenance abstraction, build-queue facade fixes,
+> polymorphic IIssuerAdapter + component consolidation, tactical
+> launch mass-budget rewrite) added enough new tests to bring the
+> current sharded baseline to **20840 / 20840 passed / 0 failed /
+> 0 errors / 0 skipped**. The 20822/20818 figure above remains
+> accurate at PROJ-FMS-D ship time + audit fix.
+
+## 2026-05-17 — Round 4 follow-up
+
+Banner: the phase decisions above describe PROJ-FMS-D as shipped.
+Round 4 QA made substantive cross-cutting changes that supersede
+several of the bay / launch / stat decisions; the historical
+decisions remain accurate at their snapshot time.
+
+- **Bay separation mechanism consolidated (Obs C):** the per-tier
+  `satellite_bay_small / _medium / _large` set was collapsed to a
+  single `satellite_bay` whose capacity scales via `simple_size_mount`
+  and the new `bay_capacity_mult` stat key; the same consolidation
+  ran for `fighter_bay`, `vehicle_bay`, and the new mine-only
+  `mine_bay`. The earlier "shared `VehicleBayAbility` with
+  `allowed_types`" decision still holds; only the per-tier component
+  data was removed.
+- **Launch bay collocates recovery (Obs C):** `satellite_launch_bay`
+  now ALSO carries `RecoverSatellites`; the standalone
+  `satellite_recovery_bay_small` was deleted. Same change ran for
+  fighters (`fighter_launch_bay` now carries `RecoverFighters`;
+  `fighter_recovery_bay_small` deleted).
+- **CarrierAIController rewrite (Obs C):** the shared
+  `_maybe_launch_wave(ability_name, vehicle_type, launch_method_name)`
+  helper was rewritten from a count-per-cycle + cooldown model to a
+  per-tick mass-tons/sec budget. Carrier-side ship-stat fields
+  renamed (`satellites_per_wave` / `satellite_launch_cycle` →
+  single `satellite_launch_rate_tons_per_sec`; same for fighters).
+  The "alternating per-tick cooldown" mental model is gone — each
+  vehicle type accumulates its own budget independently.
+- **Polymorphic order issuer (Obs B):** `IssueLaunchSatellitesCommand`
+  and `IssueRecoverSatellitesCommand` gained an optional `planet_id`
+  alongside `fleet_id` (exactly one set), and `count` is now
+  `Optional[int] = None` (None = ALL matching). The
+  `LaunchSatellitesOrderHandler` and `RecoverSatellitesOrderHandler`
+  operate on `IIssuerAdapter`
+  (`game/strategy/engine/issuer_adapter.py`) so a planet facility
+  with `StrategicSatelliteLaunch` / `RecoverSatellites` can act via
+  the same handler.

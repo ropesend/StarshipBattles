@@ -2,9 +2,12 @@
 
 Balanced compact derivative of `docs/02_PATTERNS.md` and
 `AgentCoordination/Scratchpad/reports/02_PATTERNS_ALT_compact.md`.
-Source doc last verified 2026-05-08. This version removes release-note
-archaeology, preserves current contracts and extension recipes, and fixes the
-stale pattern count to 35.
+Source doc last verified 2026-05-17. This version removes release-note
+archaeology, preserves current contracts and extension recipes, and the
+current pattern count is 40 (Patterns #37–#40 came from the PROJ-FMS
+series + Round 4 QA: group-kind discriminator, CarriedVehicle
+substrate, pre_tick_loop_callback composition, polymorphic
+`IIssuerAdapter`).
 
 ## Global Rules
 
@@ -60,6 +63,7 @@ stale pattern count to 35.
 | 37 | Group-Kind Fleet Discriminator | `Fleet.group_kind` plus `BaseCommandHandler._reject_if_non_fleet_group` constrain non-`fleet` Fleet kinds (`mine_group` / `fighter_group` / `satellite_group`) from movement / build / warp / intercept / join commands. |
 | 38 | CarriedVehicle Substrate | `VehicleBayAbility` (`capacity_mass`, `allowed_types`) plus the `CarriedVehicle` payload and shared `carried_vehicle_to_ship_instance` helper carry design-backed vehicles through bay storage, strategic launch / recovery, and end-of-battle reboard. |
 | 39 | `pre_tick_loop_callback` Composition | `_compose_setup_callbacks` chains battle-setup closures (mine resolver wiring, fighter reboard tracker, etc.) onto the single `run_battle(..., pre_tick_loop_callback=...)` slot, letting independent subsystems install per-battle state without fighting for the same hook. |
+| 40 | Polymorphic Order Issuer (`IIssuerAdapter`) | Order handlers accept an `IIssuerAdapter` protocol (`FleetShipIssuerAdapter` / `PlanetStagingYardIssuerAdapter`) instead of a concrete `(Fleet, ShipInstance)` pair, so a single handler family serves both fleet-ship and planet-facility issuers; `ActionExecutionEngine` ticks both `fleet.orders` and `planet.orders`. |
 
 ## 1. ApplicationContext
 
@@ -908,9 +912,11 @@ Where: `game/strategy/data/ship_instance.py::ShipInstance.carried_items`;
 Contract:
 - `VehicleBayAbility` data shape: `{"capacity_mass": <int>,
   "allowed_types": ["mine", "fighter", "satellite"]}`. `allowed_types`
-  is the typed-bay filter — `fighter_bay_*` carries `["fighter"]`,
-  `satellite_bay_*` carries `["satellite"]`, universal
-  `vehicle_bay_*` carries all three.
+  is the typed-bay filter — `fighter_bay` carries `["fighter"]`,
+  `satellite_bay` carries `["satellite"]`, `mine_bay` carries
+  `["mine"]`, and universal `vehicle_bay` carries all three. Capacity
+  scales via the `simple_size_mount` modifier and the
+  `bay_capacity_mult` stat key (Round 4 Obs C).
 - `CarriedVehicle` (a typed payload in `carried_items`) holds
   `design_id`, `design_data`, `current_hp`, optional
   `component_states`, and `vehicle_type`. Mass is the capacity gate;
@@ -966,6 +972,57 @@ Boundary: things that need to run per-tick belong in the tick-phase
 registry (Pattern #23). Things that need to run at end-of-battle
 belong on the strategy post-battle hook
 (`_build_strategy_post_battle_hook`), not on this setup callback.
+
+## 40. Polymorphic Order Issuer (`IIssuerAdapter`)
+
+Where: `game/strategy/engine/issuer_adapter.py::IIssuerAdapter`,
+`FleetShipIssuerAdapter`, `PlanetStagingYardIssuerAdapter`; the five
+FMS order handlers under `game/strategy/engine/order_handlers/`
+(`lay_mines.py`, `launch_fighters.py`, `launch_satellites.py`,
+`recover_fighters.py`, `recover_satellites.py`);
+`game/strategy/engine/action_execution_engine.py`.
+
+Contract:
+- `IIssuerAdapter` is a `@runtime_checkable` Protocol exposing the
+  minimum slice of fleet/planet that the FMS order handlers need:
+  `location`, `owner_id`, `display_label`, `pop_carried(...)`,
+  `count_carried(...)`, `append_carried(...)`, `append_recovered(...)`.
+- Two production implementations: `FleetShipIssuerAdapter` wraps a
+  `(Fleet, ShipInstance)` pair and operates on
+  `ship.carried_items`; `PlanetStagingYardIssuerAdapter` wraps a
+  `Planet` and operates on `planet.staging_yard`
+  (capacity-checked via `Planet.add_to_staging_yard`).
+- Order handlers expose `execute_for_issuer(adapter, order, ...)` and
+  treat the adapter as the only mutation surface — no direct
+  `fleet.ships[i].carried_items` access.
+- `ActionExecutionEngine` ticks both `fleet.orders` and `planet.orders`
+  in Round 4; each iteration constructs the matching adapter and
+  dispatches to the same handler.
+- All five FMS `Issue*Command` DTOs carry an optional `planet_id`
+  alongside the existing `fleet_id`; exactly one must be set.
+
+Recipe (when adding a new issuer kind, e.g. orbital platform):
+
+1. Define a new `IIssuerAdapter` implementation that exposes the
+   minimum surface (location / owner_id / carried-vehicle pop+append).
+2. Widen the `Issue*Command` DTOs in scope with an optional
+   identifier for the new issuer kind.
+3. Update the FMS command handlers' validation to recognise the new
+   identifier and confirm the issuer holds the required capability
+   ability.
+4. Update `ActionExecutionEngine` to tick the new issuer's order list
+   and construct the new adapter.
+5. The five FMS order handlers should require no change — they
+   already operate on `IIssuerAdapter`.
+
+Use for: any new "thing that can issue strategic action orders"
+(orbital platform, space station, megastructure, etc.) that should
+reuse the existing FMS order pipeline rather than spawn a parallel
+handler family.
+
+Boundary: this pattern is for sharing handler logic across issuer
+kinds. It is NOT for adding new order types — those still get their
+own command + handler + order handler trio (Pattern #7).
 
 ## Critical Naming Reminders
 
