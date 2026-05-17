@@ -529,12 +529,20 @@ class TestFleetInfoCarriedItems:
     """Tests for carried item aggregation helper."""
 
     def test_aggregate_carried_items_defaults_missing_fields_and_counts(self):
-        """Missing carried-item fields use DTO defaults and aggregate by key."""
+        """Missing carried-item fields use DTO defaults and aggregate by key.
+
+        PROJ-431 Phase 1e: aggregation reads through ``bay_inventory``.
+        Two empty pods (no design_data, no payload) collapse into a
+        single ``("Unknown", "unknown", 0.0, 2)`` bucket.
+        """
+        from game.strategy.data.bay_inventory import BayInventory, DropPod
         from game.strategy.facade.dto.fleet_dto import FleetInfo
 
+        pods = [DropPod(design_id="", design_data={}, mass=0.0, payload={})
+                for _ in range(2)]
         fleet = SimpleNamespace(
             ships=[
-                SimpleNamespace(carried_items=[{}, {}]),
+                SimpleNamespace(bay_inventory=BayInventory(bay=[], pods=pods)),
             ]
         )
 

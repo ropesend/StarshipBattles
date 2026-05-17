@@ -68,6 +68,19 @@ def _make_carrier_ship(
     carried_items: List[Any] | None = None,
     tactical: bool = True,
 ) -> MagicMock:
+    """Build a carrier mock with a typed ``bay_inventory`` view.
+
+    PROJ-431 Phase 1e: ``CarrierAIController`` reads through
+    ``carrier.bay_inventory.bay`` (homogeneous ``list[CarriedVehicle]``)
+    and writes back via ``carrier.set_bay_inventory(...)``. The mock
+    still mirrors the legacy ``carried_items`` list so existing
+    assertions on ``len(carrier.carried_items)`` keep working — both
+    views stay in lockstep through the test-local ``_set_bay_inventory``
+    closure.
+    """
+    from game.strategy.data.bay_inventory import BayInventory
+    from game.strategy.data.carried_vehicle import CarriedVehicle
+
     ship = MagicMock()
     ship.is_alive = True
     ship.is_derelict = False
@@ -79,14 +92,52 @@ def _make_carrier_ship(
     ship.color = (255, 255, 255)
     ship.theme_id = "Federation"
     ship.vehicle_type = "Ship"
-    ship.carried_items = carried_items or []
+
+    items = list(carried_items or [])
+
+    # PROJ-431 Phase 1e: a lightweight wrapper that owns a mutable
+    # ``carried_items`` list and exposes a ``bay_inventory`` view that
+    # refreshes on every read. Attribute access falls through to the
+    # underlying MagicMock for everything else (component iteration,
+    # position, etc.). Using a wrapper rather than patching
+    # ``type(MagicMock).bay_inventory`` keeps the override per-test —
+    # touching the class would leak the property to every other
+    # MagicMock in the suite.
+    class _CarrierWrapper:
+        def __init__(self, inner: MagicMock, carried: list[Any]) -> None:
+            object.__setattr__(self, "_inner", inner)
+            object.__setattr__(self, "carried_items", carried)
+
+        @property
+        def bay_inventory(self) -> BayInventory:
+            bay: list[CarriedVehicle] = []
+            for entry in self.carried_items:
+                cv = CarriedVehicle.from_any(entry)
+                if cv is not None:
+                    bay.append(cv)
+            return BayInventory(bay=bay, pods=[])
+
+        def set_bay_inventory(self, bi: BayInventory) -> None:
+            object.__setattr__(
+                self, "carried_items", [cv.to_dict() for cv in bi.bay]
+            )
+
+        def __getattr__(self, name: str) -> Any:
+            return getattr(self._inner, name)
+
+        def __setattr__(self, name: str, value: Any) -> None:
+            if name == "carried_items":
+                object.__setattr__(self, name, value)
+            else:
+                setattr(self._inner, name, value)
+
     if tactical:
         comp = _StubComponent("TacticalFighterLaunch", _make_tactical_launch_ability())
     else:
         comp = _StubComponent("VehicleLaunch", _make_tactical_launch_ability())
     ship.iter_components = MagicMock(return_value=[("INNER", comp)])
     ship.get_all_components = MagicMock(return_value=[comp])
-    return ship
+    return _CarrierWrapper(ship, items)
 
 
 def _make_enemy_ship(pos: Vector2) -> MagicMock:
@@ -205,20 +256,12 @@ def test_carrier_controller_respects_mass_budget_between_waves():
 
     # Slow rate: 1.0 t/s. Each tick adds 0.01t (TICK_RATE=0.01). A
     # 20t fighter needs 2000 ticks of accumulation.
+    carrier = _make_carrier_ship(
+        carried_items=[_make_fighter_cv().to_dict() for _ in range(4)]
+    )
     slow_ability = _make_tactical_launch_ability(launch_rate_tons_per_sec=1.0)
-    carrier = MagicMock()
-    carrier.is_alive = True
-    carrier.is_derelict = False
-    carrier.team_id = 0
-    carrier.position = Vector2(0.0, 0.0)
-    carrier.velocity = Vector2(0, 0)
-    carrier.angle = 0
-    carrier.radius = 20.0
-    carrier.color = (255, 255, 255)
-    carrier.theme_id = "Federation"
-    carrier.vehicle_type = "Ship"
-    carrier.carried_items = [_make_fighter_cv().to_dict() for _ in range(4)]
     comp = _StubComponent("TacticalFighterLaunch", slow_ability)
+    # Override the default launch ability the helper installed.
     carrier.iter_components = MagicMock(return_value=[("INNER", comp)])
     carrier.get_all_components = MagicMock(return_value=[comp])
     enemy = _make_enemy_ship(pos=Vector2(500.0, 0.0))
@@ -266,20 +309,12 @@ def test_carrier_controller_mass_budget_launches_variable_mass_fighters():
         design_id="bomber", design_data={"name": "bomber"},
         vehicle_type="fighter", mass=50.0, current_hp=10,
     )
-    carrier = MagicMock()
-    carrier.is_alive = True
-    carrier.is_derelict = False
-    carrier.team_id = 0
-    carrier.position = Vector2(0.0, 0.0)
-    carrier.velocity = Vector2(0, 0)
-    carrier.angle = 0
-    carrier.radius = 20.0
-    carrier.color = (255, 255, 255)
-    carrier.theme_id = "Federation"
-    carrier.vehicle_type = "Ship"
-    carrier.carried_items = [light_a.to_dict(), light_b.to_dict(), heavy.to_dict()]
+    carrier = _make_carrier_ship(
+        carried_items=[light_a.to_dict(), light_b.to_dict(), heavy.to_dict()]
+    )
     ability = _make_tactical_launch_ability(launch_rate_tons_per_sec=100.0)
     comp = _StubComponent("TacticalFighterLaunch", ability)
+    # Override the default launch ability the helper installed.
     carrier.iter_components = MagicMock(return_value=[("INNER", comp)])
     carrier.get_all_components = MagicMock(return_value=[comp])
     enemy = _make_enemy_ship(pos=Vector2(500.0, 0.0))

@@ -271,26 +271,35 @@ class CarrierAIController(AIController):
         Legacy count-based pop, retained for the pre-QA-C tests and the
         fighter-recovery-test setup paths. New tactical launches go
         through :meth:`_pop_cvs_within_budget`.
+
+        PROJ-431 Phase 1e: reads through ``carrier.bay_inventory.bay``
+        (homogeneous ``list[CarriedVehicle]``) and writes back via
+        ``carrier.set_bay_inventory(...)``. The legacy
+        ``carried_items`` / ``CarriedVehicle.from_any`` discriminator
+        path is gone.
         """
-        carried = getattr(carrier, "carried_items", None)
-        if not carried:
+        from game.strategy.data.bay_inventory import BayInventory
+
+        inventory = getattr(carrier, "bay_inventory", None)
+        if inventory is None or not getattr(inventory, "bay", None):
             return []
         popped: List[CarriedVehicle] = []
-        remaining: List[Any] = []
+        remaining: List[CarriedVehicle] = []
         vt = vehicle_type.lower()
-        for item in carried:
+        for cv in inventory.bay:
             if len(popped) >= max_count:
-                remaining.append(item)
+                remaining.append(cv)
                 continue
-            cv = CarriedVehicle.from_any(item)
-            if cv is None or cv.vehicle_type != vt:
-                remaining.append(item)
+            if cv.vehicle_type != vt:
+                remaining.append(cv)
                 continue
             popped.append(cv)
         if popped:
             try:
-                carrier.carried_items = remaining
-            except Exception:  # Intentional broad catch: stubs may set carried_items as a property; ignore and let the next tick retry.
+                carrier.set_bay_inventory(
+                    BayInventory(bay=remaining, pods=list(inventory.pods))
+                )
+            except Exception:  # Intentional broad catch: stubs may not implement set_bay_inventory; ignore and let the next tick retry.
                 pass
         return popped
 
@@ -300,27 +309,31 @@ class CarrierAIController(AIController):
     ) -> tuple[List[CarriedVehicle], float]:
         """Pop carried vehicles of ``vehicle_type`` whose mass fits ``budget``.
 
-        Mass-tons/sec launch semantics. Walks ``carrier.carried_items``
-        in order; for each matching CarriedVehicle whose ``mass`` fits
-        the residual budget, the vehicle is popped and its mass deducted.
-        Stops at the first matching vehicle that exceeds the budget so
-        the budget carries cleanly to the next tick (no skip-ahead to a
-        smaller vehicle further back in the bay).
+        Mass-tons/sec launch semantics. Walks
+        ``carrier.bay_inventory.bay`` in order; for each matching
+        CarriedVehicle whose ``mass`` fits the residual budget, the
+        vehicle is popped and its mass deducted. Stops at the first
+        matching vehicle that exceeds the budget so the budget carries
+        cleanly to the next tick (no skip-ahead to a smaller vehicle
+        further back in the bay).
 
         Returns ``(popped, remaining_budget)``.
         """
-        carried = getattr(carrier, "carried_items", None)
-        if not carried:
+        from game.strategy.data.bay_inventory import BayInventory
+
+        inventory = getattr(carrier, "bay_inventory", None)
+        if inventory is None or not getattr(inventory, "bay", None):
             return [], budget
+        bay = list(inventory.bay)
         popped: List[CarriedVehicle] = []
-        remaining_items: List[Any] = []
+        remaining_items: List[CarriedVehicle] = []
         vt = vehicle_type.lower()
         residual = budget
         launched_any = False
-        for item in carried:
-            cv = CarriedVehicle.from_any(item)
-            if cv is None or cv.vehicle_type != vt:
-                remaining_items.append(item)
+        stop_at: Optional[int] = None
+        for idx, cv in enumerate(bay):
+            if cv.vehicle_type != vt:
+                remaining_items.append(cv)
                 continue
             # Treat zero / negative mass as 1.0 to avoid divide-by-zero
             # bug-bait where a malformed design slips through.
@@ -328,18 +341,20 @@ class CarrierAIController(AIController):
             if mass > residual:
                 # First matching vehicle that doesn't fit — preserve
                 # FIFO bay ordering by keeping the rest behind it too.
-                remaining_items.append(item)
-                # Append the remaining list as-is and stop processing.
-                idx = carried.index(item)
-                remaining_items.extend(carried[idx + 1:])
+                remaining_items.append(cv)
+                stop_at = idx
                 break
             popped.append(cv)
             residual -= mass
             launched_any = True
+        if stop_at is not None:
+            remaining_items.extend(bay[stop_at + 1:])
         if launched_any:
             try:
-                carrier.carried_items = remaining_items
-            except Exception:  # Intentional broad catch: stubs may set carried_items as a property; ignore and let the next tick retry.
+                carrier.set_bay_inventory(
+                    BayInventory(bay=remaining_items, pods=list(inventory.pods))
+                )
+            except Exception:  # Intentional broad catch: stubs may not implement set_bay_inventory; ignore and let the next tick retry.
                 pass
         return popped, residual
 

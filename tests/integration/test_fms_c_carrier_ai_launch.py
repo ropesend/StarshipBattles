@@ -88,30 +88,69 @@ class _StubComponent:
         return [self._a] if name == self._n else []
 
 
-def _make_carrier_ship(fresh_registries) -> MagicMock:
-    """Carrier stub exposing the surface CarrierAIController + factory read."""
-    ship = MagicMock()
-    ship.is_alive = True
-    ship.is_derelict = False
-    ship.team_id = 0
-    ship.position = Vector2(0.0, 0.0)
-    ship.velocity = Vector2(0, 0)
-    ship.angle = 0
-    ship.radius = 20
-    ship.color = (255, 255, 255)
-    ship.theme_id = "Federation"
-    ship.vehicle_type = "Ship"
-    ship.registries = fresh_registries
-    ship.carried_items = []
-    ship.get_all_components = MagicMock(return_value=[])
-    ship.update = MagicMock()
-    ship.just_fired_projectiles = []
-    ship.fleet_attack_bonus = 0.0
-    ship.fleet_defense_bonus = 0.0
+def _make_carrier_ship(fresh_registries):
+    """Carrier stub exposing the surface CarrierAIController + factory read.
+
+    PROJ-431 Phase 1e: ``CarrierAIController`` reads through
+    ``carrier.bay_inventory.bay``. The stub wraps a MagicMock with a
+    typed view that refreshes from the mutable ``carried_items`` list
+    on every read (and writes back through it on
+    ``set_bay_inventory``). Tests can still ``append`` to
+    ``carried_items`` after construction.
+    """
+    from game.strategy.data.bay_inventory import BayInventory
+    from game.strategy.data.carried_vehicle import CarriedVehicle
+
+    inner = MagicMock()
+    inner.is_alive = True
+    inner.is_derelict = False
+    inner.team_id = 0
+    inner.position = Vector2(0.0, 0.0)
+    inner.velocity = Vector2(0, 0)
+    inner.angle = 0
+    inner.radius = 20
+    inner.color = (255, 255, 255)
+    inner.theme_id = "Federation"
+    inner.vehicle_type = "Ship"
+    inner.registries = fresh_registries
+    inner.get_all_components = MagicMock(return_value=[])
+    inner.update = MagicMock()
+    inner.just_fired_projectiles = []
+    inner.fleet_attack_bonus = 0.0
+    inner.fleet_defense_bonus = 0.0
     # Tactical fighter launch ability mounted on a fake INNER hangar.
     hangar = _StubComponent("TacticalFighterLaunch", _StubTacticalLaunchAbility())
-    ship.iter_components = MagicMock(return_value=[(LayerType.INNER, hangar)])
-    return ship
+    inner.iter_components = MagicMock(return_value=[(LayerType.INNER, hangar)])
+
+    class _CarrierWrapper:
+        def __init__(self, m: MagicMock) -> None:
+            object.__setattr__(self, "_inner", m)
+            object.__setattr__(self, "carried_items", [])
+
+        @property
+        def bay_inventory(self) -> BayInventory:
+            bay: list[CarriedVehicle] = []
+            for entry in self.carried_items:
+                cv = CarriedVehicle.from_any(entry)
+                if cv is not None:
+                    bay.append(cv)
+            return BayInventory(bay=bay, pods=[])
+
+        def set_bay_inventory(self, bi: BayInventory) -> None:
+            object.__setattr__(
+                self, "carried_items", [cv.to_dict() for cv in bi.bay]
+            )
+
+        def __getattr__(self, name: str):
+            return getattr(self._inner, name)
+
+        def __setattr__(self, name: str, value) -> None:
+            if name == "carried_items":
+                object.__setattr__(self, name, value)
+            else:
+                setattr(self._inner, name, value)
+
+    return _CarrierWrapper(inner)
 
 
 def _make_enemy_ship() -> MagicMock:

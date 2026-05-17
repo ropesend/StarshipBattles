@@ -22,7 +22,6 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Optional, Protocol
 
 from game.core.input_actions import InputAction
-from game.strategy.data.carried_vehicle import CarriedVehicle
 
 
 @dataclass(frozen=True)
@@ -98,13 +97,16 @@ def _at_colonisable_hex(fleet: Any, galaxy: Any) -> bool:
 def _fleet_has_carried_vehicle(fleet: Any, vehicle_type: str) -> bool:
     """True if any ship in ``fleet`` carries a vehicle of ``vehicle_type``.
 
-    Inspects ``ship.carried_items`` directly so tests can stub a fleet
-    with raw dicts. Mirrors how ``fms_shared.count_matching`` filters.
+    PROJ-431 Phase 1e: reads through ``ship.bay_inventory.bay`` — the
+    homogeneous typed slot for design-backed carried vehicles. Mirrors
+    how ``fms_shared.count_matching_bay`` filters.
     """
     for ship in getattr(fleet, "ships", None) or ():
-        for item in getattr(ship, "carried_items", None) or ():
-            cv = CarriedVehicle.from_any(item)
-            if cv is not None and cv.vehicle_type == vehicle_type:
+        inventory = getattr(ship, "bay_inventory", None)
+        if inventory is None:
+            continue
+        for cv in getattr(inventory, "bay", None) or ():
+            if getattr(cv, "vehicle_type", None) == vehicle_type:
                 return True
     return False
 

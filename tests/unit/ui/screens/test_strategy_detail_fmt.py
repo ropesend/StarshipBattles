@@ -373,12 +373,14 @@ class TestFormatFleetInfo:
         ship1.design_data = {"name": "Battle Cruiser"}
         ship1.get_calculated_stats = Mock(return_value={"mass": 1000})
         ship1.cargo_contents = {}
+        ship1.bay_inventory = None
 
         ship2 = Mock()
         ship2.design_id = "cruiser"
         ship2.design_data = {"name": "Battle Cruiser"}
         ship2.get_calculated_stats = Mock(return_value={"mass": 1000})
         ship2.cargo_contents = {}
+        ship2.bay_inventory = None
 
         mock_fleet.ships = [ship1, ship2]
 
@@ -486,6 +488,7 @@ class TestFormatCargoSummary:
         """Test fleet with no cargo."""
         ship = Mock()
         ship.cargo_contents = {}
+        ship.bay_inventory = None
         mock_fleet.ships = [ship]
 
         result = _format_cargo_summary(mock_fleet)
@@ -496,9 +499,11 @@ class TestFormatCargoSummary:
         """Test cargo aggregated across ships."""
         ship1 = Mock()
         ship1.cargo_contents = {"colonists": 100, "food": 50}
+        ship1.bay_inventory = None
 
         ship2 = Mock()
         ship2.cargo_contents = {"colonists": 150, "ore": 200}
+        ship2.bay_inventory = None
 
         mock_fleet.ships = [ship1, ship2]
 
@@ -513,6 +518,7 @@ class TestFormatCargoSummary:
         """Test cargo names formatted with title case."""
         ship = Mock()
         ship.cargo_contents = {"rare_minerals": 100}
+        ship.bay_inventory = None
         mock_fleet.ships = [ship]
 
         result = _format_cargo_summary(mock_fleet)

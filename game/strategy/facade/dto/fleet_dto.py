@@ -237,12 +237,21 @@ class FleetInfo:
     def _aggregate_carried_vehicles_by_type(
         fleet: 'Fleet',
     ) -> Tuple[Tuple[str, int], ...]:
-        """PROJ-FMS-A Phase 3: per-type count of CarriedVehicle entries."""
+        """PROJ-FMS-A Phase 3: per-type count of CarriedVehicle entries.
+
+        PROJ-431 Phase 1e: reads through ``ship.bay_inventory.bay`` —
+        the homogeneous typed slot for design-backed carried vehicles.
+        Drop pods live in ``bay_inventory.pods`` and are not counted
+        here.
+        """
         types = ("mine", "fighter", "satellite")
         counts: dict = {t: 0 for t in types}
         for ship in fleet.ships:
-            for item in getattr(ship, 'carried_items', []):
-                vt = str(item.get('vehicle_type', 'unknown')).lower()
+            inventory = getattr(ship, 'bay_inventory', None)
+            if inventory is None:
+                continue
+            for cv in getattr(inventory, 'bay', ()) or ():
+                vt = str(getattr(cv, 'vehicle_type', 'unknown')).lower()
                 if vt in counts:
                     counts[vt] += 1
         return tuple((vt, counts[vt]) for vt in types if counts[vt] > 0)
@@ -277,13 +286,33 @@ class FleetInfo:
 
     @staticmethod
     def _aggregate_carried_items(fleet: 'Fleet') -> Tuple[Tuple[str, str, float, int], ...]:
-        """Aggregate carried items across all ships by (name, vehicle_type, mass)."""
+        """Aggregate carried items across all ships by (name, vehicle_type, mass).
+
+        PROJ-431 Phase 1e: reads through the typed ``bay_inventory``
+        substrate. Design-backed carried vehicles come from
+        ``bay_inventory.bay`` (their ``name`` lives in
+        ``design_data['name']``); drop pods come from
+        ``bay_inventory.pods`` (their ``name`` / ``vehicle_type`` were
+        tucked into ``payload`` by the legacy projection — falling back
+        to ``'Unknown'`` / ``'unknown'``).
+        """
         counts: dict = {}
         for ship in fleet.ships:
-            for item in getattr(ship, 'carried_items', []):
-                name = item.get('name', 'Unknown')
-                vtype = item.get('vehicle_type', 'unknown')
-                mass = item.get('mass', 0.0)
+            inventory = getattr(ship, 'bay_inventory', None)
+            if inventory is None:
+                continue
+            for cv in getattr(inventory, 'bay', ()) or ():
+                design_data = getattr(cv, 'design_data', None) or {}
+                name = design_data.get('name', 'Unknown')
+                vtype = str(getattr(cv, 'vehicle_type', 'unknown'))
+                mass = float(getattr(cv, 'mass', 0.0) or 0.0)
+                key = (name, vtype, mass)
+                counts[key] = counts.get(key, 0) + 1
+            for pod in getattr(inventory, 'pods', ()) or ():
+                payload = getattr(pod, 'payload', None) or {}
+                name = payload.get('name', 'Unknown')
+                vtype = payload.get('vehicle_type', 'unknown')
+                mass = float(getattr(pod, 'mass', 0.0) or 0.0)
                 key = (name, vtype, mass)
                 counts[key] = counts.get(key, 0) + 1
         return tuple(

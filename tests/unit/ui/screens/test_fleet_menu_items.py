@@ -296,7 +296,26 @@ def _carried(vehicle_type: str, design_id: str = "auto") -> dict:
 
 
 def _ship_with_carried(items: list[dict]) -> SimpleNamespace:
-    return SimpleNamespace(carried_items=list(items))
+    """Stub a ship for FMS gates with a typed ``bay_inventory`` view.
+
+    PROJ-431 Phase 1e: the FMS row gates read through
+    ``ship.bay_inventory.bay``. Each entry is converted to a typed
+    :class:`CarriedVehicle` and dropped into the homogeneous bay slot;
+    non-vehicle entries (pods) end up in the pods slot and are ignored
+    by the bay-only gates.
+    """
+    from game.strategy.data.bay_inventory import BayInventory
+    from game.strategy.data.carried_vehicle import CarriedVehicle
+
+    bay: list[CarriedVehicle] = []
+    for entry in items:
+        cv = CarriedVehicle.from_any(entry)
+        if cv is not None:
+            bay.append(cv)
+    return SimpleNamespace(
+        carried_items=list(items),
+        bay_inventory=BayInventory(bay=bay, pods=[]),
+    )
 
 
 def _make_fleet_for_fms(
