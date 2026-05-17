@@ -117,7 +117,7 @@ class TestPodStorageBleedRegression:
 
 class TestCapabilityCalculatorGatesOnGroupKind:
     @pytest.mark.parametrize(
-        "kind", ["fighter_group", "satellite_group", "mine_group"]
+        "kind", ["fighter_group", "satellite_group"]
     )
     def test_non_fleet_kind_cannot_warp(self, kind):
         f = Fleet(fleet_id=99, owner_id=0, location=HexCoord(0, 0),
@@ -126,7 +126,7 @@ class TestCapabilityCalculatorGatesOnGroupKind:
         assert calc.can_use_warp() is False
 
     @pytest.mark.parametrize(
-        "kind", ["fighter_group", "satellite_group", "mine_group"]
+        "kind", ["fighter_group", "satellite_group"]
     )
     def test_non_fleet_kind_cannot_build_any(self, kind):
         f = Fleet(fleet_id=100, owner_id=0, location=HexCoord(0, 0),
@@ -139,7 +139,7 @@ class TestCapabilityCalculatorGatesOnGroupKind:
         assert calc.can_build_type("satellite") is False
 
     @pytest.mark.parametrize(
-        "kind", ["fighter_group", "satellite_group", "mine_group"]
+        "kind", ["fighter_group", "satellite_group"]
     )
     def test_non_fleet_kind_has_no_space_shipyard(self, kind):
         f = Fleet(fleet_id=101, owner_id=0, location=HexCoord(0, 0),

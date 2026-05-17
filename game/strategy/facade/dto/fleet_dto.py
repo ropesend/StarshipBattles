@@ -107,7 +107,9 @@ class FleetInfo:
     vehicle_bay_capacity_used: float = 0.0
     vehicle_bay_capacity_max: float = 0.0
     # PROJ-FMS-A Phase 4: fleet vs deployed-group discriminator.
-    # "fleet" / "fighter_group" / "satellite_group" / "mine_group".
+    # "fleet" / "fighter_group" / "satellite_group". PROJ-431 Phase 2
+    # dropped "mine_group" from the legal set — mines no longer flow
+    # through ``Fleet``.
     group_kind: str = "fleet"
 
     @classmethod

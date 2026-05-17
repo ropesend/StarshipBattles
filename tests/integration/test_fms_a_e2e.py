@@ -140,8 +140,13 @@ class TestFleetGroupKindIntegration:
     def test_group_kind_rejects_move_at_validation_time(self):
         """Programmatic check — the actual rejection runs through
         BaseCommandHandler._reject_if_non_fleet_group; here we just
-        verify can_strategic_move is wired."""
-        for kind in ("fighter_group", "satellite_group", "mine_group"):
+        verify can_strategic_move is wired.
+
+        PROJ-431 Phase 2: ``"mine_group"`` is gone from
+        ``Fleet.group_kind``'s legal-values set — mines are a separate
+        type (:class:`MineGroup`) and cannot be a Fleet at all.
+        """
+        for kind in ("fighter_group", "satellite_group"):
             f = Fleet(
                 fleet_id=1, owner_id=0, location=HexCoord(0, 0),
                 group_kind=kind,

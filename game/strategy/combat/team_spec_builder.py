@@ -1,12 +1,8 @@
-"""PROJ-426 — `TeamSpecBuilder`.
+"""PROJ-426 + PROJ-431 — `TeamSpecBuilder`.
 
 Owns the team-construction concerns previously embedded in
 `spec_compiler.py`:
 
-- `split_mine_groups(...)`: partition incoming fleets into combat fleets
-  vs. mine-group fleets. Promoted from the private
-  `_split_mine_groups_from_fleets` helper so tests can target a public
-  seam.
 - `team_spec_for_fleet_group(...)`: build a `TeamSpec` from one owner's
   fleets (each fleet contributes one `TaskForce` so the post-battle hook
   can still dispatch outcomes back to the originating Fleet).
@@ -15,10 +11,9 @@ Owns the team-construction concerns previously embedded in
 - `ship_spec_from_instance(...)`: ShipInstance -> ShipSpec translation
   (theme, components, pose, instance_ref).
 
-The PROJ-431 deployable substrate redesign will collapse the
-mine-vs-combat split here once mines/satellites/fighters live on a
-unified substrate; that simplification is intentionally deferred. See
-`StrategyBattleAssembler.mine_group_filter`.
+PROJ-431 Phase 2: ``split_mine_groups`` is DELETED. Mines live on
+``empire.deployed_groups`` as typed :class:`MineGroup` instances and
+never enter the combat-fleets stream that this builder consumes.
 """
 from __future__ import annotations
 
@@ -50,30 +45,6 @@ __all__ = ["TeamSpecBuilder"]
 
 class TeamSpecBuilder:
     """Build per-team `TeamSpec` artifacts from strategy-layer fleets."""
-
-    def split_mine_groups(
-        self,
-        fleets: Sequence["Fleet"],
-    ) -> Tuple[List["Fleet"], List["Fleet"]]:
-        """Partition ``fleets`` into ``(combat_fleets, mine_groups)``.
-
-        Mine-group Fleets carry mines in a synthetic-carrier ShipInstance
-        whose `layers` / `components` are empty. They participate in
-        tactical combat exclusively via `TacticalMineResolver`, not as
-        ShipSpecs on a team. Without this filter the compiler would turn
-        the synthetic carrier into a degenerate zero-HP ship.
-
-        Other "group_kind" markers (`fighter_group`, `satellite_group`)
-        carry real ships and stay in the combat-fleets stream.
-        """
-        combat: List["Fleet"] = []
-        mine_groups: List["Fleet"] = []
-        for fleet in fleets:
-            if getattr(fleet, "group_kind", "fleet") == "mine_group":
-                mine_groups.append(fleet)
-            else:
-                combat.append(fleet)
-        return combat, mine_groups
 
     def group_fleets_by_owner(
         self,

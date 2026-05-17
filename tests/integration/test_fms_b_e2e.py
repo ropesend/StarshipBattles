@@ -188,7 +188,7 @@ def test_lay_mines_then_enemy_enters_takes_damage():
         group_kind="fleet",
     )
     fleet.ships.append(carrier)
-    owner_empire = SimpleNamespace(id=1, name="Owner", fleets=[fleet])
+    owner_empire = SimpleNamespace(id=1, name="Owner", fleets=[fleet], deployed_groups=[])
     galaxy = SimpleNamespace(current_turn=1)
 
     # 3. Queue LAY_MINES order for 5 mines, run handler.
@@ -203,13 +203,10 @@ def test_lay_mines_then_enemy_enters_takes_damage():
     result = handler.execute_action_order(fleet, owner_empire, galaxy)
     assert result.success
 
-    mine_groups = [
-        f for f in owner_empire.fleets
-        if getattr(f, "group_kind", "fleet") == "mine_group"
-    ]
+    mine_groups = owner_empire.deployed_groups
     assert len(mine_groups) == 1
     mg = mine_groups[0]
-    assert len(mg.ships[0].carried_items) == 5
+    assert len(mg.mines) == 5
 
     # 4. Build an enemy fleet that enters the same hex.
     enemy_ship = _StubEnemyShip("dread_1", max_hp=2000.0)
@@ -218,7 +215,7 @@ def test_lay_mines_then_enemy_enters_takes_damage():
         group_kind="fleet",
     )
     enemy_fleet.ships.append(enemy_ship)
-    enemy_empire = SimpleNamespace(id=0, name="Invader", fleets=[enemy_fleet])
+    enemy_empire = SimpleNamespace(id=0, name="Invader", fleets=[enemy_fleet], deployed_groups=[])
 
     # 5. Force a trigger for deterministic test outcome.
     rng = random.Random()
@@ -236,7 +233,7 @@ def test_lay_mines_then_enemy_enters_takes_damage():
     assert warhead_evs, "Expected at least one warhead detonation"
     assert enemy_ship.current_hp < 2000  # damage applied
     # Mine count decremented.
-    assert len(mg.ships[0].carried_items) < 5
+    assert len(mg.mines) < 5
 
 
 def test_self_destruct_after_laying():
@@ -248,7 +245,7 @@ def test_self_destruct_after_laying():
         carrier.carried_items.append(_warhead_mine())
     fleet = Fleet(fleet_id=10, owner_id=1, location=hex_c, speed=5.0)
     fleet.ships.append(carrier)
-    owner_empire = SimpleNamespace(id=1, name="O", fleets=[fleet])
+    owner_empire = SimpleNamespace(id=1, name="O", fleets=[fleet], deployed_groups=[])
     galaxy = SimpleNamespace(current_turn=1)
 
     fleet.add_order(Order(OrderType.LAY_MINES, target={
@@ -258,12 +255,12 @@ def test_self_destruct_after_laying():
         "target_hex": hex_c,
     }))
     LayMinesOrderHandler().execute_action_order(fleet, owner_empire, galaxy)
-    mg = [f for f in owner_empire.fleets if f.group_kind == "mine_group"][0]
-    assert len(mg.ships[0].carried_items) == 4
+    mg = owner_empire.deployed_groups[0]
+    assert len(mg.mines) == 4
 
     svc = MineGroupService()
     svc.self_destruct(mg, owner_empire, {"mine_warhead_small": 2})
-    assert len(mg.ships[0].carried_items) == 2
+    assert len(mg.mines) == 2
 
 
 def test_friendly_fleet_does_not_trigger_on_entry():
@@ -277,7 +274,7 @@ def test_friendly_fleet_does_not_trigger_on_entry():
         carrier.carried_items.append(_warhead_mine())
     laying_fleet = Fleet(fleet_id=10, owner_id=1, location=hex_c, speed=5.0)
     laying_fleet.ships.append(carrier)
-    owner_empire = SimpleNamespace(id=1, name="O", fleets=[laying_fleet])
+    owner_empire = SimpleNamespace(id=1, name="O", fleets=[laying_fleet], deployed_groups=[])
     galaxy = SimpleNamespace(current_turn=1)
     laying_fleet.add_order(Order(OrderType.LAY_MINES, target={
         "ship_instance_id": carrier.instance_id,
@@ -313,7 +310,7 @@ def test_mixed_warhead_and_laserhead_minefield():
         carrier.carried_items.append(_laserhead_mine())
     laying_fleet = Fleet(fleet_id=10, owner_id=1, location=hex_c, speed=5.0)
     laying_fleet.ships.append(carrier)
-    owner_empire = SimpleNamespace(id=1, name="O", fleets=[laying_fleet])
+    owner_empire = SimpleNamespace(id=1, name="O", fleets=[laying_fleet], deployed_groups=[])
     galaxy = SimpleNamespace(current_turn=1)
 
     # Lay all 3 warheads first.
@@ -335,9 +332,9 @@ def test_mixed_warhead_and_laserhead_minefield():
     # PROJ-FMS-B audit Fix 4: two separate lay actions => two mine_groups
     # (no auto-merge). One holds the 3 warhead mines, the other holds the
     # 3 laserhead mines.
-    mine_groups = [f for f in owner_empire.fleets if f.group_kind == "mine_group"]
+    mine_groups = owner_empire.deployed_groups
     assert len(mine_groups) == 2
-    total_mines = sum(len(mg.ships[0].carried_items) for mg in mine_groups)
+    total_mines = sum(len(mg.mines) for mg in mine_groups)
     assert total_mines == 6
     for mg in mine_groups:
         mg.expected_hit_chance_threshold = 0.0  # always-fire laserheads
@@ -346,7 +343,7 @@ def test_mixed_warhead_and_laserhead_minefield():
     enemy_ship = _StubEnemyShip("dread", max_hp=2000.0, total_defense_score=0.0)
     enemy_fleet = Fleet(fleet_id=20, owner_id=0, location=hex_c, speed=5.0)
     enemy_fleet.ships.append(enemy_ship)
-    enemy_empire = SimpleNamespace(id=0, name="E", fleets=[enemy_fleet])
+    enemy_empire = SimpleNamespace(id=0, name="E", fleets=[enemy_fleet], deployed_groups=[])
 
     rng = random.Random()
     rng.random = lambda: 0.0
@@ -417,8 +414,9 @@ def test_spec_compiler_filters_mine_groups_and_wires_resolver():
     lay_fleet.ships.append(mine_carrier)
     owner_empire = SimpleNamespace(
         id=1, name="Owner", fleets=[lay_fleet, owner_combat_fleet],
+        deployed_groups=[],
     )
-    enemy_empire = SimpleNamespace(id=0, name="Enemy", fleets=[enemy_fleet])
+    enemy_empire = SimpleNamespace(id=0, name="Enemy", fleets=[enemy_fleet], deployed_groups=[])
     galaxy = SimpleNamespace(current_turn=1)
     lay_fleet.add_order(Order(OrderType.LAY_MINES, target={
         "ship_instance_id": mine_carrier.instance_id,
@@ -427,17 +425,17 @@ def test_spec_compiler_filters_mine_groups_and_wires_resolver():
         "target_hex": hex_c,
     }))
     LayMinesOrderHandler().execute_action_order(lay_fleet, owner_empire, galaxy)
-    mine_groups_at_hex = [
-        f for f in owner_empire.fleets if f.group_kind == "mine_group"
-    ]
+    mine_groups_at_hex = owner_empire.deployed_groups
     assert len(mine_groups_at_hex) == 1
     mg = mine_groups_at_hex[0]
 
     # Build the assembly. We use registries=MagicMock() since we are not
     # going to materialize ships — we only inspect the spec's structure
     # and the wiring callbacks.
+    # PROJ-431 Phase 2: mine groups arrive via ``empire.deployed_groups``,
+    # NOT via the fleets list.
     assembly = build_strategy_battle_assembly(
-        [enemy_fleet, mg, owner_combat_fleet],
+        [enemy_fleet, owner_combat_fleet],
         empires={0: enemy_empire, 1: owner_empire},
         registries=MagicMock(),
         post_battle_hook=None,  # let the compiler build the real hook
@@ -518,8 +516,9 @@ def test_post_battle_hook_calls_writeback_and_prunes_empty_mine_group():
     lay_fleet.ships.append(carrier)
     owner_empire = SimpleNamespace(
         id=1, name="O", fleets=[lay_fleet, owner_combat],
+        deployed_groups=[],
     )
-    enemy_empire = SimpleNamespace(id=0, name="E", fleets=[enemy_combat])
+    enemy_empire = SimpleNamespace(id=0, name="E", fleets=[enemy_combat], deployed_groups=[])
     galaxy = SimpleNamespace(current_turn=1)
     lay_fleet.add_order(Order(OrderType.LAY_MINES, target={
         "ship_instance_id": carrier.instance_id,
@@ -528,10 +527,12 @@ def test_post_battle_hook_calls_writeback_and_prunes_empty_mine_group():
         "target_hex": hex_c,
     }))
     LayMinesOrderHandler().execute_action_order(lay_fleet, owner_empire, galaxy)
-    mg = [f for f in owner_empire.fleets if f.group_kind == "mine_group"][0]
+    mg = owner_empire.deployed_groups[0]
 
+    # PROJ-431 Phase 2: mine groups arrive via ``empire.deployed_groups``,
+    # NOT via the fleets list.
     assembly = build_strategy_battle_assembly(
-        [enemy_combat, mg, owner_combat],
+        [enemy_combat, owner_combat],
         empires={0: enemy_empire, 1: owner_empire},
         registries=MagicMock(),
     )
@@ -558,10 +559,10 @@ def test_post_battle_hook_calls_writeback_and_prunes_empty_mine_group():
     ])
     spec.post_battle_hook(outcome)
 
-    # Writeback ran: carrier's carried_items is empty.
-    assert mg.ships[0].carried_items == []
-    # Empty mine_group pruned from owner's fleets list.
-    assert mg not in owner_empire.fleets
+    # Writeback ran: mine inventory is empty.
+    assert mg.mines == []
+    # Empty MineGroup pruned from owner's deployed_groups list.
+    assert mg not in owner_empire.deployed_groups
 
 
 def test_insufficient_mines_returns_clean_failure():
@@ -572,7 +573,7 @@ def test_insufficient_mines_returns_clean_failure():
     carrier.carried_items.append(_warhead_mine())
     fleet = Fleet(fleet_id=10, owner_id=1, location=hex_c, speed=5.0)
     fleet.ships.append(carrier)
-    owner_empire = SimpleNamespace(id=1, name="O", fleets=[fleet])
+    owner_empire = SimpleNamespace(id=1, name="O", fleets=[fleet], deployed_groups=[])
     galaxy = SimpleNamespace(current_turn=1)
     fleet.add_order(Order(OrderType.LAY_MINES, target={
         "ship_instance_id": carrier.instance_id,

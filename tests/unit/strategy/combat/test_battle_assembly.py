@@ -38,12 +38,15 @@ def _make_fleet(
     ships: tuple[Any, ...] = (),
 ) -> MagicMock:
     """Build a Fleet-shaped mock the spec compiler accepts."""
-    fleet = MagicMock(spec_set=["id", "owner_id", "ships", "task_forces", "group_kind"])
+    fleet = MagicMock(spec_set=[
+        "id", "owner_id", "ships", "task_forces", "group_kind", "location",
+    ])
     fleet.id = fleet_id
     fleet.owner_id = owner_id
     fleet.ships = list(ships)
     fleet.task_forces = []
     fleet.group_kind = group_kind
+    fleet.location = None
     return fleet
 
 
@@ -134,21 +137,33 @@ def test_build_strategy_battle_assembly_returns_typed_wrapper_around_existing_sp
 def test_build_strategy_battle_assembly_includes_mine_group_extension(
     fresh_registries,
 ):
-    """Mine-group filtering surfaces on `extensions.mine_groups`."""
+    """Mine-groups now arrive via ``empire.deployed_groups``, NOT via the
+    fleets list. PROJ-431 Phase 2 collapses the former
+    ``mine_group_filter`` partitioning step.
+    """
+    from types import SimpleNamespace
+    from game.core.hex_math import HexCoord
+    from game.strategy.data.deployed_group import MineGroup
+
+    hex_c = HexCoord(0, 0)
     fleet = _make_fleet(1, owner_id=10, ships=(_make_ship("a-1"),))
+    fleet.location = hex_c
     enemy = _make_fleet(2, owner_id=20, ships=(_make_ship("b-1"),))
-    mine_group = _make_fleet(
-        3, owner_id=10, group_kind="mine_group", ships=(_make_ship("mg-1"),)
-    )
+    enemy.location = hex_c
+    mg = MineGroup(group_id=3, owner_id=10, location=hex_c)
+
+    empire10 = SimpleNamespace(id=10, deployed_groups=[mg])
+    empire20 = SimpleNamespace(id=20, deployed_groups=[])
 
     assembly = build_strategy_battle_assembly(
-        [fleet, enemy, mine_group],
+        [fleet, enemy],
+        empires={10: empire10, 20: empire20},
         registries=fresh_registries,
         seed=1,
     )
 
     assert assembly.extensions.combat_fleets == (fleet, enemy)
-    assert assembly.extensions.mine_groups == (mine_group,)
+    assert assembly.extensions.mine_groups == (mg,)
     assert assembly.extensions.owner_to_team_id == {10: 0, 20: 1}
 
 

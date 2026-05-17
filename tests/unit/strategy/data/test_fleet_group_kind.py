@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import pytest
-from unittest.mock import MagicMock
 
 from game.core.hex_math import HexCoord
 from game.core.validation import ValidationResult
@@ -17,10 +16,13 @@ class TestFleetGroupKind:
         assert f.can_strategic_move is True
 
     def test_mine_group_rejects_strategic_move(self):
-        f = Fleet(fleet_id=2, owner_id=0, location=HexCoord(0, 0),
+        """PROJ-431 Phase 2: ``"mine_group"`` is no longer a legal
+        ``Fleet.group_kind``. The constructor must reject it — a
+        :class:`MineGroup` is a sibling type, not a Fleet.
+        """
+        with pytest.raises(ValueError):
+            Fleet(fleet_id=2, owner_id=0, location=HexCoord(0, 0),
                   group_kind="mine_group")
-        assert f.group_kind == "mine_group"
-        assert f.can_strategic_move is False
 
     def test_invalid_group_kind_raises(self):
         with pytest.raises(ValueError):
@@ -53,12 +55,15 @@ class TestRejectIfNonFleetGroupHelper:
         result = BaseCommandHandler._reject_if_non_fleet_group(f, "Move")
         assert result is None
 
-    def test_returns_error_for_mine_group(self):
-        f = Fleet(fleet_id=11, owner_id=0, location=HexCoord(0, 0),
+    def test_mine_group_kind_no_longer_legal_on_fleet(self):
+        """PROJ-431 Phase 2: ``"mine_group"`` was removed from
+        ``Fleet.group_kind``'s legal-values set. The guard is moot for
+        mines because they are not ``Fleet``s anymore — they cannot
+        reach a fleet-typed handler parameter.
+        """
+        with pytest.raises(ValueError):
+            Fleet(fleet_id=11, owner_id=0, location=HexCoord(0, 0),
                   group_kind="mine_group")
-        result = BaseCommandHandler._reject_if_non_fleet_group(f, "Move")
-        assert isinstance(result, ValidationResult)
-        assert not result.is_valid
 
     def test_returns_error_for_satellite_group(self):
         f = Fleet(fleet_id=12, owner_id=0, location=HexCoord(0, 0),

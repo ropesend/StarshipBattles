@@ -1,4 +1,4 @@
-"""PROJ-426 — typed assembly seam between strategy and simulation.
+"""PROJ-426 + PROJ-431 — typed assembly seam between strategy and simulation.
 
 `StrategyBattleAssembler.assemble(...)` is the canonical orchestrator
 for turning fleets on a hex into a battle. It returns a
@@ -14,15 +14,17 @@ for turning fleets on a hex into a battle. It returns a
   reboard setup callbacks into the single `pre_tick_loop_callback`
   `run_battle` accepts.
 
-`StrategyBattleAssembler` also carries a temporary `mine_group_filter`
-parameter. PROJ-431 Phase 2 (TD-10 deployable substrate redesign)
-simplifies this away once mines, satellites, and fighter groups live
-on a unified substrate; do not pre-collapse it here.
+PROJ-431 Phase 2: the temporary `mine_group_filter` parameter is
+DELETED. Mines now live on `empire.deployed_groups` as typed
+:class:`MineGroup` instances and arrive at the assembler through the
+``empires`` mapping (the same map the post-battle hook already
+consults). Combat fleets and mine groups are now structurally
+distinct collections — no string-discriminator partitioning step.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from game.simulation.battle_spec import BattleSpec
 from game.simulation.combat.boundary import UnboundedRegion
@@ -38,6 +40,7 @@ from game.strategy.combat.strategy_modifier_stack_builder import (
     StrategyModifierStackBuilder,
 )
 from game.strategy.combat.team_spec_builder import TeamSpecBuilder
+from game.strategy.data.deployed_group import MineGroup
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
@@ -79,35 +82,60 @@ def _boundary_to_box(
     return None
 
 
-def _default_mine_group_filter(
-    fleets: Sequence["Fleet"],
-) -> Tuple[List["Fleet"], List["Fleet"]]:
-    """Partition `fleets` into `(combat_fleets, mine_groups)`.
+def _collect_mine_groups_at_hex(
+    combat_fleets: Sequence["Fleet"],
+    empires: Mapping[Any, Any],
+) -> List[MineGroup]:
+    """Collect MineGroups co-located with any combat fleet.
 
-    Mine-group Fleets carry mines in a synthetic-carrier ShipInstance whose
-    `layers` / `components` are empty. They participate in tactical combat
-    exclusively via `TacticalMineResolver`, not as ShipSpecs on a team.
+    PROJ-431 Phase 2: mines no longer live in ``empire.fleets``; they
+    live in ``empire.deployed_groups``. The assembler walks the union
+    of empires referenced by ``combat_fleets`` (resolved via the
+    ``empires`` mapping) and pulls every :class:`MineGroup` at a hex
+    one of the combat fleets occupies.
     """
-    return TeamSpecBuilder().split_mine_groups(fleets)
+    if not combat_fleets:
+        return []
+    target_hexes = {f.location for f in combat_fleets}
+    seen_empire_ids: set = set()
+    seen_group_ids: set = set()
+    collected: List[MineGroup] = []
+    for empire in empires.values():
+        # Dedupe empires by ``id(...)`` rather than via ``set(...)`` so
+        # callers that pass un-hashable ``SimpleNamespace`` stubs work.
+        if id(empire) in seen_empire_ids:
+            continue
+        seen_empire_ids.add(id(empire))
+        deployed = getattr(empire, "deployed_groups", None) or ()
+        for group in deployed:
+            if not isinstance(group, MineGroup):
+                continue
+            if group.location not in target_hexes:
+                continue
+            if id(group) in seen_group_ids:
+                continue
+            seen_group_ids.add(id(group))
+            collected.append(group)
+    return collected
 
 
 @dataclass(frozen=True)
 class BattleSpecExtensions:
     """Strategy-only sidecar for a `BattleSpec`.
 
-    - `mine_groups`: filtered-out mine_group Fleets for the tactical
-      `TacticalMineResolver` wiring.
+    - `mine_groups`: typed :class:`MineGroup` instances co-located with
+      the battle, wired into ``TacticalMineResolver`` setup.
     - `owner_to_team_id`: empire_id -> team_id mapping used by both the
       mine resolver (for `_owner_team_id`) and the post-battle hook.
-    - `combat_fleets`: the fleets that survived the mine-group filter
-      and entered team construction. Used by the fighter reboard setup.
+    - `combat_fleets`: the fleets that entered team construction. Used
+      by the fighter reboard setup.
     - `engine_ref`: mutable one-slot list inside this otherwise frozen
       dataclass. The pre-tick reboard callback appends the live
       `BattleEngine` to it so the post-battle hook can drive
       `apply_reboard`. The frozen dataclass holds the list reference;
       the list itself is mutable. Do NOT replace the list — append.
     """
-    mine_groups: Tuple["Fleet", ...]
+    mine_groups: Tuple[MineGroup, ...]
     owner_to_team_id: Mapping[Any, int]
     combat_fleets: Tuple["Fleet", ...]
     engine_ref: List[Any]
@@ -124,20 +152,13 @@ class StrategyBattleAssembly:
 class StrategyBattleAssembler:
     """Orchestrator that compiles fleets into a `StrategyBattleAssembly`.
 
-    The `mine_group_filter` parameter is the explicit temporary handoff
-    to PROJ-431 Phase 2: that project's deployable substrate redesign
-    simplifies the filter away once mines/satellites/fighters live on a
-    unified substrate. Do not pre-collapse it here.
+    PROJ-431 Phase 2: the temporary ``mine_group_filter`` parameter is
+    DELETED. Mines live on ``empire.deployed_groups`` as typed
+    :class:`MineGroup` instances and are gathered from the ``empires``
+    mapping directly — no partition step on ``fleets``.
     """
 
-    def __init__(
-        self,
-        *,
-        mine_group_filter: Optional[
-            Callable[[Sequence["Fleet"]], Tuple[List["Fleet"], List["Fleet"]]]
-        ] = None,
-    ) -> None:
-        self._mine_group_filter = mine_group_filter or _default_mine_group_filter
+    def __init__(self) -> None:
         self._team_builder = TeamSpecBuilder()
         self._modifier_builder = StrategyModifierStackBuilder()
         self._hook_builder = PostBattleHookBuilder()
@@ -156,12 +177,16 @@ class StrategyBattleAssembler:
         team_modifiers: Optional[Mapping[int, Any]] = None,
         max_ticks: Optional[int] = None,
     ) -> StrategyBattleAssembly:
-        _ = registries  # parity; ship construction uses InstanceBackedMaterializer.
+        del registries  # parity; ship construction uses InstanceBackedMaterializer.
 
         if empires is None:
             empires = {}
 
-        combat_fleets, mine_groups = self._mine_group_filter(fleets)
+        # PROJ-431 Phase 2: every entry in ``fleets`` is a real combat
+        # fleet. Mines arrive as typed ``MineGroup``s on
+        # ``empire.deployed_groups`` and are collected separately.
+        combat_fleets = list(fleets)
+        mine_groups = _collect_mine_groups_at_hex(combat_fleets, empires)
 
         # Single source of truth for owner-order and owner->team mapping.
         # `PostBattleHookBuilder` and `BattleSpecExtensions.owner_to_team_id`
@@ -176,7 +201,7 @@ class StrategyBattleAssembler:
                 f"StrategyBattleAssembler.assemble: requires "
                 f"{_MIN_TEAMS}..{_MAX_TEAMS} unique combat-fleet owners; "
                 f"got {num_teams} from {len(combat_fleets)} combat fleets "
-                f"({len(mine_groups)} mine_groups)"
+                f"({len(mine_groups)} MineGroups)"
             )
 
         entry_vectors = resolve_team_entry_vectors(team_count=num_teams)

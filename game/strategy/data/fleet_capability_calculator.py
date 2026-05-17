@@ -93,16 +93,18 @@ class FleetCapabilityCalculator:
         self._component_registry = component_registry
 
     def _is_real_fleet(self) -> bool:
-        """PROJ-FMS-A: True only for ``group_kind == "fleet"`` groups.
+        """PROJ-FMS-A + PROJ-431 Phase 2: True only for
+        ``group_kind == "fleet"`` groups.
 
-        Non-fleet groups (``fighter_group`` / ``satellite_group`` /
-        ``mine_group``) cannot perform strategic-layer actions; their
-        ships are tactical entities loaned to the strategy layer via the
-        VehicleBay/staging-yard substrate. Resilient to mock fleets in
-        tests: only string discriminators in the recognised set trigger
-        rejection. Treats anything else (including missing attribute,
-        Mock objects) as a real fleet so existing tests don't have to
-        wire ``group_kind``.
+        Non-fleet groups (``fighter_group`` / ``satellite_group``)
+        cannot perform strategic-layer actions; their ships are tactical
+        entities loaned to the strategy layer via the
+        VehicleBay/staging-yard substrate. Mines are a separate type
+        (:class:`MineGroup`) entirely and never reach this calculator.
+        Resilient to mock fleets in tests: only string discriminators
+        in the recognised set trigger rejection. Treats anything else
+        (including missing attribute, Mock objects) as a real fleet so
+        existing tests don't have to wire ``group_kind``.
         """
         kind = getattr(self._fleet, "group_kind", "fleet")
         if isinstance(kind, str):
@@ -117,9 +119,10 @@ class FleetCapabilityCalculator:
         Returns True if any combat-capable ship has a component with
         SpaceShipyard ability (e.g., space_shipyard component).
 
-        PROJ-FMS-A: non-``fleet`` group kinds (fighter_group,
-        satellite_group, mine_group) are not real fleets and cannot host
-        shipyards, regardless of any ship's components.
+        PROJ-FMS-A + PROJ-431 Phase 2: non-``fleet`` group kinds
+        (``fighter_group`` / ``satellite_group``) are not real fleets
+        and cannot host shipyards, regardless of any ship's components.
+        Mines are a separate type entirely (:class:`MineGroup`).
         """
         if not self._is_real_fleet():
             return False

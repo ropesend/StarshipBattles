@@ -59,35 +59,21 @@ class Fleet:
 
         # PROJ-FMS-A Phase 4: discriminator for fleet-vs-deployed-group.
         # Values: "fleet" (real fleet, full Move/Build/Warp surface),
-        # "fighter_group" / "satellite_group" / "mine_group" (deployed groups
-        # — auto-joinable to combat, but reject strategic movement / build /
-        # warp). Enforced at command-validation time in
+        # "fighter_group" / "satellite_group" (deployed groups —
+        # auto-joinable to combat, but reject strategic movement / build
+        # / warp). Enforced at command-validation time in
         # game/strategy/engine/handlers/{movement,build}.py.
-        if group_kind not in ("fleet", "fighter_group", "satellite_group", "mine_group"):
+        # PROJ-431 Phase 2: ``"mine_group"`` is removed from the legal
+        # set. Mines live on ``empire.deployed_groups`` as a typed
+        # :class:`~game.strategy.data.deployed_group.MineGroup` — they
+        # are not ``Fleet``s at all. Phase 3 will drop the remaining
+        # two markers and delete this field entirely.
+        if group_kind not in ("fleet", "fighter_group", "satellite_group"):
             raise ValueError(
                 f"Fleet.group_kind={group_kind!r} must be one of "
-                f"fleet/fighter_group/satellite_group/mine_group"
+                f"fleet/fighter_group/satellite_group"
             )
         self.group_kind = group_kind
-
-        # PROJ-FMS-B Phase 1: minefield-specific runtime fields populated
-        # only for ``group_kind == "mine_group"``. They default to safe
-        # values on non-mine groups so consumers can read them
-        # unconditionally without ``hasattr`` guards.
-        #
-        # ``sensitivity``: one of "LOW" / "MED" / "HIGH" — warhead trigger
-        #     multiplier (see ``minefield_balance.MinefieldBalance``).
-        # ``expected_hit_chance_threshold``: float in [0.0, 1.0] — the
-        #     deterministic continuous gate on the laserhead pass.
-        # ``mine_positions``: List[Tuple[float, float]] — scatter coords
-        #     of the mines in tactical-map units. Populated at strategic
-        #     launch time and persisted across saves.
-        # ``scatter_seed``: int — stable PRNG seed for the scatter layout
-        #     so re-entries / re-loads produce the same layout.
-        self.sensitivity: str = "MED"
-        self.expected_hit_chance_threshold: float = 0.30
-        self.mine_positions: List[Tuple[float, float]] = []
-        self.scatter_seed: Optional[int] = None
 
         # Master ship list (flat, canonical list of all ships in the fleet)
         self.ships: List[ShipInstance] = []
@@ -127,11 +113,14 @@ class Fleet:
 
     @property
     def can_strategic_move(self) -> bool:
-        """PROJ-FMS-A Phase 4: only ``group_kind == "fleet"`` may move.
+        """PROJ-FMS-A Phase 4 + PROJ-431 Phase 2: only ``group_kind ==
+        "fleet"`` may move.
 
-        Deployed groups (``fighter_group`` / ``satellite_group`` /
-        ``mine_group``) reject Move / Intercept / Warp / Build /
-        Join-Fleet at command validation time.
+        Deployed groups (``fighter_group`` / ``satellite_group``)
+        reject Move / Intercept / Warp / Build / Join-Fleet at command
+        validation time. ``MineGroup`` is a separate type entirely
+        (sibling of ``Fleet``) and structurally cannot reach the move
+        handlers.
         """
         return self.group_kind == "fleet"
 
@@ -511,18 +500,9 @@ class Fleet:
             'group_kind': self.group_kind,
         }
 
-        # PROJ-FMS-B Phase 1: serialise minefield runtime state only when
-        # populated. Non-mine fleets carry defaults that round-trip as
-        # absent fields (keeps existing saves clean).
-        if self.group_kind == "mine_group":
-            data['sensitivity'] = self.sensitivity
-            data['expected_hit_chance_threshold'] = float(
-                self.expected_hit_chance_threshold
-            )
-            if self.mine_positions:
-                data['mine_positions'] = [list(p) for p in self.mine_positions]
-            if self.scatter_seed is not None:
-                data['scatter_seed'] = int(self.scatter_seed)
+        # PROJ-431 Phase 2: minefield runtime state moved to ``MineGroup``.
+        # Real fleets no longer carry sensitivity / threshold / mine_positions
+        # / scatter_seed fields.
 
         # Serialize hierarchy
         if self._task_forces:
@@ -580,23 +560,10 @@ class Fleet:
             group_kind=data.get('group_kind', 'fleet'),
         )
 
-        # PROJ-FMS-B Phase 1: restore minefield runtime state. Absent
-        # fields fall back to the constructor defaults (MED sensitivity /
-        # 0.30 threshold / empty positions / None seed).
-        if 'sensitivity' in data:
-            fleet.sensitivity = str(data['sensitivity'])
-        if 'expected_hit_chance_threshold' in data:
-            fleet.expected_hit_chance_threshold = float(
-                data['expected_hit_chance_threshold']
-            )
-        if 'mine_positions' in data:
-            fleet.mine_positions = [
-                (float(p[0]), float(p[1]))
-                for p in data['mine_positions']
-                if isinstance(p, (list, tuple)) and len(p) >= 2
-            ]
-        if 'scatter_seed' in data:
-            fleet.scatter_seed = int(data['scatter_seed'])
+        # PROJ-431 Phase 2: ``Fleet`` no longer carries minefield runtime
+        # state. Any save predating Phase 2 that stored those fields on
+        # a fleet entry has them silently ignored — they belong on
+        # ``MineGroup`` instances now, which live on ``deployed_groups``.
 
         # PROJ-251: Strict deserialization — corrupt ships fail the load
         for i, ship_data in enumerate(data.get('ships', [])):

@@ -15,8 +15,6 @@ end-to-end.
 """
 from __future__ import annotations
 
-from unittest.mock import MagicMock
-
 import pytest
 
 from game.core.hex_math import HexCoord
@@ -37,46 +35,6 @@ def _make_ship(instance_id: str, owner_id: int) -> ShipInstance:
         design_data={"name": "Test Escort", "ship_class": "Escort"},
         current_hp=200,
     )
-
-
-def test_split_mine_groups_partitions_by_group_kind():
-    """`mine_group` flagged fleets go to the second tuple; everything else stays combat."""
-    builder = TeamSpecBuilder()
-    hex_c = HexCoord(0, 0)
-    fleet = Fleet(
-        fleet_id=1, owner_id=10, location=hex_c, speed=5.0, group_kind="fleet",
-    )
-    fighter_group = Fleet(
-        fleet_id=2, owner_id=10, location=hex_c, speed=0.0,
-        group_kind="fighter_group",
-    )
-    satellite_group = Fleet(
-        fleet_id=3, owner_id=10, location=hex_c, speed=0.0,
-        group_kind="satellite_group",
-    )
-    mine_group = Fleet(
-        fleet_id=4, owner_id=10, location=hex_c, speed=0.0,
-        group_kind="mine_group",
-    )
-
-    combat, mine_groups = builder.split_mine_groups(
-        [fleet, fighter_group, satellite_group, mine_group]
-    )
-    assert combat == [fleet, fighter_group, satellite_group]
-    assert mine_groups == [mine_group]
-
-
-def test_split_mine_groups_handles_missing_group_kind_attr():
-    """Fleets without a `group_kind` attribute default to combat."""
-    builder = TeamSpecBuilder()
-    fleet = MagicMock(spec_set=["id", "owner_id", "ships"])
-    fleet.id = 1
-    fleet.owner_id = 10
-    fleet.ships = []
-
-    combat, mine_groups = builder.split_mine_groups([fleet])
-    assert combat == [fleet]
-    assert mine_groups == []
 
 
 def test_team_spec_for_fleet_group_returns_team_spec_with_expected_shape():

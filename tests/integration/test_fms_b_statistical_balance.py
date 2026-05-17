@@ -119,35 +119,15 @@ def _warhead_mine(damage=10.0):
 
 def _make_mine_group(hex_c, owner_id, mines, sensitivity="MED",
                      fleet_id=100000):
-    """Build a populated mine_group with one synthetic carrier."""
-    fleet = Fleet(
-        fleet_id=fleet_id, owner_id=owner_id, location=hex_c, speed=0.0,
-        group_kind="mine_group",
-    )
-    fleet.sensitivity = sensitivity
-    # PROJ-431 Phase 1f: production callers read carried inventory via
-    # the typed BayInventory and write it back through
-    # ``set_bay_inventory``. SimpleNamespace lacks the latter so use a
-    # tiny shim class with both.
-    from game.strategy.data.bay_inventory import BayInventory
+    """PROJ-431 Phase 2: build a typed :class:`MineGroup`."""
     from game.strategy.data.carried_vehicle import CarriedVehicle
-
-    class _MineCarrier:
-        def __init__(self) -> None:
-            self.instance_id = f"carrier_{fleet_id}"
-            self.owner_id = owner_id
-            self.carried_items = list(mines)
-            self.bay_inventory = BayInventory(
-                bay=[CarriedVehicle.from_dict(m) for m in mines], pods=[]
-            )
-
-        def set_bay_inventory(self, bi: BayInventory) -> None:
-            self.bay_inventory = bi
-            self.carried_items = [cv.to_dict() for cv in bi.bay]
-
-    carrier = _MineCarrier()
-    fleet.ships.append(carrier)
-    return fleet
+    from game.strategy.data.deployed_group import MineGroup
+    mg = MineGroup(
+        group_id=fleet_id, owner_id=owner_id, location=hex_c,
+        sensitivity=sensitivity,
+    )
+    mg.mines = [CarriedVehicle.from_dict(m) for m in mines]
+    return mg
 
 
 def _trial(seed: int, ship: _StubShip, mine_count: int, sensitivity: str) -> bool:
@@ -172,8 +152,8 @@ def _trial(seed: int, ship: _StubShip, mine_count: int, sensitivity: str) -> boo
         total_defense_score=ship._defense,
     )
     fleet.ships.append(fresh)
-    enemy = SimpleNamespace(id=1, fleets=[mg])
-    player = SimpleNamespace(id=0, fleets=[fleet])
+    enemy = SimpleNamespace(id=1, fleets=[], deployed_groups=[mg])
+    player = SimpleNamespace(id=0, fleets=[fleet], deployed_groups=[])
 
     r = MinefieldResolver(rng=random.Random(seed))
     res = r.resolve_minefield_entry(

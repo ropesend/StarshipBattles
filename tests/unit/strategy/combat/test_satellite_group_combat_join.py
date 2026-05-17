@@ -11,7 +11,6 @@ from __future__ import annotations
 
 from game.core.hex_math import HexCoord
 from game.strategy.combat.spec_compiler import build_strategy_battle_spec
-from game.strategy.combat.team_spec_builder import TeamSpecBuilder
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.ship_instance import ShipInstance
 
@@ -43,31 +42,11 @@ def _make_enemy_ship(instance_id: str, owner_id: int) -> ShipInstance:
     )
 
 
-def test_satellite_group_not_filtered_as_mine_group():
-    """`TeamSpecBuilder.split_mine_groups` keeps satellite_group in combat."""
-    hex_c = HexCoord(0, 0)
-    satellite_group = Fleet(
-        fleet_id=300001, owner_id=10, location=hex_c, speed=0.0,
-        group_kind="satellite_group",
-    )
-    satellite_group.ships.append(_make_satellite_ship("s1", owner_id=10))
-
-    mine_group = Fleet(
-        fleet_id=100001, owner_id=10, location=hex_c, speed=0.0,
-        group_kind="mine_group",
-    )
-
-    regular = Fleet(
-        fleet_id=1, owner_id=10, location=hex_c, speed=5.0,
-        group_kind="fleet",
-    )
-
-    combat, mine_groups = TeamSpecBuilder().split_mine_groups(
-        [regular, satellite_group, mine_group]
-    )
-    assert mine_group in mine_groups
-    assert satellite_group in combat
-    assert regular in combat
+# PROJ-431 Phase 2: ``TeamSpecBuilder.split_mine_groups`` is deleted —
+# mines no longer live in ``empire.fleets``, so there is no
+# "satellite_group must not be filtered as mine_group" surface left to
+# protect. The test that used to assert that invariant was removed
+# along with the helper it exercised.
 
 
 def test_satellite_group_joins_owner_team_in_spec(fresh_registries):

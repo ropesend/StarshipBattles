@@ -209,7 +209,12 @@ class BaseCommandHandler:
     def _reject_if_non_fleet_group(fleet, action: str) -> 'ValidationResult | None':
         """PROJ-FMS-A Phase 4: reject fleet-manipulation commands on
         non-fleet ``group_kind`` discriminators (fighter_group /
-        satellite_group / mine_group).
+        satellite_group).
+
+        PROJ-431 Phase 2: ``"mine_group"`` is gone from the legal set —
+        mines are a separate type (:class:`MineGroup`) that can never
+        reach a fleet-typed handler parameter. Phase 3 will remove the
+        remaining markers and delete this guard entirely.
 
         Returns a ``ValidationResult.error(...)`` when the fleet is a
         deployed group; returns ``None`` to indicate the action may
@@ -221,11 +226,11 @@ class BaseCommandHandler:
         # treated as real fleets.
         if not isinstance(kind, str) or kind == "fleet":
             return None
-        if kind not in ("fighter_group", "satellite_group", "mine_group"):
+        if kind not in ("fighter_group", "satellite_group"):
             return None
         return ValidationResult.error(
             f"{action} is not allowed for group_kind={kind!r}: "
-            f"deployed groups (mines / fighters / satellites) "
+            f"deployed groups (fighters / satellites) "
             f"cannot move, warp, build, or join."
         )
 
