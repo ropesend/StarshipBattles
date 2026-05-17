@@ -1,0 +1,650 @@
+{
+    "_format_version": "2.0",
+    "name": "QS Mine Layer (BC)",
+    "ship_class": "Battle Cruiser",
+    "vehicle_type": "Ship",
+    "theme_id": "Federation",
+    "team_id": 0,
+    "color": [
+        100,
+        100,
+        255
+    ],
+    "movement_policy": "kite_max",
+    "targeting_policy": "standard",
+    "design_role": "transport",
+    "layers": {
+        "CORE": [
+            {
+                "id": "bridge",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "generator",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 42.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 42.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 42.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 42.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 42.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 42.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 42.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "life_support",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 33.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "life_support",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 33.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "life_support",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 33.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "life_support",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 33.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ],
+        "INNER": [
+            {
+                "id": "mine_bay",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 30.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "mine_bay",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 30.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "mine_bay",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 30.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "mine_bay",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 30.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "mine_deployer",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "mine_deployer",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "mine_deployer",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "mine_deployer",
+                "modifiers": [
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            }
+        ],
+        "OUTER": [
+            {
+                "id": "warp_drive",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 20.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 20.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 20.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 20.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 20.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 20.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 20.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 20.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 20.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 20.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "fuel_tank",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 42.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "fuel_tank",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 42.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "fuel_tank",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 42.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "fuel_tank",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 42.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "fuel_tank",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 42.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "battery",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 10.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "battery",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 10.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "battery",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 10.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ],
+        "ARMOR": []
+    },
+    "resources": {
+        "fuel": 10750000.0,
+        "energy": 60000.0,
+        "ammo": 0.0
+    },
+    "expected_stats": {
+        "max_hp": 92099,
+        "max_fuel": 10500000.0,
+        "max_energy": 60000.0,
+        "max_ammo": 0.0,
+        "max_speed": 11.746280344557556,
+        "acceleration_rate": 0.018396680257725225,
+        "turn_speed": 0.0,
+        "total_thrust": 30000.0,
+        "strategic_movement": 20000.0,
+        "mass": 63850.0,
+        "armor_hp_pool": 0,
+        "warp_max_tonnage": 64000.0,
+        "warp_energy_cost": 0.0,
+        "mass_valid": true
+    }
+}
