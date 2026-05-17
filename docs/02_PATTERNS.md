@@ -64,6 +64,7 @@ substrate, pre_tick_loop_callback composition, polymorphic
 | 38 | CarriedVehicle Substrate | `VehicleBayAbility` (`capacity_mass`, `allowed_types`) plus the `CarriedVehicle` payload and shared `carried_vehicle_to_ship_instance` helper carry design-backed vehicles through bay storage, strategic launch / recovery, and end-of-battle reboard. |
 | 39 | `pre_tick_loop_callback` Composition | `_compose_setup_callbacks` chains battle-setup closures (mine resolver wiring, fighter reboard tracker, etc.) onto the single `run_battle(..., pre_tick_loop_callback=...)` slot, letting independent subsystems install per-battle state without fighting for the same hook. |
 | 40 | Polymorphic Order Issuer (`IIssuerAdapter`) | Order handlers accept an `IIssuerAdapter` protocol (`FleetShipIssuerAdapter` / `PlanetStagingYardIssuerAdapter`) instead of a concrete `(Fleet, ShipInstance)` pair, so a single handler family serves both fleet-ship and planet-facility issuers; `ActionExecutionEngine` ticks both `fleet.orders` and `planet.orders`. |
+| 41 | Bootstrap-State Single Assignment Path | One frozen-dataclass payload (`SessionBootstrapState`) backs both fresh construction and rehydration; one private `_apply_bootstrap_state(state)` method is the only place that mutates `self` from state. Canonical example: `GameSession`. Eliminates the PROJ-396 CRIT-002 service-wiring drift surface. |
 
 ## 1. ApplicationContext
 
@@ -1023,6 +1024,67 @@ handler family.
 Boundary: this pattern is for sharing handler logic across issuer
 kinds. It is NOT for adding new order types — those still get their
 own command + handler + order handler trio (Pattern #7).
+
+## 41. Bootstrap-State Single Assignment Path
+
+Where: `game/strategy/engine/session/runtime_services.py`, `game/strategy/engine/session/bootstrap.py`, `game/strategy/engine/session/persistence_adapter.py`, `game/strategy/engine/game_session.py`.
+
+Use this pattern when a class has two construction entry paths (e.g. fresh construction + rehydration from a save) that must produce structurally identical instances. The historical failure mode is service-wiring drift: the two paths re-implement composition by hand, a new dependency lands on one path, and the other quietly diverges. PROJ-396 CRIT-002 is the canonical case in this codebase — the prior `GameSession` had a hand-mirrored mutator-service / turn-engine / event-bus block in both `__init__` and `from_dict`.
+
+Contract:
+
+- Define a single frozen-dataclass payload (e.g. `SessionBootstrapState`) that captures everything either path needs to apply onto `self`.
+- Define a single internal assignment method (e.g. `_apply_bootstrap_state(state)`) that is the **only** place that mutates `self` from a state value. Do NOT use `self.__dict__.update(...)` or `cls.__new__(cls)` re-construction.
+- Define a single canonical wiring function (e.g. `SessionBootstrap._build_services(...)`) shared by both paths.
+- Both entry paths build a state and call the assignment method. Public API stays the same; tests should not see the indirection.
+- Cover with an anti-drift regression test that compares service classes across both construction paths (e.g. `test_init_and_from_dict_use_identical_service_classes`).
+
+Skeleton:
+
+```python
+@dataclass(frozen=True)
+class SessionRuntimeServices:
+    registries: GameRegistries
+    event_log: EventLog
+    # ... other wired services
+
+@dataclass(frozen=True)
+class SessionBootstrapState:
+    config: GameConfig
+    services: SessionRuntimeServices
+    # ... other owned state
+
+class SessionBootstrap:
+    @staticmethod
+    def _build_services(*, registries, event_log=None, ...): ...
+
+    @staticmethod
+    def new_game_state(config, *, ai_factory=None) -> SessionBootstrapState: ...
+
+class GameSession:
+    def __init__(self, config=None, ai_factory=None, *, _state=None):
+        self._race_registry = None
+        if _state is not None:
+            self._apply_bootstrap_state(_state)
+            return
+        state = SessionBootstrap.new_game_state(config or GameConfig(), ai_factory=ai_factory)
+        self._apply_bootstrap_state(state)
+
+    @classmethod
+    def from_dict(cls, data, ai_factory=None):
+        session = cls.__new__(cls)
+        session._race_registry = None
+        state = SessionPersistenceAdapter.rehydrate_state(data, ai_factory=ai_factory, ...)
+        session._apply_bootstrap_state(state)
+        return session
+
+    def _apply_bootstrap_state(self, state):
+        # Single state-mutation site.
+        self._services = state.services
+        # ... other owned fields
+```
+
+Boundary: this pattern is for *structural* drift, not behavioral cleanup. If the two construction paths have intentionally different semantics (e.g. `human_player_ids` fallback differing between fresh and load paths), keep that asymmetry inside the state-builder for each path. The single-assignment method only copies from the state; it does not enforce equality across paths.
 
 ## Critical Naming Reminders
 

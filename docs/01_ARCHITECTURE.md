@@ -373,6 +373,16 @@ UI StrategyScreen
   -> read-only DTOs returned through StrategySessionFacade
 ```
 
+### GameSession Lifecycle (PROJ-423)
+
+`GameSession` is a thin shell. Composition lives in three internal collaborators under `game/strategy/engine/session/`:
+
+- `SessionRuntimeServices` (`runtime_services.py`): frozen dataclass holding `registries`, `event_log`, `event_bus`, four mutators, `turn_engine`, `command_registry`. `race_registry` is intentionally outside this bag and remains lazy on `GameSession`.
+- `SessionBootstrap` (`bootstrap.py`): canonical wiring. `_build_services(...)` is the single construction site shared by `__init__` and `from_dict`. `new_game_state(config, ai_factory=...)` adds `GameInitializer.initialize` with `SessionInitializationError` null-object substitution.
+- `SessionPersistenceAdapter` (`persistence_adapter.py`): `serialize(session)` returns the save dict byte-for-byte; `rehydrate_state(data, ai_factory=..., turn_number_provider=..., race_registry_provider=...)` returns a `SessionBootstrapState`.
+
+Public API is unchanged: `GameSession(config=..., ai_factory=...)`, `GameSession.from_dict(data, ai_factory=...)`, `GameSession.to_dict()`. Both `__init__` and `from_dict` route through the canonical `_apply_bootstrap_state(state)` method, which is the single internal assignment path. The save schema is unchanged.
+
 `TurnEngineConfig` contract:
 
 - `TurnEngineConfig` is a frozen dataclass bundling 22 fields: 18 engines plus 4 strategy mutator protocols.

@@ -62,6 +62,21 @@ Facade slice architecture:
 
 Authoring rule: external callers use `StrategySessionFacade`, not slices. Facade properties exposing old private caches exist for legacy tests only.
 
+### GameSession Lifecycle (PROJ-423)
+
+`GameSession` is now a thin shell that holds owned domain state and delegates composition to three internal collaborators under `game/strategy/engine/session/`:
+
+| Collaborator | File | Role |
+|---|---|---|
+| `SessionRuntimeServices` | `runtime_services.py` | Frozen dataclass holding the wired service bag: `registries`, `event_log`, `event_bus`, four mutators (`fleet`, `planet`, `empire`, `ship`), `turn_engine`, `command_registry`. |
+| `SessionBootstrapState` | `runtime_services.py` | Frozen dataclass: the single internal payload both entry paths feed into `_apply_bootstrap_state(...)`. Fields: `config`, `services`, `galaxy`, `empires`, `turn_number`, `save_path`, `human_player_ids`. |
+| `SessionBootstrap` | `bootstrap.py` | Canonical wiring. `_build_services(...)` is the *single* construction site for the mutators / event bus / turn engine / command registry. `new_game_state(...)` adds `GameInitializer.initialize` with the existing `SessionInitializationError` null-object substitution. |
+| `SessionPersistenceAdapter` | `persistence_adapter.py` | `serialize(session)` returns the existing save dict shape; `rehydrate_state(data, ai_factory=...)` returns a `SessionBootstrapState`. Performs galaxy back-refs, fleet registration (PROJ-219), order reference resolution (PROJ-207), pursuer-tracker rebuild (PROJ-222). |
+
+Public surface is unchanged: `GameSession(config=..., ai_factory=...)`, `GameSession.from_dict(data, ai_factory=...)`, `GameSession.to_dict()`. Both `__init__` and `from_dict` route through the canonical `_apply_bootstrap_state(state)` method — the duplicated composition root that caused PROJ-396 CRIT-002 service-wiring drift no longer exists. The anti-drift regression test (`tests/unit/strategy/engine/session/test_bootstrap.py::test_init_and_from_dict_use_identical_service_classes`) is the safeguard against re-occurrence.
+
+`race_registry` stays lazy on `GameSession` (it is intentionally outside `SessionRuntimeServices`). The `_race_registry` slot starts `None`; the property populates it on first access through the `IRaceRegistry` protocol.
+
 ## 2. Command Dispatch
 
 **Files:** `game/strategy/engine/handlers/` (canonical package; PROJ-383 retired the legacy `command_handlers.py` shim)

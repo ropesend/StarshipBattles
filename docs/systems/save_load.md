@@ -18,6 +18,12 @@
 
 `GameSession.to_dict()` currently writes `turn_number`, `save_path`, `config`, `galaxy`, `empires`, `human_player_ids`, and `event_log`. `GameSession.from_dict()` reconstructs config first, resolves registries, rebuilds the turn engine and event bus, loads the galaxy before empires, resolves fleet order references, rebuilds pursuer tracking, and restores active/enemy empire pointers.
 
+PROJ-423 split this serialization out into a dedicated adapter under `game/strategy/engine/session/persistence_adapter.py::SessionPersistenceAdapter`. `GameSession.to_dict()` and `GameSession.from_dict()` are thin delegates:
+
+- `SessionPersistenceAdapter.serialize(session)` returns the dict shape above, byte-for-byte. The save schema is unchanged.
+- `SessionPersistenceAdapter.rehydrate_state(data, ai_factory=..., turn_number_provider=..., race_registry_provider=...)` returns a `SessionBootstrapState`; `GameSession.from_dict` then applies it via the canonical `_apply_bootstrap_state(state)` method, which is shared with the new-game `__init__` path.
+- The historic `human_player_ids` `[0, 1]` fallback when the key is missing from a save file is preserved exactly. Do not "clean up" the fallback semantics — a dedicated future plan can revisit it.
+
 ## Public API
 
 All entry points are static methods on `SaveGameService`.

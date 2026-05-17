@@ -17,13 +17,13 @@
 | 2. Extract canonical service construction into `SessionBootstrap` | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Extract `SessionPersistenceAdapter` | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Collapse `GameSession` to a thin shell | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Docs update | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Docs update | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 5 — Docs update
-**Last Action:** Phase 4 complete — canonical `_apply_bootstrap_state(...)` is the single state-application path; `__init__` and `from_dict` both route through it. Service properties forward through `self._services`; dead imports (`EventBus`, `TurnEngine`, `TurnEngineConfig`, `create_default_registry`, `GameInitializer`, `Empire`, `Galaxy`, plus the five mutator service classes) dropped. game_session.py: 599 → 474 LOC. Sharded suite: 20890/20890 green.
-**Next Action:** Phase 5 — docs update (architecture, patterns, strategy_layer, save_load)
+**Active Phase:** All phases complete
+**Last Action:** Phase 5 complete — docs updated (`01_ARCHITECTURE.md` adds session-lifecycle section; `02_PATTERNS.md` adds Pattern #41 Bootstrap-State Single Assignment Path; `systems/strategy_layer.md` adds session-lifecycle subsection; `systems/save_load.md` documents the SessionPersistenceAdapter delegation). Final sharded run: 20890/20890 green.
+**Next Action:** None
 **Blockers:** None
 
 ## Overview
@@ -102,10 +102,10 @@ Document `SessionRuntimeServices`, `SessionBootstrap`, and `SessionPersistenceAd
 - Per-phase file manifest: [`manifest.md`](manifest.md)
 
 ## Verification
-- [ ] `game/strategy/engine/session/` exists with `runtime_services.py`, `bootstrap.py`, and `persistence_adapter.py`.
-- [ ] `GameSession.__init__` and `GameSession.from_dict()` both route through `SessionBootstrapState` + `_apply_bootstrap_state(...)`.
-- [ ] `game_session.py` no longer imports `FleetNavigationService`, `FleetWriteService`, `PlanetWriteService`, `EmpireWriteService`, `ShipInstanceWriteService`, `TurnEngineConfig`, `TurnEngine`, `GameInitializer`, `EventBus`, or `create_default_registry`.
-- [ ] `race_registry` remains lazy on `GameSession`.
-- [ ] `SessionPersistenceAdapter.serialize()` preserves the existing save schema byte-for-byte.
-- [ ] `python Tools/test_sharded/test_sharded.py` passes after Phase 3 and again after Phase 4.
-- [ ] All phase checklists complete; docs in Phase 5 updated.
+- [x] `game/strategy/engine/session/` exists with `runtime_services.py`, `bootstrap.py`, and `persistence_adapter.py`.
+- [x] `GameSession.__init__` and `GameSession.from_dict()` both route through `SessionBootstrapState` + `_apply_bootstrap_state(...)`.
+- [x] `game_session.py` no longer imports `FleetNavigationService`, `FleetWriteService`, `PlanetWriteService`, `EmpireWriteService`, `ShipInstanceWriteService`, `TurnEngineConfig`, `TurnEngine`, `GameInitializer`, `EventBus`, or `create_default_registry`.
+- [x] `race_registry` remains lazy on `GameSession`.
+- [x] `SessionPersistenceAdapter.serialize()` preserves the existing save schema byte-for-byte.
+- [x] `python Tools/test_sharded/test_sharded.py` passes after Phase 3 and again after Phase 4.
+- [x] All phase checklists complete; docs in Phase 5 updated.
