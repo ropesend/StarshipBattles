@@ -136,19 +136,32 @@ class TransferController:
         return sources
 
     def discover_pod_designs(self, scene) -> List[str]:
-        """Discover all pod-type design names from the design
-        library. Returns a sorted list of design names with
-        vehicle_type=='Drop Pod'. Falls back to ``[]`` on any I/O
-        or schema error so the dialog still opens."""
+        """Discover all pod-type design names from the per-empire catalog.
+
+        PROJ-427 Phase 6: was ``DesignLibrary.filter_designs(...)``; now
+        reads through ``session.services.design_catalogs_by_empire[empire_id]``.
+        Returns a sorted list of design names with
+        ``vehicle_type=='Drop Pod'``. Falls back to ``[]`` on any error
+        so the dialog still opens.
+        """
         try:
-            from game.strategy.systems.design_library import DesignLibrary
             session = scene.session
             empire = getattr(session, "active_empire", None)
             empire_id = empire.id if empire else 0
-            library = DesignLibrary(session.save_path, empire_id)
-            pod_designs = library.filter_designs(vehicle_type="Drop Pod")
+            services = getattr(session, "services", None)
+            catalogs = (
+                getattr(services, "design_catalogs_by_empire", None) or {}
+                if services is not None
+                else {}
+            )
+            catalog = catalogs.get(empire_id)
+            if catalog is None:
+                return []
+            pod_designs = [
+                m for m in catalog.list_designs() if m.vehicle_type == "Drop Pod"
+            ]
             return sorted({d.name for d in pod_designs})
-        except Exception:  # Intentional broad catch: DesignLibrary load surfaces I/O, JSON, and schema-validation errors; transfer dialog falls back to empty pod list
+        except Exception:  # Intentional broad catch: catalog lookup must not block the transfer dialog from opening
             logger.debug(
                 "Could not discover pod designs, falling back to empty list",
             )

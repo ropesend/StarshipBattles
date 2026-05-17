@@ -7,21 +7,18 @@ that today live on ``DesignLibrary``:
 - ``scan_designs()`` — list ``DesignMetadata`` for all designs on disk.
 - ``save_design_data(design_id, data)`` — write a design JSON file.
 - ``load_design_data(design_id)`` — read a design JSON file into a
-  ``DesignLoadResult`` (shape unchanged from ``DesignLibrary``).
+  ``DesignLoadResult`` (shape unchanged).
 - ``mark_design_obsolete(design_id, is_obsolete)`` — toggle the
   metadata flag on disk.
 - ``increment_built_count(design_id)`` — bump ``times_built`` on disk.
 - Save-folder and temp-folder policy (per-empire subfolder layout).
 
-Phase 1 is **additive**: no existing caller is migrated, and
-``DesignLibrary`` continues to own runtime lookup + UI cache + spawn
-disk reads. Phase 2 layers ``DesignCatalog`` on top; Phases 3-6 migrate
-callers off ``DesignLibrary`` and eventually delete it.
-
-The ``DesignLoadResult`` value type is imported from
-``design_library`` so the shape is byte-identical to today's contract;
-Phase 6 will swap the import direction once ``DesignLibrary`` goes
-away.
+PROJ-427 Phase 6: ``DesignLoadResult`` was relocated from
+``design_library`` to this module so the dependency direction inverts
+in preparation for ``DesignLibrary`` deletion. ``design_library`` now
+re-exports the value type for backwards compatibility during the
+in-flight UI migration; callers should import it from
+``game.strategy.systems.design_repository`` going forward.
 """
 from __future__ import annotations
 
@@ -29,18 +26,76 @@ import glob
 import logging
 import os
 import tempfile
+from dataclasses import dataclass
 from json import JSONDecodeError
 from typing import List, Optional, Tuple, TYPE_CHECKING
 
 from game.core.exceptions import ValidationException
 from game.core.json_utils import load_json_required, save_json
 from game.strategy.data.design_metadata import DesignMetadata
-from game.strategy.systems.design_library import DesignLoadResult
 
 if TYPE_CHECKING:
     pass
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class DesignLoadResult:
+    """Result of attempting to load a ship design.
+
+    PROJ-251: Replaces bare Optional[dict] return so callers can distinguish
+    between not-found, corrupt JSON, invalid schema, and permission errors.
+    PROJ-427 Phase 6: relocated from ``design_library`` to this module; the
+    legacy ``design_library`` location re-exports for backwards compatibility.
+    """
+    data: Optional[dict] = None
+    error: Optional[str] = None
+    error_type: Optional[str] = None
+
+    @property
+    def success(self) -> bool:
+        """True if design was loaded successfully."""
+        return self.data is not None
+
+    @staticmethod
+    def ok(data: dict) -> "DesignLoadResult":
+        return DesignLoadResult(data=data)
+
+    @staticmethod
+    def not_found(design_id: str) -> "DesignLoadResult":
+        return DesignLoadResult(
+            error=f"Design '{design_id}' not found",
+            error_type="not_found",
+        )
+
+    @staticmethod
+    def corrupt(design_id: str, detail: str) -> "DesignLoadResult":
+        return DesignLoadResult(
+            error=f"Design '{design_id}' has corrupt JSON: {detail}",
+            error_type="corrupt_json",
+        )
+
+    @staticmethod
+    def invalid_schema(design_id: str, detail: str) -> "DesignLoadResult":
+        return DesignLoadResult(
+            error=f"Design '{design_id}' has invalid schema: {detail}",
+            error_type="invalid_schema",
+        )
+
+    @staticmethod
+    def permission_denied(design_id: str, detail: str) -> "DesignLoadResult":
+        return DesignLoadResult(
+            error=f"Design '{design_id}' permission denied: {detail}",
+            error_type="permission_denied",
+        )
+
+    @staticmethod
+    def io_error(design_id: str, detail: str) -> "DesignLoadResult":
+        return DesignLoadResult(
+            error=f"Design '{design_id}' IO error: {detail}",
+            error_type="io_error",
+        )
 
 
 class DesignRepository:

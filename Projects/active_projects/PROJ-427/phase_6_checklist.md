@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED.
 > 3. Update plan.md phase table AND Current State.
 
-**Status:** Not Started
+**Status:** Partial (Committed) — dependency inversion + 1 of 4 UI callers migrated; 3 UI screens + deletion deferred to follow-up slot. See `decisions.md` 2026-05-17.
 **Depends on:** Phase 5
 **Review Mode:** standard
 **Files (planned):**

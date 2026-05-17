@@ -54,42 +54,44 @@ def test_collect_sources_checks_projected_position_when_primary_hex_has_no_plane
 def test_discover_pod_designs_returns_sorted_unique_drop_pod_names(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """PROJ-427 Phase 6: discover_pod_designs now reads through the per-empire
+    DesignCatalog on session.services, not via DesignLibrary."""
     controller, _facade, _view_model = _controller()
-    scene = SimpleNamespace(
-        session=SimpleNamespace(save_path="save-a", active_empire=SimpleNamespace(id=4))
+
+    catalog = SimpleNamespace(
+        list_designs=lambda: [
+            SimpleNamespace(name="Zulu Pod", vehicle_type="Drop Pod"),
+            SimpleNamespace(name="Alpha Pod", vehicle_type="Drop Pod"),
+            SimpleNamespace(name="Alpha Pod", vehicle_type="Drop Pod"),
+            SimpleNamespace(name="Ignore Me", vehicle_type="Fighter"),
+        ]
     )
-
-    class _Library:
-        def __init__(self, save_path: str, empire_id: int) -> None:
-            assert save_path == "save-a"
-            assert empire_id == 4
-
-        def filter_designs(self, *, vehicle_type: str) -> list[SimpleNamespace]:
-            assert vehicle_type == "Drop Pod"
-            return [
-                SimpleNamespace(name="Zulu Pod"),
-                SimpleNamespace(name="Alpha Pod"),
-                SimpleNamespace(name="Alpha Pod"),
-            ]
-
-    monkeypatch.setattr("game.strategy.systems.design_library.DesignLibrary", _Library)
+    services = SimpleNamespace(design_catalogs_by_empire={4: catalog})
+    scene = SimpleNamespace(
+        session=SimpleNamespace(
+            save_path="save-a",
+            active_empire=SimpleNamespace(id=4),
+            services=services,
+        )
+    )
 
     assert controller.discover_pod_designs(scene) == ["Alpha Pod", "Zulu Pod"]
 
 
-def test_discover_pod_designs_falls_back_to_empty_list_on_library_error(
+def test_discover_pod_designs_falls_back_to_empty_list_when_no_catalog(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """PROJ-427 Phase 6: if no catalog is registered for the active empire,
+    discover_pod_designs returns []. Same defensive behavior as the legacy
+    DesignLibrary-error path."""
     controller, _facade, _view_model = _controller()
-    scene = SimpleNamespace(session=SimpleNamespace(save_path="save-a", active_empire=None))
-
-    class _BrokenLibrary:
-        def __init__(self, *_args: object, **_kwargs: object) -> None:
-            raise OSError("missing designs")
-
-    monkeypatch.setattr(
-        "game.strategy.systems.design_library.DesignLibrary",
-        _BrokenLibrary,
+    services = SimpleNamespace(design_catalogs_by_empire={})
+    scene = SimpleNamespace(
+        session=SimpleNamespace(
+            save_path="save-a",
+            active_empire=None,
+            services=services,
+        )
     )
 
     assert controller.discover_pod_designs(scene) == []

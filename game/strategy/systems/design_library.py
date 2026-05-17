@@ -4,9 +4,13 @@ Design Library - Manages ship designs for an empire/savegame
 This module provides the DesignLibrary class for managing ship designs in
 integrated mode, including saving, loading, filtering, and marking designs
 as obsolete. Designs are stored in the savegame's designs folder.
+
+PROJ-427 Phase 6: ``DesignLoadResult`` was relocated to
+``design_repository`` and is re-exported here for backwards compatibility
+during the UI migration. New code should import ``DesignLoadResult`` from
+``game.strategy.systems.design_repository``.
 """
 import logging
-from dataclasses import dataclass
 from json import JSONDecodeError
 import os
 import glob
@@ -18,82 +22,14 @@ from game.core.profiling import profile_action
 from game.core.string_utils import slugify
 from game.core.exceptions import ValidationException
 
+# PROJ-427 Phase 6: dependency-inverted re-export. design_repository owns
+# the canonical DesignLoadResult dataclass now.
+from game.strategy.systems.design_repository import DesignLoadResult  # noqa: F401
+
 if TYPE_CHECKING:
     from game.strategy.facade.slices._facade_state import FacadeSessionState
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class DesignLoadResult:
-    """Result of attempting to load a ship design.
-
-    PROJ-251: Replaces bare Optional[dict] return so callers can distinguish
-    between not-found, corrupt JSON, invalid schema, and permission errors.
-
-    Usage:
-        result = library.load_design_data(design_id)
-        if result.success:
-            data = result.data
-        else:
-            if result.error_type == "not_found":
-                pass  # Normal — design hasn't been saved yet
-            else:
-                logger.warning(f"Design load failed: {result.error}")
-    """
-    data: Optional[dict] = None
-    error: Optional[str] = None
-    error_type: Optional[str] = None
-
-    @property
-    def success(self) -> bool:
-        """True if design was loaded successfully."""
-        return self.data is not None
-
-    @staticmethod
-    def ok(data: dict) -> 'DesignLoadResult':
-        """Create a successful result."""
-        return DesignLoadResult(data=data)
-
-    @staticmethod
-    def not_found(design_id: str) -> 'DesignLoadResult':
-        """Design file does not exist."""
-        return DesignLoadResult(
-            error=f"Design '{design_id}' not found",
-            error_type="not_found"
-        )
-
-    @staticmethod
-    def corrupt(design_id: str, detail: str) -> 'DesignLoadResult':
-        """Design file exists but contains invalid JSON."""
-        return DesignLoadResult(
-            error=f"Design '{design_id}' has corrupt JSON: {detail}",
-            error_type="corrupt_json"
-        )
-
-    @staticmethod
-    def invalid_schema(design_id: str, detail: str) -> 'DesignLoadResult':
-        """Design file has valid JSON but missing/invalid schema."""
-        return DesignLoadResult(
-            error=f"Design '{design_id}' has invalid schema: {detail}",
-            error_type="invalid_schema"
-        )
-
-    @staticmethod
-    def permission_denied(design_id: str, detail: str) -> 'DesignLoadResult':
-        """Cannot read design file due to permissions."""
-        return DesignLoadResult(
-            error=f"Design '{design_id}' permission denied: {detail}",
-            error_type="permission_denied"
-        )
-
-    @staticmethod
-    def io_error(design_id: str, detail: str) -> 'DesignLoadResult':
-        """Cannot read design file due to OS/IO error."""
-        return DesignLoadResult(
-            error=f"Design '{design_id}' IO error: {detail}",
-            error_type="io_error"
-        )
 
 
 class DesignLibrary:
