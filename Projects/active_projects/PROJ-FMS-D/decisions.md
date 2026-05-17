@@ -76,9 +76,11 @@ Source: claude/codex inter-agent discussion at `AgentCoordination/Scratchpad/Dis
   manual smoke list flagged this as a possible polish item if
   satellites visually overlap too aggressively on the carrier's hex.
 - **Two pre-existing baseline failures from the PROJ-FMS-C baseline
-  carry over unchanged:** the `test_iter_keys_match_full_hp_builder_for_cross_layer_design`
+  carry over unchanged at PROJ-FMS-D ship time:** the `test_iter_keys_match_full_hp_builder_for_cross_layer_design`
   flake and the 6 `test_design_load_warp_capability` errors (missing
   `FR Frigate GC.json`). No new regressions introduced by PROJ-FMS-D.
+  **Resolved 2026-05-16 in a follow-up test-baseline cleanup pass** (see
+  section below).
 
 ### 2026-05-16 — Audit fix pass
 
@@ -127,3 +129,46 @@ decisions captured here:
   tests, +78 passing, zero new regressions. The 9 failures + 6
   errors are the same pre-existing data-debt set documented in
   PROJ-FMS-C. Receipt: `findings/implementation_report.md`.
+
+### 2026-05-16 — Post-PROJ-FMS test-baseline cleanup pass
+
+Source: QA-driven triage of the 13 failures + 9 errors that were tracked
+as "pre-existing baseline" through all four PROJ-FMS projects + the two
+QA fix rounds. Both an independent subagent and a codex consult
+investigated each failure in parallel and converged on the verdicts.
+
+Outcomes (all four were fixture/snapshot drift, not engine regressions):
+
+- `test_design_has_metadata` (8 fails): relaxed assertion to "if
+  `_metadata` is present, must contain `is_obsolete` + `times_built`".
+  Matches production code (`DesignMetadata.from_design_file:126-139`)
+  which defaults every read with `.get()`. The 8 designs emitted by
+  `ShipSerializer.to_dict()` (which writes `_format_version` only) and
+  never round-tripped through `DesignLibrary.save_design()` are
+  legitimate per the new contract.
+
+- `test_iter_keys_match_full_hp_builder_for_cross_layer_design`
+  (1 fail): removed the `('battery', 1)` precondition assertion.
+  Commit `2b0562ca0` (2026-05-14) reduced `qs_battleship.json` from
+  two batteries to one; the meaningful cross-layer-uniqueness coverage
+  already lives in the sibling test
+  `test_cross_layer_component_ids_use_ship_wide_instance_index`
+  with a synthetic fixture.
+
+- `test_design_load_warp_capability.py` (6 errors): repointed fixture
+  path from the deleted `FR Frigate GC.json` to `qs_frigate_gc.json`.
+  Fresh recompute showed actual mass is `1999.43` (under the 2000 Frigate
+  class limit) — the only thing making it appear over-mass was the stale
+  golden snapshot from the same era.
+
+- `test_ship_stats_match_golden` (4 fails for `qs_escort`,
+  `qs_frigate_gc`, `qs_battleship`, `qs_carrier`): regenerated
+  `tests/unit/simulation/entities/test_ship_stats_golden_snapshot.json`
+  via a one-shot helper. Each drift verified arithmetically against the
+  live `(thrust * 2500) / mass^2` formula. Engine math
+  (`physics_constants.py`, `ship_design_stats.py`) was unchanged by
+  PROJ-FMS or the maintenance abstraction.
+
+**Final sharded suite after cleanup**:
+`20822 tests | 20818 passed | 0 failed | 0 errors | 4 skipped`.
+First fully-green baseline since before the PROJ-FMS sequence began.

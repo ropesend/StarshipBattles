@@ -44,8 +44,8 @@ def real_registries():
 
 @pytest.fixture
 def frigate_design():
-    """Load the canonical FR Frigate GC design from disk."""
-    with open('data/designs/FR Frigate GC.json') as f:
+    """Load the canonical qs_frigate_gc design from disk."""
+    with open('data/designs/qs_frigate_gc.json') as f:
         return json.load(f)
 
 

@@ -88,10 +88,10 @@
     },
     "claude-qa-feedback": {
       "agents": {
-        "claude": 2
+        "claude": 3
       },
-      "count": 2,
-      "last_used": "2026-05-16T17:36:41Z"
+      "count": 3,
+      "last_used": "2026-05-17T00:27:47Z"
     },
     "claude-qa-triage": {
       "agents": {
@@ -144,10 +144,10 @@
     },
     "codex-starship-consult-respond": {
       "agents": {
-        "codex": 8
+        "codex": 9
       },
-      "count": 8,
-      "last_used": "2026-05-16T19:10:18Z"
+      "count": 9,
+      "last_used": "2026-05-16T23:16:21Z"
     },
     "codex-starship-project-system": {
       "agents": {

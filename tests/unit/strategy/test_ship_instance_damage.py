@@ -570,7 +570,12 @@ class TestIterAllComponentsByLayerRemediations:
             for state in seeded_components.values()
             if state.component_id in design_component_ids
         }
-        assert ('battery', 1) in seeded_keys
+        # NOTE: dropped the historical `assert ('battery', 1) in seeded_keys`.
+        # Commit 2b0562ca0 (2026-05-14) reshaped qs_battleship.json to a single
+        # battery (the INNER-layer battery became standard_engine), making the
+        # assertion impossible to satisfy. The cross-layer-uniqueness contract
+        # is covered by `test_cross_layer_component_ids_use_ship_wide_instance_index`
+        # below with a synthetic two-layer design.
         assert ('fuel_tank', 1) in seeded_keys
         assert iter_keys == seeded_keys
 
