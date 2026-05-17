@@ -5,7 +5,10 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
+
+**Final sharded suite:** 20903/20903 passed, wall 138.7s, 12 shards.
+**Final grep gate:** the only remaining `MOVEMENT_ORDER_TYPES`/`ACTION_ORDER_TYPES`/`PLANET_ACTION_ORDER_TYPES`/`PLANET_FMS_ACTION_ORDER_TYPES`/`ORDER_TO_ABILITY_MAP` matches in production are (a) the `registry.py` derivation-method docstrings, (b) the `order_metadata_view.py` module docstring explaining the convergence, (c) historical/explanatory comments in `order_types.py`, `fleet.py`, `action_time_resolver.py`. No code references the deleted names. Test/doc matches are all explanatory text plus the `test_order_types_no_duplicated_metadata.py` regression-guard parametrize list.
 **Depends on:** phase_5
 **Review Mode:** standard
 **Files (planned):**

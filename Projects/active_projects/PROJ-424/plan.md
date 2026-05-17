@@ -21,13 +21,13 @@
 | 3. Migrate snapshot consumer (`action_time_resolver.py`) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate remaining production consumers | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Delete duplicated constants + `fleet.py` re-exports | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Docs convergence + final grep gate | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. Docs convergence + final grep gate | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 6
-**Last Action:** Phase 5 landed — `MOVEMENT_ORDER_TYPES`, `ACTION_ORDER_TYPES`, `PLANET_ACTION_ORDER_TYPES`, `PLANET_FMS_ACTION_ORDER_TYPES` all deleted from `order_types.py`; `fleet.py` re-exports deleted; 7 affected test modules migrated to read through `order_metadata`. No compatibility aliases. **Full sharded suite 20903/20903 green.**
-**Next Action:** Phase 6 — update docs (orders_system.md, 04_SERVICES.md, satellites.md), run final grep gate, full sharded suite one more time
+**Active Phase:** Complete — awaiting audit
+**Last Action:** Phase 6 landed — `docs/systems/orders_system.md`, `docs/04_SERVICES.md`, `docs/systems/satellites.md` updated to describe `order_metadata` as the single read path; added FMS-subcategory section + cycle-break rationale paragraph. Final grep gate clean (only historical/explanatory references remain). **Full sharded suite 20903/20903 green** (Phase 5 + Phase 6 boundaries).
+**Next Action:** Project complete — submit for audit
 **Blockers:** None
 
 ## Overview
@@ -144,14 +144,14 @@ Update `docs/systems/orders_system.md`, `docs/04_SERVICES.md`, `docs/systems/sat
 
 ## Verification
 Acceptance criteria from the TD-03 plan:
-- [ ] `game/strategy/engine/commands/order_metadata_view.py` exists and imports the registry only inside `_registry()`.
-- [ ] The five FMS handler specs carry `subcategories=frozenset({"planet_fms"})`.
-- [ ] `CommandRegistry` exposes `planet_fms_action_order_types()` derived from the `subcategories` tag.
-- [ ] `game/strategy/services/action_time_resolver.py` has no `ORDER_TO_ABILITY_MAP`.
-- [ ] `game/strategy/data/order_types.py` exports no metadata frozensets.
-- [ ] `game/strategy/data/fleet.py` no longer re-exports order-metadata constants.
-- [ ] Production consumers read metadata through `order_metadata`.
-- [ ] `tests/unit/strategy/engine/commands/test_order_metadata_view.py` exists and passes (including `test_view_is_lazy_at_import_time` and `test_view_reflects_replace_overlay`).
-- [ ] `tests/unit/strategy/data/test_order_types_no_duplicated_metadata.py` exists and passes.
-- [ ] `python Tools/test_sharded/test_sharded.py` passes after Phase 5 and again after Phase 6.
-- [ ] Docs no longer instruct contributors to edit `ORDER_TO_ABILITY_MAP` or the duplicated frozensets manually.
+- [x] `game/strategy/engine/commands/order_metadata_view.py` exists and imports the registry only inside `_registry()`.
+- [x] The five FMS handler specs carry `subcategories=frozenset({"planet_fms"})`.
+- [x] `CommandRegistry` exposes `planet_fms_action_order_types()` derived from the `subcategories` tag.
+- [x] `game/strategy/services/action_time_resolver.py` has no `ORDER_TO_ABILITY_MAP`.
+- [x] `game/strategy/data/order_types.py` exports no metadata frozensets.
+- [x] `game/strategy/data/fleet.py` no longer re-exports order-metadata constants.
+- [x] Production consumers read metadata through `order_metadata`.
+- [x] `tests/unit/strategy/engine/commands/test_order_metadata_view.py` exists and passes (including `test_view_is_lazy_at_import_time` and `test_view_reflects_replace_overlay`).
+- [x] `tests/unit/strategy/data/test_order_types_no_duplicated_metadata.py` exists and passes.
+- [x] `python Tools/test_sharded/test_sharded.py` passes after Phase 5 and again after Phase 6.
+- [x] Docs no longer instruct contributors to edit `ORDER_TO_ABILITY_MAP` or the duplicated frozensets manually.

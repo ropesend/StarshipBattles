@@ -437,10 +437,10 @@ orders from component abilities.
 
 Contract:
 
-- `ORDER_TO_ABILITY_MAP` is derived from the self-registering command registry, not a hardcoded table.
-- `MOVEMENT_ORDER_TYPES = frozenset({OrderType.MOVE, OrderType.MOVE_TO_FLEET})` complete with 0 action ticks.
+- `order_metadata.order_to_ability_map` is the single read facade — a lazy live view over the self-registering command registry. PROJ-424 Phase 3 deleted the previous import-time `ORDER_TO_ABILITY_MAP` snapshot in `action_time_resolver.py`; every read goes back to the registry so `command_registry.register(..., replace=True)` mod overlays are visible immediately.
+- `order_metadata.movement_order_types` (currently `frozenset({OrderType.MOVE, OrderType.MOVE_TO_FLEET, OrderType.WARP})`) returns 0 action ticks; the action engine short-circuits before any ability search.
 - `ACTIVATE_ABILITY` and `DEACTIVATE_ABILITY` read `ability_name` from `order.target` and use `activation_time` / `deactivation_time`.
-- Fleet orders search ship components; planet action orders search target facility components.
+- Fleet orders search ship components; planet action orders search target facility components (gated by `order_metadata.planet_action_order_types`).
 - Default fallback for unmapped/missing ability time is 1 tick.
 
 API: `ActionTimeResolver.resolve_action_time(entity, order, component_registry=None) -> int`.
@@ -881,7 +881,7 @@ failures, and serialization failures should use the project exception model.
 
 - Do not reference `game/strategy/services/area_effect_manager.py`; the current path is ability sources plus `SystemEffectsCollector`.
 - Do not use `calculate_fleet_speed_with_environment`; use `calculate_fleet_speed_with_strategic_mult`.
-- Do not hardcode `ORDER_TO_ABILITY_MAP`; it is derived from the self-registering command registry.
+- Do not hardcode `ORDER_TO_ABILITY_MAP` (deleted in PROJ-424 Phase 3) or the order-type frozensets in `order_types.py` (deleted in PROJ-424 Phase 5); read through `game.strategy.engine.commands.order_metadata_view.order_metadata`.
 - Do not treat `BuildQueueController` / `BuildQueueRenderer` as strategy services; they are UI classes under `game/ui/`.
 - Do not import `IRaceRegistry` from old protocol paths; current path is `game/core/protocols/strategy_domain.py`.
 - Do not add save-file migration or compatibility shims for old save/replay formats unless a project explicitly changes the no-migration policy.

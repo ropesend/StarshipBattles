@@ -191,10 +191,12 @@ Exactly one of `fleet_id` / `planet_id` is set (Round 4 Obs B).
    `empire.fleets` if empty.
 
 The ability-gate test pins that a carrier with only
-`RecoverFightersAbility` cannot recover satellites — the static
-`ORDER_TO_ABILITY_MAP` lookup gates the order at action-time
-resolution, and the bay-side `allowed_types` filter rejects satellites
-into a fighter-only bay even if the order somehow slipped through.
+`RecoverFightersAbility` cannot recover satellites — the
+`order_metadata.order_to_ability_map` lookup (live view over the
+self-registering command registry, read at call time) gates the order
+at action-time resolution, and the bay-side `allowed_types` filter
+rejects satellites into a fighter-only bay even if the order somehow
+slipped through.
 
 ## Planet-issued launch / recovery (QA Observation B / Pattern #40)
 
@@ -255,7 +257,11 @@ group unless explicitly recovered via the strategic action.
 - `game/strategy/engine/order_handlers/registry_factory.py` — registers
   both handlers.
 - `game/strategy/data/order_types.py` — `LAUNCH_SATELLITES` and
-  `RECOVER_SATELLITES` in `ACTION_ORDER_TYPES`.
+  `RECOVER_SATELLITES` `OrderType` members. Category membership comes
+  from each handler's `CommandSpec` (`category='action'`,
+  `subcategories=frozenset({"planet_fms"})`) and is read live via
+  `order_metadata.action_order_types` /
+  `order_metadata.planet_fms_action_order_types`.
 - `game/simulation/systems/battle_engine.py` —
   `BattleEngine.launch_satellites_in_battle`.
 - `game/simulation/systems/fighter_reboard.py` — generalised

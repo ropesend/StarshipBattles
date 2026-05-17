@@ -55,7 +55,7 @@ Relevant turn phases are data-driven in `game/strategy/engine/turn_phase_registr
 
 | Engine or service | Contract |
 |---|---|
-| `game/strategy/engine/fleet_movement_engine.py` | Handles `MOVE`, `MOVE_TO_FLEET`, `WARP`; skips `ACTION_ORDER_TYPES` and `BUILD`; moves one step per eligible tick except warp traversal. |
+| `game/strategy/engine/fleet_movement_engine.py` | Handles `MOVE`, `MOVE_TO_FLEET`, `WARP`; skips `order_metadata.action_order_types` and `BUILD`; moves one step per eligible tick except warp traversal. |
 | `game/strategy/engine/action_execution_engine.py` | Handles fleet action orders; increments `execution_progress`; delegates completed actions to `OrderProcessor.execute_action_order()`. |
 | `game/strategy/engine/order_processor.py` | Thin facade over `game.strategy.engine.order_handlers`; keeps legacy public methods only as shims for tests/callers. |
 | `game/strategy/engine/order_handlers/` | Canonical per-`OrderType` action/instant execution handlers. |
@@ -63,15 +63,19 @@ Relevant turn phases are data-driven in `game/strategy/engine/turn_phase_registr
 | `game/strategy/engine/component_activation_engine.py` | Ticks component activation state each turn tick. |
 | `game/strategy/engine/production_engine.py` | Handles construction queues; `BUILD` persists until the fleet queue empties. |
 
-`BUILD` is not in `MOVEMENT_ORDER_TYPES`, `ACTION_ORDER_TYPES`, or `PLANET_ACTION_ORDER_TYPES`. The action engine only auto-pops `BUILD` when `fleet.construction_queue` is empty.
+`BUILD` is not in `order_metadata.movement_order_types`, `order_metadata.action_order_types`, or `order_metadata.planet_action_order_types`. The action engine only auto-pops `BUILD` when `fleet.construction_queue` is empty.
 
 ## Order Categories
 
-Definitions and frozensets live in `game/strategy/data/order_types.py`. The self-registering command metadata in `game/strategy/engine/commands/registry.py` is the canonical declaration of command category, but the frozensets stay as plain constants to keep `game.strategy.data` a leaf package. `tests/unit/strategy/engine/test_command_specs_contract.py` pins equality between the constants and the registry-derived views.
+`game/strategy/data/order_types.py` exports `OrderType`, `Order`, and the serialization helpers only. The categorization frozensets were removed by PROJ-424 — the single read path is `game.strategy.engine.commands.order_metadata_view.order_metadata`, a lazy live view over the self-registering `command_registry`. Each property reads back into the registry at call time, so `command_registry.register(..., replace=True)` mod overlays are visible immediately.
+
+### Cycle break (PROJ-424)
+
+The frozensets used to be hardcoded in `order_types.py` to keep `game.strategy.data` a leaf package — runtime derivation would have triggered the cycle `order_types -> registry -> seed_default_commands -> handlers -> order_types`. `OrderMetadataView` breaks the cycle by importing `command_registry` LAZILY inside `_registry()`. Pinned by `tests/unit/strategy/engine/commands/test_order_metadata_view.py::test_view_is_lazy_at_import_time` (AST inspection of the view's source). Hoisting that import to the module top reintroduces the cycle.
 
 ### Movement Orders
 
-`MOVEMENT_ORDER_TYPES`
+`order_metadata.movement_order_types`
 
 | Type | Target | Behavior |
 |---|---|---|
@@ -81,7 +85,7 @@ Definitions and frozensets live in `game/strategy/data/order_types.py`. The self
 
 ### Fleet Action Orders
 
-`ACTION_ORDER_TYPES - PLANET_ACTION_ORDER_TYPES`
+`order_metadata.action_order_types - order_metadata.planet_action_order_types`
 
 | Type | Target | Execution handler |
 |---|---|---|
@@ -106,7 +110,7 @@ Definitions and frozensets live in `game/strategy/data/order_types.py`. The self
 
 ### Planet Action Orders
 
-`PLANET_ACTION_ORDER_TYPES` is a subset of `ACTION_ORDER_TYPES`:
+`order_metadata.planet_action_order_types` is a subset of `order_metadata.action_order_types`:
 
 | Type | Target | Behavior |
 |---|---|---|
@@ -114,6 +118,10 @@ Definitions and frozensets live in `game/strategy/data/order_types.py`. The self
 | `DEACTIVATE_ABILITY` | same target shape | Starts deactivation or cancels an in-progress activation. |
 
 These are deliberately not registered in `OrderHandlerRegistry`. `PlanetActionEngine` handles them and stops processing at the first non-planet-action order, so all consecutive ability toggles queued for the same tick start with equal activation timing.
+
+### FMS subcategory
+
+The five FMS handler command specs (`lay_mines`, `launch_fighters`, `launch_satellites`, `recover_fighters`, `recover_satellites`) carry `subcategories=frozenset({"planet_fms"})` on their `@command_spec(...)` declaration. `CommandRegistry.planet_fms_action_order_types()` derives `order_metadata.planet_fms_action_order_types` from that tag — there is no hardcoded list keyed by handler filename. Adding a new FMS handler is a single edit to the new handler's `@command_spec` declaration; `tests/unit/strategy/engine/test_command_specs_contract.py::test_exactly_five_specs_carry_planet_fms_subcategory` guards the count against accidental drift.
 
 ## Command Dispatch
 
@@ -150,11 +158,11 @@ Do not reintroduce central `elif order.type == ...` dispatch in `OrderProcessor`
 
 Resolver: `game/strategy/services/action_time_resolver.py`
 
-`ORDER_TO_ABILITY_MAP` is derived from `command_registry.order_to_ability_map()`, which reads `action_ability_name` from `@command_spec` metadata. For new fleet actions, set `action_ability_name` on the command spec instead of editing `ORDER_TO_ABILITY_MAP` by hand.
+`order_metadata.order_to_ability_map` reads `command_registry.order_to_ability_map()` at call time — derived from `action_ability_name` on each `@command_spec` declaration. PROJ-424 Phase 3 deleted the previous import-time `ORDER_TO_ABILITY_MAP` snapshot in `action_time_resolver.py`; `replace=True` mod overlays are now visible immediately. For new fleet actions, set `action_ability_name` on the command spec — there is no hand-edited map.
 
 Fleet action lookup:
 
-1. Get ability name from `ORDER_TO_ABILITY_MAP`.
+1. Get ability name from `order_metadata.order_to_ability_map`.
 2. Walk ships and design components with `iterate_design_components(...)`.
 3. Read `action_time` from the first matching ability dict.
 4. Default to `1` when no ability or numeric time is found.
@@ -337,10 +345,10 @@ Use strict TDD for code changes: write or identify a failing test first, run it 
 ### Add a Normal Fleet Order
 
 1. Add the `OrderType` member in `game/strategy/data/order_types.py`.
-2. Add it to the correct category constant. If command metadata should derive the same category, update both surfaces and let `test_command_specs_contract.py` pin equality.
+2. Register a `CommandSpec` with the appropriate `category` (and `subcategories` if the order is FMS-from-planet — see [FMS subcategory](#fms-subcategory) below). Do NOT add a hardcoded frozenset — `order_metadata` derives every category from the registry at call time.
 3. Add or update a command DTO in `game/strategy/engine/commands/__init__.py`.
 4. Add a command handler in the appropriate `game/strategy/engine/handlers/` module, or create a new module with `@command_spec(...)` and `register(registry)`. If it is a new module, add it to `seed_default_commands()`.
-5. For action-time lookup, set `action_ability_name` in `@command_spec`. Do not manually edit `ORDER_TO_ABILITY_MAP`.
+5. For action-time lookup, set `action_ability_name` in `@command_spec`. There is no hand-edited ability map; `order_metadata.order_to_ability_map` derives from the spec.
 6. Add fleet execution logic as an `IOrderHandler` under `game/strategy/engine/order_handlers/` and register it in `create_default_order_handler_registry()`. Skip this only for orders owned by a dedicated engine such as `BUILD` or planet ability toggles.
 7. Add serializer support if the target shape is new.
 8. Add or update facade/UI dispatch helpers if the player can issue the command.
