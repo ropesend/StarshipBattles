@@ -217,6 +217,26 @@ class StrategyBattleAssembler:
         empire_to_team_id: Dict[Any, int] = {
             owner_id: team_id for team_id, owner_id in enumerate(owner_order)
         }
+        # PROJ-431 Phase 5 (Finding 2): allocate synthetic team IDs for
+        # mine owners that have no combat fleet present. Without an
+        # entry in ``empire_to_team_id``, ``build_mine_resolver_setup``
+        # silently skips them and ``BattleEngine._run_mine_resolver_tick``
+        # would refuse to tick the resolver anyway (it requires a
+        # non-None ``_owner_team_id``). Result pre-fix: third-party mines
+        # at a contested hex were inert. Post-fix: they get a unique
+        # synthetic team_id beyond the combatant teams. Combatant ships
+        # all carry team_ids in ``[0, num_teams)``, so they all read as
+        # enemies of the synthetic mine team — exactly the intended
+        # detonation semantics. The BattleSpec itself does not gain a
+        # team for the synthetic id (there are no ships to add); the id
+        # exists solely so the mine resolver gets wired.
+        next_synthetic_team_id = len(owner_order)
+        for mg in mine_groups:
+            mg_owner = getattr(mg, "owner_id", None)
+            if mg_owner is None or mg_owner in empire_to_team_id:
+                continue
+            empire_to_team_id[mg_owner] = next_synthetic_team_id
+            next_synthetic_team_id += 1
         modifier_stack = self._modifier_builder.build(
             team_count=len(teams),
             environmental_effects=environmental_effects,
