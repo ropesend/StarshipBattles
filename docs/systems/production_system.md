@@ -307,9 +307,13 @@ Dispatch:
 | Fleet complex | `_spawn_fleet_complex()` then `_create_and_place_facility()` | Adds facility to a planet at fleet hex, honoring optional `target_planet_id` |
 | Fleet ship/fighter/satellite/other | `_spawn_fleet_ship()` | Adds `ShipInstance` to existing fleet |
 
-Design loading uses `DesignLibrary(save_path, empire.id)`. Ship creation uses
-`ShipInstance.create(..., registries=self._registries)`, and successful ship
-creation increments the design library built count.
+Design loading uses the per-empire `DesignCatalog` resolved from
+`session.services.design_catalogs_by_empire[empire.id]` (PROJ-427 /
+PROJ-434). Ship creation uses
+`ShipInstance.create(..., registries=self._registries)`, and successful
+ship creation calls `catalog.record_built(design_id)` — the pending
+counts are flushed through `DesignRepository.increment_built_count` at
+save time.
 
 Facility placement routes through `PlanetWriteService` via
 `ProductionSpawner._get_planet_mutator().add_facility(planet, facility)`.

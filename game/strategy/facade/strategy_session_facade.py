@@ -183,8 +183,9 @@ class StrategySessionFacade:
         """PROJ-411 Phase 1: public accessor for the per-turn cache holder.
 
         UI-side callers (Build Queue, Workshop, etc.) can pass this into
-        ``DesignLibrary(facade_state=...)`` and similar collaborators so
-        their per-turn caches are shared across opens within one turn.
+        the per-empire ``DesignCatalog`` (PROJ-434 Phase 2) and similar
+        collaborators so their per-turn caches are shared across opens
+        within one turn.
         Engine-side code (turn engines, order processors) should NOT use
         this — it runs inside the turn loop where the cache is irrelevant
         and may even mask state-mutation bugs.

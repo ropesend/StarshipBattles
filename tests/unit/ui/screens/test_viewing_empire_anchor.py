@@ -132,6 +132,8 @@ class TestBuildQueueScansPlanetOwnersDesigns:
     used ``active_empire.id`` instead."""
 
     def test_design_library_uses_planet_owner_id(self) -> None:
+        """PROJ-434 Phase 2: the build queue resolves the per-empire
+        ``DesignCatalog`` via ``planet.owner_id`` (not active_empire.id)."""
         from unittest.mock import patch
 
         from game.ui.screens.strategy_build_queue_manager import (
@@ -143,7 +145,14 @@ class TestBuildQueueScansPlanetOwnersDesigns:
         screen.galaxy.get_system_of_planet.return_value = None
         screen.facade = MagicMock()
         screen.facade.session_meta.save_path = MagicMock(return_value="saves/test")
-        screen.facade.facade_state = None
+        # PROJ-434 Phase 2: build queue pulls catalog via
+        # facade.facade_state.session.services.design_catalogs_by_empire.
+        viewing_catalog = MagicMock(name="viewing_catalog")
+        active_catalog = MagicMock(name="active_catalog")
+        catalogs_by_empire = {0: viewing_catalog, 1: active_catalog}
+        screen.facade.facade_state.session.services.design_catalogs_by_empire = (
+            catalogs_by_empire
+        )
         screen.ui = MagicMock()
         screen.ui.manager = MagicMock()
         screen.input_mapper = MagicMock()
@@ -168,9 +177,7 @@ class TestBuildQueueScansPlanetOwnersDesigns:
 
         with patch(
             "game.ui.screens.strategy_build_queue_manager.BuildQueueScreen"
-        ), patch(
-            "game.ui.screens.strategy_build_queue_manager.DesignLibrary"
-        ) as MockLib, patch(
+        ) as MockBQS, patch(
             "game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter"
         ), patch(
             "game.ui.screens.strategy_build_queue_manager.is_planet",
@@ -178,15 +185,13 @@ class TestBuildQueueScansPlanetOwnersDesigns:
         ):
             manager.on_build_yard_click()
 
-        # DesignLibrary is constructed with empire_id == planet.owner_id,
-        # which equals current_empire.id (the gate guarantees this), NOT
-        # the divergent active_empire.id.
-        MockLib.assert_called_once()
-        _, kwargs = MockLib.call_args
-        # Positional args: (savegame_path, empire_id)
-        args = MockLib.call_args.args
-        assert args[1] == 0
-        assert args[1] != screen.session.active_empire.id
+        # The BuildQueueScreen receives the viewing-empire's catalog
+        # (planet.owner_id == 0), NOT the divergent active_empire's
+        # catalog (id=1).
+        MockBQS.assert_called_once()
+        kwargs = MockBQS.call_args.kwargs
+        assert kwargs["design_catalog"] is viewing_catalog
+        assert kwargs["design_catalog"] is not active_catalog
 
 
 class TestViewingEmpireIdProperty:

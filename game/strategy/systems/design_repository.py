@@ -1,24 +1,24 @@
-"""PROJ-427 Phase 1: DesignRepository (filesystem + JSON persistence).
+"""DesignRepository — filesystem + JSON persistence for ship designs.
 
-The repository is the new home for the disk-bound responsibilities
-that today live on ``DesignLibrary``:
+Disk-bound responsibilities (introduced in PROJ-427 Phase 1; the
+legacy ``DesignLibrary`` was deleted in PROJ-434 Phase 2):
 
-- Folder location and creation.
+- Folder location and creation (per-empire subfolder layout under
+  ``<save_path>/designs/empire_<id>/``).
 - ``scan_designs()`` — list ``DesignMetadata`` for all designs on disk.
 - ``save_design_data(design_id, data)`` — write a design JSON file.
+- ``save_design(ship, name, built_designs)`` — rich workshop-save
+  flow (metadata embedding + overwrite-protection + on-disk write).
 - ``load_design_data(design_id)`` — read a design JSON file into a
-  ``DesignLoadResult`` (shape unchanged).
-- ``mark_design_obsolete(design_id, is_obsolete)`` — toggle the
-  metadata flag on disk.
+  ``DesignLoadResult``.
+- ``mark_design_obsolete`` / ``mark_obsolete`` — toggle the
+  ``_metadata.is_obsolete`` flag on disk.
 - ``increment_built_count(design_id)`` — bump ``times_built`` on disk.
-- Save-folder and temp-folder policy (per-empire subfolder layout).
+- ``get_design_path(design_id)`` — path-style accessor used by UI
+  portrait loaders.
 
-PROJ-427 Phase 6: ``DesignLoadResult`` was relocated from
-``design_library`` to this module so the dependency direction inverts
-in preparation for ``DesignLibrary`` deletion. ``design_library`` now
-re-exports the value type for backwards compatibility during the
-in-flight UI migration; callers should import it from
-``game.strategy.systems.design_repository`` going forward.
+``DesignLoadResult`` is owned by this module. Pair this repository
+with one ``DesignCatalog`` per empire for the in-memory runtime view.
 """
 from __future__ import annotations
 
@@ -33,6 +33,7 @@ from typing import Any, List, Optional, Set, Tuple, TYPE_CHECKING
 
 from game.core.exceptions import ValidationException
 from game.core.json_utils import load_json_required, save_json
+from game.core.profiling import profile_action
 from game.core.string_utils import slugify
 from game.strategy.data.design_metadata import DesignMetadata
 
@@ -48,8 +49,6 @@ class DesignLoadResult:
 
     PROJ-251: Replaces bare Optional[dict] return so callers can distinguish
     between not-found, corrupt JSON, invalid schema, and permission errors.
-    PROJ-427 Phase 6: relocated from ``design_library`` to this module; the
-    legacy ``design_library`` location re-exports for backwards compatibility.
     """
     data: Optional[dict] = None
     error: Optional[str] = None
@@ -161,6 +160,7 @@ class DesignRepository:
     # scan
     # ------------------------------------------------------------------
 
+    @profile_action("Panel: BuildQueue.scan_designs")
     def scan_designs(self) -> List[DesignMetadata]:
         """Scan the designs folder and return ``DesignMetadata`` for each
         design file.

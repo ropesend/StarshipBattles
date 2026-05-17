@@ -17,16 +17,16 @@
 
 | Phase | Status | Checklist | Depends on |
 |-------|--------|-----------|------------|
-| 0. Extend `DesignRepository` + `DesignCatalog` API to cover the remaining UI surface | Not Started | [phase_0_checklist.md](phase_0_checklist.md) | — |
-| 1. Migrate `BuildQueueScreen` + its 3 panel collaborators (controller / drag handler / portrait loader) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) | Phase 0 |
-| 2. Migrate the remaining 3 UI screen entry points + ~25 test files + delete `design_library.py` (deletion gate) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) | Phase 1 |
+| 0. Extend `DesignRepository` + `DesignCatalog` API to cover the remaining UI surface | Complete | [phase_0_checklist.md](phase_0_checklist.md) | — |
+| 1. Migrate `BuildQueueScreen` + its 3 panel collaborators (controller / drag handler / portrait loader) | Complete | [phase_1_checklist.md](phase_1_checklist.md) | Phase 0 |
+| 2. Migrate the remaining 3 UI screen entry points + ~25 test files + delete `design_library.py` (deletion gate) | Complete | [phase_2_checklist.md](phase_2_checklist.md) | Phase 1 |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 0 (planning — initialized from PROJ-427 Phase 6 deferral)
-**Last Action:** Project scaffolded from PROJ-427's Phase 6 partial close (2026-05-17). PROJ-427 achieved its TD-05 core intent (`DesignRepository` + `DesignCatalog` introduced, runtime production migrated off disk, `SaveGameService` replay store instance-owned, sharded 20996/20996 green) and partially completed Phase 6 (dependency inversion + `transfer_controller.discover_pod_designs` migrated). Two prior Phase 6 subagents independently deferred the remaining UI migration citing scope: 7 production files (3 UI screens + 4 `BuildQueueScreen` panel collaborators) + ~30 test files + missing API on `DesignCatalog`/`DesignRepository` + the QA-Obs-3 cache contract wired through `FacadeSessionState`. Spinning the deletion into PROJ-434 lets PROJ-427 close cleanly.
-**Next Action:** Begin Phase 0 — extend `DesignRepository` / `DesignCatalog` with the missing methods (`scan_designs`, `search_designs`, `filter_designs`, `load_design_data`, `get_design_path`, rich `save_design(ship, name, built_designs)` with overwrite-protection + per-turn cache invalidation; plus the QA-Obs-3 cache parity wiring through `FacadeSessionState`). Phase 1 cannot start until the API surface is in place — every deferred Phase 6 caller depends on at least one of these methods.
-**Blockers:** None. Predecessor PROJ-427 Phases 0-5 are complete and committed on `proj/PROJ-427/main`. PROJ-428..PROJ-431 do not block this; can run in parallel with them.
+**Active Phase:** Complete
+**Last Action:** All three phases shipped on `proj/PROJ-434/main`. Phase 0 added the API surface (`scan_designs`, `search_designs`, `filter_designs`, `load_design_data`, `get_design_path`, rich `save_design`, `mark_obsolete`, `invalidate`, `attach_repository`) on `DesignRepository`/`DesignCatalog` and wired `FacadeSessionState.get_designs_for_empire` through the catalog. Phase 1 renamed `design_library` → `design_catalog` across `BuildQueueScreen` + its 3 panel collaborators and their tests. Phase 2 migrated `workshop_ship_io.py`, `strategy_build_queue_manager.py`, and `design_selector_window.py` onto the catalog lookup, repointed all remaining test fixtures, and deleted `game/strategy/systems/design_library.py` along with the `DesignLoadResult` re-export shim. Sharded suite 21125/21125 green at Phase 2 close.
+**Next Action:** None — project complete.
+**Blockers:** None.
 
 ## Overview
 

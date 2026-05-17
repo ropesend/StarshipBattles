@@ -20,7 +20,7 @@ from game.strategy.quickstart_builder import (
 )
 from game.strategy.engine.game_config import GameConfig
 from game.strategy.data.race_config import RaceConfig
-from game.strategy.systems.design_library import DesignLoadResult
+from game.strategy.systems.design_repository import DesignLoadResult
 
 
 class TestQuickstartBuilderLoadTestRace:

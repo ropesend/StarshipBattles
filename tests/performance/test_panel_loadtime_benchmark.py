@@ -66,7 +66,7 @@ def test_benchmark_open_paths_legacy_uncached(
         gather_stars,
     )
     from game.ui.panels.empire_treasury_panel import load_resource_icons
-    from game.strategy.systems.design_library import DesignLibrary
+    from game.strategy.systems.design_repository import DesignRepository
 
     session, galaxy, empires = smoke_turn1_scenario
     empire = empires[0]
@@ -80,7 +80,9 @@ def test_benchmark_open_paths_legacy_uncached(
             stars = list(gather_stars(galaxy))
             compute_star_ranges(stars)
             load_resource_icons()
-            DesignLibrary(tmpdir, empire_id=0).scan_designs()
+            # PROJ-434 Phase 2: BEFORE-state measurement now uses
+            # DesignRepository (disk-bound scan) since DesignLibrary is gone.
+            DesignRepository(tmpdir, empire_id=0).scan_designs()
 
     # Print per-span median (informational; this is the BEFORE state).
     _print_span_medians(active_profiler, "BEFORE (uncached)")
@@ -104,7 +106,8 @@ def test_benchmark_open_paths_with_facade_cache(
         gather_stars,
     )
     from game.ui.panels.empire_treasury_panel import load_resource_icons
-    from game.strategy.systems.design_library import DesignLibrary
+    from game.strategy.systems.design_catalog import DesignCatalog
+    from game.strategy.systems.design_repository import DesignRepository
     from game.strategy.facade.slices._facade_state import FacadeSessionState
 
     session, galaxy, empires = smoke_turn1_scenario
@@ -113,6 +116,11 @@ def test_benchmark_open_paths_with_facade_cache(
 
     with tempfile.TemporaryDirectory() as tmpdir:
         os.makedirs(os.path.join(tmpdir, "designs", "empire_0"), exist_ok=True)
+        # PROJ-434 Phase 2: AFTER-state uses DesignCatalog (in-memory
+        # list view; scan_designs() reads the cached list rather than
+        # globbing disk each iteration).
+        catalog = DesignCatalog(empire_id=0)
+        catalog.repopulate_from(DesignRepository(tmpdir, empire_id=0))
         for _ in range(_ITERATIONS):
             planets = list(gather_planets(galaxy, empire, facade_state=state))
             keys = compute_planet_effect_keys(planets)
@@ -120,7 +128,7 @@ def test_benchmark_open_paths_with_facade_cache(
             stars = list(gather_stars(galaxy, facade_state=state))
             compute_star_ranges(stars)
             load_resource_icons()
-            DesignLibrary(tmpdir, empire_id=0, facade_state=state).scan_designs()
+            catalog.scan_designs()
 
     _print_span_medians(active_profiler, "AFTER (cached)")
 

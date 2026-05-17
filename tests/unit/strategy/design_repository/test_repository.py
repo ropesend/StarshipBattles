@@ -31,7 +31,7 @@ import tempfile
 
 import pytest
 
-from game.strategy.systems.design_library import DesignLoadResult
+from game.strategy.systems.design_repository import DesignLoadResult
 
 
 def _write_design(designs_folder: str, design_id: str, name: str = "Test") -> None:

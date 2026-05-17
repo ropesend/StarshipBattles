@@ -24,7 +24,7 @@ def _make_design_metadata(design_id="ship_001", name="Test Ship", ship_class="Cr
     return design
 
 
-def _make_design_library(designs=None):
+def _make_design_catalog(designs=None):
     """Create a mock DesignLibrary."""
     library = MagicMock()
     library.designs_folder = "/saves/empire_1/designs"
@@ -71,7 +71,7 @@ def _make_design_library(designs=None):
     return library
 
 
-def _make_selector_window(design_library=None, mode="load", on_select_callback=None):
+def _make_selector_window(design_catalog=None, mode="load", on_select_callback=None):
     """Create a DesignSelectorWindow with mocked dependencies.
 
     Returns (window, mocks_dict) where mocks_dict contains all mock objects.
@@ -83,9 +83,9 @@ def _make_selector_window(design_library=None, mode="load", on_select_callback=N
         window = DesignSelectorWindow.__new__(DesignSelectorWindow)
 
     # Design library
-    if design_library is None:
-        design_library = _make_design_library()
-    window.design_library = design_library
+    if design_catalog is None:
+        design_catalog = _make_design_catalog()
+    window.design_catalog = design_catalog
 
     # Mode and callback
     window.mode = mode
@@ -154,7 +154,7 @@ def _make_selector_window(design_library=None, mode="load", on_select_callback=N
     window.kill = MagicMock()
 
     mocks = {
-        'design_library': design_library,
+        'design_catalog': design_catalog,
         'ui_manager': ui_manager,
     }
 
@@ -173,12 +173,12 @@ class TestDesignSelectorFiltering:
 
         window._refresh_designs()
 
-        mocks['design_library'].search_designs.assert_called()
+        mocks['design_catalog'].search_designs.assert_called()
 
     def test_filter_by_ship_class(self):
         """Test filtering by ship class."""
-        library = _make_design_library()
-        window, _ = _make_selector_window(design_library=library)
+        library = _make_design_catalog()
+        window, _ = _make_selector_window(design_catalog=library)
         window._rebuild_design_list = MagicMock()
         window.class_dropdown.selected_option = "Cruiser"
 
@@ -190,8 +190,8 @@ class TestDesignSelectorFiltering:
 
     def test_filter_by_vehicle_type(self):
         """Test filtering by vehicle type."""
-        library = _make_design_library()
-        window, _ = _make_selector_window(design_library=library)
+        library = _make_design_catalog()
+        window, _ = _make_selector_window(design_catalog=library)
         window._rebuild_design_list = MagicMock()
         window.type_dropdown.selected_option = "Fighter"
 
@@ -203,8 +203,8 @@ class TestDesignSelectorFiltering:
 
     def test_text_search_filters_by_name(self):
         """Test text search filters by design name."""
-        library = _make_design_library()
-        window, _ = _make_selector_window(design_library=library)
+        library = _make_design_catalog()
+        window, _ = _make_selector_window(design_catalog=library)
         window._rebuild_design_list = MagicMock()
         window.filter_name = "Alpha"
 
@@ -216,8 +216,8 @@ class TestDesignSelectorFiltering:
 
     def test_obsolete_filter_toggle(self):
         """Test obsolete filter toggle."""
-        library = _make_design_library()
-        window, _ = _make_selector_window(design_library=library)
+        library = _make_design_catalog()
+        window, _ = _make_selector_window(design_catalog=library)
         window._rebuild_design_list = MagicMock()
         window.show_obsolete = True
 
@@ -229,8 +229,8 @@ class TestDesignSelectorFiltering:
 
     def test_combined_filters(self):
         """Test combining multiple filters."""
-        library = _make_design_library()
-        window, _ = _make_selector_window(design_library=library)
+        library = _make_design_catalog()
+        window, _ = _make_selector_window(design_catalog=library)
         window._rebuild_design_list = MagicMock()
         window.filter_name = "Battle"
         window.class_dropdown.selected_option = "Battleship"
@@ -245,8 +245,8 @@ class TestDesignSelectorFiltering:
 
     def test_all_classes_means_no_filter(self):
         """Test All Classes dropdown option means no class filter."""
-        library = _make_design_library()
-        window, _ = _make_selector_window(design_library=library)
+        library = _make_design_catalog()
+        window, _ = _make_selector_window(design_catalog=library)
         window._rebuild_design_list = MagicMock()
         window.class_dropdown.selected_option = "All Classes"
 
@@ -257,8 +257,8 @@ class TestDesignSelectorFiltering:
 
     def test_dropdown_tuple_value_extraction(self):
         """Test handling pygame_gui dropdown tuple values."""
-        library = _make_design_library()
-        window, _ = _make_selector_window(design_library=library)
+        library = _make_design_catalog()
+        window, _ = _make_selector_window(design_catalog=library)
         window._rebuild_design_list = MagicMock()
         # pygame_gui sometimes returns (current, previous) tuple
         window.class_dropdown.selected_option = ("Destroyer", "Cruiser")
@@ -275,8 +275,8 @@ class TestDesignSelectorFiltering:
             _make_design_metadata("a", "Alpha"),
             _make_design_metadata("m", "Manta"),
         ]
-        library = _make_design_library(designs)
-        window, _ = _make_selector_window(design_library=library)
+        library = _make_design_catalog(designs)
+        window, _ = _make_selector_window(design_catalog=library)
         window._rebuild_design_list = MagicMock()
 
         window._refresh_designs()
@@ -356,8 +356,8 @@ class TestDesignSelectorSelection:
 
     def test_empty_library_no_selection_available(self):
         """Test empty library has no designs to select."""
-        library = _make_design_library(designs=[])
-        window, _ = _make_selector_window(design_library=library)
+        library = _make_design_catalog(designs=[])
+        window, _ = _make_selector_window(design_catalog=library)
 
         window._refresh_designs()
 
@@ -421,8 +421,8 @@ class TestDesignSelectorEvents:
 
     def test_on_toggle_obsolete_calls_library(self):
         """Test obsolete toggle on design row calls library."""
-        library = _make_design_library()
-        window, _ = _make_selector_window(design_library=library)
+        library = _make_design_catalog()
+        window, _ = _make_selector_window(design_catalog=library)
         window._refresh_designs = MagicMock()
 
         window._on_toggle_obsolete("ship_001", False)
@@ -432,9 +432,9 @@ class TestDesignSelectorEvents:
 
     def test_on_toggle_obsolete_refreshes_on_success(self):
         """Test obsolete toggle refreshes list on success."""
-        library = _make_design_library()
+        library = _make_design_catalog()
         library.mark_obsolete.return_value = (True, "Success")
-        window, _ = _make_selector_window(design_library=library)
+        window, _ = _make_selector_window(design_catalog=library)
         window._refresh_designs = MagicMock()
 
         window._on_toggle_obsolete("ship_001", False)
@@ -468,8 +468,8 @@ class TestDesignSelectorUICreation:
             _make_design_metadata("ship_001", "Alpha"),
             _make_design_metadata("ship_002", "Beta"),
         ]
-        library = _make_design_library(designs)
-        window, _ = _make_selector_window(design_library=library)
+        library = _make_design_catalog(designs)
+        window, _ = _make_selector_window(design_catalog=library)
         window.filtered_designs = designs
 
         # Mock _create_design_row to track calls
@@ -575,9 +575,9 @@ class TestDesignSelectorIntegration:
             _make_design_metadata("ship_001", "Alpha Cruiser"),
             _make_design_metadata("ship_002", "Beta Destroyer"),
         ]
-        library = _make_design_library(designs)
+        library = _make_design_catalog(designs)
         callback = MagicMock()
-        window, _ = _make_selector_window(design_library=library, on_select_callback=callback)
+        window, _ = _make_selector_window(design_catalog=library, on_select_callback=callback)
         window._rebuild_design_list = MagicMock()
 
         # Set search filter
@@ -600,8 +600,8 @@ class TestDesignSelectorIntegration:
             _make_design_metadata("ship_001", "Current Ship", is_obsolete=False),
             _make_design_metadata("ship_002", "Old Ship", is_obsolete=True),
         ]
-        library = _make_design_library(designs)
-        window, _ = _make_selector_window(design_library=library)
+        library = _make_design_catalog(designs)
+        window, _ = _make_selector_window(design_catalog=library)
         window._rebuild_design_list = MagicMock()
 
         # Default: hide obsolete
@@ -637,7 +637,7 @@ class TestDesignSelectorWindowWidgetPlaceholders:
             return DesignSelectorWindow(
                 rect,
                 MagicMock(name="ui_manager"),
-                _make_design_library(),
+                _make_design_catalog(),
                 mode="load",
                 on_select_callback=MagicMock(name="on_select_callback"),
                 ui_builder=ui_builder,
@@ -803,8 +803,8 @@ class TestDesignSelectorDropdownOptions:
     def test_mine_filter_propagates_to_search_designs(self):
         """Selecting 'Mine' in the type dropdown must be forwarded to
         DesignLibrary.search_designs as a vehicle_type filter."""
-        library = _make_design_library()
-        window, _ = _make_selector_window(design_library=library)
+        library = _make_design_catalog()
+        window, _ = _make_selector_window(design_catalog=library)
         window._rebuild_design_list = MagicMock()
         window.type_dropdown.selected_option = "Mine"
 

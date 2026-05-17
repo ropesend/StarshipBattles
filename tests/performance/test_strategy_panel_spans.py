@@ -43,8 +43,8 @@ _INSTRUMENTED_TARGETS: list[tuple[str, str, str]] = [
         "Panel: BuildQueue.rebuild_ui_labels",
     ),
     (
-        "game.strategy.systems.design_library",
-        "DesignLibrary.scan_designs",
+        "game.strategy.systems.design_repository",
+        "DesignRepository.scan_designs",
         "Panel: BuildQueue.scan_designs",
     ),
     # Empire Overview
@@ -168,7 +168,7 @@ def test_module_level_spans_fire_under_smoke(smoke_turn1_scenario, _active_profi
         gather_stars,
     )
     from game.ui.panels.empire_treasury_panel import load_resource_icons
-    from game.strategy.systems.design_library import DesignLibrary
+    from game.strategy.systems.design_repository import DesignRepository
 
     session, galaxy, empires = smoke_turn1_scenario
     empire = empires[0]
@@ -184,7 +184,7 @@ def test_module_level_spans_fire_under_smoke(smoke_turn1_scenario, _active_profi
 
     with tempfile.TemporaryDirectory() as tmpdir:
         os.makedirs(os.path.join(tmpdir, "designs", "empire_0"), exist_ok=True)
-        DesignLibrary(tmpdir, empire_id=0).scan_designs()
+        DesignRepository(tmpdir, empire_id=0).scan_designs()
 
     span_names = {r["name"] for r in _active_profiler.records}
     expected = {

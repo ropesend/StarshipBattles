@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Optional
 import pygame
 
 from game.ui.screens.build_queue_screen import BuildQueueScreen
-from game.strategy.systems.design_library import DesignLibrary
+from game.strategy.systems.design_catalog import DesignCatalog
 from game.ui.services.design_loader_adapter import DesignLoaderAdapter
 from game.ui.panels.build_queue_portraits import BuildQueuePortraitLoader
 from game.strategy.data.order_types import OrderType
@@ -64,6 +64,25 @@ class StrategyBuildQueueManager:
         # widget/queue state.
         self._last_active_empire_id: int | None = None
 
+    def _design_catalog_for_empire(self, empire_id: int) -> DesignCatalog:
+        """Resolve the per-empire ``DesignCatalog`` from the live session.
+
+        PROJ-434 Phase 2: replaces the previous
+        ``DesignLibrary(savegame_path, empire_id, facade_state=...)`` (legacy)
+        construction. The catalog is bootstrapped per-empire and holds
+        a reference to its disk-bound ``DesignRepository`` (see
+        ``SessionBootstrap`` / ``PersistenceAdapter``), so writes
+        through ``catalog.save_design`` still hit the per-empire
+        designs folder. The QA-Obs-3 cache contract is preserved
+        because every read in the BuildQueue family routes through
+        the same catalog instance — workshop saves invalidate the
+        in-memory list view via ``catalog.upsert_design`` and the
+        next ``catalog.scan_designs()`` sees the new entry.
+        """
+        session = self._screen.facade.facade_state.session
+        catalogs = session.services.design_catalogs_by_empire
+        return catalogs[empire_id]
+
     def _active_theme_id(self) -> str:
         """Resolve the active empire's ``empire_theme_id`` (PROJ-396 MAJ-002).
 
@@ -81,14 +100,14 @@ class StrategyBuildQueueManager:
         yard,
         hex_coord: 'HexCoord',
         portrait_surface: Optional[pygame.Surface],
-        design_library: DesignLibrary,
+        design_catalog: DesignCatalog,
         design_loader: DesignLoaderAdapter,
     ) -> None:
         """Open the build queue overlay for ``yard``.
 
         PROJ-376 Phase 2: Constructs ``BuildQueueScreen`` lazily on first
         call and reuses the cached instance for every subsequent call via
-        ``open_for_yard()``. Re-binds the per-click ``DesignLibrary`` /
+        ``open_for_yard()``. Re-binds the per-click ``DesignCatalog`` /
         ``DesignLoaderAdapter`` (and the drag handler / portrait loader
         references that hang off them) onto the cached instance so each
         open reflects the manager's current empire context.
@@ -109,7 +128,7 @@ class StrategyBuildQueueManager:
                 build_context=None,
                 on_close_callback=self._on_build_queue_close,
                 portrait_surface=portrait_surface,
-                design_catalog=design_library,
+                design_catalog=design_catalog,
                 design_loader=design_loader,
                 hex_coord=None,
                 galaxy=self._screen.galaxy,
@@ -121,15 +140,15 @@ class StrategyBuildQueueManager:
             )
         else:
             # Re-bind per-click dependencies onto the cached instance. The
-            # manager constructs a fresh ``DesignLibrary`` / ``DesignLoader``
-            # per click (the empire context CAN differ — e.g. a
-            # navigate-from-empire-queue path uses ``current_empire`` while
-            # ``on_build_yard_click`` uses ``planet.owner_id``). The
-            # ``portrait_loader`` holds a reference to the library, so it
-            # must be rebuilt too. The drag handler's ``design_library``
-            # reference is rebound inside ``open_for_yard`` already, but
-            # only if the drag handler exists yet — covered by the fact
-            # that we only reach this branch after first construction.
+            # manager resolves a per-empire ``DesignCatalog`` per click; the
+            # empire context CAN differ (e.g. a navigate-from-empire-queue
+            # path uses ``current_empire`` while ``on_build_yard_click``
+            # uses ``planet.owner_id``). The ``portrait_loader`` holds a
+            # reference to the catalog, so it must be rebuilt too. The
+            # drag handler's ``design_catalog`` reference is rebound inside
+            # ``open_for_yard`` already, but only if the drag handler
+            # exists yet — covered by the fact that we only reach this
+            # branch after first construction.
             screen = self._screen.build_queue_screen
             # PROJ-410 Phase 4 Task 4.2: if the active empire changed since
             # the last open, flush widget/queue state on the cached screen
@@ -139,10 +158,10 @@ class StrategyBuildQueueManager:
             if (self._last_active_empire_id is not None
                     and current_empire_id != self._last_active_empire_id):
                 screen.on_active_player_changed()
-            screen.design_catalog = design_library
+            screen.design_catalog = design_catalog
             screen.design_loader = design_loader
             screen.portrait_loader = BuildQueuePortraitLoader(
-                design_library, self._active_theme_id
+                design_catalog, self._active_theme_id
             )
 
         # PROJ-410 Phase 4 Task 4.2: rebind cached domain context (empire,
@@ -173,17 +192,11 @@ class StrategyBuildQueueManager:
                 # Get planet portrait from asset system
                 portrait_surface = self._screen._get_object_asset(planet)
 
-                # PROJ-40: Create dependencies for DI injection.
-                # PROJ-396 MAJ-004: route save_path / galaxy through facade
-                # / screen properties instead of reaching into the session.
-                savegame_path = self._screen.facade.session_meta.save_path()
+                # PROJ-434 Phase 2: resolve the per-empire DesignCatalog
+                # from the live session (PROJ-427 bootstrap binds one per
+                # empire). Replaces the previous DesignLibrary construction.
                 empire_id = planet.owner_id
-                # PROJ-411 Phase 1: pass facade_state so scan_designs() reuses
-                # the per-turn cache instead of re-globbing 47 JSON files per open.
-                design_library = DesignLibrary(
-                    savegame_path, empire_id,
-                    facade_state=getattr(self._screen.facade, "facade_state", None),
-                )
+                design_catalog = self._design_catalog_for_empire(empire_id)
                 # PROJ-211: Pass registries explicitly
                 design_loader = DesignLoaderAdapter(registry_provider=get_cached_registries())
 
@@ -193,7 +206,7 @@ class StrategyBuildQueueManager:
 
                 self._open_build_queue(
                     planet, hex_coord, portrait_surface,
-                    design_library, design_loader,
+                    design_catalog, design_loader,
                 )
                 logger.info(f"Opened build queue for {planet.name}")
 
@@ -287,22 +300,15 @@ class StrategyBuildQueueManager:
         # Get portrait from asset system
         portrait_surface = self._screen._get_object_asset(entity)
 
-        # Create dependencies for DI injection.
-        # PROJ-396 MAJ-004: save_path via facade.
-        savegame_path = self._screen.facade.session_meta.save_path()
+        # PROJ-434 Phase 2: per-empire DesignCatalog via session services.
         empire_id = self._screen.current_empire.id
-        # PROJ-411 Phase 1: pass facade_state so scan_designs() reuses
-        # the per-turn cache instead of re-globbing 47 JSON files per open.
-        design_library = DesignLibrary(
-            savegame_path, empire_id,
-            facade_state=getattr(self._screen.facade, "facade_state", None),
-        )
+        design_catalog = self._design_catalog_for_empire(empire_id)
         # PROJ-211: Pass registries explicitly
         design_loader = DesignLoaderAdapter(registry_provider=get_cached_registries())
 
         self._open_build_queue(
             entity, hex_coord, portrait_surface,
-            design_library, design_loader,
+            design_catalog, design_loader,
         )
         logger.info(f"Navigated to build queue for {source.display_name} at hex {hex_coord}")
 
@@ -317,16 +323,9 @@ class StrategyBuildQueueManager:
                 # Get fleet portrait from asset system
                 portrait_surface = self._screen._get_object_asset(fleet)
 
-                # Create dependencies for DI injection.
-                # PROJ-396 MAJ-004: save_path via facade.
-                savegame_path = self._screen.facade.session_meta.save_path()
+                # PROJ-434 Phase 2: per-empire DesignCatalog via session services.
                 empire_id = fleet.owner_id
-                # PROJ-411 Phase 1: pass facade_state so scan_designs() reuses
-                # the per-turn cache instead of re-globbing 47 JSON files per open.
-                design_library = DesignLibrary(
-                    savegame_path, empire_id,
-                    facade_state=getattr(self._screen.facade, "facade_state", None),
-                )
+                design_catalog = self._design_catalog_for_empire(empire_id)
                 # PROJ-211: Pass registries explicitly
                 design_loader = DesignLoaderAdapter(registry_provider=get_cached_registries())
 
@@ -335,6 +334,6 @@ class StrategyBuildQueueManager:
 
                 self._open_build_queue(
                     fleet, hex_coord, portrait_surface,
-                    design_library, design_loader,
+                    design_catalog, design_loader,
                 )
                 logger.info(f"Opened build queue for fleet {fleet.id}")

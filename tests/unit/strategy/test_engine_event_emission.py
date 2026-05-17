@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch, call
 from game.core.event_logging import EventBus
 from game.strategy.data.order_types import OrderType
 from game.strategy.events import EventType, EventCategory
-from game.strategy.systems.design_library import DesignLoadResult  # noqa: F401 — used by legacy patches kept for back-compat during PROJ-427 phase 3 transition
+from game.strategy.systems.design_repository import DesignLoadResult  # noqa: F401
 
 
 def _wire_catalog_on(engine, empire_id, data):

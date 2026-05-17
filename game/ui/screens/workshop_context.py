@@ -64,14 +64,15 @@ class WorkshopContext:
     # PROJ-38: Dependency injection for registries
     registries: Optional['GameRegistries'] = None
 
-    # PROJ-411 Phase 1 / QA Obs 3 (2026-05-16): Optional reference to the
-    # strategy session's FacadeSessionState. When supplied, threaded into
-    # ``DesignLibrary(facade_state=...)`` in ``WorkshopShipIO`` so save_design()
-    # invalidates the per-turn ``scan_designs`` cache that the Build Queue
-    # reads from. Without this wiring the build queue serves stale data after
-    # a workshop save and never surfaces the newly-saved design.
-    # ``None`` for standalone mode (no facade exists) and for legacy
-    # construction paths that don't yet thread the live facade through.
+    # PROJ-411 Phase 1 / QA Obs 3 (2026-05-16) / PROJ-434 Phase 2:
+    # Optional reference to the strategy session's FacadeSessionState.
+    # When supplied, ``WorkshopShipIO`` resolves the per-empire
+    # ``DesignCatalog`` from ``facade_state.session.services.design_catalogs_by_empire``
+    # so workshop saves flow through ``catalog.save_design`` and the
+    # QA-Obs-3 cache invalidation hits the same in-memory list view the
+    # Build Queue reads from. ``None`` for standalone mode (no facade
+    # exists) and for legacy construction paths that don't yet thread
+    # the live facade through.
     facade_state: Optional['FacadeSessionState'] = None
 
 
@@ -132,10 +133,12 @@ class WorkshopContext:
             built_designs: Set of design IDs that have been built (default: empty set)
             empire_theme_id: Ship theme for the empire (default: None)
             facade_state: Optional FacadeSessionState from the live strategy
-                session. When supplied, propagated to every
-                ``DesignLibrary(...)`` constructed by ``WorkshopShipIO`` so
-                ``save_design()`` invalidates the per-turn ``scan_designs``
-                cache that the Build Queue reads from (PROJ-411 / QA Obs 3).
+                session. When supplied, ``WorkshopShipIO`` resolves the
+                per-empire ``DesignCatalog`` from
+                ``facade_state.session.services.design_catalogs_by_empire``;
+                ``catalog.save_design`` then refreshes the in-memory list
+                view the Build Queue reads from (QA Obs 3 contract,
+                PROJ-434 Phase 2).
 
         Returns:
             WorkshopContext configured for integrated mode

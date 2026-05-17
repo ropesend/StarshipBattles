@@ -7,21 +7,25 @@ its cache-invalidation step. The Build Queue (which DOES pass
 ``facade_state``) then served stale data and the newly-saved design never
 appeared in Available Designs.
 
-Fix: ``WorkshopContext`` carries an optional ``facade_state`` reference;
-``Game._create_workshop_context`` threads ``screen.facade.facade_state``
-into it; ``WorkshopShipIO`` forwards it to every ``DesignLibrary(...)``
-construction. These tests lock the contract going forward.
+PROJ-434 Phase 2: the workshop now routes through the per-empire
+``DesignCatalog`` from ``session.services.design_catalogs_by_empire``.
+The catalog's ``save_design`` orchestrates the disk write + invalidates
+the in-memory list view so the next read sees the new design without a
+turn advance. These tests lock the new contract.
 """
 from __future__ import annotations
 
 import os
 import tempfile
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
 
 from game.core.registry import GameRegistries
 from game.strategy.facade.slices._facade_state import FacadeSessionState
+from game.strategy.systems.design_catalog import DesignCatalog
+from game.strategy.systems.design_repository import DesignRepository
 from game.ui.screens.workshop_context import WorkshopContext, WorkshopMode
 
 
@@ -30,9 +34,18 @@ def mock_registries() -> GameRegistries:
     return GameRegistries(components={}, modifiers={}, vehicle_classes={}, resources={})
 
 
-@pytest.fixture
-def fake_state() -> FacadeSessionState:
-    return FacadeSessionState(session=MagicMock())
+def _wired_facade_state(tmpdir: str, empire_id: int) -> tuple[FacadeSessionState, DesignCatalog]:
+    """Build a FacadeSessionState whose session exposes a per-empire
+    DesignCatalog under ``services.design_catalogs_by_empire``."""
+    repo = DesignRepository(tmpdir, empire_id=empire_id)
+    catalog = DesignCatalog(empire_id=empire_id)
+    catalog.attach_repository(repo)
+    session = MagicMock()
+    session.services = SimpleNamespace(
+        design_catalogs_by_empire={empire_id: catalog},
+    )
+    state = FacadeSessionState(session=session)
+    return state, catalog
 
 
 # --------------------------------------------------------------------------
@@ -40,16 +53,17 @@ def fake_state() -> FacadeSessionState:
 # --------------------------------------------------------------------------
 
 def test_integrated_context_accepts_facade_state(
-    mock_registries: GameRegistries, fake_state: FacadeSessionState
+    mock_registries: GameRegistries,
 ) -> None:
     """``WorkshopContext.integrated`` must accept and store facade_state."""
+    state = FacadeSessionState(session=MagicMock())
     ctx = WorkshopContext.integrated(
         empire_id=1,
         savegame_path="saves/test",
-        facade_state=fake_state,
+        facade_state=state,
         registries=mock_registries,
     )
-    assert ctx.facade_state is fake_state
+    assert ctx.facade_state is state
 
 
 def test_integrated_context_facade_state_defaults_to_none(
@@ -73,7 +87,7 @@ def test_standalone_context_has_no_facade_state(
 
 
 # --------------------------------------------------------------------------
-# WorkshopShipIO threads facade_state into every DesignLibrary construction.
+# WorkshopShipIO routes through the per-empire DesignCatalog.
 # --------------------------------------------------------------------------
 
 def _build_ship_io(ctx: WorkshopContext, viewmodel) -> "object":
@@ -95,25 +109,21 @@ def _build_ship_io(ctx: WorkshopContext, viewmodel) -> "object":
     )
 
 
-def test_workshop_save_ship_constructs_design_library_with_facade_state(
+def test_workshop_save_ship_routes_through_design_catalog(
     mock_registries: GameRegistries,
-    fake_state: FacadeSessionState,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """``WorkshopShipIO.save_ship`` (integrated mode) must construct
-    ``DesignLibrary`` with the context's facade_state.
-
-    This is the QA Obs 3 contract test: without facade_state, cache
-    invalidation silently no-op's and the build queue serves stale data.
-    """
+    """PROJ-434 Phase 2: ``WorkshopShipIO.save_ship`` (integrated mode) routes
+    through ``DesignCatalog.save_design`` so the QA-Obs-3 cache contract is
+    served by the same catalog the Build Queue reads from."""
     with tempfile.TemporaryDirectory() as tmpdir:
+        state, catalog = _wired_facade_state(tmpdir, empire_id=1)
         ctx = WorkshopContext.integrated(
             empire_id=1,
             savegame_path=tmpdir,
-            facade_state=fake_state,
+            facade_state=state,
             registries=mock_registries,
         )
-        assert ctx.mode == WorkshopMode.INTEGRATED
 
         ship = MagicMock()
         ship.name = "Probe Ship"
@@ -139,116 +149,85 @@ def test_workshop_save_ship_constructs_design_library_with_facade_state(
             lambda *a, **kw: "Probe Ship",
         )
 
-        # Capture every DesignLibrary construction.
-        constructed: list = []
-        import game.ui.screens.workshop_ship_io as ship_io_mod
-
-        real_cls = ship_io_mod.DesignLibrary
-
-        def capturing_ctor(*args, **kwargs):
-            inst = real_cls(*args, **kwargs)
-            constructed.append(inst)
-            return inst
-
-        monkeypatch.setattr(ship_io_mod, "DesignLibrary", capturing_ctor)
-
         ship_io = _build_ship_io(ctx, viewmodel)
         ship_io.save_ship()
 
-        assert constructed, "save_ship must construct a DesignLibrary"
-        for lib in constructed:
-            assert lib._facade_state is fake_state, (
-                "WorkshopShipIO must pass context.facade_state into "
-                "DesignLibrary so save_design invalidates the per-turn cache."
-            )
-
-        # Cache invalidation effect: empire 1 entry must NOT survive the save.
-        # (No entry was seeded — but the pop is a no-op-safe contract.)
-        assert 1 not in fake_state.designs_by_empire
+        # The new design must be present on the next catalog read on the
+        # SAME turn (QA-Obs-3 contract enforced through DesignCatalog).
+        names = {d.name for d in catalog.list_designs()}
+        assert "Probe Ship" in names
 
 
-def test_workshop_load_ship_constructs_design_library_with_facade_state(
+def test_workshop_load_ship_reads_from_design_catalog(
     mock_registries: GameRegistries,
-    fake_state: FacadeSessionState,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The load path also threads facade_state so a load right after a save
-    in the same turn reads from the same cache space."""
+    """The load path scans through the same DesignCatalog instance the
+    Build Queue uses."""
     with tempfile.TemporaryDirectory() as tmpdir:
         os.makedirs(os.path.join(tmpdir, "designs", "empire_1"), exist_ok=True)
+        state, catalog = _wired_facade_state(tmpdir, empire_id=1)
         ctx = WorkshopContext.integrated(
             empire_id=1,
             savegame_path=tmpdir,
-            facade_state=fake_state,
+            facade_state=state,
             registries=mock_registries,
         )
 
         viewmodel = MagicMock()
         viewmodel.ship = MagicMock()
 
-        constructed: list = []
         import game.ui.screens.workshop_ship_io as ship_io_mod
 
-        real_cls = ship_io_mod.DesignLibrary
+        # Track the catalog kwarg threaded into DesignSelectorWindow.
+        captured: list = []
 
-        def capturing_ctor(*args, **kwargs):
-            inst = real_cls(*args, **kwargs)
-            constructed.append(inst)
-            return inst
+        def fake_selector(**kw):
+            captured.append(kw)
+            return MagicMock()
 
-        monkeypatch.setattr(ship_io_mod, "DesignLibrary", capturing_ctor)
-        # Stub out DesignSelectorWindow — we only care about construction.
-        monkeypatch.setattr(
-            ship_io_mod, "DesignSelectorWindow", lambda **kw: MagicMock()
-        )
+        monkeypatch.setattr(ship_io_mod, "DesignSelectorWindow", fake_selector)
 
         ship_io = _build_ship_io(ctx, viewmodel)
         ship_io.load_ship()
 
-        assert constructed, "load_ship must construct a DesignLibrary"
-        for lib in constructed:
-            assert lib._facade_state is fake_state
+        assert captured, "load_ship must open DesignSelectorWindow"
+        assert captured[0]["design_catalog"] is catalog
 
 
-def test_workshop_select_target_constructs_design_library_with_facade_state(
+def test_workshop_select_target_reads_from_design_catalog(
     mock_registries: GameRegistries,
-    fake_state: FacadeSessionState,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The target-selector path also threads facade_state."""
+    """The target-selector path also reads through DesignCatalog."""
     with tempfile.TemporaryDirectory() as tmpdir:
         os.makedirs(os.path.join(tmpdir, "designs", "empire_1"), exist_ok=True)
+        state, catalog = _wired_facade_state(tmpdir, empire_id=1)
         ctx = WorkshopContext.integrated(
             empire_id=1,
             savegame_path=tmpdir,
-            facade_state=fake_state,
+            facade_state=state,
             registries=mock_registries,
         )
 
         viewmodel = MagicMock()
         viewmodel.ship = MagicMock()
 
-        constructed: list = []
         import game.ui.screens.workshop_ship_io as ship_io_mod
 
-        real_cls = ship_io_mod.DesignLibrary
+        captured: list = []
 
-        def capturing_ctor(*args, **kwargs):
-            inst = real_cls(*args, **kwargs)
-            constructed.append(inst)
-            return inst
+        def fake_selector(**kw):
+            captured.append(kw)
+            return MagicMock()
 
-        monkeypatch.setattr(ship_io_mod, "DesignLibrary", capturing_ctor)
-        monkeypatch.setattr(
-            ship_io_mod, "DesignSelectorWindow", lambda **kw: MagicMock()
-        )
+        monkeypatch.setattr(ship_io_mod, "DesignSelectorWindow", fake_selector)
 
         ship_io = _build_ship_io(ctx, viewmodel)
         ship_io.select_target()
 
-        assert constructed, "select_target must construct a DesignLibrary"
-        for lib in constructed:
-            assert lib._facade_state is fake_state
+        assert captured, "select_target must open DesignSelectorWindow"
+        assert captured[0]["design_catalog"] is catalog
 
 
 # --------------------------------------------------------------------------
@@ -256,7 +235,7 @@ def test_workshop_select_target_constructs_design_library_with_facade_state(
 # --------------------------------------------------------------------------
 
 def test_create_workshop_context_threads_facade_state_from_scene(
-    mock_registries: GameRegistries, fake_state: FacadeSessionState
+    mock_registries: GameRegistries,
 ) -> None:
     """``Game._create_workshop_context`` reads ``game_session.facade.facade_state``
     (or equivalent) and stores it on the WorkshopContext.
@@ -264,9 +243,9 @@ def test_create_workshop_context_threads_facade_state_from_scene(
     This locks the production wiring: pre-fix the live facade was reachable
     via ``StrategyScreen.facade`` but never propagated into the workshop.
     """
-    from types import SimpleNamespace
     from game.app import Game
 
+    fake_state = FacadeSessionState(session=MagicMock())
     game = Game.__new__(Game)
     game.registries = mock_registries
 
@@ -290,6 +269,6 @@ def test_create_workshop_context_threads_facade_state_from_scene(
     assert result is not None
     assert result.facade_state is fake_state, (
         "Game._create_workshop_context must thread the live facade_state into "
-        "WorkshopContext so the workshop's DesignLibrary save invalidates the "
-        "per-turn cache (QA Obs 3 regression)."
+        "WorkshopContext so the catalog routing in WorkshopShipIO resolves "
+        "the same catalog instance the Build Queue reads from."
     )

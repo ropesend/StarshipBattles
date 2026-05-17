@@ -6,7 +6,7 @@ library in integrated mode. It supports filtering by class, type, and obsolete
 status, as well as text search.
 
 Cross-layer imports (acceptable for UI):
-- DesignLibrary: Runtime - required for browsing and selecting designs
+- DesignCatalog: Runtime - required for browsing and selecting designs
 - DesignMetadata: TYPE_CHECKING only - used for type hints
 """
 from __future__ import annotations
@@ -18,7 +18,7 @@ from pygame_gui.elements import (
     UITextEntryLine, UIDropDownMenu, UIImage
 )
 from typing import Any, Optional, Callable, List, Dict, Set, TYPE_CHECKING
-from game.strategy.systems.design_library import DesignLibrary
+from game.strategy.systems.design_catalog import DesignCatalog
 import logging
 from game.ui.screens.design_image_helper import load_portrait_thumbnail, load_topdown_thumbnail
 from game.ui.screens.strategy_modal_window import StrategyModalWindow
@@ -56,7 +56,7 @@ class DesignSelectorWindow(StrategyModalWindow):
     def __init__(self,
                  rect: pygame.Rect,
                  manager: pygame_gui.UIManager,
-                 design_library: DesignLibrary,
+                 design_catalog: DesignCatalog,
                  mode: str = "load",
                  on_select_callback: Optional[Callable[[str], None]] = None,
                  *,
@@ -68,7 +68,7 @@ class DesignSelectorWindow(StrategyModalWindow):
         Args:
             rect: Window rectangle
             manager: UIManager instance
-            design_library: DesignLibrary to browse
+            design_catalog: DesignCatalog to browse
             mode: "load" (for loading designs) or "target" (for selecting targets)
             on_select_callback: Callback function when design is selected
             window_manager: PROJ-382 Phase 2 — StrategyWindowManager for modal
@@ -76,7 +76,7 @@ class DesignSelectorWindow(StrategyModalWindow):
             ui_builder: Optional UI builder override (test seam — PROJ-329B).
         """
         # ---- Stage 1: cheap state ----
-        self.design_library = design_library
+        self.design_catalog = design_catalog
         self.mode = mode
         self.on_select_callback = on_select_callback
 
@@ -353,7 +353,10 @@ class DesignSelectorWindow(StrategyModalWindow):
             )
 
         logger.info(f"DesignSelector: Refreshing design list (mode={self.mode})")
-        logger.debug(f"  design_library.designs_folder: {self.design_library.designs_folder}")
+        logger.debug(
+            "  design_catalog.empire_id: %s",
+            getattr(self.design_catalog, "empire_id", "?"),
+        )
         logger.debug(f"  filter_name: '{self.filter_name}'")
         logger.debug(f"  class_filter: {class_filter}")
         logger.debug(f"  type_filter: {type_filter}")
@@ -361,7 +364,7 @@ class DesignSelectorWindow(StrategyModalWindow):
         logger.debug(f"  show_obsolete: {self.show_obsolete}")
 
         # Search designs
-        self.filtered_designs = self.design_library.search_designs(
+        self.filtered_designs = self.design_catalog.search_designs(
             name_query=self.filter_name,
             filters={
                 'ship_class': class_filter,
@@ -661,7 +664,7 @@ class DesignSelectorWindow(StrategyModalWindow):
         logger.info(f"DesignSelector: Toggling obsolete for {design_id}: {current_state} -> {new_state}")
 
         # Call design library to mark obsolete
-        success, message = self.design_library.mark_obsolete(design_id, new_state)
+        success, message = self.design_catalog.mark_obsolete(design_id, new_state)
         logger.info(f"DesignSelector: mark_obsolete result: {success}, {message}")
 
         if success:

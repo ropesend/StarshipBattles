@@ -189,7 +189,7 @@ Use `game/core/json_utils.py` for normal file-based JSON operations in `game/`.
 
 - `success` is `data is not None`.
 - Constructors: `ok`, `not_found`, `corrupt`, `invalid_schema`, `permission_denied`, `io_error`.
-- Current `DesignLibrary.load_design_data()` returns `ok`, `not_found`, `corrupt_json`, `permission_denied`, or `io_error`; it does not currently perform schema validation.
+- Current `DesignRepository.load_design_data()` returns `ok`, `not_found`, `corrupt_json`, `permission_denied`, or `io_error`; it does not currently perform schema validation.
 
 ## Turn Engine Boundary
 

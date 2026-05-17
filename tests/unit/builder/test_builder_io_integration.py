@@ -154,15 +154,19 @@ class TestBuilderIOIntegration:
         mock_ship.name = "TargetShip"
         design_loader_adapter.load_ship_from_design_data.return_value = mock_ship
 
-        with patch("game.ui.screens.workshop_ship_io.DesignLibrary") as mock_lib_cls, \
-             patch("game.ui.screens.workshop_ship_io.DesignSelectorWindow") as mock_window_cls:
-            mock_library = MagicMock()
-            mock_lib_cls.return_value = mock_library
-            load_result = MagicMock()
-            load_result.success = True
-            load_result.data = {"design": "data"}
-            mock_library.load_design_data.return_value = load_result
+        # PROJ-434 Phase 2: select_target routes through the per-empire
+        # DesignCatalog resolved via context.facade_state. Wire a mock
+        # catalog into the catalogs_by_empire map.
+        mock_catalog = MagicMock()
+        load_result = MagicMock()
+        load_result.success = True
+        load_result.data = {"design": "data"}
+        mock_catalog.load_design_data.return_value = load_result
+        ship_io.context.facade_state.session.services.design_catalogs_by_empire = {
+            ship_io.context.empire_id: mock_catalog,
+        }
 
+        with patch("game.ui.screens.workshop_ship_io.DesignSelectorWindow") as mock_window_cls:
             ship_io.select_target()
 
             # Capture the on_target_selected callback registered with the selector window.

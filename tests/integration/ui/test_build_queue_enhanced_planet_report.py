@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 from game.strategy.data.planet import Planet, PlanetType
 from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
-from game.strategy.systems.design_library import DesignLoadResult
+from game.strategy.systems.design_repository import DesignLoadResult
 
 
 class MockSession:

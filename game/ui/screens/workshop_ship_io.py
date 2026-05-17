@@ -8,12 +8,10 @@ DUP-UI2-001: Tkinter initialization now uses shared tkinter_utils module.
 from __future__ import annotations
 
 import logging
-import os
 
 from game.core.profiling import profile_action
 
 logger = logging.getLogger(__name__)
-from game.strategy.systems.design_library import DesignLibrary
 from game.ui.screens.design_selector_window import DesignSelectorWindow
 from game.ui.screens.workshop_context import WorkshopMode
 from game.ui.services.tkinter_utils import prompt_string
@@ -66,6 +64,32 @@ class WorkshopShipIO:
         self._show_error = show_error_callback
         self._apply_loaded_ship = apply_loaded_ship_callback
 
+    def _design_catalog(self):
+        """Resolve the per-empire ``DesignCatalog`` via ``facade_state``.
+
+        PROJ-434 Phase 2: replaces the previous
+        ``DesignLibrary(context.savegame_path, context.empire_id,
+        facade_state=context.facade_state)`` construction. The catalog
+        is bootstrapped per-empire and owns the in-memory list view +
+        the QA-Obs-3 cache contract; writes flow through
+        ``catalog.save_design`` which delegates to the bound
+        ``DesignRepository`` then refreshes the in-memory entry so the
+        Build Queue sees the new design on the next read without a
+        turn advance. Falls back to ``None`` if the session is not
+        wired (legacy / partial-init paths).
+        """
+        facade_state = self.context.facade_state
+        if facade_state is None:
+            return None
+        session = getattr(facade_state, "session", None)
+        if session is None:
+            return None
+        services = getattr(session, "services", None)
+        if services is None:
+            return None
+        catalogs = getattr(services, "design_catalogs_by_empire", None) or {}
+        return catalogs.get(self.context.empire_id)
+
     @profile_action("Builder: Save Ship")
     def save_ship(self) -> None:
         """Save ship design (context-aware)."""
@@ -83,16 +107,18 @@ class WorkshopShipIO:
             logger.debug(f"  context.empire_id: {self.context.empire_id}")
             logger.debug(f"  context.mode: {self.context.mode}")
 
-            # QA Obs 3 (2026-05-16): thread facade_state so save_design()
-            # invalidates the per-turn scan_designs cache. Without this,
-            # the Build Queue serves stale data after a workshop save.
-            library = DesignLibrary(
-                self.context.savegame_path,
-                self.context.empire_id,
-                facade_state=self.context.facade_state,
-            )
-
-            logger.debug(f"  library.designs_folder: {library.designs_folder}")
+            # PROJ-434 Phase 2: route through DesignCatalog.save_design,
+            # which orchestrates DesignRepository.save_design + the
+            # QA-Obs-3 cache invalidation (workshop save -> next Build
+            # Queue read sees the new design, same turn).
+            catalog = self._design_catalog()
+            if catalog is None:
+                logger.error("Workshop Save: no DesignCatalog for empire "
+                             f"{self.context.empire_id}")
+                self._show_error(
+                    "Internal error: design catalog not initialized"
+                )
+                return
 
             # Show save dialog to get design name
             design_name = self._prompt_design_name(self.viewmodel.ship.name)
@@ -106,10 +132,10 @@ class WorkshopShipIO:
             built_designs = self.context.built_designs
             logger.debug(f"  built_designs count: {len(built_designs)}")
 
-            success, message = library.save_design(
+            success, message = catalog.save_design(
                 self.viewmodel.ship,
                 design_name,
-                built_designs
+                built_designs,
             )
 
             if message:
@@ -136,38 +162,35 @@ class WorkshopShipIO:
             logger.debug(f"  context.empire_id: {self.context.empire_id}")
             logger.debug(f"  context.mode: {self.context.mode}")
 
-            # QA Obs 3 (2026-05-16): thread facade_state so this scan reads
-            # from the same per-turn cache the Build Queue uses (keeps the
-            # workshop and build queue in sync within one turn).
-            library = DesignLibrary(
-                self.context.savegame_path,
-                self.context.empire_id,
-                facade_state=self.context.facade_state,
-            )
+            # PROJ-434 Phase 2: read through DesignCatalog (shared with
+            # Build Queue so cache stays coherent intra-turn).
+            catalog = self._design_catalog()
+            if catalog is None:
+                logger.error("Workshop Load: no DesignCatalog for empire "
+                             f"{self.context.empire_id}")
+                self._show_error(
+                    "Internal error: design catalog not initialized"
+                )
+                return
 
-            logger.debug(f"  library.designs_folder: {library.designs_folder}")
-
-            # Immediate scan to diagnose
             try:
-                designs = library.scan_designs()
-                logger.info(f"Workshop Load: DesignLibrary scanned {len(designs)} designs")
+                designs = catalog.scan_designs()
+                logger.info(
+                    f"Workshop Load: DesignCatalog scanned {len(designs)} designs"
+                )
                 if designs:
                     for d in designs[:5]:  # Log first 5 designs
                         logger.debug(f"    - {d.name} (design_id={d.design_id})")
                 else:
-                    logger.warning("Workshop Load: scan_designs() returned an empty list!")
-                    logger.warning(f"  Checked folder: {library.designs_folder}")
-                    if os.path.exists(library.designs_folder):
-                        files = os.listdir(library.designs_folder)
-                        logger.warning(f"  Folder exists with {len(files)} files: {files}")
-                    else:
-                        logger.error(f"  Folder does not exist!")
+                    logger.warning(
+                        "Workshop Load: scan_designs() returned an empty list!"
+                    )
             except (OSError, ValueError, KeyError) as e:
                 logger.exception(f"Workshop Load: Exception during scan_designs(): {e}")
 
             def on_design_selected(design_id: str) -> None:
                 logger.info(f"Workshop: User selected design_id='{design_id}'")
-                load_result = library.load_design_data(design_id)
+                load_result = catalog.load_design_data(design_id)
                 if load_result.success:
                     # Use adapter to create ship from design data
                     ship = self._design_loader_adapter.load_ship_from_design_data(
@@ -188,7 +211,7 @@ class WorkshopShipIO:
             _selector = DesignSelectorWindow(
                 rect=window_rect,
                 manager=self.ui_manager,
-                design_library=library,
+                design_catalog=catalog,
                 mode="load",
                 on_select_callback=on_design_selected
             )
@@ -204,16 +227,19 @@ class WorkshopShipIO:
             elif message and "Cancelled" not in message:
                 self._show_error(message)
         else:
-            # Use design selector with ALL designs (player + AI)
-            # QA Obs 3 (2026-05-16): thread facade_state for cache consistency.
-            library = DesignLibrary(
-                self.context.savegame_path,
-                self.context.empire_id,
-                facade_state=self.context.facade_state,
-            )
+            # PROJ-434 Phase 2: read through DesignCatalog (shared with
+            # Build Queue so cache stays coherent intra-turn).
+            catalog = self._design_catalog()
+            if catalog is None:
+                logger.error("Workshop Target: no DesignCatalog for empire "
+                             f"{self.context.empire_id}")
+                self._show_error(
+                    "Internal error: design catalog not initialized"
+                )
+                return
 
             def on_target_selected(design_id: str) -> None:
-                load_result = library.load_design_data(design_id)
+                load_result = catalog.load_design_data(design_id)
                 if load_result.success:
                     # Use adapter to create ship from design data
                     ship = self._design_loader_adapter.load_ship_from_design_data(
@@ -232,7 +258,7 @@ class WorkshopShipIO:
             _selector = DesignSelectorWindow(
                 rect=window_rect,
                 manager=self.ui_manager,
-                design_library=library,
+                design_catalog=catalog,
                 mode="target",
                 on_select_callback=on_target_selected
             )

@@ -14,7 +14,7 @@ from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 from game.strategy.engine.turn_engine import TurnEngine
 from tests.fixtures.turn_engine import build_test_turn_engine
-from game.strategy.systems.design_library import DesignLibrary
+from game.strategy.systems.design_repository import DesignRepository
 
 
 @pytest.fixture
@@ -176,7 +176,7 @@ def _process_one_turn(engine, empires, galaxy=None, save_path=None):
 
 def test_design_save_load_complex(test_savegame_dir):
     """Test that complex designs can be saved and loaded."""
-    library = DesignLibrary(test_savegame_dir, empire_id=1)
+    library = DesignRepository(test_savegame_dir, empire_id=1)
 
     # Scan designs
     designs = library.scan_designs()
@@ -199,7 +199,7 @@ def test_complex_design_in_build_queue(empire_with_colony):
     """Test that complex designs appear in BuildQueueScreen's category filter."""
     empire, planet, save_path = empire_with_colony
 
-    library = DesignLibrary(save_path, empire_id=1)
+    library = DesignRepository(save_path, empire_id=1)
 
     # Simulate _load_designs_by_category("complex")
     all_designs = library.scan_designs()

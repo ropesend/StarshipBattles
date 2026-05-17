@@ -26,7 +26,8 @@ At runtime, a design becomes a `PlanetaryFacility` on a planet. Stat calculation
 | `data/vehiclelayers.json` | Layer availability, max layer percentages, and placement restrictions |
 | `game/strategy/quickstart_builder.py` | `INITIAL_COMPLEXES`, design copying, homeworld starter spawning |
 | `game/strategy/data/planetary_facility.py` | Runtime facility data model, activation state, fuel storage helpers |
-| `game/strategy/systems/design_library.py` | Design loading/filtering via `DesignLibrary` and `DesignLoadResult` |
+| `game/strategy/systems/design_catalog.py` | In-memory per-empire design lookup + UI surface (`search_designs`, `filter_designs`, `save_design` orchestrator) |
+| `game/strategy/systems/design_repository.py` | Disk-bound filesystem + JSON persistence; owns `DesignLoadResult` |
 | `game/strategy/engine/production_spawner.py` | Facility creation after colony/fleet construction completion |
 | `game/strategy/services/component_inspector.py` | Canonical registry-backed ability inspection for design data |
 | `game/strategy/services/strategic_ability_scanner.py` | Scoped strategic ability queries and multiplier/rate aggregation |

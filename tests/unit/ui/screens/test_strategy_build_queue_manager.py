@@ -22,6 +22,13 @@ def _make_build_queue_manager():
     mock_screen.galaxy = MagicMock()  # PROJ-396 MAJ-004
     mock_screen.facade = MagicMock()  # PROJ-212: facade for command dispatch
     mock_screen.facade.session_meta.save_path = MagicMock(return_value="test_savegame")
+    # PROJ-434 Phase 2: manager pulls per-empire catalog through
+    # facade.facade_state.session.services.design_catalogs_by_empire.
+    mock_catalog = MagicMock()
+    mock_screen.facade.facade_state.session.services.design_catalogs_by_empire = {
+        0: mock_catalog,
+        1: mock_catalog,
+    }
     mock_screen.ui = MagicMock()
     mock_screen.ui.manager = MagicMock()
     mock_screen.selected_object = None
@@ -76,7 +83,6 @@ class TestOnBuildYardClick:
         screen.build_queue_screen = cached_screen
 
         with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
-             patch('game.ui.screens.strategy_build_queue_manager.DesignLibrary'), \
              patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'), \
              patch('game.ui.screens.strategy_build_queue_manager.is_planet', return_value=True):
             manager.on_build_yard_click()
@@ -119,7 +125,6 @@ class TestOnBuildYardClick:
 
         # PROJ-208: is_planet uses Protocol isinstance, need to patch it for mocks
         with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
-             patch('game.ui.screens.strategy_build_queue_manager.DesignLibrary'), \
              patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'), \
              patch('game.ui.screens.strategy_build_queue_manager.is_planet', return_value=True):
             manager.on_build_yard_click()
@@ -142,7 +147,6 @@ class TestOnBuildYardClick:
         screen.galaxy.get_system_of_planet.return_value = None
 
         with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
-             patch('game.ui.screens.strategy_build_queue_manager.DesignLibrary'), \
              patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'), \
              patch('game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader'), \
              patch('game.ui.screens.strategy_build_queue_manager.is_planet', return_value=True):
@@ -313,7 +317,6 @@ class TestOnFleetBuildClick:
         screen.build_queue_screen = cached_screen
 
         with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
-             patch('game.ui.screens.strategy_build_queue_manager.DesignLibrary'), \
              patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'), \
              patch('game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader'), \
              patch('game.ui.screens.strategy_build_queue_manager.is_fleet', return_value=True):
@@ -347,7 +350,6 @@ class TestOnFleetBuildClick:
 
         # PROJ-208: is_fleet uses Protocol isinstance, need to patch it for mocks
         with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
-             patch('game.ui.screens.strategy_build_queue_manager.DesignLibrary'), \
              patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'), \
              patch('game.ui.screens.strategy_build_queue_manager.is_fleet', return_value=True):
             manager.on_fleet_build_click()
@@ -373,7 +375,6 @@ class TestOnNavigateToHexBuild:
         mock_source.display_name = "Test"
 
         with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
-             patch('game.ui.screens.strategy_build_queue_manager.DesignLibrary'), \
              patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'), \
              patch('game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader'):
             manager.on_navigate_to_hex_build(mock_hex, mock_source)
@@ -405,7 +406,6 @@ class TestOnNavigateToHexBuild:
         mock_source.display_name = "Test Planet"
 
         with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
-             patch('game.ui.screens.strategy_build_queue_manager.DesignLibrary'), \
              patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'):
             manager.on_navigate_to_hex_build(mock_hex, mock_source)
 
@@ -491,7 +491,7 @@ class TestProj410TurnBoundaryRebind:
         screen.galaxy.get_system_of_planet.return_value = None
 
         with patch("game.ui.screens.strategy_build_queue_manager.BuildQueueScreen"), \
-             patch("game.ui.screens.strategy_build_queue_manager.DesignLibrary"), \
+             patch("game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader"), \
              patch("game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter"), \
              patch("game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader"), \
              patch("game.ui.screens.strategy_build_queue_manager.is_planet", return_value=True):
@@ -536,7 +536,7 @@ class TestProj410TurnBoundaryRebind:
         screen.galaxy.get_system_of_planet.return_value = None
 
         with patch("game.ui.screens.strategy_build_queue_manager.BuildQueueScreen"), \
-             patch("game.ui.screens.strategy_build_queue_manager.DesignLibrary"), \
+             patch("game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader"), \
              patch("game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter"), \
              patch("game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader"), \
              patch("game.ui.screens.strategy_build_queue_manager.is_planet", return_value=True):
@@ -578,7 +578,7 @@ class TestProj410TurnBoundaryRebind:
         screen.galaxy.get_system_of_planet.return_value = None
 
         with patch("game.ui.screens.strategy_build_queue_manager.BuildQueueScreen"), \
-             patch("game.ui.screens.strategy_build_queue_manager.DesignLibrary"), \
+             patch("game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader"), \
              patch("game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter"), \
              patch("game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader"), \
              patch("game.ui.screens.strategy_build_queue_manager.is_planet", return_value=True):
@@ -618,7 +618,7 @@ class TestProj410TurnBoundaryRebind:
         screen.galaxy.get_system_of_planet.return_value = None
 
         with patch("game.ui.screens.strategy_build_queue_manager.BuildQueueScreen"), \
-             patch("game.ui.screens.strategy_build_queue_manager.DesignLibrary"), \
+             patch("game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader"), \
              patch("game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter"), \
              patch("game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader"), \
              patch("game.ui.screens.strategy_build_queue_manager.is_planet", return_value=True):
