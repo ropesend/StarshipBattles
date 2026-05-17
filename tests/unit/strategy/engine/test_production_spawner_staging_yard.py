@@ -38,10 +38,10 @@ class TestSpawnToStagingYardEmpireParam:
         item = {'design_id': 'fighter_mk1', 'type': 'fighter'}
 
         with patch.object(spawner, '_load_design', return_value={'name': 'Fighter'}) as mock_load:
-            spawner._spawn_to_staging_yard(planet, 'fighter_mk1', item, empire, '/fake/save')
+            spawner._spawn_to_staging_yard(planet, 'fighter_mk1', item, empire)
 
         # The critical assertion: _load_design receives the Empire object, not an int
-        mock_load.assert_called_once_with('fighter_mk1', empire, '/fake/save')
+        mock_load.assert_called_once_with('fighter_mk1', empire)
 
     def test_spawn_to_staging_yard_no_crash_with_real_empire(self):
         """End-to-end: calling _spawn_to_staging_yard with an Empire object
@@ -53,7 +53,7 @@ class TestSpawnToStagingYardEmpireParam:
                 'design_data': {'name': 'DropPod', 'components': []}}
 
         # Should not raise - design_data is in the item so _load_design is skipped
-        spawner._spawn_to_staging_yard(planet, 'drop_pod_1', item, empire, '/fake/save')
+        spawner._spawn_to_staging_yard(planet, 'drop_pod_1', item, empire)
         planet.add_to_staging_yard.assert_called_once()
 
     def test_spawn_to_staging_yard_uses_empire_id_for_owner(self):
@@ -64,7 +64,7 @@ class TestSpawnToStagingYardEmpireParam:
         item = {'design_id': 'fighter_x', 'type': 'fighter',
                 'design_data': {'name': 'FighterX'}}
 
-        spawner._spawn_to_staging_yard(planet, 'fighter_x', item, empire, '/fake/save')
+        spawner._spawn_to_staging_yard(planet, 'fighter_x', item, empire)
 
         staging_item = planet.add_to_staging_yard.call_args[0][0]
         assert staging_item['owner_id'] == 99
@@ -103,7 +103,7 @@ class TestSpawnToStagingYardMassCalculation:
         item = {'design_id': 'pod_1', 'type': 'drop_pod',
                 'design_data': design_data}
 
-        spawner._spawn_to_staging_yard(planet, 'pod_1', item, empire, '/fake/save')
+        spawner._spawn_to_staging_yard(planet, 'pod_1', item, empire)
 
         staging_item = planet.add_to_staging_yard.call_args[0][0]
         # crew_quarters base mass=30, with 0.5 size modifier = 15, plus hull base mass
@@ -153,7 +153,7 @@ class TestStagingYardEmitsProductionEvent:
             'design_data': {'name': 'Razor MK1'},
         }
 
-        spawner._spawn_to_staging_yard(planet, 'fighter_mk1', item, empire, '/fake/save')
+        spawner._spawn_to_staging_yard(planet, 'fighter_mk1', item, empire)
 
         event_bus.log_event.assert_called_once()
         call = event_bus.log_event.call_args
@@ -178,7 +178,7 @@ class TestStagingYardEmitsProductionEvent:
             'design_data': {'name': 'Mk2 Mine'},
         }
 
-        spawner._spawn_to_staging_yard(planet, 'mine_v2', item, empire, '/fake/save')
+        spawner._spawn_to_staging_yard(planet, 'mine_v2', item, empire)
 
         event_bus.log_event.assert_called_once()
         call = event_bus.log_event.call_args
@@ -202,5 +202,5 @@ class TestStagingYardEmitsProductionEvent:
             'design_data': {'name': 'CommSat'},
         }
         # Should not raise
-        spawner._spawn_to_staging_yard(planet, 'sat_relay', item, empire, '/fake/save')
+        spawner._spawn_to_staging_yard(planet, 'sat_relay', item, empire)
         planet.add_to_staging_yard.assert_called_once()

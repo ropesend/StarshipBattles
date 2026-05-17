@@ -304,12 +304,14 @@ DEFAULT_TICK_PHASE_LIST: tuple[TickPhase, ...] = (
         args_resolver=lambda ctx: ((ctx.tick, ctx.empires, ctx.galaxy), {}),
     ),
     # --- Phase 0e: Construction resource consumption ---
+    # PROJ-427 Phase 3: save_path no longer threaded — designs come from
+    # the in-memory DesignCatalog wired on the production spawner.
     TickPhase(
         phase_key='production',
         callable_target=lambda e: e.production_engine.process_construction_tick,
         args_resolver=lambda ctx: (
             (ctx.tick, ctx.empires, ctx.galaxy),
-            {'save_path': ctx.save_path},
+            {},
         ),
         tick_gating=TICK_GATE_ONLY_TICK_1,  # hook-only gating
         post_exec_hook=_log_after_construction_tick_1,

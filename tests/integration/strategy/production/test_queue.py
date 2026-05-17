@@ -18,11 +18,12 @@ from game.strategy.data.planetary_facility import PlanetaryFacility
 def _process_one_turn(engine, empires, galaxy=None, save_path=None):
     """Process 100 ticks of construction for one turn.
 
-    Uses the live tick-based API instead of the dead process_production().
+    PROJ-427 Phase 3: ``save_path`` no longer threaded into the engine.
     """
+    del save_path
     for tick in range(1, 101):
         engine.production_engine.process_construction_tick(
-            tick, empires, galaxy, save_path=save_path
+            tick, empires, galaxy
         )
 
 

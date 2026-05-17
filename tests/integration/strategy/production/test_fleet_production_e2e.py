@@ -56,11 +56,12 @@ def _make_cargo_ship(resources=None):
 def _process_fleet_turn(engine, empires, galaxy=None, save_path=None):
     """Process 100 ticks of construction for one turn.
 
-    Uses the live tick-based API instead of the dead process_fleet_production().
+    PROJ-427 Phase 3: ``save_path`` no longer threaded into the engine.
     """
+    del save_path
     for tick in range(1, 101):
         engine.process_construction_tick(
-            tick, empires, galaxy, save_path=save_path
+            tick, empires, galaxy
         )
 
 
@@ -124,6 +125,14 @@ class TestFleetProductionE2E:
         """E2E: Create fleet with yard → issue BUILD → advance turns → ship spawns in fleet."""
         # PROJ-211: Pass registries for DI compliance when spawning ships
         engine = ProductionEngine(registries=fresh_registries)
+
+        # PROJ-427 Phase 3: wire a DesignCatalog seeded from the temp save
+        # folder so spawn paths can resolve designs in-memory.
+        from game.strategy.systems.design_catalog import DesignCatalog
+        from game.strategy.systems.design_repository import DesignRepository
+        _catalog = DesignCatalog(empire_id=0)
+        _catalog.repopulate_from(DesignRepository(temp_save_dir, empire_id=0))
+        engine.set_design_catalogs_by_empire({0: _catalog})
 
         # Create fleet with space yard capability
         # At 300/tick fleet yard rate, 60000 Metals = 200 ticks = 2 turns

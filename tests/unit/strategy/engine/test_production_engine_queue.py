@@ -87,7 +87,7 @@ def test_process_construction_tick_validates_resource_pool_not_none(engine):
     bad_empire.id = "emp1"
     bad_empire.resource_pool = None
     with pytest.raises(ValidationException):
-        engine.process_construction_tick(1, [bad_empire], None, None)
+        engine.process_construction_tick(1, [bad_empire], None)
 
 
 # ---------------------------------------------------------------------------
@@ -113,7 +113,7 @@ def test_construction_queue_paused_skips_colony_base_queue(engine, empire, monke
         lambda *_args, **_kw: True,
     )
 
-    engine.process_construction_tick(1, [empire], None, None)
+    engine.process_construction_tick(1, [empire], None)
 
     assert item["resources_consumed"]["A"] == 0.0
 
@@ -150,7 +150,7 @@ def test_per_facility_pause_skips_only_that_shipyard(engine, empire, monkeypatch
     )
     engine._spawner.spawn_completed_item = MagicMock()
 
-    engine.process_construction_tick(1, [empire], None, None)
+    engine.process_construction_tick(1, [empire], None)
 
     assert paused_item["resources_consumed"]["A"] == 0.0
     assert active_item["resources_consumed"]["A"] > 0.0
@@ -171,7 +171,7 @@ def test_non_shipyard_facility_queue_is_skipped(engine, empire):
     empire.fleets = []
     engine._spawner.spawn_completed_item = MagicMock()
 
-    engine.process_construction_tick(1, [empire], None, None)
+    engine.process_construction_tick(1, [empire], None)
 
     assert item["resources_consumed"]["A"] == 0.0
     engine._spawner.spawn_completed_item.assert_not_called()
@@ -187,7 +187,7 @@ def test_fleet_without_space_shipyard_is_skipped(engine, empire):
     empire.colonies = []
     empire.fleets = [fleet]
 
-    engine.process_construction_tick(1, [empire], None, None)
+    engine.process_construction_tick(1, [empire], None)
 
     assert item["resources_consumed"]["A"] == 0.0
 
@@ -204,7 +204,7 @@ def test_fleet_not_building_is_skipped_before_space_yard_processing(engine, empi
     empire.fleets = [fleet]
     engine._spawner.spawn_completed_item = MagicMock()
 
-    engine.process_construction_tick(1, [empire], None, None)
+    engine.process_construction_tick(1, [empire], None)
 
     assert item["resources_consumed"]["A"] == 0.0
     engine._spawner.spawn_completed_item.assert_not_called()
@@ -222,7 +222,7 @@ def test_fleet_pause_flag_blocks_fleet_queue_processing(engine, empire):
     empire.colonies = []
     empire.fleets = [fleet]
 
-    engine.process_construction_tick(1, [empire], None, None)
+    engine.process_construction_tick(1, [empire], None)
 
     assert item["resources_consumed"]["A"] == 0.0
 
@@ -260,7 +260,7 @@ def test_complex_only_queue_stops_on_non_complex_item(engine, empire, colony):
     engine._spawner.spawn_completed_item = MagicMock()
 
     engine._process_queue_tick_dynamic(
-        queue, empire, 1, MagicMock(), None,
+        queue, empire, 1, MagicMock(),
         {"A": 1000.0}, colony, is_complex_only=True,
     )
 
@@ -297,7 +297,7 @@ def test_queue_item_missing_total_cost_is_skipped_with_warning(engine, empire, c
     import logging
     with caplog.at_level(logging.WARNING):
         engine._process_queue_tick_dynamic(
-            queue, empire, 1, MagicMock(), None,
+            queue, empire, 1, MagicMock(),
             {"A": 10000.0}, colony, is_complex_only=False,
         )
 
@@ -311,7 +311,7 @@ def test_queue_item_not_a_dict_is_skipped(engine, empire, colony):
     engine._spawner.spawn_completed_item = MagicMock()
 
     engine._process_queue_tick_dynamic(
-        queue, empire, 1, MagicMock(), None,
+        queue, empire, 1, MagicMock(),
         {"A": 10000.0}, colony, is_complex_only=False,
     )
 
@@ -337,7 +337,7 @@ def test_max_queue_iterations_limits_inner_loop_to_10(engine, empire, colony):
 
     queue = list(items)
     engine._process_queue_tick_dynamic(
-        queue, empire, 1, MagicMock(), None,
+        queue, empire, 1, MagicMock(),
         {"A": 1_000_000.0}, colony, is_complex_only=False,
     )
 
@@ -365,7 +365,7 @@ def test_first_tick_clears_shortage_logged_flags(engine, empire, colony):
     colony.stockpile = {}
 
     engine._process_queue_tick_dynamic(
-        queue, empire, 1, MagicMock(), None,
+        queue, empire, 1, MagicMock(),
         {"A": 500.0}, colony, is_complex_only=False,
     )
 

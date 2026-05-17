@@ -14,7 +14,6 @@ from typing import Dict, Optional, List, TYPE_CHECKING
 from game.strategy.engine.game_config import GameConfig, PlayerConfig, THEME_DEFAULTS
 from game.strategy.data.race_config import RaceConfig
 from game.strategy.data.planetary_facility import PlanetaryFacility
-from game.strategy.systems.design_library import DesignLibrary
 from game.core.json_utils import load_json, save_json
 from game.core.paths import Paths
 
@@ -261,6 +260,14 @@ class QuickstartBuilder:
 
         Called after designs are copied and save_path is set.
 
+        PROJ-427 Phase 3: designs are resolved through the per-empire
+        ``DesignCatalog`` on ``session.services``. Quickstart's
+        ``copy_quickstart_designs`` runs BEFORE this method copies the
+        starter design JSONs into ``save_path/designs/empire_<id>/``;
+        because the session bootstrap built the catalogs before those
+        files existed, we explicitly repopulate each empire's catalog
+        from a fresh ``DesignRepository`` scan here.
+
         Args:
             save_path: Path to save folder (designs already copied here)
             session: GameSession with empires and colonies initialized
@@ -268,7 +275,30 @@ class QuickstartBuilder:
         Returns:
             True if all complexes spawned successfully
         """
+        from game.strategy.systems.design_catalog import DesignCatalog
+        from game.strategy.systems.design_repository import DesignRepository
+
         success = True
+
+        # Ensure per-empire catalogs reflect the freshly-copied starter
+        # designs on disk. ``copy_quickstart_designs`` ran before
+        # ``spawn_initial_complexes`` so the files exist now even though
+        # they did not when ``SessionBootstrap.new_game_state`` first
+        # populated the catalogs.
+        catalogs = getattr(session.services, 'design_catalogs_by_empire', None) or {}
+        for empire in session.empires:
+            catalog = catalogs.get(empire.id)
+            if catalog is None:
+                catalog = DesignCatalog(empire_id=empire.id)
+                # Note: services is a frozen dataclass, but the catalogs
+                # mapping is a plain dict we can mutate. The session
+                # initially seeded an empty/pre-copy map; we add the
+                # missing entry in place so downstream production sees
+                # the same instance.
+                if isinstance(catalogs, dict):
+                    catalogs[empire.id] = catalog
+            per_empire_repo = DesignRepository(save_path, empire_id=empire.id)
+            catalog.repopulate_from(per_empire_repo)
 
         for empire in session.empires:
             # Get home planet (first colony)
@@ -277,17 +307,18 @@ class QuickstartBuilder:
                 continue
 
             home_planet = empire.colonies[0]
-            library = DesignLibrary(save_path, empire.id)
+            catalog = catalogs.get(empire.id)
 
             for design_id in INITIAL_COMPLEXES:
-                load_result = library.load_design_data(design_id)
+                design_data = catalog.lookup_data(design_id) if catalog else None
 
-                if not load_result.success:
-                    logger.warning(f"Could not load design {design_id} for empire {empire.id}: {load_result.error}")
+                if design_data is None:
+                    logger.warning(
+                        f"Could not look up design {design_id} for empire {empire.id} in catalog"
+                    )
                     success = False
                     continue
 
-                design_data = load_result.data
                 facility = PlanetaryFacility(
                     instance_id=str(uuid.uuid4()),
                     design_id=design_id,

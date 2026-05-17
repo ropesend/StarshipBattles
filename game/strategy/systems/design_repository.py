@@ -114,41 +114,59 @@ class DesignRepository:
             files are skipped and logged, matching ``DesignLibrary``
             today.
         """
+        return [m for m, _ in self.scan_designs_with_data()]
+
+    def scan_designs_with_data(self) -> List[Tuple[DesignMetadata, dict]]:
+        """Scan the designs folder and return ``(metadata, data)`` pairs.
+
+        PROJ-427 Phase 2: a single pass that yields both the lightweight
+        ``DesignMetadata`` and the full design data dict per file, so the
+        catalog's ``repopulate_from`` boundary can seed both views without
+        reading each file twice.
+        """
         if self.designs_folder is None:
             logger.warning(
-                "DesignRepository.scan_designs: designs_folder is None"
+                "DesignRepository.scan_designs_with_data: designs_folder is None"
             )
             return []
 
-        designs: List[DesignMetadata] = []
+        designs: List[Tuple[DesignMetadata, dict]] = []
         pattern = os.path.join(self.designs_folder, "*.json")
         for filepath in glob.glob(pattern):
             try:
                 design_id = os.path.splitext(os.path.basename(filepath))[0]
-                metadata = DesignMetadata.from_design_file(filepath, design_id)
-                designs.append(metadata)
+                data = load_json_required(filepath)
+                stat = os.stat(filepath)
+                from datetime import datetime as _dt
+                created_date = _dt.fromtimestamp(stat.st_ctime).isoformat()
+                last_modified = _dt.fromtimestamp(stat.st_mtime).isoformat()
+                metadata = DesignMetadata.from_design_data(
+                    data, design_id,
+                    created_date=created_date, last_modified=last_modified,
+                )
+                designs.append((metadata, data))
             except JSONDecodeError as e:
                 logger.error(
-                    "DesignRepository.scan_designs: corrupt JSON in '%s': %s",
+                    "DesignRepository.scan_designs_with_data: corrupt JSON in '%s': %s",
                     filepath, e,
                 )
                 continue
             except KeyError as e:
                 logger.error(
-                    "DesignRepository.scan_designs: missing required field "
+                    "DesignRepository.scan_designs_with_data: missing required field "
                     "in '%s': %s",
                     filepath, e,
                 )
                 continue
             except (PermissionError, OSError) as e:
                 logger.error(
-                    "DesignRepository.scan_designs: cannot read '%s': %s",
+                    "DesignRepository.scan_designs_with_data: cannot read '%s': %s",
                     filepath, e,
                 )
                 continue
             except ValidationException as e:
                 logger.exception(
-                    "DesignRepository.scan_designs: validation error loading "
+                    "DesignRepository.scan_designs_with_data: validation error loading "
                     "'%s': %s",
                     filepath, e,
                 )

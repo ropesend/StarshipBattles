@@ -45,6 +45,7 @@ class DesignCatalog:
     def __init__(self, *, empire_id: int) -> None:
         self.empire_id = empire_id
         self._by_id: Dict[str, DesignMetadata] = {}
+        self._data_by_id: Dict[str, dict] = {}
         self._list_view: List[DesignMetadata] = []
         self._pending_built: Dict[str, int] = {}
 
@@ -55,6 +56,44 @@ class DesignCatalog:
     def lookup(self, design_id: str) -> Optional[DesignMetadata]:
         """Return the ``DesignMetadata`` for ``design_id`` or ``None``."""
         return self._by_id.get(design_id)
+
+    def lookup_data(self, design_id: str) -> Optional[dict]:
+        """Return the full design data dict for ``design_id`` or ``None``.
+
+        PROJ-427 Phase 3: this is the runtime spawn lookup. Returns the
+        same JSON-equivalent dict shape that ``DesignRepository.load_design_data``
+        delivers from disk, but serves it from the in-memory cache so a
+        production tick triggers zero filesystem reads.
+        """
+        return self._data_by_id.get(design_id)
+
+    def has_design(self, design_id: str) -> bool:
+        """Return ``True`` if the catalog knows about ``design_id``."""
+        return design_id in self._by_id
+
+    def upsert_design(self, design_id: str, data: dict) -> None:
+        """Refresh the in-memory entry for ``design_id`` from ``data``.
+
+        Used by UI write paths (workshop save) to keep the runtime catalog
+        coherent without forcing a full repository rescan. Rebuilds the
+        list view so ordering matches the underlying dict iteration order.
+        """
+        try:
+            metadata = DesignMetadata.from_design_data(data, design_id)
+        except Exception:  # Intentional broad catch: schema-validation failures during upsert must not corrupt the catalog — fall back to dropping the entry.
+            self._data_by_id[design_id] = data
+            self._by_id.pop(design_id, None)
+            self._list_view = list(self._by_id.values())
+            return
+        self._by_id[design_id] = metadata
+        self._data_by_id[design_id] = data
+        self._list_view = list(self._by_id.values())
+
+    def remove_design(self, design_id: str) -> None:
+        """Drop ``design_id`` from the catalog (UI deletion / rename)."""
+        self._by_id.pop(design_id, None)
+        self._data_by_id.pop(design_id, None)
+        self._list_view = list(self._by_id.values())
 
     def list_designs(self) -> List[DesignMetadata]:
         """Return the cached per-empire ``DesignMetadata`` list.
@@ -99,6 +138,30 @@ class DesignCatalog:
         (workshop saves, etc.). Phase 3 asserts via integration test
         that this method is NOT called during a production tick.
         """
-        designs = repository.scan_designs()
-        self._list_view = list(designs)
-        self._by_id = {d.design_id: d for d in designs}
+        pairs = repository.scan_designs_with_data()
+        self._by_id = {meta.design_id: meta for meta, _ in pairs}
+        self._data_by_id = {meta.design_id: data for meta, data in pairs}
+        self._list_view = list(self._by_id.values())
+
+    def flush_pending_built_counts(self, repository: "DesignRepository") -> int:
+        """Persist pending built-count increments through ``repository``.
+
+        PROJ-427 Phase 4: called by ``SaveGameService.save_game(...)``
+        before the save dict is written, so the on-disk
+        ``_metadata.times_built`` counter reflects every spawn that
+        happened since the last save. No mid-tick disk write.
+
+        Returns the number of distinct ``design_id`` flushed.
+        """
+        if not self._pending_built:
+            return 0
+        flushed = 0
+        # Drain the pending map; repeated calls on the same catalog within
+        # one save are idempotent.
+        pending = self._pending_built
+        self._pending_built = {}
+        for design_id, count in pending.items():
+            for _ in range(count):
+                repository.increment_built_count(design_id)
+            flushed += 1
+        return flushed

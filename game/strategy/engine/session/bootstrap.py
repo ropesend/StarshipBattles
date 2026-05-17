@@ -301,6 +301,16 @@ class SessionBootstrap:
             design_catalogs_by_empire=catalogs_by_empire,
         )
 
+        # PROJ-427 Phase 3: forward the catalog map into the
+        # ProductionEngine's spawner so runtime spawn paths can resolve
+        # designs without touching disk.
+        setter = getattr(
+            services.turn_engine.production_engine,
+            'set_design_catalogs_by_empire', None,
+        )
+        if setter is not None:
+            setter(catalogs_by_empire)
+
         return SessionBootstrapState(
             config=config,
             services=services,

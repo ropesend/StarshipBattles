@@ -41,7 +41,7 @@ class TestPlanetBuiltSmallCraftToStaging:
         }
         spawner.spawn_completed_item(
             item, empire, planet, galaxy=None,
-            save_path='/fake', tick=0,
+            tick=0,
         )
         # Routed to staging_yard, not _spawn_ship.
         planet.add_to_staging_yard.assert_called_once()
@@ -91,7 +91,7 @@ class TestFleetBuiltSmallCraftToBay:
         ):
             spawner.spawn_completed_item(
                 item, empire, fleet, galaxy=None,
-                save_path='/fake', tick=0,
+                tick=0,
             )
         # Confirm cargo_mgr.load_vehicle invoked exactly once (flagship).
         cargo_mgr.can_accept_vehicle.assert_called()
@@ -116,7 +116,7 @@ class TestFleetBuiltSmallCraftToBay:
         ):
             spawner.spawn_completed_item(
                 item, empire, fleet, galaxy=None,
-                save_path='/fake', tick=0,
+                tick=0,
             )
         # No load_vehicle invocation — production output silently dropped
         # (with a warning logged).

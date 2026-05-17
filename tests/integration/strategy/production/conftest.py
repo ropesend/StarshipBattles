@@ -103,6 +103,18 @@ def production_setup(fresh_registries):
     planet.facilities.append(yard)
 
     engine = build_test_turn_engine(fresh_registries)
+
+    # PROJ-427 Phase 3: wire a DesignCatalog seeded from the designs the
+    # fixture just wrote, so production-spawn paths can resolve designs
+    # in-memory without re-reading disk during the tick.
+    from game.strategy.systems.design_catalog import DesignCatalog
+    from game.strategy.systems.design_repository import DesignRepository
+    catalog = DesignCatalog(empire_id=empire.id)
+    catalog.repopulate_from(DesignRepository(temp_dir, empire_id=empire.id))
+    engine.production_engine.set_design_catalogs_by_empire(
+        {empire.id: catalog}
+    )
+
     empires = [empire]
 
     yield {
@@ -111,7 +123,8 @@ def production_setup(fresh_registries):
         'planet': planet,
         'empire': empire,
         'engine': engine,
-        'empires': empires
+        'empires': empires,
+        'catalog': catalog,
     }
 
     # Cleanup

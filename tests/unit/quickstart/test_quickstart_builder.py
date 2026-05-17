@@ -305,6 +305,9 @@ class TestSpawnInitialComplexes:
         """Create a mock game session."""
         session = MagicMock()
         session.empires = empires if empires is not None else []
+        # PROJ-427 Phase 3: spawn_initial_complexes mutates this dict to
+        # add per-empire catalogs.
+        session.services.design_catalogs_by_empire = {}
         return session
 
     def test_spawns_seven_complexes_on_home_planet(self, temp_save_folder):

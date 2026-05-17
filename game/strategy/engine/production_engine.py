@@ -131,6 +131,14 @@ class ProductionEngine(IProductionEngine):
         """PROJ-285: key the per-turn habitability cache on Planet."""
         self._current_turn = turn
 
+    def set_design_catalogs_by_empire(self, catalogs) -> None:
+        """PROJ-427 Phase 3: forward the per-empire ``DesignCatalog`` map
+        through to the embedded ``ProductionSpawner``. Called by
+        ``SessionBootstrap`` / ``SessionPersistenceAdapter`` after empire
+        IDs are known and catalogs have been populated from disk.
+        """
+        self._spawner.set_design_catalogs_by_empire(catalogs)
+
     def _get_habitability_mult(self, colony_or_fleet) -> float:
         """Resolve the habitability multiplier for this queue owner.
 
@@ -184,19 +192,20 @@ class ProductionEngine(IProductionEngine):
         tick: int,
         empires: List['Empire'],
         galaxy: Optional['Galaxy'],
-        save_path: Optional[str] = None,
     ) -> None:
         """Process per-tick resource consumption and completion for all construction queues.
 
         PROJ-79: Dynamic resource consumption with carry-over capacity.
         PROJ-161: Removed harvesting_engine parameter.
-        PROJ-233: Cleaned up fleet rate resolution and removed design-discussion comment.
+        PROJ-233: Cleaned up fleet rate resolution.
+        PROJ-427 Phase 3: runtime production resolves designs through
+            the in-memory ``DesignCatalog`` wired on the spawner. No
+            mid-turn filesystem reads.
 
         Args:
             tick: Current tick number (1-100).
             empires: List of Empire objects to process.
             galaxy: Galaxy object for spawning.
-            save_path: Path to savegame folder for loading designs.
         """
         self._validate_tick_inputs(empires)
         for empire in empires:
@@ -211,7 +220,7 @@ class ProductionEngine(IProductionEngine):
                 ):
                     base_rate = get_default_production_rates("planetary_yard")
                     self._process_queue_tick_dynamic(
-                        colony.construction_queue, empire, tick, galaxy, save_path,
+                        colony.construction_queue, empire, tick, galaxy,
                         base_rate, colony_or_fleet=colony,
                         is_complex_only=True
                     )
@@ -227,7 +236,7 @@ class ProductionEngine(IProductionEngine):
                     ):
                         fac_rate = _get_facility_production_rates(facility)
                         self._process_queue_tick_dynamic(
-                            facility.construction_queue, empire, tick, galaxy, save_path,
+                            facility.construction_queue, empire, tick, galaxy,
                             fac_rate, colony_or_fleet=colony,
                             is_complex_only=False
                         )
@@ -243,7 +252,7 @@ class ProductionEngine(IProductionEngine):
 
                 total_rate = self._resolve_fleet_production_rate(fleet)
                 self._process_queue_tick_dynamic(
-                    fleet.construction_queue, empire, tick, galaxy, save_path,
+                    fleet.construction_queue, empire, tick, galaxy,
                     total_rate, colony_or_fleet=fleet,
                     is_complex_only=False
                 )
@@ -260,7 +269,6 @@ class ProductionEngine(IProductionEngine):
         empire: 'Empire',
         tick: int,
         galaxy: Optional['Galaxy'],
-        save_path: Optional[str],
         production_rate: Dict[str, float],
         colony_or_fleet: Any,
         is_complex_only: bool = False
@@ -285,7 +293,6 @@ class ProductionEngine(IProductionEngine):
             queue: The construction queue.
             empire: Owner empire.
             tick: Current tick (1-100).
-            save_path: Save path.
             production_rate: Rate per TURN (100 ticks).
             colony_or_fleet: Context.
             is_complex_only: Filter.
@@ -341,7 +348,7 @@ class ProductionEngine(IProductionEngine):
 
             if not expenditure.remaining_cost:
                 # No remaining cost = complete/free item
-                self._complete_item(queue, item, empire, colony_or_fleet, galaxy, save_path, tick)
+                self._complete_item(queue, item, empire, colony_or_fleet, galaxy, tick)
                 continue
 
             # Check affordability (PROJ-209: extracted to helper)
@@ -365,7 +372,7 @@ class ProductionEngine(IProductionEngine):
 
             # Check completion (PROJ-209: extracted to helper)
             if self._check_item_completion(item):
-                self._complete_item(queue, item, empire, colony_or_fleet, galaxy, save_path, tick)
+                self._complete_item(queue, item, empire, colony_or_fleet, galaxy, tick)
                 # Loop continues with remaining tick_capacity
 
     def _validate_queue_item(
@@ -645,11 +652,13 @@ class ProductionEngine(IProductionEngine):
 
     def _complete_item(self, queue: List[Dict], item: Dict, empire: 'Empire',
                        colony_or_fleet: Any, galaxy: Optional['Galaxy'],
-                       save_path: Optional[str], tick: int) -> None:
+                       tick: int) -> None:
         """Handle completion of a construction item.
 
         PROJ-161: Removed harvesting_engine parameter.
         PROJ-233: Delegates spawning to ProductionSpawner.
+        PROJ-427 Phase 3: ``save_path`` removed — designs come from the
+        spawner's in-memory ``DesignCatalog``.
         """
         design_id = item['design_id']
         vehicle_type = item.get('type', 'ship')
@@ -662,5 +671,5 @@ class ProductionEngine(IProductionEngine):
 
         # Spawn via dedicated spawner
         self._spawner.spawn_completed_item(
-            item, empire, colony_or_fleet, galaxy, save_path, tick
+            item, empire, colony_or_fleet, galaxy, tick
         )

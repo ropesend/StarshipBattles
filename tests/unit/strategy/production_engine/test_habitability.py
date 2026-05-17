@@ -156,11 +156,11 @@ class TestProductionHabitabilityScaling:
         empire_hostile.colonies = [hostile]
 
         engine._process_queue_tick_dynamic(
-            ideal.construction_queue, empire_ideal, 1, MagicMock(), None,
+            ideal.construction_queue, empire_ideal, 1, MagicMock(),
             production_rate, colony_or_fleet=ideal, is_complex_only=True,
         )
         engine._process_queue_tick_dynamic(
-            hostile.construction_queue, empire_hostile, 1, MagicMock(), None,
+            hostile.construction_queue, empire_hostile, 1, MagicMock(),
             production_rate, colony_or_fleet=hostile, is_complex_only=True,
         )
 
@@ -196,11 +196,11 @@ class TestProductionHabitabilityScaling:
         empire = Empire(empire_id=1, name="A", color=(0, 0, 0))
 
         engine_with_reg._process_queue_tick_dynamic(
-            p_with.construction_queue, empire, 1, MagicMock(), None,
+            p_with.construction_queue, empire, 1, MagicMock(),
             rate, colony_or_fleet=p_with, is_complex_only=True,
         )
         engine_no_reg._process_queue_tick_dynamic(
-            p_no.construction_queue, empire, 1, MagicMock(), None,
+            p_no.construction_queue, empire, 1, MagicMock(),
             rate, colony_or_fleet=p_no, is_complex_only=True,
         )
 
@@ -284,7 +284,7 @@ class TestProductionCacheShared:
         empire.colonies = [planet]
 
         prod_engine._process_queue_tick_dynamic(
-            planet.construction_queue, empire, 1, MagicMock(), None,
+            planet.construction_queue, empire, 1, MagicMock(),
             {"metals": 100.0}, colony_or_fleet=planet, is_complex_only=True,
         )
         harv_engine.process_harvesting_tick(tick=1, empires=[empire])

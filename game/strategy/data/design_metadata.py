@@ -98,31 +98,42 @@ class DesignMetadata:
         instantiating the Ship object.
         """
         data = load_json_required(file_path)
+        stat = os.stat(file_path)
+        created_date = datetime.fromtimestamp(stat.st_ctime).isoformat()
+        last_modified = datetime.fromtimestamp(stat.st_mtime).isoformat()
+        return cls.from_design_data(
+            data, design_id,
+            created_date=created_date, last_modified=last_modified,
+        )
 
-        # Extract basic info
+    @classmethod
+    def from_design_data(
+        cls,
+        data: dict,
+        design_id: str,
+        *,
+        created_date: str = "",
+        last_modified: str = "",
+    ) -> 'DesignMetadata':
+        """Build metadata from an in-memory design data dict.
+
+        PROJ-427 Phase 2: file-less companion to ``from_design_file`` so
+        the ``DesignCatalog`` can construct metadata without touching the
+        filesystem during a refresh.
+        """
         name = data.get("name", "Unnamed")
         ship_class = data.get("ship_class", "Unknown")
         vehicle_type = data.get("vehicle_type", "Ship")
         design_role = data.get("design_role", "general_purpose")
         theme_id = data.get("theme_id", "")
 
-        # Mass and validity stored in expected_stats
         expected_stats = data.get("expected_stats", {})
         mass = expected_stats.get("mass", 0.0)
         mass_valid = expected_stats.get("mass_valid", True)
 
-        # Calculate combat power (simplified metric)
         combat_power = cls._calculate_combat_power(data)
-
-        # Calculate construction costs
         construction_cost = cls._calculate_construction_cost(data)
 
-        # Get file timestamps
-        stat = os.stat(file_path)
-        created_date = datetime.fromtimestamp(stat.st_ctime).isoformat()
-        last_modified = datetime.fromtimestamp(stat.st_mtime).isoformat()
-
-        # Check for embedded metadata
         embedded_metadata = data.get("_metadata", {})
 
         return cls(

@@ -156,9 +156,21 @@ def _process_one_turn(engine, empires, galaxy=None, save_path=None):
 
     Uses the live tick-based API instead of the dead process_production().
     """
+    # PROJ-427 Phase 3: rebuild per-empire catalogs from the savegame
+    # folder so production-tick design lookups (catalog-only, no disk)
+    # see the freshly-written designs.
+    if save_path is not None:
+        from game.strategy.systems.design_catalog import DesignCatalog
+        from game.strategy.systems.design_repository import DesignRepository
+        catalogs = {}
+        for empire in empires:
+            cat = DesignCatalog(empire_id=empire.id)
+            cat.repopulate_from(DesignRepository(save_path, empire_id=empire.id))
+            catalogs[empire.id] = cat
+        engine.production_engine.set_design_catalogs_by_empire(catalogs)
     for tick in range(1, 101):
         engine.production_engine.process_construction_tick(
-            tick, empires, galaxy, save_path=save_path
+            tick, empires, galaxy
         )
 
 

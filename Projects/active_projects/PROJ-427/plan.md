@@ -20,17 +20,17 @@
 | 0. Lock current behavior with red tests | Complete | [phase_0_checklist.md](phase_0_checklist.md) | — |
 | 1. Introduce `DesignRepository` (additive, no caller migration) | Complete | [phase_1_checklist.md](phase_1_checklist.md) | Phase 0 |
 | 2. Introduce `DesignCatalog` and move cache ownership | Complete (scope-narrowed: absorption only; cache migration deferred to Phase 6) | [phase_2_checklist.md](phase_2_checklist.md) | Phase 1 |
-| 3. Migrate runtime production to the catalog | Not Started | [phase_3_checklist.md](phase_3_checklist.md) | Phase 2 |
+| 3. Migrate runtime production to the catalog | Complete (Committed) | [phase_3_checklist.md](phase_3_checklist.md) | Phase 2 |
 | 4. Built-count write-back (deferred, no mid-tick disk writes) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) | Phase 3 |
 | 5. Convert `SaveGameService` to instance-owned replay-store wiring | Not Started | [phase_5_checklist.md](phase_5_checklist.md) | Phase 4 |
 | 6. Migrate UI callers and delete the old `DesignLibrary` shim | Not Started | [phase_6_checklist.md](phase_6_checklist.md) | Phase 5 |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phases 0-2 complete; phases 3-6 deferred to a separate execution slot.
-**Last Action:** Phase 2 — TDD-introduced `game/strategy/systems/design_catalog.py` (per-empire in-memory lookup + list view + pending built-count map; no filesystem, no JSON). Absorbed the catalog map and repository into `SessionRuntimeServices` (two new fields: `design_repository: DesignRepository | None` and `design_catalogs_by_empire: Mapping[int, DesignCatalog]`). Updated `SessionBootstrap._build_services` to construct the session-level `DesignRepository`; updated `SessionBootstrap.new_game_state` and `SessionPersistenceAdapter.rehydrate_state` to build per-empire `DesignCatalog` instances after empires are known (using `dataclasses.replace`). Extended the anti-drift test `test_init_and_from_dict_use_identical_service_classes` and updated `_EXPECTED_RUNTIME_SERVICE_FIELDS` in `test_runtime_services.py`. Phase 2 scope was narrowed against the original checklist: `FacadeSessionState.designs_by_empire` migration and `GameSession.get_design_catalog(empire_id)` accessor are deferred to Phase 6 because they are caller-migrations (out of scope for this additive run). 1821/1821 focused tests green across engine/, design_catalog/, design_repository/, design_library/, save_game_service/, facade/. The Phase 0 xfail integration guard is still xfailed (flips in Phase 3).
-**Next Action:** Resume Phase 3 (production migration) in a separate slot per the split-execution plan documented in `decisions.md`.
-**Blockers:** None for phases 0-2 (additive scope only). Phases 3-6 (runtime migration onto `DesignCatalog`, replay-store conversion to instance-owned wiring, UI caller migration, `DesignLibrary` deletion, full sharded suite as final gate) remain queued as planned.
+**Active Phase:** Phase 3 complete; resuming with Phase 4.
+**Last Action:** Phase 3 — Migrated runtime production off `DesignLibrary` / `save_path`. `ProductionSpawner`, `ProductionEngine`, `AddToConstructionQueueCommandHandler`, and `quickstart_builder.spawn_initial_complexes` now consume `DesignCatalog` via `session.services.design_catalogs_by_empire[empire_id]`. `ProductionEngine` no longer threads `save_path` through tick processing. The Phase 0 integration guard `tests/integration/strategy/production/test_no_design_disk_read_during_tick.py` has been flipped from xfail to expected-pass. Test patches in `tests/unit/strategy/engine/test_production_spawner.py` and `tests/unit/strategy/production_engine/test_spawning.py` re-pointed to patch `DesignCatalog` instead of `DesignLibrary`. Quickstart retains a `save_path` parameter only to bootstrap-time prime each empire's catalog from a fresh `DesignRepository` scan — no tick-path disk reads. Grep gate against the four tick-path runtime files shows only doc-string mentions. Focused suites green: 137 passed across production / construction-queue / quickstart unit + integration.
+**Next Action:** Begin Phase 4 (deferred built-count flush at save time, no schema bump, no `Empire.designs_built_count` field).
+**Blockers:** None.
 
 ## Overview
 

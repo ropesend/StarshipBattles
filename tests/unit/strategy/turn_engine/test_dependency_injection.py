@@ -50,11 +50,10 @@ class TestTurnEngineEdgeCases:
 
         turn_engine.process_turn([empire1, empire2], mock_galaxy)
 
-    def test_save_path_passed_to_production_tick(self, turn_engine, mock_empire, mock_galaxy):
-        """save_path parameter passed to process_construction_tick.
-
-        PROJ-158: Production is now tick-based. save_path is passed to
-        process_construction_tick during the 100-tick loop.
+    def test_save_path_not_threaded_to_production_tick(self, turn_engine, mock_empire, mock_galaxy):
+        """PROJ-427 Phase 3: ``save_path`` is no longer threaded into
+        ``process_construction_tick``. Designs are resolved through the
+        in-memory ``DesignCatalog`` wired on the spawner.
         """
         mock_empire.fleets = []
         mock_empire.colonies = []
@@ -62,13 +61,11 @@ class TestTurnEngineEdgeCases:
         with patch.object(turn_engine.production_engine, 'process_construction_tick') as mock_tick:
             turn_engine.process_turn([mock_empire], mock_galaxy, save_path="/test/path")
 
-            # Should be called 100 times (once per tick)
             assert mock_tick.call_count == 100
-            # Check one of the calls has the save_path
-            # Call signature: process_construction_tick(tick, empires, galaxy, save_path, harvesting_engine)
             call_args = mock_tick.call_args_list[0]
             assert call_args[0][0] == 1  # tick
-            assert call_args[1].get('save_path') == "/test/path"
+            # PROJ-427 Phase 3: save_path must NOT be passed.
+            assert 'save_path' not in call_args[1]
 
 
 # =============================================================================
@@ -409,10 +406,10 @@ class TestMockEngines:
         mock = MockProductionEngine()
 
         # Call process_construction_tick directly
-        mock.process_construction_tick(1, [], None, "/path")
+        mock.process_construction_tick(1, [], None)
 
         assert mock.process_construction_tick_called
-        assert mock.process_construction_tick_calls == [(1, [], None, "/path")]
+        assert mock.process_construction_tick_calls == [(1, [], None)]
 
     def test_full_tick_with_all_mocks(self, fresh_registries):
         """TurnEngine._process_tick works with all mock engines."""

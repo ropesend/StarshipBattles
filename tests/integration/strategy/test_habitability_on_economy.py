@@ -280,11 +280,11 @@ class TestCacheStable:
         empire = Empire(empire_id=1, name="A", color=(0, 0, 0))
 
         ideal_engine._process_queue_tick_dynamic(
-            ideal.construction_queue, empire, 1, _MM(), None,
+            ideal.construction_queue, empire, 1, _MM(),
             {"metals": 100.0}, colony_or_fleet=ideal, is_complex_only=True,
         )
         hostile_engine._process_queue_tick_dynamic(
-            hostile.construction_queue, empire, 1, _MM(), None,
+            hostile.construction_queue, empire, 1, _MM(),
             {"metals": 100.0}, colony_or_fleet=hostile, is_complex_only=True,
         )
 
@@ -331,11 +331,11 @@ class TestCacheStable:
 
         # A gets 100 * 1.5 = 150 (booster-only); B gets 100 * hab applied internally.
         engine_a._process_queue_tick_dynamic(
-            planet_a.construction_queue, empire, 1, _MM(), None,
+            planet_a.construction_queue, empire, 1, _MM(),
             {"metals": 150.0}, colony_or_fleet=planet_a, is_complex_only=True,
         )
         engine_b._process_queue_tick_dynamic(
-            planet_b.construction_queue, empire, 1, _MM(), None,
+            planet_b.construction_queue, empire, 1, _MM(),
             {"metals": 100.0}, colony_or_fleet=planet_b, is_complex_only=True,
         )
 

@@ -18,10 +18,13 @@ def _process_one_turn(engine, empires, galaxy=None, save_path=None):
     """Process 100 ticks of construction for one turn.
 
     Uses the live tick-based API instead of the dead process_production().
+    PROJ-427 Phase 3: ``save_path`` is accepted for back-compat with test
+    call sites but no longer threaded into the engine.
     """
+    del save_path  # PROJ-427 Phase 3: unused.
     for tick in range(1, 101):
         engine.production_engine.process_construction_tick(
-            tick, empires, galaxy, save_path=save_path
+            tick, empires, galaxy
         )
 
 
@@ -364,9 +367,10 @@ class TestShipSpawning:
         # Process turns - with carry-over all 3 may complete in 1 turn
         # Pass mock_galaxy so fleet IDs are globally unique
         def _process_with_galaxy(engine, empires, save_path):
+            del save_path  # PROJ-427 Phase 3: unused.
             for tick in range(1, 101):
                 engine.production_engine.process_construction_tick(
-                    tick, empires, mock_galaxy, save_path=save_path
+                    tick, empires, mock_galaxy
                 )
 
         _process_with_galaxy(engine, empires, save_path=temp_dir)

@@ -10,7 +10,22 @@ from unittest.mock import MagicMock, patch, call
 from game.core.event_logging import EventBus
 from game.strategy.data.order_types import OrderType
 from game.strategy.events import EventType, EventCategory
-from game.strategy.systems.design_library import DesignLoadResult
+from game.strategy.systems.design_library import DesignLoadResult  # noqa: F401 — used by legacy patches kept for back-compat during PROJ-427 phase 3 transition
+
+
+def _wire_catalog_on(engine, empire_id, data):
+    """PROJ-427 Phase 3 helper: wire a per-empire catalog map onto the
+    engine's spawner with ``data`` available under all test design_ids.
+    """
+    from game.strategy.systems.design_catalog import DesignCatalog
+    cat = DesignCatalog(empire_id=empire_id)
+    for did in (
+        "scout_design", "cruiser_design", "bad_design", "scout",
+        "fighter_design", "complex_design", "complex_xyz", "shipyard",
+    ):
+        cat._data_by_id[did] = data
+    engine._spawner.set_design_catalogs_by_empire({empire_id: cat})
+    return cat
 
 
 # ---------------------------------------------------------------------------
@@ -104,11 +119,8 @@ class TestShipBuiltEvent:
         from unittest.mock import DEFAULT
         with patch.multiple(
             'game.strategy.engine.production_spawner',
-            DesignLibrary=DEFAULT, ShipInstance=DEFAULT, Fleet=DEFAULT,
+            ShipInstance=DEFAULT, Fleet=DEFAULT,
         ) as mocks:
-            mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Scout Ship"})
-            mocks['DesignLibrary'].return_value = mock_lib
 
             mock_ship = MagicMock()
             mock_ship.name = "Scout Ship"
@@ -118,7 +130,8 @@ class TestShipBuiltEvent:
             mock_fleet.id = 1
             mocks['Fleet'].return_value = mock_fleet
 
-            engine._spawner._spawn_ship(planet, "scout_design", empire, galaxy, save_path="/test")
+            _wire_catalog_on(engine, empire.id, {"name": "Scout Ship"})
+            engine._spawner._spawn_ship(planet, "scout_design", empire, galaxy)
 
         assert len(calls) == 1
         etype, kw = calls[0]
@@ -143,11 +156,8 @@ class TestShipBuiltEvent:
         from unittest.mock import DEFAULT
         with patch.multiple(
             'game.strategy.engine.production_spawner',
-            DesignLibrary=DEFAULT, ShipInstance=DEFAULT, Fleet=DEFAULT,
+            ShipInstance=DEFAULT, Fleet=DEFAULT,
         ) as mocks:
-            mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Cruiser"})
-            mocks['DesignLibrary'].return_value = mock_lib
 
             mock_ship = MagicMock()
             mocks['ShipInstance'].create.return_value = mock_ship
@@ -156,32 +166,33 @@ class TestShipBuiltEvent:
             mock_fleet.id = 1
             mocks['Fleet'].return_value = mock_fleet
 
-            engine._spawner._spawn_ship(planet, "cruiser_design", empire, galaxy, save_path="/test")
+            _wire_catalog_on(engine, empire.id, {"name": "Scout Ship"})
+            engine._spawner._spawn_ship(planet, "cruiser_design", empire, galaxy)
 
         assert len(calls) == 1
         _, kw = calls[0]
         assert kw["design_id"] == "cruiser_design"
         assert kw["planet_id"] == 42
 
-    def test_spawn_ship_no_event_when_no_save_path(self, fresh_registries):
-        """No event emitted when save_path is None (ship not actually spawned)."""
+    def test_spawn_ship_no_event_when_no_catalog(self, fresh_registries):
+        """PROJ-427 Phase 3: no event when no catalog is wired."""
         from game.strategy.engine.production_engine import ProductionEngine
 
-        calls, fake, bus = _capture_log_event_calls()
         calls, fake, bus = _capture_log_event_calls()
         engine = ProductionEngine(registries=fresh_registries, event_bus=bus)
         empire = _make_mock_empire()
         planet = _make_mock_planet()
         galaxy = _make_mock_galaxy()
 
-
-        engine._spawner._spawn_ship(planet, "scout", empire, galaxy, save_path=None)
+        # No catalog wired — spawn should skip without emitting an event.
+        engine._spawner._spawn_ship(planet, "scout", empire, galaxy)
 
         assert len(calls) == 0
 
-    def test_spawn_ship_no_event_when_design_not_found(self, fresh_registries):
-        """No event emitted when design data can't be loaded."""
+    def test_spawn_ship_no_event_when_design_not_in_catalog(self, fresh_registries):
+        """No event emitted when design isn't in the catalog."""
         from game.strategy.engine.production_engine import ProductionEngine
+        from game.strategy.systems.design_catalog import DesignCatalog
 
         calls, fake, bus = _capture_log_event_calls()
         engine = ProductionEngine(registries=fresh_registries, event_bus=bus)
@@ -189,13 +200,11 @@ class TestShipBuiltEvent:
         planet = _make_mock_planet()
         galaxy = _make_mock_galaxy()
 
+        # Wire an empty catalog (no design entries).
+        empty_cat = DesignCatalog(empire_id=empire.id)
+        engine._spawner.set_design_catalogs_by_empire({empire.id: empty_cat})
 
-        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
-            mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = DesignLoadResult.not_found("bad_design")
-            mock_lib_cls.return_value = mock_lib
-
-            engine._spawner._spawn_ship(planet, "bad_design", empire, galaxy, save_path="/test")
+        engine._spawner._spawn_ship(planet, "missing_design", empire, galaxy)
 
         assert len(calls) == 0
 
@@ -221,17 +230,15 @@ class TestFleetShipBuiltEvent:
         fleet.location = MagicMock(q=5, r=-3)
 
 
-        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
-            mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Fighter"})
-            mock_lib_cls.return_value = mock_lib
+        if True:
 
             with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_si:
                 mock_ship = MagicMock()
                 mock_ship.name = "Fighter"
                 mock_si.create.return_value = mock_ship
 
-                engine._spawner._spawn_fleet_ship(fleet, "fighter_design", empire, save_path="/test")
+                _wire_catalog_on(engine, empire.id, {"name": "Scout Ship"})
+                engine._spawner._spawn_fleet_ship(fleet, "fighter_design", empire)
 
         assert len(calls) == 1
         etype, kw = calls[0]
@@ -243,8 +250,8 @@ class TestFleetShipBuiltEvent:
         assert "Fighter" in kw["message"]
         assert kw["location_hex"] == [5, -3]
 
-    def test_spawn_fleet_ship_no_event_when_no_save_path(self, fresh_registries):
-        """No event when save_path is None."""
+    def test_spawn_fleet_ship_no_event_when_no_catalog(self, fresh_registries):
+        """PROJ-427 Phase 3: no event when no catalog wired."""
         from game.strategy.engine.production_engine import ProductionEngine
         from game.strategy.data.fleet import Fleet
 
@@ -254,8 +261,8 @@ class TestFleetShipBuiltEvent:
         fleet = MagicMock(spec=Fleet)
         fleet.id = 7
 
-
-        engine._spawner._spawn_fleet_ship(fleet, "fighter", empire, save_path=None)
+        # No catalog wired.
+        engine._spawner._spawn_fleet_ship(fleet, "fighter", empire)
 
         assert len(calls) == 0
 
@@ -278,12 +285,13 @@ class TestComplexBuiltEvent:
         planet = _make_mock_planet(name="Gamma Station")
 
 
-        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
-            mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Mining Complex"})
-            mock_lib_cls.return_value = mock_lib
-
-            engine._spawner._create_and_place_facility(planet, "mining_complex", empire, save_path="/test")
+        # PROJ-427 Phase 3: catalog supplies "Mining Complex" so the
+        # COMPLEX_BUILT event message includes that human-readable name.
+        from game.strategy.systems.design_catalog import DesignCatalog
+        cat = DesignCatalog(empire_id=empire.id)
+        cat._data_by_id["mining_complex"] = {"name": "Mining Complex"}
+        engine._spawner.set_design_catalogs_by_empire({empire.id: cat})
+        engine._spawner._create_and_place_facility(planet, "mining_complex", empire)
 
         assert len(calls) == 1
         etype, kw = calls[0]
@@ -303,12 +311,10 @@ class TestComplexBuiltEvent:
         planet = _make_mock_planet(planet_id=99, name="Delta")
 
 
-        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
-            mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Shipyard"})
-            mock_lib_cls.return_value = mock_lib
+        if True:
 
-            engine._spawner._create_and_place_facility(planet, "shipyard_design", empire, save_path="/test")
+            _wire_catalog_on(engine, empire.id, {"name": "Scout Ship"})
+            engine._spawner._create_and_place_facility(planet, "shipyard_design", empire)
 
         _, kw = calls[0]
         assert kw["design_id"] == "shipyard_design"
@@ -324,7 +330,8 @@ class TestComplexBuiltEvent:
         planet = _make_mock_planet()
 
 
-        engine._spawner._create_and_place_facility(planet, "basic_factory", empire, save_path=None)
+        _wire_catalog_on(engine, empire.id, {"name": "Scout Ship"})
+        engine._spawner._create_and_place_facility(planet, "basic_factory", empire)
 
         # Complex is still created even without save_path, so event should fire
         assert len(calls) == 1
@@ -358,12 +365,11 @@ class TestFleetComplexBuiltEvent:
         galaxy.get_planets_at_global_hex.return_value = [planet]
 
 
-        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
-            mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Orbital Refinery"})
-            mock_lib_cls.return_value = mock_lib
-
-            engine._spawner._spawn_fleet_complex(fleet, "refinery_design", empire, galaxy, save_path="/test")
+        from game.strategy.systems.design_catalog import DesignCatalog
+        cat = DesignCatalog(empire_id=empire.id)
+        cat._data_by_id["refinery_design"] = {"name": "Orbital Refinery"}
+        engine._spawner.set_design_catalogs_by_empire({empire.id: cat})
+        engine._spawner._spawn_fleet_complex(fleet, "refinery_design", empire, galaxy)
 
         assert len(calls) == 1
         etype, kw = calls[0]
@@ -388,6 +394,7 @@ class TestFleetComplexBuiltEvent:
         fleet.id = 9
 
 
+        _wire_catalog_on(engine, empire.id, {"name": "Scout Ship"})
         engine._spawner._spawn_fleet_complex(fleet, "design_x", empire, galaxy=None)
 
         assert len(calls) == 0
@@ -409,6 +416,7 @@ class TestFleetComplexBuiltEvent:
         galaxy.get_planets_at_global_hex.return_value = []
 
 
+        _wire_catalog_on(engine, empire.id, {"name": "Scout Ship"})
         engine._spawner._spawn_fleet_complex(fleet, "design_y", empire, galaxy)
 
         assert len(calls) == 0
@@ -735,11 +743,8 @@ class TestProductionEventLocationEnrichment:
         from unittest.mock import DEFAULT
         with patch.multiple(
             'game.strategy.engine.production_spawner',
-            DesignLibrary=DEFAULT, ShipInstance=DEFAULT, Fleet=DEFAULT,
+            ShipInstance=DEFAULT, Fleet=DEFAULT,
         ) as mocks:
-            mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Scout"})
-            mocks['DesignLibrary'].return_value = mock_lib
 
             mock_ship = MagicMock()
             mocks['ShipInstance'].create.return_value = mock_ship
@@ -748,7 +753,8 @@ class TestProductionEventLocationEnrichment:
             mock_fleet.id = 1
             mocks['Fleet'].return_value = mock_fleet
 
-            engine._spawner._spawn_ship(planet, "scout", empire, galaxy, save_path="/test")
+            _wire_catalog_on(engine, empire.id, {"name": "Scout Ship"})
+            engine._spawner._spawn_ship(planet, "scout", empire, galaxy)
 
         assert len(calls) == 1
         _, kw = calls[0]
@@ -773,11 +779,8 @@ class TestProductionEventLocationEnrichment:
         from unittest.mock import DEFAULT
         with patch.multiple(
             'game.strategy.engine.production_spawner',
-            DesignLibrary=DEFAULT, ShipInstance=DEFAULT, Fleet=DEFAULT,
+            ShipInstance=DEFAULT, Fleet=DEFAULT,
         ) as mocks:
-            mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Scout"})
-            mocks['DesignLibrary'].return_value = mock_lib
 
             mock_ship = MagicMock()
             mocks['ShipInstance'].create.return_value = mock_ship
@@ -786,7 +789,8 @@ class TestProductionEventLocationEnrichment:
             mock_fleet.id = 1
             mocks['Fleet'].return_value = mock_fleet
 
-            engine._spawner._spawn_ship(planet, "scout", empire, galaxy, save_path="/test")
+            _wire_catalog_on(engine, empire.id, {"name": "Scout Ship"})
+            engine._spawner._spawn_ship(planet, "scout", empire, galaxy)
 
         _, kw = calls[0]
         assert kw["system_name"] == ""
@@ -811,7 +815,8 @@ class TestProductionEventLocationEnrichment:
         galaxy.get_system_of_planet.return_value = mock_system
 
 
-        engine._spawner._create_and_place_facility(planet, "factory", empire, save_path=None, galaxy=galaxy)
+        _wire_catalog_on(engine, empire.id, {"name": "Scout Ship"})
+        engine._spawner._create_and_place_facility(planet, "factory", empire, galaxy=galaxy)
 
         _, kw = calls[0]
         assert kw["system_name"] == "Alpha Centauri"
@@ -830,16 +835,14 @@ class TestProductionEventLocationEnrichment:
         fleet.location = MagicMock(q=5, r=-3)
 
 
-        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
-            mock_lib = MagicMock()
-            mock_lib.load_design_data.return_value = DesignLoadResult.ok({"name": "Fighter"})
-            mock_lib_cls.return_value = mock_lib
+        if True:
 
             with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_si:
                 mock_ship = MagicMock()
                 mock_si.create.return_value = mock_ship
 
-                engine._spawner._spawn_fleet_ship(fleet, "fighter_design", empire, save_path="/test")
+                _wire_catalog_on(engine, empire.id, {"name": "Scout Ship"})
+                engine._spawner._spawn_fleet_ship(fleet, "fighter_design", empire)
 
         _, kw = calls[0]
         assert kw["system_name"] == ""

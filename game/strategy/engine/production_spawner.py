@@ -7,7 +7,7 @@ added to existing fleets) and facility spawning (complexes on planets).
 
 import logging
 import uuid
-from typing import Optional, Any, Dict, List, Tuple, TYPE_CHECKING
+from typing import Optional, Any, Dict, List, Mapping, Tuple, TYPE_CHECKING
 
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.planetary_facility import PlanetaryFacility
@@ -18,8 +18,8 @@ if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
     from game.strategy.data.galaxy import Galaxy
     from game.strategy.data.planet import Planet
+    from game.strategy.systems.design_catalog import DesignCatalog
 from game.strategy.events.event_types import EventType, EventCategory
-from game.strategy.systems.design_library import DesignLibrary
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +37,7 @@ class ProductionSpawner:
         registries: 'GameRegistries',
         event_bus=None,
         planet_mutator=None,
+        design_catalogs_by_empire: "Optional[Mapping[int, DesignCatalog]]" = None,
     ):
         """Initialize the spawner.
 
@@ -71,6 +72,31 @@ class ProductionSpawner:
             )
             planet_mutator = PlanetWriteService()
         self._planet_mutator = planet_mutator
+        # PROJ-427 Phase 3: per-empire DesignCatalog map for in-memory
+        # design lookup during a production tick. None means "not yet
+        # wired" — callers should set this via
+        # ``set_design_catalogs_by_empire(...)`` before any spawn occurs.
+        # Spawn paths that hit a missing catalog log a warning and skip
+        # (same observable shape as the legacy "missing save_path" path).
+        self._design_catalogs_by_empire: "Mapping[int, DesignCatalog]" = (
+            design_catalogs_by_empire or {}
+        )
+
+    def set_design_catalogs_by_empire(
+        self, catalogs: "Mapping[int, DesignCatalog]"
+    ) -> None:
+        """PROJ-427 Phase 3: install the per-empire ``DesignCatalog`` map.
+
+        Called by ``SessionBootstrap`` / ``SessionPersistenceAdapter``
+        after empire IDs are known and catalogs have been populated from
+        disk. Mutates in place — no rewrap needed because
+        ``ProductionSpawner`` is not a frozen dataclass.
+        """
+        self._design_catalogs_by_empire = catalogs
+
+    def _get_catalog(self, empire: 'Empire') -> "Optional[DesignCatalog]":
+        """Return the ``DesignCatalog`` for ``empire`` or ``None`` if missing."""
+        return self._design_catalogs_by_empire.get(empire.id)
 
     def _get_planet_mutator(self):
         # PROJ-382 Phase 3: kept as a thin accessor; the lazy-fallback
@@ -80,7 +106,7 @@ class ProductionSpawner:
 
     def spawn_completed_item(self, item: Dict, empire: 'Empire',
                              colony_or_fleet: Any, galaxy: Optional['Galaxy'],
-                             save_path: Optional[str], tick: int) -> None:
+                             tick: int) -> None:
         """Dispatch to appropriate spawn method based on item type and context.
 
         Args:
@@ -88,7 +114,6 @@ class ProductionSpawner:
             empire: Empire that owns the production.
             colony_or_fleet: Build context (Planet or Fleet).
             galaxy: Galaxy for location resolution.
-            save_path: Path to savegame folder.
             tick: Current tick number (for logging).
         """
         design_id = item['design_id']
@@ -103,27 +128,27 @@ class ProductionSpawner:
             if vehicle_type in ('complex', 'planetary_complex'):
                 target_planet_id = item.get('target_planet_id')
                 self._spawn_fleet_complex(
-                    colony_or_fleet, design_id, empire, galaxy, save_path,
+                    colony_or_fleet, design_id, empire, galaxy,
                     target_planet_id=target_planet_id
                 )
             elif vehicle_type in ('mine', 'fighter', 'satellite'):
                 self._spawn_fleet_carried_vehicle(
-                    colony_or_fleet, design_id, item, empire, save_path
+                    colony_or_fleet, design_id, item, empire,
                 )
             else:
-                self._spawn_fleet_ship(colony_or_fleet, design_id, empire, save_path)
+                self._spawn_fleet_ship(colony_or_fleet, design_id, empire)
         else:
             # Colony/planet
             if vehicle_type in ('complex', 'planetary_complex'):
                 self._create_and_place_facility(
-                    colony_or_fleet, design_id, empire, save_path, galaxy
+                    colony_or_fleet, design_id, empire, galaxy,
                 )
             elif vehicle_type in ('drop_pod', 'fighter', 'satellite', 'mine'):
                 self._spawn_to_staging_yard(
-                    colony_or_fleet, design_id, item, empire, save_path
+                    colony_or_fleet, design_id, item, empire,
                 )
             else:
-                self._spawn_ship(colony_or_fleet, design_id, empire, galaxy, save_path)
+                self._spawn_ship(colony_or_fleet, design_id, empire, galaxy)
 
     # --- Location Resolution ---
 
@@ -152,74 +177,91 @@ class ProductionSpawner:
                     local_hex = [planet.location.q, planet.location.r]
         return location_hex, system_name, local_hex
 
-    # --- Design Loading ---
+    # --- Design Loading (PROJ-427 Phase 3: in-memory catalog only) ---
 
-    def _load_design(self, design_id: str, empire: 'Empire', save_path: Optional[str]) -> dict:
-        """Load design data from the design library.
+    def _load_design(self, design_id: str, empire: 'Empire') -> dict:
+        """Look up design data from the per-empire ``DesignCatalog``.
+
+        PROJ-427 Phase 3: pure in-memory access. No filesystem call, no
+        JSON parse. The catalog is seeded once at session bootstrap from
+        ``DesignRepository``; runtime production never re-reads disk.
 
         Args:
-            design_id: Design to load.
+            design_id: Design to look up.
             empire: Empire owning the design.
-            save_path: Path to savegame folder.
 
         Returns:
-            Design data dict, or empty dict on failure.
+            Design data dict, or empty dict on failure / missing catalog.
         """
-        if not save_path:
-            logger.warning(f"No savegame path - creating empty data for {design_id}")
+        catalog = self._get_catalog(empire)
+        if catalog is None:
+            logger.warning(
+                f"No DesignCatalog wired for empire {empire.id} - creating "
+                f"empty data for {design_id}"
+            )
             return {}
-        library = DesignLibrary(save_path, empire.id)
-        result = library.load_design_data(design_id)
-        if result.success:
-            return result.data
-        logger.warning(f"Could not load design: {design_id} ({result.error})")
-        return {}
+        data = catalog.lookup_data(design_id)
+        if data is None:
+            logger.warning(
+                f"Could not look up design '{design_id}' in catalog for "
+                f"empire {empire.id}"
+            )
+            return {}
+        return data
 
     def _load_and_create_ship(
-        self, design_id: str, empire: 'Empire', save_path: Optional[str]
+        self, design_id: str, empire: 'Empire'
     ) -> Optional[ShipInstance]:
-        """Load design and create a ship instance.
+        """Look up design and create a ship instance.
 
-        Shared by _spawn_ship (colony production) and _spawn_fleet_ship
-        (fleet production). Handles design loading, ship creation, and
-        built count increment.
+        PROJ-427 Phase 3: design data resolved via the per-empire
+        ``DesignCatalog`` (in-memory). Built-count increment is recorded
+        in the catalog's pending map; ``SaveGameService`` flushes it to
+        disk at save time (Phase 4), so no mid-tick disk write occurs.
 
         Args:
             design_id: ID of the ship design.
             empire: Empire that owns the design.
-            save_path: Path to savegame folder.
 
         Returns:
             ShipInstance if successful, None on failure.
         """
-        if not save_path:
-            logger.warning(f"Cannot spawn {design_id}: no save_path provided")
+        catalog = self._get_catalog(empire)
+        if catalog is None:
+            logger.warning(
+                f"Cannot spawn {design_id}: no DesignCatalog wired for "
+                f"empire {empire.id}"
+            )
             return None
 
-        design_library = DesignLibrary(save_path, empire.id)
-        load_result = design_library.load_design_data(design_id)
-
-        if not load_result.success:
-            logger.warning(f"Cannot spawn {design_id}: {load_result.error}")
+        data = catalog.lookup_data(design_id)
+        if data is None:
+            logger.warning(
+                f"Cannot spawn {design_id}: not present in catalog for "
+                f"empire {empire.id}"
+            )
             return None
 
         ship_instance = ShipInstance.create(
             design_id=design_id,
-            design_data=load_result.data,
+            design_data=data,
             owner_id=empire.id,
-            name=load_result.data.get("name", design_id),
+            name=data.get("name", design_id),
             empire=empire,
             registries=self._registries,
         )
 
-        design_library.increment_built_count(design_id)
+        # PROJ-427 Phase 4 prep: defer the disk-write. The increment is
+        # captured in the catalog's in-memory pending map and flushed
+        # through DesignRepository when the save runs.
+        catalog.record_built(design_id)
         return ship_instance
 
     # --- Spawn Methods ---
 
     def _create_and_place_facility(
         self, planet: 'Planet', design_id: str, empire: 'Empire',
-        save_path: Optional[str], galaxy: Optional['Galaxy'] = None,
+        galaxy: Optional['Galaxy'] = None,
         log_prefix: str = ""
     ) -> None:
         """Create a facility and place it on a planet.
@@ -231,11 +273,10 @@ class ProductionSpawner:
             planet: Planet to add facility to.
             design_id: ID of the complex design.
             empire: Empire that owns the production.
-            save_path: Path to savegame folder.
             galaxy: Galaxy for location calculation.
             log_prefix: Optional prefix for log messages (e.g., "Fleet 5 ").
         """
-        design_data = self._load_design(design_id, empire, save_path)
+        design_data = self._load_design(design_id, empire)
 
         facility = PlanetaryFacility(
             instance_id=str(uuid.uuid4()),
@@ -277,7 +318,6 @@ class ProductionSpawner:
         design_id: str,
         item: Dict,
         empire: 'Empire',
-        save_path: Optional[str],
     ) -> None:
         """Spawn a completed drop pod or fighter to the planet's staging yard.
 
@@ -286,11 +326,10 @@ class ProductionSpawner:
             design_id: Design identifier.
             item: Queue item dict with design_data.
             empire: Empire that owns the production.
-            save_path: Path to savegame folder.
         """
         design_data = item.get('design_data')
         if not design_data:
-            design_data = self._load_design(design_id, empire, save_path)
+            design_data = self._load_design(design_id, empire)
         if not design_data:
             logger.warning(f"Cannot spawn to staging yard: design '{design_id}' not found")
             return
@@ -373,7 +412,6 @@ class ProductionSpawner:
         design_id: str,
         empire: 'Empire',
         galaxy: Optional['Galaxy'],
-        save_path: Optional[str] = None
     ) -> None:
         """Spawn ship/satellite/fighter as fleet with ShipInstance.
 
@@ -382,9 +420,8 @@ class ProductionSpawner:
             design_id: ID of the ship design.
             empire: Empire that owns the ship.
             galaxy: Galaxy for location calculation.
-            save_path: Path to savegame folder for loading design data.
         """
-        ship_instance = self._load_and_create_ship(design_id, empire, save_path)
+        ship_instance = self._load_and_create_ship(design_id, empire)
         if ship_instance is None:
             return
 
@@ -428,7 +465,6 @@ class ProductionSpawner:
         design_id: str,
         item: Dict,
         empire: 'Empire',
-        save_path: Optional[str] = None,
     ) -> None:
         """PROJ-FMS-A Phase 4: fleet-yard-built mine / fighter / satellite.
 
@@ -448,7 +484,7 @@ class ProductionSpawner:
         from game.strategy.data.carried_vehicle import CarriedVehicle
 
         design_data = item.get('design_data') or self._load_design(
-            design_id, empire, save_path
+            design_id, empire
         )
         if not design_data:
             logger.warning(
@@ -473,11 +509,11 @@ class ProductionSpawner:
         vehicle_type = item.get('type', 'fighter').lower()
         if vehicle_type == 'drop_pod':
             # Drop pods stay on the legacy pod-storage path.
-            self._spawn_fleet_ship(fleet, design_id, empire, save_path)
+            self._spawn_fleet_ship(fleet, design_id, empire)
             return
         if vehicle_type not in ("mine", "fighter", "satellite"):
             # Unknown small-craft type — fall back to full ship spawn.
-            self._spawn_fleet_ship(fleet, design_id, empire, save_path)
+            self._spawn_fleet_ship(fleet, design_id, empire)
             return
 
         cv = CarriedVehicle(
@@ -540,7 +576,6 @@ class ProductionSpawner:
         fleet: Fleet,
         design_id: str,
         empire: 'Empire',
-        save_path: Optional[str] = None
     ) -> None:
         """Spawn ship/satellite/fighter and add to the building fleet.
 
@@ -550,9 +585,8 @@ class ProductionSpawner:
             fleet: Fleet building the ship.
             design_id: ID of the ship design.
             empire: Empire that owns the fleet.
-            save_path: Path to savegame folder for loading design data.
         """
-        ship_instance = self._load_and_create_ship(design_id, empire, save_path)
+        ship_instance = self._load_and_create_ship(design_id, empire)
         if ship_instance is None:
             return
 
@@ -579,7 +613,6 @@ class ProductionSpawner:
         design_id: str,
         empire: 'Empire',
         galaxy: Optional['Galaxy'],
-        save_path: Optional[str] = None,
         target_planet_id: Optional[int] = None
     ) -> None:
         """Spawn complex on planet at fleet's location.
@@ -592,7 +625,6 @@ class ProductionSpawner:
             design_id: ID of the complex design.
             empire: Empire that owns the fleet.
             galaxy: Galaxy for planet lookup.
-            save_path: Path to savegame folder for loading design data.
             target_planet_id: Specific planet ID to receive the complex (PROJ-79).
         """
         # Find planet at fleet's location
@@ -615,6 +647,6 @@ class ProductionSpawner:
             planet = planets_at_hex[0]
 
         self._create_and_place_facility(
-            planet, design_id, empire, save_path, galaxy,
+            planet, design_id, empire, galaxy,
             log_prefix=f"Fleet {fleet.id} "
         )

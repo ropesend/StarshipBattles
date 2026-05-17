@@ -62,42 +62,38 @@ def test_constructor_records_registries_and_event_bus():
     assert spawner._event_bus is event_bus
 
 
-def _stub_design_library(design_data: dict | None = None):
-    """Build a DesignLibrary stub used by both _load_design and
-    _load_and_create_ship. Returns the (cls, library, result) triple so
-    tests can assert call counts on cls (constructor) and library (load).
+def _wire_catalog(spawner, empire_id: int, design_data: dict | None = None):
+    """PROJ-427 Phase 3: install a per-empire DesignCatalog containing
+    a single design for every test design_id we expect to be looked up.
+    Returns the catalog so tests can assert on
+    ``pending_built_counts`` etc.
     """
-    result = MagicMock()
-    result.success = True
-    result.data = design_data if design_data is not None else {"name": "Test"}
-    library = MagicMock()
-    library.load_design_data.return_value = result
-    library.increment_built_count = MagicMock()
-    cls = MagicMock(return_value=library)
-    return cls, library, result
+    from game.strategy.systems.design_catalog import DesignCatalog
+    cat = DesignCatalog(empire_id=empire_id)
+    data = design_data if design_data is not None else {"name": "Test"}
+    # Populate every design_id used by the test set.
+    for design_id in (
+        "ferrite_mine", "frig", "yard", "pod", "any", "any_id", "missing",
+        "complex",
+    ):
+        cat._data_by_id[design_id] = data
+    spawner.set_design_catalogs_by_empire({empire_id: cat})
+    return cat
 
 
 def test_spawn_dispatches_complex_to_create_and_place_facility_for_colony():
-    """Colony + 'complex' type → real `_create_and_place_facility` mutates planet.facilities.
+    """Colony + 'complex' type → `_create_and_place_facility` mutates planet.facilities.
 
-    PROJ-345 T3.4: un-patches `_create_and_place_facility`. Uses a real
-    DesignLibrary stub at the module boundary so the inner method runs
-    in full (load → PlanetaryFacility() → planet.facilities.append).
+    PROJ-427 Phase 3: design data resolved via the in-memory DesignCatalog.
     """
     spawner = ProductionSpawner(registries=MagicMock())
     item = {"design_id": "ferrite_mine", "type": "complex"}
     planet = _planet()
     empire = _empire()
-    cls, library, _ = _stub_design_library({"name": "Ferrite Mine"})
+    _wire_catalog(spawner, empire.id, {"name": "Ferrite Mine"})
 
-    with patch(
-        "game.strategy.engine.production_spawner.DesignLibrary", cls,
-    ):
-        spawner.spawn_completed_item(item, empire, planet, MagicMock(), "/tmp", 1)
+    spawner.spawn_completed_item(item, empire, planet, MagicMock(), 1)
 
-    # Real `_create_and_place_facility` ran: design loaded, facility appended.
-    cls.assert_called_once_with("/tmp", empire.id)
-    library.load_design_data.assert_called_once_with("ferrite_mine")
     assert len(planet.facilities) == 1
     facility = planet.facilities[0]
     assert facility.design_id == "ferrite_mine"
@@ -106,12 +102,7 @@ def test_spawn_dispatches_complex_to_create_and_place_facility_for_colony():
 
 
 def test_spawn_dispatches_drop_pod_to_staging_yard_for_colony():
-    """Colony + 'drop_pod' type → `_spawn_to_staging_yard`.
-
-    Staging-yard helper kept patched per phase_1_checklist scope (task
-    only un-patches `_load_and_create_ship`, `_create_and_place_facility`,
-    `_spawn_fleet_ship`).
-    """
+    """Colony + 'drop_pod' type → `_spawn_to_staging_yard`."""
     spawner = ProductionSpawner(registries=MagicMock())
     item = {"design_id": "pod1", "type": "drop_pod"}
     empire = _empire()
@@ -119,19 +110,15 @@ def test_spawn_dispatches_drop_pod_to_staging_yard_for_colony():
     galaxy = MagicMock()
 
     with patch.object(spawner, "_spawn_to_staging_yard") as mock_stage:
-        spawner.spawn_completed_item(item, empire, planet, galaxy, None, 1)
-    # PROJ-353A Tier-7 (T2.2): pin concrete dispatch args, not just call count.
-    mock_stage.assert_called_once_with(planet, "pod1", item, empire, None)
+        spawner.spawn_completed_item(item, empire, planet, galaxy, 1)
+    mock_stage.assert_called_once_with(planet, "pod1", item, empire)
 
 
 def test_spawn_dispatches_default_ship_path_for_colony_default_type():
     """Colony + 'ship' type → real `_spawn_ship` creates a Fleet with the ship.
 
-    PROJ-345 T3.4: un-patches `_load_and_create_ship` (called by
-    `_spawn_ship`). DesignLibrary, ShipInstance.create, and the Fleet
-    constructor are stubbed at the module boundary; `_spawn_ship` runs
-    in full and calls `empire.add_fleet` with a Fleet that contains the
-    created ship.
+    PROJ-427 Phase 3: design comes from the catalog; built count flows to
+    the catalog's pending map (no DesignLibrary).
     """
     spawner = ProductionSpawner(registries=MagicMock())
     item = {"design_id": "frig", "type": "ship"}
@@ -141,9 +128,7 @@ def test_spawn_dispatches_default_ship_path_for_colony_default_type():
     galaxy.get_next_fleet_id.return_value = 42
     galaxy.get_system_of_planet.return_value = None  # take fallback path
 
-    cls, library, _ = _stub_design_library({"name": "Frigate"})
-    # Bare MagicMock (not spec=ShipInstance) so Fleet.add_ship's downstream
-    # speed recalc can reach design_data + calculated stats.
+    cat = _wire_catalog(spawner, empire.id, {"name": "Frigate"})
     fake_ship = MagicMock()
     fake_ship.name = "Frigate"
     fake_ship.design_data = {"name": "Frigate", "layers": {}, "vehicle_type": "Ship"}
@@ -152,18 +137,12 @@ def test_spawn_dispatches_default_ship_path_for_colony_default_type():
     }
 
     with patch(
-        "game.strategy.engine.production_spawner.DesignLibrary", cls,
-    ), patch(
         "game.strategy.engine.production_spawner.ShipInstance.create",
         return_value=fake_ship,
     ) as mock_create:
-        spawner.spawn_completed_item(item, empire, planet, galaxy, "/tmp", 1)
+        spawner.spawn_completed_item(item, empire, planet, galaxy, 1)
 
-    # Real `_spawn_ship` ran end-to-end: design loaded, ShipInstance.create
-    # called, built count incremented, a real Fleet constructed with the
-    # galaxy fleet_id, ship added to fleet, fleet added to empire.
-    library.load_design_data.assert_called_once_with("frig")
-    library.increment_built_count.assert_called_once_with("frig")
+    assert cat.pending_built_counts.get("frig") == 1
     # PROJ-353A Tier-7 (T2.2): pin concrete kwargs flowing into
     # ShipInstance.create — design_id/owner_id/name routing.
     mock_create.assert_called_once_with(
@@ -184,21 +163,13 @@ def test_spawn_dispatches_default_ship_path_for_colony_default_type():
 
 
 def test_spawn_dispatches_to_fleet_ship_when_owner_is_fleet():
-    """Fleet + 'ship' type → real `_spawn_fleet_ship` adds ship to fleet.
-
-    PROJ-345 T3.4: un-patches `_spawn_fleet_ship`. The real method calls
-    `_load_and_create_ship` (also un-patched), which is stubbed at the
-    DesignLibrary + ShipInstance.create boundaries. End state: the
-    building fleet receives the new ship via `fleet.add_ship`.
-    """
+    """Fleet + 'ship' type → real `_spawn_fleet_ship` adds ship to fleet."""
     spawner = ProductionSpawner(registries=MagicMock())
     item = {"design_id": "frig", "type": "ship"}
     fleet = _fleet_at(HexCoord(0, 0))
     empire = _empire()
 
-    cls, library, _ = _stub_design_library({"name": "Frigate"})
-    # Bare MagicMock (not spec=ShipInstance) so Fleet.add_ship's downstream
-    # speed recalc can reach design_data + calculated stats.
+    cat = _wire_catalog(spawner, empire.id, {"name": "Frigate"})
     fake_ship = MagicMock()
     fake_ship.name = "Frigate"
     fake_ship.design_data = {"name": "Frigate", "layers": {}, "vehicle_type": "Ship"}
@@ -207,17 +178,11 @@ def test_spawn_dispatches_to_fleet_ship_when_owner_is_fleet():
     }
 
     with patch(
-        "game.strategy.engine.production_spawner.DesignLibrary", cls,
-    ), patch(
         "game.strategy.engine.production_spawner.ShipInstance.create",
         return_value=fake_ship,
     ) as mock_create:
-        spawner.spawn_completed_item(item, empire, fleet, MagicMock(), "/tmp", 1)
+        spawner.spawn_completed_item(item, empire, fleet, MagicMock(), 1)
 
-    # Real `_spawn_fleet_ship` ran: ship added to the building fleet,
-    # built count incremented, NO new fleet allocated on the empire.
-    library.load_design_data.assert_called_once_with("frig")
-    # PROJ-353A Tier-7 (T2.2): pin ShipInstance.create kwargs.
     mock_create.assert_called_once_with(
         design_id="frig",
         design_data={"name": "Frigate"},
@@ -226,19 +191,13 @@ def test_spawn_dispatches_to_fleet_ship_when_owner_is_fleet():
         empire=empire,
         registries=spawner._registries,
     )
-    library.increment_built_count.assert_called_once_with("frig")
+    assert cat.pending_built_counts.get("frig") == 1
     fleet.add_ship.assert_called_once_with(fake_ship)
     empire.add_fleet.assert_not_called()
 
 
 def test_spawn_dispatches_to_fleet_complex_when_fleet_and_complex_type():
-    """Fleet + 'complex' type → real `_spawn_fleet_complex` lands facility on planet.
-
-    PROJ-345 T3.4: un-patches `_create_and_place_facility` (called by
-    `_spawn_fleet_complex`). With a planet at the fleet's hex, the real
-    chain runs: `_spawn_fleet_complex` → `_create_and_place_facility` →
-    `planet.facilities.append`.
-    """
+    """Fleet + 'complex' type → `_spawn_fleet_complex` lands facility on planet."""
     spawner = ProductionSpawner(registries=MagicMock())
     item = {"design_id": "yard", "type": "complex"}
     fleet = _fleet_at(HexCoord(5, 5))
@@ -247,17 +206,11 @@ def test_spawn_dispatches_to_fleet_complex_when_fleet_and_complex_type():
     galaxy.get_planets_at_global_hex.return_value = [planet]
     galaxy.get_system_of_planet.return_value = None
     empire = _empire()
-    cls, library, _ = _stub_design_library({"name": "Space Yard"})
+    _wire_catalog(spawner, empire.id, {"name": "Space Yard"})
 
-    with patch(
-        "game.strategy.engine.production_spawner.DesignLibrary", cls,
-    ):
-        spawner.spawn_completed_item(item, empire, fleet, galaxy, "/tmp", 1)
+    spawner.spawn_completed_item(item, empire, fleet, galaxy, 1)
 
-    # Real chain ran: planet was looked up at the fleet's hex; facility
-    # was constructed from loaded design data and appended to the planet.
     galaxy.get_planets_at_global_hex.assert_called_once_with(fleet.location)
-    library.load_design_data.assert_called_once_with("yard")
     assert len(planet.facilities) == 1
     facility = planet.facilities[0]
     assert facility.design_id == "yard"
@@ -265,32 +218,26 @@ def test_spawn_dispatches_to_fleet_complex_when_fleet_and_complex_type():
 
 
 # ---------------------------------------------------------------------------
-# _load_design fallback semantics
+# _load_design fallback semantics (PROJ-427 Phase 3: catalog-based)
 # ---------------------------------------------------------------------------
 
 
-def test_load_design_returns_empty_dict_when_no_save_path():
-    """Missing save_path → empty dict (NOT None) per design.md observation."""
+def test_load_design_returns_empty_dict_when_no_catalog():
+    """Missing catalog → empty dict (NOT None)."""
     spawner = ProductionSpawner(registries=MagicMock())
-    result = spawner._load_design("any", _empire(), None)
+    result = spawner._load_design("any", _empire())
     assert result == {}
 
 
-def test_load_design_returns_empty_dict_when_load_fails():
-    """DesignLibrary failure → empty dict, NOT raised."""
+def test_load_design_returns_empty_dict_when_design_missing():
+    """Catalog without the design returns empty dict."""
+    from game.strategy.systems.design_catalog import DesignCatalog
     spawner = ProductionSpawner(registries=MagicMock())
-    failing = MagicMock()
-    failing.success = False
-    failing.error = "not found"
-    fake_lib = MagicMock()
-    fake_lib.load_design_data.return_value = failing
-
-    with patch(
-        "game.strategy.engine.production_spawner.DesignLibrary",
-        return_value=fake_lib,
-    ):
-        result = spawner._load_design("missing", _empire(), "/tmp/save")
-    assert result == {}
+    empire = _empire()
+    cat = DesignCatalog(empire_id=empire.id)
+    # Catalog wired but design absent.
+    spawner.set_design_catalogs_by_empire({empire.id: cat})
+    assert spawner._load_design("missing", empire) == {}
 
 
 # ---------------------------------------------------------------------------
@@ -318,7 +265,7 @@ def test_spawn_ship_creates_new_fleet_with_unique_id_from_galaxy():
 
     with patch.object(spawner, "_load_and_create_ship", return_value=fake_ship), \
             patch("game.strategy.engine.production_spawner.Fleet", fake_fleet_cls):
-        spawner._spawn_ship(planet, "frig", empire, galaxy, save_path="/tmp")
+        spawner._spawn_ship(planet, "frig", empire, galaxy)
 
     # PROJ-353A Tier-7 (T2.2): pin no-arg shape of get_next_fleet_id().
     galaxy.get_next_fleet_id.assert_called_once_with()
@@ -347,7 +294,7 @@ def test_spawn_ship_calculates_global_location_via_system_resolution():
 
     with patch.object(spawner, "_load_and_create_ship", return_value=MagicMock(name="ship")), \
             patch("game.strategy.engine.production_spawner.Fleet", fake_fleet_cls):
-        spawner._spawn_ship(planet, "frig", empire, galaxy, save_path="/tmp")
+        spawner._spawn_ship(planet, "frig", empire, galaxy)
 
     # Third positional arg to Fleet() is the spawn location
     spawn_loc_arg = fake_fleet_cls.call_args[0][2]
@@ -371,7 +318,7 @@ def test_spawn_ship_without_galaxy_uses_local_location_and_fleet_id_zero():
 
     with patch.object(spawner, "_load_and_create_ship", return_value=fake_ship), \
             patch("game.strategy.engine.production_spawner.Fleet", fake_fleet_cls):
-        spawner._spawn_ship(planet, "frig", empire, galaxy=None, save_path="/tmp")
+        spawner._spawn_ship(planet, "frig", empire, galaxy=None)
 
     fake_fleet_cls.assert_called_once()
     assert fake_fleet_cls.call_args[0][0] == 0
@@ -451,7 +398,7 @@ def test_spawn_to_staging_yard_uses_design_data_from_item_when_present():
     planet = _planet()
 
     with patch.object(spawner, "_load_design") as mock_load:
-        spawner._spawn_to_staging_yard(planet, "pod", item, _empire(), "/tmp")
+        spawner._spawn_to_staging_yard(planet, "pod", item, _empire())
 
     mock_load.assert_not_called()
     # Inline name flowed through to staging item
@@ -478,7 +425,7 @@ def test_spawn_to_staging_yard_reaches_into_simulation_for_mass_calculation():
         "game.simulation.entities.ship_design_stats.calculate_design_stats",
         return_value={"mass": 4200.0},
     ) as mock_calc:
-        spawner._spawn_to_staging_yard(planet, "pod", item, _empire(), "/tmp")
+        spawner._spawn_to_staging_yard(planet, "pod", item, _empire())
 
     # PROJ-353A Tier-7 (T2.2): pin the cross-layer call with concrete args
     # — design_data dict + registries instance — so a future signature
@@ -513,7 +460,7 @@ def test_spawn_to_staging_yard_logs_warning_when_full(caplog):
 
     import logging
     with caplog.at_level(logging.WARNING):
-        spawner._spawn_to_staging_yard(planet, "pod", item, _empire(), "/tmp")
+        spawner._spawn_to_staging_yard(planet, "pod", item, _empire())
     assert "Staging yard full" in caplog.text
 
 
@@ -534,7 +481,7 @@ def test_spawn_fleet_complex_uses_target_planet_id_when_specified():
 
     with patch.object(spawner, "_create_and_place_facility") as mock_create:
         spawner._spawn_fleet_complex(
-            fleet, "complex", _empire(), galaxy, save_path="/tmp",
+            fleet, "complex", _empire(), galaxy,
             target_planet_id=2,
         )
     chosen_planet = mock_create.call_args[0][0]
@@ -553,7 +500,7 @@ def test_spawn_fleet_complex_falls_back_to_first_planet_when_target_id_missing()
 
     with patch.object(spawner, "_create_and_place_facility") as mock_create:
         spawner._spawn_fleet_complex(
-            fleet, "complex", _empire(), galaxy, save_path="/tmp",
+            fleet, "complex", _empire(), galaxy,
             target_planet_id=999,  # nonexistent
         )
     chosen_planet = mock_create.call_args[0][0]
@@ -568,7 +515,7 @@ def test_spawn_fleet_complex_returns_when_galaxy_missing():
 
     with patch.object(spawner, "_create_and_place_facility") as mock_create:
         spawner._spawn_fleet_complex(
-            fleet, "complex", _empire(), galaxy=None, save_path="/tmp"
+            fleet, "complex", _empire(), galaxy=None,
         )
 
     mock_create.assert_not_called()
@@ -583,7 +530,7 @@ def test_spawn_fleet_complex_returns_when_fleet_not_at_planet_hex():
 
     with patch.object(spawner, "_create_and_place_facility") as mock_create:
         spawner._spawn_fleet_complex(
-            fleet, "complex", _empire(), galaxy=galaxy, save_path="/tmp"
+            fleet, "complex", _empire(), galaxy=galaxy,
         )
 
     galaxy.get_planets_at_global_hex.assert_called_once_with(fleet.location)
@@ -591,56 +538,44 @@ def test_spawn_fleet_complex_returns_when_fleet_not_at_planet_hex():
 
 
 # ---------------------------------------------------------------------------
-# PROJ-427 Phase 0: characterization — pin current DesignLibrary + save_path
-# coupling. These tests assert the present-day (pre-refactor) behavior and
-# must pass on the current codebase. Phase 3 will replace them.
+# PROJ-427 Phase 3: invert the Phase 0 characterization. The spawn chain
+# now uses DesignCatalog and no longer imports DesignLibrary.
 # ---------------------------------------------------------------------------
 
 
-def test_proj427_phase0_production_spawner_imports_design_library():
-    """PROJ-427 Phase 0: ProductionSpawner currently imports DesignLibrary
-    at module scope. This coupling is what Phase 3 removes."""
+def test_proj427_production_spawner_does_not_import_design_library():
+    """PROJ-427 Phase 3: ProductionSpawner no longer imports DesignLibrary."""
     import inspect
     import game.strategy.engine.production_spawner as ps_mod
 
-    assert hasattr(ps_mod, "DesignLibrary"), (
-        "Current code path imports DesignLibrary at module scope; "
-        "this characterization test pins that today."
+    assert not hasattr(ps_mod, "DesignLibrary"), (
+        "PROJ-427 Phase 3: DesignLibrary must NOT be imported into the "
+        "production spawner module."
     )
-    # Pin the textual import too (defensive against re-exports).
     src = inspect.getsource(ps_mod)
-    assert "from game.strategy.systems.design_library import DesignLibrary" in src
+    assert "from game.strategy.systems.design_library" not in src
 
 
-def test_proj427_phase0_load_design_helpers_require_save_path():
-    """PROJ-427 Phase 0: spawn helpers currently short-circuit when no
-    save_path is provided. This pins the save_path coupling Phase 3
-    removes by routing through DesignCatalog instead."""
+def test_proj427_load_design_helpers_use_catalog():
+    """PROJ-427 Phase 3: spawn helpers fall back to {}/None when no
+    catalog is wired (replacing the prior save_path coupling)."""
     spawner = ProductionSpawner(registries=MagicMock())
     empire = _empire()
 
-    # _load_design with no save_path returns {} (current behavior).
-    assert spawner._load_design("any_id", empire, None) == {}
-    # _load_and_create_ship with no save_path returns None.
-    assert spawner._load_and_create_ship("any_id", empire, None) is None
+    assert spawner._load_design("any_id", empire) == {}
+    assert spawner._load_and_create_ship("any_id", empire) is None
 
 
-def test_proj427_phase0_spawn_triggers_design_library_construction():
-    """PROJ-427 Phase 0: a colony complex spawn currently constructs a
-    DesignLibrary(save_path, empire.id) directly. This pins the
-    instantiation surface Phase 3 removes."""
+def test_proj427_spawn_uses_catalog_no_design_library():
+    """PROJ-427 Phase 3: colony complex spawn pulls design data from the
+    catalog — no DesignLibrary construction."""
     spawner = ProductionSpawner(registries=MagicMock())
     item = {"design_id": "ferrite_mine", "type": "complex"}
     planet = _planet()
     empire = _empire()
-    cls, library, _ = _stub_design_library({"name": "Ferrite Mine"})
+    _wire_catalog(spawner, empire.id, {"name": "Ferrite Mine"})
 
-    with patch(
-        "game.strategy.engine.production_spawner.DesignLibrary", cls,
-    ):
-        spawner.spawn_completed_item(
-            item, empire, planet, MagicMock(), "/tmp", 1
-        )
+    spawner.spawn_completed_item(item, empire, planet, MagicMock(), 1)
 
-    cls.assert_called_once_with("/tmp", empire.id)
-    library.load_design_data.assert_called_once_with("ferrite_mine")
+    assert len(planet.facilities) == 1
+    assert planet.facilities[0].name == "Ferrite Mine"

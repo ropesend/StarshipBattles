@@ -207,23 +207,43 @@ def _make_empire(empire_id, colonies):
 def _make_session(empires):
     session = MagicMock()
     session.empires = empires
+    # PROJ-427 Phase 3: spawn_initial_complexes rebuilds the per-empire
+    # DesignCatalog map on session.services.design_catalogs_by_empire,
+    # so seed it as a real dict here (MagicMock auto-attr would yield a
+    # mock that breaks the `catalogs.get(...)` lookup contract).
+    session.services.design_catalogs_by_empire = {}
     return session
 
 
 @contextmanager
 def _patched_design_library(load_result=None):
-    """Patch DesignLibrary so `load_design_data` returns a controllable result.
+    """PROJ-427 Phase 3: stub a DesignCatalog on the session so
+    quickstart's spawn_initial_complexes finds designs in-memory.
 
     Default: success with a minimal valid design dict.
     Pass `load_result=DesignLoadResult.not_found("x")` to simulate missing designs.
     """
-    if load_result is None:
-        load_result = DesignLoadResult.ok({"name": "Test Complex", "components": []})
-    with patch("game.strategy.quickstart_builder.DesignLibrary") as MockLibrary:
-        mock_lib = MagicMock()
-        mock_lib.load_design_data.return_value = load_result
-        MockLibrary.return_value = mock_lib
-        yield MockLibrary
+    # Patch the in-quickstart DesignRepository to return the stubbed
+    # designs without touching disk; the function rebuilds the catalog
+    # from the repo at the start.
+    from game.strategy.systems.design_repository import DesignRepository as _Repo
+    if load_result is None or getattr(load_result, "success", True):
+        pairs_data = {"name": "Test Complex", "components": []} if load_result is None else load_result.data
+        # Make scan_designs_with_data return every INITIAL_COMPLEXES id with
+        # the supplied data dict.
+        def _fake_scan_with_data(self):
+            from game.strategy.data.design_metadata import DesignMetadata
+            results = []
+            for did in INITIAL_COMPLEXES:
+                meta = DesignMetadata.from_design_data(pairs_data, did)
+                results.append((meta, pairs_data))
+            return results
+    else:
+        def _fake_scan_with_data(self):  # noqa: E306
+            return []  # Empty catalog -> spawn_initial_complexes fails to find each design.
+
+    with patch.object(_Repo, "scan_designs_with_data", _fake_scan_with_data):
+        yield None
 
 
 class TestQuickstartBuilderSpawnComplexes:

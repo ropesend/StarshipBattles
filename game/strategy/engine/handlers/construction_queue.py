@@ -27,7 +27,6 @@ from game.strategy.engine.commands.registry import (
 )
 from game.strategy.engine.handlers.base import BaseCommandHandler
 from game.strategy.services.design_cost_calculator import DesignCostCalculator
-from game.strategy.systems.design_library import DesignLibrary
 
 logger = logging.getLogger(__name__)
 
@@ -104,13 +103,35 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
 
         return ValidationResult.success()
 
+    def _resolve_design_data(self, session: 'GameSession', entity, design_id: str):
+        """PROJ-427 Phase 3: resolve design data via the per-empire
+        ``DesignCatalog`` exposed on ``session.services``. Returns the
+        data dict (or ``None`` if missing); no filesystem I/O.
+        """
+        empire_id = getattr(entity, 'owner_id', 0)
+        services = getattr(session, 'services', None)
+        catalogs = getattr(services, 'design_catalogs_by_empire', None)
+        if not isinstance(catalogs, dict):
+            return None
+        catalog = catalogs.get(empire_id)
+        if catalog is None:
+            return None
+        data = catalog.lookup_data(design_id)
+        if not isinstance(data, dict):
+            return None
+        return data
+
     def _check_design_valid(self, session: 'GameSession', entity, design_id: str) -> bool:
         """Check if a design is valid for construction.
 
         Uses DesignValidator to check crew, life support, and mass budgets.
 
+        PROJ-427 Phase 3: design data resolved through the in-memory
+        ``DesignCatalog``, not by reconstructing a ``DesignLibrary`` per
+        validation call.
+
         Args:
-            session: Game session for save_path.
+            session: Game session whose services bag exposes the catalog.
             entity: Planet or Fleet with owner_id.
             design_id: ID of the design to check.
 
@@ -118,16 +139,14 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
             True if the design is valid, False if it has errors.
         """
         try:
-            empire_id = getattr(entity, 'owner_id', 0)
-            library = DesignLibrary(session.save_path, empire_id)
-            load_result = library.load_design_data(design_id)
-            if not load_result.success:
+            data = self._resolve_design_data(session, entity, design_id)
+            if data is None:
                 return True  # Can't validate, allow by default
 
             if session.registries:
                 from game.strategy.services.design_validator import DesignValidator
                 validator = DesignValidator(session.registries)
-                result = validator.validate(load_result.data)
+                result = validator.validate(data)
                 # Block on errors AND warnings (e.g., layer mass over budget)
                 if result.has_issues:
                     issues = result.errors + result.warnings
@@ -138,7 +157,7 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
                 return True
 
             return True
-        except (OSError, ValueError, KeyError):
+        except (ValueError, KeyError):
             return True  # Can't validate, allow by default
 
     def _load_design_cost(self, session: 'GameSession', entity, design_id: str) -> Dict[str, float]:
@@ -146,9 +165,11 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
 
         PROJ-213: Populates queue items with actual build costs so
         ProductionEngine can process tick-based resource consumption.
+        PROJ-427 Phase 3: design data resolved through the in-memory
+        ``DesignCatalog`` — no save-folder JSON read.
 
         Args:
-            session: Game session for save_path.
+            session: Game session whose services bag exposes the catalog.
             entity: Planet or Fleet with owner_id.
             design_id: ID of the design to get cost for.
 
@@ -156,15 +177,13 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
             Dict mapping resource type to cost amount, empty dict on failure.
         """
         try:
-            empire_id = getattr(entity, 'owner_id', 0)
-            library = DesignLibrary(session.save_path, empire_id)
-            load_result = library.load_design_data(design_id)
-            if not load_result.success:
-                logger.warning(f"Could not load design data for {design_id}: {load_result.error}")
+            data = self._resolve_design_data(session, entity, design_id)
+            if data is None:
+                logger.warning(f"Could not look up design data for {design_id} in catalog")
                 return {}
             # PROJ-218: Pass registries for Ship-loading cost calculation
-            return DesignCostCalculator.calculate_total_cost(load_result.data, session.registries)
-        except (OSError, ValueError, KeyError) as e:
+            return DesignCostCalculator.calculate_total_cost(data, session.registries)
+        except (ValueError, KeyError) as e:
             logger.warning(f"Failed to calculate design cost for {design_id}: {e}")
             return {}
 

@@ -297,7 +297,7 @@ def test_log_resource_shortage_emitted_once_per_item_per_turn(engine, empire):
     # Tick 1 logs; tick 2 does not.
     for tick in (1, 2):
         eng._process_queue_tick_dynamic(
-            queue, empire, tick, MagicMock(), None,
+            queue, empire, tick, MagicMock(),
             {"A": 500.0}, colony, is_complex_only=False,
         )
 

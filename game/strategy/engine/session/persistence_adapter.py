@@ -218,6 +218,15 @@ class SessionPersistenceAdapter:
             design_catalogs_by_empire=catalogs_by_empire,
         )
 
+        # PROJ-427 Phase 3: forward catalog map into the ProductionEngine
+        # spawner so runtime spawn paths resolve designs without disk I/O.
+        setter = getattr(
+            services.turn_engine.production_engine,
+            'set_design_catalogs_by_empire', None,
+        )
+        if setter is not None:
+            setter(catalogs_by_empire)
+
         return SessionBootstrapState(
             config=config,
             services=services,

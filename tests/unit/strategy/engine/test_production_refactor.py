@@ -70,7 +70,7 @@ class TestProductionEngineRefactor:
         
         # Test 1 tick
         engine._process_queue_tick_dynamic(
-            mock_colony.construction_queue, mock_empire, 1, MagicMock(), None,
+            mock_colony.construction_queue, mock_empire, 1, MagicMock(),
             rates, mock_colony, None
         )
         
@@ -82,7 +82,7 @@ class TestProductionEngineRefactor:
         item["resources_consumed"]["B"] = 100.0 # Half done
         
         engine._process_queue_tick_dynamic(
-            mock_colony.construction_queue, mock_empire, 2, MagicMock(), None,
+            mock_colony.construction_queue, mock_empire, 2, MagicMock(),
             rates, mock_colony, None
         )
         
@@ -120,7 +120,7 @@ class TestProductionEngineRefactor:
         engine._spawner._spawn_ship = MagicMock()
         
         engine._process_queue_tick_dynamic(
-            mock_colony.construction_queue, mock_empire, 1, MagicMock(), None,
+            mock_colony.construction_queue, mock_empire, 1, MagicMock(),
             rates, mock_colony, None
         )
         
@@ -179,7 +179,7 @@ class TestProductionEngineEdgeCases:
         import logging
         with caplog.at_level(logging.WARNING):
             engine._process_queue_tick_dynamic(
-                mock_colony.construction_queue, mock_empire, 1, MagicMock(), None,
+                mock_colony.construction_queue, mock_empire, 1, MagicMock(),
                 rates, mock_colony, False
             )
 
@@ -206,7 +206,7 @@ class TestProductionEngineEdgeCases:
         engine._spawner._spawn_ship = MagicMock()
 
         engine._process_queue_tick_dynamic(
-            mock_colony.construction_queue, mock_empire, 1, MagicMock(), None,
+            mock_colony.construction_queue, mock_empire, 1, MagicMock(),
             rates, mock_colony, False
         )
 
@@ -231,7 +231,7 @@ class TestProductionEngineEdgeCases:
         engine._spawner._spawn_ship = MagicMock()
 
         engine._process_queue_tick_dynamic(
-            mock_colony.construction_queue, mock_empire, 1, MagicMock(), None,
+            mock_colony.construction_queue, mock_empire, 1, MagicMock(),
             rates, mock_colony, False
         )
 
@@ -259,7 +259,7 @@ class TestProductionEngineEdgeCases:
         engine._spawner._spawn_ship = MagicMock()
 
         engine._process_queue_tick_dynamic(
-            mock_colony.construction_queue, mock_empire, 1, MagicMock(), None,
+            mock_colony.construction_queue, mock_empire, 1, MagicMock(),
             rates, mock_colony, is_complex_only=True
         )
 
@@ -289,7 +289,7 @@ class TestProductionEngineEdgeCases:
 
         # Should not hang - safety guard limits to 10 iterations
         engine._process_queue_tick_dynamic(
-            mock_colony.construction_queue, mock_empire, 1, MagicMock(), None,
+            mock_colony.construction_queue, mock_empire, 1, MagicMock(),
             rates, mock_colony, False
         )
 
@@ -351,7 +351,7 @@ class TestResourceShortageEventLogging:
         rates = {"metals": 500, "organics": 500}
 
         engine._process_queue_tick_dynamic(
-            colony.construction_queue, empire, 1, MagicMock(), None,
+            colony.construction_queue, empire, 1, MagicMock(),
             rates, colony, False
         )
 
@@ -386,7 +386,7 @@ class TestResourceShortageEventLogging:
         colony.get_stockpile.side_effect = lambda res: colony.stockpile.get(res, 0.0)
 
         engine._process_queue_tick_dynamic(
-            colony.construction_queue, empire, 1, MagicMock(), None,
+            colony.construction_queue, empire, 1, MagicMock(),
             rates, colony, False
         )
 
@@ -415,7 +415,7 @@ class TestResourceShortageEventLogging:
         # Simulate multiple ticks within the same turn
         for tick in range(1, 4):
             engine._process_queue_tick_dynamic(
-                colony.construction_queue, empire, tick, MagicMock(), None,
+                colony.construction_queue, empire, tick, MagicMock(),
                 rates, colony, False
             )
 
@@ -448,11 +448,11 @@ class TestResourceShortageEventLogging:
 
         # Turn 1: tick 1 logs shortage, tick 2 does not
         engine._process_queue_tick_dynamic(
-            colony.construction_queue, empire_poor, 1, MagicMock(), None,
+            colony.construction_queue, empire_poor, 1, MagicMock(),
             rates, colony, False
         )
         engine._process_queue_tick_dynamic(
-            colony.construction_queue, empire_poor, 2, MagicMock(), None,
+            colony.construction_queue, empire_poor, 2, MagicMock(),
             rates, colony, False
         )
 
@@ -467,7 +467,7 @@ class TestResourceShortageEventLogging:
 
         # Turn 2: tick 1 should log again (flag resets at tick 1)
         engine._process_queue_tick_dynamic(
-            colony.construction_queue, empire_poor, 1, MagicMock(), None,
+            colony.construction_queue, empire_poor, 1, MagicMock(),
             rates, colony, False
         )
 
@@ -499,7 +499,7 @@ class TestResourceShortageEventLogging:
         rates = {"metals": 500}
 
         engine._process_queue_tick_dynamic(
-            colony.construction_queue, empire_rich, 1, MagicMock(), None,
+            colony.construction_queue, empire_rich, 1, MagicMock(),
             rates, colony, False
         )
 
