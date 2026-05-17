@@ -96,10 +96,16 @@ explicitly requests legacy 03a flow. To opt in:
    See `Projects/protocols/03c_phase_aware_execution.md` for the full
    protocol. Coordinator owns this file; phase workers must NOT edit it.
 
-4. **Initialize an empty `findings_ledger.md`** in the project directory:
+4. **Initialize an empty `findings_ledger.md`** in the project directory
+   using the canonical two-line shape specified in
+   [`Projects/protocols/03c_phase_aware_execution.md`](../../../Projects/protocols/03c_phase_aware_execution.md)
+   (Prerequisites section). Use `printf` rather than `echo` so newlines and
+   the em-dash render correctly across shells:
    ```bash
-   echo "# PROJ-XX — Findings Ledger\n\n_(Generated from phase_state.json. Do not edit by hand.)_" > Projects/active_projects/PROJ-XX/findings_ledger.md
+   printf '# %s \xe2\x80\x94 Findings Ledger\n\n_(Generated from phase_state.json. Do not edit by hand.)_\n' "PROJ-XX" > Projects/active_projects/PROJ-XX/findings_ledger.md
    ```
+   Substitute the real project ID for `PROJ-XX`. Do NOT use a `Write`-tool
+   write that lands a single title line — that violates the canonical shape.
 
 5. **Don't create the project branch yet** — `claude-proj-continue` does
    that on first execution. Initial planning artifacts commit to `main`.

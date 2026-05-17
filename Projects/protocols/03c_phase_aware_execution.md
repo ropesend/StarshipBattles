@@ -63,7 +63,27 @@ worktrees; multi-parent phases wait for all parents to be `verified`.
 - The project branch `proj/{PROJ-ID}/main` exists. If this is the first
   execution session, the coordinator creates it from `main`'s tip on
   startup and commits the initial planning artifacts to it.
-- `findings_ledger.md` exists (an empty template is fine).
+- `findings_ledger.md` exists with the canonical empty-template
+  shape:
+
+  ```markdown
+  # PROJ-XXX — Findings Ledger
+
+  _(Generated from phase_state.json. Do not edit by hand.)_
+  ```
+
+  Substitute the real project ID for `PROJ-XXX`. Use an em-dash (`—`,
+  U+2014), not `--` or `-`. This file is regenerated from
+  `phase_state.json.findings` and must not be hand-edited; the two-line
+  shape is the canonical empty state. Create it at scaffold time via:
+
+  ```bash
+  printf '# %s \xe2\x80\x94 Findings Ledger\n\n_(Generated from phase_state.json. Do not edit by hand.)_\n' "PROJ-XXX" > Projects/active_projects/PROJ-XXX/findings_ledger.md
+  ```
+
+  `printf` is used instead of `echo` because POSIX `echo` does not
+  portably interpret `\n` and the canonical shape requires real
+  newlines.
 
 Projects without the opt-in marker fall through to legacy
 [03a](03a_continue_working.md) — DO NOT silently apply 03c to them.
