@@ -24,9 +24,11 @@ Branch numbering matches the docstring header in `transfer.py`:
 """
 from __future__ import annotations
 
-from typing import Optional, TYPE_CHECKING
+from typing import Any, List, Optional, TYPE_CHECKING
 import logging
 
+from game.strategy.data.bay_inventory import BayInventory, DropPod
+from game.strategy.data.carried_vehicle import CarriedVehicle, VALID_VEHICLE_TYPES
 from game.strategy.data.fleet import Fleet
 
 logger = logging.getLogger(__name__)
@@ -34,6 +36,55 @@ logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
     from game.strategy.data.planet import Planet
+
+
+def _is_carried_vehicle_dict(item: Any) -> bool:
+    """Return True iff ``item`` is a staging-yard dict shaped like a
+    :class:`CarriedVehicle` (mine/fighter/satellite). PROJ-431 Phase 1d:
+    explicit dict-shape probe that replaces the legacy runtime
+    ``CarriedVehicle.from_any()`` discriminator at the staging-yard
+    boundary, which still holds dicts.
+    """
+    if isinstance(item, CarriedVehicle):
+        return True
+    if not isinstance(item, dict):
+        return False
+    return str(item.get("vehicle_type", "")).lower() in VALID_VEHICLE_TYPES
+
+
+def _pod_from_dict(item: Any) -> DropPod:
+    """Promote a legacy drop-pod-shaped dict to a typed
+    :class:`DropPod`. Mirrors the shape ``ShipInstance.bay_inventory``
+    uses when projecting the legacy ``carried_items`` substrate.
+    Extra dict keys land in :attr:`DropPod.payload`.
+    """
+    if isinstance(item, DropPod):
+        return item
+    if not isinstance(item, dict):
+        return DropPod(design_id="", design_data={}, mass=0.0, payload={})
+    return DropPod(
+        design_id=str(item.get("design_id", "")),
+        design_data=dict(item.get("design_data", {})),
+        mass=float(item.get("mass", 0.0)),
+        payload={
+            k: v for k, v in item.items()
+            if k not in {"design_id", "design_data", "mass"}
+        },
+    )
+
+
+def _staging_yard_carried_vehicle(item: Any) -> Optional[CarriedVehicle]:
+    """Promote a staging-yard dict to a typed :class:`CarriedVehicle`
+    when it is shaped like one. Returns ``None`` for drop-pod-shaped
+    entries (which lack a recognised ``vehicle_type``).
+    """
+    if isinstance(item, CarriedVehicle):
+        return item
+    if not isinstance(item, dict):
+        return None
+    if str(item.get("vehicle_type", "")).lower() not in VALID_VEHICLE_TYPES:
+        return None
+    return CarriedVehicle.from_dict(item)
 
 
 class _TransferDispatchMixin:
@@ -138,9 +189,14 @@ class _TransferDispatchMixin:
         Staging yard iterated in reverse so `pop` removals are safe.
         PROJ-FMS-A: skips ``CarriedVehicle``-shaped entries — those go
         through the dedicated carried-vehicle branch.
-        """
-        from game.strategy.data.carried_vehicle import CarriedVehicle
 
+        PROJ-431 Phase 1d: fleet-side deposit goes through
+        ``ship.set_bay_inventory(...)`` (typed write-through), and the
+        staging-yard dict-shape probe uses an explicit ``vehicle_type``
+        check instead of the legacy ``CarriedVehicle.from_any()``
+        discriminator. The staging yard itself remains on the dict
+        substrate (migration deferred).
+        """
         logger.info(
             f"_dispatch_drop_pod_load: planet={planet.name} pod_name={pod_name!r} "
             f"amount={amount} staging_count={len(planet.staging_yard)} "
@@ -154,7 +210,7 @@ class _TransferDispatchMixin:
             if loaded >= to_load:
                 break
             item = planet.staging_yard[i]
-            if CarriedVehicle.from_any(item) is not None:
+            if _is_carried_vehicle_dict(item):
                 continue
             if pod_name and item.get("name") != pod_name:
                 logger.debug(
@@ -182,8 +238,13 @@ class _TransferDispatchMixin:
                 continue  # No ship has capacity
             removed = planet.remove_from_staging_yard(i)
             if removed:
-                # PROJ-370 Phase 5: route through IShipInstanceMutator.
-                self._get_ship_mutator().add_carried_item(target_ship, removed)
+                # PROJ-431 Phase 1d: typed write-through.
+                current_bay = target_ship.bay_inventory
+                new_pods = list(current_bay.pods)
+                new_pods.append(_pod_from_dict(removed))
+                target_ship.set_bay_inventory(
+                    BayInventory(bay=list(current_bay.bay), pods=new_pods)
+                )
                 loaded += 1
 
         return loaded
@@ -271,9 +332,12 @@ class _TransferDispatchMixin:
         ``design_id`` may be passed via the legacy ``species_id`` slot in
         the order target dict — the order serializer treats the slot as
         a generic per-order discriminator.
-        """
-        from game.strategy.data.carried_vehicle import CarriedVehicle
 
+        PROJ-431 Phase 1d: staging-yard dict probe uses an explicit
+        ``vehicle_type`` shape check instead of the legacy
+        ``CarriedVehicle.from_any()`` discriminator. The staging yard
+        is still on the dict substrate.
+        """
         loaded = 0
         to_load = amount if amount > 0 else len(planet.staging_yard)
 
@@ -281,7 +345,7 @@ class _TransferDispatchMixin:
             if loaded >= to_load:
                 break
             item = planet.staging_yard[i]
-            cv = CarriedVehicle.from_any(item)
+            cv = _staging_yard_carried_vehicle(item)
             if cv is None:
                 continue
             if design_id and cv.design_id != design_id:
@@ -345,38 +409,49 @@ class _TransferDispatchMixin:
     ) -> int:
         """Branch 6: fleet -> planet, drop_pod (unload to staging yard).
 
-        Lifted verbatim from `OrderProcessor._unload_pod_to_staging_yard`.
-        PROJ-FMS-A: skips ``CarriedVehicle``-shaped entries — those go
-        through the dedicated carried-vehicle branch.
+        PROJ-431 Phase 1d: pods read from ``ship.bay_inventory.pods``
+        (typed slot — exclusively drop pods by construction) and the
+        consumed pod is removed by rebuilding the bay inventory and
+        writing back via ``ship.set_bay_inventory(...)``. The planet
+        staging yard still consumes legacy dict shape, so the typed
+        ``DropPod`` is flattened to a dict at the boundary.
         """
-        from game.strategy.data.carried_vehicle import CarriedVehicle
-
         unloaded = 0
-        # Count drop-pod entries only; CarriedVehicle entries belong to
-        # a different transfer branch.
+        # Count drop-pod entries via the typed slot; CarriedVehicle
+        # entries belong to a different transfer branch.
         to_unload = amount if amount > 0 else sum(
-            sum(
-                1 for it in getattr(s, "carried_items", [])
-                if CarriedVehicle.from_any(it) is None
-            )
-            for s in fleet.ships
+            len(s.bay_inventory.pods) for s in fleet.ships
         )
 
         for ship in fleet.ships:
             if unloaded >= to_unload:
                 break
-            for i in range(len(ship.carried_items) - 1, -1, -1):
+            current_bay = ship.bay_inventory
+            # Walk a snapshot so we can rebuild the typed pod list
+            # without index churn across mutations.
+            kept_pods: List[DropPod] = []
+            for pod in current_bay.pods:
                 if unloaded >= to_unload:
-                    break
-                item = ship.carried_items[i]
-                if CarriedVehicle.from_any(item) is not None:
+                    kept_pods.append(pod)
                     continue
-                if pod_name and item.get("name") != pod_name:
+                if pod_name and pod.payload.get("name") != pod_name:
+                    kept_pods.append(pod)
                     continue
-                if planet.add_to_staging_yard(item):
-                    # PROJ-370 Phase 5: route through IShipInstanceMutator.
-                    self._get_ship_mutator().pop_carried_item(ship, i)
+                # Flatten the typed pod back to the dict shape the
+                # planet's staging yard still expects.
+                pod_dict = dict(pod.payload)
+                pod_dict["design_id"] = pod.design_id
+                pod_dict["design_data"] = pod.design_data
+                pod_dict["mass"] = pod.mass
+                if planet.add_to_staging_yard(pod_dict):
                     unloaded += 1
+                    # pod consumed -- do not append to kept_pods
+                else:
+                    kept_pods.append(pod)
+            if len(kept_pods) != len(current_bay.pods):
+                ship.set_bay_inventory(
+                    BayInventory(bay=list(current_bay.bay), pods=kept_pods)
+                )
 
         return unloaded
 

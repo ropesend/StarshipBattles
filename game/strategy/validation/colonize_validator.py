@@ -3,9 +3,14 @@ ColonizeValidator - Validates COLONIZE orders for fleets.
 
 PROJ-36: Extracted from TurnEngine to centralize validation.
 PROJ-55: Added colony pod detection and chain validation.
-Phase 3: Drop pods are constructed items carried in ship.carried_items.
+Phase 3: Drop pods are typed entries in ``ship.bay_inventory.pods``.
          Colony ships need ColonizePlanet ability for planet type eligibility.
          Drop pods are universal (work on any planet type).
+PROJ-431 Phase 1d: drop-pod walks migrated from the legacy
+``ship.carried_items`` mixed-shape list to ``ship.bay_inventory.pods``
+(typed ``DropPod`` entries). Pods in ``bay_inventory.pods`` are all
+drop pods by construction — the legacy ``vehicle_type == 'drop_pod'``
+filter is gone because the typed slot is homogeneous.
 """
 from typing import Dict, Any, Optional, TYPE_CHECKING
 from game.core.validation import ValidationResult
@@ -23,7 +28,7 @@ class ColonizeValidator:
 
     Colony ships need:
     1. ColonizePlanet ability matching the target planet type (on a ship component)
-    2. A drop pod in carried_items (any ship in fleet)
+    2. A drop pod in ``bay_inventory.pods`` (any ship in fleet)
 
     Drop pods are universal — any drop pod works on any planet type.
     The colony ship's ColonizePlanet ability determines planet eligibility.
@@ -78,11 +83,17 @@ class ColonizeValidator:
 
     @staticmethod
     def fleet_has_drop_pod(fleet: 'Fleet') -> bool:
-        """Check if any ship in the fleet carries a drop pod."""
+        """Check if any ship in the fleet carries a drop pod.
+
+        PROJ-431 Phase 1d: reads ``ship.bay_inventory.pods``. Entries
+        in the typed pods slot are all drop pods by construction.
+        """
         for ship in fleet.ships:
-            for item in getattr(ship, 'carried_items', []):
-                if item.get('vehicle_type') == 'drop_pod':
-                    return True
+            bay = getattr(ship, "bay_inventory", None)
+            if bay is None:
+                continue
+            if bay.pods:
+                return True
         return False
 
     @staticmethod
@@ -111,25 +122,37 @@ class ColonizeValidator:
 
     @staticmethod
     def count_drop_pods(fleet: 'Fleet') -> int:
-        """Count total drop pods across all ships in the fleet."""
+        """Count total drop pods across all ships in the fleet.
+
+        PROJ-431 Phase 1d: walks ``ship.bay_inventory.pods``.
+        """
         count = 0
         for ship in fleet.ships:
-            for item in getattr(ship, 'carried_items', []):
-                if item.get('vehicle_type') == 'drop_pod':
-                    count += 1
+            bay = getattr(ship, "bay_inventory", None)
+            if bay is None:
+                continue
+            count += len(bay.pods)
         return count
 
     @staticmethod
     def find_ship_with_drop_pod(fleet: 'Fleet') -> tuple:
-        """Find a ship carrying a drop pod and return (ship, item_index).
+        """Find a ship carrying a drop pod and return (ship, pod_index).
+
+        PROJ-431 Phase 1d: walks ``ship.bay_inventory.pods``. The
+        returned index addresses ``bay_inventory.pods`` (not the
+        legacy mixed-shape ``carried_items`` list). Callers consume
+        the index by rebuilding the bay inventory with the matched
+        pod removed.
 
         Returns:
-            Tuple of (ship, index) or (None, -1) if not found.
+            Tuple of (ship, pod_index) or (None, -1) if not found.
         """
         for ship in fleet.ships:
-            for i, item in enumerate(getattr(ship, 'carried_items', [])):
-                if item.get('vehicle_type') == 'drop_pod':
-                    return ship, i
+            bay = getattr(ship, "bay_inventory", None)
+            if bay is None:
+                continue
+            if bay.pods:
+                return ship, 0
         return None, -1
 
     @staticmethod

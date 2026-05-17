@@ -1,11 +1,38 @@
 """Tests for drop pod transfer between staging yard and ship carried_items.
 
 Phase 3: Pods are transferred via the TRANSFER order with cargo_type='drop_pod'.
-Load: planet.staging_yard -> ship.carried_items
-Unload: ship.carried_items -> planet.staging_yard
+Load: planet.staging_yard -> ship.bay_inventory.pods
+Unload: ship.bay_inventory.pods -> planet.staging_yard
+
+PROJ-431 Phase 1d: the ``_make_ship`` helper now mirrors the typed
+:class:`BayInventory` substrate the dispatch branches consume. It
+projects ``carried_items`` into a typed view at construction time and
+on every ``set_bay_inventory(...)`` write-through, so legacy assertions
+on ``ship.carried_items`` keep working.
 """
 from unittest.mock import MagicMock, patch
+from game.strategy.data.bay_inventory import BayInventory, DropPod
 from game.strategy.engine.order_handlers.transfer import TransferHandler
+
+
+def _pod_dict_to_typed(d) -> DropPod:
+    if isinstance(d, DropPod):
+        return d
+    if not isinstance(d, dict):
+        return DropPod(design_id="", design_data={}, mass=0.0, payload={})
+    return DropPod(
+        design_id=str(d.get("design_id", "")),
+        design_data=dict(d.get("design_data", {})),
+        mass=float(d.get("mass", 0.0)),
+        payload={
+            k: v for k, v in d.items()
+            if k not in {"design_id", "design_data", "mass"}
+        },
+    )
+
+
+def _bi_from_carried(items) -> BayInventory:
+    return BayInventory(bay=[], pods=[_pod_dict_to_typed(i) for i in items])
 
 
 def _make_planet(staging_items=None):
@@ -35,12 +62,29 @@ def _make_planet(staging_items=None):
 def _make_ship(carried_items=None, pod_capacity=2000.0):
     ship = MagicMock()
     ship.carried_items = list(carried_items or [])
+    ship.bay_inventory = _bi_from_carried(ship.carried_items)
     ship.get_pod_storage_capacity = MagicMock(return_value=pod_capacity)
     ship.get_pod_storage_used = lambda: sum(i.get('mass', 0.0) for i in ship.carried_items)
     ship.can_carry_pod = lambda mass: (
         pod_capacity > 0 and
         ship.get_pod_storage_used() + mass <= pod_capacity
     )
+
+    def _set_bay_inventory(bi: BayInventory) -> None:
+        ship.bay_inventory = bi
+        ship.carried_items = []
+        for cv in bi.bay:
+            ship.carried_items.append(cv.to_dict())
+        for p in bi.pods:
+            entry = {
+                "design_id": p.design_id,
+                "design_data": p.design_data,
+                "mass": p.mass,
+            }
+            entry.update(p.payload)
+            ship.carried_items.append(entry)
+
+    ship.set_bay_inventory = _set_bay_inventory
     return ship
 
 

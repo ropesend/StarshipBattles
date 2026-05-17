@@ -6,6 +6,7 @@ _unload_pod_to_staging_yard() which had zero test coverage.
 """
 
 import pytest
+from game.strategy.data.bay_inventory import BayInventory, DropPod
 from game.strategy.data.order_types import OrderType
 from unittest.mock import MagicMock
 
@@ -22,13 +23,50 @@ def _make_pod(name="Continental Drop Pod", mass=500):
     return {"name": name, "mass": mass, "vehicle_type": "drop_pod", "design_id": "pod_1"}
 
 
+def _pod_dict_to_typed(d) -> DropPod:
+    return DropPod(
+        design_id=str(d.get("design_id", "")),
+        design_data=dict(d.get("design_data", {})),
+        mass=float(d.get("mass", 0.0)),
+        payload={
+            k: v for k, v in d.items()
+            if k not in {"design_id", "design_data", "mass"}
+        },
+    )
+
+
 def _make_ship(can_carry=True, carried_items=None):
+    """PROJ-431 Phase 1d: wire both the legacy ``carried_items`` list
+    and the typed ``bay_inventory`` view so the migrated dispatch
+    branches work and legacy assertions on ``carried_items`` still hold
+    (modulo identity — the typed substrate round-trips DropPods through
+    ``to_dict`` so tests asserting ``is pod`` must use payload checks).
+    """
     ship = MagicMock()
     ship.name = "Colony Ship"
-    ship.carried_items = carried_items or []
+    ship.carried_items = list(carried_items or [])
+    ship.bay_inventory = BayInventory(
+        bay=[], pods=[_pod_dict_to_typed(p) for p in ship.carried_items]
+    )
     ship.get_pod_storage_capacity = MagicMock(return_value=1000 if can_carry else 0)
     ship.get_pod_storage_used = MagicMock(return_value=0)
     ship.can_carry_pod = MagicMock(return_value=can_carry)
+
+    def _set_bay_inventory(bi: BayInventory) -> None:
+        ship.bay_inventory = bi
+        ship.carried_items = []
+        for cv in bi.bay:
+            ship.carried_items.append(cv.to_dict())
+        for p in bi.pods:
+            entry = {
+                "design_id": p.design_id,
+                "design_data": p.design_data,
+                "mass": p.mass,
+            }
+            entry.update(p.payload)
+            ship.carried_items.append(entry)
+
+    ship.set_bay_inventory = _set_bay_inventory
     return ship
 
 
@@ -68,7 +106,11 @@ class TestLoadPodFromStagingYard:
 
         assert result == 1
         assert len(ship.carried_items) == 1
-        assert ship.carried_items[0] is pod
+        # PROJ-431 Phase 1d: pods round-trip through DropPod.to_dict on
+        # the typed write-through path, so identity is not preserved.
+        # Assert on the payload-equality view instead.
+        assert ship.carried_items[0]["name"] == pod["name"]
+        assert ship.carried_items[0]["design_id"] == pod["design_id"]
 
     def test_filters_by_pod_name(self, processor):
         """Only loads pods matching pod_name."""
@@ -156,7 +198,12 @@ class TestUnloadPodToStagingYard:
         result = processor._dispatch_drop_pod_unload(fleet, planet)
 
         assert result == 1
-        planet.add_to_staging_yard.assert_called_once_with(pod)
+        # PROJ-431 Phase 1d: pod is flattened back to dict at the
+        # staging-yard boundary so identity is not preserved.
+        assert planet.add_to_staging_yard.call_count == 1
+        delivered = planet.add_to_staging_yard.call_args.args[0]
+        assert delivered["name"] == pod["name"]
+        assert delivered["design_id"] == pod["design_id"]
         assert len(ship.carried_items) == 0
 
     def test_filters_by_pod_name(self, processor):

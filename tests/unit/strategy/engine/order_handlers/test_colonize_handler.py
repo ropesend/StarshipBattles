@@ -9,10 +9,53 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 from game.core.hex_math import HexCoord
+from game.strategy.data.bay_inventory import BayInventory, DropPod
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
 from game.strategy.engine.order_handlers.colonize import ColonizeHandler
 from game.strategy.events.event_types import EventCategory, EventType
+
+
+def _ship_with_pod(design_id: str, name: str, design_data: dict) -> MagicMock:
+    """PROJ-431 Phase 1d: build a MagicMock ship with both the legacy
+    ``carried_items`` dict and the typed ``bay_inventory`` slot wired up.
+    The handler's ``_deploy_drop_pod`` reads ``ship.bay_inventory.pods``
+    and writes back via ``ship.set_bay_inventory(...)``; we mirror the
+    write-through into ``carried_items`` so existing assertions on the
+    legacy list shape keep working.
+    """
+    ship = MagicMock()
+    pod = DropPod(
+        design_id=design_id,
+        design_data=design_data,
+        mass=0.0,
+        payload={"name": name},
+    )
+    ship.carried_items = [{
+        "design_id": design_id,
+        "name": name,
+        "design_data": design_data,
+    }]
+    ship.bay_inventory = BayInventory(bay=[], pods=[pod])
+
+    def _set_bay_inventory(bi: BayInventory) -> None:
+        ship.bay_inventory = bi
+        # Mirror back to carried_items so legacy assertions remain
+        # meaningful for tests that haven't migrated yet.
+        ship.carried_items = []
+        for cv in bi.bay:
+            ship.carried_items.append(cv.to_dict())
+        for p in bi.pods:
+            entry = {
+                "design_id": p.design_id,
+                "design_data": p.design_data,
+                "mass": p.mass,
+            }
+            entry.update(p.payload)
+            ship.carried_items.append(entry)
+
+    ship.set_bay_inventory = _set_bay_inventory
+    return ship
 
 
 def _captured_event_bus():
@@ -155,12 +198,11 @@ def test_happy_path_claims_planet_and_deploys_pod():
     sys_obj.name = "Sol"
     galaxy.get_system_of_planet.return_value = sys_obj
 
-    fake_ship = MagicMock()
-    fake_ship.carried_items = [{
-        "design_id": "drop_pod_basic",
-        "name": "Test Pod",
-        "design_data": {"initial_stockpile": {"metals": 10}},
-    }]
+    fake_ship = _ship_with_pod(
+        design_id="drop_pod_basic",
+        name="Test Pod",
+        design_data={"initial_stockpile": {"metals": 10}},
+    )
 
     with patch(
         "game.strategy.validation.ColonizeValidator.validate"
@@ -199,12 +241,11 @@ def test_emits_colony_founded_event_payload_exact_match():
     sys_obj.name = "Sol"
     galaxy.get_system_of_planet.return_value = sys_obj
 
-    fake_ship = MagicMock()
-    fake_ship.carried_items = [{
-        "design_id": "drop_pod_basic",
-        "name": "Test Pod",
-        "design_data": {},
-    }]
+    fake_ship = _ship_with_pod(
+        design_id="drop_pod_basic",
+        name="Test Pod",
+        design_data={},
+    )
 
     with patch(
         "game.strategy.validation.ColonizeValidator.validate"

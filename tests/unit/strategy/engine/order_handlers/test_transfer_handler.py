@@ -9,10 +9,66 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 from game.core.hex_math import HexCoord
+from game.strategy.data.bay_inventory import BayInventory, DropPod
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.species_population import SpeciesPopulation
 from game.strategy.engine.order_handlers.transfer import TransferHandler
+
+
+def _bay_ship(*, name: str = "Ship", pods: list | None = None) -> MagicMock:
+    """PROJ-431 Phase 1d helper: MagicMock ship with a wired-up typed
+    :class:`BayInventory` and a ``set_bay_inventory`` write-through that
+    mirrors the new inventory back onto ``ship.carried_items`` so legacy
+    assertions remain meaningful.
+    """
+    ship = MagicMock()
+    ship.name = name
+    pods = list(pods or [])
+
+    def _typed_pod(p) -> DropPod:
+        if isinstance(p, DropPod):
+            return p
+        if isinstance(p, dict):
+            return DropPod(
+                design_id=str(p.get("design_id", "")),
+                design_data=dict(p.get("design_data", {})),
+                mass=float(p.get("mass", 0.0)),
+                payload={
+                    k: v for k, v in p.items()
+                    if k not in {"design_id", "design_data", "mass"}
+                },
+            )
+        return DropPod(design_id="", design_data={}, mass=0.0, payload={})
+
+    typed_pods = [_typed_pod(p) for p in pods]
+    ship.bay_inventory = BayInventory(bay=[], pods=typed_pods)
+    ship.carried_items = []
+    for p in typed_pods:
+        entry = {
+            "design_id": p.design_id,
+            "design_data": p.design_data,
+            "mass": p.mass,
+        }
+        entry.update(p.payload)
+        ship.carried_items.append(entry)
+
+    def _set_bay_inventory(bi: BayInventory) -> None:
+        ship.bay_inventory = bi
+        ship.carried_items = []
+        for cv in bi.bay:
+            ship.carried_items.append(cv.to_dict())
+        for p in bi.pods:
+            entry = {
+                "design_id": p.design_id,
+                "design_data": p.design_data,
+                "mass": p.mass,
+            }
+            entry.update(p.payload)
+            ship.carried_items.append(entry)
+
+    ship.set_bay_inventory = _set_bay_inventory
+    return ship
 
 
 def _fleet(fleet_id: int = 1, location: HexCoord = HexCoord(0, 0)):
@@ -178,9 +234,7 @@ def test_dispatch_drop_pod_load_reverse_iteration():
     handler = TransferHandler()
     fleet = _fleet()
 
-    ship = MagicMock()
-    ship.name = "Carrier"
-    ship.carried_items = []
+    ship = _bay_ship(name="Carrier")
     ship.get_pod_storage_capacity.return_value = 100
     ship.get_pod_storage_used.return_value = 0
     ship.can_carry_pod.return_value = True
@@ -213,7 +267,11 @@ def test_dispatch_drop_pod_load_reverse_iteration():
     assert result.success is True
     assert result.amount_transferred == 1
     # PodB was loaded; PodA remains in staging.
-    assert ship.carried_items == [pod_b]
+    # PROJ-431 Phase 1d: pods now live on bay_inventory.pods. The legacy
+    # carried_items mirror is preserved by ``_bay_ship`` for tests that
+    # still assert on that shape.
+    assert len(ship.bay_inventory.pods) == 1
+    assert ship.bay_inventory.pods[0].payload.get("name") == "PodB"
     assert planet.staging_yard == [pod_a]
 
 
@@ -325,9 +383,8 @@ def test_dispatch_unload_planet_passengers_existing_species_increments():
 def test_dispatch_drop_pod_unload():
     handler = TransferHandler()
     fleet = _fleet()
-    ship = MagicMock()
-    pod_x = {"name": "PodX"}
-    ship.carried_items = [pod_x]
+    pod_x = {"name": "PodX", "design_id": "drop_pod_basic", "mass": 0.0}
+    ship = _bay_ship(pods=[pod_x])
     fleet.ships = [ship]
 
     planet = _planet()
@@ -352,7 +409,16 @@ def test_dispatch_drop_pod_unload():
         result = handler.execute_action_order(fleet, _empire(), galaxy)
     assert result.success is True
     assert result.amount_transferred == 1
-    planet.add_to_staging_yard.assert_called_once_with(pod_x)
+    # The pod arrives at staging as a flattened dict. The handler
+    # rebuilds the dict at the boundary, so its exact shape is implementation
+    # detail — assert it carries the pod identity rather than identity-equal.
+    assert planet.add_to_staging_yard.call_count == 1
+    delivered = planet.add_to_staging_yard.call_args.args[0]
+    assert delivered.get("name") == "PodX"
+    assert delivered.get("design_id") == "drop_pod_basic"
+    # PROJ-431 Phase 1d: ship's bay_inventory.pods is drained; the
+    # mirrored carried_items list also reflects that.
+    assert ship.bay_inventory.pods == []
     assert ship.carried_items == []
 
 

@@ -5,6 +5,12 @@ Lifted from `OrderProcessor.process_colonize` (lines 151-249) and
 (retained from PROJ-238): colony pods are cargo items consumed at
 colonization; the carrying ship is reusable and stays in the fleet.
 
+PROJ-431 Phase 1d: drop-pod deploy walks ``ship.bay_inventory.pods``
+(typed ``DropPod`` entries) instead of the legacy mixed-shape
+``carried_items`` list. The consumed pod is removed by rebuilding
+``ship.bay_inventory`` with that pod dropped and calling
+``ship.set_bay_inventory(...)``.
+
 Q1 resolution (decisions.md): missing `component_registry` continues to
 log+pop+False (preserved backward-compat). Stronger ValueError contract
 deferred to a future tech-debt project.
@@ -141,31 +147,53 @@ class ColonizeHandler(BaseOrderHandler):
     ) -> None:
         """Deploy a drop pod from fleet cargo as a facility on the planet.
 
-        Finds the first drop pod in any ship's carried_items, removes it,
-        and creates a PlanetaryFacility from its design_data. The full
-        design (all components the player chose) becomes the facility.
+        PROJ-431 Phase 1d: finds the first drop pod in any ship's
+        ``bay_inventory.pods``, removes it via ``set_bay_inventory(...)``
+        (rebuilding the inventory with that pod dropped), and creates a
+        PlanetaryFacility from its ``design_data``. The full design (all
+        components the player chose) becomes the facility.
 
         PROJ-412 Phase 5: ``empire`` is forwarded to ``add_facility`` so
         the empire's storage/booster dirty flags flip mid-turn.
         """
         from uuid import uuid4
+        from game.strategy.data.bay_inventory import BayInventory
         from game.strategy.data.planetary_facility import PlanetaryFacility
         from game.strategy.validation.colonize_validator import ColonizeValidator
 
-        ship, item_index = ColonizeValidator.find_ship_with_drop_pod(fleet)
+        ship, pod_index = ColonizeValidator.find_ship_with_drop_pod(fleet)
         if ship is None:
             logger.warning("_deploy_drop_pod: No drop pod found in fleet")
             return
 
-        # Remove the drop pod from the ship.
-        # PROJ-370 Phase 5: route through IShipInstanceMutator.
-        drop_pod = self._get_ship_mutator().pop_carried_item(ship, item_index)
-        design_data = drop_pod.get('design_data', {})
+        # Remove the drop pod from the ship by rebuilding bay_inventory
+        # without that pod. PROJ-431 Phase 1d: typed write-through.
+        current_bay = ship.bay_inventory
+        if pod_index < 0 or pod_index >= len(current_bay.pods):
+            logger.warning(
+                "_deploy_drop_pod: pod_index %d out of range (pods=%d)",
+                pod_index,
+                len(current_bay.pods),
+            )
+            return
+        drop_pod = current_bay.pods[pod_index]
+        remaining_pods = [
+            p for i, p in enumerate(current_bay.pods) if i != pod_index
+        ]
+        ship.set_bay_inventory(
+            BayInventory(bay=list(current_bay.bay), pods=remaining_pods)
+        )
+
+        design_data = drop_pod.design_data or {}
+        # The legacy entry preserved a 'name' field in its payload. The
+        # typed ``DropPod`` keeps payload-shape extras opaquely so the
+        # facility name continues to round-trip through the same slot.
+        pod_name = drop_pod.payload.get("name", "Colony Drop Pod")
 
         facility = PlanetaryFacility(
             instance_id=uuid4().hex,
-            design_id=drop_pod.get('design_id', 'drop_pod'),
-            name=drop_pod.get('name', 'Colony Drop Pod'),
+            design_id=drop_pod.design_id or "drop_pod",
+            name=pod_name,
             design_data=design_data,
             is_operational=True,
         )

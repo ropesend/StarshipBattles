@@ -290,16 +290,30 @@ class TransferValidator:
         least one ``CarriedVehicle``-shaped entry (optionally matching
         ``design_id``), and the fleet must have at least one ship with
         ``VehicleBay`` capacity remaining for the smallest matching item.
+
+        PROJ-431 Phase 1d: the legacy ``CarriedVehicle.from_any(...)``
+        discriminator is replaced by an explicit dict-shape match
+        against ``VALID_VEHICLE_TYPES``. The planet staging yard is
+        still on the legacy dict substrate (its migration is a later
+        phase); we only avoid the runtime discriminator in this file.
         """
-        from game.strategy.data.carried_vehicle import CarriedVehicle
+        from game.strategy.data.carried_vehicle import (
+            CarriedVehicle,
+            VALID_VEHICLE_TYPES,
+        )
 
         staging = getattr(planet, "staging_yard", [])
         if not isinstance(staging, list):
             staging = []
         candidate: Any = None
         for item in staging:
-            cv = CarriedVehicle.from_any(item)
-            if cv is None:
+            if isinstance(item, CarriedVehicle):
+                cv = item
+            elif isinstance(item, dict) and str(
+                item.get("vehicle_type", "")
+            ).lower() in VALID_VEHICLE_TYPES:
+                cv = CarriedVehicle.from_dict(item)
+            else:
                 continue
             if design_id and cv.design_id != design_id:
                 continue

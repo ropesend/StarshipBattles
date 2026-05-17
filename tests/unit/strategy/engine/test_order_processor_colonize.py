@@ -14,10 +14,52 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from game.core.hex_math import HexCoord
+from game.strategy.data.bay_inventory import BayInventory, DropPod
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
 from game.strategy.engine.order_processor import OrderProcessor
 from game.strategy.events.event_types import EventType
+
+
+def _wire_bay(ship: MagicMock, pod_dicts: list) -> None:
+    """PROJ-431 Phase 1d: wire a MagicMock ship's typed bay_inventory
+    to mirror its legacy ``carried_items`` dict list. Tests created
+    before the typed migration set ``ship.carried_items`` directly;
+    this helper retrofits the typed view so the new validator/handler
+    code paths work without touching the rest of the test body.
+    """
+    ship.carried_items = list(pod_dicts)
+    ship.bay_inventory = BayInventory(
+        bay=[],
+        pods=[
+            DropPod(
+                design_id=str(d.get("design_id", "")),
+                design_data=dict(d.get("design_data", {})),
+                mass=float(d.get("mass", 0.0)),
+                payload={
+                    k: v for k, v in d.items()
+                    if k not in {"design_id", "design_data", "mass"}
+                },
+            )
+            for d in pod_dicts
+        ],
+    )
+
+    def _set_bay_inventory(bi: BayInventory) -> None:
+        ship.bay_inventory = bi
+        ship.carried_items = []
+        for cv in bi.bay:
+            ship.carried_items.append(cv.to_dict())
+        for p in bi.pods:
+            entry = {
+                "design_id": p.design_id,
+                "design_data": p.design_data,
+                "mass": p.mass,
+            }
+            entry.update(p.payload)
+            ship.carried_items.append(entry)
+
+    ship.set_bay_inventory = _set_bay_inventory
 
 
 # ---------------------------------------------------------------------------
@@ -117,9 +159,9 @@ def test_process_colonize_resolves_any_planet_picks_first_unowned():
 
     # Make a drop pod present so we don't trip the no-pod branch.
     pod_ship = MagicMock()
-    pod_ship.carried_items = [
+    _wire_bay(pod_ship, [
         {"vehicle_type": "drop_pod", "design_id": "pod1", "name": "Pod"}
-    ]
+    ])
     fleet.ships = [pod_ship]
 
     with patch(
@@ -142,7 +184,9 @@ def test_process_colonize_returns_false_when_no_drop_pod_in_fleet():
     galaxy.get_planets_at_global_hex.return_value = [planet]
     galaxy.get_system_of_planet.return_value = None
 
-    fleet.ships = [MagicMock(carried_items=[])]  # no pod
+    empty_ship = MagicMock()
+    _wire_bay(empty_ship, [])
+    fleet.ships = [empty_ship]  # no pod
 
     with patch(
         "game.strategy.validation.ColonizeValidator.validate",
@@ -173,7 +217,7 @@ def test_process_colonize_adds_colony_pops_order_and_deploys_pod():
     pod_item = {"vehicle_type": "drop_pod", "design_id": "pod1",
                 "name": "PrimePod", "design_data": {}}
     pod_ship = MagicMock()
-    pod_ship.carried_items = [pod_item]
+    _wire_bay(pod_ship, [pod_item])
     fleet.ships = [pod_ship]
 
     with patch(
@@ -200,12 +244,12 @@ def test_process_colonize_seeds_stockpile_from_design_initial_stockpile():
     galaxy.get_system_of_planet.return_value = None
 
     pod_ship = MagicMock()
-    pod_ship.carried_items = [{
+    _wire_bay(pod_ship, [{
         "vehicle_type": "drop_pod",
         "design_id": "seed_pod",
         "name": "SeedPod",
         "design_data": {"initial_stockpile": {"metals": 50.0, "organics": 25.0}},
-    }]
+    }])
     fleet.ships = [pod_ship]
 
     with patch(
@@ -241,9 +285,9 @@ def test_process_colonize_logs_colony_founded_event_with_system_and_local_hex():
     galaxy.get_system_of_planet.return_value = fake_system
 
     pod_ship = MagicMock()
-    pod_ship.carried_items = [
+    _wire_bay(pod_ship, [
         {"vehicle_type": "drop_pod", "design_id": "pod", "name": "Pod"},
-    ]
+    ])
     fleet.ships = [pod_ship]
 
     with patch(
@@ -317,7 +361,9 @@ def test_deploy_drop_pod_warns_and_returns_when_no_pod_found(caplog):
     """`_deploy_drop_pod` logs a warning and exits when no pod available."""
     proc = OrderProcessor()
     fleet = MagicMock()
-    fleet.ships = [MagicMock(carried_items=[])]
+    empty_ship = MagicMock()
+    _wire_bay(empty_ship, [])
+    fleet.ships = [empty_ship]
     planet = _colonizable_planet()
 
     import logging

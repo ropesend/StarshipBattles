@@ -4,6 +4,7 @@ Phase 5: A ship with multiple drop pods can queue multiple COLONIZE orders
 and colonize multiple planets sequentially.
 """
 from unittest.mock import MagicMock
+from game.strategy.data.bay_inventory import BayInventory, DropPod
 from game.strategy.validation.colonize_validator import ColonizeValidator
 from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
@@ -14,8 +15,26 @@ def _drop_pod(name="Colony Pod", mass=500.0):
 
 
 def _make_ship(num_pods=1):
+    """PROJ-431 Phase 1d: ship stub with typed ``bay_inventory.pods``
+    mirroring the legacy ``carried_items`` list so validator pod counts
+    work against the typed substrate while legacy assertions on
+    ``carried_items`` remain meaningful.
+    """
     ship = MagicMock()
-    ship.carried_items = [_drop_pod() for _ in range(num_pods)]
+    pods_data = [_drop_pod() for _ in range(num_pods)]
+    ship.carried_items = pods_data
+    ship.bay_inventory = BayInventory(
+        bay=[],
+        pods=[
+            DropPod(
+                design_id=p["design_id"],
+                design_data={},
+                mass=p["mass"],
+                payload={"name": p["name"], "vehicle_type": "drop_pod"},
+            )
+            for p in pods_data
+        ],
+    )
     return ship
 
 
@@ -104,8 +123,13 @@ class TestMultiPodChainValidation:
         assert ColonizeValidator.count_committed_colonize_orders(fleet) == 2
         assert ColonizeValidator.count_drop_pods(fleet) == 2
 
-        # Simulate first colonization: remove 1 pod and 1 order
+        # Simulate first colonization: remove 1 pod and 1 order.
+        # PROJ-431 Phase 1d: validator reads the typed pods slot, so
+        # mutate that alongside the legacy carried_items mirror.
         ship.carried_items.pop(0)
+        ship.bay_inventory = BayInventory(
+            bay=list(ship.bay_inventory.bay), pods=ship.bay_inventory.pods[1:]
+        )
         fleet.orders.pop(0)
 
         # Now: 1 pod, 1 committed order → at limit, cannot add more
@@ -114,6 +138,9 @@ class TestMultiPodChainValidation:
 
         # After second colonization: 0 pods, 0 orders
         ship.carried_items.pop(0)
+        ship.bay_inventory = BayInventory(
+            bay=list(ship.bay_inventory.bay), pods=ship.bay_inventory.pods[1:]
+        )
         fleet.orders.pop(0)
         assert ColonizeValidator.count_drop_pods(fleet) == 0
         assert ColonizeValidator.count_committed_colonize_orders(fleet) == 0

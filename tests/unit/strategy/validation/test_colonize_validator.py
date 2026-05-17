@@ -5,12 +5,17 @@ PROJ-36: Tests for centralized colonize order validation.
 Migrated from test_turn_engine.py::TestColonizeValidation.
 Phase 3: Updated to use carried_items with drop pods instead of cargo_contents.
 PROJ-267: Extracted MockPlanetType to module level (was defined 13 times inline).
+PROJ-431 Phase 1d: drop pods now live on ``ship.bay_inventory.pods``
+(typed ``DropPod`` entries). The helpers below set both the typed slot
+and the legacy ``carried_items`` list so tests that assert on either
+shape keep working until the broader test sweep (sub-phase 1e).
 """
 import pytest
 from enum import Enum
 from unittest.mock import MagicMock
 
 from game.core.hex_math import HexCoord
+from game.strategy.data.bay_inventory import BayInventory, DropPod
 
 
 class MockPlanetType(Enum):
@@ -29,6 +34,44 @@ def _drop_pod_item(design_id="test_pod", name="Test Pod"):
         "design_data": {"layers": {"CORE": []}},
         "mass": 500,
     }
+
+
+def _drop_pod_typed(design_id="test_pod", name="Test Pod") -> DropPod:
+    """PROJ-431 Phase 1d: typed DropPod mirror of :func:`_drop_pod_item`.
+    Payload preserves the legacy ``name`` / ``vehicle_type`` keys so
+    consumers that inspect them through ``DropPod.payload`` round-trip.
+    """
+    return DropPod(
+        design_id=design_id,
+        design_data={"layers": {"CORE": []}},
+        mass=500.0,
+        payload={"name": name, "vehicle_type": "drop_pod"},
+    )
+
+
+def _attach_pods(ship_mock: MagicMock, pod_dicts: list) -> None:
+    """Wire a MagicMock ship so both the legacy ``carried_items`` list
+    and the PROJ-431 typed ``bay_inventory`` / ``set_bay_inventory``
+    surface mirror each other. Tests can continue to assert on
+    ``ship.carried_items`` while the production validator walks
+    ``ship.bay_inventory.pods``.
+    """
+    ship_mock.carried_items = list(pod_dicts)
+    ship_mock.bay_inventory = BayInventory(
+        bay=[],
+        pods=[
+            DropPod(
+                design_id=str(d.get("design_id", "")),
+                design_data=dict(d.get("design_data", {})),
+                mass=float(d.get("mass", 0.0)),
+                payload={
+                    k: v for k, v in d.items()
+                    if k not in {"design_id", "design_data", "mass"}
+                },
+            )
+            for d in pod_dicts
+        ],
+    )
 
 
 def _make_planet(planet_type_name: str, name: str = "Test Planet"):
@@ -412,19 +455,19 @@ class TestColonizeValidatorColonyPods:
 
     @pytest.fixture
     def mock_ship_with_ice_dwarf_pod(self):
-        """Create a mock ship with a drop pod in carried_items."""
+        """Create a mock ship with a drop pod in bay_inventory.pods."""
         ship = MagicMock()
         ship.name = "Colony Ship Alpha"
-        ship.carried_items = [_drop_pod_item("ice_dwarf_pod", "Ice Dwarf Pod")]
+        _attach_pods(ship, [_drop_pod_item("ice_dwarf_pod", "Ice Dwarf Pod")])
         ship.is_combat_capable = MagicMock(return_value=True)
         return ship
 
     @pytest.fixture
     def mock_ship_with_continental_pod(self):
-        """Create a mock ship with a drop pod in carried_items."""
+        """Create a mock ship with a drop pod in bay_inventory.pods."""
         ship = MagicMock()
         ship.name = "Colony Ship Beta"
-        ship.carried_items = [_drop_pod_item("continental_pod", "Continental Pod")]
+        _attach_pods(ship, [_drop_pod_item("continental_pod", "Continental Pod")])
         ship.is_combat_capable = MagicMock(return_value=True)
         return ship
 
@@ -433,7 +476,7 @@ class TestColonizeValidatorColonyPods:
         """Create a mock ship without any colony pod."""
         ship = MagicMock()
         ship.name = "Combat Ship"
-        ship.carried_items = []
+        _attach_pods(ship, [])
         ship.is_combat_capable = MagicMock(return_value=True)
         return ship
 
@@ -533,7 +576,7 @@ class TestColonizeValidatorColonyPods:
 
         # Create another ship with a drop pod
         ship2 = MagicMock()
-        ship2.carried_items = [_drop_pod_item("pod_2", "Pod 2")]
+        _attach_pods(ship2, [_drop_pod_item("pod_2", "Pod 2")])
 
         fleet = MagicMock()
         fleet.ships = [mock_ship_with_ice_dwarf_pod, ship2]
@@ -1118,7 +1161,7 @@ class TestColonizeValidatorAdvancedEdgeCases:
         from game.strategy.validation import ColonizeValidator
 
         ship = MagicMock()
-        ship.carried_items = []
+        _attach_pods(ship, [])
 
         fleet = MagicMock()
         fleet.ships = [ship]
