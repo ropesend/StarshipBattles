@@ -58,7 +58,8 @@ Key invariant: component-born modifier applications persist as id/value pairs; `
 | `game/ui/services/component_service.py` | UI-layer facade for component/modifier registry access. |
 | `game/ui/screens/builder/modifier_config.py` | Builder UI parameter controls and defaults. |
 | `game/strategy/services/modifier_resolver.py` | Strategy-layer size-mount stat resolver. |
-| `game/strategy/combat/spec_compiler.py` | Strategy battle compiler; emits `ModifierStack`. |
+| `game/strategy/combat/spec_compiler.py` | Strategy battle public facade (delegates to the assembler). |
+| `game/strategy/combat/strategy_modifier_stack_builder.py` | `StrategyModifierStackBuilder` emits the strategy-side `ModifierStack`. |
 | `game/ui/screens/battle_setup/spec_compiler.py` | Manual battle setup compiler; emits `ModifierStack`. |
 
 ## Modifier Definition

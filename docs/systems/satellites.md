@@ -41,7 +41,7 @@ satellite_group Fleet (group_kind="satellite_group")
         v  contested-hex combat → build_strategy_battle_spec
 spec compiler groups fleets by owner_id; satellite_group merges onto the
 owner's team alongside any regular fleets (only mine_groups are filtered
-out by `_split_mine_groups_from_fleets`).
+out by `TeamSpecBuilder.split_mine_groups`).
         |
         v
 BattleEngine ticks; SatelliteAIController forces zero throttle / zero

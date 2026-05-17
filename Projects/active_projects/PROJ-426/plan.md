@@ -20,13 +20,13 @@
 | 2. Extract pure builders out of `spec_compiler.py` | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Extract pre-tick setup registry and setup builders | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate the adapter to `StrategyBattleAssembly` and remove side-channels | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Reduce `spec_compiler.py` to a thin public facade and update docs | In Progress | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Reduce `spec_compiler.py` to a thin public facade and update docs | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 5
-**Last Action:** Phase 4 complete — adapter consumes StrategyBattleAssembly; 4 side-channel writes deleted; full sharded suite 20953/20953 green.
-**Next Action:** Phase 5 final shrink + docs sync.
+**Active Phase:** None (ready for final audit)
+**Last Action:** Phase 5 complete — spec_compiler.py shrunk to 100 LOC thin facade delegating to `StrategyBattleAssembler`; docs synced. Full sharded 20953/20953 green; testmon green.
+**Next Action:** Final audit / merge.
 **Blockers:** None
 
 ## Overview
@@ -118,11 +118,11 @@ Switch `simulation_adapter._build_spec` to consume `StrategyBattleAssembly` (ren
 
 ## Verification
 Acceptance criteria from the TD-01 plan:
-- [ ] `game/strategy/combat/spec_compiler.py` remains as the public entry point and is `<= 120 LOC`
-- [ ] `game/strategy/adapters/simulation_adapter.py` no longer reads any private spec attribute
-- [ ] `rg "object\.__setattr__\(spec" game tests` returns zero hits
-- [ ] `rg "getattr\(spec, ['\"]_" game tests` returns zero hits
-- [ ] No production file under `game/strategy/combat/` exceeds 500 LOC
-- [ ] `python Tools/test_sharded/test_sharded.py` passes after Phase 4 and again after Phase 5
-- [ ] `docs/systems/strategy_layer.md` describes the assembly pipeline, not spec side-channels
-- [ ] `StrategyBattleAssembler` carries a `mine_group_filter` parameter (intentional temporary state for PROJ-431 Phase 2 handoff)
+- [x] `game/strategy/combat/spec_compiler.py` remains as the public entry point and is `<= 120 LOC` (100 LOC).
+- [x] `game/strategy/adapters/simulation_adapter.py` no longer reads any private spec attribute.
+- [x] `rg "object\.__setattr__\(spec" game tests` returns zero hits (only docstring/comment references remain).
+- [x] `rg "getattr\(spec, ['\"]_" game tests` returns zero hits.
+- [x] No production file under `game/strategy/combat/` exceeds 500 LOC (max 303 in battle_assembly.py).
+- [x] `python Tools/test_sharded/test_sharded.py` passes after Phase 4 (20953/20953) and again after Phase 5 (20953/20953).
+- [x] `docs/systems/strategy_layer.md` describes the assembly pipeline, not spec side-channels.
+- [x] `StrategyBattleAssembler` carries a `mine_group_filter` parameter (intentional temporary state for PROJ-431 Phase 2 handoff).

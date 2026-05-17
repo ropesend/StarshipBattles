@@ -317,7 +317,7 @@ Unified headless path:
 
 ```text
 caller (Combat Lab, Battle Setup, Strategy IBattleResolver)
-  -> context-specific spec compiler
+  -> context-specific spec compiler / assembler
   -> BattleSpec frozen DTO
   -> run_battle(spec, ai_factory, ship_builder=None, registry_provider=None, ...)
   -> BattleEngine.start_teams(teams_by_id, seed, end_condition)
@@ -326,6 +326,20 @@ caller (Combat Lab, Battle Setup, Strategy IBattleResolver)
   -> BattleOutcome
   -> optional spec.post_battle_hook(outcome)
 ```
+
+The Strategy path uses a typed two-stage seam introduced by PROJ-426
+(TD-01). Strategy-only state (`mine_groups`, `owner_to_team_id`,
+`combat_fleets`, `engine_ref`) does NOT live on `BattleSpec`; it lives
+on a typed `BattleSpecExtensions` sidecar inside a
+`StrategyBattleAssembly` returned by
+`StrategyBattleAssembler.assemble(...)`. The simulation engine still
+receives `assembly.spec`; the pre-tick callback comes from
+`assembly.pre_tick_setup.composed_callback()` (a
+`PreTickBattleSetupRegistry` populated with the mine + reboard setups).
+The legacy `object.__setattr__(spec, "_attr", value)` side-channels on
+the frozen `BattleSpec` no longer exist — see Pattern #39 (typed-sidecar
+extensions on frozen DTOs) and Pattern #40 (named pre-tick setup
+registry) in `docs/02_PATTERNS.md`.
 
 Current contracts:
 

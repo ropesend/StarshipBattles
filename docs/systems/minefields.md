@@ -196,8 +196,11 @@ standard tick phases (`update()` in `battle_engine.py`). PROJ-FMS-B
 audit Fix 2 added automatic spec-compiler wiring via
 `build_mine_resolver_setup` (one `TacticalMineResolver` per
 `mine_group` attached to `BattleEngine.mine_resolvers`, threaded
-through a `pre_tick_loop_callback` plus a `_mine_groups` side-channel
-on the frozen `BattleSpec`). `BattleEngine.mine_resolvers` (plural
+through the `pre_tick_loop_callback` composed by
+`StrategyBattleAssembly.pre_tick_setup`, plus the `mine_groups` field
+on `StrategyBattleAssembly.extensions` (PROJ-426 typed sidecar; was
+formerly an `object.__setattr__(spec, "_mine_groups", ...)`
+side-channel on the frozen `BattleSpec`). `BattleEngine.mine_resolvers` (plural
 list) is the load-bearing slot; `BattleEngine.mine_resolver`
 (singular) is retained as a backwards-compat alias for the Phase 3
 unit tests.

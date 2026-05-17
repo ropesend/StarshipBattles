@@ -123,8 +123,8 @@
         "phase_4"
       ],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
-      "phase_branch": null,
+      "phase_base_sha": "6149a8fef",
+      "phase_branch": "proj/PROJ-426/main",
       "phase_head_sha": null,
       "planned_files": [
         "game/strategy/combat/spec_compiler.py",
@@ -136,7 +136,7 @@
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     }
   },

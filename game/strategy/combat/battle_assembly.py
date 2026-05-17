@@ -1,17 +1,18 @@
 """PROJ-426 — typed assembly seam between strategy and simulation.
 
-Replaces the four `object.__setattr__(spec, ...)` side-channels that the
-spec compiler used to bolt onto the frozen `BattleSpec`. The strategy-only
-state (mine_groups, owner→team map, combat_fleets, engine_ref) now lives
-on a typed `BattleSpecExtensions` dataclass wrapped inside a
-`StrategyBattleAssembly` alongside the immutable `BattleSpec` and the
-`PreTickBattleSetupRegistry` that owns the pre-tick setup callbacks.
+`StrategyBattleAssembler.assemble(...)` is the canonical orchestrator
+for turning fleets on a hex into a battle. It returns a
+`StrategyBattleAssembly` bundling:
 
-Phase 1 (this file's introduction) adds the DTOs and the
-`build_strategy_battle_assembly(...)` orchestrator as a compat layer:
-the compiler still writes the side-channels and this orchestrator reads
-them back. Phase 4 deletes the side-channel writes and this orchestrator
-becomes the only path for the four extension fields.
+- `spec: BattleSpec` — the immutable simulation-layer DTO passed to
+  `run_battle`.
+- `extensions: BattleSpecExtensions` — typed sidecar holding the four
+  pieces of strategy-only state (`mine_groups`, `owner_to_team_id`,
+  `combat_fleets`, `engine_ref`) that used to be parked on the spec via
+  `object.__setattr__(spec, ...)`.
+- `pre_tick_setup: PreTickBattleSetupRegistry` — composes the mine +
+  reboard setup callbacks into the single `pre_tick_loop_callback`
+  `run_battle` accepts.
 
 `StrategyBattleAssembler` also carries a temporary `mine_group_filter`
 parameter. PROJ-431 Phase 2 (TD-10 deployable substrate redesign)
@@ -20,16 +21,28 @@ on a unified substrate; do not pre-collapse it here.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Callable, List, Mapping, Optional, Sequence, Tuple
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
+
+from game.simulation.battle_spec import BattleSpec
+from game.simulation.combat.boundary import UnboundedRegion
+from game.simulation.combat.formation import resolve_team_entry_vectors
+from game.simulation.combat.telemetry import TelemetryLevel
+from game.simulation.systems.battle_end_conditions import (
+    TeamEliminatedCondition,
+    TickLimitCondition,
+)
+from game.strategy.combat.post_battle_hook_builder import PostBattleHookBuilder
+from game.strategy.combat.pre_tick_setup_registry import PreTickBattleSetupRegistry
+from game.strategy.combat.strategy_modifier_stack_builder import (
+    StrategyModifierStackBuilder,
+)
+from game.strategy.combat.team_spec_builder import TeamSpecBuilder
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
-    from game.simulation.battle_spec import BattleSpec
     from game.simulation.systems.battle_end_conditions import IEndCondition
     from game.strategy.data.fleet import Fleet
-
-from game.strategy.combat.pre_tick_setup_registry import PreTickBattleSetupRegistry
 
 
 __all__ = [
@@ -40,20 +53,19 @@ __all__ = [
 ]
 
 
-# Default mine-group filter — partitions fleets into (combat_fleets, mine_groups).
-# Lives here as a module-level default so `StrategyBattleAssembler` can carry
-# it as a parameter (the temporary handoff to PROJ-431 Phase 2). Once that
-# project's deployable substrate redesign lands, the filter is no longer
-# needed and the parameter collapses away.
+_DEFAULT_ABSOLUTE_MAX_TICKS = 20_000
+_MIN_TEAMS = 2
+_MAX_TEAMS = 8
+
+
 def _boundary_to_box(
     boundary: Any,
 ) -> Optional[Tuple[float, float, float, float]]:
     """Derive an axis-aligned scatter box from a battle boundary.
 
-    Mirrors the helper currently on `SimulationBattleResolver`: tactical
-    mine scatter takes a `(xmin, ymin, xmax, ymax)` rect. `UnboundedRegion`
-    and non-rectangular boundaries fall back to `None` so the resolver
-    pulls from the mine_group's stored `mine_positions`.
+    Tactical mine scatter takes a `(xmin, ymin, xmax, ymax)` rect.
+    `UnboundedRegion` and non-rectangular boundaries fall back to `None`
+    so the resolver pulls from the mine_group's stored `mine_positions`.
     """
     if boundary is None:
         return None
@@ -70,41 +82,30 @@ def _boundary_to_box(
 def _default_mine_group_filter(
     fleets: Sequence["Fleet"],
 ) -> Tuple[List["Fleet"], List["Fleet"]]:
-    """Partition ``fleets`` into ``(combat_fleets, mine_groups)``.
+    """Partition `fleets` into `(combat_fleets, mine_groups)`.
 
     Mine-group Fleets carry mines in a synthetic-carrier ShipInstance whose
     `layers` / `components` are empty. They participate in tactical combat
     exclusively via `TacticalMineResolver`, not as ShipSpecs on a team.
     """
-    combat: List["Fleet"] = []
-    mine_groups: List["Fleet"] = []
-    for fleet in fleets:
-        if getattr(fleet, "group_kind", "fleet") == "mine_group":
-            mine_groups.append(fleet)
-        else:
-            combat.append(fleet)
-    return combat, mine_groups
+    return TeamSpecBuilder().split_mine_groups(fleets)
 
 
 @dataclass(frozen=True)
 class BattleSpecExtensions:
     """Strategy-only sidecar for a `BattleSpec`.
 
-    Holds the data the spec compiler used to stash via
-    `object.__setattr__(spec, "_<field>", value)`. Lives beside the spec
-    so `BattleSpec` itself remains a frozen simulation-layer DTO.
-
     - `mine_groups`: filtered-out mine_group Fleets for the tactical
       `TacticalMineResolver` wiring.
-    - `owner_to_team_id`: empire_id → team_id mapping used by both the
+    - `owner_to_team_id`: empire_id -> team_id mapping used by both the
       mine resolver (for `_owner_team_id`) and the post-battle hook.
-    - `combat_fleets`: the fleets that survived `_default_mine_group_filter`
+    - `combat_fleets`: the fleets that survived the mine-group filter
       and entered team construction. Used by the fighter reboard setup.
     - `engine_ref`: mutable one-slot list inside this otherwise frozen
-      dataclass. The pre-tick callback fills slot 0 with the live
-      `BattleEngine` so the post-battle hook can drive `apply_reboard`.
-      The frozen dataclass holds the list reference; the list itself is
-      mutable. Do NOT replace the list — append to it.
+      dataclass. The pre-tick reboard callback appends the live
+      `BattleEngine` to it so the post-battle hook can drive
+      `apply_reboard`. The frozen dataclass holds the list reference;
+      the list itself is mutable. Do NOT replace the list — append.
     """
     mine_groups: Tuple["Fleet", ...]
     owner_to_team_id: Mapping[Any, int]
@@ -114,29 +115,14 @@ class BattleSpecExtensions:
 
 @dataclass(frozen=True)
 class StrategyBattleAssembly:
-    """Typed wrapper bundling a battle's three artifacts.
-
-    - `spec`: the immutable `BattleSpec` passed to `run_battle`.
-    - `extensions`: the strategy-only sidecar `BattleSpecExtensions`.
-    - `pre_tick_setup`: the `PreTickBattleSetupRegistry` owning ordered
-      `(engine, spec) -> None` callbacks composed into the single
-      `pre_tick_loop_callback` that `run_battle` accepts.
-    """
-    spec: "BattleSpec"
+    """Typed wrapper bundling a battle's three artifacts."""
+    spec: BattleSpec
     extensions: BattleSpecExtensions
     pre_tick_setup: PreTickBattleSetupRegistry
 
 
 class StrategyBattleAssembler:
     """Orchestrator that compiles fleets into a `StrategyBattleAssembly`.
-
-    Phase 1: a thin wrapper over `build_strategy_battle_spec(...)` that
-    reads the four side-channels back off the produced spec to populate
-    the extensions. Phase 2-3 grow this into the canonical assembly
-    pipeline (delegating to `TeamSpecBuilder`, `StrategyModifierStackBuilder`,
-    `PostBattleHookBuilder`, and the `pre_tick_setup` package). Phase 4
-    flips the spec/extensions ownership — extensions are populated
-    directly without reading the soon-to-be-deleted side-channels.
 
     The `mine_group_filter` parameter is the explicit temporary handoff
     to PROJ-431 Phase 2: that project's deployable substrate redesign
@@ -152,6 +138,9 @@ class StrategyBattleAssembler:
         ] = None,
     ) -> None:
         self._mine_group_filter = mine_group_filter or _default_mine_group_filter
+        self._team_builder = TeamSpecBuilder()
+        self._modifier_builder = StrategyModifierStackBuilder()
+        self._hook_builder = PostBattleHookBuilder()
 
     def assemble(
         self,
@@ -167,36 +156,90 @@ class StrategyBattleAssembler:
         team_modifiers: Optional[Mapping[int, Any]] = None,
         max_ticks: Optional[int] = None,
     ) -> StrategyBattleAssembly:
-        # Local import keeps the strategy-combat package free of any import
-        # cycle with `spec_compiler.py`.
-        from game.strategy.combat.spec_compiler import _compile_spec_with_state
+        _ = registries  # parity; ship construction uses InstanceBackedMaterializer.
 
-        spec, state = _compile_spec_with_state(
-            fleets,
-            empires=empires,
-            settings=settings,
-            registries=registries,
-            seed=seed,
-            end_condition=end_condition,
-            post_battle_hook=post_battle_hook,
+        if empires is None:
+            empires = {}
+
+        combat_fleets, mine_groups = self._mine_group_filter(fleets)
+
+        fleets_by_owner: Dict[Any, List["Fleet"]] = {}
+        for fleet in combat_fleets:
+            fleets_by_owner.setdefault(fleet.owner_id, []).append(fleet)
+        owner_order: List[Any] = list(fleets_by_owner.keys())
+
+        num_teams = len(owner_order)
+        if num_teams < _MIN_TEAMS or num_teams > _MAX_TEAMS:
+            raise ValueError(
+                f"StrategyBattleAssembler.assemble: requires "
+                f"{_MIN_TEAMS}..{_MAX_TEAMS} unique combat-fleet owners; "
+                f"got {num_teams} from {len(combat_fleets)} combat fleets "
+                f"({len(mine_groups)} mine_groups)"
+            )
+
+        entry_vectors = resolve_team_entry_vectors(team_count=num_teams)
+        teams = [
+            self._team_builder.team_spec_for_fleet_group(
+                list(fleets_by_owner[owner_id]),
+                team_id=team_id,
+                entry_vector=entry_vectors[team_id],
+            )
+            for team_id, owner_id in enumerate(owner_order)
+        ]
+
+        empire_to_team_id: Dict[Any, int] = {
+            owner_id: team_id for team_id, owner_id in enumerate(owner_order)
+        }
+        modifier_stack = self._modifier_builder.build(
+            team_count=len(teams),
             environmental_effects=environmental_effects,
             team_modifiers=team_modifiers,
-            max_ticks=max_ticks,
+            empire_to_team_id=empire_to_team_id,
         )
 
-        # PROJ-426 Phase 4: extensions populated directly from the
-        # compiler's typed intermediate state (`_SpecCompilationState`).
-        # The post-battle hook captured `state.engine_ref`, so reusing
-        # that exact list reference here is essential — the pre-tick
-        # reboard setup will append to it and the hook will read it.
-        combat_fleets = state.combat_fleets
-        mine_groups = state.mine_groups
-        owner_to_team_id = state.owner_to_team_id
-        engine_ref = state.engine_ref
+        boundary = None
+        if settings is not None:
+            boundary = getattr(settings, "combat_boundary_default", None)
+        if boundary is None:
+            boundary = UnboundedRegion()
 
-        # Phase 3: populate the pre-tick setup registry with the mine and
-        # reboard setups. The registry composes them into the single
-        # `pre_tick_loop_callback` that `run_battle` accepts.
+        if max_ticks is not None:
+            effective_end_condition: "IEndCondition" = TickLimitCondition(
+                max_ticks=max_ticks
+            )
+            effective_absolute_max_ticks = max_ticks
+        else:
+            effective_end_condition = (
+                end_condition if end_condition is not None
+                else TeamEliminatedCondition()
+            )
+            effective_absolute_max_ticks = _DEFAULT_ABSOLUTE_MAX_TICKS
+
+        # Shared engine_ref: post-battle hook captures it; pre-tick reboard
+        # setup appends the live BattleEngine to slot 0; same list lives on
+        # `BattleSpecExtensions.engine_ref` so the adapter / tests can read.
+        engine_ref: List[Any] = []
+        effective_hook = post_battle_hook
+        if effective_hook is None:
+            effective_hook = self._hook_builder.build(
+                combat_fleets, empires,
+                mine_groups=mine_groups, engine_ref=engine_ref,
+            )
+
+        spec = BattleSpec(
+            seed=seed if seed is not None else 0,
+            telemetry_level=TelemetryLevel.NORMAL,
+            boundary=boundary,
+            end_condition=effective_end_condition,
+            absolute_max_ticks=effective_absolute_max_ticks,
+            teams=tuple(teams),
+            modifier_stack=modifier_stack,
+            post_battle_hook=effective_hook,
+        )
+
+        # Populate the pre-tick setup registry with the mine and reboard
+        # setups. `composed_callback()` will return None when both setups
+        # are absent (e.g., synthetic test fleets).
         registry = PreTickBattleSetupRegistry()
         if combat_fleets:
             from game.strategy.combat.pre_tick_setup import (
@@ -211,17 +254,16 @@ class StrategyBattleAssembler:
             from game.strategy.combat.pre_tick_setup import (
                 build_mine_resolver_setup,
             )
-            battle_boundary = _boundary_to_box(spec.boundary)
             mine_setup = build_mine_resolver_setup(
-                mine_groups, owner_to_team_id,
-                battle_boundary=battle_boundary,
+                mine_groups, empire_to_team_id,
+                battle_boundary=_boundary_to_box(boundary),
             )
             if mine_setup is not None:
                 registry.register("mine", mine_setup)
 
         extensions = BattleSpecExtensions(
             mine_groups=tuple(mine_groups),
-            owner_to_team_id=dict(owner_to_team_id),
+            owner_to_team_id=dict(empire_to_team_id),
             combat_fleets=tuple(combat_fleets),
             engine_ref=engine_ref,
         )
@@ -246,16 +288,8 @@ def build_strategy_battle_assembly(
     team_modifiers: Optional[Mapping[int, Any]] = None,
     max_ticks: Optional[int] = None,
 ) -> StrategyBattleAssembly:
-    """Public functional entry point for building a `StrategyBattleAssembly`.
-
-    Mirrors the signature of `build_strategy_battle_spec(...)`. Instantiates
-    a default `StrategyBattleAssembler` and delegates to `assemble(...)`.
-    Production callers (e.g., `SimulationBattleResolver`) hit this path
-    once Phase 4 lands; until then, the existing `build_strategy_battle_spec`
-    entry point coexists.
-    """
-    assembler = StrategyBattleAssembler()
-    return assembler.assemble(
+    """Public functional entry — instantiate a default assembler and assemble."""
+    return StrategyBattleAssembler().assemble(
         fleets,
         empires=empires,
         settings=settings,

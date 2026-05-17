@@ -4,10 +4,13 @@ Balanced compact derivative of `docs/02_PATTERNS.md` and
 `AgentCoordination/Scratchpad/reports/02_PATTERNS_ALT_compact.md`.
 Source doc last verified 2026-05-17. This version removes release-note
 archaeology, preserves current contracts and extension recipes, and the
-current pattern count is 40 (Patterns #37–#40 came from the PROJ-FMS
-series + Round 4 QA: group-kind discriminator, CarriedVehicle
-substrate, pre_tick_loop_callback composition, polymorphic
-`IIssuerAdapter`).
+current pattern count is 42. Patterns #37, #38, #41 came from the
+PROJ-FMS series + Round 4 QA: group-kind discriminator, CarriedVehicle
+substrate, polymorphic `IIssuerAdapter`. Patterns #39 (typed-sidecar
+extensions on frozen DTOs) and #40 (named pre-tick setup registry)
+came from PROJ-426 (TD-01) and replace the prior
+`_compose_setup_callbacks` + `object.__setattr__(spec, ...)`
+side-channel pattern.
 
 ## Global Rules
 
@@ -62,9 +65,10 @@ substrate, pre_tick_loop_callback composition, polymorphic
 | 36 | Re-Export Shim | Thin module shim preserves a legacy import path during decomposition; tied to a tracked migration project. |
 | 37 | Group-Kind Fleet Discriminator | `Fleet.group_kind` plus `BaseCommandHandler._reject_if_non_fleet_group` constrain non-`fleet` Fleet kinds (`mine_group` / `fighter_group` / `satellite_group`) from movement / build / warp / intercept / join commands. |
 | 38 | CarriedVehicle Substrate | `VehicleBayAbility` (`capacity_mass`, `allowed_types`) plus the `CarriedVehicle` payload and shared `carried_vehicle_to_ship_instance` helper carry design-backed vehicles through bay storage, strategic launch / recovery, and end-of-battle reboard. |
-| 39 | `pre_tick_loop_callback` Composition | `_compose_setup_callbacks` chains battle-setup closures (mine resolver wiring, fighter reboard tracker, etc.) onto the single `run_battle(..., pre_tick_loop_callback=...)` slot, letting independent subsystems install per-battle state without fighting for the same hook. |
-| 40 | Polymorphic Order Issuer (`IIssuerAdapter`) | Order handlers accept an `IIssuerAdapter` protocol (`FleetShipIssuerAdapter` / `PlanetStagingYardIssuerAdapter`) instead of a concrete `(Fleet, ShipInstance)` pair, so a single handler family serves both fleet-ship and planet-facility issuers; `ActionExecutionEngine` ticks both `fleet.orders` and `planet.orders`. |
-| 41 | Bootstrap-State Single Assignment Path | One frozen-dataclass payload (`SessionBootstrapState`) backs both fresh construction and rehydration; one private `_apply_bootstrap_state(state)` method is the only place that mutates `self` from state. Canonical example: `GameSession`. Eliminates the PROJ-396 CRIT-002 service-wiring drift surface. |
+| 39 | Typed-Sidecar Extensions on Frozen DTOs | A frozen cross-layer DTO (e.g. `BattleSpec`) is paired with a typed extensions dataclass (`BattleSpecExtensions`) inside a wrapper (`StrategyBattleAssembly`) constructed by a single orchestrator. Replaces the `object.__setattr__(frozen_dto, "_attr", ...)` side-channel anti-pattern eliminated by PROJ-426 (TD-01). |
+| 40 | Named Pre-Tick Setup Registry | `PreTickBattleSetupRegistry` chains battle-setup closures (`mine_setup`, `reboard_setup`, etc.) by string name in registration order. `composed_callback()` returns the single `run_battle(..., pre_tick_loop_callback=...)` callable or `None` when empty. Independent subsystems register their own setup without coupling to others or fighting for the single hook slot. |
+| 41 | Polymorphic Order Issuer (`IIssuerAdapter`) | Order handlers accept an `IIssuerAdapter` protocol (`FleetShipIssuerAdapter` / `PlanetStagingYardIssuerAdapter`) instead of a concrete `(Fleet, ShipInstance)` pair, so a single handler family serves both fleet-ship and planet-facility issuers; `ActionExecutionEngine` ticks both `fleet.orders` and `planet.orders`. |
+| 42 | Bootstrap-State Single Assignment Path | One frozen-dataclass payload (`SessionBootstrapState`) backs both fresh construction and rehydration; one private `_apply_bootstrap_state(state)` method is the only place that mutates `self` from state. Canonical example: `GameSession`. Eliminates the PROJ-396 CRIT-002 service-wiring drift surface. |
 
 ## 1. ApplicationContext
 
@@ -573,7 +577,7 @@ Contract:
 - `emit_entries_for_ability(ability_name, ability_data, *, scope, owner_team, num_teams, source, source_modifier_id, source_modifier_name, stack_group=None)` performs value extraction, team routing, N-team fan-out, and entry creation.
 - Unknown abilities and zero values emit nothing.
 - `KNOWN_EXTERNAL_STAT_KEYS` lists downstream-consumed stat keys; `FleetAuraManager` warns once per `(stat_key, source)` for unconsumed emitted keys.
-- Consumers: `game/ui/screens/battle_setup/spec_compiler.py::_complex_to_entries`, `game/strategy/combat/spec_compiler.py::_emit_entries_team_scoped`.
+- Consumers: `game/ui/screens/battle_setup/spec_compiler.py::_complex_to_entries`, `game/strategy/combat/strategy_modifier_stack_builder.py::StrategyModifierStackBuilder._emit_team_scoped`.
 - Guard tests in `tests/unit/simulation/combat/test_ability_stat_registry.py` iterate `data/designs/qs_*_complex.json` for placeholder keys and coverage.
 
 To add a combat-affecting ability: add one registry entry, add the consumed stat key to `KNOWN_EXTERNAL_STAT_KEYS`, and rely on glob tests for quickstart complex coverage.
@@ -884,7 +888,7 @@ Contract:
 - Combat membership is unchanged: the conflict-resolution engine
   iterates `empire.fleets` and pulls every Fleet at the contested hex
   regardless of `group_kind` (mine_groups are split back out by
-  `_split_mine_groups_from_fleets` at spec-compile time).
+  `TeamSpecBuilder.split_mine_groups` inside the strategy assembler).
 - Strategic launch / lay actions mint a fresh group every time — no
   same-hex auto-merge (PROJ-FMS-B audit Fix 4; mirrored by PROJ-FMS-C
   fighter launch and PROJ-FMS-D satellite launch).
@@ -940,41 +944,71 @@ Boundary: pods and other non-design-backed cargo continue to use the
 legacy `PodStorage` / `CargoStorage` surface. `VehicleBay` is for
 items that round-trip a full design through the bay.
 
-## 39. `pre_tick_loop_callback` Composition
+## 39. Typed-Sidecar Extensions on Frozen DTOs
 
-Where: `game/strategy/combat/spec_compiler.py::_compose_setup_callbacks`,
-`build_mine_resolver_setup`, `build_fighter_reboard_setup`;
+Where: `game/strategy/combat/battle_assembly.py::BattleSpecExtensions`,
+`StrategyBattleAssembly`, `StrategyBattleAssembler`;
+`game/simulation/battle_spec.py::BattleSpec` (frozen target).
+
+Contract:
+- A frozen simulation-layer DTO (e.g. `BattleSpec`) is a layer-spanning
+  contract — strategy code MUST NOT mutate it. Strategy-only state that
+  the simulation later needs is bundled in a typed `Extensions`
+  dataclass wrapped alongside the spec by a typed
+  `StrategyBattleAssembly`.
+- Mutation requirements that must survive the frozen contract (e.g.
+  a one-slot list filled by a pre-tick callback so a post-battle hook
+  can read it) live as a mutable container field inside the otherwise
+  frozen extensions dataclass. The frozen dataclass holds the reference;
+  the container is appended to, never replaced.
+- The orchestrator (`StrategyBattleAssembler.assemble`) is the only path
+  that constructs both halves so spec and extensions cannot drift.
+- Replaces the deprecated `object.__setattr__(frozen_dto, "_attr", value)`
+  side-channel anti-pattern eliminated by PROJ-426 (TD-01).
+
+Use for: any future cross-layer DTO where one side owns immutability
+and the other needs to attach context, lifecycle state, or
+extension-point data.
+
+Boundary: fields that genuinely belong on the simulation contract
+(read by `run_battle` / engine subsystems via their public surface)
+go on the frozen DTO itself. Strategy-only data that the simulation
+never reads goes on the extensions dataclass.
+
+## 40. Named Pre-Tick Setup Registry
+
+Where: `game/strategy/combat/pre_tick_setup_registry.py::PreTickBattleSetupRegistry`;
+`game/strategy/combat/pre_tick_setup/{mine,reboard}_setup.py`;
+`game/strategy/combat/battle_assembly.py::StrategyBattleAssembler`;
 `game/simulation/battle_runner.py::run_battle`
-(`pre_tick_loop_callback` parameter); `game/simulation/systems/battle_engine.py`.
+(`pre_tick_loop_callback` parameter).
 
 Contract:
 - `run_battle` accepts a single `pre_tick_loop_callback(engine,
   battle_spec)` invoked once after engine construction and before the
   tick loop starts.
 - Independent subsystems (mine resolvers, fighter reboard tracker,
-  etc.) each export a `build_*_setup(...)` factory that returns its
-  own closure over its inputs (`mine_groups`, `owner_to_team_id`,
-  `battle_boundary`, etc.).
-- `_compose_setup_callbacks(*callbacks)` chains those closures in
-  registration order so they share the single `run_battle` hook
-  without coupling.
-- Frozen-`BattleSpec` side-channels: subsystems whose data does not
-  belong on the public spec stash it via
-  `object.__setattr__(spec, "_attr", value)` and read it back in the
-  setup closure. Current side-channels: `_mine_groups`,
-  `_owner_to_team_id`, `_fighter_reboard_inputs`.
+  etc.) each export a `build_*_setup(...)` factory under
+  `game/strategy/combat/pre_tick_setup/` that returns its own closure.
+- `PreTickBattleSetupRegistry.register(name, setup)` adds a setup
+  callback under a string name (duplicate names raise);
+  `composed_callback()` returns a single ordered callback (registration
+  order) or `None` when the registry is empty.
+- `StrategyBattleAssembler` populates the registry once per assembly;
+  the adapter passes `assembly.pre_tick_setup.composed_callback()`
+  straight to `run_battle`.
 
 Use for: any new battle-setup wiring that needs to install state on
-the live `BattleEngine` before the tick loop. Compose with existing
-setup callbacks rather than racing for the single `pre_tick_loop_callback`
+the live `BattleEngine` before the tick loop. Register a named setup
+with the assembler rather than racing for the single `pre_tick_loop_callback`
 slot or adding a parallel kwarg to `run_battle`.
 
 Boundary: things that need to run per-tick belong in the tick-phase
 registry (Pattern #23). Things that need to run at end-of-battle
 belong on the strategy post-battle hook
-(`_build_strategy_post_battle_hook`), not on this setup callback.
+(`PostBattleHookBuilder.build`), not on this setup registry.
 
-## 40. Polymorphic Order Issuer (`IIssuerAdapter`)
+## 41. Polymorphic Order Issuer (`IIssuerAdapter`)
 
 Where: `game/strategy/engine/issuer_adapter.py::IIssuerAdapter`,
 `FleetShipIssuerAdapter`, `PlanetStagingYardIssuerAdapter`; the five
@@ -1025,7 +1059,7 @@ Boundary: this pattern is for sharing handler logic across issuer
 kinds. It is NOT for adding new order types — those still get their
 own command + handler + order handler trio (Pattern #7).
 
-## 41. Bootstrap-State Single Assignment Path
+## 42. Bootstrap-State Single Assignment Path
 
 Where: `game/strategy/engine/session/runtime_services.py`, `game/strategy/engine/session/bootstrap.py`, `game/strategy/engine/session/persistence_adapter.py`, `game/strategy/engine/game_session.py`.
 

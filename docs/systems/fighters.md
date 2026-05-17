@@ -155,8 +155,9 @@ for end-of-battle reboard.
 
 `fighter_group` Fleets are real combat fleets — unlike `mine_group`s
 they ARE combat-capable entities and translate to `ShipSpec` entries on
-the owner's team in `build_strategy_battle_spec`. The spec compiler's
-`_split_mine_groups_from_fleets` only filters mine groups; fighter_groups
+the owner's team in `build_strategy_battle_spec` /
+`build_strategy_battle_assembly`. The strategy assembler's
+`TeamSpecBuilder.split_mine_groups` only filters mine groups; fighter_groups
 fall through to the normal `fleets_by_owner` grouping.
 
 Each `ShipInstance` in the fighter_group becomes a tactical entity
@@ -264,11 +265,13 @@ Wiring:
   `build_fighter_reboard_setup` pre_tick_loop_callback.
 - [`attack_processor.process_launch_attack`](../../game/simulation/systems/attack_processor.py)
   appends each spawned fighter to the tracker.
-- The post-battle hook in `_build_strategy_post_battle_hook` reads the
-  engine via a shared `_engine_ref` list parked on the spec and calls
-  `apply_reboard`.
-- The simulation adapter composes `mine_resolver_setup` and
-  `reboard_setup` into a single `pre_tick_loop_callback`.
+- The post-battle hook built by `PostBattleHookBuilder` reads the
+  engine via the shared `engine_ref` mutable one-slot list on
+  `StrategyBattleAssembly.extensions` (PROJ-426 typed sidecar; was
+  formerly an `object.__setattr__(spec, "_engine_ref", ...)` side-channel)
+  and calls `apply_reboard`.
+- `PreTickBattleSetupRegistry` composes `mine_setup` and `reboard_setup`
+  into the single `pre_tick_loop_callback` passed to `run_battle`.
 
 ## Tests
 

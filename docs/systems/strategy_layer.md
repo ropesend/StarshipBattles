@@ -489,6 +489,56 @@ Important contracts:
 - All `find_abilities_in_scope()` calls use `require_active=True`.
 - `ConflictResolutionEngine` collects modifiers for every participating fleet and resolves one N-team battle per contested hex.
 
+#### Strategy Battle Assembly Pipeline (PROJ-426 / TD-01)
+
+`game.strategy.combat.battle_assembly.StrategyBattleAssembler.assemble(...)`
+is the canonical orchestrator. It returns a `StrategyBattleAssembly`:
+
+```text
+build_strategy_battle_assembly(fleets, ...)
+    -> StrategyBattleAssembler.assemble(...)
+        -> StrategyBattleAssembly(
+               spec=BattleSpec,                       # frozen sim-layer DTO
+               extensions=BattleSpecExtensions,       # strategy-only sidecar
+               pre_tick_setup=PreTickBattleSetupRegistry,
+           )
+```
+
+`BattleSpecExtensions` holds the four pieces of strategy-only state that
+used to be parked on the frozen `BattleSpec` via
+`object.__setattr__(spec, ...)`:
+
+| Field | Purpose |
+|---|---|
+| `mine_groups` | Mine-group Fleets filtered out of team construction; consumed by `TacticalMineResolver` wiring. |
+| `owner_to_team_id` | `empire_id -> team_id` map used by the mine resolver and post-battle hook. |
+| `combat_fleets` | Fleets that survived the mine-group filter and entered team construction; consumed by the reboard setup. |
+| `engine_ref` | Mutable one-slot list. The pre-tick reboard setup appends the live `BattleEngine`; the post-battle hook reads slot 0 to drive `apply_reboard`. |
+
+`PreTickBattleSetupRegistry` owns the ordered mine + reboard setup
+callbacks; `composed_callback()` returns the single `pre_tick_loop_callback`
+that `run_battle` accepts (or `None` when nothing is registered).
+
+The named builders inside the assembler:
+
+- `TeamSpecBuilder` — fleet grouping, team build, formation selection,
+  ship_spec construction, mine-group split.
+- `StrategyModifierStackBuilder` — environmental + per-team modifier
+  translation.
+- `PostBattleHookBuilder` — outcome closure construction.
+- `pre_tick_setup/{mine,reboard}_setup.py` — engine-side wiring closures.
+
+`game/strategy/combat/spec_compiler.py::build_strategy_battle_spec(...)`
+is preserved as a thin public facade (delegates to the assembler and
+returns `assembly.spec`). New callers that need extensions or the
+pre-tick registry should use `build_strategy_battle_assembly` directly.
+`SimulationBattleResolver._build_assembly` is the production runtime
+caller of `build_strategy_battle_assembly`.
+
+The `StrategyBattleAssembler` `mine_group_filter` parameter is an
+explicit temporary handoff to PROJ-431 Phase 2 (TD-10 deployable
+substrate redesign) — do not pre-collapse it.
+
 Battle Setup complex toggles:
 
 - File: `game/ui/screens/battle_setup/spec_compiler.py::_complex_to_entries`.
@@ -926,7 +976,7 @@ Storm coordinate frame:
 
 Combat consumption:
 
-- `spec_compiler._entries_from_sector_effects` emits one `ModifierEntry` per ACTIVE provider.
+- `StrategyModifierStackBuilder.entries_from_sector_effects` (in `game/strategy/combat/strategy_modifier_stack_builder.py`) emits one `ModifierEntry` per ACTIVE provider.
 - ShieldModifier, DamageModifier, and ThrustModifier flow through `ABILITY_STAT_REGISTRY`.
 
 Removed legacy:

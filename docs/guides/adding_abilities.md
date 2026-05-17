@@ -324,8 +324,8 @@ Adding a combat-projected ability usually requires:
 Current routing surfaces:
 
 - Battle Setup complex toggles walk `ABILITY_STAT_REGISTRY` for non-`self` scoped abilities in `game/ui/screens/battle_setup/spec_compiler.py`.
-- Strategy sector effects are converted in `game/strategy/combat/spec_compiler.py::_entries_from_sector_effects`.
-- Fleet-combat aggregate modifiers are represented by `FleetCombatModifiers` and translated by `_entries_from_fleet_combat_modifiers`.
+- Strategy sector effects are converted in `game/strategy/combat/strategy_modifier_stack_builder.py::StrategyModifierStackBuilder.entries_from_sector_effects`.
+- Fleet-combat aggregate modifiers are represented by `FleetCombatModifiers` and translated by `StrategyModifierStackBuilder.entries_from_fleet_combat_modifiers`.
 - Legacy placeholder stat emission is gone. Do not reintroduce placeholder keys or compiler-local duplicate mappings.
 
 Enemy scopes are routed by `OPPONENT_SCOPES = {"enemy_sector", "enemy_system"}`. Adding another enemy scope requires extending that constant and tests.
@@ -438,7 +438,7 @@ Add new system/sector effect ability metadata in `game/strategy/services/effect_
 If the strategic ability modifies combat stats, make sure both source collection and battle emission are covered:
 
 - `game/strategy/services/combat_modifier_collector.py` collects active facility effects for strategy combat. Activatable effects should use active-state filtering.
-- `game/strategy/combat/spec_compiler.py` emits sector-effect entries into `ModifierStack`.
+- `game/strategy/combat/strategy_modifier_stack_builder.py` emits sector-effect entries into `ModifierStack` for the strategy spec compiler / assembler.
 - `game/simulation/combat/ability_stat_registry.py` maps ability name to stat key and operation.
 
 Battle Setup complex toggles already use the same ability-stat registry path for non-self scoped complex abilities.

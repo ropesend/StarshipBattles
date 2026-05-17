@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Depends on:** phase_4
 **Review Mode:** standard
 **Files (planned):**
@@ -20,9 +20,9 @@
 
 ## Reading
 
-- [ ] Re-read [TD-01 source plan §"Phase 5"](../../../Reviews/results/2026-05-16_strategy-layer-tech-debt-review/Verified%20Problem%20Remediation%20Plans/TD-01_battle_spec_compilation.md).
-- [ ] `git ls-files game/strategy/combat/` and `wc -l game/strategy/combat/*.py` — confirm no file is > 500 LOC post-extraction.
-- [ ] Identify any doc text that still describes `spec._mine_groups` / side-channels / "spec compiler builds setup callbacks". Grep:
+- [x] Re-read [TD-01 source plan §"Phase 5"](../../../Reviews/results/2026-05-16_strategy-layer-tech-debt-review/Verified%20Problem%20Remediation%20Plans/TD-01_battle_spec_compilation.md).
+- [x] `git ls-files game/strategy/combat/` and `wc -l game/strategy/combat/*.py` — confirm no file is > 500 LOC post-extraction.
+- [x] Identify any doc text that still describes `spec._mine_groups` / side-channels / "spec compiler builds setup callbacks". Grep:
   ```bash
   rg "_mine_groups|_owner_to_team_id|_combat_fleets|_engine_ref|object\.__setattr__\(spec" docs
   ```
@@ -35,12 +35,12 @@
 **File:** `game/strategy/combat/spec_compiler.py`
 **Tests:** `pytest tests/unit/strategy/combat/ tests/unit/strategy/adapters/test_simulation_adapter.py -x`
 
-- [ ] Body of `build_strategy_battle_spec(...)` becomes orchestration only: instantiate `StrategyBattleAssembler`, call `assemble`, and `return assembly.spec`.
-- [ ] Optionally re-export `build_strategy_battle_assembly(...)` for callers that want the full assembly.
-- [ ] Remove now-dead imports.
-- [ ] Remove stale module-doc text that still describes side-channels or embedded setup builders.
-- [ ] `wc -l game/strategy/combat/spec_compiler.py` should report `<= 120` LOC.
-- [ ] Run focused suite; confirm green.
+- [x] Body of `build_strategy_battle_spec(...)` becomes orchestration only: instantiate `StrategyBattleAssembler`, call `assemble`, and `return assembly.spec`.
+- [x] Optionally re-export `build_strategy_battle_assembly(...)` for callers that want the full assembly.
+- [x] Remove now-dead imports.
+- [x] Remove stale module-doc text that still describes side-channels or embedded setup builders.
+- [x] `wc -l game/strategy/combat/spec_compiler.py` should report `<= 120` LOC.
+- [x] Run focused suite; confirm green.
 
 **Notes:**
 
@@ -48,9 +48,9 @@
 **File:** N/A
 **Tests:** N/A
 
-- [ ] `wc -l game/strategy/combat/*.py game/strategy/combat/pre_tick_setup/*.py`.
-- [ ] Every file `<= 500` LOC per AGENTS.md production-file ceiling.
-- [ ] If any file is over, split by responsibility before continuing.
+- [x] `wc -l game/strategy/combat/*.py game/strategy/combat/pre_tick_setup/*.py`.
+- [x] Every file `<= 500` LOC per AGENTS.md production-file ceiling.
+- [x] If any file is over, split by responsibility before continuing.
 
 **Notes:**
 
@@ -58,10 +58,10 @@
 **File:** `docs/systems/strategy_layer.md`, `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`
 **Tests:** N/A (docs)
 
-- [ ] Update `docs/systems/strategy_layer.md` to describe the assembly pipeline (`build_strategy_battle_spec` → `StrategyBattleAssembler.assemble` → `StrategyBattleAssembly{spec, extensions, pre_tick_setup}`) rather than spec mutation.
-- [ ] Update `docs/01_ARCHITECTURE.md` to reflect the strategy-to-simulation boundary now being the typed `StrategyBattleAssembly` (extensions live in strategy, `BattleSpec` stays frozen in simulation).
-- [ ] Update `docs/02_PATTERNS.md` with the typed-sidecar-extensions pattern and the named-setup-registry pattern. Remove any prior description of `object.__setattr__` on frozen DTOs as an accepted pattern.
-- [ ] Skip `docs/_ignore/` per AGENTS.md.
+- [x] Update `docs/systems/strategy_layer.md` to describe the assembly pipeline (`build_strategy_battle_spec` → `StrategyBattleAssembler.assemble` → `StrategyBattleAssembly{spec, extensions, pre_tick_setup}`) rather than spec mutation.
+- [x] Update `docs/01_ARCHITECTURE.md` to reflect the strategy-to-simulation boundary now being the typed `StrategyBattleAssembly` (extensions live in strategy, `BattleSpec` stays frozen in simulation).
+- [x] Update `docs/02_PATTERNS.md` with the typed-sidecar-extensions pattern and the named-setup-registry pattern. Remove any prior description of `object.__setattr__` on frozen DTOs as an accepted pattern.
+- [x] Skip `docs/_ignore/` per AGENTS.md.
 
 **Notes:**
 
@@ -69,9 +69,9 @@
 **File:** N/A
 **Tests:** `python Tools/test_sharded/test_sharded.py` + `pytest tests/ --testmon`
 
-- [ ] Run `python Tools/test_sharded/test_sharded.py`; confirm green.
-- [ ] Run `pytest tests/ --testmon`; confirm green.
-- [ ] Final grep gates:
+- [x] Run `python Tools/test_sharded/test_sharded.py`; confirm green.
+- [x] Run `pytest tests/ --testmon`; confirm green.
+- [x] Final grep gates:
   - `rg "object\.__setattr__\(spec" game tests` → zero hits.
   - `rg "getattr\(spec, ['\"]_" game tests` → zero hits.
   - `rg "_mine_groups|_owner_to_team_id|_combat_fleets|_engine_ref" docs` → zero hits in non-historical text.
@@ -82,8 +82,8 @@
 **File:** N/A
 **Tests:** N/A
 
-- [ ] `git status --short` confirms only Phase 5 files dirty.
-- [ ] Commit: `PROJ-426 phase 5: reduce spec_compiler.py to thin facade + docs sync`.
+- [x] `git status --short` confirms only Phase 5 files dirty.
+- [x] Commit: `PROJ-426 phase 5: reduce spec_compiler.py to thin facade + docs sync`.
 
 **Notes:**
 
@@ -91,12 +91,12 @@
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All Phase 5 task checkboxes checked.
-- [ ] `game/strategy/combat/spec_compiler.py` `<= 120 LOC` and is orchestration only.
-- [ ] No `game/strategy/combat/` file exceeds 500 LOC.
-- [ ] `docs/systems/strategy_layer.md`, `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md` describe the assembler pipeline.
-- [ ] Full sharded suite green; `--testmon` green.
-- [ ] All final grep gates pass.
-- [ ] Update status at top of this file to `Complete`.
-- [ ] Update plan.md phase table row to `Complete`.
-- [ ] Update plan.md Current State to indicate project ready for final audit.
+- [x] All Phase 5 task checkboxes checked.
+- [x] `game/strategy/combat/spec_compiler.py` `<= 120 LOC` and is orchestration only.
+- [x] No `game/strategy/combat/` file exceeds 500 LOC.
+- [x] `docs/systems/strategy_layer.md`, `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md` describe the assembler pipeline.
+- [x] Full sharded suite green; `--testmon` green.
+- [x] All final grep gates pass.
+- [x] Update status at top of this file to `Complete`.
+- [x] Update plan.md phase table row to `Complete`.
+- [x] Update plan.md Current State to indicate project ready for final audit.
