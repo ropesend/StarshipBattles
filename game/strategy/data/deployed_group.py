@@ -30,7 +30,12 @@ from game.core.hex_math import HexCoord
 from game.strategy.data.carried_vehicle import CarriedVehicle
 
 
-__all__ = ["DeployedGroup", "MineGroup"]
+__all__ = [
+    "DeployedGroup",
+    "MineGroup",
+    "FighterWing",
+    "SatelliteConstellation",
+]
 
 
 # ---------------------------------------------------------------------------
@@ -272,3 +277,128 @@ class MineGroup(DeployedGroup):
         if data.get("scatter_seed") is not None:
             mg.scatter_seed = int(data["scatter_seed"])
         return mg
+
+
+# ---------------------------------------------------------------------------
+# FighterWing (PROJ-431 Phase 3)
+# ---------------------------------------------------------------------------
+
+
+@_register_type("fighter_wing")
+class FighterWing(DeployedGroup):
+    """Deployed-fighter group — sibling of :class:`Fleet`, NOT a Fleet.
+
+    Replaces the previous ``Fleet(group_kind="fighter_group")`` synthetic
+    fleet pattern. Fighters launched into the strategic layer (either via
+    :class:`LaunchFightersOrderHandler` or as battle overflow) live here
+    as real :class:`ShipInstance` entries on ``self.ships``. The fleet-
+    action surface (Move / Warp / Build / Join) is structurally
+    unreachable on this type — no string discriminator, no guard.
+
+    Attributes:
+        ships: Deployed fighter roster, ``list[ShipInstance]``. Unlike
+            :class:`MineGroup` (which holds :class:`CarriedVehicle`s),
+            fighter wings hold materialised ships so they can participate
+            in battle directly.
+    """
+
+    def __init__(
+        self,
+        *,
+        group_id: Any,
+        owner_id: int,
+        location: HexCoord,
+        display_name: str = "",
+    ) -> None:
+        super().__init__(
+            group_id=group_id,
+            owner_id=owner_id,
+            location=location,
+            display_name=display_name,
+        )
+        # Late-import-avoidance: typed only via comment, list-typed at runtime.
+        self.ships: List[Any] = []
+
+    # ------------------------------------------------------------------
+    # Serialisation
+    # ------------------------------------------------------------------
+
+    def to_dict(self) -> Dict[str, Any]:
+        data = super().to_dict()
+        data["ships"] = [s.to_dict() for s in self.ships]
+        return data
+
+    @classmethod
+    def _from_dict_payload(cls, data: Dict[str, Any]) -> "FighterWing":
+        from game.strategy.data.ship_instance import ShipInstance
+
+        wing = cls(
+            group_id=data["id"],
+            owner_id=int(data["owner_id"]),
+            location=cls._decode_location(data["location"]),
+            display_name=str(data.get("display_name", "") or ""),
+        )
+        for ship_data in data.get("ships", []) or []:
+            if isinstance(ship_data, ShipInstance):
+                wing.ships.append(ship_data)
+            elif isinstance(ship_data, dict):
+                wing.ships.append(ShipInstance.from_dict(ship_data))
+        return wing
+
+
+# ---------------------------------------------------------------------------
+# SatelliteConstellation (PROJ-431 Phase 3)
+# ---------------------------------------------------------------------------
+
+
+@_register_type("satellite_constellation")
+class SatelliteConstellation(DeployedGroup):
+    """Deployed-satellite group — sibling of :class:`Fleet`, NOT a Fleet.
+
+    Mirror of :class:`FighterWing` for the satellite family. Replaces
+    the previous ``Fleet(group_kind="satellite_group")`` synthetic
+    fleet. Satellites launched into the strategic layer live here as
+    real :class:`ShipInstance` entries on ``self.ships``.
+    """
+
+    def __init__(
+        self,
+        *,
+        group_id: Any,
+        owner_id: int,
+        location: HexCoord,
+        display_name: str = "",
+    ) -> None:
+        super().__init__(
+            group_id=group_id,
+            owner_id=owner_id,
+            location=location,
+            display_name=display_name,
+        )
+        self.ships: List[Any] = []
+
+    # ------------------------------------------------------------------
+    # Serialisation
+    # ------------------------------------------------------------------
+
+    def to_dict(self) -> Dict[str, Any]:
+        data = super().to_dict()
+        data["ships"] = [s.to_dict() for s in self.ships]
+        return data
+
+    @classmethod
+    def _from_dict_payload(cls, data: Dict[str, Any]) -> "SatelliteConstellation":
+        from game.strategy.data.ship_instance import ShipInstance
+
+        c = cls(
+            group_id=data["id"],
+            owner_id=int(data["owner_id"]),
+            location=cls._decode_location(data["location"]),
+            display_name=str(data.get("display_name", "") or ""),
+        )
+        for ship_data in data.get("ships", []) or []:
+            if isinstance(ship_data, ShipInstance):
+                c.ships.append(ship_data)
+            elif isinstance(ship_data, dict):
+                c.ships.append(ShipInstance.from_dict(ship_data))
+        return c
