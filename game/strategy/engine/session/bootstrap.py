@@ -92,6 +92,8 @@ class SessionBootstrap:
         ai_factory: Any | None = None,
         race_registry_provider: Callable[[], "IRaceRegistry"] | None = None,
         event_handler_factory: Callable[[EventLog], Callable[..., None]] | None = None,
+        save_path: str | None = None,
+        empire_ids: list[int] | None = None,
     ) -> SessionRuntimeServices:
         """Construct the wired runtime-services bag.
 
@@ -181,6 +183,33 @@ class SessionBootstrap:
 
         command_registry = create_default_registry()
 
+        # PROJ-427 Phase 2: construct one DesignRepository per session
+        # and one DesignCatalog per known empire id. Catalogs are
+        # populated from the repository here (single bootstrap-time
+        # scan); they are NEVER repopulated during a production tick
+        # (Phase 3 integration test asserts this).
+        from game.strategy.systems.design_catalog import DesignCatalog
+        from game.strategy.systems.design_repository import DesignRepository
+
+        # Note: DesignRepository's constructor takes (savegame_path,
+        # empire_id) — its folder layout is per-empire. For the
+        # session-level catalog/repository wiring we keep a session-
+        # owned repository keyed by empire 0 as the canonical
+        # filesystem handle; per-empire repos used inside
+        # repopulate_from(...) are constructed on the fly below so
+        # each catalog sees its own designs folder. This split keeps
+        # the repository file folder-shape unchanged from today
+        # (`designs/empire_<id>/`) without forcing a multi-empire
+        # repository refactor inside Phase 2.
+        design_repository = DesignRepository(save_path, empire_id=0)
+        catalogs_by_empire: dict[int, DesignCatalog] = {}
+        if empire_ids:
+            for emp_id in empire_ids:
+                cat = DesignCatalog(empire_id=emp_id)
+                per_empire_repo = DesignRepository(save_path, empire_id=emp_id)
+                cat.repopulate_from(per_empire_repo)
+                catalogs_by_empire[emp_id] = cat
+
         return SessionRuntimeServices(
             registries=registries,
             event_log=log,
@@ -191,6 +220,8 @@ class SessionBootstrap:
             ship_mutator=ship_mutator,
             turn_engine=turn_engine,
             command_registry=command_registry,
+            design_repository=design_repository,
+            design_catalogs_by_empire=catalogs_by_empire,
         )
 
     @staticmethod
@@ -249,6 +280,26 @@ class SessionBootstrap:
         human_player_ids = [
             i for i, p in enumerate(config.players) if p.is_human
         ]
+
+        # PROJ-427 Phase 2: now that we have empire IDs, build per-
+        # empire DesignCatalogs and replace them on the services bag.
+        # `_build_services` constructed the session-level
+        # design_repository already; here we just seed per-empire
+        # catalogs and re-wrap the frozen dataclass via replace().
+        from dataclasses import replace as _dc_replace
+        from game.strategy.systems.design_catalog import DesignCatalog
+        from game.strategy.systems.design_repository import DesignRepository
+
+        catalogs_by_empire: dict[int, DesignCatalog] = {}
+        for emp in empires:
+            cat = DesignCatalog(empire_id=emp.id)
+            per_empire_repo = DesignRepository(None, empire_id=emp.id)
+            cat.repopulate_from(per_empire_repo)
+            catalogs_by_empire[emp.id] = cat
+        services = _dc_replace(
+            services,
+            design_catalogs_by_empire=catalogs_by_empire,
+        )
 
         return SessionBootstrapState(
             config=config,

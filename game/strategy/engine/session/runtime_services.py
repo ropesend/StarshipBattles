@@ -16,7 +16,7 @@ lazy on `GameSession` per the source plan.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import Mapping, TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from game.core.event_logging import EventBus
@@ -26,6 +26,8 @@ if TYPE_CHECKING:
     from game.strategy.engine.game_config import GameConfig
     from game.strategy.engine.turn_engine import TurnEngine
     from game.strategy.events import EventLog
+    from game.strategy.systems.design_catalog import DesignCatalog
+    from game.strategy.systems.design_repository import DesignRepository
 
 
 @dataclass(frozen=True)
@@ -44,6 +46,19 @@ class SessionRuntimeServices:
         turn_engine: TurnEngine instance for this session.
         command_registry: Command dispatch registry
             (`create_default_registry()` output).
+        design_repository: PROJ-427 Phase 2. Filesystem + JSON
+            persistence layer for ship designs. One instance per
+            session; reachable from ``SaveGameService`` for the
+            Phase-4 built-count flush, and from each per-empire
+            ``DesignCatalog``'s ``repopulate_from(...)`` boundary.
+            Not reachable from runtime production spawn paths after
+            Phase 3.
+        design_catalogs_by_empire: PROJ-427 Phase 2. Per-empire
+            ``DesignCatalog`` map keyed by ``empire.id``. Each catalog
+            owns the in-memory runtime lookup + per-turn UI cache +
+            pending built-count increments for one empire. Built at
+            ``SessionBootstrap.new_game_state(...)``; populated by
+            ``DesignCatalog.repopulate_from(design_repository)``.
     """
 
     registries: "GameRegistries"
@@ -55,6 +70,10 @@ class SessionRuntimeServices:
     ship_mutator: Any
     turn_engine: "TurnEngine"
     command_registry: Any
+    design_repository: "DesignRepository | None" = None
+    design_catalogs_by_empire: "Mapping[int, DesignCatalog]" = field(
+        default_factory=dict
+    )
 
 
 @dataclass(frozen=True)

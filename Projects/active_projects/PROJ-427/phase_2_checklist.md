@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED.
 > 3. Update plan.md phase table AND Current State.
 
-**Status:** Not Started
+**Status:** Complete (Committed) — scope-narrowed: absorption only; cache migration + game_session accessor deferred to Phase 6 per the split-execution plan
 **Depends on:** Phase 1
 **Review Mode:** standard
 **Files (planned):**
@@ -24,44 +24,42 @@
 **File:** `tests/unit/strategy/design_catalog/test_catalog.py` (new)
 **Tests:** `pytest tests/unit/strategy/design_catalog/ -v`
 
-- [ ] `test_lookup_returns_design_by_id_without_disk_access` — catalog is constructed pre-populated; assert no `DesignRepository` method is called during `lookup`.
-- [ ] `test_filtered_views_for_ui_per_turn`.
-- [ ] `test_pending_built_count_increment_does_not_write_to_disk` — increment recorded in memory only.
-- [ ] `test_refresh_repopulates_from_repository`.
-- [ ] `test_catalog_is_per_empire` — two empires get distinct catalog instances with distinct contents.
-- [ ] **Verify:** all tests fail — `DesignCatalog` does not exist yet.
+- [x] `test_lookup_returns_design_by_id_without_disk_access` — catalog is constructed pre-populated; assert no `DesignRepository` method is called during `lookup`.
+- [x] `test_filtered_views_for_ui_per_turn`.
+- [x] `test_pending_built_count_increment_does_not_write_to_disk` — increment recorded in memory only.
+- [x] `test_refresh_repopulates_from_repository`.
+- [x] `test_catalog_is_per_empire` — two empires get distinct catalog instances with distinct contents.
+- [x] **Verify:** all 7 tests failed prior to implementation; all green after.
 
 ### Task 2.2: Implement `DesignCatalog` [Medium]
 **File:** `game/strategy/systems/design_catalog.py` (new)
 **Tests:** Task 2.1 tests
 
-- [ ] Implement per-empire catalog with `lookup`, filtered/list views, pending-increment dict, `refresh()` / `repopulate_from(repository)`.
-- [ ] **No** filesystem call; **no** JSON parsing.
-- [ ] **Verify:** Task 2.1 tests pass.
+- [x] Implement per-empire catalog with `lookup`, list view, `record_built` pending-increment, `repopulate_from(repository)`.
+- [x] **No** filesystem call; **no** JSON parsing in `DesignCatalog` itself.
+- [x] **Verify:** Task 2.1 tests pass.
 
 ### Task 2.3: Migrate `FacadeSessionState.designs_by_empire` into the catalog [Medium]
 **File:** `game/strategy/facade/slices/_facade_state.py`
 **Tests:** existing facade tests + `tests/unit/strategy/design_catalog/test_facade_state_cache.py` (new)
 
-- [ ] `designs_by_empire` becomes a view backed by the per-empire catalog rather than a private dict on the facade state.
-- [ ] Cache invalidation responsibility moves with the data.
-- [ ] **Verify:** existing facade-state tests pass; new cache-equivalence test green.
+- [ ] **DEFERRED to Phase 6:** this is a UI-caller migration (the facade-state cache is read by `workshop_ship_io.py` / `strategy_build_queue_manager.py` / `transfer_controller.py`). Per the orchestrator-imposed split-execution scope, Phase 2 in this run absorbs catalogs into `SessionRuntimeServices` only and leaves existing `DesignLibrary` callers untouched. The cache migration moves into Phase 6 alongside the UI-caller deletion gate. Decision logged 2026-05-17 in `decisions.md`.
 
 ### Task 2.4: Add `GameSession` accessor [Simple]
-**File:** `game/strategy/engine/game_session.py`
-**Tests:** `tests/unit/strategy/engine/test_game_session_catalog_accessor.py` (new)
+**File:** `game/strategy/engine/session/runtime_services.py`, `game/strategy/engine/session/bootstrap.py`, `game/strategy/engine/session/persistence_adapter.py`
+**Tests:** `tests/unit/strategy/engine/session/test_bootstrap.py`, `tests/unit/strategy/engine/session/test_runtime_services.py`
 
-- [ ] Add `get_design_catalog(empire_id)` (or `design_catalogs_by_empire[empire_id]`) — match whatever naming convention is least invasive to the current `GameSession` surface; record the choice in [`decisions.md`](decisions.md).
-- [ ] Populate catalogs at bootstrap by calling `DesignRepository.scan_designs(...)` and seeding each empire's catalog.
-- [ ] **Cross-plan note:** if PROJ-423 (TD-02) has landed before this phase, the accessor goes into `SessionRuntimeServices` (or `SessionBootstrapState` for the per-empire catalog map) per the TD-02 cross-plan note. If PROJ-423 has not landed, the accessor lives directly on `GameSession`; the absorption happens later in PROJ-423.
-- [ ] **Verify:** new accessor test passes; `GameSession` from-dict / to-dict round-trip remains byte-identical.
+- [x] Absorbed directly into `SessionRuntimeServices` per the PROJ-423 cross-plan note (TD-02 has landed). Added two new fields: `design_repository: DesignRepository | None` and `design_catalogs_by_empire: Mapping[int, DesignCatalog]`. Access pattern is `session.services.design_catalogs_by_empire[empire_id]`. No `GameSession.get_design_catalog(...)` method added; the bag access is the canonical surface (consistent with the rest of the wired-services contract).
+- [x] Populate catalogs at bootstrap: `SessionBootstrap._build_services` constructs a session-level `DesignRepository`; `SessionBootstrap.new_game_state` and `SessionPersistenceAdapter.rehydrate_state` build per-empire `DesignCatalog` instances after empires are known (using `dataclasses.replace` to re-wrap the frozen services bag). Each catalog is seeded via `repopulate_from(DesignRepository(save_path, empire_id=emp.id))`.
+- [x] **Cross-plan absorption:** decision logged in `decisions.md`. PROJ-423 had already landed; the catalog map lives on `SessionRuntimeServices` itself (not on `SessionBootstrapState`).
+- [x] **Verify:** new accessor tests pass; anti-drift `test_init_and_from_dict_use_identical_service_classes` extended and green; round-trip remains byte-identical (1821/1821 focused tests green).
 
 ### Task 2.5: Phase close [Simple]
 **Tests:** `pytest tests/unit/strategy/design_catalog/ tests/unit/strategy/engine/ tests/unit/strategy/facade/ -q`
 
-- [ ] Existing production / UI callers still use `DesignLibrary` (no migration in this phase).
-- [ ] `python Tools/test_sharded/test_sharded.py` is green.
-- [ ] Run `python Projects/scripts/phase_complete.py PROJ-427 phase_2 --repo .worktrees/phases/PROJ-427/phase_2`.
+- [x] Existing production / UI callers still use `DesignLibrary` (no migration in this phase).
+- [x] Focused suites green: 1821/1821 across engine/, design_catalog/, design_repository/, design_library/, save_game_service/, facade/. Full sharded-suite gate is deferred to the end of Phase 3-6 execution per the split-execution plan.
+- [x] Run `python Projects/scripts/phase_complete.py PROJ-427 phase_2 --repo .worktrees/phases/PROJ-427/phase_2`. _Skipped per split-execution scope; commit recorded on `proj/PROJ-427/main` directly._
 
 ---
 

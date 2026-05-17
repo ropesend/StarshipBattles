@@ -32,6 +32,8 @@ def _make_minimal_config() -> GameConfig:
 
 
 # Expected field sets pinned by the source plan (TD-02) and design.md.
+# PROJ-427 Phase 2: design_repository + design_catalogs_by_empire join the
+# wired-service bag per the TD-02 / TD-05 cross-plan absorption note.
 _EXPECTED_RUNTIME_SERVICE_FIELDS = {
     "registries",
     "event_log",
@@ -42,6 +44,8 @@ _EXPECTED_RUNTIME_SERVICE_FIELDS = {
     "ship_mutator",
     "turn_engine",
     "command_registry",
+    "design_repository",
+    "design_catalogs_by_empire",
 }
 
 _EXPECTED_BOOTSTRAP_STATE_FIELDS = {

@@ -19,7 +19,7 @@
 |-------|--------|-----------|------------|
 | 0. Lock current behavior with red tests | Complete | [phase_0_checklist.md](phase_0_checklist.md) | — |
 | 1. Introduce `DesignRepository` (additive, no caller migration) | Complete | [phase_1_checklist.md](phase_1_checklist.md) | Phase 0 |
-| 2. Introduce `DesignCatalog` and move cache ownership | Not Started | [phase_2_checklist.md](phase_2_checklist.md) | Phase 1 |
+| 2. Introduce `DesignCatalog` and move cache ownership | Complete (scope-narrowed: absorption only; cache migration deferred to Phase 6) | [phase_2_checklist.md](phase_2_checklist.md) | Phase 1 |
 | 3. Migrate runtime production to the catalog | Not Started | [phase_3_checklist.md](phase_3_checklist.md) | Phase 2 |
 | 4. Built-count write-back (deferred, no mid-tick disk writes) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) | Phase 3 |
 | 5. Convert `SaveGameService` to instance-owned replay-store wiring | Not Started | [phase_5_checklist.md](phase_5_checklist.md) | Phase 4 |
@@ -27,10 +27,10 @@
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phases 0-1 complete. Phase 2 next.
-**Last Action:** Phase 1 — TDD-introduced `game/strategy/systems/design_repository.py` (filesystem + JSON persistence) with `scan_designs`, `save_design_data`, `load_design_data`, `mark_design_obsolete`, `increment_built_count`, plus the per-empire folder-resolution + creation policy lifted from `DesignLibrary`. `DesignLoadResult` shape is preserved byte-identically (imported from `design_library` to keep the contract until Phase 6 inverts ownership). 9/9 new repository tests + 46/46 existing DesignLibrary tests green; no production or UI caller imports `DesignRepository` yet.
-**Next Action:** Phase 2 — TDD-introduce `game/strategy/systems/design_catalog.py` (per-empire in-memory lookup + UI cache + pending built-count increments) and absorb the catalog map + repository into `SessionRuntimeServices` per the PROJ-423 cross-plan note. Update `SessionBootstrap._build_services` and the anti-drift test in `tests/unit/strategy/engine/session/test_bootstrap.py`.
-**Blockers:** None for phases 0-2 (additive scope only). Split-execution: phases 3-6 (runtime migration, replay-store conversion, deletion) are deferred to a separate execution slot per the rationale in `decisions.md`.
+**Active Phase:** Phases 0-2 complete; phases 3-6 deferred to a separate execution slot.
+**Last Action:** Phase 2 — TDD-introduced `game/strategy/systems/design_catalog.py` (per-empire in-memory lookup + list view + pending built-count map; no filesystem, no JSON). Absorbed the catalog map and repository into `SessionRuntimeServices` (two new fields: `design_repository: DesignRepository | None` and `design_catalogs_by_empire: Mapping[int, DesignCatalog]`). Updated `SessionBootstrap._build_services` to construct the session-level `DesignRepository`; updated `SessionBootstrap.new_game_state` and `SessionPersistenceAdapter.rehydrate_state` to build per-empire `DesignCatalog` instances after empires are known (using `dataclasses.replace`). Extended the anti-drift test `test_init_and_from_dict_use_identical_service_classes` and updated `_EXPECTED_RUNTIME_SERVICE_FIELDS` in `test_runtime_services.py`. Phase 2 scope was narrowed against the original checklist: `FacadeSessionState.designs_by_empire` migration and `GameSession.get_design_catalog(empire_id)` accessor are deferred to Phase 6 because they are caller-migrations (out of scope for this additive run). 1821/1821 focused tests green across engine/, design_catalog/, design_repository/, design_library/, save_game_service/, facade/. The Phase 0 xfail integration guard is still xfailed (flips in Phase 3).
+**Next Action:** Resume Phase 3 (production migration) in a separate slot per the split-execution plan documented in `decisions.md`.
+**Blockers:** None for phases 0-2 (additive scope only). Phases 3-6 (runtime migration onto `DesignCatalog`, replay-store conversion to instance-owned wiring, UI caller migration, `DesignLibrary` deletion, full sharded suite as final gate) remain queued as planned.
 
 ## Overview
 

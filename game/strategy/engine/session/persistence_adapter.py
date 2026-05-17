@@ -196,6 +196,28 @@ class SessionPersistenceAdapter:
                         if hasattr(order.target, "pursuer_tracker"):
                             order.target.pursuer_tracker.add_pursuer(fleet)
 
+        # PROJ-427 Phase 2: build per-empire DesignCatalog map now that
+        # empires are restored. Catalogs are populated from each
+        # empire's DesignRepository scan (the save folder is the
+        # canonical source). The frozen services dataclass is re-
+        # wrapped via dataclasses.replace so the anti-drift contract
+        # (test_init_and_from_dict_use_identical_service_classes) sees
+        # identical shape between fresh and loaded sessions.
+        from dataclasses import replace as _dc_replace
+        from game.strategy.systems.design_catalog import DesignCatalog
+        from game.strategy.systems.design_repository import DesignRepository
+
+        catalogs_by_empire: dict[int, DesignCatalog] = {}
+        for emp in empires:
+            cat = DesignCatalog(empire_id=emp.id)
+            per_empire_repo = DesignRepository(save_path, empire_id=emp.id)
+            cat.repopulate_from(per_empire_repo)
+            catalogs_by_empire[emp.id] = cat
+        services = _dc_replace(
+            services,
+            design_catalogs_by_empire=catalogs_by_empire,
+        )
+
         return SessionBootstrapState(
             config=config,
             services=services,

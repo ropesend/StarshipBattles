@@ -119,3 +119,62 @@ class TestAntiDrift:
         assert type(loaded.turn_engine) is type(fresh.turn_engine)
         assert type(loaded._command_registry) is type(fresh._command_registry)
         assert type(loaded._event_bus) is type(fresh._event_bus)
+        # PROJ-427 Phase 2: design_repository + design_catalogs_by_empire
+        # join the anti-drift set. Both paths must produce the same
+        # types (DesignRepository instance + a Mapping[int, DesignCatalog]
+        # populated with DesignCatalog instances).
+        assert type(loaded.services.design_repository) is type(
+            fresh.services.design_repository
+        )
+        assert type(loaded.services.design_catalogs_by_empire) is type(
+            fresh.services.design_catalogs_by_empire
+        )
+        # Anti-drift across the per-empire catalogs themselves.
+        for empire_id in fresh.services.design_catalogs_by_empire:
+            assert empire_id in loaded.services.design_catalogs_by_empire
+            assert type(
+                loaded.services.design_catalogs_by_empire[empire_id]
+            ) is type(fresh.services.design_catalogs_by_empire[empire_id])
+
+
+class TestProj427Phase2CatalogAbsorption:
+    """PROJ-427 Phase 2: SessionRuntimeServices gains design_repository
+    and design_catalogs_by_empire. SessionBootstrap._build_services
+    constructs them at session boundaries."""
+
+    def test_build_services_populates_design_repository(self) -> None:
+        from game.strategy.systems.design_repository import DesignRepository
+
+        registries = GameSession._resolve_registries()
+        services = SessionBootstrap._build_services(registries=registries)
+        assert hasattr(services, "design_repository")
+        assert isinstance(services.design_repository, DesignRepository)
+
+    def test_build_services_populates_design_catalogs_by_empire_mapping(self) -> None:
+        from typing import Mapping
+        from game.strategy.systems.design_catalog import DesignCatalog
+
+        registries = GameSession._resolve_registries()
+        services = SessionBootstrap._build_services(registries=registries)
+        assert hasattr(services, "design_catalogs_by_empire")
+        catalogs = services.design_catalogs_by_empire
+        # Mapping shape — but at the build_services boundary we may not
+        # have empire IDs yet (those come in via new_game_state). The
+        # mapping should at least be a Mapping instance and contain
+        # only DesignCatalog values.
+        assert isinstance(catalogs, Mapping)
+        for cat in catalogs.values():
+            assert isinstance(cat, DesignCatalog)
+
+    def test_new_game_state_builds_per_empire_catalogs(self) -> None:
+        """New-game bootstrap constructs one DesignCatalog per empire,
+        keyed by empire.id."""
+        from game.strategy.systems.design_catalog import DesignCatalog
+
+        state = SessionBootstrap.new_game_state(_minimal_config())
+        catalogs = state.services.design_catalogs_by_empire
+        assert len(catalogs) == len(state.empires)
+        for emp in state.empires:
+            assert emp.id in catalogs
+            assert isinstance(catalogs[emp.id], DesignCatalog)
+            assert catalogs[emp.id].empire_id == emp.id
