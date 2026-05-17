@@ -22,7 +22,7 @@ unified substrate; that simplification is intentionally deferred. See
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Tuple
 
 from game.core.math import Vector2
 from game.simulation.battle_spec import (
@@ -74,6 +74,38 @@ class TeamSpecBuilder:
             else:
                 combat.append(fleet)
         return combat, mine_groups
+
+    def group_fleets_by_owner(
+        self,
+        combat_fleets: Sequence["Fleet"],
+    ) -> Tuple[Dict[Any, List["Fleet"]], List[Any]]:
+        """Group combat fleets by `owner_id` and return the insertion-ordered owner list.
+
+        Single source of truth for owner-order discovery used downstream
+        by both `compute_owner_to_team_id` (assembler-side) and the
+        post-battle hook builder. Without this helper, both call sites
+        re-derived the same iteration independently — a drift risk if
+        either side's tiebreak/order rules diverged over time.
+        """
+        fleets_by_owner: Dict[Any, List["Fleet"]] = {}
+        for fleet in combat_fleets:
+            fleets_by_owner.setdefault(fleet.owner_id, []).append(fleet)
+        owner_order: List[Any] = list(fleets_by_owner.keys())
+        return fleets_by_owner, owner_order
+
+    def compute_owner_to_team_id(
+        self,
+        combat_fleets: Sequence["Fleet"],
+    ) -> Dict[Any, int]:
+        """Compute the canonical `owner_id -> team_id` mapping.
+
+        team_ids are assigned by insertion order of unique owners across
+        `combat_fleets`. The returned dict is the single source of truth:
+        both `BattleSpecExtensions.owner_to_team_id` and the post-battle
+        hook's owner-keyed dispatch share this exact object.
+        """
+        _, owner_order = self.group_fleets_by_owner(combat_fleets)
+        return {owner_id: team_id for team_id, owner_id in enumerate(owner_order)}
 
     def team_spec_for_fleet_group(
         self,

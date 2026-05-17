@@ -21,11 +21,12 @@
 | 3. Extract pre-tick setup registry and setup builders | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate the adapter to `StrategyBattleAssembly` and remove side-channels | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Reduce `spec_compiler.py` to a thin public facade and update docs | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Codex consult follow-ups: single owner->team mapping + tighten integration tests | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
 **Active Phase:** None (ready for final audit)
-**Last Action:** Phase 5 complete — spec_compiler.py shrunk to 100 LOC thin facade delegating to `StrategyBattleAssembler`; docs synced. Full sharded 20953/20953 green; testmon green.
+**Last Action:** Phase 6 complete — Codex consult follow-ups landed: owner->team mapping now has a single source of truth (`TeamSpecBuilder.compute_owner_to_team_id`) shared by `StrategyBattleAssembler` and `PostBattleHookBuilder` (same dict object, no re-derivation); `test_fms_b_e2e` and adapter pre-tick callback tests now exercise `assembly.pre_tick_setup.composed_callback()` rather than the underlying setup helpers. Full sharded 20954/20954 green.
 **Next Action:** Final audit / merge.
 **Blockers:** None
 
@@ -107,6 +108,15 @@ Switch `simulation_adapter._build_spec` to consume `StrategyBattleAssembly` (ren
 
 ### Phase 5: Reduce `spec_compiler.py` to a thin public facade and update docs
 `spec_compiler.py` keeps `build_strategy_battle_spec(...)` (and may re-export `build_strategy_battle_assembly(...)`). Its body becomes orchestration only: instantiate `StrategyBattleAssembler`, call `assemble`, return `assembly.spec`. Remove now-dead imports and stale module-doc text describing side-channels or embedded setup builders. Target `<= 120 LOC`. Update `docs/systems/strategy_layer.md`, `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md` to describe the assembler pipeline rather than spec mutation. Run focused tests + sharded suite + `pytest tests/ --testmon`.
+
+### Phase 6: Codex consult follow-ups — eliminate owner-order/team mapping drift surface and tighten integration tests
+Driven by a post-Phase-5 Codex consult. Two action items:
+
+1. **Single source of truth for owner→team mapping.** Both `StrategyBattleAssembler.assemble(...)` and `PostBattleHookBuilder.build(...)` independently iterated combat fleets to derive `owner_id -> team_id`. Same logic, two places — future drift risk if either side's ordering rule diverges. Phase 6 extracts `TeamSpecBuilder.group_fleets_by_owner(...)` and `TeamSpecBuilder.compute_owner_to_team_id(...)`. The assembler computes the mapping once and passes the **same dict instance** to both `BattleSpecExtensions.owner_to_team_id` and `PostBattleHookBuilder.build(..., owner_to_team_id=...)`. A new structural test in `test_battle_assembly.py` pins identity (not equality) between the two consumers.
+
+2. **Tighten test_fms_b_e2e + adapter pre-tick callback tests.** Two integration sites bypassed the public seam: `tests/integration/test_fms_b_e2e.py:420-425` and `:495-500` invoked `build_mine_resolver_setup(...)` directly instead of `assembly.pre_tick_setup.composed_callback()`; `tests/unit/strategy/adapters/test_simulation_adapter_registry_threading.py:105-112` captured `pre_tick_loop_callback` without asserting on it. Both updated to exercise the same composed callback the simulation adapter feeds into `run_battle`, with assertions that the callback is non-None and installs the expected side effects (`engine.mine_resolvers`, `engine.reboard_tracker`) on the engine.
+
+Run full sharded suite at the end.
 
 ## Related Documents
 - [TD-01 source plan](../../../Reviews/results/2026-05-16_strategy-layer-tech-debt-review/Verified%20Problem%20Remediation%20Plans/TD-01_battle_spec_compilation.md) — canonical specification (verification findings, file touch plan, per-phase implementation rules, validation commands, risks)

@@ -138,6 +138,29 @@
       "scrap_history": [],
       "status": "complete",
       "verifying_review_id": null
+    },
+    "phase_6": {
+      "depends_on": [
+        "phase_5"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": "8ea593e76",
+      "phase_branch": "proj/PROJ-426/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/combat/team_spec_builder.py",
+        "game/strategy/combat/post_battle_hook_builder.py",
+        "game/strategy/combat/battle_assembly.py",
+        "tests/unit/strategy/combat/test_battle_assembly.py",
+        "tests/integration/test_fms_b_e2e.py",
+        "tests/unit/strategy/adapters/test_simulation_adapter_registry_threading.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "complete",
+      "verifying_review_id": null
     }
   },
   "project_branch": "proj/PROJ-426/main",

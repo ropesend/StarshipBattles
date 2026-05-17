@@ -339,7 +339,6 @@ def test_spec_compiler_filters_mine_groups_and_wires_resolver():
     from game.strategy.combat.battle_assembly import (
         build_strategy_battle_assembly,
     )
-    from game.strategy.combat.pre_tick_setup import build_mine_resolver_setup
     from game.strategy.data.fleet import Fleet
 
     hex_c = HexCoord(0, 0)
@@ -417,12 +416,19 @@ def test_spec_compiler_filters_mine_groups_and_wires_resolver():
     owner_map = assembly.extensions.owner_to_team_id
     assert 1 in owner_map  # owner empire is in the battle
 
-    # (3) build_mine_resolver_setup returns a callable that populates
-    # engine.mine_resolvers.
-    setup = build_mine_resolver_setup(assembly.extensions.mine_groups, owner_map)
-    assert setup is not None
+    # (3) The PreTickBattleSetupRegistry's composed callback — the same
+    # callable the simulation adapter feeds into `run_battle` via
+    # `pre_tick_loop_callback` — wires `engine.mine_resolvers`. We invoke
+    # the public seam here rather than reaching into the underlying
+    # `build_mine_resolver_setup` helper so the integration exercises
+    # the exact code path the runtime uses (Codex Phase 6 follow-up).
+    composed = assembly.pre_tick_setup.composed_callback()
+    assert composed is not None, (
+        "composed_callback() must be non-None when a mine_group is in the "
+        "battle — the registry should have a 'mine' setup registered."
+    )
     fake_engine = SimpleNamespace(mine_resolvers=[])
-    setup(fake_engine)
+    composed(fake_engine)
     assert len(fake_engine.mine_resolvers) == 1
     resolver = fake_engine.mine_resolvers[0]
     assert getattr(resolver, "_owner_team_id", None) == owner_map[1]
@@ -442,7 +448,6 @@ def test_post_battle_hook_calls_writeback_and_prunes_empty_mine_group():
     from game.strategy.combat.battle_assembly import (
         build_strategy_battle_assembly,
     )
-    from game.strategy.combat.pre_tick_setup import build_mine_resolver_setup
     from game.strategy.data.fleet import Fleet
 
     hex_c = HexCoord(0, 0)
@@ -492,12 +497,14 @@ def test_post_battle_hook_calls_writeback_and_prunes_empty_mine_group():
 
     # Wire the resolver onto the mine_group then simulate "all mines
     # consumed during battle" by marking every tactical entity consumed.
-    setup = build_mine_resolver_setup(
-        assembly.extensions.mine_groups,
-        assembly.extensions.owner_to_team_id,
-    )
+    # Use the assembly's composed pre-tick callback — the same surface
+    # the simulation adapter feeds into `run_battle` — rather than the
+    # underlying `build_mine_resolver_setup` helper (Codex Phase 6
+    # follow-up: exercise the integration seam, not a private helper).
+    composed = assembly.pre_tick_setup.composed_callback()
+    assert composed is not None
     fake_engine = SimpleNamespace(mine_resolvers=[])
-    setup(fake_engine)
+    composed(fake_engine)
     resolver = fake_engine.mine_resolvers[0]
     for entity in resolver.mines:
         entity.consumed = True

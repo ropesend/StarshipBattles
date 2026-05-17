@@ -37,25 +37,45 @@ class PostBattleHookBuilder:
         *,
         mine_groups: Optional[Sequence["Fleet"]] = None,
         engine_ref: Optional[List[Any]] = None,
+        owner_to_team_id: Optional[Mapping[Any, int]] = None,
     ) -> Callable[[Any], None]:
         """Create the post-battle hook closure for a battle.
 
-        Captures (team_id -> fleets) by owner — the compiler assigns
-        team_ids by sorted owner order, mirrored here.
+        ``owner_to_team_id`` is the canonical owner->team mapping computed
+        once by the assembler (`TeamSpecBuilder.compute_owner_to_team_id`).
+        Passing the same mapping object here keeps the assembler and the
+        post-battle hook in lockstep — the alternative (re-deriving the
+        mapping from ``fleets``) is the drift surface flagged by the
+        Codex Phase 6 consult.
+
+        For back-compat with callers that pre-date the kwarg (tests that
+        construct the hook directly without an assembler), ``None`` falls
+        back to re-deriving the mapping from ``fleets`` using the same
+        insertion-order rule the assembler uses.
         """
         from game.strategy.combat.post_battle_hook import apply_outcome_to_fleets
 
         owner_to_fleets: Dict[Any, List["Fleet"]] = {}
         for fleet in fleets:
             owner_to_fleets.setdefault(fleet.owner_id, []).append(fleet)
-        owner_order: List[Any] = list(owner_to_fleets.keys())
+
+        if owner_to_team_id is None:
+            # Back-compat fallback: re-derive using the same insertion-order
+            # rule the assembler applies. Production callers (the assembler)
+            # always pass the canonical mapping; this path only fires for
+            # legacy direct-construction tests.
+            owner_to_team_id = {
+                owner_id: team_id
+                for team_id, owner_id in enumerate(owner_to_fleets.keys())
+            }
 
         fleets_by_team_id: Dict[int, List["Fleet"]] = {
-            team_id: list(owner_to_fleets[owner_id])
-            for team_id, owner_id in enumerate(owner_order)
+            owner_to_team_id[owner_id]: list(owner_fleets)
+            for owner_id, owner_fleets in owner_to_fleets.items()
+            if owner_id in owner_to_team_id
         }
         empires_by_team_id: Dict[int, Any] = {}
-        for team_id, owner_id in enumerate(owner_order):
+        for owner_id, team_id in owner_to_team_id.items():
             empire = empires.get(team_id)
             if empire is None:
                 empire = empires.get(owner_id)
@@ -68,7 +88,7 @@ class PostBattleHookBuilder:
         )
         captured_owner_to_fleets: Dict[Any, List["Fleet"]] = dict(owner_to_fleets)
         captured_empires_by_owner: Dict[Any, Any] = {}
-        for owner_id in owner_order:
+        for owner_id in owner_to_team_id.keys():
             emp = empires.get(owner_id)
             if emp is not None:
                 captured_empires_by_owner[owner_id] = emp

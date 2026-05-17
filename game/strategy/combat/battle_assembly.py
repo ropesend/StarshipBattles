@@ -163,10 +163,12 @@ class StrategyBattleAssembler:
 
         combat_fleets, mine_groups = self._mine_group_filter(fleets)
 
-        fleets_by_owner: Dict[Any, List["Fleet"]] = {}
-        for fleet in combat_fleets:
-            fleets_by_owner.setdefault(fleet.owner_id, []).append(fleet)
-        owner_order: List[Any] = list(fleets_by_owner.keys())
+        # Single source of truth for owner-order and owner->team mapping.
+        # `PostBattleHookBuilder` and `BattleSpecExtensions.owner_to_team_id`
+        # both receive the SAME dict object — never re-derive locally.
+        fleets_by_owner, owner_order = self._team_builder.group_fleets_by_owner(
+            combat_fleets
+        )
 
         num_teams = len(owner_order)
         if num_teams < _MIN_TEAMS or num_teams > _MAX_TEAMS:
@@ -224,6 +226,7 @@ class StrategyBattleAssembler:
             effective_hook = self._hook_builder.build(
                 combat_fleets, empires,
                 mine_groups=mine_groups, engine_ref=engine_ref,
+                owner_to_team_id=empire_to_team_id,
             )
 
         spec = BattleSpec(
@@ -263,7 +266,9 @@ class StrategyBattleAssembler:
 
         extensions = BattleSpecExtensions(
             mine_groups=tuple(mine_groups),
-            owner_to_team_id=dict(empire_to_team_id),
+            # Identity, NOT a copy: the same dict instance is captured by
+            # PostBattleHookBuilder above so the two stay in lockstep.
+            owner_to_team_id=empire_to_team_id,
             combat_fleets=tuple(combat_fleets),
             engine_ref=engine_ref,
         )

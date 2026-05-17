@@ -124,6 +124,32 @@ class TestRegistryThreadingToRunBattle:
             "the resolver silently fell back to the default provider."
         )
 
+        # PROJ-426 Phase 6 (Codex consult follow-up): the adapter must
+        # thread the assembly's composed pre-tick callback into
+        # `run_battle.pre_tick_loop_callback`. With two real combat fleets
+        # the reboard setup registers and `composed_callback()` returns a
+        # callable — not None. Calling it must install a ReboardTracker
+        # on the engine, matching the runtime contract.
+        pre_tick_cb = captured["pre_tick_loop_callback"]
+        assert pre_tick_cb is not None, (
+            "pre_tick_loop_callback must be non-None when combat fleets "
+            "are present — the assembly's reboard setup should have "
+            "registered into the PreTickBattleSetupRegistry."
+        )
+        assert callable(pre_tick_cb)
+
+        # Exercise the callback against a fake engine to confirm it
+        # reaches the actual integration surface (not a stale closure
+        # that captures pre-Phase-4 side-channel attributes).
+        from types import SimpleNamespace
+        fake_engine = SimpleNamespace(mine_resolvers=[])
+        pre_tick_cb(fake_engine)
+        assert getattr(fake_engine, "reboard_tracker", None) is not None, (
+            "Composed pre-tick callback did not install reboard_tracker on "
+            "the engine — the reboard setup is not wired through the "
+            "assembly seam."
+        )
+
         # PROJ-361 audit (TC-01): the same injected registries must reach
         # ``_instances_to_ships`` → ``ShipInstance.to_ship``. A future
         # change that threads registries to ``run_battle`` but drops them
