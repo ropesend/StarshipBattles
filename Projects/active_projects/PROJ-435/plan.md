@@ -9,18 +9,26 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Audit gap + propose registry shape | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Implement migration | Not Started | (TBD) |
+| 1. Audit gap + propose registry shape | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Implement migration | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Planning
-**Last Action:** Scaffold created by PROJ-429 Phase 8 as a spin-off from Codex consult finding 4.
-**Next Action:** Phase 1 — audit the gap and decide whether to extend
-`AbilityMetadataRegistry` with UI-facing labels or to introduce a thin
-UI-layer label map keyed on `StrategicKind.ENERGY_DRAINING` + named
-non-registered abilities.
+**Active Phase:** Phase 2 — Implementation
+**Last Action:** Phase 1 audit + policy decision. Picked hybrid C+B: register `GravityModifier` and `RadiationShield` in `AbilityMetadataRegistry` with `ENERGY_DRAINING` tag + `EnergyFacet`; iterate the tag from the UI; keep labels UI-side per `_SUPERWEAPON_LABELS` precedent. For `modifier_abilities`, iterate `COMBAT_MODIFIER ∪ BUILD_RATE_BOOSTER ∪ RESOURCE_BOOSTER` ∩ UI label dict.
+**Next Action:** Phase 2 — implement per `phase_2_checklist.md`.
 **Blockers:** None
+
+## Phase 2 plan
+1. Failing test in `tests/unit/ui/screens/builder/test_stat_rows_dynamic.py` that:
+   - Asserts `_ACTIVATABLE_ABILITIES` and the inline `modifier_abilities` literal are gone (negative regression guard via `getattr(stat_rows_dynamic, '_ACTIVATABLE_ABILITIES', None) is None`).
+   - Asserts that `get_planetary_defense_rows` picks up `GravityModifier` and `RadiationShield` (positive regression on the two newly registered abilities).
+2. Add new test in `tests/unit/strategy/services/test_ability_metadata_registry.py` (or extend existing) asserting `GravityModifier` and `RadiationShield` are registered with the `ENERGY_DRAINING` kind tag and have an `EnergyFacet` with `drains_energy=True`.
+3. Implementation:
+   - Register the two abilities in `game/strategy/services/ability_metadata.py`.
+   - Rewrite `_ACTIVATABLE_ABILITIES` in `stat_rows_dynamic.py` as a UI-side label dict that iterates `abilities_with_kind_tag(StrategicKind.ENERGY_DRAINING)` (renamed to make the label-only intent explicit).
+   - Rewrite `modifier_abilities` to iterate registry tags and filter by UI label presence.
+4. File diff estimate: ~50 lines (registry: +12, UI: ±30, tests: +20).
 
 ## Overview
 `game/ui/screens/builder/stat_rows_dynamic.py:381-463` defines two hardcoded
