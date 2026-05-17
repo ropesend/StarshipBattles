@@ -16,7 +16,7 @@
 
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Scope-bounding read + design decision | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
+| 0. Scope-bounding read + design decision | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Establish the unified `AbilityMetadataRegistry` skeleton | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Migrate `design_role` classification | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Migrate `planet_energy_engine` (delete dead `_ACTIVATABLE_ABILITIES`) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
@@ -27,11 +27,11 @@
 
 ## Current State
 
-**Last Updated:** 2026-05-16
-**Active Phase:** Phase 0 / Phase 1 (planning artifacts only — execution blocked)
-**Last Action:** Project scaffold populated from the verified TD-07 remediation plan.
-**Next Action:** Wait for PROJ-424 (TD-03 order metadata convergence) to merge to project main; then start Phase 0.
-**Blockers:** **HARD predecessor: PROJ-424 (TD-03) must complete before any phase of this project starts.** See [Dependencies](#dependencies).
+**Last Updated:** 2026-05-17
+**Active Phase:** Phase 1
+**Last Action:** Phase 0 complete — inventory verified; one source-plan drift (spec_compiler→strategy_modifier_stack_builder) recorded in decisions.md row 9; superset+shim approach confirmed.
+**Next Action:** Phase 1 — introduce `AbilityMetadataRegistry`, parity test, AST guard, shim.
+**Blockers:** None.
 
 ## Overview
 
