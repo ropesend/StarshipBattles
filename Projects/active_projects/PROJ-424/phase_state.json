@@ -157,6 +157,24 @@
       "scrap_history": [],
       "status": "complete",
       "verifying_review_id": null
+    },
+    "phase_7": {
+      "depends_on": [
+        "phase_6"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "tests/unit/strategy/engine/commands/test_order_metadata_view.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "lightweight",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "complete",
+      "verifying_review_id": null
     }
   },
   "project_branch": "proj/PROJ-424/main",

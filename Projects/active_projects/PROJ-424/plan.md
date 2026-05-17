@@ -22,11 +22,12 @@
 | 4. Migrate remaining production consumers | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Delete duplicated constants + `fleet.py` re-exports | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Docs convergence + final grep gate | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
+| 7. Harden lazy-import AST guard (Codex follow-up) | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
 **Active Phase:** Complete — awaiting audit
-**Last Action:** Phase 6 landed — `docs/systems/orders_system.md`, `docs/04_SERVICES.md`, `docs/systems/satellites.md` updated to describe `order_metadata` as the single read path; added FMS-subcategory section + cycle-break rationale paragraph. Final grep gate clean (only historical/explanatory references remain). **Full sharded suite 20903/20903 green** (Phase 5 + Phase 6 boundaries).
+**Last Action:** Phase 7 landed — Codex consult flagged that `_module_level_imports()` in `test_order_metadata_view.py` only inspected top-level `ast.Import` / `ast.ImportFrom` nodes, leaving class-body imports and dynamic `importlib.import_module(...)` / `__import__(...)` calls as bypass routes around the cycle-safety regression guard. Replaced with `_module_load_evaluated_imports(source)` that walks module-top + top-level class bodies for static imports AND parses dynamic-import call sites for string-literal arguments. Added 4 regression tests (3 must-detect, 1 must-ignore); `test_view_is_lazy_at_import_time` still green on the production view source.
 **Next Action:** Project complete — submit for audit
 **Blockers:** None
 
@@ -133,6 +134,9 @@ Write the failing tests `test_order_types_module_no_longer_exports_metadata_cons
 
 ### Phase 6: Docs convergence + final grep gate
 Update `docs/systems/orders_system.md`, `docs/04_SERVICES.md`, `docs/systems/satellites.md` to reference `order_metadata` as the single read path. Remove guidance that tells contributors to edit `ORDER_TO_ABILITY_MAP` or frozensets manually. Document the `planet_fms` subcategory and the lazy-view cycle break. Final grep over `game`, `docs`, `tests`: only `registry.py` derivation methods and `order_metadata_view.py` should match the duplicated-constant names. Full sharded suite green.
+
+### Phase 7: Harden lazy-import AST guard (Codex follow-up)
+Codex consult flagged that the Phase 2 cycle-safety regression guard `_module_level_imports()` in `test_order_metadata_view.py` was narrower than the invariant it claimed to protect: it inspected only `tree.body` and only `ast.Import` / `ast.ImportFrom` nodes, leaving class-body imports and dynamic `importlib.import_module(...)` / `__import__(...)` calls at module scope as bypass routes. Replaced the helper with `_module_load_evaluated_imports(source)` that walks both module-top statements and top-level class bodies for static imports, plus scans the same locations for dynamic-import call sites and harvests string-literal arguments. Added four regression tests: three negative (class-body import, `importlib.import_module`, `__import__`) all must be detected; one positive (function-body import) must NOT be detected. `test_view_is_lazy_at_import_time` continues to pass on the production view source.
 
 ## Related Documents
 - [TD-03 source plan](../../../Reviews/results/2026-05-16_strategy-layer-tech-debt-review/Verified%20Problem%20Remediation%20Plans/TD-03_order_metadata_convergence.md) — canonical specification (verification findings, cycle analysis, consumer inventory, per-phase exit criteria, risks)
