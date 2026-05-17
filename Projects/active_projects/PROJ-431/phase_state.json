@@ -15,7 +15,7 @@
       "merged_into_project_at_sha": null,
       "phase_base_sha": "d8d07607dbd282b0058715aca19abb91fab0f927",
       "phase_branch": "proj/PROJ-431/main",
-      "phase_head_sha": null,
+      "phase_head_sha": "3006eabfce4df27435f492d4b75051587933a7df",
       "planned_files": [
         "game/strategy/data/bay_inventory.py",
         "game/strategy/data/ship_instance.py",
