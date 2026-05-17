@@ -67,7 +67,7 @@ def _make_bay_ship_instance(fresh_registries) -> ShipInstance:
         ("crew_quarters", LayerType.INNER),
         ("life_support", LayerType.INNER),
         ("generator", LayerType.INNER),
-        ("vehicle_bay_medium", LayerType.INNER),
+        ("vehicle_bay", LayerType.INNER),
     ):
         comp = create_component(comp_id, registries=fresh_registries)
         assert comp is not None, comp_id

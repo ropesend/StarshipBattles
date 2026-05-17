@@ -58,7 +58,7 @@ class TestCarriedVehicleDataclass:
 
 class TestVehicleBayAbility:
     def test_instantiates_from_component(self, fresh_registries):
-        comp = create_component("vehicle_bay_small", registries=fresh_registries)
+        comp = create_component("vehicle_bay", registries=fresh_registries)
         assert comp is not None
         bays = [a for a in comp.ability_instances if isinstance(a, VehicleBayAbility)]
         assert len(bays) == 1
@@ -66,12 +66,34 @@ class TestVehicleBayAbility:
         assert "mine" in bays[0].allowed_types
 
     def test_accepts_helper(self, fresh_registries):
-        comp = create_component("vehicle_bay_medium", registries=fresh_registries)
+        comp = create_component("vehicle_bay", registries=fresh_registries)
         bays = [a for a in comp.ability_instances if isinstance(a, VehicleBayAbility)]
         bay = bays[0]
         assert bay.accepts("fighter")
         assert bay.accepts("mine")
         assert not bay.accepts("complex")
+
+    def test_size_mount_scales_capacity_mass(self, fresh_registries):
+        """QA-C: VehicleBay.capacity_mass scales linearly with
+        ``simple_size_mount`` via the ``bay_capacity_mult`` binding.
+        """
+        comp_1x = create_component("vehicle_bay", registries=fresh_registries)
+        assert comp_1x is not None
+        comp_1x.add_modifier("simple_size_mount", 1.0)
+
+        comp_2x = create_component("vehicle_bay", registries=fresh_registries)
+        assert comp_2x is not None
+        comp_2x.add_modifier("simple_size_mount", 2.0)
+
+        bay_1x = [
+            a for a in comp_1x.ability_instances
+            if isinstance(a, VehicleBayAbility)
+        ][0]
+        bay_2x = [
+            a for a in comp_2x.ability_instances
+            if isinstance(a, VehicleBayAbility)
+        ][0]
+        assert bay_2x.capacity_mass == bay_1x.capacity_mass * 2.0
 
 
 class TestShipCargoManagerVehicles:
@@ -93,12 +115,17 @@ class TestShipCargoManagerVehicles:
             ship_class="Cruiser", registries=fresh_registries,
         )
         # Wire a minimal-but-operational backbone.
+        # QA-C: the test now uses the consolidated ``vehicle_bay`` at
+        # its base scale (250 capacity_mass). The prior "_medium" tier
+        # is replaced by ``simple_size_mount`` scaling on the same
+        # component; size-scaling is covered separately in
+        # ``test_size_mount_scales_capacity_mass``.
         for comp_id, layer in (
             ("bridge", LayerType.CORE),
             ("crew_quarters", LayerType.INNER),
             ("life_support", LayerType.INNER),
             ("generator", LayerType.INNER),
-            ("vehicle_bay_medium", LayerType.INNER),
+            ("vehicle_bay", LayerType.INNER),
         ):
             comp = create_component(comp_id, registries=fresh_registries)
             assert comp is not None, comp_id
@@ -130,16 +157,16 @@ class TestShipCargoManagerVehicles:
         assert len(inst.carried_items) == 1
         current, max_mass = inst._cargo_mgr.get_vehicle_bay_capacity()
         assert current == 50
-        assert max_mass >= 750  # vehicle_bay_medium has 750 capacity_mass
+        assert max_mass >= 250  # vehicle_bay base capacity is 250 mass
 
     def test_load_vehicle_rejects_beyond_capacity(self, fresh_registries):
         inst = self._make_ship_instance(fresh_registries)
-        # Try to load 800 mass into a 750-mass bay -> rejected.
+        # Try to load 300 mass into a 250-mass bay -> rejected.
         cv = CarriedVehicle(
             design_id="qs_heavy_fighter",
             design_data={"name": "qs_heavy_fighter"},
             vehicle_type="fighter",
-            mass=800,
+            mass=300,
             current_hp=100,
         )
         ok = inst._cargo_mgr.load_vehicle(cv)
@@ -167,7 +194,7 @@ class TestShipCargoManagerVehicles:
             ("fighter", "f1", 25),
             ("fighter", "f2", 25),
             ("mine", "m1", 5),
-            ("satellite", "s1", 250),
+            ("satellite", "s1", 50),
         ]:
             cv = CarriedVehicle(
                 design_id=name, design_data={"name": name},

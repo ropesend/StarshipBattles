@@ -14,13 +14,18 @@ Data shape:
 
 ``allowed_types`` defaults to all three small-craft kinds: mine, fighter,
 satellite. Drop pods retain their separate PodStorage path.
+
+QA-C: ``capacity_mass`` now scales via :class:`AbilityStatBinding` with
+``bay_capacity_mult`` so ``simple_size_mount`` drives bay size linearly
+with the modifier param. This replaces the old small/medium/large tier
+proliferation with a single component that scales.
 """
 from __future__ import annotations
 
 from typing import Any, Dict, List
 
 from .base import Ability, AbilityLayer
-from .stat_keys import AbilityStatBinding
+from .stat_keys import AbilityStatBinding, StatKey
 from .ui_colors import HINT_NEUTRAL
 
 
@@ -38,23 +43,36 @@ class VehicleBayAbility(Ability):
 
     layer = AbilityLayer.STRATEGIC
 
-    # Bay capacity is additive across components; no modifier scaling.
-    STAT_BINDINGS: List[AbilityStatBinding] = []
+    STAT_BINDINGS: List[AbilityStatBinding] = [
+        AbilityStatBinding(
+            StatKey.BAY_CAPACITY_MULT,
+            attribute_name="capacity_mass",
+            operation="multiply",
+            base_attribute="_base_capacity_mass",
+        ),
+    ]
 
     def _parse_attrs(self, data: Any) -> None:
         if isinstance(data, dict):
-            self.capacity_mass = float(data.get("capacity_mass", 0))
+            cap = float(data.get("capacity_mass", 0))
             allowed = data.get("allowed_types")
             if allowed is None:
                 self.allowed_types = list(_DEFAULT_ALLOWED_TYPES)
             else:
                 self.allowed_types = [str(a).lower() for a in allowed]
         elif isinstance(data, (int, float)):
-            self.capacity_mass = float(data)
+            cap = float(data)
             self.allowed_types = list(_DEFAULT_ALLOWED_TYPES)
         else:
-            self.capacity_mass = 0.0
+            cap = 0.0
             self.allowed_types = list(_DEFAULT_ALLOWED_TYPES)
+        self._base_capacity_mass = cap
+        self.capacity_mass = cap
+
+    def recalculate(self) -> None:
+        """Apply ``bay_capacity_mult`` to ``capacity_mass``."""
+        mult = self.get_effective_stat("bay_capacity_mult", 1.0)
+        self.capacity_mass = self._base_capacity_mass * mult
 
     def accepts(self, vehicle_type: str) -> bool:
         """True iff this bay accepts the given vehicle type."""

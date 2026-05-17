@@ -34,9 +34,10 @@ from game.strategy.data.ship_instance import ShipInstance
 def _ship_instance_from(layers_components, fresh_registries) -> ShipInstance:
     """Build a real ShipInstance whose design has the listed components.
 
-    ``layers_components`` is a list of ``(component_id, LayerType)`` pairs.
-    A minimal-but-operational backbone is always added so the bay is
-    considered active.
+    ``layers_components`` accepts ``(component_id, LayerType)`` pairs
+    or ``(component_id, LayerType, simple_size_mount_value)`` triples
+    when a bay needs to be scaled. A minimal-but-operational backbone
+    is always added so the bay is considered active.
     """
     ship = Ship(
         "Test Ship", 0, 0, (255, 255, 255),
@@ -49,10 +50,22 @@ def _ship_instance_from(layers_components, fresh_registries) -> ShipInstance:
         ("life_support", LayerType.INNER),
         ("generator", LayerType.INNER),
     ]
-    for comp_id, layer in backbone + list(layers_components):
+    pending_mods: list = []
+    for entry in backbone + list(layers_components):
+        if len(entry) == 3:
+            comp_id, layer, size_mount = entry
+        else:
+            comp_id, layer = entry
+            size_mount = None
         comp = create_component(comp_id, registries=fresh_registries)
         assert comp is not None, comp_id
         assert ship.add_component(comp, layer), comp_id
+        if size_mount is not None:
+            pending_mods.append((comp, float(size_mount)))
+    # Apply scaling modifiers AFTER add_component so formulas resolving
+    # against ship_class_mass have the ship context they need.
+    for comp, sm in pending_mods:
+        comp.add_modifier("simple_size_mount", sm)
 
     from game.simulation.entities.ship_serialization import ShipSerializer
     design_data = ShipSerializer.to_dict(ship)
@@ -97,8 +110,8 @@ class TestMixedBayCarrier:
         # ``fighter_bay_small`` -> 250 fighter-only, ``satellite_bay_small`` -> 300 satellite-only.
         return _ship_instance_from(
             [
-                ("fighter_bay_small", LayerType.INNER),
-                ("satellite_bay_small", LayerType.INNER),
+                ("fighter_bay", LayerType.INNER),
+                ("satellite_bay", LayerType.INNER),
             ],
             fresh_registries,
         )
@@ -177,16 +190,18 @@ class TestUniversalBay:
     def test_universal_bay_accepts_both_types_to_aggregate_cap(
         self, fresh_registries
     ):
-        # vehicle_bay_medium = capacity_mass 750, allowed = [mine, fighter, satellite].
+        # QA-C: consolidated ``vehicle_bay`` (base 250) accepts all three
+        # vehicle types. Down-scaled masses keep the test independent of
+        # the operational-backbone scaling tax.
         inst = _ship_instance_from(
-            [("vehicle_bay_medium", LayerType.INNER)],
+            [("vehicle_bay", LayerType.INNER)],
             fresh_registries,
         )
-        assert inst._cargo_mgr.load_vehicle(_fighter(mass=400.0))
-        assert inst._cargo_mgr.load_vehicle(_satellite(mass=300.0))
-        # 50 free in the universal bay.
-        assert inst._cargo_mgr.load_vehicle(_fighter(mass=60.0)) is False
-        assert inst._cargo_mgr.load_vehicle(_satellite(mass=50.0))
+        assert inst._cargo_mgr.load_vehicle(_fighter(mass=120.0))
+        assert inst._cargo_mgr.load_vehicle(_satellite(mass=100.0))
+        # 30 free in the universal bay.
+        assert inst._cargo_mgr.load_vehicle(_fighter(mass=40.0)) is False
+        assert inst._cargo_mgr.load_vehicle(_satellite(mass=20.0))
 
 
 class TestSingleTypedBay:
@@ -194,7 +209,7 @@ class TestSingleTypedBay:
 
     def test_fighter_only_carrier_rejects_satellite(self, fresh_registries):
         inst = _ship_instance_from(
-            [("fighter_bay_small", LayerType.INNER)],
+            [("fighter_bay", LayerType.INNER)],
             fresh_registries,
         )
         assert inst._cargo_mgr.load_vehicle(_fighter(mass=200.0))

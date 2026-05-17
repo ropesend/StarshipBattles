@@ -50,6 +50,17 @@ class StatKey(Enum):
     PROJECTILE_HP_MULT = "projectile_hp_mult"
     PROJECTILE_DAMAGE_MULT = "projectile_damage_mult"
     CREW_REQ_MULT = "crew_req_mult"
+    # QA-C Phase 1: launch/recovery/bay-capacity scaling. Drives:
+    #   - launch_rate_mult  -> TacticalFighter/Satellite/MineLayer
+    #                          launch_rate_tons_per_sec  (mass-tons/sec budget)
+    #                          AND legacy capacity_per_action / cycle_time
+    #                          inverse-cycle scaling for the strategic skeleton.
+    #   - recovery_rate_mult -> RecoverFighters / RecoverSatellites
+    #                           recovery_per_action.
+    #   - bay_capacity_mult  -> VehicleBay capacity_mass.
+    LAUNCH_RATE_MULT = "launch_rate_mult"
+    RECOVERY_RATE_MULT = "recovery_rate_mult"
+    BAY_CAPACITY_MULT = "bay_capacity_mult"
 
     # Additive stats (default 0.0)
     MASS_ADD = "mass_add"

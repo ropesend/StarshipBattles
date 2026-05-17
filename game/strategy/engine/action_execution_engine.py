@@ -24,6 +24,10 @@ from game.strategy.data.fleet import (
     MOVEMENT_ORDER_TYPES,
     ACTION_ORDER_TYPES,
 )
+from game.strategy.data.order_types import PLANET_FMS_ACTION_ORDER_TYPES
+from game.strategy.engine.issuer_adapter import (
+    PlanetStagingYardIssuerAdapter,
+)
 from game.strategy.services.action_time_resolver import ActionTimeResolver
 from game.strategy.services.fleet_speed_calculator import get_tick_interval
 
@@ -112,6 +116,19 @@ class ActionExecutionEngine(IActionExecutionEngine):
             for fleet in list(empire.fleets):
                 result = self._process_fleet_action_tick(
                     fleet, empire, galaxy, tick, component_registry, all_empires
+                )
+                if result is not None:
+                    results.append(result)
+
+            # QA Observation B: planets can also issue FMS action orders
+            # (lay mines / launch+recover fighters and satellites) via
+            # their planetary-complex facility components. These tick
+            # alongside fleet orders here; toggle abilities
+            # (ACTIVATE/DEACTIVATE) stay on PlanetActionEngine.
+            colonies = getattr(empire, "colonies", None) or []
+            for planet in list(colonies):
+                result = self._process_planet_action_tick(
+                    planet, empire, tick, component_registry
                 )
                 if result is not None:
                     results.append(result)
@@ -224,3 +241,101 @@ class ActionExecutionEngine(IActionExecutionEngine):
             component_registry=component_registry,
             empires=all_empires,
         )
+
+    # ------------------------------------------------------------------
+    # Planet FMS tick (QA Observation B)
+    # ------------------------------------------------------------------
+
+    def _process_planet_action_tick(
+        self,
+        planet: Any,
+        empire: Any,
+        tick: int,
+        component_registry: Optional[Dict[str, Any]],
+    ) -> Optional[ActionTickResult]:
+        """Tick a planet's FMS action order if one is queued.
+
+        Planets have no speed concept, so they act every tick (interval=1).
+        Mirrors :meth:`_process_fleet_action_tick` for the FMS subset only;
+        ACTIVATE/DEACTIVATE toggles stay on PlanetActionEngine.
+        """
+        get_current = getattr(planet, "get_current_order", None)
+        if get_current is None:
+            return None
+        order = get_current()
+        if order is None:
+            return None
+        if order.type not in PLANET_FMS_ACTION_ORDER_TYPES:
+            return None
+
+        order.execution_progress += 1
+
+        if self._action_time_resolver is not None:
+            action_time = self._action_time_resolver.resolve_action_time(
+                planet, order, component_registry
+            )
+        else:
+            action_time = ActionTimeResolver.resolve_action_time(
+                planet, order, component_registry
+            )
+
+        if order.execution_progress >= action_time:
+            self._execute_planet_action(
+                planet, empire, component_registry,
+            )
+            return ActionTickResult(
+                fleet_id=getattr(planet, "id", -1),
+                order_type=order.type,
+                action_completed=True,
+                fleet_consumed=False,
+                execution_progress=order.execution_progress,
+                action_time=action_time,
+            )
+        return ActionTickResult(
+            fleet_id=getattr(planet, "id", -1),
+            order_type=order.type,
+            action_completed=False,
+            fleet_consumed=False,
+            execution_progress=order.execution_progress,
+            action_time=action_time,
+        )
+
+    def _execute_planet_action(
+        self,
+        planet: Any,
+        empire: Any,
+        component_registry: Optional[Dict[str, Any]],
+    ) -> None:
+        """Dispatch a completed planet FMS order through the order-handler
+        registry, wrapping the planet in a PlanetStagingYardIssuerAdapter.
+        """
+        order = planet.get_current_order()
+        if order is None:
+            return
+        registry = getattr(self._order_processor, "_handler_registry", None)
+        if registry is None:
+            # Defensive: nothing to dispatch through. Pop the order so the
+            # planet doesn't loop forever.
+            planet.pop_order()
+            return
+        handler = registry.get(order.type)
+        if handler is None or not hasattr(handler, "execute_for_issuer"):
+            planet.pop_order()
+            return
+        issuer = PlanetStagingYardIssuerAdapter(planet)
+        # Recovery handlers have a smaller signature (no galaxy/registries).
+        try:
+            handler.execute_for_issuer(
+                issuer=issuer,
+                order_owner=planet,
+                empire=empire,
+            )
+        except TypeError:
+            # Launch handlers expect (galaxy, registries) kwargs as well.
+            handler.execute_for_issuer(
+                issuer=issuer,
+                order_owner=planet,
+                empire=empire,
+                galaxy=None,
+                registries=getattr(empire, "_registries", None),
+            )

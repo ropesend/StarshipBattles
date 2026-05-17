@@ -9,7 +9,11 @@ from game.simulation.entities.ship_stats import ShipStatsCalculator
 # to ``TacticalFighterLaunch`` (PROJ-FMS-A Phase 5). The contributor
 # now reads ``capacity_per_action`` (additive) and ``cycle_time`` (max)
 # plus co-located ``VehicleStorage`` (additive into ``fighter_capacity``).
-_TL_ABILITY = SimpleNamespace(capacity_per_action=2, cycle_time=9.0)
+_TL_ABILITY = SimpleNamespace(
+    capacity_per_action=2,
+    cycle_time=9.0,
+    launch_rate_tons_per_sec=12.0,
+)
 _VS_ABILITY = SimpleNamespace(capacity=3)
 
 
@@ -35,6 +39,7 @@ def test_stats_aggregation_routes_hangar_abilities_to_launch_contributor() -> No
     ship.fighters_per_wave = 0
     ship.fighter_size_cap = 0
     ship.launch_cycle = 0
+    ship.fighter_launch_rate_tons_per_sec = 0.0
     ship.max_targets = 1
     ship.resources = MagicMock()
     ship.external_stats = {}
@@ -47,3 +52,4 @@ def test_stats_aggregation_routes_hangar_abilities_to_launch_contributor() -> No
     assert ship.fighter_capacity == 3
     assert ship.fighters_per_wave == 2
     assert ship.launch_cycle == 9.0
+    assert ship.fighter_launch_rate_tons_per_sec == 12.0

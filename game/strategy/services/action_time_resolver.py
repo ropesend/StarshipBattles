@@ -106,17 +106,22 @@ class ActionTimeResolver:
         time_field = ORDER_TO_TIME_FIELD.get(order.type, 'action_time')
 
         # Search entity's components (ships for fleets, facilities for planets)
-        # PROJ-238: Use order type to determine search path (avoids MagicMock hasattr issues)
+        # PROJ-238: Use order type to determine search path (avoids MagicMock hasattr issues).
+        # QA Observation B: FMS orders (LAY_MINES, LAUNCH_*, RECOVER_*) can
+        # be issued from either a fleet or a planet — detect from the
+        # entity itself rather than the order type. ``Planet`` has
+        # ``facilities`` (a list); ``Fleet`` has ``ships``.
         if order.type in PLANET_ACTION_ORDER_TYPES:
-            # Planet order: search facility components
             return ActionTimeResolver._find_planet_ability_time(
                 entity, order, ability_name, time_field, component_registry
             )
-        else:
-            # Fleet order: search ship components
-            return ActionTimeResolver._find_fleet_ability_time(
-                entity, ability_name, time_field, component_registry or {}
+        if hasattr(entity, "facilities") and not hasattr(entity, "ships"):
+            return ActionTimeResolver._find_planet_ability_time(
+                entity, order, ability_name, time_field, component_registry
             )
+        return ActionTimeResolver._find_fleet_ability_time(
+            entity, ability_name, time_field, component_registry or {}
+        )
 
     @staticmethod
     def _find_fleet_ability_time(

@@ -1,9 +1,7 @@
-"""RecoverSatellitesCommandHandler — PROJ-FMS-D Phase 2.
+"""RecoverSatellitesCommandHandler — PROJ-FMS-D Phase 2 + QA Observation B.
 
-Command-side entry point for strategic satellite recovery. Mirrors
-:class:`RecoverFightersCommandHandler` (PROJ-FMS-C Phase 3) but acts on
-``satellite_group`` Fleets and requires :class:`RecoverSatellitesAbility`
-on the recovering ship.
+Polymorphic across fleet- and planet-issued recovery via the planet_id
+field on :class:`IssueRecoverSatellitesCommand`.
 """
 from __future__ import annotations
 
@@ -19,6 +17,7 @@ from game.strategy.engine.commands.registry import (
     command_spec,
 )
 from game.strategy.engine.handlers.base import BaseCommandHandler
+from game.strategy.engine.handlers.fms_shared import check_issuer_invariant
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +32,6 @@ if TYPE_CHECKING:
     execution_model='action',
     facade_helper_name='dispatch_issue_recover_satellites',
     serializer_codec='dict',
-    # PROJ-FMS-D Phase 2: ability-lookup gating mirrors the PROJ-FMS-C
-    # audit Fix for fighter recovery. A ship without
-    # ``RecoverSatellitesAbility`` cannot recover satellites.
     action_ability_name='RecoverSatellites',
 )
 class RecoverSatellitesCommandHandler(BaseCommandHandler):
@@ -46,17 +42,26 @@ class RecoverSatellitesCommandHandler(BaseCommandHandler):
         session: 'GameSession',
         cmd: 'IssueRecoverSatellitesCommand',
     ) -> ValidationResult:
-        # 1. Resolve fleet & authorization.
+        invariant = check_issuer_invariant(cmd, "Recover Satellites")
+        if invariant is not None:
+            return invariant
+        if cmd.planet_id is not None:
+            return self._execute_planet(session, cmd)
+        return self._execute_fleet(session, cmd)
+
+    def _execute_fleet(
+        self, session: 'GameSession', cmd: 'IssueRecoverSatellitesCommand'
+    ) -> ValidationResult:
         fleet, error = self._resolve_player_fleet(session, cmd.fleet_id)
         if error:
             return error
-
-        # 2. Deployed groups cannot run recovery actions.
         reject = self._reject_if_non_fleet_group(fleet, "Recover Satellites")
         if reject is not None:
             return reject
-
-        # 3. Find the carrier ship in the fleet.
+        if not cmd.ship_instance_id:
+            return ValidationResult.error(
+                "Recover Satellites (fleet) requires ship_instance_id."
+            )
         carrier = None
         for ship in fleet.ships:
             if str(ship.instance_id) == str(cmd.ship_instance_id):
@@ -66,30 +71,39 @@ class RecoverSatellitesCommandHandler(BaseCommandHandler):
             return ValidationResult.error(
                 f"Ship {cmd.ship_instance_id!r} not found in Fleet {fleet.id}."
             )
-
-        # 4. Queue the RECOVER_SATELLITES order. Detailed validation
-        # (specific satellite_group existence, bay capacity, etc.) is
-        # deferred to the order handler so this surface stays a thin
-        # adapter and partial-recovery semantics live in one place.
-        order_target = {
+        order = Order(OrderType.RECOVER_SATELLITES, target={
             "ship_instance_id": cmd.ship_instance_id,
             "satellite_group_id": cmd.satellite_group_id,
             "count": cmd.count,
-        }
-        order = Order(OrderType.RECOVER_SATELLITES, target=order_target)
+        })
         fleet.add_order(order)
         logger.info(
             "RecoverSatellitesCommandHandler: Fleet %s queued "
             "RECOVER_SATELLITES group=%s count=%s",
-            fleet.id,
-            cmd.satellite_group_id,
-            cmd.count,
+            fleet.id, cmd.satellite_group_id, cmd.count,
+        )
+        return ValidationResult.success()
+
+    def _execute_planet(
+        self, session: 'GameSession', cmd: 'IssueRecoverSatellitesCommand'
+    ) -> ValidationResult:
+        planet, error = self._resolve_player_planet(session, cmd.planet_id)
+        if error:
+            return error
+        order = Order(OrderType.RECOVER_SATELLITES, target={
+            "satellite_group_id": cmd.satellite_group_id,
+            "count": cmd.count,
+        })
+        planet.add_order(order)
+        logger.info(
+            "RecoverSatellitesCommandHandler: Planet %s queued "
+            "RECOVER_SATELLITES group=%s count=%s",
+            planet.id, cmd.satellite_group_id, cmd.count,
         )
         return ValidationResult.success()
 
 
 def register(registry: CommandRegistry) -> None:
-    """Register this module's handlers into ``registry``."""
     registry.register(CommandSpec(
         handler_class=RecoverSatellitesCommandHandler,
         **RecoverSatellitesCommandHandler.__command_spec_kwargs__,

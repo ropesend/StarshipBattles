@@ -275,6 +275,27 @@ def format_planet_info(
         else:
             text += "<br><b>Complexes:</b> None<br>"
 
+        # QA-OBS-A: staging-yard contents render inline with complexes
+        # rather than in a separate side column. Mirrors the complexes
+        # rhythm: `- Mk1 Mine x3 (Staged)`. Empty / missing staging yard
+        # produces no header — the inline rhythm doesn't need a placeholder
+        # to fill column space the way the old side column did. Defensive
+        # `isinstance(..., list)` check so legacy planet mocks (Mock()
+        # auto-creating attrs) and DTO fallbacks don't crash the renderer.
+        staging_yard = getattr(planet, "staging_yard", None)
+        if isinstance(staging_yard, list) and staging_yard:
+            group_counts: dict[tuple, int] = {}
+            for item in staging_yard:
+                if not isinstance(item, dict):
+                    continue
+                key = (item.get("name", "Unknown"), item.get("vehicle_type", "unknown"))
+                group_counts[key] = group_counts.get(key, 0) + 1
+            if group_counts:
+                text += "<br><b>Staged Units:</b><br>"
+                for (name, _vtype), count in sorted(group_counts.items()):
+                    suffix = f" x{count}" if count > 1 else ""
+                    text += f" - {name}{suffix} (Staged)<br>"
+
     # PROJ-237: Energy & Shield display
     energy_cap = getattr(planet, 'energy_capacity', None)
     if isinstance(energy_cap, (int, float)) and energy_cap > 0:

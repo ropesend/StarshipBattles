@@ -1,31 +1,23 @@
-"""LaunchFightersOrderHandler — PROJ-FMS-C Phase 1.
+"""LaunchFightersOrderHandler — PROJ-FMS-C Phase 1 + QA Observation B.
 
-Executes ``OrderType.LAUNCH_FIGHTERS`` orders: pops N fighters from the
-issuing ship's :class:`VehicleBay` and creates a new ``fighter_group``
-Fleet for the owner at the target hex. Each launched ``CarriedVehicle``
-is converted into a real :class:`ShipInstance` living in the group's
-``ships`` list so the existing conflict-resolution / battle-spec
-compilation paths see the fighters as combat entities.
+Executes ``OrderType.LAUNCH_FIGHTERS`` orders. Now polymorphic across
+both fleet- and planet-issued FMS orders through :class:`IIssuerAdapter`
+(see ``issuer_adapter.py``).
 
-Strategic-flow contract mirrors :class:`LayMinesOrderHandler` (PROJ-FMS-B
-Phase 1):
+Strategic-flow contract::
 
     Command -> OrderType.LAUNCH_FIGHTERS -> LaunchFightersOrderHandler
 
 Order ``target`` payload is a dict::
 
     {
-        'ship_instance_id': str,    # The carrier ship in the issuing fleet
+        'ship_instance_id': str,    # Carrier ship in the issuing fleet
+                                    # (omit / None for planet-issued).
         'fighter_design_id': str,   # Specific fighter design to launch
                                     # (or "auto" to take any fighter)
         'count': int,               # How many to launch
-        'target_hex': HexCoord,     # Where to launch (default = fleet.location)
+        'target_hex': HexCoord,     # Where to launch (default = issuer.location)
     }
-
-PROJ-FMS-C decision: same-hex launches do NOT auto-merge (mirrors
-PROJ-FMS-B audit Fix 4 for mine_groups). Each launch action mints its own
-fighter_group; the player can recover individual groups via the strategic
-:class:`RecoverFightersOrderHandler` action.
 """
 from __future__ import annotations
 
@@ -37,6 +29,10 @@ from game.strategy.data.carried_vehicle import CarriedVehicle
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import OrderType
 from game.strategy.data.ship_instance import ShipInstance
+from game.strategy.engine.issuer_adapter import (
+    FleetShipIssuerAdapter,
+    IIssuerAdapter,
+)
 from game.strategy.engine.order_handlers.base import (
     BaseOrderHandler,
     OrderExecutionResult,
@@ -71,7 +67,7 @@ class LaunchFightersOrderHandler(BaseOrderHandler):
         return (OrderType.LAUNCH_FIGHTERS,)
 
     # ------------------------------------------------------------------
-    # Execution
+    # Execution — fleet entry point
     # ------------------------------------------------------------------
 
     def execute_action_order(
@@ -96,36 +92,87 @@ class LaunchFightersOrderHandler(BaseOrderHandler):
             )
 
         ship_instance_id = payload.get("ship_instance_id")
-        fighter_design_id = payload.get("fighter_design_id")
-        count = int(payload.get("count", 0))
-        target_hex = payload.get("target_hex") or fleet.location
-
-        if not ship_instance_id or count <= 0:
-            fleet.pop_order()
-            return OrderExecutionResult(
-                success=False,
-                message=(
-                    "LAUNCH_FIGHTERS order requires ship_instance_id "
-                    "and count > 0"
-                ),
-            )
-
-        carrier = self._find_ship(fleet, ship_instance_id)
+        carrier = self._find_ship(fleet, ship_instance_id) if ship_instance_id else None
         if carrier is None:
             fleet.pop_order()
             return OrderExecutionResult(
                 success=False, message=f"Ship {ship_instance_id} not in fleet"
             )
 
-        # Pop N matching fighters from the carrier's bay.
-        popped = self._pop_fighters(carrier, fighter_design_id, count)
-        if len(popped) < count:
-            for f in popped:
-                carrier.carried_items.append(f)
-            fleet.pop_order()
-            available = self._count_matching_fighters(
-                carrier, fighter_design_id
+        issuer = FleetShipIssuerAdapter(fleet, carrier)
+        return self._run_with_issuer(
+            issuer=issuer,
+            order_owner=fleet,
+            empire=empire,
+            galaxy=galaxy,
+            payload=payload,
+            registries=getattr(carrier, "_registries", None),
+        )
+
+    # ------------------------------------------------------------------
+    # Polymorphic core
+    # ------------------------------------------------------------------
+
+    def execute_for_issuer(
+        self,
+        *,
+        issuer: IIssuerAdapter,
+        order_owner: Any,
+        empire: "Empire",
+        galaxy: "Galaxy",
+        registries: Optional[Any] = None,
+    ) -> OrderExecutionResult:
+        """Run the handler against any IIssuerAdapter (planet or fleet)."""
+        order = order_owner.get_current_order()
+        if not order or order.type != OrderType.LAUNCH_FIGHTERS:
+            return OrderExecutionResult(
+                success=False, message="Not a LAUNCH_FIGHTERS order"
             )
+        payload = order.target
+        if not isinstance(payload, dict):
+            order_owner.pop_order()
+            return OrderExecutionResult(
+                success=False, message="LAUNCH_FIGHTERS order missing payload"
+            )
+        return self._run_with_issuer(
+            issuer=issuer,
+            order_owner=order_owner,
+            empire=empire,
+            galaxy=galaxy,
+            payload=payload,
+            registries=registries,
+        )
+
+    def _run_with_issuer(
+        self,
+        *,
+        issuer: IIssuerAdapter,
+        order_owner: Any,
+        empire: "Empire",
+        galaxy: "Galaxy",
+        payload: Dict[str, Any],
+        registries: Optional[Any],
+    ) -> OrderExecutionResult:
+        fighter_design_id = payload.get("fighter_design_id")
+        count_raw = payload.get("count", 0)
+        try:
+            count = int(count_raw) if count_raw is not None else 0
+        except (TypeError, ValueError):
+            count = 0
+        target_hex = payload.get("target_hex") or issuer.location
+
+        if count <= 0:
+            order_owner.pop_order()
+            return OrderExecutionResult(
+                success=False,
+                message="LAUNCH_FIGHTERS order requires count > 0",
+            )
+
+        popped = issuer.pop_carried("fighter", fighter_design_id, count)
+        if len(popped) < count:
+            issuer.append_carried(popped)
+            order_owner.pop_order()
+            available = issuer.count_carried("fighter", fighter_design_id)
             return OrderExecutionResult(
                 success=False,
                 message=(
@@ -134,13 +181,10 @@ class LaunchFightersOrderHandler(BaseOrderHandler):
                 ),
             )
 
-        # Mint a fresh fighter_group Fleet — no auto-merge.
         fighter_group = self._create_fighter_group(
             empire=empire, target_hex=target_hex,
         )
 
-        # Materialise each CarriedVehicle into a deployed ShipInstance.
-        registries = getattr(carrier, "_registries", None)
         for raw_item in popped:
             cv = CarriedVehicle.from_any(raw_item)
             if cv is None:
@@ -150,12 +194,12 @@ class LaunchFightersOrderHandler(BaseOrderHandler):
             )
             fighter_group.ships.append(ship)
 
-        fleet.pop_order()
+        order_owner.pop_order()
 
         logger.info(
             "LaunchFightersOrderHandler: %s launched %d fighters of design "
             "%s at %s (group_id=%s)",
-            getattr(empire, "name", f"Empire {empire.id}"),
+            issuer.display_label,
             len(popped),
             fighter_design_id,
             target_hex,
@@ -168,9 +212,9 @@ class LaunchFightersOrderHandler(BaseOrderHandler):
                 empire_id=empire.id,
                 message=(
                     f"Launched {len(popped)} {fighter_design_id} fighters at "
-                    f"{target_hex} (group {fighter_group.id})"
+                    f"{target_hex} from {issuer.display_label} "
+                    f"(group {fighter_group.id})"
                 ),
-                fleet_id=fleet.id,
                 location_hex=[target_hex.q, target_hex.r],
             )
         except Exception:  # Intentional broad catch: event-bus emission is best-effort; missing event types in older bus configurations must not break the launch action.
@@ -191,50 +235,6 @@ class LaunchFightersOrderHandler(BaseOrderHandler):
                 return ship
         return None
 
-    @staticmethod
-    def _pop_fighters(
-        carrier: ShipInstance,
-        fighter_design_id: Optional[str],
-        count: int,
-    ) -> List[Dict[str, Any]]:
-        """Pop up to ``count`` matching fighters from ``carried_items``.
-
-        When ``fighter_design_id`` is ``"auto"`` or falsy, any
-        ``fighter`` CarriedVehicle matches. Otherwise filters by design.
-        """
-        popped: List[Dict[str, Any]] = []
-        remaining: List[Dict[str, Any]] = []
-        for item in carrier.carried_items:
-            if len(popped) >= count:
-                remaining.append(item)
-                continue
-            cv = CarriedVehicle.from_any(item)
-            if cv is None or cv.vehicle_type != "fighter":
-                remaining.append(item)
-                continue
-            if fighter_design_id and fighter_design_id != "auto":
-                if cv.design_id != fighter_design_id:
-                    remaining.append(item)
-                    continue
-            popped.append(item)
-        carrier.carried_items = remaining
-        return popped
-
-    @staticmethod
-    def _count_matching_fighters(
-        carrier: ShipInstance, fighter_design_id: Optional[str]
-    ) -> int:
-        n = 0
-        for item in carrier.carried_items:
-            cv = CarriedVehicle.from_any(item)
-            if cv is None or cv.vehicle_type != "fighter":
-                continue
-            if fighter_design_id and fighter_design_id != "auto":
-                if cv.design_id != fighter_design_id:
-                    continue
-            n += 1
-        return n
-
     def _create_fighter_group(
         self, *, empire: "Empire", target_hex: HexCoord,
     ) -> Fleet:
@@ -254,7 +254,7 @@ class LaunchFightersOrderHandler(BaseOrderHandler):
     @staticmethod
     def _mint_fleet_id(empire: "Empire") -> int:
         existing = {f.id for f in empire.fleets if isinstance(f.id, int)}
-        candidate = 200000  # Distinct namespace from mine_group (100000).
+        candidate = 200000
         while candidate in existing:
             candidate += 1
         return candidate
@@ -266,14 +266,7 @@ class LaunchFightersOrderHandler(BaseOrderHandler):
         owner_id: int,
         registries: Optional[Any],
     ) -> ShipInstance:
-        """Build a deployed ShipInstance from a CarriedVehicle entry.
-
-        PROJ-FMS-D audit Fix 1: delegates to the shared
-        :func:`carried_vehicle_to_ship_instance` helper so the strategic
-        launch path, the strategic satellite launch path, and the
-        post-battle overflow path in :mod:`fighter_reboard` all preserve
-        the same fields (HP, component_states, alive flags) uniformly.
-        """
+        """Build a deployed ShipInstance from a CarriedVehicle entry."""
         from game.strategy.data.carried_vehicle_deploy import (
             carried_vehicle_to_ship_instance,
         )

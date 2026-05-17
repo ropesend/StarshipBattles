@@ -599,11 +599,22 @@ python Tools/test_sharded/test_sharded.py
 | `RecoverFighters` | `RecoverFightersAbility` | STRATEGIC | `recovery.py` | Skeleton; PROJ-FMS-C Phase 3 via `OrderType.RECOVER_FIGHTERS`. |
 | `RecoverSatellites` | `RecoverSatellitesAbility` | STRATEGIC | `recovery.py` | Skeleton; PROJ-FMS-D Phase 2 via `OrderType.RECOVER_SATELLITES`. |
 
-Data shape for the six launch skeletons:
+Data shape for the six launch skeletons (strategic + tactical):
 
 ```json
 "StrategicFighterLaunch": {"capacity_per_action": 4, "cycle_time": 15.0}
+"TacticalFighterLaunch":  {"capacity_per_action": 2, "cycle_time": 6.0, "launch_rate_tons_per_sec": 8.0}
 ```
+
+QA-C: `launch_rate_tons_per_sec` is the authoritative tactical-launch
+throughput dial. `CarrierAIController` accumulates a per-tick mass
+budget (`rate * TICK_RATE`); any carried vehicle whose mass fits the
+residual budget is popped and dispatched. Variable-mass fleets launch
+at variable rates from the same bay. `capacity_per_action` /
+`cycle_time` remain for design-workshop UI headlines; they don't gate
+tactical dispatch any more. `launch_rate_mult` (driven by the
+`simple_size_mount` modifier) scales both the count headline and the
+rate.
 
 Data shape for the two recovery skeletons:
 
@@ -611,11 +622,20 @@ Data shape for the two recovery skeletons:
 "RecoverFighters": {"recovery_per_action": 4}
 ```
 
+`recovery_rate_mult` scales `recovery_per_action` via the standard
+size-mount path.
+
 Data shape for VehicleBay:
 
 ```json
-"VehicleBay": {"capacity_mass": 750, "allowed_types": ["mine", "fighter", "satellite"]}
+"VehicleBay": {"capacity_mass": 250, "allowed_types": ["mine", "fighter", "satellite"]}
 ```
+
+QA-C: `bay_capacity_mult` (driven by `simple_size_mount`) scales
+`capacity_mass` linearly with the modifier param. The old
+`_small / _medium / _large` tier proliferation is gone; the shipped
+single component is `vehicle_bay` and consumers pick a `simple_size_mount`
+value to dial in the desired capacity.
 
 Reserved `OrderType` enum values (no handlers attached yet, reserved for
 the PROJ-FMS-B/C/D handlers): `LAY_MINES`, `LAUNCH_FIGHTERS`,
@@ -722,12 +742,13 @@ are now wired.
 ### Bay separation mechanism — `VehicleBay.allowed_types`
 
 `VehicleBayAbility` (PROJ-FMS-A Phase 3) carries an `allowed_types`
-list. PROJ-FMS-D Phase 1 ships three pre-configured component variants:
+list. QA-C ships four pre-configured component variants; capacity is
+scaled by `simple_size_mount` rather than baked into named tiers:
 
-- `vehicle_bay_{small,medium,large}` — universal (`["mine", "fighter",
-  "satellite"]`).
-- `fighter_bay_small` — fighter-only (`["fighter"]`).
-- `satellite_bay_{small,medium,large}` — satellite-only (`["satellite"]`).
+- `vehicle_bay` — universal (`["mine", "fighter", "satellite"]`).
+- `fighter_bay` — fighter-only (`["fighter"]`).
+- `satellite_bay` — satellite-only (`["satellite"]`).
+- `mine_bay` — mine-only (`["mine"]`).
 
 `ShipCargoManager.can_accept_vehicle` queries this list per active bay
 and refuses to load a vehicle whose `vehicle_type` is not accepted by

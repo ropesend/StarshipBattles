@@ -57,9 +57,18 @@ def _minimal_fighter_design() -> dict:
 class _StubTacticalLaunchAbility:
     """Mirror of TacticalFighterLaunchAbility surface used by the controller."""
 
-    def __init__(self, capacity_per_action: int = 2, cycle_time: float = 6.0):
+    def __init__(
+        self,
+        capacity_per_action: int = 2,
+        cycle_time: float = 6.0,
+        launch_rate_tons_per_sec: float = 100000.0,
+    ):
         self.capacity_per_action = capacity_per_action
         self.cycle_time = cycle_time
+        # QA-C: tactical throughput dial. Default to a high rate so the
+        # 20t fighter stubs fit in a single-tick budget (10t per tick
+        # would otherwise need to accumulate across several ticks).
+        self.launch_rate_tons_per_sec = launch_rate_tons_per_sec
 
 
 class _StubComponent:

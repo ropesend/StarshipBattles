@@ -1,19 +1,15 @@
 """
-Launch / hangar stat contributor — fighter capacity, wave size, launch cycle.
+Launch / hangar stat contributor — fighter capacity + tactical mass rate.
 
-Reads :class:`TacticalFighterLaunchAbility` (PROJ-FMS-A Phase 5) and
-:class:`VehicleStorageAbility`, fills ``ship.fighter_capacity``,
-``fighters_per_wave``, ``fighter_size_cap``, ``launch_cycle``.
+QA-C: replaced the legacy aggregated ``fighters_per_wave`` /
+``launch_cycle`` headline (count + cooldown) with
+``fighter_launch_rate_tons_per_sec`` — the sum of
+``TacticalFighterLaunchAbility.launch_rate_tons_per_sec`` across all
+launch components on the ship. The same change applies to satellites
+via ``satellite_launch_rate_tons_per_sec``.
 
-PROJ-360 Phase 2: extracted from ``ShipStatsCalculator
-._aggregate_hangar_abilities``. PROJ-367 Phase 1: typed-ability migration.
-PROJ-367 Phase 2: registered as a default Phase-3 contributor at module
-import via ``stat_contributors.registry._seed_builtin_contributors``.
-
-PROJ-FMS-C audit Fix 1: removed the legacy ``VehicleLaunchAbility`` path.
-``TacticalFighterLaunchAbility`` is the only supported tactical-launch
-shape; the production caller is :class:`CarrierAIController` (auto-launch)
-or a player UI action through :meth:`BattleEngine.launch_fighters_in_battle`.
+PROJ-FMS-A Phase 3 ``VehicleBay`` capacity aggregation still rolls up
+into ``ship.bay_capacity_mass``.
 """
 from __future__ import annotations
 
@@ -29,23 +25,24 @@ if TYPE_CHECKING:
 def contribute_vehicle_launch(
     ship: "Ship", comp: "Component", acc: StatAccumulator
 ) -> None:
-    """Sum hangar capacity, wave width, and longest launch cycle.
+    """Sum tactical fighter-launch rate and co-located VehicleStorage capacity.
 
     Direct mutations on ``ship`` (NOT ``acc`` — the hangar fields live
     directly on ``ship`` as a Phase-3 side-channel):
 
-    - ``fighters_per_wave`` (sum of ``capacity_per_action``)
-    - ``launch_cycle`` (max of ``cycle_time``)
+    - ``fighter_launch_rate_tons_per_sec`` (sum of
+      ``TacticalFighterLaunch.launch_rate_tons_per_sec``)
     - ``fighter_capacity`` (sum of co-located VehicleStorage capacity —
       only counted when at least one TacticalFighterLaunch is present so
       ``VehicleStorage`` on non-launch components stays out)
 
-    PROJ-FMS-C audit Fix 1: the legacy ``VehicleLaunchAbility`` branch
-    (with ``max_launch_mass`` and a per-bay wave-of-one assumption) was
-    removed. Component designs that previously mounted ``VehicleLaunch``
-    must migrate to ``TacticalFighterLaunch`` (+ ``StrategicFighterLaunch``
-    for strategic-layer actions) and an explicit ``VehicleBay`` for mass-
-    based storage capacity.
+    QA-C: the legacy count-of-fighters-per-wave + cooldown headline
+    fields (``fighters_per_wave`` / ``launch_cycle``) are retained on
+    the ship for backwards-compatible UI rendering but they're now
+    derived stats — ``fighters_per_wave`` mirrors the sum of
+    ``capacity_per_action`` (unchanged), ``launch_cycle`` mirrors the
+    max ``cycle_time``. The authoritative tactical-throughput dial is
+    ``fighter_launch_rate_tons_per_sec``.
     """
     if not comp.has_ability("TacticalFighterLaunch"):
         return
@@ -64,17 +61,21 @@ def contribute_vehicle_launch(
         cycle = float(getattr(tl, "cycle_time", 0.0) or 0.0)
         if cycle > ship.launch_cycle:
             ship.launch_cycle = cycle
+        rate = float(getattr(tl, "launch_rate_tons_per_sec", 0.0) or 0.0)
+        if rate > 0:
+            ship.fighter_launch_rate_tons_per_sec += rate
 
 
 def contribute_tactical_satellite_launch(
     ship: "Ship", comp: "Component", acc: StatAccumulator
 ) -> None:
-    """PROJ-FMS-D Phase 1: satellite-specific tactical-launch aggregation.
+    """Satellite-specific tactical-launch aggregation (mirror of fighter path).
 
     Mirrors :func:`contribute_vehicle_launch` but writes to a separate
     set of ship fields (``satellites_per_wave``, ``satellite_launch_cycle``,
-    ``satellite_capacity``) so a carrier mounting both fighter and
-    satellite tactical bays exposes both stat sets independently.
+    ``satellite_capacity``, ``satellite_launch_rate_tons_per_sec``) so
+    a carrier mounting both fighter and satellite tactical bays exposes
+    both stat sets independently.
     """
     if not comp.has_ability("TacticalSatelliteLaunch"):
         return
@@ -94,6 +95,9 @@ def contribute_tactical_satellite_launch(
         cycle = float(getattr(tl, "cycle_time", 0.0) or 0.0)
         if cycle > ship.satellite_launch_cycle:
             ship.satellite_launch_cycle = cycle
+        rate = float(getattr(tl, "launch_rate_tons_per_sec", 0.0) or 0.0)
+        if rate > 0:
+            ship.satellite_launch_rate_tons_per_sec += rate
 
 
 def contribute_vehicle_bay(

@@ -1,26 +1,8 @@
-"""LaunchSatellitesOrderHandler — PROJ-FMS-D Phase 1.
+"""LaunchSatellitesOrderHandler — PROJ-FMS-D Phase 1 + QA Observation B.
 
-Executes ``OrderType.LAUNCH_SATELLITES`` orders. Mirrors
-:class:`LaunchFightersOrderHandler` (PROJ-FMS-C Phase 1) but pops
-satellite-type CarriedVehicles and creates a ``satellite_group`` Fleet.
-
-Strategic-flow contract::
-
-    Command -> OrderType.LAUNCH_SATELLITES -> LaunchSatellitesOrderHandler
-
-Order ``target`` payload is a dict::
-
-    {
-        'ship_instance_id': str,        # The carrier ship in the issuing fleet
-        'satellite_design_id': str,     # Specific satellite design (or 'auto')
-        'count': int,                   # How many to launch
-        'target_hex': HexCoord,         # Default = fleet.location
-    }
-
-Same "no auto-merge across same-hex launches" decision PROJ-FMS-C made
-for fighter_groups applies here. Fleet id namespace for satellite_groups
-starts at 300000 (mine_group=100000, fighter_group=200000) so each
-PROJ-FMS unit type lives in a distinct id range.
+Mirrors :class:`LaunchFightersOrderHandler` but for satellites. Now
+polymorphic across fleet- and planet-issued FMS orders through
+:class:`IIssuerAdapter`.
 """
 from __future__ import annotations
 
@@ -32,6 +14,10 @@ from game.strategy.data.carried_vehicle import CarriedVehicle
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import OrderType
 from game.strategy.data.ship_instance import ShipInstance
+from game.strategy.engine.issuer_adapter import (
+    FleetShipIssuerAdapter,
+    IIssuerAdapter,
+)
 from game.strategy.engine.order_handlers.base import (
     BaseOrderHandler,
     OrderExecutionResult,
@@ -66,7 +52,7 @@ class LaunchSatellitesOrderHandler(BaseOrderHandler):
         return (OrderType.LAUNCH_SATELLITES,)
 
     # ------------------------------------------------------------------
-    # Execution
+    # Execution — fleet entry point
     # ------------------------------------------------------------------
 
     def execute_action_order(
@@ -82,47 +68,94 @@ class LaunchSatellitesOrderHandler(BaseOrderHandler):
             return OrderExecutionResult(
                 success=False, message="Not a LAUNCH_SATELLITES order"
             )
-
         payload = order.target
         if not isinstance(payload, dict):
             fleet.pop_order()
             return OrderExecutionResult(
-                success=False,
-                message="LAUNCH_SATELLITES order missing payload",
+                success=False, message="LAUNCH_SATELLITES order missing payload"
             )
 
         ship_instance_id = payload.get("ship_instance_id")
-        satellite_design_id = payload.get("satellite_design_id")
-        count = int(payload.get("count", 0))
-        target_hex = payload.get("target_hex") or fleet.location
-
-        if not ship_instance_id or count <= 0:
-            fleet.pop_order()
-            return OrderExecutionResult(
-                success=False,
-                message=(
-                    "LAUNCH_SATELLITES order requires ship_instance_id "
-                    "and count > 0"
-                ),
-            )
-
-        carrier = self._find_ship(fleet, ship_instance_id)
+        carrier = self._find_ship(fleet, ship_instance_id) if ship_instance_id else None
         if carrier is None:
             fleet.pop_order()
             return OrderExecutionResult(
-                success=False,
-                message=f"Ship {ship_instance_id} not in fleet",
+                success=False, message=f"Ship {ship_instance_id} not in fleet"
             )
 
-        # Pop N matching satellites from the carrier's bay.
-        popped = self._pop_satellites(carrier, satellite_design_id, count)
-        if len(popped) < count:
-            for s in popped:
-                carrier.carried_items.append(s)
-            fleet.pop_order()
-            available = self._count_matching_satellites(
-                carrier, satellite_design_id
+        issuer = FleetShipIssuerAdapter(fleet, carrier)
+        return self._run_with_issuer(
+            issuer=issuer,
+            order_owner=fleet,
+            empire=empire,
+            galaxy=galaxy,
+            payload=payload,
+            registries=getattr(carrier, "_registries", None),
+        )
+
+    # ------------------------------------------------------------------
+    # Polymorphic core
+    # ------------------------------------------------------------------
+
+    def execute_for_issuer(
+        self,
+        *,
+        issuer: IIssuerAdapter,
+        order_owner: Any,
+        empire: "Empire",
+        galaxy: "Galaxy",
+        registries: Optional[Any] = None,
+    ) -> OrderExecutionResult:
+        order = order_owner.get_current_order()
+        if not order or order.type != OrderType.LAUNCH_SATELLITES:
+            return OrderExecutionResult(
+                success=False, message="Not a LAUNCH_SATELLITES order"
             )
+        payload = order.target
+        if not isinstance(payload, dict):
+            order_owner.pop_order()
+            return OrderExecutionResult(
+                success=False, message="LAUNCH_SATELLITES order missing payload"
+            )
+        return self._run_with_issuer(
+            issuer=issuer,
+            order_owner=order_owner,
+            empire=empire,
+            galaxy=galaxy,
+            payload=payload,
+            registries=registries,
+        )
+
+    def _run_with_issuer(
+        self,
+        *,
+        issuer: IIssuerAdapter,
+        order_owner: Any,
+        empire: "Empire",
+        galaxy: "Galaxy",
+        payload: Dict[str, Any],
+        registries: Optional[Any],
+    ) -> OrderExecutionResult:
+        satellite_design_id = payload.get("satellite_design_id")
+        count_raw = payload.get("count", 0)
+        try:
+            count = int(count_raw) if count_raw is not None else 0
+        except (TypeError, ValueError):
+            count = 0
+        target_hex = payload.get("target_hex") or issuer.location
+
+        if count <= 0:
+            order_owner.pop_order()
+            return OrderExecutionResult(
+                success=False,
+                message="LAUNCH_SATELLITES order requires count > 0",
+            )
+
+        popped = issuer.pop_carried("satellite", satellite_design_id, count)
+        if len(popped) < count:
+            issuer.append_carried(popped)
+            order_owner.pop_order()
+            available = issuer.count_carried("satellite", satellite_design_id)
             return OrderExecutionResult(
                 success=False,
                 message=(
@@ -131,13 +164,10 @@ class LaunchSatellitesOrderHandler(BaseOrderHandler):
                 ),
             )
 
-        # Mint a fresh satellite_group Fleet — no auto-merge.
         satellite_group = self._create_satellite_group(
             empire=empire, target_hex=target_hex,
         )
 
-        # Materialise each CarriedVehicle into a deployed ShipInstance.
-        registries = getattr(carrier, "_registries", None)
         for raw_item in popped:
             cv = CarriedVehicle.from_any(raw_item)
             if cv is None:
@@ -147,12 +177,12 @@ class LaunchSatellitesOrderHandler(BaseOrderHandler):
             )
             satellite_group.ships.append(ship)
 
-        fleet.pop_order()
+        order_owner.pop_order()
 
         logger.info(
             "LaunchSatellitesOrderHandler: %s launched %d satellites of "
             "design %s at %s (group_id=%s)",
-            getattr(empire, "name", f"Empire {empire.id}"),
+            issuer.display_label,
             len(popped),
             satellite_design_id,
             target_hex,
@@ -165,9 +195,9 @@ class LaunchSatellitesOrderHandler(BaseOrderHandler):
                 empire_id=empire.id,
                 message=(
                     f"Launched {len(popped)} {satellite_design_id} satellites "
-                    f"at {target_hex} (group {satellite_group.id})"
+                    f"at {target_hex} from {issuer.display_label} "
+                    f"(group {satellite_group.id})"
                 ),
-                fleet_id=fleet.id,
                 location_hex=[target_hex.q, target_hex.r],
             )
         except Exception:  # Intentional broad catch: event-bus emission is best-effort; missing event types in older bus configurations must not break the launch action.
@@ -188,50 +218,9 @@ class LaunchSatellitesOrderHandler(BaseOrderHandler):
                 return ship
         return None
 
-    @staticmethod
-    def _pop_satellites(
-        carrier: ShipInstance,
-        satellite_design_id: Optional[str],
-        count: int,
-    ) -> List[Dict[str, Any]]:
-        """Pop up to ``count`` matching satellites from ``carried_items``."""
-        popped: List[Dict[str, Any]] = []
-        remaining: List[Dict[str, Any]] = []
-        for item in carrier.carried_items:
-            if len(popped) >= count:
-                remaining.append(item)
-                continue
-            cv = CarriedVehicle.from_any(item)
-            if cv is None or cv.vehicle_type != "satellite":
-                remaining.append(item)
-                continue
-            if satellite_design_id and satellite_design_id != "auto":
-                if cv.design_id != satellite_design_id:
-                    remaining.append(item)
-                    continue
-            popped.append(item)
-        carrier.carried_items = remaining
-        return popped
-
-    @staticmethod
-    def _count_matching_satellites(
-        carrier: ShipInstance, satellite_design_id: Optional[str]
-    ) -> int:
-        n = 0
-        for item in carrier.carried_items:
-            cv = CarriedVehicle.from_any(item)
-            if cv is None or cv.vehicle_type != "satellite":
-                continue
-            if satellite_design_id and satellite_design_id != "auto":
-                if cv.design_id != satellite_design_id:
-                    continue
-            n += 1
-        return n
-
     def _create_satellite_group(
         self, *, empire: "Empire", target_hex: HexCoord,
     ) -> Fleet:
-        """Mint a new ``satellite_group`` Fleet for this launch action."""
         new_id = self._mint_fleet_id(empire)
         group = Fleet(
             fleet_id=new_id,
@@ -247,7 +236,6 @@ class LaunchSatellitesOrderHandler(BaseOrderHandler):
     @staticmethod
     def _mint_fleet_id(empire: "Empire") -> int:
         existing = {f.id for f in empire.fleets if isinstance(f.id, int)}
-        # mine_group=100000, fighter_group=200000, satellite_group=300000.
         candidate = 300000
         while candidate in existing:
             candidate += 1
@@ -260,15 +248,6 @@ class LaunchSatellitesOrderHandler(BaseOrderHandler):
         owner_id: int,
         registries: Optional[Any],
     ) -> ShipInstance:
-        """Build a deployed ShipInstance from a satellite CarriedVehicle.
-
-        PROJ-FMS-D audit Fix 1: delegates to the shared
-        :func:`carried_vehicle_to_ship_instance` helper so the strategic
-        satellite launch path, the strategic fighter launch path, and
-        the post-battle overflow path in :mod:`fighter_reboard` all
-        preserve the same fields (HP, component_states, alive flags)
-        uniformly.
-        """
         from game.strategy.data.carried_vehicle_deploy import (
             carried_vehicle_to_ship_instance,
         )

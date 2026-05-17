@@ -179,6 +179,18 @@ The UI screens hook into these methods rather than mutating Fleet
 state directly. (Pygame screen wiring is intentionally minimal; the
 service layer is the testable boundary.)
 
+## Planet-issued mine laying (QA Observation B)
+
+A planetary-complex facility component exposing `StrategicMineLayer`
+lets a planet issue `IssueLayMinesCommand(planet_id=...)`; the same
+`LayMinesOrderHandler` ticks via `PlanetStagingYardIssuerAdapter`,
+popping mine `CarriedVehicle`s from the planet's `staging_yard` and
+producing a `mine_group` at the planet's hex (or merging into an
+existing one). The planet right-click menu
+([`planet_menu_items.build_menu_items`](../../game/ui/screens/planet_menu_items.py))
+exposes the "Lay Mines" row when the facility ability gate passes and
+the staging yard holds at least one mine.
+
 ## Ramming
 
 `game/simulation/combat/ram_target_resolver.py::RamTargetResolver`:

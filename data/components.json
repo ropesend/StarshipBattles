@@ -4183,8 +4183,8 @@
             }
         },
         {
-            "id": "mine_launcher_small",
-            "name": "Small Mine Launcher",
+            "id": "mine_deployer",
+            "name": "Mine Deployer",
             "type": "Hangar",
             "mass": 60,
             "hp": 100,
@@ -4200,7 +4200,8 @@
                 },
                 "TacticalMineLayer": {
                     "capacity_per_action": 1,
-                    "cycle_time": 5.0
+                    "cycle_time": 5.0,
+                    "launch_rate_tons_per_sec": 4.0
                 },
                 "RequiresMaintenance": 2,
                 "RequiresCommandAndControl": true
@@ -4212,8 +4213,8 @@
             }
         },
         {
-            "id": "fighter_launch_bay_small",
-            "name": "Small Fighter Launch Bay",
+            "id": "fighter_launch_bay",
+            "name": "Fighter Launch Bay",
             "type": "Hangar",
             "mass": 80,
             "hp": 150,
@@ -4229,7 +4230,11 @@
                 },
                 "TacticalFighterLaunch": {
                     "capacity_per_action": 2,
-                    "cycle_time": 6.0
+                    "cycle_time": 6.0,
+                    "launch_rate_tons_per_sec": 8.0
+                },
+                "RecoverFighters": {
+                    "recovery_per_action": 4
                 },
                 "RequiresMaintenance": 4,
                 "RequiresCommandAndControl": true
@@ -4241,8 +4246,8 @@
             }
         },
         {
-            "id": "satellite_launch_bay_small",
-            "name": "Small Satellite Launch Bay",
+            "id": "satellite_launch_bay",
+            "name": "Satellite Launch Bay",
             "type": "Hangar",
             "mass": 100,
             "hp": 150,
@@ -4258,7 +4263,11 @@
                 },
                 "TacticalSatelliteLaunch": {
                     "capacity_per_action": 1,
-                    "cycle_time": 8.0
+                    "cycle_time": 8.0,
+                    "launch_rate_tons_per_sec": 6.0
+                },
+                "RecoverSatellites": {
+                    "recovery_per_action": 2
                 },
                 "RequiresMaintenance": 4,
                 "RequiresCommandAndControl": true
@@ -4270,56 +4279,8 @@
             }
         },
         {
-            "id": "fighter_recovery_bay_small",
-            "name": "Small Fighter Recovery Bay",
-            "type": "Hangar",
-            "mass": 60,
-            "hp": 120,
-            "allowed_vehicle_types": [
-                "Ship",
-                "Planetary Complex"
-            ],
-            "sprite_index": 22,
-            "abilities": {
-                "RecoverFighters": {
-                    "recovery_per_action": 4
-                },
-                "RequiresMaintenance": 3,
-                "RequiresCommandAndControl": true
-            },
-            "major_classification": "Infrastructure",
-            "resource_cost": {
-                "metals": 60,
-                "exotics": 8
-            }
-        },
-        {
-            "id": "satellite_recovery_bay_small",
-            "name": "Small Satellite Recovery Bay",
-            "type": "Hangar",
-            "mass": 80,
-            "hp": 120,
-            "allowed_vehicle_types": [
-                "Ship",
-                "Planetary Complex"
-            ],
-            "sprite_index": 22,
-            "abilities": {
-                "RecoverSatellites": {
-                    "recovery_per_action": 2
-                },
-                "RequiresMaintenance": 3,
-                "RequiresCommandAndControl": true
-            },
-            "major_classification": "Infrastructure",
-            "resource_cost": {
-                "metals": 80,
-                "exotics": 10
-            }
-        },
-        {
-            "id": "vehicle_bay_small",
-            "name": "Small Vehicle Bay",
+            "id": "vehicle_bay",
+            "name": "Vehicle Bay",
             "type": "Hangar",
             "mass": 200,
             "hp": 200,
@@ -4344,8 +4305,8 @@
             }
         },
         {
-            "id": "fighter_bay_small",
-            "name": "Small Fighter-Only Bay",
+            "id": "fighter_bay",
+            "name": "Fighter-Only Bay",
             "type": "Hangar",
             "mass": 180,
             "hp": 180,
@@ -4370,8 +4331,8 @@
             }
         },
         {
-            "id": "satellite_bay_small",
-            "name": "Small Satellite-Only Bay",
+            "id": "satellite_bay",
+            "name": "Satellite-Only Bay",
             "type": "Hangar",
             "mass": 220,
             "hp": 220,
@@ -4396,11 +4357,11 @@
             }
         },
         {
-            "id": "satellite_bay_medium",
-            "name": "Medium Satellite-Only Bay",
+            "id": "mine_bay",
+            "name": "Mine-Only Bay",
             "type": "Hangar",
-            "mass": 520,
-            "hp": 520,
+            "mass": 180,
+            "hp": 180,
             "allowed_vehicle_types": [
                 "Ship",
                 "Planetary Complex"
@@ -4408,95 +4369,17 @@
             "sprite_index": 22,
             "abilities": {
                 "VehicleBay": {
-                    "capacity_mass": 800,
-                    "allowed_types": ["satellite"]
+                    "capacity_mass": 250,
+                    "allowed_types": ["mine"]
                 },
-                "RequiresMaintenance": 5,
+                "RequiresMaintenance": 2,
                 "RequiresCommandAndControl": true
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "metals": 420,
-                "organics": 50,
-                "exotics": 32
-            }
-        },
-        {
-            "id": "satellite_bay_large",
-            "name": "Large Satellite-Only Bay",
-            "type": "Hangar",
-            "mass": 1250,
-            "hp": 1250,
-            "allowed_vehicle_types": [
-                "Ship",
-                "Planetary Complex"
-            ],
-            "sprite_index": 22,
-            "abilities": {
-                "VehicleBay": {
-                    "capacity_mass": 2100,
-                    "allowed_types": ["satellite"]
-                },
-                "RequiresMaintenance": 12,
-                "RequiresCommandAndControl": true
-            },
-            "major_classification": "Infrastructure",
-            "resource_cost": {
-                "metals": 1050,
-                "organics": 100,
-                "exotics": 80
-            }
-        },
-        {
-            "id": "vehicle_bay_medium",
-            "name": "Medium Vehicle Bay",
-            "type": "Hangar",
-            "mass": 500,
-            "hp": 500,
-            "allowed_vehicle_types": [
-                "Ship",
-                "Planetary Complex"
-            ],
-            "sprite_index": 22,
-            "abilities": {
-                "VehicleBay": {
-                    "capacity_mass": 750,
-                    "allowed_types": ["mine", "fighter", "satellite"]
-                },
-                "RequiresMaintenance": 5,
-                "RequiresCommandAndControl": true
-            },
-            "major_classification": "Infrastructure",
-            "resource_cost": {
-                "metals": 400,
-                "organics": 50,
-                "exotics": 30
-            }
-        },
-        {
-            "id": "vehicle_bay_large",
-            "name": "Large Vehicle Bay",
-            "type": "Hangar",
-            "mass": 1200,
-            "hp": 1200,
-            "allowed_vehicle_types": [
-                "Ship",
-                "Planetary Complex"
-            ],
-            "sprite_index": 22,
-            "abilities": {
-                "VehicleBay": {
-                    "capacity_mass": 2000,
-                    "allowed_types": ["mine", "fighter", "satellite"]
-                },
-                "RequiresMaintenance": 12,
-                "RequiresCommandAndControl": true
-            },
-            "major_classification": "Infrastructure",
-            "resource_cost": {
-                "metals": 1000,
-                "organics": 100,
-                "exotics": 75
+                "metals": 140,
+                "organics": 18,
+                "exotics": 10
             }
         },
         {

@@ -156,7 +156,9 @@ class PlanetReportPanel:
 
     Components:
     - Portrait (150x150 at 10, 10)
-    - Info text (UITextBox with HTML in middle)
+    - Info text (UITextBox with HTML in middle — includes inline
+      Staged Units block when the planet has staging-yard contents,
+      QA-OBS-A)
     - Atmosphere graph (150px wide at 10, 170)
     - Complexes list (scrollable, right side)
     """
@@ -169,7 +171,6 @@ class PlanetReportPanel:
         container=None,
         portrait_surface=None,
         show_complexes=True,
-        show_staged_units=True,
         production_rates: Optional[Dict[str, float]] = None,
         view=None,
         empire=None,
@@ -187,12 +188,6 @@ class PlanetReportPanel:
                 If provided, will be used instead of generating placeholder.
             show_complexes (bool, optional): Whether to show the complexes list.
                 Defaults to True. Set to False for contexts like Strategy UI.
-            show_staged_units (bool, optional): Whether to show the staged
-                units list (fighters / mines / satellites / drop-pods sitting
-                in the planet's staging yard). Defaults to True.
-                QA-OBS-4: the original silent-feedback bug had no UI surface
-                for `planet.staging_yard` outside the Transfer dialog; this
-                makes staged production visible on the planet view itself.
             production_rates (Dict[str, float], optional): Per-resource production rates.
                 Used for the resource grid. Defaults to empty dict.
             view: Optional ``ColonyDemographicView`` (PROJ-289). Threaded through
@@ -242,19 +237,17 @@ class PlanetReportPanel:
             container=self.panel
         )
 
-        # Reserve space for the right-side column (200px wide). The column
-        # hosts the Built Complexes list, the Staged Units list, or both —
-        # whichever the caller enabled. QA-OBS-4: staged units default
-        # on so every PlanetReportPanel caller surfaces queued production
-        # output without needing layout changes at the call sites.
+        # Reserve space for the right-side complexes column (200px wide)
+        # when show_complexes=True. Staged-yard contents are rendered
+        # inline within the detail_text by `format_planet_info` (QA-OBS-A),
+        # so there is no separate staged-units column.
         complexes_width = 200
         complexes_gap = 10
-        show_right_column = show_complexes or show_staged_units
 
         # Info text (170, 10, text_w, text_h) - width depends on whether
-        # the right column is shown.
+        # the complexes column is shown.
         # Height reduced to make room for resource panel at bottom
-        if show_right_column:
+        if show_complexes:
             text_w = rect.width - 180 - complexes_width - complexes_gap
         else:
             text_w = rect.width - 180  # Only leave room for portrait and graph
@@ -268,28 +261,9 @@ class PlanetReportPanel:
             container=self.panel
         )
 
-        # Right-side scrollable column(s). When both lists are enabled the
-        # vertical space is split 50/50; when only one is enabled it takes
-        # the full column height.
+        # Right-side complexes column (full height when shown).
         column_x = rect.width - complexes_width - 10
-        column_full_h = rect.height - 20 - RESOURCE_PANEL_HEIGHT
-
-        if show_complexes and show_staged_units:
-            complexes_h = column_full_h // 2
-            staged_h = column_full_h - complexes_h
-            staged_y = 10 + complexes_h + 5  # small gap between sections
-        elif show_complexes:
-            complexes_h = column_full_h
-            staged_h = 0
-            staged_y = 0
-        elif show_staged_units:
-            complexes_h = 0
-            staged_h = column_full_h
-            staged_y = 10
-        else:
-            complexes_h = 0
-            staged_h = 0
-            staged_y = 0
+        complexes_h = rect.height - 20 - RESOURCE_PANEL_HEIGHT
 
         if show_complexes:
             self.complexes_container = UIScrollingContainer(
@@ -307,26 +281,6 @@ class PlanetReportPanel:
         else:
             self.complexes_container = None
             self.complex_items = []
-
-        # QA-OBS-4: staged units list (fighters / mines / satellites /
-        # drop-pods sitting in `planet.staging_yard`). Mirrors the
-        # complexes-list contract.
-        if show_staged_units:
-            self.staged_units_container = UIScrollingContainer(
-                relative_rect=pygame.Rect(column_x, staged_y, complexes_width, staged_h),
-                manager=manager,
-                container=self.panel
-            )
-            UILabel(
-                relative_rect=pygame.Rect(5, 5, complexes_width - 10, 25),
-                text="Staged Units",
-                manager=manager,
-                container=self.staged_units_container
-            )
-            self.staged_items: List = []
-        else:
-            self.staged_units_container = None
-            self.staged_items = []
 
         # Atmosphere graph (10, 170, 150, graph_h)
         # Height reduced to make room for resource panel at bottom
@@ -362,7 +316,6 @@ class PlanetReportPanel:
         self._update_portrait(portrait_surface)
         self._update_graph()
         self._update_complexes_list()
-        self._update_staged_units_list()
         self._build_resource_grid()
 
     def update_planet(
@@ -426,11 +379,10 @@ class PlanetReportPanel:
         )
         self.detail_text.rebuild()
 
-        # Update portrait, graph, complexes list, staged units, and resource grid
+        # Update portrait, graph, complexes list, and resource grid
         self._update_portrait(portrait_surface)
         self._update_graph()
         self._update_complexes_list()
-        self._update_staged_units_list()
         self._update_resource_grid()
 
     def _update_portrait(self, portrait_surface=None) -> None:
@@ -541,59 +493,6 @@ class PlanetReportPanel:
             self.complex_items.append(complex_label)
 
             y_offset += 30  # Gap between items
-
-    def _update_staged_units_list(self) -> None:
-        """Render the planet's staging-yard contents into the right column.
-
-        QA-OBS-4: staging-yard items (fighter / mine / satellite / drop-pod
-        output from production queues) were previously only visible through
-        the Transfer dialog. Surfacing them here closes the feedback gap so
-        players can confirm at a glance that a queue actually produced
-        something.
-
-        Groups entries by (name, vehicle_type) so 12 identical Mk1 Mines
-        render as a single 'Mk1 Mine x12' row, matching the complexes-list
-        convention. Empty staging yard renders a 'None' placeholder.
-        """
-        if not self.staged_units_container:
-            return  # show_staged_units=False at construction
-
-        # Clear existing items - copy list to avoid mutation during iteration
-        for item in list(self.staged_items):
-            item.kill()
-        self.staged_items = []
-
-        staging_yard = getattr(self.planet, "staging_yard", None) or []
-
-        if not staging_yard:
-            no_items_label = UILabel(
-                relative_rect=pygame.Rect(5, 35, 190, 25),
-                text="None",
-                manager=self.manager,
-                container=self.staged_units_container,
-            )
-            self.staged_items.append(no_items_label)
-            return
-
-        # Group by (name, vehicle_type)
-        group_counts: Dict[tuple, int] = {}
-        for item in staging_yard:
-            if not isinstance(item, dict):
-                continue
-            key = (item.get("name", "Unknown"), item.get("vehicle_type", "unknown"))
-            group_counts[key] = group_counts.get(key, 0) + 1
-
-        y_offset = 35  # below the "Staged Units" header
-        for (name, _vtype), count in sorted(group_counts.items()):
-            display_text = f"{name} x{count}" if count > 1 else name
-            label = UILabel(
-                relative_rect=pygame.Rect(5, y_offset, 190, 25),
-                text=display_text,
-                manager=self.manager,
-                container=self.staged_units_container,
-            )
-            self.staged_items.append(label)
-            y_offset += 30
 
     # Net row index within the 8 data rows returned by `_projection_grid_rows`
     # (Qty, Qual, Harvest, Upkeep, Yard, Net, Stored, Cap). Used to scope
@@ -759,13 +658,6 @@ class PlanetReportPanel:
         for item in self._resource_grid_items:
             item.kill()
         self._resource_grid_items = []
-
-        # Clean up staged-units list items (the container itself is killed
-        # via the panel-tree below, but items kept separately need explicit
-        # cleanup to avoid dangling pygame_gui refs).
-        for item in getattr(self, "staged_items", []) or []:
-            item.kill()
-        self.staged_items = []
 
         # Clean up resource panel
         if self.resource_panel:

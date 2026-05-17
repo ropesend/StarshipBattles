@@ -107,6 +107,19 @@ PLANET_ACTION_ORDER_TYPES: frozenset = frozenset({
     OrderType.DEACTIVATE_ABILITY,
 })
 
+# QA Observation B: FMS order types that planets can issue from a
+# facility (planetary complex with mine_deployer / fighter_launch_bay /
+# satellite_launch_bay components). Ticked by ActionExecutionEngine
+# alongside fleet orders, NOT by PlanetActionEngine (which is reserved
+# for the instant ACTIVATE/DEACTIVATE pop-and-set toggles).
+PLANET_FMS_ACTION_ORDER_TYPES: frozenset = frozenset({
+    OrderType.LAY_MINES,
+    OrderType.LAUNCH_FIGHTERS,
+    OrderType.LAUNCH_SATELLITES,
+    OrderType.RECOVER_FIGHTERS,
+    OrderType.RECOVER_SATELLITES,
+})
+
 
 class Order:
     """

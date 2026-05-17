@@ -42,8 +42,24 @@ class _StubComponent:
         return [self._ab] if name == self._name else []
 
 
-def _make_tactical_launch_ability(*, capacity: int = 2, cycle_time: float = 6.0):
-    return SimpleNamespace(capacity_per_action=capacity, cycle_time=cycle_time)
+def _make_tactical_launch_ability(
+    *,
+    capacity: int = 2,
+    cycle_time: float = 6.0,
+    launch_rate_tons_per_sec: float = 100000.0,
+):
+    """QA-C: tactical launch abilities expose a mass-tons/sec budget.
+
+    Default rate (100000 t/s) is intentionally huge so a single
+    tick (0.01s) yields 1000t of budget — more than enough for the
+    20t fighter stubs the legacy tests build. Keeps the "one tick =
+    at least one launch" expectation in the original tests.
+    """
+    return SimpleNamespace(
+        capacity_per_action=capacity,
+        cycle_time=cycle_time,
+        launch_rate_tons_per_sec=launch_rate_tons_per_sec,
+    )
 
 
 def _make_carrier_ship(
@@ -180,12 +196,31 @@ def test_carrier_controller_does_not_launch_without_loaded_fighters():
     assert not engine.launch_fighters_in_battle.called
 
 
-def test_carrier_controller_respects_cooldown_between_waves():
-    """After a launch, cooldown must elapse before the next wave fires."""
+def test_carrier_controller_respects_mass_budget_between_waves():
+    """QA-C: with a low launch_rate_tons_per_sec, the mass budget
+    rebuilds slowly. After spending the budget on a launch, the next
+    immediate tick has too little budget to launch the next fighter.
+    """
     from game.ai.carrier_controller import CarrierAIController
 
-    cvs = [_make_fighter_cv().to_dict() for _ in range(4)]
-    carrier = _make_carrier_ship(carried_items=list(cvs))
+    # Slow rate: 1.0 t/s. Each tick adds 0.01t (TICK_RATE=0.01). A
+    # 20t fighter needs 2000 ticks of accumulation.
+    slow_ability = _make_tactical_launch_ability(launch_rate_tons_per_sec=1.0)
+    carrier = MagicMock()
+    carrier.is_alive = True
+    carrier.is_derelict = False
+    carrier.team_id = 0
+    carrier.position = Vector2(0.0, 0.0)
+    carrier.velocity = Vector2(0, 0)
+    carrier.angle = 0
+    carrier.radius = 20.0
+    carrier.color = (255, 255, 255)
+    carrier.theme_id = "Federation"
+    carrier.vehicle_type = "Ship"
+    carrier.carried_items = [_make_fighter_cv().to_dict() for _ in range(4)]
+    comp = _StubComponent("TacticalFighterLaunch", slow_ability)
+    carrier.iter_components = MagicMock(return_value=[("INNER", comp)])
+    carrier.get_all_components = MagicMock(return_value=[comp])
     enemy = _make_enemy_ship(pos=Vector2(500.0, 0.0))
     engine = _make_engine_stub()
     grid = _make_grid_stub([enemy])
@@ -196,13 +231,79 @@ def test_carrier_controller_respects_cooldown_between_waves():
     ctrl = CarrierAIController(
         adapter, grid, enemy_team_id=1, rng=random.Random(0), engine=engine,
     )
+    # Pre-warm the budget enough for exactly one 20t fighter.
+    ctrl._mass_budget_by_ability["TacticalFighterLaunch"] = 20.0
 
-    # First tick: launches a wave.
+    # First tick: budget grows by 0.01t and 20.01t covers exactly one launch.
     ctrl.update()
     assert engine.launch_fighters_in_battle.call_count == 1
-    # Second tick immediately after: cooldown still active → no launch.
+    # Second tick: only 0.01t accumulated since the spend; can't launch.
     ctrl.update()
     assert engine.launch_fighters_in_battle.call_count == 1
+
+
+def test_carrier_controller_mass_budget_launches_variable_mass_fighters():
+    """QA-C: a 100 t/s bay launches a small fighter every tick it can
+    afford the mass, and stops when the next-in-line fighter exceeds
+    the residual budget.
+    """
+    from game.ai.carrier_controller import CarrierAIController
+    from game.strategy.data.carried_vehicle import CarriedVehicle
+
+    # Variable-mass payload: 30t + 30t + 50t = 110t total. With a
+    # 100 t/s rate the first tick accumulates 1.0t; pre-warm to 60.5t
+    # so the controller fits two 30t fighters in one launch, leaving
+    # 0.5t residual that can't fit the 50t bomber.
+    light_a = CarriedVehicle(
+        design_id="lite", design_data={"name": "lite"},
+        vehicle_type="fighter", mass=30.0, current_hp=10,
+    )
+    light_b = CarriedVehicle(
+        design_id="lite", design_data={"name": "lite"},
+        vehicle_type="fighter", mass=30.0, current_hp=10,
+    )
+    heavy = CarriedVehicle(
+        design_id="bomber", design_data={"name": "bomber"},
+        vehicle_type="fighter", mass=50.0, current_hp=10,
+    )
+    carrier = MagicMock()
+    carrier.is_alive = True
+    carrier.is_derelict = False
+    carrier.team_id = 0
+    carrier.position = Vector2(0.0, 0.0)
+    carrier.velocity = Vector2(0, 0)
+    carrier.angle = 0
+    carrier.radius = 20.0
+    carrier.color = (255, 255, 255)
+    carrier.theme_id = "Federation"
+    carrier.vehicle_type = "Ship"
+    carrier.carried_items = [light_a.to_dict(), light_b.to_dict(), heavy.to_dict()]
+    ability = _make_tactical_launch_ability(launch_rate_tons_per_sec=100.0)
+    comp = _StubComponent("TacticalFighterLaunch", ability)
+    carrier.iter_components = MagicMock(return_value=[("INNER", comp)])
+    carrier.get_all_components = MagicMock(return_value=[comp])
+    enemy = _make_enemy_ship(pos=Vector2(500.0, 0.0))
+    engine = _make_engine_stub()
+    grid = _make_grid_stub([enemy])
+
+    from game.ai.interfaces.controllable import ShipControllableAdapter
+    import random
+    adapter = ShipControllableAdapter(carrier)
+    ctrl = CarrierAIController(
+        adapter, grid, enemy_team_id=1, rng=random.Random(0), engine=engine,
+    )
+    # Pre-warm budget: 60.5t. Per-tick tick adds 1.0t -> 61.5t entering
+    # the pop loop. Two 30t fighters fit (61.5 - 60 = 1.5t remaining),
+    # but the 50t heavy does not.
+    ctrl._mass_budget_by_ability["TacticalFighterLaunch"] = 60.5
+
+    ctrl.update()
+    assert engine.launch_fighters_in_battle.call_count == 1
+    _args, _kwargs = engine.launch_fighters_in_battle.call_args
+    assert len(_args[1]) == 2  # the two lights, heavy stays in the bay
+    assert len(carrier.carried_items) == 1
+    # Residual budget = 61.5 - 60.0 = 1.5t.
+    assert abs(ctrl._mass_budget_by_ability["TacticalFighterLaunch"] - 1.5) < 1e-9
 
 
 def test_carrier_controller_skips_when_only_legacy_vehicle_launch():

@@ -150,6 +150,8 @@ def _capture_stats(ship: "Ship") -> dict:
         "fighters_per_wave": ship.fighters_per_wave,
         "fighter_size_cap": ship.fighter_size_cap,
         "launch_cycle": ship.launch_cycle,
+        # QA-C: authoritative tactical-throughput dial (mass-tons/sec).
+        "fighter_launch_rate_tons_per_sec": ship.fighter_launch_rate_tons_per_sec,
         # Command / multiplex
         "max_targets": ship.max_targets,
         "crew_onboard": ship.crew_onboard,

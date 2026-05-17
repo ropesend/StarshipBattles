@@ -161,3 +161,35 @@ Per-project E2E gameplay smoke:
    - fighters/sats: confirm they auto-join the next tactical battle on the owner's side.
 6. Recover survivors via the strategic recovery action; verify HP persists.
 7. Self-destruct a minefield (selective); verify removal from `mine_group`.
+
+## Decision: `IIssuerAdapter` is the canonical issuer-polymorphism seam (QA Observation B)
+
+The five FMS order handlers (`LayMines`, `LaunchFighters`,
+`LaunchSatellites`, `RecoverFighters`, `RecoverSatellites`) were widened
+to accept BOTH fleet ships AND planetary-complex facilities as the
+issuer. Rather than fork each handler into parallel
+`*_fleet` / `*_planet` codepaths permanently, we introduced
+[`game/strategy/engine/issuer_adapter.py`](../../../game/strategy/engine/issuer_adapter.py)
+as the polymorphic interface — `FleetShipIssuerAdapter` wraps
+`(Fleet, ShipInstance)` against `ship.carried_items`;
+`PlanetStagingYardIssuerAdapter` wraps a `Planet` against
+`planet.staging_yard`. Order handlers (`*OrderHandler.execute_for_issuer`)
+operate on the protocol surface (`location`, `owner_id`, `display_label`,
+`pop_carried`, `count_carried`, `append_carried`, `append_recovered`)
+so the same launch / recovery body runs for both issuer kinds.
+
+Implication for future issuer types (e.g. orbital platforms, free-floating
+stations): add a new `IIssuerAdapter` implementation, expose the same
+surface, and route the relevant Issue*Command branch through the adapter.
+Do NOT widen the handler's `_execute_fleet` / `_execute_planet` switch
+further.
+
+UI parity: both the fleet right-click menu
+([`fleet_menu_items.build_menu_items`](../../../game/ui/screens/fleet_menu_items.py))
+and the planet right-click menu
+([`planet_menu_items.build_menu_items`](../../../game/ui/screens/planet_menu_items.py))
+emit the same five FMS rows when capability gates pass; the FMS rows
+carry a `callback` rather than an `InputAction` because there is no
+keyboard surface for them today. Callback builders live in
+[`fms_menu_callbacks.py`](../../../game/ui/screens/fms_menu_callbacks.py).
+

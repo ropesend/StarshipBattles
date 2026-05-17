@@ -26,6 +26,7 @@ import pygame_gui.elements
 
 from game.core.input_actions import InputAction
 from game.ui.screens.fleet_menu_items import FleetMenuItem
+from game.ui.screens.planet_menu_items import PlanetMenuItem
 
 
 # Layout constants — tuned for 2560x1600 and 3840x2160 displays.
@@ -95,6 +96,9 @@ class FleetContextMenu(pygame_gui.elements.UIPanel):
         )
         self.on_action_selected = on_action_selected
         self._action_buttons: dict[pygame_gui.elements.UIButton, InputAction] = {}
+        # QA Observation B Phase 7: FMS rows have ``action=None`` and a
+        # ``callback`` field rather than an InputAction.
+        self._callback_buttons: dict[pygame_gui.elements.UIButton, Callable[[], None]] = {}
         self._create_buttons(items)
 
     def _create_buttons(self, items: Sequence[FleetMenuItem]) -> None:
@@ -112,7 +116,10 @@ class FleetContextMenu(pygame_gui.elements.UIPanel):
                 manager=self.ui_manager,
                 container=self,
             )
-            self._action_buttons[button] = item.action
+            if item.action is not None:
+                self._action_buttons[button] = item.action
+            elif item.callback is not None:
+                self._callback_buttons[button] = item.callback
 
     @staticmethod
     def _format_row(item: FleetMenuItem) -> str:
@@ -136,11 +143,72 @@ class FleetContextMenu(pygame_gui.elements.UIPanel):
             if action is not None:
                 self.on_action_selected(action)
                 return True
+            cb = self._callback_buttons.get(event.ui_element)
+            if cb is not None:
+                cb()
+                return True
         return super().process_event(event)
 
     @classmethod
     def required_height(cls, num_items: int) -> int:
         """Total panel height needed to hold ``num_items`` rows."""
+        if num_items <= 0:
+            return 2 * PANEL_PADDING
+        return (
+            2 * PANEL_PADDING
+            + num_items * ROW_HEIGHT
+            + (num_items - 1) * ROW_GAP
+        )
+
+
+class PlanetContextMenu(pygame_gui.elements.UIPanel):
+    """QA Observation B: planet right-click context menu.
+
+    Shape-equivalent to :class:`FleetContextMenu` but rows carry an
+    explicit zero-arg callback rather than an :class:`InputAction`. The
+    planet FMS flows don't have ``InputAction`` enum values (the
+    keyboard surface for them is not yet defined; right-click is the
+    only entry point today).
+    """
+
+    def __init__(
+        self,
+        relative_rect: pygame.Rect,
+        manager: pygame_gui.UIManager,
+        items: Sequence[PlanetMenuItem],
+    ) -> None:
+        super().__init__(
+            relative_rect,
+            starting_height=2,
+            manager=manager,
+        )
+        self._row_callbacks: dict[pygame_gui.elements.UIButton, Callable[[], None]] = {}
+        self._create_buttons(items)
+
+    def _create_buttons(self, items: Sequence[PlanetMenuItem]) -> None:
+        for i, item in enumerate(items):
+            y = PANEL_PADDING + i * (ROW_HEIGHT + ROW_GAP)
+            button = pygame_gui.elements.UIButton(
+                relative_rect=pygame.Rect(
+                    PANEL_PADDING, y,
+                    PANEL_WIDTH - 2 * PANEL_PADDING, ROW_HEIGHT,
+                ),
+                text=item.label,
+                manager=self.ui_manager,
+                container=self,
+            )
+            self._row_callbacks[button] = item.callback
+
+    def process_event(self, event: pygame.event.Event) -> bool:
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            cb = self._row_callbacks.get(event.ui_element)
+            if cb is not None:
+                cb()
+                return True
+        return super().process_event(event)
+
+    @classmethod
+    def required_height(cls, num_items: int) -> int:
         if num_items <= 0:
             return 2 * PANEL_PADDING
         return (

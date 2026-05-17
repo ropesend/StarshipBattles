@@ -18,10 +18,11 @@ duplicated logic, no divergent rules.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Protocol
+from dataclasses import dataclass, field
+from typing import Any, Callable, Optional, Protocol
 
 from game.core.input_actions import InputAction
+from game.strategy.data.carried_vehicle import CarriedVehicle
 
 
 @dataclass(frozen=True)
@@ -31,13 +32,19 @@ class FleetMenuItem:
     Attributes:
         label: Display label, e.g. ``"Open Warp Point"``.
         action: The ``InputAction`` to dispatch when this row is clicked.
+            ``None`` is allowed when ``callback`` is set (QA Observation
+            B: FMS rows have no InputAction enum value today).
         shortcut: Display text of the bound key (e.g. ``"Ctrl+W"``);
             ``""`` if the action is unbound.
+        callback: Optional zero-arg callable. When set, the menu invokes
+            this directly instead of routing ``action`` through the
+            fleet command router. Used by the FMS rows.
     """
 
     label: str
-    action: InputAction
+    action: Optional[InputAction]
     shortcut: str
+    callback: Optional[Callable[[], None]] = field(default=None)
 
 
 class _MapperLike(Protocol):
@@ -85,15 +92,67 @@ def _at_colonisable_hex(fleet: Any, galaxy: Any) -> bool:
     return False
 
 
+# --- QA Observation B Phase 7: FMS row gates -------------------------------
+
+
+def _fleet_has_carried_vehicle(fleet: Any, vehicle_type: str) -> bool:
+    """True if any ship in ``fleet`` carries a vehicle of ``vehicle_type``.
+
+    Inspects ``ship.carried_items`` directly so tests can stub a fleet
+    with raw dicts. Mirrors how ``fms_shared.count_matching`` filters.
+    """
+    for ship in getattr(fleet, "ships", None) or ():
+        for item in getattr(ship, "carried_items", None) or ():
+            cv = CarriedVehicle.from_any(item)
+            if cv is not None and cv.vehicle_type == vehicle_type:
+                return True
+    return False
+
+
+def _matching_group_at_fleet_hex(
+    fleet: Any, galaxy: Any, group_kind: str,
+) -> bool:
+    """True if a same-empire ``group_kind`` fleet sits at ``fleet.location``.
+
+    Walks ``galaxy.empires`` so it works on the same in-memory model the
+    rest of the strategy layer uses. Falls back to ``False`` on mocks
+    that lack ``empires``.
+    """
+    if galaxy is None:
+        return False
+    owner_id = getattr(fleet, "owner_id", None)
+    if owner_id is None:
+        return False
+    target_hex = fleet.location
+    empires = getattr(galaxy, "empires", None) or []
+    for emp in empires:
+        if getattr(emp, "id", None) != owner_id:
+            continue
+        for other in getattr(emp, "fleets", None) or ():
+            if getattr(other, "group_kind", "fleet") != group_kind:
+                continue
+            if other.location == target_hex:
+                return True
+    return False
+
+
 def build_menu_items(
     fleet: Any,
     galaxy: Any,
     mapper: _MapperLike,
+    callbacks: Optional[dict[str, Callable[[], None]]] = None,
 ) -> list[FleetMenuItem]:
     """Return the ordered list of menu items the fleet can perform.
 
     Items the fleet cannot perform are omitted entirely (not greyed —
     per AC: "exactly the orders the fleet can perform").
+
+    ``callbacks`` (QA Observation B Phase 7) supplies the zero-arg
+    callables for the five FMS rows (``lay_mines``, ``launch_fighters``,
+    ``launch_satellites``, ``recover_fighters``, ``recover_satellites``).
+    When omitted (or a key is missing) the corresponding FMS row is not
+    emitted — this keeps existing call sites and tests that don't supply
+    callbacks unchanged.
     """
     # PROJ-FMS-A: non-fleet group_kinds (fighter_group / satellite_group /
     # mine_group) cannot perform strategic moves or merge with other fleets.
@@ -153,4 +212,51 @@ def build_menu_items(
                 shortcut=mapper.get_display_text(action),
             )
         )
+
+    # QA Observation B Phase 7: FMS rows (callback-driven, no InputAction).
+    if callbacks:
+        fms_rows: list[tuple[str, str, bool]] = [
+            (
+                "Lay Mines",
+                "lay_mines",
+                _has(fleet, "StrategicMineLayer")
+                and _fleet_has_carried_vehicle(fleet, "mine"),
+            ),
+            (
+                "Launch Fighters",
+                "launch_fighters",
+                _has(fleet, "StrategicFighterLaunch")
+                and _fleet_has_carried_vehicle(fleet, "fighter"),
+            ),
+            (
+                "Launch Satellites",
+                "launch_satellites",
+                _has(fleet, "StrategicSatelliteLaunch")
+                and _fleet_has_carried_vehicle(fleet, "satellite"),
+            ),
+            (
+                "Recover Fighters",
+                "recover_fighters",
+                _has(fleet, "RecoverFighters")
+                and _matching_group_at_fleet_hex(fleet, galaxy, "fighter_group"),
+            ),
+            (
+                "Recover Satellites",
+                "recover_satellites",
+                _has(fleet, "RecoverSatellites")
+                and _matching_group_at_fleet_hex(fleet, galaxy, "satellite_group"),
+            ),
+        ]
+        for label, key, visible in fms_rows:
+            if not visible:
+                continue
+            cb = callbacks.get(key)
+            if cb is None:
+                continue
+            items.append(
+                FleetMenuItem(
+                    label=label, action=None, shortcut="", callback=cb,
+                )
+            )
+
     return items

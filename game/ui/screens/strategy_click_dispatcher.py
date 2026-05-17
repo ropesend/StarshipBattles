@@ -375,19 +375,24 @@ class ClickModeDispatcher:
             self._handle_picking(mx, my)
             return True
 
-        elif button == 3:  # Right Click: friendly fleet -> menu, else silent no-op.
-            # Issue #20 added a 3-way branch; issue #29 removed the third arm
-            # (empty-hex Quick-Move) in favour of the M-key path. The two
-            # surviving arms are menu-related:
-            #   1. Selected fleet's hex          -> open menu.
-            #   2. Different friendly fleet hex  -> select + open menu.
-            # Anything else falls through to the function-final ``return False``.
+        elif button == 3:  # Right Click: friendly fleet/planet -> menu, else silent no-op.
+            # Issue #20 added the fleet-menu branch; QA Observation B adds
+            # the parallel planet branch so planetary complexes can issue
+            # the same FMS actions (Lay Mines / Launch+Recover Fighters /
+            # Launch+Recover Satellites) carriers can.
             friendly = self._friendly_fleet_at_screen(mx, my)
             if friendly is not None:
                 if self.scene.selected_fleet is not friendly:
                     self.scene.on_ui_selection(friendly)
                 self.scene.ui.open_fleet_context_menu(friendly, mx, my)
                 return True
+
+            planet = self._friendly_planet_at_screen(mx, my)
+            if planet is not None:
+                opener = getattr(self.scene.ui, "open_planet_context_menu", None)
+                if opener is not None:
+                    opener(planet, mx, my)
+                    return True
 
         return False
 
@@ -408,6 +413,47 @@ class ClickModeDispatcher:
             for f in emp.fleets:
                 if f.location == hex_clicked and getattr(f, "owner_id", None) == current_player_id:
                     return f
+        return None
+
+    def _friendly_planet_at_screen(self, mx: int, my: int) -> Optional[object]:
+        """Return a planet owned by the current player at the clicked hex.
+
+        QA Observation B: mirrors :meth:`_friendly_fleet_at_screen` so
+        planetary complexes can host the same FMS right-click menu rows
+        carriers do. Uses hex-precision hit testing first; if zoomed in,
+        also falls back to visual-planet hit testing via
+        :meth:`_hit_test_planets` so dense systems work the same way as
+        left-click selection.
+        """
+        hex_clicked = self.scene.camera.hex_at_screen(
+            mx, my, self.scene.hex_size,
+        )
+        current_player_id = self.scene.human_player_ids[
+            self.scene.current_player_index
+        ]
+        clicked_system = self.scene._get_system_at_hex(hex_clicked)
+        # Visual hit test in zoom — picks one of multiple co-hexed planets.
+        # Degenerate test mocks may set non-numeric ``zoom``; treat the
+        # numeric-comparison failure as "not zoomed".
+        zoom = getattr(self.scene.camera, "zoom", 0.0)
+        try:
+            zoomed_in = bool(clicked_system) and float(zoom) >= 1.5
+        except (TypeError, ValueError):
+            zoomed_in = False
+        if zoomed_in:
+            hit_planet = self._hit_test_planets(mx, my, clicked_system)
+            if hit_planet is not None and (
+                getattr(hit_planet, "owner_id", None) == current_player_id
+            ):
+                return hit_planet
+        if clicked_system:
+            planets = getattr(clicked_system, "planets", None) or []
+            for p in planets:
+                p_global = clicked_system.global_location + p.location
+                if p_global == hex_clicked and (
+                    getattr(p, "owner_id", None) == current_player_id
+                ):
+                    return p
         return None
 
     # =========================================================================

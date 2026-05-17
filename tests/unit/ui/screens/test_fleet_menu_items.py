@@ -278,3 +278,301 @@ class TestFleetMenuItemShape:
         assert move.label == "Move"
         assert move.action == InputAction.FLEET_MOVE
         assert move.shortcut == "M"
+
+
+# ---------------------------------------------------------------------------
+# QA Observation B Phase 7: FMS rows on the fleet right-click menu
+# ---------------------------------------------------------------------------
+
+
+def _carried(vehicle_type: str, design_id: str = "auto") -> dict:
+    return {
+        "design_id": design_id,
+        "design_data": {"name": design_id},
+        "vehicle_type": vehicle_type,
+        "mass": 5.0,
+        "current_hp": 30,
+    }
+
+
+def _ship_with_carried(items: list[dict]) -> SimpleNamespace:
+    return SimpleNamespace(carried_items=list(items))
+
+
+def _make_fleet_for_fms(
+    *,
+    abilities: set[str] | None = None,
+    carried: list[dict] | None = None,
+    location: object = SimpleNamespace(q=0, r=0),
+    owner_id: int = 1,
+    fleet_id: int = 99,
+) -> SimpleNamespace:
+    """Fleet shaped for FMS gates: has ``ships`` with ``carried_items``."""
+    ship = _ship_with_carried(carried or [])
+    return SimpleNamespace(
+        id=fleet_id,
+        owner_id=owner_id,
+        capabilities=_make_capabilities(abilities=abilities or set()),
+        location=location,
+        ships=[ship],
+    )
+
+
+def _make_galaxy_with_groups(
+    *,
+    groups_at_hex: list[tuple[str, int, object]] | None = None,
+) -> SimpleNamespace:
+    """Galaxy returning fleets-at-hex matching ``(group_kind, owner_id, hex)``."""
+    items = list(groups_at_hex or ())
+
+    def get_planets_at_global_hex(_h: object) -> list[object]:
+        return []
+
+    by_empire: dict[int, list[SimpleNamespace]] = {}
+    for kind, oid, loc in items:
+        by_empire.setdefault(oid, []).append(
+            SimpleNamespace(group_kind=kind, owner_id=oid, location=loc, id=0)
+        )
+    empires = [
+        SimpleNamespace(id=oid, fleets=flts)
+        for oid, flts in by_empire.items()
+    ]
+    return SimpleNamespace(
+        get_planets_at_global_hex=get_planets_at_global_hex,
+        empires=empires,
+    )
+
+
+def _fms_callbacks() -> dict[str, object]:
+    calls: dict[str, int] = {}
+    def make(name: str):
+        def _cb() -> None:
+            calls[name] = calls.get(name, 0) + 1
+        return _cb
+    cbs = {
+        "lay_mines": make("lay_mines"),
+        "launch_fighters": make("launch_fighters"),
+        "launch_satellites": make("launch_satellites"),
+        "recover_fighters": make("recover_fighters"),
+        "recover_satellites": make("recover_satellites"),
+    }
+    cbs["_calls"] = calls  # type: ignore[assignment]
+    return cbs
+
+
+class TestFMSRows:
+    """Phase 7: five FMS rows added to the fleet right-click menu."""
+
+    # --- Lay Mines ---
+
+    def test_lay_mines_visible_with_layer_and_mine_inventory(self) -> None:
+        fleet = _make_fleet_for_fms(
+            abilities={"StrategicMineLayer"},
+            carried=[_carried("mine")],
+        )
+        items = build_menu_items(
+            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
+        )
+        labels = [it.label for it in items]
+        assert "Lay Mines" in labels
+
+    def test_lay_mines_hidden_without_ability(self) -> None:
+        fleet = _make_fleet_for_fms(carried=[_carried("mine")])
+        items = build_menu_items(
+            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
+        )
+        assert "Lay Mines" not in [it.label for it in items]
+
+    def test_lay_mines_hidden_when_no_mine_inventory(self) -> None:
+        fleet = _make_fleet_for_fms(
+            abilities={"StrategicMineLayer"},
+            carried=[],
+        )
+        items = build_menu_items(
+            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
+        )
+        assert "Lay Mines" not in [it.label for it in items]
+
+    # --- Launch Fighters ---
+
+    def test_launch_fighters_visible_with_ability_and_fighter_inventory(self) -> None:
+        fleet = _make_fleet_for_fms(
+            abilities={"StrategicFighterLaunch"},
+            carried=[_carried("fighter")],
+        )
+        items = build_menu_items(
+            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
+        )
+        assert "Launch Fighters" in [it.label for it in items]
+
+    def test_launch_fighters_hidden_without_ability(self) -> None:
+        fleet = _make_fleet_for_fms(carried=[_carried("fighter")])
+        items = build_menu_items(
+            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
+        )
+        assert "Launch Fighters" not in [it.label for it in items]
+
+    def test_launch_fighters_hidden_when_no_fighter_inventory(self) -> None:
+        fleet = _make_fleet_for_fms(abilities={"StrategicFighterLaunch"})
+        items = build_menu_items(
+            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
+        )
+        assert "Launch Fighters" not in [it.label for it in items]
+
+    # --- Launch Satellites ---
+
+    def test_launch_satellites_visible_with_ability_and_satellite_inventory(self) -> None:
+        fleet = _make_fleet_for_fms(
+            abilities={"StrategicSatelliteLaunch"},
+            carried=[_carried("satellite")],
+        )
+        items = build_menu_items(
+            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
+        )
+        assert "Launch Satellites" in [it.label for it in items]
+
+    def test_launch_satellites_hidden_without_ability(self) -> None:
+        fleet = _make_fleet_for_fms(carried=[_carried("satellite")])
+        items = build_menu_items(
+            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
+        )
+        assert "Launch Satellites" not in [it.label for it in items]
+
+    def test_launch_satellites_hidden_when_no_satellite_inventory(self) -> None:
+        fleet = _make_fleet_for_fms(abilities={"StrategicSatelliteLaunch"})
+        items = build_menu_items(
+            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
+        )
+        assert "Launch Satellites" not in [it.label for it in items]
+
+    # --- Recover Fighters ---
+
+    def test_recover_fighters_visible_with_ability_and_matching_group(self) -> None:
+        loc = SimpleNamespace(q=3, r=4)
+        fleet = _make_fleet_for_fms(
+            abilities={"RecoverFighters"}, location=loc, owner_id=7,
+        )
+        galaxy = _make_galaxy_with_groups(
+            groups_at_hex=[("fighter_group", 7, loc)],
+        )
+        items = build_menu_items(
+            fleet, galaxy, _mapper(), callbacks=_fms_callbacks(),
+        )
+        assert "Recover Fighters" in [it.label for it in items]
+
+    def test_recover_fighters_hidden_without_ability(self) -> None:
+        loc = SimpleNamespace(q=3, r=4)
+        fleet = _make_fleet_for_fms(location=loc, owner_id=7)
+        galaxy = _make_galaxy_with_groups(
+            groups_at_hex=[("fighter_group", 7, loc)],
+        )
+        items = build_menu_items(
+            fleet, galaxy, _mapper(), callbacks=_fms_callbacks(),
+        )
+        assert "Recover Fighters" not in [it.label for it in items]
+
+    def test_recover_fighters_hidden_when_no_matching_group_at_hex(self) -> None:
+        loc = SimpleNamespace(q=3, r=4)
+        fleet = _make_fleet_for_fms(
+            abilities={"RecoverFighters"}, location=loc, owner_id=7,
+        )
+        galaxy = _make_galaxy_with_groups(groups_at_hex=[])
+        items = build_menu_items(
+            fleet, galaxy, _mapper(), callbacks=_fms_callbacks(),
+        )
+        assert "Recover Fighters" not in [it.label for it in items]
+
+    def test_recover_fighters_hidden_when_group_belongs_to_other_empire(self) -> None:
+        loc = SimpleNamespace(q=3, r=4)
+        fleet = _make_fleet_for_fms(
+            abilities={"RecoverFighters"}, location=loc, owner_id=7,
+        )
+        # Group is at the right hex but owned by a different empire.
+        galaxy = _make_galaxy_with_groups(
+            groups_at_hex=[("fighter_group", 99, loc)],
+        )
+        items = build_menu_items(
+            fleet, galaxy, _mapper(), callbacks=_fms_callbacks(),
+        )
+        assert "Recover Fighters" not in [it.label for it in items]
+
+    # --- Recover Satellites ---
+
+    def test_recover_satellites_visible_with_ability_and_matching_group(self) -> None:
+        loc = SimpleNamespace(q=1, r=2)
+        fleet = _make_fleet_for_fms(
+            abilities={"RecoverSatellites"}, location=loc, owner_id=5,
+        )
+        galaxy = _make_galaxy_with_groups(
+            groups_at_hex=[("satellite_group", 5, loc)],
+        )
+        items = build_menu_items(
+            fleet, galaxy, _mapper(), callbacks=_fms_callbacks(),
+        )
+        assert "Recover Satellites" in [it.label for it in items]
+
+    def test_recover_satellites_hidden_without_ability(self) -> None:
+        loc = SimpleNamespace(q=1, r=2)
+        fleet = _make_fleet_for_fms(location=loc, owner_id=5)
+        galaxy = _make_galaxy_with_groups(
+            groups_at_hex=[("satellite_group", 5, loc)],
+        )
+        items = build_menu_items(
+            fleet, galaxy, _mapper(), callbacks=_fms_callbacks(),
+        )
+        assert "Recover Satellites" not in [it.label for it in items]
+
+    def test_recover_satellites_hidden_when_no_matching_group(self) -> None:
+        loc = SimpleNamespace(q=1, r=2)
+        fleet = _make_fleet_for_fms(
+            abilities={"RecoverSatellites"}, location=loc, owner_id=5,
+        )
+        galaxy = _make_galaxy_with_groups(groups_at_hex=[])
+        items = build_menu_items(
+            fleet, galaxy, _mapper(), callbacks=_fms_callbacks(),
+        )
+        assert "Recover Satellites" not in [it.label for it in items]
+
+    # --- Callback wiring + shape ---
+
+    def test_fms_row_has_callback_and_no_action(self) -> None:
+        fleet = _make_fleet_for_fms(
+            abilities={"StrategicMineLayer"},
+            carried=[_carried("mine")],
+        )
+        cbs = _fms_callbacks()
+        items = build_menu_items(
+            fleet, _make_galaxy(), _mapper(), callbacks=cbs,
+        )
+        lay = next(it for it in items if it.label == "Lay Mines")
+        assert lay.action is None
+        assert callable(lay.callback)
+        # Invoking the callback routes through the supplied dict.
+        lay.callback()
+        assert cbs["_calls"]["lay_mines"] == 1
+
+    def test_callbacks_param_optional_keeps_existing_rows_unchanged(self) -> None:
+        """Backwards-compat: omitting callbacks still produces the legacy rows."""
+        fleet = _make_fleet_for_fms(
+            abilities={"StrategicMineLayer"},
+            carried=[_carried("mine")],
+        )
+        items = build_menu_items(fleet, _make_galaxy(), _mapper())
+        # No FMS rows when callbacks missing — but Move/Join still present.
+        labels = [it.label for it in items]
+        assert "Move" in labels and "Join Fleet" in labels
+        assert "Lay Mines" not in labels
+
+    def test_fms_rows_appear_after_legacy_rows(self) -> None:
+        loc = SimpleNamespace(q=0, r=0)
+        fleet = _make_fleet_for_fms(
+            abilities={"StrategicMineLayer", "CargoStorage"},
+            carried=[_carried("mine")],
+            location=loc,
+        )
+        items = build_menu_items(
+            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
+        )
+        labels = [it.label for it in items]
+        # Cargo group appears before FMS group.
+        assert labels.index("Transfer Cargo") < labels.index("Lay Mines")

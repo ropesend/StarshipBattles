@@ -227,8 +227,8 @@ def test_mixed_bay_carrier_isolates_per_type_capacity(fresh_registries):
         ("crew_quarters", LayerType.INNER),
         ("life_support", LayerType.INNER),
         ("generator", LayerType.INNER),
-        ("fighter_bay_small", LayerType.INNER),  # 250, fighter-only
-        ("satellite_bay_small", LayerType.INNER),  # 300, satellite-only
+        ("fighter_bay", LayerType.INNER),  # 250, fighter-only
+        ("satellite_bay", LayerType.INNER),  # 300, satellite-only
     ):
         comp = create_component(comp_id, registries=fresh_registries)
         assert comp is not None, comp_id

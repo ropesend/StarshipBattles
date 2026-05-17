@@ -141,6 +141,18 @@
                 {
                     "stat": "planetary_yard_rate_mult",
                     "formula": "param"
+                },
+                {
+                    "stat": "launch_rate_mult",
+                    "formula": "param"
+                },
+                {
+                    "stat": "recovery_rate_mult",
+                    "formula": "param"
+                },
+                {
+                    "stat": "bay_capacity_mult",
+                    "formula": "param"
                 }
             ]
         },

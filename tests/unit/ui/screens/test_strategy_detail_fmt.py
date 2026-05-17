@@ -886,6 +886,110 @@ class TestFormatPlanetInfo:
         assert "factory_01" in result
         assert "(Offline)" in result
 
+    # ---------------------------------------------------------------------
+    # QA-OBS-A: staging-yard contents render inline within the planet info
+    # text (mirroring complexes), NOT as a separate side column. The
+    # previous PROJ-FMS-D follow-up added a dedicated UIScrollingContainer
+    # in PlanetReportPanel; QA called that out as a layout regression. The
+    # tests below pin the inline contract.
+    # ---------------------------------------------------------------------
+
+    def test_staging_yard_renders_inline_after_complexes_before_energy(self, mock_planet):
+        """Staging yard block sits between the Complexes block and the
+        Energy block in the rendered HTML, matching the complexes rhythm."""
+        mock_planet.owner_id = 1
+        mock_planet.populations = []
+        mock_planet.max_population = 0
+
+        facility = Mock()
+        facility.name = "Mining Complex"
+        facility.design_id = "mining_01"
+        facility.is_operational = True
+        mock_planet.facilities = [facility]
+
+        mock_planet.staging_yard = [
+            {"name": "Mk1 Mine", "vehicle_type": "mine", "mass": 5.0},
+            {"name": "Mk1 Mine", "vehicle_type": "mine", "mass": 5.0},
+            {"name": "Mk1 Mine", "vehicle_type": "mine", "mass": 5.0},
+        ]
+        mock_planet.energy_capacity = 100
+        mock_planet.energy = 50
+
+        result = format_planet_info(mock_planet)
+
+        assert "Complexes:" in result
+        assert "Staged Units:" in result
+        assert "Energy:" in result
+        assert result.index("Complexes:") < result.index("Staged Units:") < result.index("Energy:")
+        assert " - Mk1 Mine x3 (Staged)" in result
+
+    def test_staging_yard_groups_by_name_with_count_suffix(self, mock_planet):
+        """Multi-instance groups get an `xN` suffix; singletons do not."""
+        mock_planet.owner_id = 1
+        mock_planet.populations = []
+        mock_planet.max_population = 0
+        mock_planet.facilities = []
+        mock_planet.staging_yard = [
+            {"name": "X", "vehicle_type": "mine"},
+            {"name": "X", "vehicle_type": "mine"},
+            {"name": "X", "vehicle_type": "mine"},
+            {"name": "Y", "vehicle_type": "fighter"},
+        ]
+
+        result = format_planet_info(mock_planet)
+
+        assert " - X x3 (Staged)" in result
+        assert " - Y (Staged)" in result
+        assert " - Y x1" not in result
+
+    def test_empty_staging_yard_omits_header(self, mock_planet):
+        """Empty staging yard produces no header at all (inline rhythm —
+        no need for a 'None' placeholder like the old side column)."""
+        mock_planet.owner_id = 1
+        mock_planet.populations = []
+        mock_planet.max_population = 0
+        mock_planet.facilities = []
+        mock_planet.staging_yard = []
+
+        result = format_planet_info(mock_planet)
+
+        assert "Staged Units:" not in result
+
+    def test_missing_staging_yard_attr_is_safe(self, mock_planet):
+        """Planets without a `staging_yard` attribute (uncolonized, legacy
+        DTOs) must not crash the formatter."""
+        # mock_planet has no staging_yard configured by default; Mock()
+        # auto-creates a MagicMock when accessed, so we must explicitly
+        # delete the attribute to simulate the missing case.
+        if hasattr(mock_planet, "staging_yard"):
+            del mock_planet.staging_yard
+        mock_planet.owner_id = 1
+        mock_planet.populations = []
+        mock_planet.max_population = 0
+        mock_planet.facilities = []
+
+        # Must not raise
+        result = format_planet_info(mock_planet)
+        assert "Staged Units:" not in result
+
+    def test_non_dict_staging_yard_entries_silently_ignored(self, mock_planet):
+        """Preserves the tolerance of the old `_update_staged_units_list`
+        (non-dict entries skipped silently)."""
+        mock_planet.owner_id = 1
+        mock_planet.populations = []
+        mock_planet.max_population = 0
+        mock_planet.facilities = []
+        mock_planet.staging_yard = [
+            "not a dict",
+            42,
+            {"name": "Real", "vehicle_type": "mine"},
+        ]
+
+        result = format_planet_info(mock_planet)
+
+        assert " - Real (Staged)" in result
+        assert "not a dict" not in result
+
 
 # =============================================================================
 # format_star_system_info Tests

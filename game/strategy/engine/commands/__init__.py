@@ -225,114 +225,147 @@ class QueueCreateDysonSphereMissionCommand(Command):
 
 @dataclass
 class IssueLaunchFightersCommand(Command):
-    """PROJ-FMS-C Phase 1: command to launch fighters from a ship's bay.
+    """PROJ-FMS-C Phase 1 + QA Observation B: launch fighters from a
+    fleet ship OR a planetary-complex facility.
+
+    Invariant: exactly one of ``fleet_id`` / ``planet_id`` must be set.
+    Fleet-issued launches require ``ship_instance_id`` (the carrier);
+    planet-issued launches operate on the planet's staging yard and
+    leave ``ship_instance_id`` unset.
 
     Args:
-        fleet_id: Source fleet containing the carrier ship.
+        fleet_id: Source fleet containing the carrier ship (mutually
+            exclusive with ``planet_id``).
         ship_instance_id: The carrier ship within the fleet that holds the
-            fighters.
+            fighters. Required for fleet-issued, unused for planet-issued.
         fighter_design_id: Specific fighter design to launch. Use "auto" or
             an empty string to take any fighter from the bay.
-        count: Number of fighters of that design to launch.
-        target_hex: Optional target hex. ``None`` => current fleet hex.
+        count: Number of fighters of that design to launch. ``None``
+            launches all matching fighters.
+        target_hex: Optional target hex. ``None`` => current issuer hex.
+        planet_id: Source planet (mutually exclusive with ``fleet_id``);
+            launches from the planet's staging yard.
     """
 
-    fleet_id: int
-    ship_instance_id: str
+    fleet_id: Optional[int] = None
+    ship_instance_id: Optional[str] = None
     fighter_design_id: str = "auto"
-    count: int = 1
+    count: Optional[int] = None
     target_hex: Optional[HexCoord] = None
+    planet_id: Optional[int] = None
 
 
 @dataclass
 class IssueRecoverFightersCommand(Command):
-    """PROJ-FMS-C Phase 3: command to recover fighters into a ship's bay.
+    """PROJ-FMS-C Phase 3 + QA Observation B: recover fighters into a
+    fleet ship's bay OR a planet's staging yard.
+
+    Invariant: exactly one of ``fleet_id`` / ``planet_id`` must be set.
 
     Args:
-        fleet_id: Recovering fleet containing the carrier ship.
-        ship_instance_id: The carrier ship that will receive the fighters.
+        fleet_id: Recovering fleet containing the carrier ship (mutually
+            exclusive with ``planet_id``).
+        ship_instance_id: The carrier ship that will receive the
+            fighters. Required for fleet-issued, unused for planet-issued.
         fighter_group_id: Specific fighter_group fleet id to recover from.
-            ``None`` => the first fighter_group at the recovering fleet's
-            current hex owned by the same empire.
+            ``None`` => the first fighter_group at the issuer's hex owned
+            by the same empire.
         count: Number of fighters to recover. ``None`` => recover all
-            available (capped by bay capacity).
+            available (capped by bay/staging capacity).
+        planet_id: Recovering planet (mutually exclusive with
+            ``fleet_id``); fighters land in the planet's staging yard.
     """
 
-    fleet_id: int
-    ship_instance_id: str
+    fleet_id: Optional[int] = None
+    ship_instance_id: Optional[str] = None
     fighter_group_id: Optional[int] = None
     count: Optional[int] = None
+    planet_id: Optional[int] = None
 
 
 @dataclass
 class IssueLaunchSatellitesCommand(Command):
-    """PROJ-FMS-D Phase 1: command to launch satellites from a ship's bay.
+    """PROJ-FMS-D Phase 1 + QA Observation B: launch satellites from a
+    fleet ship OR a planetary-complex facility.
 
-    Mirrors :class:`IssueLaunchFightersCommand` but operates on satellite
-    CarriedVehicle entries. Satellite recovery has its own command
-    (:class:`IssueRecoverSatellitesCommand`) so a fighter-only carrier
-    can't accidentally recover satellites and vice versa.
+    Invariant: exactly one of ``fleet_id`` / ``planet_id`` must be set.
 
     Args:
-        fleet_id: Source fleet containing the carrier ship.
+        fleet_id: Source fleet containing the carrier ship (mutually
+            exclusive with ``planet_id``).
         ship_instance_id: The carrier ship within the fleet that holds the
-            satellites.
+            satellites. Required for fleet-issued, unused for planet-issued.
         satellite_design_id: Specific satellite design to launch. Use
             "auto" or an empty string to take any satellite from the bay.
-        count: Number of satellites of that design to launch.
-        target_hex: Optional target hex. ``None`` => current fleet hex.
+        count: Number of satellites of that design to launch. ``None``
+            launches all matching satellites.
+        target_hex: Optional target hex. ``None`` => current issuer hex.
+        planet_id: Source planet (mutually exclusive with ``fleet_id``);
+            launches from the planet's staging yard.
     """
 
-    fleet_id: int
-    ship_instance_id: str
+    fleet_id: Optional[int] = None
+    ship_instance_id: Optional[str] = None
     satellite_design_id: str = "auto"
-    count: int = 1
+    count: Optional[int] = None
     target_hex: Optional[HexCoord] = None
+    planet_id: Optional[int] = None
 
 
 @dataclass
 class IssueRecoverSatellitesCommand(Command):
-    """PROJ-FMS-D Phase 2: command to recover satellites into a ship's bay.
+    """PROJ-FMS-D Phase 2 + QA Observation B: recover satellites into a
+    fleet ship's bay OR a planet's staging yard.
 
-    Mirrors :class:`IssueRecoverFightersCommand` but operates on
-    ``satellite_group`` Fleets and requires the recovering ship to carry
-    :class:`RecoverSatellitesAbility`. Per the merged design the ability
-    gates are intentionally separate from fighters'.
+    Invariant: exactly one of ``fleet_id`` / ``planet_id`` must be set.
 
     Args:
-        fleet_id: Recovering fleet containing the carrier ship.
-        ship_instance_id: The carrier ship that will receive the satellites.
+        fleet_id: Recovering fleet containing the carrier ship (mutually
+            exclusive with ``planet_id``).
+        ship_instance_id: The carrier ship that will receive the
+            satellites. Required for fleet-issued, unused for planet-issued.
         satellite_group_id: Specific ``satellite_group`` fleet id to
             recover from. ``None`` => the first satellite_group at the
-            recovering fleet's current hex owned by the same empire.
+            issuer's hex owned by the same empire.
         count: Number of satellites to recover. ``None`` => recover all
-            available (capped by bay capacity).
+            available (capped by bay/staging capacity).
+        planet_id: Recovering planet (mutually exclusive with
+            ``fleet_id``); satellites land in the planet's staging yard.
     """
 
-    fleet_id: int
-    ship_instance_id: str
+    fleet_id: Optional[int] = None
+    ship_instance_id: Optional[str] = None
     satellite_group_id: Optional[int] = None
     count: Optional[int] = None
+    planet_id: Optional[int] = None
 
 
 @dataclass
 class IssueLayMinesCommand(Command):
-    """PROJ-FMS-B Phase 1: command to lay mines from a ship's bay.
+    """PROJ-FMS-B Phase 1 + QA Observation B: lay mines from a fleet
+    ship OR a planetary-complex facility.
+
+    Invariant: exactly one of ``fleet_id`` / ``planet_id`` must be set.
 
     Args:
-        fleet_id: Source fleet containing the carrier ship.
-        ship_instance_id: The carrier ship within the fleet that holds the mines.
-        mine_design_id: Specific mine design to lay (must match
-            ``CarriedVehicle.design_id`` entries in the bay).
-        count: Number of mines of that design to lay.
-        target_hex: Optional target hex. ``None`` => current fleet hex.
+        fleet_id: Source fleet containing the carrier ship (mutually
+            exclusive with ``planet_id``).
+        ship_instance_id: The carrier ship within the fleet that holds
+            the mines. Required for fleet-issued, unused for planet-issued.
+        mine_design_id: Specific mine design to lay.
+        count: Number of mines of that design to lay. ``None`` lays all
+            matching mines.
+        target_hex: Optional target hex. ``None`` => current issuer hex.
+        planet_id: Source planet (mutually exclusive with ``fleet_id``);
+            lays mines from the planet's staging yard.
     """
 
-    fleet_id: int
-    ship_instance_id: str
-    mine_design_id: str
-    count: int = 1
+    fleet_id: Optional[int] = None
+    ship_instance_id: Optional[str] = None
+    mine_design_id: str = ""
+    count: Optional[int] = None
     target_hex: Optional[HexCoord] = None
+    planet_id: Optional[int] = None
 
 
 @dataclass

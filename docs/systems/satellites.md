@@ -106,16 +106,20 @@ recover action.
 is the explicit action surface. Production caller:
 `CarrierAIController._maybe_launch_satellite_wave`, which:
 
-- Walks the carrier's components for `TacticalSatelliteLaunchAbility`.
+- Sums `launch_rate_tons_per_sec` across active
+  `TacticalSatelliteLaunchAbility` components on the carrier and
+  accumulates `rate * TICK_RATE` into a per-vehicle-type mass budget.
 - Checks an enemy is in launch radius (cheap spatial-grid query).
-- Pops up to `capacity_per_action` satellite CarriedVehicles.
+- Pops carried satellite CarriedVehicles whose mass fits the residual
+  budget, deducting each launch's mass.
 - Calls the engine action surface, which spawns full design-backed
   satellites with components / weapons / HP and tags each with
   `launched_in_battle_id` for the end-of-battle reboard pipeline.
 
-The same per-tick cooldown gates both fighter and satellite waves, so a
-carrier mounting both ability sets alternates by exhausting one wave's
-cooldown before launching the other.
+QA-C: the per-tick mass budget replaces the older count-per-cycle +
+cooldown model. The same budget accumulator is used for both fighters
+and satellites, keyed by ability name; a carrier mounting both bays
+launches each type independently as its respective budget refills.
 
 ## Stationary tactical AI
 
@@ -157,6 +161,21 @@ The ability-gate test pins that a carrier with only
 `ORDER_TO_ABILITY_MAP` lookup gates the order at action-time
 resolution, and the bay-side `allowed_types` filter rejects satellites
 into a fighter-only bay even if the order somehow slipped through.
+
+## Planet-issued launch / recovery (QA Observation B)
+
+A planetary-complex facility component exposing
+`StrategicSatelliteLaunch` lets a planet issue
+`IssueLaunchSatellitesCommand(planet_id=...)`; the same
+`LaunchSatellitesOrderHandler` ticks via `PlanetStagingYardIssuerAdapter`,
+popping satellites from the planet's `staging_yard` and spawning a
+`satellite_group` at the planet's hex. Recovery mirrors it: a facility
+with `RecoverSatellites` issues
+`IssueRecoverSatellitesCommand(planet_id=...)`; recovered satellites
+re-stage to `staging_yard` (capacity-checked by `max_staging_mass`). The
+planet right-click menu
+([`planet_menu_items.build_menu_items`](../../game/ui/screens/planet_menu_items.py))
+exposes both rows when capability gates pass.
 
 ## End-of-battle reboard
 
@@ -214,9 +233,10 @@ group unless explicitly recovered via the strategic action.
   stat fields each recalculation.
 - `game/strategy/data/design_role.py` — `_CARRIER_ABILITIES` extended
   to include the satellite launch abilities.
-- `data/components.json` — adds `fighter_bay_small`, `satellite_bay_small`
-  / `_medium` / `_large` typed-bay components alongside the universal
-  `vehicle_bay_*` entries (already shipped pre-FMS-D).
+- `data/components.json` — ships the consolidated `fighter_bay`,
+  `satellite_bay`, `mine_bay`, and universal `vehicle_bay` typed-bay
+  components. QA-C: capacity scales through `simple_size_mount` rather
+  than separate `_small / _medium / _large` tiers.
 
 ### Tests
 

@@ -155,11 +155,11 @@
                 ]
             },
             {
-                "id": "vehicle_bay_medium",
+                "id": "vehicle_bay",
                 "modifiers": [
                     {
                         "id": "simple_size_mount",
-                        "value": 1.0
+                        "value": 3.0
                     },
                     {
                         "id": "hardened_mount",
@@ -239,7 +239,7 @@
                 ]
             },
             {
-                "id": "fighter_launch_bay_small",
+                "id": "fighter_launch_bay",
                 "modifiers": [
                     {
                         "id": "simple_size_mount",
@@ -252,7 +252,7 @@
                 ]
             },
             {
-                "id": "fighter_launch_bay_small",
+                "id": "fighter_launch_bay",
                 "modifiers": [
                     {
                         "id": "simple_size_mount",
@@ -293,11 +293,11 @@
         "last_modified": "2026-04-18T07:44:51.318912"
     },
     "expected_stats": {
-        "max_hp": 19662,
-        "mass": 6497.154036486907,
+        "max_hp": 19762,
+        "mass": 6597.154036486907,
         "total_thrust": 1200.0,
         "max_speed": 4.617406303055942,
-        "turn_speed": 17.185325586726897,
-        "acceleration_rate": 0.07106813655833581
+        "turn_speed": 16.79606600573169,
+        "acceleration_rate": 0.06892995670275817
     }
 }

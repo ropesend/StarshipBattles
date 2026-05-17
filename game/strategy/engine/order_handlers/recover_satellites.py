@@ -1,23 +1,8 @@
-"""RecoverSatellitesOrderHandler — PROJ-FMS-D Phase 2.
+"""RecoverSatellitesOrderHandler — PROJ-FMS-D Phase 2 + QA Observation B.
 
-Executes ``OrderType.RECOVER_SATELLITES`` orders. Mirrors
-:class:`RecoverFightersOrderHandler` (PROJ-FMS-C Phase 3) but:
-
-- Acts on ``satellite_group`` Fleets only.
-- Pops :class:`CarriedVehicle`s back into a satellite-capable bay (the
-  ``allowed_types`` filter on :class:`VehicleBayAbility` enforces this
-  per-bay).
-- The recovering ship must mount :class:`RecoverSatellitesAbility` —
-  enforced by the ability-lookup gating wired on the command spec.
-
-Order ``target`` payload is a dict::
-
-    {
-        'ship_instance_id': str,             # Recovering ship in the issuing fleet
-        'satellite_group_id': int | None,    # Specific group, or None for first
-                                             # owner-owned group at hex
-        'count': int | None,                 # How many to recover, or None for all
-    }
+Mirrors :class:`RecoverFightersOrderHandler` but for satellites, now
+polymorphic across fleet- and planet-issued recovery via
+:class:`IIssuerAdapter`.
 """
 from __future__ import annotations
 
@@ -28,6 +13,10 @@ from game.strategy.data.carried_vehicle import CarriedVehicle
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import OrderType
 from game.strategy.data.ship_instance import ShipInstance
+from game.strategy.engine.issuer_adapter import (
+    FleetShipIssuerAdapter,
+    IIssuerAdapter,
+)
 from game.strategy.engine.order_handlers.base import (
     BaseOrderHandler,
     OrderExecutionResult,
@@ -74,49 +63,79 @@ class RecoverSatellitesOrderHandler(BaseOrderHandler):
             return OrderExecutionResult(
                 success=False, message="Not a RECOVER_SATELLITES order"
             )
-
         payload = order.target
         if not isinstance(payload, dict):
             fleet.pop_order()
             return OrderExecutionResult(
-                success=False,
-                message="RECOVER_SATELLITES order missing payload",
+                success=False, message="RECOVER_SATELLITES order missing payload"
             )
 
         ship_instance_id = payload.get("ship_instance_id")
-        satellite_group_id = payload.get("satellite_group_id")
-        count = payload.get("count")  # None => recover all
-
-        if not ship_instance_id:
-            fleet.pop_order()
-            return OrderExecutionResult(
-                success=False,
-                message="RECOVER_SATELLITES order requires ship_instance_id",
-            )
-
-        carrier = self._find_ship(fleet, ship_instance_id)
+        carrier = self._find_ship(fleet, ship_instance_id) if ship_instance_id else None
         if carrier is None:
             fleet.pop_order()
             return OrderExecutionResult(
                 success=False, message=f"Ship {ship_instance_id} not in fleet"
             )
 
+        issuer = FleetShipIssuerAdapter(fleet, carrier)
+        return self._run_with_issuer(
+            issuer=issuer,
+            order_owner=fleet,
+            empire=empire,
+            payload=payload,
+        )
+
+    def execute_for_issuer(
+        self,
+        *,
+        issuer: IIssuerAdapter,
+        order_owner: Any,
+        empire: "Empire",
+    ) -> OrderExecutionResult:
+        order = order_owner.get_current_order()
+        if not order or order.type != OrderType.RECOVER_SATELLITES:
+            return OrderExecutionResult(
+                success=False, message="Not a RECOVER_SATELLITES order"
+            )
+        payload = order.target
+        if not isinstance(payload, dict):
+            order_owner.pop_order()
+            return OrderExecutionResult(
+                success=False, message="RECOVER_SATELLITES order missing payload"
+            )
+        return self._run_with_issuer(
+            issuer=issuer,
+            order_owner=order_owner,
+            empire=empire,
+            payload=payload,
+        )
+
+    def _run_with_issuer(
+        self,
+        *,
+        issuer: IIssuerAdapter,
+        order_owner: Any,
+        empire: "Empire",
+        payload: Dict[str, Any],
+    ) -> OrderExecutionResult:
+        satellite_group_id = payload.get("satellite_group_id")
+        count = payload.get("count")
+
         source = self._find_satellite_group(
-            empire,
-            hex_=fleet.location,
-            satellite_group_id=satellite_group_id,
+            empire, hex_=issuer.location, satellite_group_id=satellite_group_id,
         )
         if source is None:
-            fleet.pop_order()
+            order_owner.pop_order()
             return OrderExecutionResult(
                 success=False,
                 message=(
-                    f"No matching satellite_group at {fleet.location} "
+                    f"No matching satellite_group at {issuer.location} "
                     f"(group_id={satellite_group_id})"
                 ),
             )
         if not source.ships:
-            fleet.pop_order()
+            order_owner.pop_order()
             return OrderExecutionResult(
                 success=False,
                 message=f"Satellite group {source.id} is empty",
@@ -129,37 +148,28 @@ class RecoverSatellitesOrderHandler(BaseOrderHandler):
             requested = min(int(count), available)
 
         recovered = 0
-        not_recovered: List[ShipInstance] = []
         for ship in list(source.ships[:requested]):
             cv = self._satellite_ship_to_carried_vehicle(ship)
             if cv is None:
-                not_recovered.append(ship)
                 continue
-            if carrier._cargo_mgr is None:
-                not_recovered.append(ship)
-                continue
-            ok = carrier._cargo_mgr.load_vehicle(cv)
-            if not ok:
-                not_recovered.append(ship)
+            if not issuer.append_recovered(cv):
                 continue
             source.ships.remove(ship)
             recovered += 1
 
-        # Prune empty satellite_group from empire's fleets list.
         if not source.ships:
             try:
                 empire.fleets.remove(source)
             except ValueError:
                 pass
 
-        fleet.pop_order()
+        order_owner.pop_order()
 
         logger.info(
             "RecoverSatellitesOrderHandler: %s recovered %d satellite(s) "
-            "into %s from group %s (left in group: %d)",
-            getattr(empire, "name", f"Empire {empire.id}"),
+            "from group %s (left in group: %d)",
+            issuer.display_label,
             recovered,
-            carrier.instance_id,
             source.id,
             len(source.ships),
         )
@@ -170,9 +180,8 @@ class RecoverSatellitesOrderHandler(BaseOrderHandler):
                 empire_id=empire.id,
                 message=(
                     f"Recovered {recovered} satellite(s) into "
-                    f"{carrier.instance_id} from group {source.id}"
+                    f"{issuer.display_label} from group {source.id}"
                 ),
-                fleet_id=fleet.id,
             )
         except Exception:  # Intentional broad catch: event-bus emission is best-effort; missing event types in older bus configurations must not break the recovery action.
             pass
@@ -211,7 +220,6 @@ class RecoverSatellitesOrderHandler(BaseOrderHandler):
         hex_: Any,
         satellite_group_id: Optional[int],
     ) -> Optional[Fleet]:
-        """Locate a satellite_group at ``hex_`` owned by ``empire``."""
         for f in empire.fleets:
             if getattr(f, "group_kind", "fleet") != "satellite_group":
                 continue
@@ -227,7 +235,6 @@ class RecoverSatellitesOrderHandler(BaseOrderHandler):
     def _satellite_ship_to_carried_vehicle(
         ship: ShipInstance,
     ) -> Optional[CarriedVehicle]:
-        """Convert a deployed satellite ShipInstance back into a CarriedVehicle."""
         design = ship.design_data or {}
         mass = 0.0
         try:

@@ -85,48 +85,38 @@ class TestPhase5AbilitySkeletons:
         ]:
             assert ABILITY_REGISTRY[key] is expected_class
 
-    def test_fighter_launch_bay_small_instantiates(self, fresh_registries):
+    def test_fighter_launch_bay_instantiates(self, fresh_registries):
         comp = create_component(
-            "fighter_launch_bay_small", registries=fresh_registries,
+            "fighter_launch_bay", registries=fresh_registries,
         )
         assert comp is not None
-        # Both the strategic + tactical fighter launch abilities resolve.
+        # QA-C: collocated launch + recovery on a single component.
         strat = comp.get_abilities("StrategicFighterLaunch")
         tact = comp.get_abilities("TacticalFighterLaunch")
-        assert strat and tact
+        rec = comp.get_abilities("RecoverFighters")
+        assert strat and tact and rec
         assert isinstance(strat[0], StrategicFighterLaunchAbility)
         assert isinstance(tact[0], TacticalFighterLaunchAbility)
+        assert isinstance(rec[0], RecoverFightersAbility)
         assert strat[0].capacity_per_action == 4
         assert strat[0].cycle_time == 15.0
+        assert tact[0].launch_rate_tons_per_sec == 8.0
+        assert rec[0].recovery_per_action == 4
 
-    def test_mine_launcher_instantiates(self, fresh_registries):
-        comp = create_component("mine_launcher_small", registries=fresh_registries)
+    def test_mine_deployer_instantiates(self, fresh_registries):
+        comp = create_component("mine_deployer", registries=fresh_registries)
         assert comp is not None
         assert comp.get_abilities("StrategicMineLayer")
         assert comp.get_abilities("TacticalMineLayer")
 
     def test_satellite_launch_bay_instantiates(self, fresh_registries):
         comp = create_component(
-            "satellite_launch_bay_small", registries=fresh_registries,
+            "satellite_launch_bay", registries=fresh_registries,
         )
         assert comp is not None
         assert comp.get_abilities("StrategicSatelliteLaunch")
         assert comp.get_abilities("TacticalSatelliteLaunch")
-
-    def test_recover_fighters_instantiates(self, fresh_registries):
-        comp = create_component(
-            "fighter_recovery_bay_small", registries=fresh_registries,
-        )
-        assert comp is not None
-        rec = comp.get_abilities("RecoverFighters")
-        assert rec
-        assert rec[0].recovery_per_action == 4
-
-    def test_recover_satellites_instantiates(self, fresh_registries):
-        comp = create_component(
-            "satellite_recovery_bay_small", registries=fresh_registries,
-        )
-        assert comp is not None
+        # QA-C: satellite_launch_bay also bundles RecoverSatellites.
         rec = comp.get_abilities("RecoverSatellites")
         assert rec
         assert rec[0].recovery_per_action == 2
@@ -195,7 +185,7 @@ def _make_bay_ship_instance(fresh_registries):
         ("crew_quarters", LayerType.INNER),
         ("life_support", LayerType.INNER),
         ("generator", LayerType.INNER),
-        ("vehicle_bay_medium", LayerType.INNER),
+        ("vehicle_bay", LayerType.INNER),
     ):
         comp = create_component(comp_id, registries=fresh_registries)
         assert comp is not None, comp_id

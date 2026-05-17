@@ -138,6 +138,22 @@ count)` queues a `RECOVER_FIGHTERS` order. The handler:
 Files: [`game/strategy/engine/handlers/recover_fighters.py`](../../game/strategy/engine/handlers/recover_fighters.py),
 [`game/strategy/engine/order_handlers/recover_fighters.py`](../../game/strategy/engine/order_handlers/recover_fighters.py).
 
+## Planet-issued launch / recovery (QA Observation B)
+
+Both launch and recovery are polymorphic across fleet ships AND planetary
+complex facilities. A planet whose facility component exposes
+`StrategicFighterLaunch` can issue `IssueLaunchFightersCommand(planet_id=...)`
+(no `ship_instance_id`); the same `LaunchFightersOrderHandler` ticks the
+order through `PlanetStagingYardIssuerAdapter`, popping fighters from the
+planet's `staging_yard` and producing a `fighter_group` at the planet's
+hex. Recovery mirrors that: a facility with `RecoverFighters` issues
+`IssueRecoverFightersCommand(planet_id=...)`, drains the matching
+`fighter_group` at the hex, and re-stages recovered fighters back into
+the planet's `staging_yard` (capacity-checked by `max_staging_mass`). The
+right-click planet menu (built by
+[`planet_menu_items.build_menu_items`](../../game/ui/screens/planet_menu_items.py))
+exposes both rows when capability gates pass.
+
 ## End-of-battle reboard
 
 The strategy-side post-battle hook in

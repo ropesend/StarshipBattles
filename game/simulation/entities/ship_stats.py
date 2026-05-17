@@ -186,6 +186,10 @@ class ShipStatsCalculator:
         ship.fighters_per_wave = 0
         ship.fighter_size_cap = 0
         ship.launch_cycle = 0
+        # QA-C: tactical mass-tons/sec budget per vehicle type. The
+        # authoritative tactical-throughput dial; the count + cooldown
+        # fields above are retained for UI back-compat.
+        ship.fighter_launch_rate_tons_per_sec = 0.0
 
         # PROJ-FMS-D Phase 1: satellite launch stats are aggregated
         # separately from fighter equivalents. Without this split a
@@ -195,6 +199,7 @@ class ShipStatsCalculator:
         ship.satellite_capacity = 0
         ship.satellites_per_wave = 0
         ship.satellite_launch_cycle = 0
+        ship.satellite_launch_rate_tons_per_sec = 0.0
 
         # PROJ-FMS-A Phase 3: vehicle-bay capacity (typed design-backed
         # carried vehicles; separate from the legacy ``fighter_capacity``

@@ -21,6 +21,7 @@ def _make_ship():
     ship.fighters_per_wave = 0
     ship.fighter_size_cap = 0
     ship.launch_cycle = 0
+    ship.fighter_launch_rate_tons_per_sec = 0.0
     return ship
 
 
@@ -42,6 +43,9 @@ def _make_hangar_component(
         ab = SimpleNamespace(
             capacity_per_action=tactical_launch.get("capacity_per_action", 1),
             cycle_time=tactical_launch.get("cycle_time", 5.0),
+            launch_rate_tons_per_sec=tactical_launch.get(
+                "launch_rate_tons_per_sec", 0.0,
+            ),
         )
         typed["TacticalFighterLaunch"] = [ab]
     if vehicle_storage:

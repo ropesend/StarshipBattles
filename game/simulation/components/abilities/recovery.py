@@ -1,35 +1,54 @@
-"""PROJ-FMS-A Phase 5 — recovery ability skeletons.
+"""Recovery ability skeletons + scaling bindings.
 
-Two strategic-layer skeleton classes: one for fighters, one for
-satellites. Mines are one-way and never recovered.
+PROJ-FMS-A Phase 5 introduced two strategic-layer skeleton classes:
+one for fighters, one for satellites. Mines are one-way and never
+recovered.
 
-These hold ``recovery_per_action`` from component config and nothing
-else. Behavior lands later:
-  - ``RecoverFightersAbility`` -> PROJ-FMS-C Phase 3, ``OrderType.RECOVER_FIGHTERS``
-  - ``RecoverSatellitesAbility`` -> PROJ-FMS-D Phase 2, ``OrderType.RECOVER_SATELLITES``
+QA Observation C: both classes consume ``recovery_rate_mult`` via
+:class:`AbilityStatBinding` so ``simple_size_mount`` scales
+``recovery_per_action`` linearly with the modifier param. Even though
+strategic recovery is "all in one turn" today, exposing this dial
+keeps the surface symmetric with the launch path and ready for a
+future per-tick tactical recovery hook.
 """
 from __future__ import annotations
 
 from typing import Any, Dict, List
 
 from .base import Ability, AbilityLayer
-from .stat_keys import AbilityStatBinding
+from .stat_keys import AbilityStatBinding, StatKey
 from .ui_colors import HINT_NEUTRAL
 
 
 class _RecoveryAbilityBase(Ability):
     """Shared parsing for the two recovery ability classes."""
 
-    STAT_BINDINGS: List[AbilityStatBinding] = []
+    STAT_BINDINGS: List[AbilityStatBinding] = [
+        AbilityStatBinding(
+            StatKey.RECOVERY_RATE_MULT,
+            attribute_name="recovery_per_action",
+            operation="multiply",
+            base_attribute="_base_recovery_per_action",
+        ),
+    ]
     ui_label: str = "Recovery"
 
     def _parse_attrs(self, data: Any) -> None:
         if isinstance(data, dict):
-            self.recovery_per_action = int(data.get("recovery_per_action", 0))
+            rec = int(data.get("recovery_per_action", 0))
         elif isinstance(data, (int, float)):
-            self.recovery_per_action = int(data)
+            rec = int(data)
         else:
-            self.recovery_per_action = 0
+            rec = 0
+        self._base_recovery_per_action = rec
+        self.recovery_per_action = rec
+
+    def recalculate(self) -> None:
+        """Apply ``recovery_rate_mult`` to ``recovery_per_action``."""
+        mult = self.get_effective_stat("recovery_rate_mult", 1.0)
+        self.recovery_per_action = int(
+            round(self._base_recovery_per_action * mult)
+        )
 
     def get_primary_value(self) -> float:
         return float(self.recovery_per_action)

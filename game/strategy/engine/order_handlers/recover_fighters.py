@@ -1,20 +1,16 @@
-"""RecoverFightersOrderHandler — PROJ-FMS-C Phase 3.
+"""RecoverFightersOrderHandler — PROJ-FMS-C Phase 3 + QA Observation B.
 
-Executes ``OrderType.RECOVER_FIGHTERS`` orders: pops N ``ShipInstance``
-fighters from a target ``fighter_group`` Fleet, converts each back to a
-:class:`CarriedVehicle` preserving ``current_hp``, and loads them into
-the recovering ship's bay (partial recovery allowed).
-
-If the source ``fighter_group`` is reduced to zero ships, it is removed
-from the empire's fleets list.
+Executes ``OrderType.RECOVER_FIGHTERS`` orders, now polymorphic across
+fleet- and planet-issued recovery via :class:`IIssuerAdapter`.
 
 Order ``target`` payload is a dict::
 
     {
-        'ship_instance_id': str,            # Recovering ship in the issuing fleet
-        'fighter_group_id': int | None,     # Specific group, or None for first
-                                            # owner-owned group at hex
-        'count': int | None,                # How many to recover, or None for all
+        'ship_instance_id': str | None,   # Recovering carrier in the fleet
+                                          # (None for planet-issued).
+        'fighter_group_id': int | None,   # Specific group, or None for first
+                                          # owner-owned group at hex.
+        'count': int | None,              # How many to recover, or None for all.
     }
 """
 from __future__ import annotations
@@ -26,6 +22,10 @@ from game.strategy.data.carried_vehicle import CarriedVehicle
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import OrderType
 from game.strategy.data.ship_instance import ShipInstance
+from game.strategy.engine.issuer_adapter import (
+    FleetShipIssuerAdapter,
+    IIssuerAdapter,
+)
 from game.strategy.engine.order_handlers.base import (
     BaseOrderHandler,
     OrderExecutionResult,
@@ -59,6 +59,10 @@ class RecoverFightersOrderHandler(BaseOrderHandler):
     def supported_order_types(self) -> Tuple[OrderType, ...]:
         return (OrderType.RECOVER_FIGHTERS,)
 
+    # ------------------------------------------------------------------
+    # Fleet entry point
+    # ------------------------------------------------------------------
+
     def execute_action_order(
         self,
         fleet: Fleet,
@@ -72,7 +76,6 @@ class RecoverFightersOrderHandler(BaseOrderHandler):
             return OrderExecutionResult(
                 success=False, message="Not a RECOVER_FIGHTERS order"
             )
-
         payload = order.target
         if not isinstance(payload, dict):
             fleet.pop_order()
@@ -81,83 +84,109 @@ class RecoverFightersOrderHandler(BaseOrderHandler):
             )
 
         ship_instance_id = payload.get("ship_instance_id")
-        fighter_group_id = payload.get("fighter_group_id")
-        count = payload.get("count")  # None => recover all
-
-        if not ship_instance_id:
-            fleet.pop_order()
-            return OrderExecutionResult(
-                success=False,
-                message="RECOVER_FIGHTERS order requires ship_instance_id",
-            )
-
-        carrier = self._find_ship(fleet, ship_instance_id)
+        carrier = self._find_ship(fleet, ship_instance_id) if ship_instance_id else None
         if carrier is None:
             fleet.pop_order()
             return OrderExecutionResult(
                 success=False, message=f"Ship {ship_instance_id} not in fleet"
             )
 
-        # Locate the source fighter_group.
+        issuer = FleetShipIssuerAdapter(fleet, carrier)
+        return self._run_with_issuer(
+            issuer=issuer,
+            order_owner=fleet,
+            empire=empire,
+            payload=payload,
+        )
+
+    # ------------------------------------------------------------------
+    # Polymorphic core
+    # ------------------------------------------------------------------
+
+    def execute_for_issuer(
+        self,
+        *,
+        issuer: IIssuerAdapter,
+        order_owner: Any,
+        empire: "Empire",
+    ) -> OrderExecutionResult:
+        order = order_owner.get_current_order()
+        if not order or order.type != OrderType.RECOVER_FIGHTERS:
+            return OrderExecutionResult(
+                success=False, message="Not a RECOVER_FIGHTERS order"
+            )
+        payload = order.target
+        if not isinstance(payload, dict):
+            order_owner.pop_order()
+            return OrderExecutionResult(
+                success=False, message="RECOVER_FIGHTERS order missing payload"
+            )
+        return self._run_with_issuer(
+            issuer=issuer,
+            order_owner=order_owner,
+            empire=empire,
+            payload=payload,
+        )
+
+    def _run_with_issuer(
+        self,
+        *,
+        issuer: IIssuerAdapter,
+        order_owner: Any,
+        empire: "Empire",
+        payload: Dict[str, Any],
+    ) -> OrderExecutionResult:
+        fighter_group_id = payload.get("fighter_group_id")
+        count = payload.get("count")  # None => recover all
+
         source = self._find_fighter_group(
-            empire, hex_=fleet.location, fighter_group_id=fighter_group_id,
+            empire, hex_=issuer.location, fighter_group_id=fighter_group_id,
         )
         if source is None:
-            fleet.pop_order()
+            order_owner.pop_order()
             return OrderExecutionResult(
                 success=False,
                 message=(
-                    f"No matching fighter_group at {fleet.location} "
+                    f"No matching fighter_group at {issuer.location} "
                     f"(group_id={fighter_group_id})"
                 ),
             )
         if not source.ships:
-            fleet.pop_order()
+            order_owner.pop_order()
             return OrderExecutionResult(
                 success=False,
                 message=f"Fighter group {source.id} is empty",
             )
 
-        # How many to attempt.
         available = len(source.ships)
         if count is None or int(count) <= 0:
             requested = available
         else:
             requested = min(int(count), available)
 
-        # Try to recover up to `requested` fighters into the carrier's bay.
         recovered = 0
-        not_recovered: List[ShipInstance] = []
         for ship in list(source.ships[:requested]):
             cv = self._fighter_ship_to_carried_vehicle(ship)
             if cv is None:
-                not_recovered.append(ship)
                 continue
-            if carrier._cargo_mgr is None:
-                not_recovered.append(ship)
-                continue
-            ok = carrier._cargo_mgr.load_vehicle(cv)
-            if not ok:
-                not_recovered.append(ship)
+            if not issuer.append_recovered(cv):
                 continue
             source.ships.remove(ship)
             recovered += 1
 
-        # Prune empty fighter_group from empire's fleets list.
         if not source.ships:
             try:
                 empire.fleets.remove(source)
             except ValueError:
                 pass
 
-        fleet.pop_order()
+        order_owner.pop_order()
 
         logger.info(
-            "RecoverFightersOrderHandler: %s recovered %d fighter(s) into "
-            "%s from group %s (left in group: %d)",
-            getattr(empire, "name", f"Empire {empire.id}"),
+            "RecoverFightersOrderHandler: %s recovered %d fighter(s) from "
+            "group %s (left in group: %d)",
+            issuer.display_label,
             recovered,
-            carrier.instance_id,
             source.id,
             len(source.ships),
         )
@@ -168,9 +197,8 @@ class RecoverFightersOrderHandler(BaseOrderHandler):
                 empire_id=empire.id,
                 message=(
                     f"Recovered {recovered} fighter(s) into "
-                    f"{carrier.instance_id} from group {source.id}"
+                    f"{issuer.display_label} from group {source.id}"
                 ),
-                fleet_id=fleet.id,
             )
         except Exception:  # Intentional broad catch: event-bus emission is best-effort; missing event types in older bus configurations must not break the recovery action.
             pass
@@ -209,12 +237,6 @@ class RecoverFightersOrderHandler(BaseOrderHandler):
         hex_: Any,
         fighter_group_id: Optional[int],
     ) -> Optional[Fleet]:
-        """Locate a fighter_group at ``hex_`` owned by ``empire``.
-
-        When ``fighter_group_id`` is provided, match by id (and hex+owner
-        for safety). When None, returns the first fighter_group at the
-        hex.
-        """
         for f in empire.fleets:
             if getattr(f, "group_kind", "fleet") != "fighter_group":
                 continue
@@ -230,15 +252,9 @@ class RecoverFightersOrderHandler(BaseOrderHandler):
     def _fighter_ship_to_carried_vehicle(
         ship: ShipInstance,
     ) -> Optional[CarriedVehicle]:
-        """Convert a deployed fighter ShipInstance back into a CarriedVehicle.
-
-        Preserves ``current_hp`` (capped at 0 minimum) and per-component
-        state. Mass is read from the design's cached stats if available;
-        otherwise falls back to design_data['mass'] when present, then 0.
-        """
+        """Convert a deployed fighter ShipInstance back into a CarriedVehicle."""
         design = ship.design_data or {}
         mass = 0.0
-        # Try cached stats.
         try:
             stats = ship.get_calculated_stats()
             m = stats.get("mass")

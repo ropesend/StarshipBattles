@@ -32,11 +32,15 @@ def _get_planetary_ids() -> tuple[str, ...]:
 from game.ui.screens.strategy_menu_panel import StrategyMenuPanel, PANEL_WIDTH, PANEL_HEIGHT
 from game.ui.screens.strategy_fleet_context_menu import (
     FleetContextMenu,
+    PlanetContextMenu,
     PANEL_WIDTH as FLEET_MENU_PANEL_WIDTH,
     clamp_menu_position,
     dispatch_action,
 )
 from game.ui.screens.fleet_menu_items import build_menu_items
+from game.ui.screens.planet_menu_items import (
+    build_menu_items as build_planet_menu_items,
+)
 from game.ui.screens.strategy_window_manager import StrategyWindowManager
 from game.ui.screens.strategy_detail_formatter import StrategyDetailFormatter
 from game.ui.screens.strategy_panel_manager import (
@@ -69,6 +73,7 @@ class StrategyUI:
         self.planet_report_panel = None  # planet report panel instance (PROJ-54)
         self.menu_panel = None           # strategy menu dropdown (PROJ-72)
         self.fleet_context_menu = None   # fleet right-click context menu (issue #20)
+        self.planet_context_menu = None  # planet right-click context menu (QA Observation B)
 
         # UI State
         theme_path = os.path.join(Paths.DATA_DIR, 'builder_theme.json')
@@ -189,7 +194,10 @@ class StrategyUI:
         """
         self.close_fleet_context_menu()  # one-at-a-time
 
-        items = build_menu_items(fleet, self.scene.galaxy, self._mapper)
+        callbacks = self._build_fleet_menu_callbacks(fleet)
+        items = build_menu_items(
+            fleet, self.scene.galaxy, self._mapper, callbacks=callbacks,
+        )
         if not items:
             # AC bullet 9 guarantees Move/Join are unconditional, so this
             # is unreachable in production. Defensive guard for tests
@@ -211,6 +219,65 @@ class StrategyUI:
         if self.fleet_context_menu:
             self.fleet_context_menu.kill()
             self.fleet_context_menu = None
+
+    # ------------------------------------------------------------------
+    # Planet right-click context menu (QA Observation B)
+    # ------------------------------------------------------------------
+
+    def open_planet_context_menu(self, planet, mx: int, my: int) -> None:
+        """Open the planet context menu near (mx, my) for ``planet``.
+
+        Items are built by capability gating
+        (:func:`planet_menu_items.build_menu_items`); clicking a row
+        dispatches an FMS command (Lay Mines / Launch / Recover) with
+        ``planet_id=planet.id`` against the strategy facade.
+        """
+        self.close_planet_context_menu()
+        callbacks = self._build_planet_menu_callbacks(planet)
+        items = build_planet_menu_items(planet, self.scene.galaxy, callbacks)
+        if not items:
+            return
+        height = PlanetContextMenu.required_height(len(items))
+        rect = clamp_menu_position(
+            x=mx, y=my,
+            width=FLEET_MENU_PANEL_WIDTH, height=height,
+            screen_width=self.width, screen_height=self.height,
+        )
+        self.planet_context_menu = PlanetContextMenu(
+            rect, self.manager, items,
+        )
+
+    def close_planet_context_menu(self) -> None:
+        """Close and destroy the planet context menu, if open."""
+        if self.planet_context_menu:
+            self.planet_context_menu.kill()
+            self.planet_context_menu = None
+
+    def _build_planet_menu_callbacks(self, planet) -> dict:
+        """Build the {action_name: callable} map for the planet menu.
+
+        Thin wrapper around
+        :func:`fms_menu_callbacks.build_planet_fms_callbacks`.
+        """
+        from game.ui.screens.fms_menu_callbacks import build_planet_fms_callbacks
+        return build_planet_fms_callbacks(
+            planet=planet,
+            facade=getattr(self.scene, "facade", None),
+            close_menu=self.close_planet_context_menu,
+        )
+
+    def _build_fleet_menu_callbacks(self, fleet) -> dict:
+        """Build the FMS callback map for the fleet right-click menu.
+
+        Thin wrapper around
+        :func:`fms_menu_callbacks.build_fleet_fms_callbacks`.
+        """
+        from game.ui.screens.fms_menu_callbacks import build_fleet_fms_callbacks
+        return build_fleet_fms_callbacks(
+            fleet=fleet,
+            facade=getattr(self.scene, "facade", None),
+            close_menu=self.close_fleet_context_menu,
+        )
 
     def _on_fleet_context_menu_action(self, action) -> None:
         """Handle a menu row click: close, then dispatch the action.
