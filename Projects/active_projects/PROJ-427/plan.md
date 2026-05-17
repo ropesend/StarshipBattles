@@ -18,7 +18,7 @@
 | Phase | Status | Checklist | Depends on |
 |-------|--------|-----------|------------|
 | 0. Lock current behavior with red tests | Complete | [phase_0_checklist.md](phase_0_checklist.md) | — |
-| 1. Introduce `DesignRepository` (additive, no caller migration) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) | Phase 0 |
+| 1. Introduce `DesignRepository` (additive, no caller migration) | Complete | [phase_1_checklist.md](phase_1_checklist.md) | Phase 0 |
 | 2. Introduce `DesignCatalog` and move cache ownership | Not Started | [phase_2_checklist.md](phase_2_checklist.md) | Phase 1 |
 | 3. Migrate runtime production to the catalog | Not Started | [phase_3_checklist.md](phase_3_checklist.md) | Phase 2 |
 | 4. Built-count write-back (deferred, no mid-tick disk writes) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) | Phase 3 |
@@ -27,9 +27,9 @@
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 0 complete. Phase 1 next.
-**Last Action:** Added PROJ-427 characterization tests pinning the four current coupling points (DesignLibrary module import + save_path threading in ProductionSpawner; save_path kwarg in `ProductionEngine.process_construction_tick` + `_complete_item`; module-global `_replay_store` set/get/notify behavior in SaveGameService; per-turn UI cache reuse via `FacadeSessionState.designs_by_empire`) and the new `tests/integration/strategy/production/test_no_design_disk_read_during_tick.py` marked `xfail(strict=True)` as the explicit no-disk-read guard (flips to expected-pass in Phase 3).
-**Next Action:** Phase 1 — TDD-introduce `game/strategy/systems/design_repository.py` with the six methods documented in `phase_1_checklist.md`. Purely additive; no caller migration.
+**Active Phase:** Phases 0-1 complete. Phase 2 next.
+**Last Action:** Phase 1 — TDD-introduced `game/strategy/systems/design_repository.py` (filesystem + JSON persistence) with `scan_designs`, `save_design_data`, `load_design_data`, `mark_design_obsolete`, `increment_built_count`, plus the per-empire folder-resolution + creation policy lifted from `DesignLibrary`. `DesignLoadResult` shape is preserved byte-identically (imported from `design_library` to keep the contract until Phase 6 inverts ownership). 9/9 new repository tests + 46/46 existing DesignLibrary tests green; no production or UI caller imports `DesignRepository` yet.
+**Next Action:** Phase 2 — TDD-introduce `game/strategy/systems/design_catalog.py` (per-empire in-memory lookup + UI cache + pending built-count increments) and absorb the catalog map + repository into `SessionRuntimeServices` per the PROJ-423 cross-plan note. Update `SessionBootstrap._build_services` and the anti-drift test in `tests/unit/strategy/engine/session/test_bootstrap.py`.
 **Blockers:** None for phases 0-2 (additive scope only). Split-execution: phases 3-6 (runtime migration, replay-store conversion, deletion) are deferred to a separate execution slot per the rationale in `decisions.md`.
 
 ## Overview
