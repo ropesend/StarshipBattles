@@ -26,11 +26,11 @@
 | 6. Migrate UI callers and delete the old `DesignLibrary` shim | Not Started | [phase_6_checklist.md](phase_6_checklist.md) | Phase 5 |
 
 ## Current State
-**Last Updated:** 2026-05-16
-**Active Phase:** Phase 0 (red-tests baseline)
-**Last Action:** Project scaffold populated from the TD-05 source plan.
-**Next Action:** Read the source plan in full, then add Phase 0 red tests that pin the current coupling (production reads design JSON from disk during tick; module-global `_replay_store`; per-turn UI cache state).
-**Blockers:** None.
+**Last Updated:** 2026-05-17
+**Active Phase:** Phase 0 (red-tests baseline) — halted at entry.
+**Last Action:** Logged a scope-vs-budget blocker in `decisions.md` after reading the seven phase checklists, the live `DesignLibrary`/`production_spawner`/`save_game_service`/`game_session`/`session/bootstrap` code, `SessionRuntimeServices` (PROJ-423), and the existing test patches against `game.strategy.engine.production_spawner.DesignLibrary`.
+**Next Action:** Resumption with a wider budget. Start at Phase 0 task 0.1 unchanged. The cross-plan absorption target (`SessionRuntimeServices.design_repository`, `SessionRuntimeServices.design_catalogs_by_empire` or `SessionBootstrapState`-side per-empire map) and the discipline guardrails (no `Empire.designs_built_count`, no save-schema bump, no premature `DesignLibrary` deletion, explicit no-disk-read tick test) all remain the correct contracts.
+**Blockers:** Single-slot operator budget insufficient to complete phases 0-6 with strict TDD plus a full sharded-suite final gate without leaving partial state. See `decisions.md` 2026-05-17 entry. No code or test changes were committed; `proj/PROJ-427/main` is a clean branch from `proj/PROJ-426/main`.
 
 ## Overview
 
