@@ -478,6 +478,32 @@ class TurnEngine:
         """Return injected per-turn water-level engine."""
         return self._water_engine
 
+    @property
+    def planet_modifier_effect_engine(self):
+        """Lazy-construct + cache the PlanetModifierEffectEngine.
+
+        PROJ-428 Phase 1 (TD-04): the planet-modifier engine moved off
+        the registry module onto TurnEngine. The TD-04 guardrail forbids
+        adding a TurnEngineConfig field for this — the engine is
+        stateless per tick, so a lazy property + cached instance is
+        sufficient. The descriptor in DEFAULT_TICK_PHASE_LIST resolves
+        through ``lambda e: e.planet_modifier_effect_engine.process_modifier_effects_tick``.
+
+        First access constructs; subsequent accesses return the same
+        bound instance.
+        """
+        cached = getattr(self, '_planet_modifier_effect_engine_cached', None)
+        if cached is None:
+            # Local import: PlanetModifierEffectEngine pulls strategy/data
+            # types which would create an import cycle at module top.
+            from game.strategy.engine.planet_modifier_effect_engine import (
+                PlanetModifierEffectEngine,
+            )
+
+            cached = PlanetModifierEffectEngine(registries=self._registries)
+            self._planet_modifier_effect_engine_cached = cached
+        return cached
+
     def process_turn(
         self,
         empires: List['Empire'],

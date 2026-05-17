@@ -251,6 +251,57 @@ class TestConflictEngineBattleResolverBranches:
         assert engine.conflict_engine._battle_resolver is None
 
 
+class TestPlanetModifierEffectEngineLazyProperty:
+    """PROJ-428 Phase 1: planet-modifier engine lives on TurnEngine.
+
+    The registry module must not import PlanetModifierEffectEngine; the
+    construction site moves to a lazy property on TurnEngine, accessed
+    through a resolver lambda on the descriptor.
+    """
+
+    def test_registry_module_does_not_import_planet_modifier_effect_engine(self):
+        """AST guard: turn_phase_registry must not import the engine."""
+        import ast
+        from pathlib import Path
+
+        from game.strategy.engine import turn_phase_registry as _reg
+
+        src = Path(_reg.__file__).read_text(encoding="utf-8")
+        tree = ast.parse(src)
+        offenders: list[str] = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom):
+                module = node.module or ""
+                if "planet_modifier_effect_engine" in module:
+                    offenders.append(f"from {module} import ...")
+                for alias in node.names:
+                    if alias.name == "PlanetModifierEffectEngine":
+                        offenders.append(f"from {module} import {alias.name}")
+            elif isinstance(node, ast.Import):
+                for alias in node.names:
+                    if "planet_modifier_effect_engine" in alias.name:
+                        offenders.append(f"import {alias.name}")
+        assert not offenders, (
+            f"turn_phase_registry must not import PlanetModifierEffectEngine "
+            f"(found: {offenders}). PROJ-428 Phase 1 moves construction to "
+            f"TurnEngine.planet_modifier_effect_engine."
+        )
+
+    def test_planet_modifier_effect_engine_property_returns_cached_instance(
+        self, fresh_registries
+    ):
+        """The lazy property must construct once and cache."""
+        from game.strategy.engine.planet_modifier_effect_engine import (
+            PlanetModifierEffectEngine,
+        )
+
+        engine = build_test_turn_engine(fresh_registries)
+        first = engine.planet_modifier_effect_engine
+        second = engine.planet_modifier_effect_engine
+        assert isinstance(first, PlanetModifierEffectEngine)
+        assert first is second
+
+
 class TestNullBattleResolverSymbolAbsent:
     """PROJ-369 Phase 3 regression guard: ``_NullBattleResolver`` is gone."""
 

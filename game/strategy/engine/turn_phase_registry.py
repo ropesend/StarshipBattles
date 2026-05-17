@@ -30,14 +30,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
-# PROJ-412 Phase 2.3: import the engine at module top so the per-tick
-# resolver doesn't pay the import lookup on each of the 100 invocations.
-# Aliased to a leading underscore to signal it's a private detail of
-# the descriptor resolver below.
-from game.strategy.engine.planet_modifier_effect_engine import (
-    PlanetModifierEffectEngine as _PlanetModifierEffectEngine,
-)
-
 # Sentinel: applied to descriptors whose pre/post hooks should only fire
 # on tick==1. The dispatch loop does not gate the phase call itself —
 # the harvesting / production calls run on every tick. Hooks are
@@ -237,22 +229,6 @@ def _derive_moved_fleet_ids(engine, ctx: TickContext, _result) -> None:
                     owning_empire.fleets.remove(fleet)
 
 
-def _resolve_planet_modifier_effects(engine):
-    """Resolver for the locally-constructed PlanetModifierEffectEngine.
-
-    PROJ-412 Phase 2.3: the engine is stateless per tick. The
-    pre-Phase-2 implementation constructed a fresh instance + did a late
-    import on every tick (100 allocations + 100 import lookups per turn).
-    Lazy-cache on the TurnEngine instance instead; first call constructs,
-    subsequent calls reuse the same bound method.
-    """
-    cached = getattr(engine, '_planet_modifier_effect_engine_cached', None)
-    if cached is None:
-        cached = _PlanetModifierEffectEngine(registries=engine._registries)
-        engine._planet_modifier_effect_engine_cached = cached
-    return cached.process_modifier_effects_tick
-
-
 # ---------------------------------------------------------------------------
 # PROJ-369 Phase 2: Quality / Atmosphere / Water engines are now
 # injectable via TurnEngineConfig + TurnEngine lazy properties (mirror
@@ -357,12 +333,13 @@ DEFAULT_TICK_PHASE_LIST: tuple[TickPhase, ...] = (
         args_resolver=lambda ctx: ((ctx.tick, ctx.empires), {}),
     ),
     # --- Phase 1.8: Planet Modifier Effects (gravity/radiation) ---
-    # NOTE: this phase is constructed locally per tick (matching legacy
-    # ``turn_engine.py:751`` behavior). The resolver returns the bound
-    # ``process_modifier_effects_tick`` of a fresh instance each call.
+    # PROJ-428 Phase 1: resolver routes through TurnEngine's lazy
+    # ``planet_modifier_effect_engine`` property. The engine is
+    # constructed on first access and cached on the TurnEngine
+    # instance — see ``TurnEngine.planet_modifier_effect_engine``.
     TickPhase(
         phase_key='planet_modifier_effects',
-        callable_target=_resolve_planet_modifier_effects,
+        callable_target=lambda e: e.planet_modifier_effect_engine.process_modifier_effects_tick,
         args_resolver=lambda ctx: ((ctx.tick, ctx.empires), {}),
     ),
     # --- Phase 2: Calculate Moves ---

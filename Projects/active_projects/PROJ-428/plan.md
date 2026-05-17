@@ -17,7 +17,7 @@
 | Phase | Name | Status | Checklist |
 |-------|------|--------|-----------|
 | 0 | Freeze the real contract with red tests | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1 | Move planet-modifier engine resolution onto `TurnEngine` | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1 | Move planet-modifier engine resolution onto `TurnEngine` | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2 | Move small hook logic onto named `TurnEngine` methods | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3 | Extract the movement-only collaborator | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4 | Add a registry-purity guard | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -26,9 +26,9 @@
 ## Current State
 
 **Last Updated:** 2026-05-17
-**Active Phase:** 1 — Move planet-modifier engine resolution onto `TurnEngine`
-**Last Action:** Phase 0 characterization tests added (env-event hook, booster-dirty selective flip, fleet pruning after minefield kill); hook lookup goes through `DEFAULT_TICK_PHASE_LIST` so tests survive relocation.
-**Next Action:** Phase 1 — lazy property + descriptor lambda + delete `_resolve_planet_modifier_effects`.
+**Active Phase:** 2 — Move small hook logic onto named `TurnEngine` methods
+**Last Action:** Phase 1 — `TurnEngine.planet_modifier_effect_engine` lazy property added; descriptor repointed to resolver lambda; `_resolve_planet_modifier_effects` + `PlanetModifierEffectEngine` import removed from registry. 55 turn_engine tests + 149 full focused suite green.
+**Next Action:** Phase 2 — move tick-1 logs and env-event accumulator onto TurnEngine.
 **Blockers:** None
 
 ## Overview
