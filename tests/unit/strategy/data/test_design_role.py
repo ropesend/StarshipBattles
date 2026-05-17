@@ -145,6 +145,39 @@ class TestRoleClassifier:
         role = classify_design_role(abilities={}, mass=8000)
         assert role == DesignRole.LINE_COMBATANT
 
+    def test_new_carrier_ability_classifies_without_design_role_edit(self) -> None:
+        """PROJ-429 Phase 2: a new ability tagged ``RoleTag.CARRIER`` in
+        the unified registry classifies as ``DesignRole.CARRIER`` without
+        any edit to ``design_role.py`` — the whole point of TD-07's role
+        unification is that registry tagging is sufficient.
+
+        Mechanism: temporarily register a fake carrier ability through
+        the registry's internal index and verify ``classify_design_role``
+        picks it up. We restore the registry after the test.
+        """
+        from game.strategy.data.design_role import DesignRole, classify_design_role
+        from game.strategy.services import ability_metadata as am
+
+        fake_name = "FooLaunchAbility"
+        assert fake_name not in am._BY_NAME, "test setup: name must be unused"
+        fake_meta = am.AbilityMetadata(
+            name=fake_name,
+            role_tags=frozenset({am.RoleTag.CARRIER}),
+        )
+        am._BY_NAME[fake_name] = fake_meta
+        existing_carriers = am._BY_ROLE_TAG.get(am.RoleTag.CARRIER, frozenset())
+        am._BY_ROLE_TAG[am.RoleTag.CARRIER] = existing_carriers | {fake_name}
+        try:
+            abilities = {fake_name: True}
+            role = classify_design_role(abilities=abilities, mass=8000)
+            assert role == DesignRole.CARRIER, (
+                "classify_design_role must read carrier names from the "
+                "unified AbilityMetadataRegistry, not a local frozenset."
+            )
+        finally:
+            del am._BY_NAME[fake_name]
+            am._BY_ROLE_TAG[am.RoleTag.CARRIER] = existing_carriers
+
     def test_classify_from_design_data(self):
         """classify_from_design_data extracts abilities and classifies."""
         from game.strategy.data.design_role import DesignRole, classify_from_design_data

@@ -23,6 +23,11 @@ import logging
 from enum import Enum
 from typing import Dict, Any
 
+from game.strategy.services.ability_metadata import (
+    RoleTag,
+    abilities_with_role_tag,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -52,22 +57,11 @@ class DesignRole(Enum):
     COMMAND_SHIP = "command_ship"
 
 
-# Ability names used for classification
-_WEAPON_ABILITIES = {"BeamWeaponAbility", "ProjectileWeaponAbility", "SeekerWeaponAbility"}
-_SEEKER_ABILITIES = {"SeekerWeaponAbility"}
-_BEAM_PROJECTILE_ABILITIES = {"BeamWeaponAbility", "ProjectileWeaponAbility"}
-_SENSOR_ABILITIES = {"SensorAbility", "ECMAbility"}
-_SUPPORT_ABILITIES = {"ShipRepair", "SpaceShipyard", "ResourceGeneration"}
-# PROJ-FMS-C audit Fix 1: the legacy ``VehicleLaunch`` ability was deleted.
-# A ship is now a carrier if it mounts the PROJ-FMS-A Phase 5
-# ``TacticalFighterLaunch`` or ``StrategicFighterLaunch`` ability.
-# PROJ-FMS-D Phase 1: satellite carriers (ships that strategically or
-# tactically launch satellites) are also classified as carriers.
-_CARRIER_ABILITIES = {
-    "TacticalFighterLaunch", "StrategicFighterLaunch",
-    "TacticalSatelliteLaunch", "StrategicSatelliteLaunch",
-}
-_COMMAND_ABILITIES = {"TacticalDataLinkAbility"}
+# Ability-name classification reads through the unified
+# ``AbilityMetadataRegistry`` (PROJ-429 / TD-07). The seven role-classification
+# frozensets that previously lived here have been deleted; the registry's
+# ``RoleTag`` tagging is the single source of truth. Adding a new
+# carrier-class launch ability is a single-entry edit in ``ability_metadata.py``.
 
 # Mass thresholds for light/heavy classification
 _LIGHT_SHIP_MASS = 4000   # Escort, Frigate, Destroyer
@@ -93,28 +87,47 @@ def classify_design_role(
     """
     ability_names = set(abilities.keys())
 
-    # Priority 1: Carrier (has fighter launch capability)
-    if ability_names & _CARRIER_ABILITIES:
+    # Read every role-classification set live from the unified registry.
+    # Snapshotting locally keeps the rest of the function readable; the
+    # set objects are frozenset() so callers cannot mutate them.
+    carrier_names = abilities_with_role_tag(RoleTag.CARRIER)
+    support_names = abilities_with_role_tag(RoleTag.SUPPORT)
+    seeker_names = abilities_with_role_tag(RoleTag.SEEKER)
+    beam_projectile_names = abilities_with_role_tag(RoleTag.BEAM_PROJECTILE)
+    weapon_names = abilities_with_role_tag(RoleTag.WEAPON)
+    sensor_names = abilities_with_role_tag(RoleTag.SENSOR)
+
+    # Priority 1: Carrier (has fighter / satellite launch capability)
+    if ability_names & carrier_names:
         return DesignRole.CARRIER
 
     # Priority 2: Support Ship (repair, shipyard, or resource generation)
-    if ability_names & _SUPPORT_ABILITIES:
+    if ability_names & support_names:
         return DesignRole.SUPPORT_SHIP
 
     # Priority 3: Command Ship (has tactical data link + C&C on a heavy hull)
-    if ability_names & _COMMAND_ABILITIES and "CommandAndControl" in ability_names:
+    # The legacy check was "has TacticalDataLinkAbility AND CommandAndControl";
+    # both names carry ``RoleTag.COMMAND`` in the unified registry, but the
+    # historical predicate requires BOTH names to be present (not just one
+    # COMMAND-tagged name). We therefore check membership for each name
+    # explicitly. If a future ability is tagged COMMAND, this predicate will
+    # NOT auto-include it — by design, since "command ship" is not the union
+    # of all COMMAND-tagged abilities.
+    has_tactical_link = "TacticalDataLinkAbility" in ability_names
+    has_command_and_control = "CommandAndControl" in ability_names
+    if has_tactical_link and has_command_and_control:
         if mass >= _HEAVY_SHIP_MASS:
             return DesignRole.COMMAND_SHIP
 
     # Priority 4: Missile Platform (seeker weapons, no beam/projectile)
-    has_seekers = bool(ability_names & _SEEKER_ABILITIES)
-    has_direct_weapons = bool(ability_names & _BEAM_PROJECTILE_ABILITIES)
+    has_seekers = bool(ability_names & seeker_names)
+    has_direct_weapons = bool(ability_names & beam_projectile_names)
     if has_seekers and not has_direct_weapons:
         return DesignRole.MISSILE_PLATFORM
 
     # Priority 5: Scout (sensors/ECM emphasis, no weapons, light hull)
-    has_weapons = bool(ability_names & _WEAPON_ABILITIES)
-    has_sensors = bool(ability_names & _SENSOR_ABILITIES)
+    has_weapons = bool(ability_names & weapon_names)
+    has_sensors = bool(ability_names & sensor_names)
     if has_sensors and not has_weapons and mass <= _LIGHT_SHIP_MASS:
         return DesignRole.SCOUT
 

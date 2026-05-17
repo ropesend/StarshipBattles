@@ -57,7 +57,7 @@
       ],
       "merged_into_project_at_sha": null,
       "phase_base_sha": null,
-      "phase_branch": null,
+      "phase_branch": "proj/PROJ-429/main",
       "phase_head_sha": null,
       "planned_files": [
         "game/strategy/data/design_role.py",
@@ -67,7 +67,7 @@
       "review_mode": "lightweight",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_3": {
