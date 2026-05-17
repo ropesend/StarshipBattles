@@ -107,19 +107,12 @@ class CarriedVehicle:
             component_states=comp_states,
         )
 
-    @classmethod
-    def from_any(cls, item: Any) -> Optional["CarriedVehicle"]:
-        """Best-effort conversion from an untyped carried-items dict.
-
-        Returns ``None`` for items that lack ``vehicle_type`` in the
-        accepted set (e.g. drop-pod entries) — callers should keep those
-        on the legacy ``carried_items`` path.
-        """
-        if isinstance(item, cls):
-            return item
-        if not isinstance(item, dict):
-            return None
-        vt = str(item.get("vehicle_type", "")).lower()
-        if vt not in VALID_VEHICLE_TYPES:
-            return None
-        return cls.from_dict(item)
+    # PROJ-431 Phase 1f: ``from_any`` deleted. Its only purpose was to
+    # discriminate ``CarriedVehicle``-shaped dicts from drop-pod dicts
+    # while both lived in the same legacy ``ShipInstance.carried_items``
+    # mixed list. Post-Phase-1 the bay is homogeneous
+    # ``list[CarriedVehicle]`` and pods live in their own typed slot, so
+    # the discriminator has no remaining role. Callers that still hold
+    # untyped dicts from out-of-scope substrates (planet staging yard)
+    # do an explicit ``isinstance`` + ``vehicle_type in
+    # VALID_VEHICLE_TYPES`` shape check, then ``from_dict(...)``.

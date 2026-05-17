@@ -159,12 +159,23 @@ def _spawn_from_carried_vehicle(
     """
     # Late imports keep the simulation/strategy boundary clean.
     from game.simulation.entities.ship_serialization import ShipSerializer
-    from game.strategy.data.carried_vehicle import CarriedVehicle
+    from game.strategy.data.carried_vehicle import (
+        VALID_VEHICLE_TYPES,
+        CarriedVehicle,
+    )
 
-    cv = CarriedVehicle.from_any(carried_payload) if not isinstance(
-        carried_payload, CarriedVehicle
-    ) else carried_payload
-    if cv is None:
+    # PROJ-431 Phase 1f: the legacy ``CarriedVehicle.from_any(...)``
+    # runtime discriminator is gone. Production callers
+    # (``BattleEngine.launch_*_in_battle``) always pass typed
+    # ``CarriedVehicle`` instances; we keep an explicit dict-shape probe
+    # for defensive parity with the prior code path.
+    if isinstance(carried_payload, CarriedVehicle):
+        cv = carried_payload
+    elif isinstance(carried_payload, dict) and str(
+        carried_payload.get("vehicle_type", "")
+    ).lower() in VALID_VEHICLE_TYPES:
+        cv = CarriedVehicle.from_dict(carried_payload)
+    else:
         return None
     if not cv.design_data:
         return None

@@ -304,14 +304,21 @@ def _ship_with_carried(items: list[dict]) -> SimpleNamespace:
     non-vehicle entries (pods) end up in the pods slot and are ignored
     by the bay-only gates.
     """
+    # PROJ-431 Phase 1f: from_any deleted; explicit shape probe.
     from game.strategy.data.bay_inventory import BayInventory
-    from game.strategy.data.carried_vehicle import CarriedVehicle
+    from game.strategy.data.carried_vehicle import (
+        VALID_VEHICLE_TYPES,
+        CarriedVehicle,
+    )
 
     bay: list[CarriedVehicle] = []
     for entry in items:
-        cv = CarriedVehicle.from_any(entry)
-        if cv is not None:
-            bay.append(cv)
+        if isinstance(entry, CarriedVehicle):
+            bay.append(entry)
+        elif isinstance(entry, dict) and str(
+            entry.get("vehicle_type", "")
+        ).lower() in VALID_VEHICLE_TYPES:
+            bay.append(CarriedVehicle.from_dict(entry))
     return SimpleNamespace(
         carried_items=list(items),
         bay_inventory=BayInventory(bay=bay, pods=[]),

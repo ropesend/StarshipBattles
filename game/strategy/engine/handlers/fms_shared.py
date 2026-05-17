@@ -17,7 +17,10 @@ from __future__ import annotations
 from typing import Iterable, List, Optional
 
 from game.core.validation import ValidationResult
-from game.strategy.data.carried_vehicle import CarriedVehicle
+from game.strategy.data.carried_vehicle import (
+    VALID_VEHICLE_TYPES,
+    CarriedVehicle,
+)
 
 
 def check_issuer_invariant(cmd, action: str) -> Optional[ValidationResult]:
@@ -64,15 +67,23 @@ def count_matching_yard(
     """Count ``CarriedVehicle``-shaped dict entries in a planet staging
     yard matching the filter.
 
-    PROJ-431 Phase 1c: the staging-yard substrate is still a mixed list
-    of dicts (migration deferred to 1d), so this path still uses
-    :meth:`CarriedVehicle.from_any` to discriminate.
+    PROJ-431 Phase 1f: the staging-yard substrate is still a mixed list
+    of dicts (migration deferred to PROJ-425 Phase 6). Discrimination is
+    an explicit isinstance + dict-shape probe; the legacy
+    ``CarriedVehicle.from_any`` runtime discriminator has been deleted.
     """
     n = 0
     wants_any = (not design_id) or design_id == "auto"
     for item in items:
-        cv = CarriedVehicle.from_any(item)
-        if cv is None or cv.vehicle_type != vehicle_type:
+        if isinstance(item, CarriedVehicle):
+            cv = item
+        elif isinstance(item, dict) and str(
+            item.get("vehicle_type", "")
+        ).lower() in VALID_VEHICLE_TYPES:
+            cv = CarriedVehicle.from_dict(item)
+        else:
+            continue
+        if cv.vehicle_type != vehicle_type:
             continue
         if not wants_any and cv.design_id != design_id:
             continue

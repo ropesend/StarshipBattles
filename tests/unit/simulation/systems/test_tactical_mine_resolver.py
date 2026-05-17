@@ -88,12 +88,37 @@ def _mine_dict_laserhead(damage=40.0, beam_range=600, hull_hp=30.0):
 
 def _make_mine_group(mines, owner_id=1, mine_positions=None, threshold=0.30,
                      sensitivity="HIGH"):
-    """Build a SimpleNamespace mine_group mirroring Fleet's mine surface."""
-    carrier = SimpleNamespace(
-        carried_items=list(mines),
-        instance_id="carrier",
-        owner_id=owner_id,
-    )
+    """Build a SimpleNamespace mine_group mirroring Fleet's mine surface.
+
+    PROJ-431 Phase 1f: ``ShipInstance.carried_items`` is now a legacy
+    projection over the typed ``bay_inventory`` substrate. Production
+    callers (including :class:`TacticalMineResolver`) read directly
+    from ``ship.bay_inventory.bay``, so this fake carrier exposes the
+    typed slot too. The mine entries arrive as
+    ``CarriedVehicle.to_dict()`` dicts; we promote each to a typed
+    ``CarriedVehicle`` for the bay slot and stash a back-compat list
+    proxy under ``carried_items`` for any test inspection of the legacy
+    surface.
+    """
+    from game.strategy.data.bay_inventory import BayInventory
+    from game.strategy.data.carried_vehicle import CarriedVehicle
+    bay = [CarriedVehicle.from_dict(m) for m in mines]
+    bay_inventory = BayInventory(bay=bay, pods=[])
+
+    class _StubCarrier:
+        def __init__(self) -> None:
+            self.instance_id = "carrier"
+            self.owner_id = owner_id
+            self.bay_inventory = bay_inventory
+
+        @property
+        def carried_items(self) -> list:
+            return [cv.to_dict() for cv in self.bay_inventory.bay]
+
+        def set_bay_inventory(self, bi: BayInventory) -> None:
+            self.bay_inventory = bi
+
+    carrier = _StubCarrier()
     return SimpleNamespace(
         id=42,
         owner_id=owner_id,

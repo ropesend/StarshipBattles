@@ -42,18 +42,14 @@ class TestCarriedVehicleDataclass:
         assert cv2.current_hp == cv.current_hp
         assert cv2.design_data == cv.design_data
 
-    def test_from_any_recognises_dict(self):
-        cv = self._sample()
-        assert CarriedVehicle.from_any(cv.to_dict()) is not None
-
-    def test_from_any_skips_drop_pod_dict(self):
-        # Drop-pod-shaped dict has vehicle_type "drop_pod" — not a CarriedVehicle.
-        assert CarriedVehicle.from_any({"vehicle_type": "drop_pod"}) is None
-        assert CarriedVehicle.from_any({"name": "x"}) is None
-
-    def test_from_any_passes_through_carried_vehicle(self):
-        cv = self._sample()
-        assert CarriedVehicle.from_any(cv) is cv
+    # PROJ-431 Phase 1f: ``CarriedVehicle.from_any`` was deleted (its
+    # only purpose was bridging the mixed-shape ``carried_items`` list).
+    # The previous shape-discrimination tests were a unit test on the
+    # discriminator itself. The replacement contract — explicit
+    # isinstance + dict-shape probe against ``VALID_VEHICLE_TYPES`` then
+    # ``from_dict(...)`` — is exercised by the production sites that
+    # adopted it (issuer_adapter, fms_shared, attack_processor) and by
+    # the deletion-guard test in ``test_phase_1f_deletion_guard.py``.
 
 
 class TestVehicleBayAbility:
@@ -231,9 +227,13 @@ class TestPlanetStagingYardRoundtrip:
         )
         ok = planet.add_to_staging_yard(cv.to_dict())
         assert ok
-        # Round-trip through Planet.staging_yard -> CarriedVehicle.from_any
+        # Round-trip through Planet.staging_yard -> CarriedVehicle.
+        # PROJ-431 Phase 1f: from_any deleted; the planet staging yard
+        # remains on the legacy dict shape, so callers reconstruct typed
+        # entries via an explicit shape probe + from_dict.
         item = planet.staging_yard[0]
-        cv2 = CarriedVehicle.from_any(item)
-        assert cv2 is not None
+        assert isinstance(item, dict)
+        assert item.get("vehicle_type") == "mine"
+        cv2 = CarriedVehicle.from_dict(item)
         assert cv2.vehicle_type == "mine"
         assert cv2.current_hp == 4

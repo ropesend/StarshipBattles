@@ -193,9 +193,9 @@ class IShipInstanceMutator(Protocol):
         self, instance: "ShipInstance", resource_id: str, level: float
     ) -> None: ...
 
-    # Carried items (drop pods, etc.)
-    def add_carried_item(self, instance: "ShipInstance", item: Any) -> None: ...
-    def pop_carried_item(self, instance: "ShipInstance", index: int = -1) -> Any: ...
+    # PROJ-431 Phase 1f: ``add_carried_item`` / ``pop_carried_item``
+    # removed — no production callers. The typed bay_inventory + cargo
+    # manager are the canonical write surface for carried inventory.
 
     # Per-component toggles & activation
     def set_component_toggle(

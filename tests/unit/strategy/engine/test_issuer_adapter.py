@@ -72,12 +72,20 @@ class _StubShip:
         )
 
     def _seed_bay_dicts(self, items: list[dict]) -> None:
-        """Test helper: seed the bay from a list of vehicle/pod dicts."""
+        """Test helper: seed the bay from a list of vehicle/pod dicts.
+
+        PROJ-431 Phase 1f: from_any deleted; use an explicit shape probe
+        against ``VALID_VEHICLE_TYPES`` + ``CarriedVehicle.from_dict``.
+        """
+        from game.strategy.data.carried_vehicle import VALID_VEHICLE_TYPES
         bay: list[CarriedVehicle] = []
         for d in items:
-            cv = CarriedVehicle.from_any(d)
-            if cv is not None:
-                bay.append(cv)
+            if isinstance(d, CarriedVehicle):
+                bay.append(d)
+            elif isinstance(d, dict) and str(
+                d.get("vehicle_type", "")
+            ).lower() in VALID_VEHICLE_TYPES:
+                bay.append(CarriedVehicle.from_dict(d))
         self._bay_inventory = BayInventory(bay=bay)
 
 

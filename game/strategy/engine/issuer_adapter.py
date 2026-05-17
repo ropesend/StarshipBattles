@@ -31,7 +31,10 @@ from typing import TYPE_CHECKING, Any, List, Optional, Protocol, runtime_checkab
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.bay_inventory import BayInventory, DropPod
-from game.strategy.data.carried_vehicle import CarriedVehicle
+from game.strategy.data.carried_vehicle import (
+    VALID_VEHICLE_TYPES,
+    CarriedVehicle,
+)
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
@@ -113,10 +116,25 @@ def _matches(item: Any, vehicle_type: str, design_id: Optional[str]) -> bool:
     """Shared filter predicate used by both adapters.
 
     Accepts both raw dict items (planet staging yard — pre-Phase-1b
-    substrate) and typed :class:`CarriedVehicle` instances (fleet-ship
-    bay — Phase-1b substrate).
+    substrate, still on the legacy mixed-shape list) and typed
+    :class:`CarriedVehicle` instances (fleet-ship bay — Phase-1b
+    substrate).
+
+    PROJ-431 Phase 1f: the legacy ``CarriedVehicle.from_any(...)``
+    discriminator is gone. Replaced with an explicit isinstance check
+    plus a dict-shape probe against
+    :data:`~game.strategy.data.carried_vehicle.VALID_VEHICLE_TYPES`,
+    routing through ``CarriedVehicle.from_dict`` only when the shape
+    matches.
     """
-    cv = CarriedVehicle.from_any(item)
+    if isinstance(item, CarriedVehicle):
+        cv: Optional[CarriedVehicle] = item
+    elif isinstance(item, dict) and str(
+        item.get("vehicle_type", "")
+    ).lower() in VALID_VEHICLE_TYPES:
+        cv = CarriedVehicle.from_dict(item)
+    else:
+        cv = None
     if cv is None or cv.vehicle_type != vehicle_type:
         return False
     if design_id and design_id != "auto":
@@ -228,16 +246,18 @@ class FleetShipIssuerAdapter:
                 new_bay.append(item)
                 appended += 1
                 continue
-            cv = CarriedVehicle.from_any(item)
-            if cv is not None:
-                new_bay.append(cv)
-                appended += 1
-                continue
             if isinstance(item, DropPod):
                 new_pods.append(item)
                 appended += 1
                 continue
             if isinstance(item, dict):
+                # PROJ-431 Phase 1f: explicit dict-shape probe replaces
+                # the legacy ``CarriedVehicle.from_any`` discriminator.
+                vt = str(item.get("vehicle_type", "")).lower()
+                if vt in VALID_VEHICLE_TYPES:
+                    new_bay.append(CarriedVehicle.from_dict(item))
+                    appended += 1
+                    continue
                 # Drop-pod-shaped dict (or other non-vehicle payload) —
                 # preserve in the pods slot.
                 new_pods.append(DropPod.from_dict(item))

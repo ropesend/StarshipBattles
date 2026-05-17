@@ -21,15 +21,15 @@
 | 3. Extract the factory path and keep a thin shim | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Move write behavior onto `ShipInstanceWriteService` + standardize manager names | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Demolish display / consumable / serializer / bridge forwarders (batches 5a/5b/5d/5e) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. **Cargo + deployable forwarder demolition (batch 5c)** — **Blocked by:** PROJ-431 Phase 1 (typed `bay_inventory`) | Blocked | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. **Cargo + deployable forwarder demolition (batch 5c)** — Eligible to start (PROJ-431 Phase 1 typed `bay_inventory` shipped 2026-05-17) | Eligible to start | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Label 5d/5e shims explicitly (Codex consult follow-up) — runs independently of the still-gated Phase 6; documentation-only, no behavior change. `depends_on: phase_5`. | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phases 0-5 + Phase 7 complete. Phase 6 still deferred (blocked on PROJ-431 Phase 1).
-**Last Action:** Phase 7 complete — Codex consult on 2026-05-17 surfaced that the 5d serializer and 5e bridge forwarder groups in `ship_instance.py` lacked the explicit "retained shim" comment block that 5b already had (despite `decisions.md` claiming all shim groups were labeled). Added matching comment blocks above the 5d (lines ~527-540) and 5e (lines ~473-485) forwarder groups documenting why they remain, the canonical delegate (`ShipInstanceSerializer` / `ShipInstanceBridge`), and the removal condition (callers migrated to direct delegate access). Comment-only change — no code behavior change. `ship_instance.py` 590 LOC (was 561; +29 comment LOC, still 30% under baseline 845).
-**Next Action:** Project execution complete for Phases 0-5 + 7. Phase 6 (cargo / deployable forwarder demolition, TD-06 batch 5c) deferred pending PROJ-431 Phase 1 (typed bay_inventory substrate).
-**Blockers:** None for Phases 0–5, 7. Phase 6 is blocked until [PROJ-431](../PROJ-431/plan.md) Phase 1 lands typed `bay_inventory`.
+**Active Phase:** Phase 6 eligible to start (PROJ-431 Phase 1 shipped). Phases 0-5 + Phase 7 complete.
+**Last Action:** PROJ-431 Phase 1 (typed `BayInventory` substrate) shipped 2026-05-17 in `proj/PROJ-431/main`. `ShipInstance.bay_inventory` is now the canonical typed storage (`bay: list[CarriedVehicle]` + `pods: list[DropPod]`) — replacing the legacy `carried_items: List[Dict[str, Any]]` dataclass field. `CarriedVehicle.from_any(...)` runtime discriminator is deleted. Phase 6 (cargo / deployable forwarder demolition, TD-06 batch 5c) is now unblocked: the forwarders' replacement surface (`bay_inventory.bay` / `bay_inventory.pods` / `ShipCargoManager.load_vehicle` / `unload_vehicle`) exists in stable form.
+**Next Action:** Open `phase_6_checklist.md` and start the cargo / deployable forwarder demolition batch.
+**Blockers:** None.
 
 ## Overview
 `game/strategy/data/ship_instance.py` is 845 LOC — well past the 500-LOC project ceiling — and is mostly a wall of one-line forwarders to delegate classes that already exist (`ShipConsumableManager`, `ShipCargoManager`, `ShipDisplayFormatter`, `ShipInstanceBridge`, `ShipInstanceSerializer`, `ShipInstanceWriteService`). Three substantive in-class blocks remain — the stats cache + registry-DI calculation path, the component-introspection helpers, and the `create(...)` factory — and they all want to move out before the forwarders are demolished. This project executes the six-phase TDD extraction in TD-06, slimming `ShipInstance` toward "durable state + identity + small pure predicates" without breaking any caller.

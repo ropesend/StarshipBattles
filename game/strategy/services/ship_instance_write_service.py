@@ -90,16 +90,11 @@ class ShipInstanceWriteService:
             instance.consumable_levels[resource_id] = level
 
     # ------------------------------------------------------------------
-    # Carried items (drop pods, etc.)
-    # ------------------------------------------------------------------
-    def add_carried_item(self, instance: "ShipInstance", item: Any) -> None:
-        instance.carried_items.append(item)
-
-    def pop_carried_item(
-        self, instance: "ShipInstance", index: int = -1
-    ) -> Any:
-        return instance.carried_items.pop(index)
-
+    # PROJ-431 Phase 1f: ``add_carried_item`` / ``pop_carried_item``
+    # removed. No production callers. Mutations to the carried bay /
+    # pods go through the typed :class:`BayInventory` surface
+    # (``ShipCargoManager.load_vehicle`` / ``unload_vehicle``) or
+    # :meth:`ShipInstance.set_bay_inventory` directly.
     # ------------------------------------------------------------------
     # Per-component toggles & activation states
     # ------------------------------------------------------------------

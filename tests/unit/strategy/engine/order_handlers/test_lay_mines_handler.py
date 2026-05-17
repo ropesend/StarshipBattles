@@ -44,12 +44,17 @@ class _StubShipInstance:
 
     @property
     def bay_inventory(self) -> BayInventory:
+        # PROJ-431 Phase 1f: from_any deleted; explicit shape probe.
+        from game.strategy.data.carried_vehicle import VALID_VEHICLE_TYPES
         bay: list[CarriedVehicle] = []
         pods: list[DropPod] = []
         for item in self.carried_items:
-            cv = CarriedVehicle.from_any(item)
-            if cv is not None:
-                bay.append(cv)
+            if isinstance(item, CarriedVehicle):
+                bay.append(item)
+            elif isinstance(item, dict) and str(
+                item.get("vehicle_type", "")
+            ).lower() in VALID_VEHICLE_TYPES:
+                bay.append(CarriedVehicle.from_dict(item))
             elif isinstance(item, dict):
                 pods.append(DropPod.from_dict(item))
         return BayInventory(bay=bay, pods=pods)

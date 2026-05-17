@@ -46,6 +46,48 @@ class _StubShip:
         self._turn = turn_speed
         self._defense = total_defense_score
 
+    # PROJ-431 Phase 1f: production callers read carried inventory via
+    # the typed BayInventory. Derive it from the raw ``carried_items``
+    # list so existing tests keep working.
+    @property
+    def bay_inventory(self):
+        from game.strategy.data.bay_inventory import BayInventory, DropPod
+        from game.strategy.data.carried_vehicle import (
+            VALID_VEHICLE_TYPES, CarriedVehicle,
+        )
+        bay = []
+        pods = []
+        for item in self.carried_items:
+            if isinstance(item, CarriedVehicle):
+                bay.append(item)
+            elif isinstance(item, dict) and str(
+                item.get("vehicle_type", "")
+            ).lower() in VALID_VEHICLE_TYPES:
+                bay.append(CarriedVehicle.from_dict(item))
+            elif isinstance(item, dict):
+                pods.append(DropPod(
+                    design_id=str(item.get("design_id", "")),
+                    design_data=dict(item.get("design_data", {})),
+                    mass=float(item.get("mass", 0.0)),
+                    payload={
+                        k: v for k, v in item.items()
+                        if k not in {"design_id", "design_data", "mass"}
+                    },
+                ))
+        return BayInventory(bay=bay, pods=pods)
+
+    def set_bay_inventory(self, bi) -> None:
+        new_items = [cv.to_dict() for cv in bi.bay]
+        for pod in bi.pods:
+            entry = {
+                "design_id": pod.design_id,
+                "design_data": pod.design_data,
+                "mass": pod.mass,
+            }
+            entry.update(pod.payload)
+            new_items.append(entry)
+        self.carried_items = new_items
+
     def get_calculated_stats(self):
         return {
             "max_hp": self._max_hp,
@@ -83,11 +125,27 @@ def _make_mine_group(hex_c, owner_id, mines, sensitivity="MED",
         group_kind="mine_group",
     )
     fleet.sensitivity = sensitivity
-    carrier = SimpleNamespace(
-        instance_id=f"carrier_{fleet_id}",
-        owner_id=owner_id,
-        carried_items=list(mines),
-    )
+    # PROJ-431 Phase 1f: production callers read carried inventory via
+    # the typed BayInventory and write it back through
+    # ``set_bay_inventory``. SimpleNamespace lacks the latter so use a
+    # tiny shim class with both.
+    from game.strategy.data.bay_inventory import BayInventory
+    from game.strategy.data.carried_vehicle import CarriedVehicle
+
+    class _MineCarrier:
+        def __init__(self) -> None:
+            self.instance_id = f"carrier_{fleet_id}"
+            self.owner_id = owner_id
+            self.carried_items = list(mines)
+            self.bay_inventory = BayInventory(
+                bay=[CarriedVehicle.from_dict(m) for m in mines], pods=[]
+            )
+
+        def set_bay_inventory(self, bi: BayInventory) -> None:
+            self.bay_inventory = bi
+            self.carried_items = [cv.to_dict() for cv in bi.bay]
+
+    carrier = _MineCarrier()
     fleet.ships.append(carrier)
     return fleet
 

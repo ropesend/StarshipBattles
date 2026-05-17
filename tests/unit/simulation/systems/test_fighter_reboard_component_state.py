@@ -139,8 +139,11 @@ def test_reboard_captures_component_states_into_carried_vehicle(monkeypatch):
     )
 
     assert summary["reboarded"] == 1
-    assert len(carrier_inst.carried_items) == 1
-    loaded = carrier_inst.carried_items[0]
+    # PROJ-431 Phase 1f: carried inventory lives in the typed
+    # ``bay_inventory.bay`` slot; ``carried_items`` is the legacy
+    # dict-list projection.
+    assert len(carrier_inst.bay_inventory.bay) == 1
+    loaded = carrier_inst.bay_inventory.bay[0]
     assert isinstance(loaded, CarriedVehicle)
     assert loaded.component_states is not None, (
         "Fix 2: the reboard helper must capture ship.components into "

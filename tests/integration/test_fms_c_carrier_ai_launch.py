@@ -129,11 +129,19 @@ def _make_carrier_ship(fresh_registries):
 
         @property
         def bay_inventory(self) -> BayInventory:
+            # PROJ-431 Phase 1f: from_any deleted; explicit shape probe
+            # against the dict-list legacy ``carried_items`` shape.
+            from game.strategy.data.carried_vehicle import (
+                VALID_VEHICLE_TYPES,
+            )
             bay: list[CarriedVehicle] = []
             for entry in self.carried_items:
-                cv = CarriedVehicle.from_any(entry)
-                if cv is not None:
-                    bay.append(cv)
+                if isinstance(entry, CarriedVehicle):
+                    bay.append(entry)
+                elif isinstance(entry, dict) and str(
+                    entry.get("vehicle_type", "")
+                ).lower() in VALID_VEHICLE_TYPES:
+                    bay.append(CarriedVehicle.from_dict(entry))
             return BayInventory(bay=bay, pods=[])
 
         def set_bay_inventory(self, bi: BayInventory) -> None:

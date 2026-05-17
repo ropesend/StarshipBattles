@@ -199,8 +199,13 @@ class TestCarriedVehicleSerializerRoundtrip:
         assert inst._cargo_mgr.load_vehicle(cv_a)
         assert inst._cargo_mgr.load_vehicle(cv_b)
         # Also throw in a drop-pod-shaped entry so we can confirm both
-        # shapes survive the round trip.
-        inst.carried_items.append({"name": "pod_a", "mass": 13.0})
+        # shapes survive the round trip. PROJ-431 Phase 1f: pods live in
+        # the typed ``bay_inventory.pods`` slot directly.
+        from game.strategy.data.bay_inventory import DropPod
+        inst.bay_inventory.pods.append(DropPod(
+            design_id="pod_a", design_data={}, mass=13.0,
+            payload={"name": "pod_a"},
+        ))
 
         data = ShipInstanceSerializer.to_dict(inst)
         restored = ShipInstanceSerializer.from_dict(data)
@@ -215,9 +220,11 @@ class TestCarriedVehicleSerializerRoundtrip:
         assert by_id["qs_fighter"].design_data == cv_a.design_data
         assert by_id["qs_mine_small"].vehicle_type == "mine"
         assert by_id["qs_mine_small"].current_hp == 12
-        # Drop-pod entry survived too.
+        # Drop-pod entry survived too. PROJ-431 Phase 1f: pods live in
+        # the typed ``bay_inventory.pods`` slot, distinct from vehicles
+        # in ``.bay``; ``carried_items`` is the legacy projection. Probe
+        # the typed slot directly.
         assert any(
-            it.get("name") == "pod_a"
-            for it in restored.carried_items
-            if CarriedVehicle.from_any(it) is None
+            pod.payload.get("name") == "pod_a" or pod.design_id == "pod_a"
+            for pod in restored.bay_inventory.pods
         )

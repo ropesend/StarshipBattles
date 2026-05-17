@@ -93,22 +93,12 @@ def test_increment_battles_survived(
     assert instance.battles_survived == 2
 
 
-def test_add_carried_item(
-    service: ShipInstanceWriteService, instance: MagicMock
-) -> None:
-    item = {"id": 1}
-    service.add_carried_item(instance, item)
-    assert instance.carried_items == [item]
-
-
-def test_pop_carried_item(
-    service: ShipInstanceWriteService, instance: MagicMock
-) -> None:
-    a, b = {"id": 1}, {"id": 2}
-    instance.carried_items.extend([a, b])
-    popped = service.pop_carried_item(instance, 0)
-    assert popped is a
-    assert instance.carried_items == [b]
+# PROJ-431 Phase 1f: ``add_carried_item`` / ``pop_carried_item`` removed
+# from :class:`ShipInstanceWriteService`. Carried-inventory mutation now
+# goes through the typed :class:`BayInventory` surface
+# (``ShipCargoManager.load_vehicle`` / ``unload_vehicle``) or
+# :meth:`ShipInstance.set_bay_inventory` directly; the old service
+# methods had no production callers.
 
 
 def test_set_cargo_amount_direct_write_when_no_manager(

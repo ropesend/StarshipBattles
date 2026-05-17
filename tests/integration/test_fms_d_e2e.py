@@ -54,6 +54,48 @@ class _StubCarrier:
         self._registries = None
         self._cargo_mgr = _StubCargoMgr(self, capacity=capacity, accepts=accepts)
 
+    # PROJ-431 Phase 1f: production callers read carried inventory via
+    # the typed BayInventory. Derive it from the raw ``carried_items``
+    # list so existing tests keep working.
+    @property
+    def bay_inventory(self):
+        from game.strategy.data.bay_inventory import BayInventory, DropPod
+        from game.strategy.data.carried_vehicle import (
+            VALID_VEHICLE_TYPES, CarriedVehicle,
+        )
+        bay = []
+        pods = []
+        for item in self.carried_items:
+            if isinstance(item, CarriedVehicle):
+                bay.append(item)
+            elif isinstance(item, dict) and str(
+                item.get("vehicle_type", "")
+            ).lower() in VALID_VEHICLE_TYPES:
+                bay.append(CarriedVehicle.from_dict(item))
+            elif isinstance(item, dict):
+                pods.append(DropPod(
+                    design_id=str(item.get("design_id", "")),
+                    design_data=dict(item.get("design_data", {})),
+                    mass=float(item.get("mass", 0.0)),
+                    payload={
+                        k: v for k, v in item.items()
+                        if k not in {"design_id", "design_data", "mass"}
+                    },
+                ))
+        return BayInventory(bay=bay, pods=pods)
+
+    def set_bay_inventory(self, bi) -> None:
+        new_items = [cv.to_dict() for cv in bi.bay]
+        for pod in bi.pods:
+            entry = {
+                "design_id": pod.design_id,
+                "design_data": pod.design_data,
+                "mass": pod.mass,
+            }
+            entry.update(pod.payload)
+            new_items.append(entry)
+        self.carried_items = new_items
+
 
 def _make_satellite_dict(design_id: str, hp: int = 60, mass: float = 30.0):
     return {

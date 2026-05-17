@@ -12,6 +12,7 @@ import uuid
 from typing import Dict, Any, Optional, TYPE_CHECKING
 
 from game.core.validation_helpers import require_keys, validate_non_negative
+from game.strategy.data.bay_inventory import BayInventory
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
@@ -49,8 +50,12 @@ class ShipInstanceSerializer:
         # Only include cargo_contents if non-empty
         if ship.cargo_contents:
             data['cargo_contents'] = ship.cargo_contents
-        if ship.carried_items:
-            data['carried_items'] = ship.carried_items
+        # PROJ-431 Phase 1f: emit the typed bay_inventory substrate. The
+        # legacy ``carried_items`` dict-list shape is no longer the
+        # storage surface; the typed BayInventory.to_dict() schema is
+        # ``{"bay": [CarriedVehicle.to_dict()...], "pods": [DropPod.to_dict()...]}``.
+        if not ship.bay_inventory.is_empty():
+            data['bay_inventory'] = ship.bay_inventory.to_dict()
         # Design role fields (omit when None for backward compat)
         if ship.design_role is not None:
             data['design_role'] = ship.design_role
@@ -100,6 +105,18 @@ class ShipInstanceSerializer:
         if data.get('battles_survived') is not None:
             validate_non_negative(data['battles_survived'], 'battles_survived', 'ShipInstance')
 
+        # PROJ-431 Phase 1f: typed ``bay_inventory`` is the canonical
+        # save payload. Pre-Phase-1f saves used a mixed-shape
+        # ``carried_items`` dict list; those saves are disposable per
+        # the project's no-migration rule, so we do not migrate the old
+        # key.
+        bay_inventory_data = data.get('bay_inventory')
+        bay_inventory = (
+            BayInventory.from_dict(bay_inventory_data)
+            if bay_inventory_data is not None
+            else BayInventory()
+        )
+
         instance = ShipInstance(
             instance_id=data['instance_id'],
             design_id=data['design_id'],
@@ -111,7 +128,7 @@ class ShipInstanceSerializer:
             component_toggles=data.get('component_toggles', {}),
             activation_states=data.get('activation_states', {}),
             cargo_contents=data.get('cargo_contents', {}),
-            carried_items=data.get('carried_items', []),
+            bay_inventory=bay_inventory,
             is_alive=data.get('is_alive', True),
             is_derelict=data.get('is_derelict', False),
             is_operational=data.get('is_operational', True),
@@ -120,6 +137,7 @@ class ShipInstanceSerializer:
             battles_survived=data.get('battles_survived', 0),
             serial=data.get('serial'),
         )
+
         instance._registries = registries
         # Restore design role fields (absent in old saves → None)
         instance.design_role = data.get('design_role')
@@ -161,7 +179,7 @@ class ShipInstanceSerializer:
             consumable_levels=copy.deepcopy(ship.consumable_levels),
             component_toggles=copy.deepcopy(ship.component_toggles),
             cargo_contents=copy.deepcopy(ship.cargo_contents),
-            carried_items=copy.deepcopy(ship.carried_items),
+            bay_inventory=copy.deepcopy(ship.bay_inventory),
             is_alive=ship.is_alive,
             is_derelict=ship.is_derelict,
             is_operational=ship.is_operational,
