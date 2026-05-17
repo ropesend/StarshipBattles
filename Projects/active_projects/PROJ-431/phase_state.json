@@ -50,9 +50,9 @@
         "phase_1"
       ],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
-      "phase_branch": null,
-      "phase_head_sha": null,
+      "phase_base_sha": "d641be3a96daf68dbaae26d59c61c5a92d5f6f2b",
+      "phase_branch": "proj/PROJ-431/main",
+      "phase_head_sha": "b9c8720d3386f90d616c1958b1aae18294a770b4",
       "planned_files": [
         "game/strategy/data/deployed_group.py",
         "game/strategy/data/empire.py",
@@ -75,7 +75,7 @@
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_3": {
