@@ -101,6 +101,8 @@ Public surface is unchanged: `GameSession(config=..., ai_factory=...)`, `GameSes
 
 `race_registry` stays lazy on `GameSession` (it is intentionally outside `SessionRuntimeServices`). The `_race_registry` slot starts `None`; the property populates it on first access through the `IRaceRegistry` protocol.
 
+**Rehydrate parity (PROJ-432).** There are two restore paths that walk identical deserialized data: `SessionPersistenceAdapter.rehydrate_state()` (the save-load path) and `TurnStateSnapshot.restore()` (the turn-rollback path under `game/strategy/engine/turn_state_snapshot.py`). Both now perform the same four post-deserialize wiring steps in the same order: (1) `empire.set_galaxy(galaxy)` for galaxy back-references (PROJ-219), (2) `galaxy.register_fleet(fleet)` for each deserialized fleet (PROJ-219), (3) `fleet.resolve_order_references(galaxy, empires)` for marker-dict → live-object resolution (PROJ-207), and (4) pursuer-tracker rebuild for `MOVE_TO_FLEET` / `JOIN_FLEET` orders (PROJ-222). Before PROJ-432 the snapshot path silently skipped steps (1) and (4), leaving empires without galaxy back-refs and pursuer-tracker membership empty after a turn rollback; the two paths now agree step-for-step on the post-deserialize wiring. The paths still differ on **input shape** — the adapter consumes the full save dict plus `ai_factory` / provider callbacks; the snapshot owns just the empire/galaxy dicts — so they remain separate methods rather than calling into a shared helper.
+
 ## 2. Command Dispatch
 
 **Files:** `game/strategy/engine/handlers/` (canonical package; PROJ-383 retired the legacy `command_handlers.py` shim)

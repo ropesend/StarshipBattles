@@ -17,13 +17,13 @@
 |-------|--------|-----------|
 | 0. Characterization — pin current restore() behavior with focused tests | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Mirror `SessionPersistenceAdapter.rehydrate_state()` wiring inside `TurnStateSnapshot.restore()` | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Docs + final verification | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Docs + final verification | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 2 (ready)
-**Last Action:** Phase 1 complete. Added `empire.set_galaxy(...)` and pursuer-tracker rebuild wiring blocks inside `TurnStateSnapshot.restore()`; restore now mirrors `SessionPersistenceAdapter.rehydrate_state()` for all four post-deserialize wiring steps. Focused suite (13 passed) + persistence-adapter suite (23 combined passed) + save/load integration (319 passed) all green.
-**Next Action:** Begin Phase 2 — note the alignment in `docs/systems/strategy_layer.md` and run the full sharded suite as the final verification gate.
+**Active Phase:** All phases complete
+**Last Action:** Phase 2 complete. `docs/systems/strategy_layer.md` notes the rehydrate parity between `TurnStateSnapshot.restore()` and `SessionPersistenceAdapter.rehydrate_state()` (PROJ-219/PROJ-207/PROJ-222 wiring steps). Full sharded suite green: 21141 tests | 21141 passed | 0 failed | wall 143.5s.
+**Next Action:** Awaiting user verification.
 **Blockers:** None. Predecessor PROJ-423 is complete on `proj/PROJ-423/main`.
 
 ## Overview
