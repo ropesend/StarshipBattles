@@ -5,7 +5,9 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
+
+**Implementation note:** the lazy-import regression test landed as an AST-based check rather than a subprocess `sys.modules` probe. `game/strategy/__init__.py` eagerly imports `TurnEngine` → handlers → registry, which contaminates `sys.modules` regardless of what any individual module imports. Parsing the view file's own top-level imports via `ast` directly proves the source has no module-level registry import — exactly the invariant TD-03 wants to pin, robust against unrelated package-init eagerness.
 **Depends on:** phase_1
 **Review Mode:** standard
 **Files (planned):**
