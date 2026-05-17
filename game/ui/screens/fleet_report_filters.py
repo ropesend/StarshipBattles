@@ -102,11 +102,11 @@ def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
         
         # Passengers
         max_passengers += cargo_storage.get('passengers', 0)
-        total_passengers += ship.get_current_cargo('passengers')
-        
+        total_passengers += ship._cargo_mgr.get_current_cargo('passengers')
+
         # General Cargo
         max_cargo_generic += cargo_storage.get('generic', 0)
-        total_cargo_generic += ship.get_current_cargo('generic')
+        total_cargo_generic += ship._cargo_mgr.get_current_cargo('generic')
 
     # Warp capability counts
     warp_capable_count = sum(1 for s in ships if has_warp_capability(s))
@@ -300,7 +300,7 @@ def sort_ships(
             from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
             return 1 if FleetCapabilityCalculator.ship_has_spaceyard(ship) else 0
         elif sort_column == 'transport':
-            return ship.get_cargo_capacity('passengers')
+            return ship._cargo_mgr.get_cargo_capacity('passengers')
         elif sort_column == 'cargo':
             return sum(ship.cargo_contents.values()) if ship.cargo_contents else 0
         elif sort_column == 'resources':

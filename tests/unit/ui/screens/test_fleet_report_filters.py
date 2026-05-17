@@ -52,7 +52,12 @@ def make_mock_ship(
     ship.get_calculated_stats.return_value = expected_stats
 
     # PROJ-162: Mock get_cargo_capacity to return 0 by default (sort_ships calls this)
+    # PROJ-425 Phase 6: production reads via ``ship._cargo_mgr``; also keep
+    # the entity-level mock for any remaining direct probes in this file.
     ship.get_cargo_capacity = MagicMock(return_value=0)
+    ship.get_current_cargo = MagicMock(return_value=0)
+    ship._cargo_mgr.get_cargo_capacity = MagicMock(return_value=0)
+    ship._cargo_mgr.get_current_cargo = MagicMock(return_value=0)
 
     # Set HP percentage
     ship.get_hp_percentage.return_value = hp_pct
@@ -546,10 +551,14 @@ class TestSortShipsNewColumns:
         ship_no_pax = make_mock_ship(design_name="Warship")
         ship_no_pax.get_calculated_stats.return_value = {'mass': 1000, 'cargo_storage': {}}
         ship_no_pax.get_cargo_capacity = MagicMock(return_value=0)
+        # PROJ-425 Phase 6: production reads via ``ship._cargo_mgr``.
+        ship_no_pax._cargo_mgr.get_cargo_capacity = MagicMock(return_value=0)
 
         ship_with_pax = make_mock_ship(design_name="Transport")
         ship_with_pax.get_calculated_stats.return_value = {'mass': 1000, 'cargo_storage': {'passengers': 100}}
-        ship_with_pax.get_cargo_capacity = MagicMock(return_value=100)  # PROJ-162: sort_ships uses get_cargo_capacity
+        ship_with_pax.get_cargo_capacity = MagicMock(return_value=100)
+        # PROJ-425 Phase 6: production reads via ``ship._cargo_mgr``.
+        ship_with_pax._cargo_mgr.get_cargo_capacity = MagicMock(return_value=100)
 
         ships = [ship_no_pax, ship_with_pax]
         result = sort_ships(ships, 'transport', descending=True)

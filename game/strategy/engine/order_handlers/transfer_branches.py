@@ -221,9 +221,9 @@ class _TransferDispatchMixin:
             # Find a ship that can carry this pod
             target_ship = None
             for ship in fleet.ships:
-                capacity = ship.get_pod_storage_capacity()
-                used = ship.get_pod_storage_used()
-                can = ship.can_carry_pod(pod_mass)
+                capacity = ship._cargo_mgr.get_pod_storage_capacity()
+                used = ship._cargo_mgr.get_pod_storage_used()
+                can = ship._cargo_mgr.can_carry_pod(pod_mass)
                 logger.debug(
                     f"  Ship {ship.name}: pod_capacity={capacity} used={used} "
                     f"can_carry({pod_mass})={can}"
@@ -381,12 +381,12 @@ class _TransferDispatchMixin:
         from game.strategy.data.carried_vehicle import CarriedVehicle
 
         unloaded = 0
-        total_count = sum(len(s.get_carried_vehicles()) for s in fleet.ships)
+        total_count = sum(len(s._cargo_mgr.get_carried_vehicles()) for s in fleet.ships)
         to_unload = amount if amount > 0 else total_count
         for ship in fleet.ships:
             if unloaded >= to_unload:
                 break
-            carried = ship.get_carried_vehicles()
+            carried = ship._cargo_mgr.get_carried_vehicles()
             # Walk indices in reverse so unload_vehicle pops are stable.
             for idx in range(len(carried) - 1, -1, -1):
                 if unloaded >= to_unload:

@@ -329,8 +329,9 @@ class TestFleetDataSourceCellValueTransport:
         from game.ui.screens.fleet_data_source import FleetDataSource
 
         ship = Mock()
-        ship.get_cargo_capacity = Mock(return_value=100)
-        ship.get_current_cargo = Mock(return_value=50)
+        # PROJ-425 Phase 6: production reads via ``ship._cargo_mgr``.
+        ship._cargo_mgr.get_cargo_capacity = Mock(return_value=100)
+        ship._cargo_mgr.get_current_cargo = Mock(return_value=50)
 
         ds = _make_data_source(ships=[ship])
 
@@ -341,8 +342,9 @@ class TestFleetDataSourceCellValueTransport:
         from game.ui.screens.fleet_data_source import FleetDataSource
 
         ship = Mock()
-        ship.get_cargo_capacity = Mock(return_value=0)
-        ship.get_current_cargo = Mock(return_value=0)
+        # PROJ-425 Phase 6: production reads via ``ship._cargo_mgr``.
+        ship._cargo_mgr.get_cargo_capacity = Mock(return_value=0)
+        ship._cargo_mgr.get_current_cargo = Mock(return_value=0)
 
         ds = _make_data_source(ships=[ship])
 

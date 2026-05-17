@@ -99,7 +99,7 @@ class TestPodStorageBleedRegression:
             inst.carried_items.append(cv.to_dict())
 
         # Drop-pod side sees only 7+11=18.
-        assert inst.get_pod_storage_used() == pytest.approx(18.0)
+        assert inst._cargo_mgr.get_pod_storage_used() == pytest.approx(18.0)
         # Bay side sees only 3*25=75.
         assert inst.bay_current_mass == pytest.approx(75.0)
 
@@ -107,7 +107,7 @@ class TestPodStorageBleedRegression:
         inst = _make_bay_ship_instance(fresh_registries)
         inst.carried_items.append({"name": "pod_x", "mass": 50.0})
         assert inst.bay_current_mass == pytest.approx(0.0)
-        assert inst.get_pod_storage_used() == pytest.approx(50.0)
+        assert inst._cargo_mgr.get_pod_storage_used() == pytest.approx(50.0)
 
 
 # ---------------------------------------------------------------------------
@@ -164,7 +164,7 @@ class TestCarriedVehicleSerializerRoundtrip:
         restored = ShipInstanceSerializer.from_dict(data)
         restored.set_registries(fresh_registries)
 
-        carried = restored.get_carried_vehicles()
+        carried = restored._cargo_mgr.get_carried_vehicles()
         assert len(carried) == 2
         # Order is not guaranteed; compare by design_id.
         by_id = {cv.design_id: cv for cv in carried}

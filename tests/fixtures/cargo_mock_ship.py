@@ -98,6 +98,18 @@ def make_cargo_mock_ship(
     ship.load_cargo = load_cargo
     ship.unload_cargo = unload_cargo
     ship.is_combat_capable = is_combat_capable
+
+    # PROJ-425 Phase 6: production callers now route through
+    # ``ship._cargo_mgr`` (the cargo manager), so expose the same four
+    # cargo methods on a mock manager too. The mock is shared with the
+    # closures so reads/writes stay in sync with ``ship.cargo_contents``.
+    cargo_mgr = MagicMock()
+    cargo_mgr.get_cargo_capacity = get_cargo_capacity
+    cargo_mgr.get_current_cargo = get_current_cargo
+    cargo_mgr.load_cargo = load_cargo
+    cargo_mgr.unload_cargo = unload_cargo
+    ship._cargo_mgr = cargo_mgr
+
     return ship
 
 

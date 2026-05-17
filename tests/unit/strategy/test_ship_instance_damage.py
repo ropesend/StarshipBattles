@@ -742,10 +742,10 @@ class TestShipInstanceOperationalMethods:
             lambda force_refresh=False: {'pod_storage_mass': 10.0},
         )
 
-        assert ship.get_pod_storage_capacity() == pytest.approx(10.0)
-        assert ship.get_pod_storage_used() == pytest.approx(6.5)
-        assert ship.can_carry_pod(3.5) is True
-        assert ship.can_carry_pod(3.6) is False
+        assert ship._cargo_mgr.get_pod_storage_capacity() == pytest.approx(10.0)
+        assert ship._cargo_mgr.get_pod_storage_used() == pytest.approx(6.5)
+        assert ship._cargo_mgr.can_carry_pod(3.5) is True
+        assert ship._cargo_mgr.can_carry_pod(3.6) is False
 
     def test_can_carry_pod_requires_positive_capacity(self, monkeypatch):
         ship = self._ship()
@@ -755,7 +755,7 @@ class TestShipInstanceOperationalMethods:
             lambda force_refresh=False: {'pod_storage_mass': 0.0},
         )
 
-        assert ship.can_carry_pod(0.1) is False
+        assert ship._cargo_mgr.can_carry_pod(0.1) is False
 
     def test_ship_activation_state_roundtrip(self):
         from game.strategy.data.component_activation_state import (

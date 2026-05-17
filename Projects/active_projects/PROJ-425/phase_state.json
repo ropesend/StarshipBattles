@@ -162,12 +162,10 @@
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "blocked",
+      "status": "complete",
       "verifying_review_id": null,
-      "cross_project_blockers": [
-        "PROJ-431/phase_1"
-      ],
-      "cross_project_blocker_note": "TD-06 Batch 5c — cargo/deployable forwarder demolition is blocked until PROJ-431 (TD-10) Phase 1 lands typed bay_inventory. Gate also recorded in plan.md Dependencies, plan.md Quick Status row, and phase_6_checklist.md body."
+      "cross_project_blockers": [],
+      "cross_project_blocker_note": "TD-06 Batch 5c — cargo/deployable forwarder demolition completed 2026-05-17 after PROJ-431 Phase 1 (typed bay_inventory) shipped at e791a4eb. Pod-storage helpers and cargo/carried-vehicle forwarders demolished; callers route through ShipCargoManager."
     },
     "phase_7": {
       "depends_on": [

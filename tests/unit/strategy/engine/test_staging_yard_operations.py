@@ -51,6 +51,10 @@ def _make_ship(can_carry=True, carried_items=None):
     ship.get_pod_storage_capacity = MagicMock(return_value=1000 if can_carry else 0)
     ship.get_pod_storage_used = MagicMock(return_value=0)
     ship.can_carry_pod = MagicMock(return_value=can_carry)
+    # PROJ-425 Phase 6: production reads via ``ship._cargo_mgr``.
+    ship._cargo_mgr.get_pod_storage_capacity = MagicMock(return_value=1000 if can_carry else 0)
+    ship._cargo_mgr.get_pod_storage_used = MagicMock(return_value=0)
+    ship._cargo_mgr.can_carry_pod = MagicMock(return_value=can_carry)
 
     def _set_bay_inventory(bi: BayInventory) -> None:
         ship.bay_inventory = bi

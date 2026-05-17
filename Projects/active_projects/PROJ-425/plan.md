@@ -21,14 +21,14 @@
 | 3. Extract the factory path and keep a thin shim | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Move write behavior onto `ShipInstanceWriteService` + standardize manager names | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Demolish display / consumable / serializer / bridge forwarders (batches 5a/5b/5d/5e) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. **Cargo + deployable forwarder demolition (batch 5c)** — Eligible to start (PROJ-431 Phase 1 typed `bay_inventory` shipped 2026-05-17) | Eligible to start | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. **Cargo + deployable forwarder demolition (batch 5c)** — Complete (PROJ-431 Phase 1 typed `bay_inventory` shipped 2026-05-17 at e791a4eb; Phase 6 landed same day) | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Label 5d/5e shims explicitly (Codex consult follow-up) — runs independently of the still-gated Phase 6; documentation-only, no behavior change. `depends_on: phase_5`. | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 6 eligible to start (PROJ-431 Phase 1 shipped). Phases 0-5 + Phase 7 complete.
-**Last Action:** PROJ-431 Phase 1 (typed `BayInventory` substrate) shipped 2026-05-17 in `proj/PROJ-431/main`. `ShipInstance.bay_inventory` is now the canonical typed storage (`bay: list[CarriedVehicle]` + `pods: list[DropPod]`) — replacing the legacy `carried_items: List[Dict[str, Any]]` dataclass field. `CarriedVehicle.from_any(...)` runtime discriminator is deleted. Phase 6 (cargo / deployable forwarder demolition, TD-06 batch 5c) is now unblocked: the forwarders' replacement surface (`bay_inventory.bay` / `bay_inventory.pods` / `ShipCargoManager.load_vehicle` / `unload_vehicle`) exists in stable form.
-**Next Action:** Open `phase_6_checklist.md` and start the cargo / deployable forwarder demolition batch.
+**Active Phase:** All phases complete. Project ready for final audit.
+**Last Action:** Phase 6 (TD-06 batch 5c — cargo / deployable forwarder demolition) landed 2026-05-17. Removed 12 forwarders from `ShipInstance` (cargo queries/mutators: `get_cargo_capacity`, `get_current_cargo`, `get_cargo_space_available`, `load_cargo`, `unload_cargo`; carried-vehicle queries: `get_carried_vehicles`, `get_carried_vehicles_by_type`, `get_carried_vehicle_mass`, `get_vehicle_bay_capacity`; pod-storage helpers: `get_pod_storage_capacity`, `get_pod_storage_used`, `can_carry_pod`). Pod-storage helpers + `get_carried_vehicle_mass` now live on `ShipCargoManager`. Production callers (`fleet_consumable_aggregator`, `fleet_data_source`, `fleet_report_filters`, `transfer_branches`, `transfer_validator`) and test callers migrated to `ship._cargo_mgr.<method>(...)`. `bay_current_mass` property kept as small read-only entity attribute (parallel to `design_name` / `hull_class`). High-value entry points (`ShipInstance.create`, `to_dict`, `clone`, `to_ship`, `update_from_ship`) remain as documented thin shims per Weak-LLM Guardrail #1 (Phase 5d/5e/3 decision). `ship_instance.py` went from 795 → 745 LOC. Sharded suite: 21131/21131 green.
+**Next Action:** Final audit / merge to main when scheduled.
 **Blockers:** None.
 
 ## Overview
@@ -133,4 +133,4 @@ Acceptance criteria from the TD-06 plan:
 - [x] Focused ship-instance, fleet, and FMS integration suites are green before the sharded run.
 - [x] `python Tools/test_sharded/test_sharded.py` is green. (20931 / 20931 passed)
 - [x] `ShipInstance.create`, `to_dict`, `from_dict`, `to_ship`, `clone` were not deleted ahead of grep-proven caller migration (per Weak-LLM Guardrails). (Kept as thin shims)
-- [ ] PROJ-431 Phase 1 landed before any code in Phase 6 of this project touched `main`. (Phase 6 not started — gated)
+- [x] PROJ-431 Phase 1 landed before any code in Phase 6 of this project touched `main`. (PROJ-431 Phase 1 shipped on `proj/PROJ-431/main` at `e791a4eb` on 2026-05-17; Phase 6 landed same day after gate cleared.)

@@ -63,12 +63,23 @@ def _make_ship(carried_items=None, pod_capacity=2000.0):
     ship = MagicMock()
     ship.carried_items = list(carried_items or [])
     ship.bay_inventory = _bi_from_carried(ship.carried_items)
-    ship.get_pod_storage_capacity = MagicMock(return_value=pod_capacity)
-    ship.get_pod_storage_used = lambda: sum(i.get('mass', 0.0) for i in ship.carried_items)
-    ship.can_carry_pod = lambda mass: (
-        pod_capacity > 0 and
-        ship.get_pod_storage_used() + mass <= pod_capacity
-    )
+
+    # PROJ-425 Phase 6: pod-storage helpers live on ``_cargo_mgr``,
+    # not on ``ShipInstance`` directly.
+    def _get_pod_storage_used() -> float:
+        return sum(i.get('mass', 0.0) for i in ship.carried_items)
+
+    def _can_carry_pod(mass: float) -> bool:
+        return (
+            pod_capacity > 0
+            and _get_pod_storage_used() + mass <= pod_capacity
+        )
+
+    cargo_mgr = MagicMock()
+    cargo_mgr.get_pod_storage_capacity = MagicMock(return_value=pod_capacity)
+    cargo_mgr.get_pod_storage_used = _get_pod_storage_used
+    cargo_mgr.can_carry_pod = _can_carry_pod
+    ship._cargo_mgr = cargo_mgr
 
     def _set_bay_inventory(bi: BayInventory) -> None:
         ship.bay_inventory = bi

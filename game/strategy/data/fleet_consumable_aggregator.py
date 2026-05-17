@@ -250,11 +250,11 @@ class FleetConsumableAggregator:
 
     def get_fleet_pod_capacity(self) -> float:
         """Get total pod storage mass capacity across all ships in fleet."""
-        return sum(ship.get_pod_storage_capacity() for ship in self._fleet.ships)
+        return sum(ship._cargo_mgr.get_pod_storage_capacity() for ship in self._fleet.ships)
 
     def get_fleet_pod_mass_used(self) -> float:
         """Get total mass of carried items across all ships in fleet."""
-        return sum(ship.get_pod_storage_used() for ship in self._fleet.ships)
+        return sum(ship._cargo_mgr.get_pod_storage_used() for ship in self._fleet.ships)
 
     # --- Cargo Methods ---
 
@@ -270,7 +270,7 @@ class FleetConsumableAggregator:
         """
         total = 0
         for ship in self._fleet.ships:
-            total += ship.get_cargo_capacity(cargo_type)
+            total += ship._cargo_mgr.get_cargo_capacity(cargo_type)
         return total
 
     def get_fleet_cargo_current(self, cargo_type: str) -> int:
@@ -285,7 +285,7 @@ class FleetConsumableAggregator:
         """
         total = 0
         for ship in self._fleet.ships:
-            total += ship.get_current_cargo(cargo_type)
+            total += ship._cargo_mgr.get_current_cargo(cargo_type)
         return total
 
     def _distribute_cargo_to_fleet(
@@ -336,7 +336,7 @@ class FleetConsumableAggregator:
             Actual amount loaded (may be less than requested if capacity limited).
         """
         return self._distribute_cargo_to_fleet(
-            cargo_type, amount, lambda ship, t, a: ship.load_cargo(t, a)
+            cargo_type, amount, lambda ship, t, a: ship._cargo_mgr.load_cargo(t, a)
         )
 
     def unload_cargo_from_fleet(self, cargo_type: str, amount: int) -> int:
@@ -351,5 +351,5 @@ class FleetConsumableAggregator:
             Actual amount unloaded (may be less than requested if not enough cargo).
         """
         return self._distribute_cargo_to_fleet(
-            cargo_type, amount, lambda ship, t, a: ship.unload_cargo(t, a)
+            cargo_type, amount, lambda ship, t, a: ship._cargo_mgr.unload_cargo(t, a)
         )

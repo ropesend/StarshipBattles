@@ -197,9 +197,9 @@ class TestShipCargoManagerVehicles:
                 vehicle_type=vt, mass=mass, current_hp=10,
             )
             assert inst._cargo_mgr.load_vehicle(cv)
-        fighters = inst.get_carried_vehicles_by_type("fighter")
+        fighters = inst._cargo_mgr.get_carried_vehicles_by_type("fighter")
         assert len(fighters) == 2
-        mines = inst.get_carried_vehicles_by_type("mine")
+        mines = inst._cargo_mgr.get_carried_vehicles_by_type("mine")
         assert len(mines) == 1
 
 

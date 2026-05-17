@@ -246,8 +246,8 @@ class FleetDataSource(ITableDataSource):
 
     def _format_transport(self, ship: "ShipInstance") -> str:
         """Format passenger transport capacity for display."""
-        capacity = ship.get_cargo_capacity("passengers")
-        current = ship.get_current_cargo("passengers")
+        capacity = ship._cargo_mgr.get_cargo_capacity("passengers")
+        current = ship._cargo_mgr.get_current_cargo("passengers")
         return f"{current}/{capacity}" if capacity > 0 else "--"
 
     def _format_cargo(self, ship: "ShipInstance") -> str:

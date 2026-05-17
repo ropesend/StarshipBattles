@@ -393,3 +393,31 @@ class ShipCargoManager:
                 self._ship.cargo_contents[cargo_type] = new_amount
 
         return actual_unload
+
+    # ------------------------------------------------------------------
+    # Pod-storage helpers (PROJ-425 Phase 6 — TD-06 batch 5c)
+    # ------------------------------------------------------------------
+    # Pod storage is mass-based and reads from the typed
+    # ``bay_inventory.pods`` slot. Migrated from ``ShipInstance`` in
+    # Phase 6 so this manager owns the full cargo + deployable surface.
+
+    def get_pod_storage_capacity(self) -> float:
+        """Maximum mass capacity for carried drop pods (from design stats)."""
+        stats = self._ship.get_calculated_stats()
+        return float(stats.get('pod_storage_mass', 0))
+
+    def get_pod_storage_used(self) -> float:
+        """Total mass of drop pods on this ship (from typed ``bay_inventory.pods``)."""
+        return self._ship.bay_inventory.total_pod_mass()
+
+    def can_carry_pod(self, pod_mass: float) -> bool:
+        """True iff this ship has remaining pod-storage mass for ``pod_mass``."""
+        capacity = self.get_pod_storage_capacity()
+        if capacity <= 0:
+            return False
+        return self.get_pod_storage_used() + pod_mass <= capacity
+
+    def get_carried_vehicle_mass(self) -> float:
+        """Sum of CarriedVehicle masses in the ship's bay (mirrors ``bay_current_mass``)."""
+        current, _max_mass = self.get_vehicle_bay_capacity()
+        return current

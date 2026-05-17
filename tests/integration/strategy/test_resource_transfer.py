@@ -49,6 +49,14 @@ def _make_cargo_ship(cargo_capacity=None, cargo_contents=None):
     ship.get_current_cargo = get_current_cargo
     ship.load_cargo = load_cargo
     ship.unload_cargo = unload_cargo
+
+    # PROJ-425 Phase 6: production routes through ``ship._cargo_mgr``.
+    cargo_mgr = MagicMock()
+    cargo_mgr.get_cargo_capacity = get_cargo_capacity
+    cargo_mgr.get_current_cargo = get_current_cargo
+    cargo_mgr.load_cargo = load_cargo
+    cargo_mgr.unload_cargo = unload_cargo
+    ship._cargo_mgr = cargo_mgr
     return ship
 
 

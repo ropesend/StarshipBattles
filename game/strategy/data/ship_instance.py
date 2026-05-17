@@ -317,46 +317,16 @@ class ShipInstance:
         """Per-turn consumption costs (shim to `_resource_mgr`)."""
         return self._resource_mgr.get_all_resource_costs_per_turn()
 
-    # --- Cargo Methods (delegated to ShipCargoManager) ---
-
-    def get_cargo_capacity(self, cargo_type: str) -> int:
-        """Get maximum cargo capacity for a specific cargo type."""
-        return self._cargo_mgr.get_cargo_capacity(cargo_type)
-
-    def get_current_cargo(self, cargo_type: str) -> int:
-        """Get current amount of cargo loaded for a specific type."""
-        return self._cargo_mgr.get_current_cargo(cargo_type)
-
-    def get_cargo_space_available(self, cargo_type: str) -> int:
-        """Get available space for a specific cargo type."""
-        return self._cargo_mgr.get_cargo_space_available(cargo_type)
-
-    def load_cargo(self, cargo_type: str, amount: int) -> int:
-        """Load cargo onto this ship."""
-        return self._cargo_mgr.load_cargo(cargo_type, amount)
-
-    def unload_cargo(self, cargo_type: str, amount: int) -> int:
-        """Unload cargo from this ship."""
-        return self._cargo_mgr.unload_cargo(cargo_type, amount)
-
-    # --- Carried Vehicles (PROJ-FMS-A Phase 3) ---
-
-    def get_carried_vehicles(self) -> "list":
-        """All design-backed carried vehicles (skipping drop-pod dicts)."""
-        return self._cargo_mgr.get_carried_vehicles()
-
-    def get_carried_vehicles_by_type(self, vehicle_type: str) -> "list":
-        """Carried vehicles filtered by type ("mine"/"fighter"/"satellite")."""
-        return self._cargo_mgr.get_carried_vehicles_by_type(vehicle_type)
-
-    def get_carried_vehicle_mass(self) -> float:
-        """Sum of CarriedVehicle masses in the ship's bay."""
-        current, _max_mass = self._cargo_mgr.get_vehicle_bay_capacity()
-        return current
-
-    def get_vehicle_bay_capacity(self) -> "tuple":
-        """Return (current_mass, max_mass) for the ship's vehicle bays."""
-        return self._cargo_mgr.get_vehicle_bay_capacity()
+    # --- Cargo / carried-vehicle helpers ---
+    #
+    # PROJ-425 Phase 6 (TD-06 batch 5c): the method forwarders for
+    # cargo queries / mutators, carried-vehicle queries, and pod-storage
+    # helpers were demolished. Callers go through ``ship._cargo_mgr``
+    # (see :class:`ShipCargoManager`). The ``bay_current_mass`` and
+    # ``bay_capacity_mass`` *properties* below are kept as small
+    # read-only entity attributes — they read naturally as
+    # ship-instance state (parallel to ``design_name`` /
+    # ``hull_class``) and are referenced by tests as such.
 
     @property
     def bay_current_mass(self) -> float:
@@ -366,7 +336,7 @@ class ShipInstance:
         strategy layer because it depends on the actual contents of
         ``bay_inventory.bay`` (simulation ``Ship`` cannot see those).
         """
-        return self.get_carried_vehicle_mass()
+        return self._cargo_mgr.get_carried_vehicle_mass()
 
     # ------------------------------------------------------------------
     # PROJ-431 Phase 1f: bay_inventory IS the canonical storage.
@@ -431,30 +401,10 @@ class ShipInstance:
         _current, max_mass = self._cargo_mgr.get_vehicle_bay_capacity()
         return max_mass
 
-    # --- Pod Storage (mass-based pod-slot capacity) ---
-
-    def get_pod_storage_capacity(self) -> float:
-        """Get maximum mass capacity for carried drop pods."""
-        stats = self.get_calculated_stats()
-        return float(stats.get('pod_storage_mass', 0))
-
-    def get_pod_storage_used(self) -> float:
-        """Total mass of drop pods on this ship.
-
-        PROJ-431 Phase 1f: reads from the typed ``bay_inventory.pods``
-        slot directly. The previous ``carried_items`` walk that filtered
-        out :class:`CarriedVehicle` entries via the legacy
-        ``from_any`` discriminator is no longer needed — pods live in
-        their own slot and never mix with bay vehicles.
-        """
-        return self.bay_inventory.total_pod_mass()
-
-    def can_carry_pod(self, pod_mass: float) -> bool:
-        """Check if this ship can carry an additional pod of the given mass."""
-        capacity = self.get_pod_storage_capacity()
-        if capacity <= 0:
-            return False
-        return self.get_pod_storage_used() + pod_mass <= capacity
+    # PROJ-425 Phase 6 (TD-06 batch 5c): pod-storage helpers
+    # (``get_pod_storage_capacity`` / ``get_pod_storage_used`` /
+    # ``can_carry_pod``) were demolished; callers go through
+    # ``ship._cargo_mgr`` directly.
 
     def get_warp_resource_costs(self) -> Dict[str, float]:
         """Warp jump resource costs (shim to `_resource_mgr`)."""

@@ -286,7 +286,7 @@ class TestTransferHandlerVehicleE2E:
         assert result.success is True
         # Vehicle moved from staging to ship bay.
         assert len(planet.staging_yard) == 0
-        carried = inst.get_carried_vehicles()
+        carried = inst._cargo_mgr.get_carried_vehicles()
         assert len(carried) == 1
         assert carried[0].design_id == "qs_fighter"
         assert carried[0].current_hp == 77
@@ -309,7 +309,7 @@ class TestTransferHandlerVehicleE2E:
             vehicle_type="mine", mass=5.0, current_hp=3,
         )
         assert inst._cargo_mgr.load_vehicle(mine)
-        assert len(inst.get_carried_vehicles()) == 1
+        assert len(inst._cargo_mgr.get_carried_vehicles()) == 1
 
         fleet.add_order(
             Order(
@@ -327,7 +327,7 @@ class TestTransferHandlerVehicleE2E:
         handler = TransferHandler()
         result = handler.execute_action_order(fleet, empire, galaxy)
         assert result.success is True
-        assert len(inst.get_carried_vehicles()) == 0
+        assert len(inst._cargo_mgr.get_carried_vehicles()) == 0
         # Round-trip: mine entry now lives in the planet staging yard.
         assert len(planet.staging_yard) == 1
         from game.strategy.data.carried_vehicle import CarriedVehicle as CV

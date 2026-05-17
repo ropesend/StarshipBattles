@@ -357,8 +357,11 @@ class TransferValidator:
         """
         candidate: Any = None
         for ship in getattr(fleet, "ships", []):
+            cargo_mgr = getattr(ship, "_cargo_mgr", None)
+            if cargo_mgr is None:
+                continue
             try:
-                carried = ship.get_carried_vehicles()
+                carried = cargo_mgr.get_carried_vehicles()
             except Exception as exc:  # Intentional: facade probe; treat missing accessor as empty.
                 _ = exc
                 continue
