@@ -211,7 +211,7 @@ class BuildQueueScreen:
             build_context=yard,
             queue_sources=collect_build_queues_at_hex(
                 hex_coord, self.galaxy, self.empire,
-                registries=self.facade.economy.registries(),
+                registries=self.facade.session_meta.registries(),
             ),
             portrait_loader=self.portrait_loader,
             on_queue_selection_changed=self._on_queue_selection_changed,
@@ -237,7 +237,7 @@ class BuildQueueScreen:
             empire=self.empire,
             on_planet_selection_needed=self._prompt_target_planet,
             add_to_queue_callback=self._dispatch_add_to_queue_command,
-            registries=self.facade.economy.registries(),
+            registries=self.facade.session_meta.registries(),
         )
         # PROJ-208: drag handler wires through controller's add/refresh.
         self.drag_handler = BuildQueueDragHandler(
@@ -318,7 +318,7 @@ class BuildQueueScreen:
                 planet=yard,
                 portrait_surface=portrait_surface,
                 production_rates=compute_planet_production(
-                    yard, self.facade.economy.registries()
+                    yard, self.facade.session_meta.registries()
                 ),
                 view=view,
             )
@@ -330,7 +330,7 @@ class BuildQueueScreen:
             self.portrait_surface = portrait_surface
         self.queue_sources = collect_build_queues_at_hex(
             hex_coord, self.galaxy, self.empire,
-            registries=self.facade.economy.registries(),
+            registries=self.facade.session_meta.registries(),
         )
         self.selected_queue_indices = {0} if self.queue_sources else set()
         self.active_queue_source = (
@@ -608,7 +608,7 @@ class BuildQueueScreen:
         # PROJ-382 Phase 1: registries pulled through facade rather than session.
         self.queue_sources = collect_build_queues_at_hex(
             self.hex_coord, self.galaxy, self.empire,
-            registries=self.facade.economy.registries(),
+            registries=self.facade.session_meta.registries(),
         )
         # Re-bind the active source by queue_id (same reference may not exist
         # after re-collection — match by identifier).

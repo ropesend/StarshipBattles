@@ -42,8 +42,8 @@ domain group.
 | `systems` | `all()`, `all_stars()`, `at_hex(hex)`, `containing_fleet(id)`, `near_hex(hex, max_dist=8)`, `storm_names_at_hex(hex)` |
 | `empires` | `all()`, `get(id)`, `colonies(id)`, `fleets(id)`, `build_queues(id)`, `hex_build_queues(id, hex)` |
 | `events` | `turn_events(turn=None, *, empire_id=None)`, `all(*, empire_id=None)`, `by_category(category, *, empire_id=None)` |
-| `session_meta` | `turn_number()`, `save_path()`, `human_player_ids()` |
-| `economy` | `race_registry()`, `colony_demographic_view(planet_id)`, `resolve_config()`, `registries()` |
+| `session_meta` | `turn_number()`, `save_path()`, `human_player_ids()`, `registries()` |
+| `economy` | `race_registry()`, `colony_demographic_view(planet_id)`, `resolve_config()` |
 | `validation` | `can_colonize(fleet_id, planet_id)`, `can_move_to(fleet_id, target_hex)` |
 
 DTOs include `FleetInfo`, `FleetSummary`, `StarInfo`, `SystemInfo`, `PlanetInfo`, `EmpireInfo`, `ColonySummary`, `FleetOrderInfo`, `ShipInfo`, `WarpPointInfo`, plus hierarchy DTOs (`TaskForceInfo`, `SquadronInfo`, `ShipInfoExtended`). Each DTO has a `from_<domain_object>()` constructor.

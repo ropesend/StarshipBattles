@@ -245,7 +245,7 @@ class BuildQueuePanelFactory:
                 portrait_surface=self.portrait_surface,
                 show_complexes=False,
                 production_rates=compute_planet_production(
-                    self.build_context, self._facade.economy.registries()
+                    self.build_context, self._facade.session_meta.registries()
                 ),
                 view=view,  # PROJ-292 H1
             )

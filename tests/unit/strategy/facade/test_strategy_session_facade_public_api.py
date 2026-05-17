@@ -93,12 +93,12 @@ GROUP_CONTRACT: dict[str, frozenset[str]] = {
         "turn_number",
         "save_path",
         "human_player_ids",
+        "registries",
     }),
     "economy": frozenset({
         "race_registry",
         "colony_demographic_view",
         "resolve_config",
-        "registries",
     }),
     "validation": frozenset({
         "can_colonize",

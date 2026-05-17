@@ -48,15 +48,13 @@ class MockSession:
         return self.savegame_path
 
     # PROJ-430 / TD-08: expose grouped namespace accessors so production
-    # code that calls ``facade.economy.registries()`` etc. resolves on the
+    # code that calls ``facade.session_meta.registries()`` etc. resolves on the
     # mock without rewriting every helper method.
     @property
     def economy(self):
         class _EconomyNS:
             def __init__(self, parent):
                 self._parent = parent
-            def registries(self):
-                return self._parent.get_registries() if hasattr(self._parent, "get_registries") else self._parent.registries
             def colony_demographic_view(self, planet_id):
                 return self._parent.get_colony_demographic_view(planet_id) if hasattr(self._parent, "get_colony_demographic_view") else None
             def race_registry(self):
@@ -82,6 +80,8 @@ class MockSession:
                 if hasattr(self._parent, "get_human_player_ids"):
                     return self._parent.get_human_player_ids()
                 return getattr(self._parent, "human_player_ids", [])
+            def registries(self):
+                return self._parent.get_registries() if hasattr(self._parent, "get_registries") else self._parent.registries
         return _SessionMetaNS(self)
 
     def handle_command(self, cmd):

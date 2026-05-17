@@ -130,6 +130,37 @@
       "scrap_history": [],
       "status": "complete",
       "verifying_review_id": null
+    },
+    "phase_7": {
+      "depends_on": [
+        "phase_6"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-430/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "docs/systems/strategy_layer.md",
+        "game/strategy/facade/grouped_namespaces.py",
+        "game/strategy/facade/strategy_session_facade.py",
+        "game/ui/screens/build_queue_screen.py",
+        "game/ui/screens/build_queue_panel_factory.py",
+        "game/ui/screens/empire_build_queue_window.py",
+        "tests/unit/strategy/facade/test_strategy_session_facade_public_api.py",
+        "tests/unit/ui/screens/test_build_queue_screen_lifecycle.py",
+        "tests/integration/ui/test_build_queue_formatting.py",
+        "tests/integration/ui/test_build_queue_drag_drop.py",
+        "tests/integration/ui/build_queue_screen/conftest.py",
+        "tests/integration/ui/build_queue_screen/test_basics.py",
+        "tests/integration/ui/build_queue_screen/test_portrait_logging.py",
+        "tests/integration/ui/build_queue_screen/test_queue_selector.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "lightweight",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "complete",
+      "verifying_review_id": null
     }
   },
   "project_branch": "proj/PROJ-430/main",

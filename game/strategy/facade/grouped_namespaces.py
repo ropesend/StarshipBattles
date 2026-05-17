@@ -288,12 +288,16 @@ class FacadeEventQueries:
 class FacadeSessionInfo:
     """Grouped session-metadata surface."""
 
-    __slots__ = ("_slice",)
+    __slots__ = ("_slice", "_session")
 
-    def __init__(self, slice_: "EventSlice") -> None:
+    def __init__(self, slice_: "EventSlice", session) -> None:
         # ``EventSlice`` historically also hosted the plain session reads;
         # we re-use it here rather than introduce a fifth slice.
         self._slice = slice_
+        # ``registries`` is sourced from the session directly (the legacy
+        # ``get_registries`` was a session passthrough, not a slice method);
+        # captured here so the namespace owns its DI.
+        self._session = session
 
     def turn_number(self) -> int:
         """Current turn number (1-indexed)."""
@@ -307,6 +311,16 @@ class FacadeSessionInfo:
         """Empire IDs of human players."""
         return self._slice.get_human_player_ids()
 
+    def registries(self) -> "GameRegistries":
+        """Session-scoped ``GameRegistries`` bundle (PROJ-382 Phase 1).
+
+        Generic DI accessor — kept on session_meta rather than economy so
+        the economy namespace stays focused on economy/demographics
+        concerns. Moved off ``economy`` in PROJ-430 Phase 7 after Codex
+        consult flagged it as a cross-concern leak.
+        """
+        return self._session.registries
+
 
 # ---------------------------------------------------------------------------
 # Economy / demographics
@@ -314,16 +328,12 @@ class FacadeSessionInfo:
 
 
 class FacadeEconomyQueries:
-    """Grouped economy / demographics / registries surface."""
+    """Grouped economy / demographics surface."""
 
-    __slots__ = ("_slice", "_session")
+    __slots__ = ("_slice",)
 
-    def __init__(self, slice_: "EconomySlice", session) -> None:
+    def __init__(self, slice_: "EconomySlice") -> None:
         self._slice = slice_
-        # ``registries`` is sourced from the session directly (the legacy
-        # ``get_registries`` was a session passthrough, not a slice method);
-        # captured here so the namespace owns its DI.
-        self._session = session
 
     def race_registry(self) -> "IRaceRegistry":
         """Session-scoped race registry (lazy)."""
@@ -338,10 +348,6 @@ class FacadeEconomyQueries:
     def resolve_config(self) -> "EconomyConfig":
         """Active ``EconomyConfig`` for the session (lazy fallback)."""
         return self._slice.resolve_economy_config()
-
-    def registries(self) -> "GameRegistries":
-        """Session-scoped ``GameRegistries`` bundle (PROJ-382 Phase 1)."""
-        return self._session.registries
 
 
 # ---------------------------------------------------------------------------

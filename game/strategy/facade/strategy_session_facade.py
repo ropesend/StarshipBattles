@@ -119,8 +119,8 @@ class StrategySessionFacade:
         self._systems = FacadeSystemQueries(self._system_slice)
         self._empires = FacadeEmpireQueries(self._empire_slice)
         self._events = FacadeEventQueries(self._event_slice)
-        self._session_meta = FacadeSessionInfo(self._event_slice)
-        self._economy = FacadeEconomyQueries(self._economy_slice, session)
+        self._session_meta = FacadeSessionInfo(self._event_slice, session)
+        self._economy = FacadeEconomyQueries(self._economy_slice)
         self._validation = FacadeValidation(self._fleet_slice, self._planet_slice)
 
     # =========================================================================
@@ -170,7 +170,7 @@ class StrategySessionFacade:
 
     @property
     def economy(self) -> FacadeEconomyQueries:
-        """Grouped economy / demographics / registries surface."""
+        """Grouped economy / demographics surface."""
         return self._economy
 
     @property

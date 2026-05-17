@@ -21,11 +21,12 @@
 | 4. Migrate tests off legacy cache seams | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Delete the legacy surface (root-cause) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Documentation sync | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
+| 7. Codex-consult polish | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
 **Active Phase:** All phases complete
-**Last Action:** Phase 6 complete — `docs/systems/strategy_layer.md` §1 rewritten around the post-TD-08 grouped surface (2 top-level callables + 10 grouped attrs) and the `seed_*` test seam; `docs/02_PATTERNS.md` CQRS/command sections updated to point at `facade.commands.<verb>`; `docs/03_CONVENTIONS.md` gained the grouped-facade preference bullet; `docs/systems/minefields.md` updated `dispatch_issue_lay_mines` reference; PROJ-309 facade-decomposition findings file appended with a new "TD-08 (PROJ-430) target surface" section (historical content intact). Final-verification greps clean: no stale references outside the seed-helper file and explanatory doc lines.
+**Last Action:** Phase 7 complete (lightweight polish driven by Codex consult). Two findings actioned: (1) `docs/systems/strategy_layer.md` §1 phrasing aligned with `docs/03_CONVENTIONS.md` and the PROJ-309 findings — now reads "two callables (`handle_command`, `process_turn`) plus `facade_state` and 9 grouped namespace accessors" instead of the inconsistent "ten grouped namespace accessors"; (2) `economy.registries()` was a cross-concern leak — moved to `session_meta.registries()`, which fits the generic session-DI shape (alongside `turn_number`, `save_path`, `human_player_ids`). Eight production/test callers migrated; the public-API contract test updated to pin the new group memberships. Sharded suite green 21122/21122.
 **Next Action:** All phases complete — awaiting user verification.
 **Blockers:** None
 
@@ -88,6 +89,9 @@ Delete the 8 cache-forwarder `@property` blocks at `strategy_session_facade.py:1
 
 ### Phase 6: Documentation sync
 Update `docs/systems/strategy_layer.md` facade-boundary section with the grouped surface and the `seed_*` test-seeding contract on `FacadeSessionState`. Append a new section to `Projects/active_projects/PROJ-309/findings/strategy_session_facade_decomposition.md` recording the post-TD-08 target surface as the new source of truth for future facade work (do not overwrite the historical content). Verify `docs/03_CONVENTIONS.md` does not contradict the new pattern; add a single bullet only if a "use small grouped facades" convention is now stronger. Skip `docs/_ignore/` per AGENTS.md.
+
+### Phase 7: Codex-consult polish (lightweight)
+Action two findings surfaced by a post-Phase-6 Codex consult. (1) Doc fix: `docs/systems/strategy_layer.md:20` described the facade as "only two callables and ten grouped namespace accessors" — inconsistent with the canonical phrasing in `docs/03_CONVENTIONS.md` and the PROJ-309 findings ("two callables plus `facade_state` and 9 grouped namespace accessors"). Re-word for consistency. (2) Group leak: `FacadeEconomyQueries.registries()` was a session passthrough exposing generic DI infrastructure under the economy namespace. Moved to `FacadeSessionInfo.registries()` so the economy group stays focused on economy/demographics concerns; `session_meta` was already the home of generic session-level metadata (`turn_number`, `save_path`, `human_player_ids`). Updated the public-API contract test, the eight production/test callers, and the strategy_layer.md group table. Top-level facade surface unchanged (still 2 callables + 10 attrs).
 
 ## Related Documents
 - [TD-08 source plan](../../../Reviews/results/2026-05-16_strategy-layer-tech-debt-review/Verified%20Problem%20Remediation%20Plans/TD-08_facade_api_reduction.md) — canonical specification (verification findings, file touch plan, per-phase success criteria, weak-LLM guardrails)

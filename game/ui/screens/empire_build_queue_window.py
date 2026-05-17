@@ -194,7 +194,7 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         # --- MVVM components --- (cheap; pure-python, no pygame_gui)
         self._event_bus = WorkshopEventBus()
         sources = collect_all_build_queues_for_empire(
-            empire, registries=facade.economy.registries()
+            empire, registries=facade.session_meta.registries()
         )
         self._viewmodel = EmpireBuildQueueViewModel(self._event_bus, sources)
 
@@ -708,7 +708,7 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         if empire is not self.empire:
             self.empire = empire
             sources = collect_all_build_queues_for_empire(
-                empire, registries=self._facade.economy.registries()
+                empire, registries=self._facade.session_meta.registries()
             )
             self._viewmodel.update_sources(sources)
         self.galaxy = galaxy
