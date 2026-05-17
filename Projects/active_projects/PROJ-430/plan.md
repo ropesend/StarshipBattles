@@ -15,7 +15,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Pin the target surface (red contract first) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Pin the target surface (red contract first) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Introduce grouped accessors | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Migrate UI callers (25 files) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate tests off legacy cache seams | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -23,10 +23,10 @@
 | 6. Documentation sync | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-16
-**Active Phase:** Phase 1
-**Last Action:** Project initialized from TD-08 plan
-**Next Action:** Read source plan in full, run baseline `pytest tests/unit/strategy/facade/test_strategy_session_facade_public_api.py -q` and the UI-caller grep
+**Last Updated:** 2026-05-17
+**Active Phase:** Phase 2
+**Last Action:** Phase 1 complete — contract test rewritten to target shape; parity test file authored; 43 failures captured as TDD anchor in `findings/phase_1_red_baseline.md`. UI caller inventory captured (16 files, not 25) in `findings/phase_1_ui_caller_inventory.md`.
+**Next Action:** Phase 2 — author `game/strategy/facade/grouped_namespaces.py` and add 9 grouped `@property` accessors on `StrategySessionFacade`.
 **Blockers:** None
 
 ## Overview
