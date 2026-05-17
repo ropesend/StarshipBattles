@@ -1,15 +1,18 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict, Any, Optional, Set, TYPE_CHECKING
+from typing import Dict, Any, List, Optional, Set, Type, TYPE_CHECKING, TypeVar
 
 from game.core.exceptions import PersistenceException
 from game.core.error_codes import ErrorCode
 from game.core.validation_helpers import require_keys, safe_from_dict
+from game.strategy.data.deployed_group import DeployedGroup
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
     from game.strategy.data.galaxy import Galaxy
+
+_DG = TypeVar("_DG", bound=DeployedGroup)
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +36,10 @@ class Empire:
 
         self.colonies = [] # List[Planet]
         self.fleets = [] # List[Fleet]
+        # PROJ-431 Phase 2: deployed groups (typed sibling-of-Fleet) live in
+        # their own collection. ``MineGroup`` is the first concrete subclass;
+        # ``FighterWing`` / ``SatelliteConstellation`` arrive in Phase 3.
+        self.deployed_groups: List[DeployedGroup] = []
 
         # Design library tracking (Phase 3)
         self.designed_ships = []  # List[DesignMetadata] - cached design list
@@ -62,14 +69,54 @@ class Empire:
         self._booster_dirty: bool = True
 
     def is_eliminated(self) -> bool:
-        """Return True when this empire owns no fleets and no colonies.
+        """Return True when this empire owns no fleets, no colonies, and
+        no deployed groups.
 
         Pure read; no side effects. Used by the hot-seat turn-start hook
         (issue #25) to detect defeat, remove the empire from the rotation,
         and fire a one-shot defeat modal. AI/non-human empires use the
         same predicate.
+
+        PROJ-431 Phase 2: deployed groups (e.g. orphan ``MineGroup``s)
+        keep an empire alive — a minefield on the map is still an asset
+        on the strategic surface, even after every fleet/colony is lost.
         """
-        return len(self.fleets) == 0 and len(self.colonies) == 0
+        return (
+            len(self.fleets) == 0
+            and len(self.colonies) == 0
+            and len(self.deployed_groups) == 0
+        )
+
+    # --- Deployed groups (PROJ-431 Phase 2) ---
+
+    def add_deployed_group(self, group: DeployedGroup) -> None:
+        """Attach a deployed group to this empire.
+
+        Takes ownership: ``group.owner_id`` is rewritten to this empire's
+        id, matching ``add_fleet``'s contract. Dedupes — adding the same
+        group twice is a no-op.
+        """
+        if group in self.deployed_groups:
+            return
+        self.deployed_groups.append(group)
+        group.owner_id = self.id
+
+    def remove_deployed_group(self, group: DeployedGroup) -> bool:
+        """Detach a deployed group. Returns True if it was present."""
+        if group in self.deployed_groups:
+            self.deployed_groups.remove(group)
+            return True
+        return False
+
+    def deployed_groups_of(self, cls: Type[_DG]) -> List[_DG]:
+        """Filter ``deployed_groups`` to a single concrete type.
+
+        The PROJ-431 design.md "IDeployedGroupSource accessor" — AI
+        controllers, minefield resolvers, and UI all call this rather
+        than walking ``empire.fleets`` and filtering by a string
+        discriminator.
+        """
+        return [g for g in self.deployed_groups if isinstance(g, cls)]
 
     def add_colony(self, planet) -> None:
         if planet not in self.colonies:
@@ -308,6 +355,10 @@ class Empire:
             'empire_theme_id': self.empire_theme_id,
             'colony_ids': [p.id for p in self.colonies],  # Store IDs only
             'fleets': [f.to_dict() for f in self.fleets],
+            # PROJ-431 Phase 2: deployed groups serialise as a sibling
+            # collection. Polymorphic dispatch on the ``type`` field at
+            # load time picks the correct DeployedGroup subclass.
+            'deployed_groups': [g.to_dict() for g in self.deployed_groups],
             'built_ship_designs': sorted(self.built_ship_designs),
             '_next_fleet_display_number': self._next_fleet_display_number,
             '_design_serial_counters': self._design_serial_counters,
@@ -395,6 +446,25 @@ class Empire:
                     f"Corrupt fleet data at index {i} in empire '{data.get('id', '?')}'",
                     code=ErrorCode.CORRUPT_DATA.value,
                     context={"empire_id": data.get('id'), "fleet_index": i, "original_error": str(e)}
+                ) from e
+
+        # PROJ-431 Phase 2: restore deployed groups.
+        empire.deployed_groups = []
+        for i, dg_data in enumerate(data.get('deployed_groups', []) or []):
+            try:
+                group = DeployedGroup.from_dict(dg_data)
+                group.owner_id = empire.id
+                empire.deployed_groups.append(group)
+            except (PersistenceException, KeyError, TypeError, ValueError) as e:
+                raise PersistenceException(
+                    f"Corrupt deployed_group data at index {i} in empire "
+                    f"'{data.get('id', '?')}'",
+                    code=ErrorCode.CORRUPT_DATA.value,
+                    context={
+                        "empire_id": data.get('id'),
+                        "deployed_group_index": i,
+                        "original_error": str(e),
+                    },
                 ) from e
 
         # Resolve colony references via galaxy
