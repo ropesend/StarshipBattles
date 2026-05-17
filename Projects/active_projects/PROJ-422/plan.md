@@ -16,17 +16,17 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 0. Docs read + structural TDD anchor test | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. Introduce the engines package | In Progress | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Align top-level interfaces aggregator | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Introduce the engines package | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Align top-level interfaces aggregator | In Progress | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Validate consumers (regression sweep) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Docs sync | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Clean review | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-16
-**Active Phase:** Phase 1
-**Last Action:** Phase 0 complete — failing layout test authored (RED for the documented reasons: `engines` is still a module, `engines.py` exists, and the outer `interfaces.__all__` is missing 5 names)
-**Next Action:** Phase 1 — split `engines.py` into the 9-leaf `engines/` package and delete the monolith
+**Active Phase:** Phase 2
+**Last Action:** Phase 1 complete — `engines.py` deleted; new `engines/` package contains `__init__.py` + 9 leaf modules (movement/orders/combat/production/logistics/population/planet_ops/terraforming/components). 5 of 6 layout-test assertions are green; only `test_top_level_interfaces_reexports_all_engines` remains red (Phase 2 scope).
+**Next Action:** Phase 2 — rewrite `game/strategy/interfaces/__init__.py` to re-export all 18 engine ABCs (closes the 5-name drift).
 **Blockers:** None
 
 ## Overview
