@@ -34,7 +34,7 @@ class TestCargoQuickDialogResolutionBug:
         Currently it fails because it tries to find a system at global hex (0,0).
         """
         # Arrange: Colony is at global hex (50, 100)
-        # In reality, facade.get_planets_at_hex(global_hex) should return it.
+        # In reality, facade.planets.at_hex(global_hex) should return it.
         
         # Define what the facade SHOULD return if called with the CORRECT hex
         mock_colony = MagicMock()
@@ -47,17 +47,17 @@ class TestCargoQuickDialogResolutionBug:
         mock_planet_info.population_details = (
             ("human", 100, 1.0),
         )
-        mock_scene._facade.get_planet.return_value = mock_planet_info
+        mock_scene._facade.planets.get.return_value = mock_planet_info
         
         # The facade is called with the hex passed to the dialog
         # Current implementation:
-        # planets = self.facade.get_planets_at_hex(self.hex_coord)
+        # planets = self.facade.planets.at_hex(self.hex_coord)
         def side_effect(hex_val):
             if hex_val == (50, 100):
                 return [mock_colony]
             return [] # No system at (0,0)
             
-        mock_scene._facade.get_planets_at_hex.side_effect = side_effect
+        mock_scene._facade.planets.at_hex.side_effect = side_effect
         
         # Act: Pass (0,0) as the hex_coord (simulating a click in system view)
         rect = pygame.Rect(100, 100, 450, 300)
@@ -76,7 +76,7 @@ class TestCargoQuickDialogResolutionBug:
         # Arrange: Fleet with passengers
         mock_fleet_info = MagicMock(spec=FleetInfo)
         mock_fleet_info.passengers_current = 50
-        mock_scene._facade.get_fleet.return_value = mock_fleet_info
+        mock_scene._facade.fleets.get.return_value = mock_fleet_info
         
         # Colony is at global hex (50, 100)
         mock_colony = MagicMock()
@@ -89,7 +89,7 @@ class TestCargoQuickDialogResolutionBug:
                 return [mock_colony]
             return []
             
-        mock_scene._facade.get_planets_at_hex.side_effect = side_effect
+        mock_scene._facade.planets.at_hex.side_effect = side_effect
         
         # Act
         rect = pygame.Rect(100, 100, 450, 300)

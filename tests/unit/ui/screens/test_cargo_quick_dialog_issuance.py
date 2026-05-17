@@ -34,8 +34,8 @@ class TestCargoQuickDialogIssuance:
             population_details=(('Human', 100, 0.5),),
             total_population=100
         )
-        facade.get_planets_at_hex.return_value = [colony]
-        facade.get_planet.return_value = colony
+        facade.planets.at_hex.return_value = [colony]
+        facade.planets.get.return_value = colony
         return facade
 
     @pytest.fixture

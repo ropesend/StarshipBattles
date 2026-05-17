@@ -38,7 +38,7 @@ class TestCanColonize:
         )
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.can_colonize(101, 42)
+        result = facade.validation.can_colonize(101, 42)
 
         assert result.is_valid is True
         mock_turn_engine.validate_colonize_order.assert_called_once()
@@ -74,7 +74,7 @@ class TestCanColonize:
         )
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.can_colonize(101, 42)
+        result = facade.validation.can_colonize(101, 42)
 
         assert result.is_valid is False
 
@@ -91,7 +91,7 @@ class TestCanColonize:
         mock_session = create_mock_session_with_fleet_lookup([mock_empire], galaxy=mock_galaxy)
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.can_colonize(9999, 42)
+        result = facade.validation.can_colonize(9999, 42)
 
         assert result.is_valid is False
         assert "Fleet not found" in result.message
@@ -118,7 +118,7 @@ class TestCanColonize:
         )
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.can_colonize(101, None)
+        result = facade.validation.can_colonize(101, None)
 
         # Should be called with fleet and None for planet
         mock_turn_engine.validate_colonize_order.assert_called_once()
@@ -146,7 +146,7 @@ class TestCanMoveTo:
         )
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.can_move_to(101, HexCoord(2, 0))
+        result = facade.validation.can_move_to(101, HexCoord(2, 0))
 
         assert result.is_valid is True
 
@@ -166,7 +166,7 @@ class TestCanMoveTo:
         )
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.can_move_to(101, HexCoord(100, 100))
+        result = facade.validation.can_move_to(101, HexCoord(100, 100))
 
         assert result.is_valid is False
         assert "path" in result.message.lower() or "unreachable" in result.message.lower()
@@ -181,7 +181,7 @@ class TestCanMoveTo:
         mock_session = create_mock_session_with_fleet_lookup([mock_empire])
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.can_move_to(9999, HexCoord(5, 5))
+        result = facade.validation.can_move_to(9999, HexCoord(5, 5))
 
         assert result.is_valid is False
         assert "Fleet not found" in result.message
@@ -202,6 +202,6 @@ class TestCanMoveTo:
         )
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.can_move_to(101, HexCoord(5, 5))
+        result = facade.validation.can_move_to(101, HexCoord(5, 5))
 
         assert result.is_valid is True

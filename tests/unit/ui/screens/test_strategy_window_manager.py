@@ -20,7 +20,7 @@ def mock_scene():
     scene.current_empire.id = 1
     scene.galaxy = Mock()
     scene._facade = Mock()
-    scene._facade.get_all_events = Mock(return_value=[])
+    scene._facade.events.all = Mock(return_value=[])
     scene.on_navigate_to_hex_build = Mock()
     return scene
 
@@ -266,11 +266,11 @@ class TestEventLogWindow:
         mock_scene.current_empire.id = 7
         mock_scene.current_empire.name = "Chimera"
         mock_scene.facade = mock_scene._facade
-        mock_scene.facade.get_all_events = Mock(return_value=[])
+        mock_scene.facade.events.all = Mock(return_value=[])
 
         window_manager.open_event_log()
 
-        mock_scene.facade.get_all_events.assert_called_once_with(empire_id=7)
+        mock_scene.facade.events.all.assert_called_once_with(empire_id=7)
 
     @patch('game.ui.screens.strategy_windows.event_log_window_ctrl.EventLogWindow')
     def test_open_event_log_passes_empire_name_to_window(
@@ -280,7 +280,7 @@ class TestEventLogWindow:
         mock_scene.current_empire.id = 0
         mock_scene.current_empire.name = "Lahore"
         mock_scene.facade = mock_scene._facade
-        mock_scene.facade.get_all_events = Mock(return_value=[])
+        mock_scene.facade.events.all = Mock(return_value=[])
 
         window_manager.open_event_log()
 

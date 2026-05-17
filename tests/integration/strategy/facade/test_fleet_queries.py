@@ -32,7 +32,7 @@ class TestGetFleet:
         mock_session = create_mock_session_with_fleet_lookup([mock_empire])
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_fleet(101)
+        result = facade.fleets.get(101)
 
         assert result is not None
         assert isinstance(result, FleetInfo)
@@ -50,7 +50,7 @@ class TestGetFleet:
         mock_session = create_mock_session_with_fleet_lookup([mock_empire])
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_fleet(9999)
+        result = facade.fleets.get(9999)
 
         assert result is None
 
@@ -79,7 +79,7 @@ class TestGetFleet:
         mock_session = create_mock_session_with_fleet_lookup([mock_empire1, mock_empire2])
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_fleet(202)
+        result = facade.fleets.get(202)
 
         assert result is not None
         assert result.fleet_id == 202
@@ -127,7 +127,7 @@ class TestGetFleetsAtHex:
         mock_session.empires = [mock_empire1, mock_empire2]
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_fleets_at_hex(target_hex)
+        result = facade.fleets.at_hex(target_hex)
 
         assert len(result) == 2
         assert all(isinstance(f, FleetInfo) for f in result)
@@ -150,7 +150,7 @@ class TestGetFleetsAtHex:
         mock_session.empires = [mock_empire]
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_fleets_at_hex(HexCoord(99, 99))
+        result = facade.fleets.at_hex(HexCoord(99, 99))
 
         assert result == []
 
@@ -176,7 +176,7 @@ class TestGetFleetPathPreview:
         )
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_fleet_path_preview(101, HexCoord(3, 0))
+        result = facade.fleets.path_preview(101, HexCoord(3, 0))
 
         assert result == expected_path
         mock_session.preview_fleet_path.assert_called_once_with(mock_fleet, HexCoord(3, 0))
@@ -191,7 +191,7 @@ class TestGetFleetPathPreview:
         mock_session = create_mock_session_with_fleet_lookup([mock_empire])
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_fleet_path_preview(9999, HexCoord(3, 0))
+        result = facade.fleets.path_preview(9999, HexCoord(3, 0))
 
         assert result is None
 
@@ -211,7 +211,7 @@ class TestGetFleetPathPreview:
         )
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_fleet_path_preview(101, HexCoord(100, 100))
+        result = facade.fleets.path_preview(101, HexCoord(100, 100))
 
         assert result is None
 
@@ -240,7 +240,7 @@ class TestGetFleetPathProjection:
         )
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_fleet_path_projection(101, max_turns=10)
+        result = facade.fleets.path_projection(101, max_turns=10)
 
         assert result == expected_projection
         mock_session.get_fleet_path_projection.assert_called_once_with(mock_fleet, 10)
@@ -255,7 +255,7 @@ class TestGetFleetPathProjection:
         mock_session = create_mock_session_with_fleet_lookup([mock_empire])
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_fleet_path_projection(9999)
+        result = facade.fleets.path_projection(9999)
 
         assert result == []
 
@@ -286,7 +286,7 @@ class TestGetEmpireFleets:
         mock_session.empires = [mock_empire]
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_empire_fleets(0)
+        result = facade.empires.fleets(0)
 
         assert len(result) == 2
         assert all(isinstance(f, FleetSummary) for f in result)
@@ -313,6 +313,6 @@ class TestGetEmpireFleets:
         mock_session.empires = [mock_empire]
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_empire_fleets(9999)
+        result = facade.empires.fleets(9999)
 
         assert result == []

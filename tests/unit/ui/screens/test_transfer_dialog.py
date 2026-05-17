@@ -48,23 +48,23 @@ class TestTransferDialog:
         f2 = MagicMock(fleet_id=2, owner_id=0)
         f2.configure_mock(name="Fleet 2")
         f2.location = (0, 0)
-        mock_scene._facade.get_fleets_at_hex.return_value = [f1, f2]
+        mock_scene._facade.fleets.at_hex.return_value = [f1, f2]
 
         p1 = MagicMock(planet_id=10, owner_id=0)
         p1.name = "Alpha"
         p2 = MagicMock(planet_id=11, owner_id=None)
         p2.name = "Beta"
-        mock_scene._facade.get_planets_at_hex.return_value = [p1, p2]
+        mock_scene._facade.planets.at_hex.return_value = [p1, p2]
 
         # Mock DTOs for initial population calls
         dummy_fleet_info = MagicMock(spec=FleetInfo)
         dummy_fleet_info.passengers_current = 0
-        mock_scene._facade.get_fleet.return_value = dummy_fleet_info
+        mock_scene._facade.fleets.get.return_value = dummy_fleet_info
 
         dummy_planet_info = MagicMock(spec=PlanetInfo)
         dummy_planet_info.population_details = []
         dummy_planet_info.total_population = 0
-        mock_scene._facade.get_planet.return_value = dummy_planet_info
+        mock_scene._facade.planets.get.return_value = dummy_planet_info
 
         # Act
         rect = pygame.Rect(0, 0, 600, 500)
@@ -86,13 +86,13 @@ class TestTransferDialog:
         f1.configure_mock(name="Fleet 1")
         f2 = MagicMock(fleet_id=2, owner_id=0)
         f2.configure_mock(name="Fleet 2")
-        mock_scene._facade.get_fleets_at_hex.return_value = [f1, f2]
-        mock_scene._facade.get_planets_at_hex.return_value = []
+        mock_scene._facade.fleets.at_hex.return_value = [f1, f2]
+        mock_scene._facade.planets.at_hex.return_value = []
         
         # Mock FleetInfo DTO
         dummy_fleet_info = MagicMock(spec=FleetInfo)
         dummy_fleet_info.passengers_current = 0
-        mock_scene._facade.get_fleet.return_value = dummy_fleet_info
+        mock_scene._facade.fleets.get.return_value = dummy_fleet_info
         
         rect = pygame.Rect(0, 0, 600, 500)
         dialog = TransferDialog(rect, mock_manager, mock_fleet, (0, 0), mock_scene, window_manager=None)
@@ -108,22 +108,22 @@ class TestTransferDialog:
     def test_grid_builds_resource_rows(self, mock_manager, mock_scene, mock_fleet):
         """Grid should include rows for all 8 resource types."""
         # Arrange
-        mock_scene._facade.get_fleets_at_hex.return_value = [mock_fleet]
+        mock_scene._facade.fleets.at_hex.return_value = [mock_fleet]
         p1 = MagicMock(planet_id=10, owner_id=0)
         p1.name = "Alpha"
-        mock_scene._facade.get_planets_at_hex.return_value = [p1]
+        mock_scene._facade.planets.at_hex.return_value = [p1]
 
         mock_fleet_info = MagicMock(spec=FleetInfo)
         mock_fleet_info.passengers_current = 0
         mock_fleet_info.cargo_resources = (("metals", 100),)
         mock_fleet_info.cargo_capacities = (("metals", 1000),)
-        mock_scene._facade.get_fleet.return_value = mock_fleet_info
+        mock_scene._facade.fleets.get.return_value = mock_fleet_info
 
         mock_planet_info = MagicMock(spec=PlanetInfo)
         mock_planet_info.population_details = ()
         mock_planet_info.stockpile = (("metals", 500.0),)
         mock_planet_info.max_stockpile = ()
-        mock_scene._facade.get_planet.return_value = mock_planet_info
+        mock_scene._facade.planets.get.return_value = mock_planet_info
 
         rect = pygame.Rect(0, 0, 900, 700)
         dialog = TransferDialog(rect, mock_manager, mock_fleet, (0, 0), mock_scene, window_manager=None)
@@ -138,22 +138,22 @@ class TestTransferDialog:
     def test_confirm_dispatches_pending_transfers(self, mock_manager, mock_scene, mock_fleet):
         """Confirm should dispatch IssueTransferCommand for each non-zero pending."""
         # Arrange
-        mock_scene._facade.get_fleets_at_hex.return_value = [mock_fleet]
+        mock_scene._facade.fleets.at_hex.return_value = [mock_fleet]
         p1 = MagicMock(planet_id=10, owner_id=0)
         p1.name = "Alpha"
-        mock_scene._facade.get_planets_at_hex.return_value = [p1]
+        mock_scene._facade.planets.at_hex.return_value = [p1]
 
         mock_fleet_info = MagicMock(spec=FleetInfo)
         mock_fleet_info.passengers_current = 0
         mock_fleet_info.cargo_resources = ()
         mock_fleet_info.cargo_capacities = ()
-        mock_scene._facade.get_fleet.return_value = mock_fleet_info
+        mock_scene._facade.fleets.get.return_value = mock_fleet_info
 
         mock_planet_info = MagicMock(spec=PlanetInfo)
         mock_planet_info.population_details = ()
         mock_planet_info.stockpile = ()
         mock_planet_info.max_stockpile = ()
-        mock_scene._facade.get_planet.return_value = mock_planet_info
+        mock_scene._facade.planets.get.return_value = mock_planet_info
 
         mock_scene._facade.handle_command.return_value = MagicMock(is_valid=True)
 

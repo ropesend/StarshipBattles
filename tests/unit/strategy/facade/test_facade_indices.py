@@ -67,8 +67,8 @@ class TestFacadeStarCache:
         session.turn_number = 1
 
         facade = StrategySessionFacade(session)
-        result1 = facade.get_all_stars()
-        result2 = facade.get_all_stars()
+        result1 = facade.systems.all_stars()
+        result2 = facade.systems.all_stars()
 
         # Should be the same list object (cached)
         assert result1 is result2

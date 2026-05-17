@@ -32,7 +32,7 @@ class TestResolveColonies:
         uncolonized = MagicMock()
         uncolonized.owner_id = None  # Not colonized
 
-        facade.get_planets_at_hex.return_value = [colony, uncolonized]
+        facade.planets.at_hex.return_value = [colony, uncolonized]
 
         # Act
         result = CargoTransferService.resolve_colonies(facade, hex_coord, fleet)
@@ -40,7 +40,7 @@ class TestResolveColonies:
         # Assert
         assert len(result) == 1
         assert result[0] == colony
-        facade.get_planets_at_hex.assert_called_once_with(hex_coord)
+        facade.planets.at_hex.assert_called_once_with(hex_coord)
 
     def test_resolve_colonies_fallback_to_fleet_location(self):
         """When primary hex is empty, falls back to fleet's location."""
@@ -54,7 +54,7 @@ class TestResolveColonies:
         colony.owner_id = 1
 
         # First call returns empty, second returns colony
-        facade.get_planets_at_hex.side_effect = [[], [colony]]
+        facade.planets.at_hex.side_effect = [[], [colony]]
 
         # Act
         result = CargoTransferService.resolve_colonies(facade, hex_coord, fleet)
@@ -62,9 +62,9 @@ class TestResolveColonies:
         # Assert
         assert len(result) == 1
         assert result[0] == colony
-        assert facade.get_planets_at_hex.call_count == 2
-        facade.get_planets_at_hex.assert_any_call(hex_coord)
-        facade.get_planets_at_hex.assert_any_call(fleet.location)
+        assert facade.planets.at_hex.call_count == 2
+        facade.planets.at_hex.assert_any_call(hex_coord)
+        facade.planets.at_hex.assert_any_call(fleet.location)
 
     def test_resolve_colonies_filters_uncolonized(self):
         """Only returns planets with owner_id not None."""
@@ -78,7 +78,7 @@ class TestResolveColonies:
         uncolonized2 = MagicMock()
         uncolonized2.owner_id = None
 
-        facade.get_planets_at_hex.return_value = [uncolonized1, uncolonized2]
+        facade.planets.at_hex.return_value = [uncolonized1, uncolonized2]
 
         # Act
         result = CargoTransferService.resolve_colonies(facade, hex_coord, fleet)
@@ -99,7 +99,7 @@ class TestGetUnloadItems:
         facade = MagicMock()
         fleet_info = MagicMock()
         fleet_info.passengers_current = 5000
-        facade.get_fleet.return_value = fleet_info
+        facade.fleets.get.return_value = fleet_info
 
         colony = MagicMock()
         colony.owner_id = 1
@@ -120,7 +120,7 @@ class TestGetUnloadItems:
         facade = MagicMock()
         fleet_info = MagicMock()
         fleet_info.passengers_current = 0
-        facade.get_fleet.return_value = fleet_info
+        facade.fleets.get.return_value = fleet_info
 
         colony = MagicMock()
         colony.owner_id = 1
@@ -141,13 +141,13 @@ class TestGetUnloadItems:
 
         # Assert
         assert len(result) == 0
-        facade.get_fleet.assert_not_called()
+        facade.fleets.get.assert_not_called()
 
     def test_get_unload_items_no_fleet_returns_empty(self):
         """If fleet not found, returns empty list."""
         # Arrange
         facade = MagicMock()
-        facade.get_fleet.return_value = None
+        facade.fleets.get.return_value = None
 
         colony = MagicMock()
         colony.owner_id = 1
@@ -176,7 +176,7 @@ class TestGetLoadItems:
             ("Human", 3000, 80),
             ("Silicoid", 1500, 90),
         ]
-        facade.get_planet.return_value = planet_info
+        facade.planets.get.return_value = planet_info
 
         # Act
         result = CargoTransferService.get_load_items(facade, [colony])
@@ -206,7 +206,7 @@ class TestGetLoadItems:
         planet_info = MagicMock()
         planet_info.population_details = ()  # Empty - triggers fallback
         planet_info.total_population = 5000
-        facade.get_planet.return_value = planet_info
+        facade.planets.get.return_value = planet_info
 
         # Act
         result = CargoTransferService.get_load_items(facade, [colony])
@@ -229,7 +229,7 @@ class TestGetLoadItems:
 
         # Assert
         assert len(result) == 0
-        facade.get_planet.assert_not_called()
+        facade.planets.get.assert_not_called()
 
     def test_get_load_items_skips_zero_population_species(self):
         """Species with 0 population are skipped."""
@@ -245,7 +245,7 @@ class TestGetLoadItems:
             ("Human", 0, 80),  # Zero population
             ("Silicoid", 1500, 90),
         ]
-        facade.get_planet.return_value = planet_info
+        facade.planets.get.return_value = planet_info
 
         # Act
         result = CargoTransferService.get_load_items(facade, [colony])
@@ -266,7 +266,7 @@ class TestGetLoadItems:
         planet_info = MagicMock()
         planet_info.population_details = []  # Empty list
         planet_info.total_population = 2000
-        facade.get_planet.return_value = planet_info
+        facade.planets.get.return_value = planet_info
 
         # Act
         result = CargoTransferService.get_load_items(facade, [colony])
@@ -620,7 +620,7 @@ class TestResolveColoniesProjected:
         colony.owner_id = 1
 
         # Primary hex (0,0) empty, fleet location (0,0) empty, projected (5,5) has colony
-        facade.get_planets_at_hex.side_effect = lambda h: [colony] if h == HexCoord(5, 5) else []
+        facade.planets.at_hex.side_effect = lambda h: [colony] if h == HexCoord(5, 5) else []
 
         result = CargoTransferService.resolve_colonies(facade, HexCoord(0, 0), fleet)
 
@@ -640,7 +640,7 @@ class TestResolveColoniesProjected:
         colony = MagicMock()
         colony.owner_id = 1
 
-        facade.get_planets_at_hex.side_effect = lambda h: [colony] if h == HexCoord(10, 10) else []
+        facade.planets.at_hex.side_effect = lambda h: [colony] if h == HexCoord(10, 10) else []
 
         result = CargoTransferService.resolve_colonies(facade, HexCoord(0, 0), fleet)
 
@@ -657,11 +657,11 @@ class TestResolveColoniesProjected:
         colony_at_primary = MagicMock()
         colony_at_primary.owner_id = 1
 
-        facade.get_planets_at_hex.return_value = [colony_at_primary]
+        facade.planets.at_hex.return_value = [colony_at_primary]
 
         result = CargoTransferService.resolve_colonies(facade, HexCoord(0, 0), fleet)
 
         assert len(result) == 1
         assert result[0] == colony_at_primary
         # Should only be called once (primary hex found colonies)
-        facade.get_planets_at_hex.assert_called_once()
+        facade.planets.at_hex.assert_called_once()

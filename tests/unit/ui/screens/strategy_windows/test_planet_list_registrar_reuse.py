@@ -30,7 +30,7 @@ def _make_composer(*, existing_window=None):
     composer.scene.session.empires = []
     composer.scene.session.registries = MagicMock(name="registries")
     facade = MagicMock(name="facade")
-    facade.get_race_registry = MagicMock(return_value=MagicMock(name="race_registry"))
+    facade.economy.race_registry = MagicMock(return_value=MagicMock(name="race_registry"))
     composer.scene.facade = facade
     return composer
 

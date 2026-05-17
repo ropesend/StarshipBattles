@@ -12,7 +12,7 @@ def _make_build_queue_manager():
 
     PROJ-396 MAJ-004: ``StrategyBuildQueueManager`` no longer reads
     ``screen.session.{save_path,galaxy}`` — those reads are routed
-    through ``screen.facade.get_save_path()`` and ``screen.galaxy``
+    through ``screen.facade.session_meta.save_path()`` and ``screen.galaxy``
     respectively.  The mock screen exposes both surfaces.
     """
     from game.ui.screens.strategy_build_queue_manager import StrategyBuildQueueManager
@@ -21,7 +21,7 @@ def _make_build_queue_manager():
     mock_screen = MagicMock()
     mock_screen.galaxy = MagicMock()  # PROJ-396 MAJ-004
     mock_screen.facade = MagicMock()  # PROJ-212: facade for command dispatch
-    mock_screen.facade.get_save_path = MagicMock(return_value="test_savegame")
+    mock_screen.facade.session_meta.save_path = MagicMock(return_value="test_savegame")
     mock_screen.ui = MagicMock()
     mock_screen.ui.manager = MagicMock()
     mock_screen.selected_object = None
@@ -455,7 +455,7 @@ class TestProj410TurnBoundaryRebind:
         mock_screen = MagicMock()
         mock_screen.galaxy = MagicMock()
         mock_screen.facade = MagicMock()
-        mock_screen.facade.get_save_path = MagicMock(return_value="test_savegame")
+        mock_screen.facade.session_meta.save_path = MagicMock(return_value="test_savegame")
         mock_screen.ui = MagicMock()
         mock_screen.ui.manager = MagicMock()
         mock_screen.selected_object = None

@@ -34,8 +34,8 @@ class EmpirePanelRegistrar:
         # tab's Population Upkeep row has its habitability-multiplier dep.
         race_registry = None
         facade = getattr(c.scene, "facade", None)
-        if facade is not None and hasattr(facade, "get_race_registry"):
-            race_registry = facade.get_race_registry()
+        if facade is not None and hasattr(facade, "economy"):
+            race_registry = facade.economy.race_registry()
 
         # Issue #28 (extends PROJ-411 Task 2.3): full window reuse, including
         # cross-empire. ``open_for_empire`` now rebuilds Treasury snapshot +

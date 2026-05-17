@@ -250,10 +250,10 @@ class TestTransferDialogHotkeys:
         scene.facade = MagicMock(name="facade")
         # Empty hex — populate_initial_data invoked by Mock builder
         # finds nothing.
-        scene.facade.get_fleets_at_hex.return_value = []
-        scene.facade.get_planets_at_hex.return_value = []
-        scene.facade.get_fleet.return_value = None
-        scene.facade.get_planet.return_value = None
+        scene.facade.fleets.at_hex.return_value = []
+        scene.facade.planets.at_hex.return_value = []
+        scene.facade.fleets.get.return_value = None
+        scene.facade.planets.get.return_value = None
 
         source_fleet = MagicMock(name="source_fleet")
         source_fleet.id = 1

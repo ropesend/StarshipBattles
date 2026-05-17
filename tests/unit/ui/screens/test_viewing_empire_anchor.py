@@ -142,7 +142,7 @@ class TestBuildQueueScansPlanetOwnersDesigns:
         screen.galaxy = MagicMock()
         screen.galaxy.get_system_of_planet.return_value = None
         screen.facade = MagicMock()
-        screen.facade.get_save_path = MagicMock(return_value="saves/test")
+        screen.facade.session_meta.save_path = MagicMock(return_value="saves/test")
         screen.facade.facade_state = None
         screen.ui = MagicMock()
         screen.ui.manager = MagicMock()

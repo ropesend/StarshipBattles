@@ -114,7 +114,7 @@ class TestUnownedReturnsNone:
                              race_registry=_StubRegistry({}),
                              economy=EconomyConfig(population_consumption={}))
 
-        assert facade.get_colony_demographic_view(1) is None
+        assert facade.economy.colony_demographic_view(1) is None
 
     def test_missing_planet_returns_none(self):
         # No planet seeded into the index.
@@ -124,7 +124,7 @@ class TestUnownedReturnsNone:
         facade = StrategySessionFacade(session)
         facade._planet_index = {}
 
-        assert facade.get_colony_demographic_view(999) is None
+        assert facade.economy.colony_demographic_view(999) is None
 
 
 class TestColonizedReturnsView:
@@ -139,7 +139,7 @@ class TestColonizedReturnsView:
                              race_registry=_StubRegistry({"human": _race("human")}),
                              economy=EconomyConfig(population_consumption={"organics": 0.001}))
 
-        view = facade.get_colony_demographic_view(42)
+        view = facade.economy.colony_demographic_view(42)
 
         assert view is not None
         assert view.planet_id == 42
@@ -166,7 +166,7 @@ class TestColonizedReturnsView:
                              }),
                              economy=EconomyConfig(population_consumption={"organics": 0.001}))
 
-        view = facade.get_colony_demographic_view(42)
+        view = facade.economy.colony_demographic_view(42)
 
         race_ids = [s.race_id for s in view.species]
         assert race_ids == ["big", "medium", "small"]
@@ -180,7 +180,7 @@ class TestColonizedReturnsView:
                              race_registry=_StubRegistry({"human": _race("human", name="Humans")}),
                              economy=EconomyConfig(population_consumption={"organics": 0.001}))
 
-        view = facade.get_colony_demographic_view(42)
+        view = facade.economy.colony_demographic_view(42)
 
         assert len(view.species) == 1
         s = view.species[0]
@@ -213,7 +213,7 @@ class TestColonizedReturnsView:
                              race_registry=_StubRegistry({"human": _race("human")}),
                              economy=EconomyConfig(population_consumption={"organics": 0.001}))
 
-        view = facade.get_colony_demographic_view(42)
+        view = facade.economy.colony_demographic_view(42)
 
         race_ids = [s.race_id for s in view.species]
         assert "human" in race_ids
@@ -242,7 +242,7 @@ class TestFoodSurplusOnDTO:
                                  surplus_food_bonus_cap=0.20,
                              ))
 
-        view = facade.get_colony_demographic_view(42)
+        view = facade.economy.colony_demographic_view(42)
         s = view.species[0]
 
         assert s.food_surplus == pytest.approx(1.0)
@@ -265,7 +265,7 @@ class TestFoodSurplusOnDTO:
                                  surplus_food_bonus_cap=0.20,
                              ))
 
-        view = facade.get_colony_demographic_view(42)
+        view = facade.economy.colony_demographic_view(42)
         s = view.species[0]
 
         assert s.food_surplus == pytest.approx(1.35)
@@ -287,7 +287,7 @@ class TestFoodSurplusOnDTO:
                                  surplus_food_bonus_cap=0.20,
                              ))
 
-        view = facade.get_colony_demographic_view(42)
+        view = facade.economy.colony_demographic_view(42)
         s = view.species[0]
 
         assert s.food_surplus == pytest.approx(2.0)
@@ -308,7 +308,7 @@ class TestResourceProjections:
                                  "vapors": 0.0005,
                              }))
 
-        view = facade.get_colony_demographic_view(42)
+        view = facade.economy.colony_demographic_view(42)
 
         rids = {p.resource_id for p in view.resource_projections}
         assert "organics" in rids
@@ -331,7 +331,7 @@ class TestResourceProjections:
                              }),
                              economy=EconomyConfig(population_consumption={"organics": 0.001}))
 
-        view = facade.get_colony_demographic_view(42)
+        view = facade.economy.colony_demographic_view(42)
 
         # human: 1000 * 1.0 * 0.001 = 1.0
         # voidari: 500 * 0.5 * 0.001 = 0.25
@@ -350,7 +350,7 @@ class TestFrozenness:
                              race_registry=_StubRegistry({"human": _race("human")}),
                              economy=EconomyConfig(population_consumption={"organics": 0.001}))
 
-        view = facade.get_colony_demographic_view(42)
+        view = facade.economy.colony_demographic_view(42)
 
         with pytest.raises((AttributeError, Exception)):  # FrozenInstanceError
             view.planet_id = 999  # type: ignore[misc]
@@ -362,7 +362,7 @@ class TestFrozenness:
                              race_registry=_StubRegistry({"human": _race("human")}),
                              economy=EconomyConfig(population_consumption={"organics": 0.001}))
 
-        view = facade.get_colony_demographic_view(42)
+        view = facade.economy.colony_demographic_view(42)
 
         with pytest.raises((AttributeError, Exception)):  # FrozenInstanceError
             view.species[0].count = 999  # type: ignore[misc]

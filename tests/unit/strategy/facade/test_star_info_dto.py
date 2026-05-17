@@ -161,7 +161,7 @@ class TestFacadeGetAllStars:
     def test_empty_galaxy(self):
         """No systems means no stars."""
         facade = self._make_facade_with_systems({})
-        stars = facade.get_all_stars()
+        stars = facade.systems.all_stars()
         assert stars == []
 
     def test_single_system_single_star(self):
@@ -173,7 +173,7 @@ class TestFacadeGetAllStars:
         system.planets = [MagicMock()]
 
         facade = self._make_facade_with_systems({"Solar": system})
-        stars = facade.get_all_stars()
+        stars = facade.systems.all_stars()
 
         assert len(stars) == 1
         info = stars[0]
@@ -191,7 +191,7 @@ class TestFacadeGetAllStars:
         system = StarSystem("Alpha", HexCoord(5, 5), stars=[star_a, star_b])
 
         facade = self._make_facade_with_systems({"Alpha": system})
-        stars = facade.get_all_stars()
+        stars = facade.systems.all_stars()
 
         assert len(stars) == 2
         assert all(s.companion_star_count == 1 for s in stars)
@@ -208,7 +208,7 @@ class TestFacadeGetAllStars:
         ])
 
         facade = self._make_facade_with_systems({"Sys1": s1, "Sys2": s2})
-        stars = facade.get_all_stars()
+        stars = facade.systems.all_stars()
 
         assert len(stars) == 3
         names = {s.name for s in stars}

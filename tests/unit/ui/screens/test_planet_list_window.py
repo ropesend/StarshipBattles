@@ -54,7 +54,7 @@ def _make_planet_list_window():
     # PROJ-292 H1: facade provides `get_colony_demographic_view(planet.id)`
     # for colonized planets. Wired through the controller per PROJ-329C.
     window._facade = MagicMock()
-    window._facade.get_colony_demographic_view = MagicMock(return_value=None)
+    window._facade.economy.colony_demographic_view = MagicMock(return_value=None)
     window.controller = PlanetListController(facade=window._facade)
     # Empire reference used by the detail panel.
     window.empire = MagicMock()
@@ -69,16 +69,16 @@ def _make_planet_list_window():
 
 class TestViewThreading:
     """Every colonized-context caller of `PlanetReportPanel` must resolve
-    the `ColonyDemographicView` via `facade.get_colony_demographic_view`
+    the `ColonyDemographicView` via `facade.economy.colony_demographic_view`
     and thread it through. Mirrors `strategy_detail_formatter._show_planet_report`."""
 
     def test_colonized_planet_threads_view_into_panel(self):
         """When `planet.owner_id is not None`, the window must call
-        `facade.get_colony_demographic_view(planet.id)` and pass the
+        `facade.economy.colony_demographic_view(planet.id)` and pass the
         result as `view=` to `PlanetReportPanel`."""
         window = _make_planet_list_window()
         stub_view = MagicMock(name="ColonyDemographicView")
-        window._facade.get_colony_demographic_view.return_value = stub_view
+        window._facade.economy.colony_demographic_view.return_value = stub_view
 
         planet = _make_planet_mock(planet_id=42, owner_id=1)
 
@@ -98,7 +98,7 @@ class TestViewThreading:
         assert kwargs.get("view") is stub_view, (
             f"Expected view=stub_view; got view={kwargs.get('view')!r}"
         )
-        window._facade.get_colony_demographic_view.assert_called_once_with(42)
+        window._facade.economy.colony_demographic_view.assert_called_once_with(42)
 
     def test_uncolonized_planet_passes_view_none(self):
         """Uncolonized planets (`owner_id is None`) must NOT invoke the
@@ -123,7 +123,7 @@ class TestViewThreading:
         assert kwargs.get("view") is None, (
             f"Expected view=None for uncolonized planet; got view={kwargs.get('view')!r}"
         )
-        window._facade.get_colony_demographic_view.assert_not_called()
+        window._facade.economy.colony_demographic_view.assert_not_called()
 
     def test_no_facade_falls_back_to_view_none(self):
         """When the window was constructed without a facade (legacy

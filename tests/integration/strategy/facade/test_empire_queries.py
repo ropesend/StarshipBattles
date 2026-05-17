@@ -34,7 +34,7 @@ class TestGetAllEmpires:
         mock_session.empires = [mock_empire1, mock_empire2]
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_all_empires()
+        result = facade.empires.all()
 
         assert len(result) == 2
         assert all(isinstance(e, EmpireInfo) for e in result)
@@ -50,7 +50,7 @@ class TestGetAllEmpires:
         mock_session.empires = []
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_all_empires()
+        result = facade.empires.all()
 
         assert result == []
 
@@ -76,7 +76,7 @@ class TestGetEmpire:
         mock_session.empires = [mock_empire]
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_empire(0)
+        result = facade.empires.get(0)
 
         assert result is not None
         assert isinstance(result, EmpireInfo)
@@ -93,7 +93,7 @@ class TestGetEmpire:
         mock_session.empires = []
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_empire(9999)
+        result = facade.empires.get(9999)
 
         assert result is None
 
@@ -124,7 +124,7 @@ class TestGetEmpireColonies:
         mock_session.empires = [mock_empire]
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_empire_colonies(0)
+        result = facade.empires.colonies(0)
 
         assert len(result) == 2
         assert all(isinstance(c, ColonySummary) for c in result)
@@ -147,7 +147,7 @@ class TestGetEmpireColonies:
         mock_session.empires = []
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_empire_colonies(9999)
+        result = facade.empires.colonies(9999)
 
         assert result == []
 
@@ -163,7 +163,7 @@ class TestGetEmpireColonies:
         mock_session.empires = [mock_empire]
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_empire_colonies(0)
+        result = facade.empires.colonies(0)
 
         assert result == []
 
@@ -179,7 +179,7 @@ class TestGetHumanPlayerIds:
         mock_session.human_player_ids = [0, 2]
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_human_player_ids()
+        result = facade.session_meta.human_player_ids()
 
         assert result == [0, 2]
         # Ensure it's a new list (defensive copy)
@@ -193,7 +193,7 @@ class TestGetHumanPlayerIds:
         mock_session.human_player_ids = []
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_human_player_ids()
+        result = facade.session_meta.human_player_ids()
 
         assert result == []
 
@@ -209,7 +209,7 @@ class TestGetTurnNumber:
         mock_session.turn_number = 5
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_turn_number()
+        result = facade.session_meta.turn_number()
 
         assert result == 5
 
@@ -221,6 +221,6 @@ class TestGetTurnNumber:
         mock_session.turn_number = 1
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_turn_number()
+        result = facade.session_meta.turn_number()
 
         assert result == 1

@@ -1,7 +1,7 @@
 """PROJ-411 Task 1.9: EventLogWindow holds a reference to the events list,
 not a defensive copy.
 
-``facade.get_all_events()`` returns a freshly-built list per call
+``facade.events.all()`` returns a freshly-built list per call
 (``[e.to_dict() for e in events]``), so the window does not need its
 own redundant ``list(events)`` copy. The data source still does its
 own defensive copy at construction time — that's a separate boundary.
@@ -30,5 +30,5 @@ def test_window_holds_reference_to_events_list_not_copy() -> None:
     assert window.all_events is events_input, (
         "PROJ-411 Task 1.9: EventLogWindow should hold a reference to the "
         "events list, not a redundant defensive copy. Source "
-        "(facade.get_all_events) already returns a fresh per-call list."
+        "(facade.events.all) already returns a fresh per-call list."
     )

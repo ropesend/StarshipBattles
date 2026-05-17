@@ -14,7 +14,9 @@ def _composer() -> SimpleNamespace:
             empires=[MagicMock(name="empire_1")],
             registries=MagicMock(name="registries"),
         ),
-        facade=SimpleNamespace(get_race_registry=MagicMock(return_value=None)),
+        facade=SimpleNamespace(
+            economy=SimpleNamespace(race_registry=MagicMock(return_value=None)),
+        ),
         _camera_nav=MagicMock(name="camera_nav"),
     )
     return SimpleNamespace(
@@ -115,7 +117,7 @@ def test_star_list_navigate_kills_window_and_centers_camera() -> None:
 def test_planet_list_open_threads_detail_dependencies() -> None:
     composer = _composer()
     race_registry = MagicMock(name="race_registry")
-    composer.scene.facade.get_race_registry.return_value = race_registry
+    composer.scene.facade.economy.race_registry.return_value = race_registry
     registrar = list_windows.PlanetListRegistrar(composer)
 
     with patch.object(list_windows, "PlanetListWindow") as window_cls:

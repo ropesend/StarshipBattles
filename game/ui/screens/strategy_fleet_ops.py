@@ -80,9 +80,9 @@ class FleetOperations:
             FleetInfo DTO or None if no fleet at location
 
         Note:
-            PROJ-208: Uses facade.get_fleets_at_hex() instead of raw domain iteration.
+            PROJ-208: Uses facade.fleets.at_hex() instead of raw domain iteration.
         """
-        fleets = self.facade.get_fleets_at_hex(hex_coord)
+        fleets = self.facade.fleets.at_hex(hex_coord)
         return fleets[0] if fleets else None
 
     def handle_move_designation(self, mx, my, selected_fleet) -> Any:
@@ -134,7 +134,7 @@ class FleetOperations:
         Returns:
             dict with result type and details
         """
-        preview_path = self.facade.get_fleet_path_preview(fleet.id, target_hex)
+        preview_path = self.facade.fleets.path_preview(fleet.id, target_hex)
 
         if preview_path:
             cmd = IssueMoveCommand(fleet.id, target_hex)
@@ -189,7 +189,7 @@ class FleetOperations:
 
         target_hex = self.camera.hex_at_screen(mx, my, self.hex_size)
 
-        all_fleets = self.facade.get_fleets_at_hex(target_hex)
+        all_fleets = self.facade.fleets.at_hex(target_hex)
 
         # Filter to valid join targets: same owner, not self
         valid_targets = [

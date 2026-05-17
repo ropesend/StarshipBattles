@@ -132,7 +132,7 @@ class TestGetAllSystems:
         })
 
         facade = StrategySessionFacade(_mock_session(galaxy))
-        result = facade.get_all_systems()
+        result = facade.systems.all()
 
         assert len(result) == 2
         assert all(isinstance(s, SystemInfo) for s in result)
@@ -147,7 +147,7 @@ class TestGetAllSystems:
         galaxy = _mock_galaxy_with_systems({})
         facade = StrategySessionFacade(_mock_session(galaxy))
 
-        assert facade.get_all_systems() == []
+        assert facade.systems.all() == []
 
 
 class TestGetSystemAtHex:
@@ -164,7 +164,7 @@ class TestGetSystemAtHex:
         galaxy = _mock_galaxy_with_systems({target_hex: system})
         facade = StrategySessionFacade(_mock_session(galaxy))
 
-        result = facade.get_system_at_hex(target_hex)
+        result = facade.systems.at_hex(target_hex)
 
         assert result is not None
         assert isinstance(result, SystemInfo)
@@ -178,7 +178,7 @@ class TestGetSystemAtHex:
         galaxy = _mock_galaxy_with_systems({})
         facade = StrategySessionFacade(_mock_session(galaxy))
 
-        assert facade.get_system_at_hex(HexCoord(99, 99)) is None
+        assert facade.systems.at_hex(HexCoord(99, 99)) is None
 
 
 class TestGetPlanet:
@@ -199,7 +199,7 @@ class TestGetPlanet:
         galaxy = _mock_galaxy_with_systems({HexCoord(0, 0): system})
 
         facade = StrategySessionFacade(_mock_session(galaxy))
-        result = facade.get_planet(42)
+        result = facade.planets.get(42)
 
         assert result is not None
         assert isinstance(result, PlanetInfo)
@@ -216,7 +216,7 @@ class TestGetPlanet:
         galaxy = _mock_galaxy_with_systems({HexCoord(0, 0): system})
 
         facade = StrategySessionFacade(_mock_session(galaxy))
-        assert facade.get_planet(9999) is None
+        assert facade.planets.get(9999) is None
 
     def test_get_planet_searches_all_systems(self):
         """get_planet searches planets across all systems."""
@@ -236,7 +236,7 @@ class TestGetPlanet:
         })
 
         facade = StrategySessionFacade(_mock_session(galaxy))
-        result = facade.get_planet(55)
+        result = facade.planets.get(55)
 
         assert result is not None
         assert result.planet_id == 55
@@ -266,7 +266,7 @@ class TestGetPlanetsAtHex:
         galaxy = _mock_galaxy_with_systems({system_hex: system})
 
         facade = StrategySessionFacade(_mock_session(galaxy))
-        result = facade.get_planets_at_hex(target_hex)
+        result = facade.planets.at_hex(target_hex)
 
         assert len(result) == 2
         assert all(isinstance(p, PlanetInfo) for p in result)
@@ -286,7 +286,7 @@ class TestGetPlanetsAtHex:
         galaxy = _mock_galaxy_with_systems({system_hex: system})
 
         facade = StrategySessionFacade(_mock_session(galaxy))
-        result = facade.get_planets_at_hex(system_hex)
+        result = facade.planets.at_hex(system_hex)
 
         assert result == []
 
@@ -297,7 +297,7 @@ class TestGetPlanetsAtHex:
         galaxy = _mock_galaxy_with_systems({})
         facade = StrategySessionFacade(_mock_session(galaxy))
 
-        assert facade.get_planets_at_hex(HexCoord(99, 99)) == []
+        assert facade.planets.at_hex(HexCoord(99, 99)) == []
 
     def test_get_planets_at_hex_returns_empty_for_system_without_planets(self):
         """get_planets_at_hex returns empty list for system without planets."""
@@ -308,4 +308,4 @@ class TestGetPlanetsAtHex:
         galaxy = _mock_galaxy_with_systems({system_hex: system})
 
         facade = StrategySessionFacade(_mock_session(galaxy))
-        assert facade.get_planets_at_hex(system_hex) == []
+        assert facade.planets.at_hex(system_hex) == []

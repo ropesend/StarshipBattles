@@ -24,7 +24,9 @@ def _composer(*, facade: object | None = None) -> SimpleNamespace:
 
 def test_empire_panel_open_passes_registries_and_race_registry() -> None:
     race_registry = MagicMock(name="race_registry")
-    facade = SimpleNamespace(get_race_registry=MagicMock(return_value=race_registry))
+    facade = SimpleNamespace(
+        economy=SimpleNamespace(race_registry=MagicMock(return_value=race_registry)),
+    )
     composer = _composer(facade=facade)
     registrar = empire_panel_ctrl.EmpirePanelRegistrar(composer)
 

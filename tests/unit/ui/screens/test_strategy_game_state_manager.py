@@ -91,7 +91,7 @@ class TestAdvanceTurn:
         manager, screen = _make_game_state_manager()
         screen.current_player_index = 0
         screen.human_player_ids = [0]
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
 
         with patch('pygame.display.get_surface', return_value=None):
             manager.advance_turn()
@@ -126,7 +126,7 @@ class TestProcessFullTurnLegacy:
     def test_sets_turn_processing_flag(self):
         """process_full_turn() should set turn_processing during processing."""
         manager, screen = _make_game_state_manager()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
 
         # Track the flag value during processing
         processing_values = []
@@ -147,7 +147,7 @@ class TestProcessFullTurnLegacy:
     def test_calls_facade_process_turn(self):
         """process_full_turn() should call facade.process_turn()."""
         manager, screen = _make_game_state_manager()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
 
         with patch('pygame.display.get_surface', return_value=None):
             manager.process_full_turn()
@@ -165,12 +165,12 @@ class TestProcessFullTurnLegacy:
         """
         manager, screen = _make_game_state_manager()
         mock_events = [MagicMock()]
-        screen._facade.get_turn_events.return_value = mock_events
+        screen._facade.events.turn_events.return_value = mock_events
 
         with patch('pygame.display.get_surface', return_value=None):
             result = manager.process_full_turn()
 
-        screen._facade.get_turn_events.assert_called()
+        screen._facade.events.turn_events.assert_called()
         assert result == mock_events
 
     def test_does_not_open_event_log_directly(self):
@@ -181,7 +181,7 @@ class TestProcessFullTurnLegacy:
         opening it again would double-fire on the rollover branch.
         """
         manager, screen = _make_game_state_manager()
-        screen._facade.get_turn_events.return_value = [MagicMock()]
+        screen._facade.events.turn_events.return_value = [MagicMock()]
 
         with patch('pygame.display.get_surface', return_value=None):
             manager.process_full_turn()
@@ -192,7 +192,7 @@ class TestProcessFullTurnLegacy:
         """process_full_turn() should auto-save when session has save_path."""
         manager, screen = _make_game_state_manager()
         screen.session.save_path = "/test/save.json"
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
 
         with patch('pygame.display.get_surface', return_value=None), \
              patch('game.strategy.systems.save_game_service.SaveGameService') as MockSGS:
@@ -211,7 +211,7 @@ class TestProcessFullTurnLegacy:
         on top of the home colony reseat.
         """
         manager, screen = _make_game_state_manager()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         screen.selected_object = MagicMock()
 
         with patch('pygame.display.get_surface', return_value=None):
@@ -237,8 +237,8 @@ class TestProcessFullTurnErrorBoundary:
         from game.core.exceptions import TurnFailedError
 
         manager, screen = _make_game_state_manager()
-        screen._facade.get_save_path.return_value = "/tmp/save.json"
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.session_meta.save_path.return_value = "/tmp/save.json"
+        screen._facade.events.turn_events.return_value = []
         # Pre-set tick state so we can verify ``finally`` clears it.
         screen.current_tick = 42
         screen.total_ticks = 100
@@ -276,7 +276,7 @@ class TestProcessFullTurnErrorBoundary:
         from game.core.exceptions import EnginePhaseError
 
         manager, screen = _make_game_state_manager()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
 
         engine_err = EnginePhaseError(
             "raw bypass",
@@ -332,7 +332,7 @@ class TestApplyTurnStartState:
         screen.selected_fleet = MagicMock()
         screen.selected_object = MagicMock()
         screen.last_selected_system = MagicMock()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         empire = screen.empires[1]
 
         manager._apply_turn_start_state(empire)
@@ -344,7 +344,7 @@ class TestApplyTurnStartState:
     def test_centres_camera_on_home_colony(self):
         """Helper centres the camera on ``empire.colonies[0]``."""
         manager, screen = _make_game_state_manager()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         empire = screen.empires[1]
 
         manager._apply_turn_start_state(empire)
@@ -359,7 +359,7 @@ class TestApplyTurnStartState:
         ``last_selected_system`` derivation) stay consistent with manual
         clicks."""
         manager, screen = _make_game_state_manager()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         empire = screen.empires[1]
 
         manager._apply_turn_start_state(empire)
@@ -381,13 +381,13 @@ class TestApplyTurnStartState:
         """
         manager, screen = _make_game_state_manager()
         mock_events = [MagicMock()]
-        screen._facade.get_turn_events.return_value = mock_events
-        screen._facade.get_turn_number.return_value = 8
+        screen._facade.events.turn_events.return_value = mock_events
+        screen._facade.session_meta.turn_number.return_value = 8
         empire = screen.empires[1]
 
         manager._apply_turn_start_state(empire)
 
-        screen._facade.get_turn_events.assert_called_once_with(
+        screen._facade.events.turn_events.assert_called_once_with(
             turn=7, empire_id=empire.id
         )
         screen.ui.open_event_log_with_events.assert_called_once_with(
@@ -397,7 +397,7 @@ class TestApplyTurnStartState:
     def test_no_event_log_when_no_events(self):
         """Empty turn_events suppresses the popup."""
         manager, screen = _make_game_state_manager()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         empire = screen.empires[1]
 
         manager._apply_turn_start_state(empire)
@@ -418,7 +418,7 @@ class TestApplyTurnStartState:
         # Case A: incoming player has events.
         manager, screen = _make_game_state_manager()
         events = [MagicMock()]
-        screen._facade.get_turn_events.return_value = events
+        screen._facade.events.turn_events.return_value = events
         empire = screen.empires[1]
 
         manager._apply_turn_start_state(empire)
@@ -434,7 +434,7 @@ class TestApplyTurnStartState:
         # cached visible window from the previous player is refreshed to
         # empty + hidden); auto-open does not.
         manager, screen = _make_game_state_manager()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         empire = screen.empires[1]
 
         manager._apply_turn_start_state(empire)
@@ -449,7 +449,7 @@ class TestApplyTurnStartState:
         ``run_n_turns`` can surface a single combined log at the end
         instead of one modal per turn."""
         manager, screen = _make_game_state_manager()
-        screen._facade.get_turn_events.return_value = [MagicMock()]
+        screen._facade.events.turn_events.return_value = [MagicMock()]
         manager._suppress_event_log = True
         empire = screen.empires[1]
 
@@ -463,7 +463,7 @@ class TestApplyTurnStartState:
         touched; event-log popup also short-circuits (no home to
         anchor)."""
         manager, screen = _make_game_state_manager()
-        screen._facade.get_turn_events.return_value = [MagicMock()]
+        screen._facade.events.turn_events.return_value = [MagicMock()]
         empire = screen.empires[1]
         empire.colonies = []
 
@@ -479,7 +479,7 @@ class TestApplyTurnStartState:
 
         ``GameSession.process_turn`` increments ``turn_number`` after
         running, so events filed at turn N live in the log while
-        ``facade.get_turn_number()`` returns N+1. A live facade-shaped
+        ``facade.session_meta.turn_number()`` returns N+1. A live facade-shaped
         fake that maps ``get_turn_events(turn, ...)`` -> only events
         with matching turn proves the helper looks up the *just-completed*
         turn (N), not the upcoming turn (N+1).
@@ -493,8 +493,8 @@ class TestApplyTurnStartState:
         events_by_turn = {3: turn_n_events}
 
         # Post-process: session.turn_number is now N+1 = 4.
-        screen._facade.get_turn_number.return_value = 4
-        screen._facade.get_turn_events.side_effect = (
+        screen._facade.session_meta.turn_number.return_value = 4
+        screen._facade.events.turn_events.side_effect = (
             lambda turn, *, empire_id: list(events_by_turn.get(turn, []))
         )
 
@@ -557,7 +557,7 @@ class TestAdvanceTurnPerPlayerSwitch:
         screen.selected_fleet = MagicMock()
         screen.selected_object = MagicMock()
         screen.last_selected_system = MagicMock()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
 
         manager.advance_turn()
 
@@ -571,7 +571,7 @@ class TestAdvanceTurnPerPlayerSwitch:
         manager, screen = _make_game_state_manager()
         screen.current_player_index = 0
         screen.human_player_ids = [0, 1]
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
 
         manager.advance_turn()
 
@@ -588,13 +588,13 @@ class TestAdvanceTurnPerPlayerSwitch:
         screen.current_player_index = 0
         screen.human_player_ids = [0, 1]
         mock_events = [MagicMock()]
-        screen._facade.get_turn_events.return_value = mock_events
-        screen._facade.get_turn_number.return_value = 5
+        screen._facade.events.turn_events.return_value = mock_events
+        screen._facade.session_meta.turn_number.return_value = 5
 
         manager.advance_turn()
 
         next_empire = screen.empires[1]
-        screen._facade.get_turn_events.assert_called_once_with(
+        screen._facade.events.turn_events.assert_called_once_with(
             turn=4, empire_id=next_empire.id
         )
         screen.ui.open_event_log_with_events.assert_called_once_with(
@@ -612,7 +612,7 @@ class TestAdvanceTurnRolloverBranch:
         manager, screen = _make_game_state_manager()
         screen.current_player_index = 0
         screen.human_player_ids = [0]
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
 
         with patch.object(manager, "_apply_turn_start_state") as mock_helper, \
              patch("pygame.display.get_surface", return_value=None):
@@ -628,7 +628,7 @@ class TestAdvanceTurnRolloverBranch:
         manager, screen = _make_game_state_manager()
         screen.current_player_index = 0
         screen.human_player_ids = [0]
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         call_order = []
 
         def record_sync():
@@ -653,7 +653,7 @@ class TestAdvanceTurnRolloverBranch:
         screen.current_player_index = 0
         screen.human_player_ids = [0]
         mock_events = [MagicMock()]
-        screen._facade.get_turn_events.return_value = mock_events
+        screen._facade.events.turn_events.return_value = mock_events
 
         with patch("pygame.display.get_surface", return_value=None):
             manager.advance_turn()
@@ -673,7 +673,7 @@ class TestAdvanceTurnRolloverBranch:
         manager, screen = _make_game_state_manager()
         screen.current_player_index = 0
         screen.human_player_ids = [0]
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         screen._facade.process_turn.side_effect = TurnFailedError(
             message="phase boom",
             code="S101",
@@ -706,7 +706,7 @@ class TestRunNTurns:
     def test_calls_process_full_turn_n_times(self):
         """Calling run_n_turns(5) invokes process_full_turn 5 times."""
         manager, screen = _make_game_state_manager()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         screen.dev_run_cancel_requested = False
 
         with patch.object(manager, "process_full_turn") as mock_pft, \
@@ -726,7 +726,7 @@ class TestRunNTurns:
         """
         from itertools import count
         manager, screen = _make_game_state_manager()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         screen.dev_run_cancel_requested = False
 
         # Set the cancel flag after the second process_full_turn call so the
@@ -748,7 +748,7 @@ class TestRunNTurns:
     def test_returns_completed_count(self):
         """run_n_turns returns the number of turns actually completed."""
         manager, screen = _make_game_state_manager()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         screen.dev_run_cancel_requested = False
 
         with patch.object(manager, "process_full_turn"), \
@@ -761,7 +761,7 @@ class TestRunNTurns:
     def test_resets_cancel_flag_at_start(self):
         """A stale `dev_run_cancel_requested` flag should be cleared on entry."""
         manager, screen = _make_game_state_manager()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         # Pre-set: simulate a leftover flag from a prior aborted run.
         screen.dev_run_cancel_requested = True
 
@@ -781,7 +781,7 @@ class TestRunNTurns:
         e1 = [MagicMock(name="evt1")]
         e2 = [MagicMock(name="evt2"), MagicMock(name="evt3")]
         e3 = []
-        screen._facade.get_turn_events.side_effect = [e1, e2, e3]
+        screen._facade.events.turn_events.side_effect = [e1, e2, e3]
         screen.dev_run_cancel_requested = False
         # Reset the open-event-log mock since process_full_turn will be REAL here.
         screen.ui.open_event_log_with_events.reset_mock()
@@ -803,7 +803,7 @@ class TestRunNTurns:
     def test_no_combined_log_when_no_events(self):
         """If no turn produced events, no event log opens at the end."""
         manager, screen = _make_game_state_manager()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         screen.dev_run_cancel_requested = False
         screen.ui.open_event_log_with_events.reset_mock()
 
@@ -897,7 +897,7 @@ class TestAdvanceTurnRotationSkip:
     def test_3p_skips_defeated_middle_player(self):
         """3 players, P1 defeated mid-game: P0 → (skip P1) → P2 → rollover."""
         manager, screen, empires = _make_n_player_state_manager(3)
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         manager._defeated_player_ids = {1}
 
         # Currently at P0 (index 0). Advance — should land on P2 (index 2),
@@ -911,7 +911,7 @@ class TestAdvanceTurnRotationSkip:
         """3 players, P1 defeated, currently at P2 (last live): advance
         rolls over to P0 and processes the full turn."""
         manager, screen, empires = _make_n_player_state_manager(3)
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         manager._defeated_player_ids = {1}
         screen.current_player_index = 2
 
@@ -926,7 +926,7 @@ class TestAdvanceTurnRotationSkip:
         """2 players, P0 defeated. Repeated End Turn keeps advancing P1's
         turn without prompting P0 and without crashing."""
         manager, screen, empires = _make_n_player_state_manager(2)
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         manager._defeated_player_ids = {0}
         screen.current_player_index = 1
 
@@ -942,7 +942,7 @@ class TestAdvanceTurnRotationSkip:
         """2P, P1 (index 1) defeated. From P0, End Turn rolls over to P0
         with a full-turn processed."""
         manager, screen, empires = _make_n_player_state_manager(2)
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         manager._defeated_player_ids = {1}
         screen.current_player_index = 0
 
@@ -963,7 +963,7 @@ class TestApplyTurnStartStateDefeatDetection:
         """First turn-start after an empire is eliminated: ``_show_defeat_dialog``
         is called and the empire id is added to ``_defeated_player_ids``."""
         manager, screen, empires = _make_n_player_state_manager(2)
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         defeated = empires[1]
         _eliminate(defeated)
 
@@ -977,7 +977,7 @@ class TestApplyTurnStartStateDefeatDetection:
         """Subsequent turn-start calls for the same empire do NOT re-fire
         the modal — ``_defeated_player_ids`` membership gates it."""
         manager, screen, empires = _make_n_player_state_manager(2)
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         defeated = empires[1]
         _eliminate(defeated)
 
@@ -993,8 +993,8 @@ class TestApplyTurnStartStateDefeatDetection:
         must still happen for the just-completed turn."""
         manager, screen, empires = _make_n_player_state_manager(2)
         mock_events = [MagicMock(name="last_turn_event")]
-        screen._facade.get_turn_events.return_value = mock_events
-        screen._facade.get_turn_number.return_value = 7
+        screen._facade.events.turn_events.return_value = mock_events
+        screen._facade.session_meta.turn_number.return_value = 7
         defeated = empires[1]
         _eliminate(defeated)
 
@@ -1006,7 +1006,7 @@ class TestApplyTurnStartStateDefeatDetection:
         # by the issue #9 fix lives on the fix/issue-9 branch and is not
         # yet merged into main, so the helper uses the bare turn number
         # here.)
-        screen._facade.get_turn_events.assert_called_once_with(
+        screen._facade.events.turn_events.assert_called_once_with(
             turn=7, empire_id=defeated.id
         )
         screen.ui.open_event_log_with_events.assert_called_once_with(
@@ -1017,7 +1017,7 @@ class TestApplyTurnStartStateDefeatDetection:
         """A defeated empire has no colonies — ``center_camera_on`` and
         ``on_ui_selection`` must not be called."""
         manager, screen, empires = _make_n_player_state_manager(2)
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         defeated = empires[1]
         _eliminate(defeated)
 
@@ -1031,7 +1031,7 @@ class TestApplyTurnStartStateDefeatDetection:
         """Regression guard: live empires must NOT trigger the modal or
         the defeated-set bookkeeping."""
         manager, screen, empires = _make_n_player_state_manager(2)
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         live = empires[1]
 
         with patch.object(manager, "_show_defeat_dialog") as mock_modal:
@@ -1046,8 +1046,8 @@ class TestApplyTurnStartStateDefeatDetection:
         event log."""
         manager, screen, empires = _make_n_player_state_manager(2)
         mock_events = [MagicMock(name="evt")]
-        screen._facade.get_turn_events.return_value = mock_events
-        screen._facade.get_turn_number.return_value = 3
+        screen._facade.events.turn_events.return_value = mock_events
+        screen._facade.session_meta.turn_number.return_value = 3
         screen.selected_fleet = MagicMock()
         screen.selected_object = MagicMock()
         screen.last_selected_system = MagicMock()
@@ -1070,7 +1070,7 @@ class TestApplyTurnStartStateDefeatDetection:
         invoked, in that order, by a single ``_apply_turn_start_state``
         call on a newly defeated empire."""
         manager, screen, empires = _make_n_player_state_manager(2)
-        screen._facade.get_turn_events.return_value = [MagicMock()]
+        screen._facade.events.turn_events.return_value = [MagicMock()]
         defeated = empires[1]
         _eliminate(defeated)
 
@@ -1139,7 +1139,7 @@ class TestAdvanceTurnDefeatedSkipEndToEnd:
         """3P, P1 in defeated set. From P0, advance lands on P2 and the
         helper is invoked for P2, not P1."""
         manager, screen, empires = _make_n_player_state_manager(3)
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         manager._defeated_player_ids = {1}
         screen.current_player_index = 0
 
@@ -1275,8 +1275,8 @@ class TestApplyTurnStartStateRestoresIncomingState:
         screen.ui.window_manager.iter_snapshot_windows = MagicMock(
             return_value=[window]
         )
-        screen._facade.get_turn_events.return_value = []
-        screen._facade.get_turn_number.return_value = 5
+        screen._facade.events.turn_events.return_value = []
+        screen._facade.session_meta.turn_number.return_value = 5
 
         with patch.object(manager, "_show_defeat_dialog"):
             manager._apply_turn_start_state(empire)
@@ -1295,8 +1295,8 @@ class TestApplyTurnStartStateRestoresIncomingState:
         screen.ui.window_manager.iter_snapshot_windows = MagicMock(
             return_value=[window]
         )
-        screen._facade.get_turn_events.return_value = []
-        screen._facade.get_turn_number.return_value = 5
+        screen._facade.events.turn_events.return_value = []
+        screen._facade.session_meta.turn_number.return_value = 5
 
         manager._apply_turn_start_state(empire)
 
@@ -1312,8 +1312,8 @@ class TestApplyTurnStartStateRestoresIncomingState:
         screen.ui.window_manager.iter_snapshot_windows = MagicMock(
             return_value=[dead]
         )
-        screen._facade.get_turn_events.return_value = []
-        screen._facade.get_turn_number.return_value = 5
+        screen._facade.events.turn_events.return_value = []
+        screen._facade.session_meta.turn_number.return_value = 5
 
         manager._apply_turn_start_state(empire)
 
@@ -1329,8 +1329,8 @@ class TestApplyTurnStartStateRestoresIncomingState:
         screen.ui.manager = MagicMock()
         screen.ui.width = 1920
         screen.ui.height = 1080
-        screen._facade.get_turn_events.return_value = []
-        screen._facade.get_turn_number.return_value = 5
+        screen._facade.events.turn_events.return_value = []
+        screen._facade.session_meta.turn_number.return_value = 5
 
         # Must not raise.
         manager._apply_turn_start_state(empire)
@@ -1343,8 +1343,8 @@ class TestPerPlayerStateHotSeatRoundTrip:
 
     def test_hot_seat_two_player_round_trip(self):
         manager, screen, empires = _make_n_player_state_manager(2)
-        screen._facade.get_turn_events.return_value = []
-        screen._facade.get_turn_number.return_value = 5
+        screen._facade.events.turn_events.return_value = []
+        screen._facade.session_meta.turn_number.return_value = 5
 
         # Each empire's window starts with empire-specific state.
         captures = {0: {"view": "p0_view"}, 1: {"view": "p1_view"}}
@@ -1396,8 +1396,8 @@ class TestDefeatedPlayerSnapshotPreserved:
 
     def test_defeated_empires_snapshot_is_not_cleared(self):
         manager, screen, empires = _make_n_player_state_manager(3)
-        screen._facade.get_turn_events.return_value = []
-        screen._facade.get_turn_number.return_value = 5
+        screen._facade.events.turn_events.return_value = []
+        screen._facade.session_meta.turn_number.return_value = 5
 
         # Pre-seed P1's snapshot, then eliminate them.
         manager._per_player_ui_state.save(1, "planet_list", {"v": "p1"})

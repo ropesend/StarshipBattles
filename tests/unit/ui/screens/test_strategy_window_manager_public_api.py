@@ -125,7 +125,7 @@ def mock_scene():
     scene.current_empire = Mock()
     scene.galaxy = Mock()
     scene.facade = Mock()
-    scene.facade.get_all_events = Mock(return_value=[])
+    scene.facade.events.all = Mock(return_value=[])
     scene.session = Mock()
     scene.session.empires = []
     scene.session.registries = Mock()

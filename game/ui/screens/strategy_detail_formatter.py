@@ -260,7 +260,7 @@ class StrategyDetailFormatter:
         if obj.owner_id is not None:
             facade = getattr(self.scene, "facade", None)
             if facade is not None:
-                view = facade.get_colony_demographic_view(obj.id)
+                view = facade.economy.colony_demographic_view(obj.id)
         self.planet_report_panel = PlanetReportPanel(
             manager=self.manager,
             rect=pygame.Rect(10, 10, 580, panel_max_height),

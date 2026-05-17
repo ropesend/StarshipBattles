@@ -44,7 +44,7 @@ class EventLogRegistrar:
         """
         c = self._composer
         empire = c.scene.current_empire
-        events = c.scene.facade.get_all_events(empire_id=empire.id)
+        events = c.scene.facade.events.all(empire_id=empire.id)
         self._open_with(events, empire_name=getattr(empire, "name", None))
 
     def open_with_events(

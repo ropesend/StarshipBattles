@@ -271,11 +271,11 @@ class TestFacadeThreading:
 
     def test_update_fetches_demographic_view_for_colonized_planet(self):
         """When the selection changes to a colonized planet, ``update()``
-        calls ``facade.get_colony_demographic_view(planet.id)`` and
+        calls ``facade.economy.colony_demographic_view(planet.id)`` and
         threads the result into ``PlanetReportPanel(..., view=...)``."""
         sentinel_view = MagicMock(name="ColonyDemographicView")
         facade = MagicMock(name="StrategySessionFacade")
-        facade.get_colony_demographic_view = MagicMock(return_value=sentinel_view)
+        facade.economy.colony_demographic_view = MagicMock(return_value=sentinel_view)
 
         earth = self._colonized_planet("Earth", planet_id=7)
         window = _make_window([earth], facade=facade)
@@ -292,7 +292,7 @@ class TestFacadeThreading:
             window.update(0.016)
 
         # PROJ-397 contract: facade is consulted with the planet id.
-        facade.get_colony_demographic_view.assert_called_once_with(7)
+        facade.economy.colony_demographic_view.assert_called_once_with(7)
 
         # The fetched view is threaded into the report panel — proves
         # the result actually flows through the production path,
@@ -306,7 +306,7 @@ class TestFacadeThreading:
         """Uncolonized planets short-circuit before the facade is
         consulted (production comment at line 213-214)."""
         facade = MagicMock(name="StrategySessionFacade")
-        facade.get_colony_demographic_view = MagicMock()
+        facade.economy.colony_demographic_view = MagicMock()
 
         mars = self._uncolonized_planet("Mars", planet_id=11)
         window = _make_window([mars], facade=facade)
@@ -319,7 +319,7 @@ class TestFacadeThreading:
         ), patch("pygame_gui.elements.UIWindow.update", return_value=None):
             window.update(0.016)
 
-        facade.get_colony_demographic_view.assert_not_called()
+        facade.economy.colony_demographic_view.assert_not_called()
         # Panel still created, but with view=None.
         assert mock_panel_cls.call_count == 1
         _, panel_kwargs = mock_panel_cls.call_args

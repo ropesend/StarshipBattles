@@ -129,7 +129,7 @@ class PlanetSelectionWindow(StrategyModalWindow):
                 Task 3.2: when provided, the per-planet
                 ``PlanetReportPanel`` fetches a fresh
                 ``ColonyDemographicView`` via
-                ``facade.get_colony_demographic_view(planet.id)`` so
+                ``facade.economy.colony_demographic_view(planet.id)`` so
                 colonized rows render the indented per-species
                 sub-block (PROJ-289 layout). When ``None`` (e.g. legacy
                 test fixtures), the panel falls back to ``view=None``
@@ -219,7 +219,7 @@ class PlanetSelectionWindow(StrategyModalWindow):
                     # is consulted, so only the colonized branch needs it.
                     view = None
                     if self._facade is not None and planet.owner_id is not None:
-                        view = self._facade.get_colony_demographic_view(planet.id)
+                        view = self._facade.economy.colony_demographic_view(planet.id)
 
                     self.planet_detail_panel = PlanetReportPanel(
                         manager=self.ui_manager,

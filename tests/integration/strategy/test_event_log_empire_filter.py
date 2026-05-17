@@ -56,7 +56,7 @@ class TestEventLogEmpireFilter:
         facade = StrategySessionFacade(session)
         _seed_two_empire_events(session)
 
-        events = facade.get_all_events(empire_id=0)
+        events = facade.events.all(empire_id=0)
         messages = {e["message"] for e in events}
 
         # Owns: Chimera empire's two events + the global broadcast.
@@ -72,7 +72,7 @@ class TestEventLogEmpireFilter:
         facade = StrategySessionFacade(session)
         _seed_two_empire_events(session)
 
-        events = facade.get_all_events(empire_id=1)
+        events = facade.events.all(empire_id=1)
         messages = {e["message"] for e in events}
 
         assert "Built Frigate at Lahore" in messages
@@ -87,8 +87,8 @@ class TestEventLogEmpireFilter:
         facade = StrategySessionFacade(session)
         _seed_two_empire_events(session)
 
-        msgs_0 = {e["message"] for e in facade.get_all_events(empire_id=0)}
-        msgs_1 = {e["message"] for e in facade.get_all_events(empire_id=1)}
+        msgs_0 = {e["message"] for e in facade.events.all(empire_id=0)}
+        msgs_1 = {e["message"] for e in facade.events.all(empire_id=1)}
         assert "A star has been destroyed" in msgs_0
         assert "A star has been destroyed" in msgs_1
 
@@ -98,8 +98,8 @@ class TestEventLogEmpireFilter:
         facade = StrategySessionFacade(session)
         _seed_two_empire_events(session)
 
-        unscoped = facade.get_all_events()
-        scoped = facade.get_all_events(empire_id=0)
+        unscoped = facade.events.all()
+        scoped = facade.events.all(empire_id=0)
         assert len(scoped) < len(unscoped)
         assert len(scoped) == 3   # 2 own + 1 global
         assert len(unscoped) == 5  # 2 + 2 + 1
@@ -111,8 +111,8 @@ class TestEventLogEmpireFilter:
         _seed_two_empire_events(session)
 
         turn = session.turn_number
-        e0 = facade.get_turn_events(turn=turn, empire_id=0)
-        e1 = facade.get_turn_events(turn=turn, empire_id=1)
+        e0 = facade.events.turn_events(turn=turn, empire_id=0)
+        e1 = facade.events.turn_events(turn=turn, empire_id=1)
         assert len(e0) == 3   # 2 own + 1 global
         assert len(e1) == 3   # 2 own + 1 global
         assert {e["message"] for e in e0}.isdisjoint(
@@ -125,5 +125,5 @@ class TestEventLogEmpireFilter:
         facade = StrategySessionFacade(session)
         _seed_two_empire_events(session)
 
-        assert len(facade.get_all_events()) == 5
-        assert len(facade.get_turn_events()) == 5
+        assert len(facade.events.all()) == 5
+        assert len(facade.events.turn_events()) == 5

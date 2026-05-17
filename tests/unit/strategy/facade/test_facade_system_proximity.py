@@ -29,7 +29,7 @@ class TestFacadeSystemProximity:
         # Mocking Galaxy.get_system_at_location for strict check logic
         mock_session.galaxy.get_system_at_location.return_value = system
         
-        result = facade.get_system_containing_fleet(1)
+        result = facade.systems.containing_fleet(1)
         assert result is not None
         assert result.name == "System A"
 
@@ -52,7 +52,7 @@ class TestFacadeSystemProximity:
         # Setup galaxy systems for proximity scan
         mock_session.galaxy.systems = {HexCoord(10, 10): system}
         
-        result = facade.get_system_containing_fleet(1)
+        result = facade.systems.containing_fleet(1)
         assert result is not None
         assert result.name == "System B"
 
@@ -71,7 +71,7 @@ class TestFacadeSystemProximity:
         mock_session.galaxy.get_system_at_location.return_value = None
         mock_session.galaxy.systems = {HexCoord(10, 10): system}
         
-        result = facade.get_system_containing_fleet(1)
+        result = facade.systems.containing_fleet(1)
         assert result is None
 
     def test_get_system_near_hex(self, facade, mock_session):
@@ -90,10 +90,10 @@ class TestFacadeSystemProximity:
         mock_session.galaxy.systems = {HexCoord(10, 10): system}
         
         # Test near hit
-        result = facade.get_system_near_hex(HexCoord(13, 13))
+        result = facade.systems.near_hex(HexCoord(13, 13))
         assert result is not None
         assert result.name == "System C"
         
         # Test far miss
-        result = facade.get_system_near_hex(HexCoord(100, 100))
+        result = facade.systems.near_hex(HexCoord(100, 100))
         assert result is None

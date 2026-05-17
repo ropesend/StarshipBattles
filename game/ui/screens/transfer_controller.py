@@ -86,8 +86,8 @@ class TransferController:
         ``source_fleet`` is always included even if the facade
         doesn't list it at the hex.
         """
-        fleets = list(self.facade.get_fleets_at_hex(hex_coord))
-        planets = list(self.facade.get_planets_at_hex(hex_coord))
+        fleets = list(self.facade.fleets.at_hex(hex_coord))
+        planets = list(self.facade.planets.at_hex(hex_coord))
 
         # If no planets at primary hex, check fleet's projected
         # position (queued MOVE/WARP orders).
@@ -97,7 +97,7 @@ class TransferController:
             )
             projected = project_fleet_position(source_fleet)
             if projected != hex_coord:
-                planets = list(self.facade.get_planets_at_hex(projected))
+                planets = list(self.facade.planets.at_hex(projected))
 
         sources: List[dict] = []
 
@@ -180,8 +180,8 @@ class TransferController:
         if entry is None:
             return None
         if entry["type"] == "fleet":
-            return self.facade.get_fleet(entry["id"])
-        return self.facade.get_planet(entry["id"])
+            return self.facade.fleets.get(entry["id"])
+        return self.facade.planets.get(entry["id"])
 
     # ------------------------------------------------------------------
     # Command emission

@@ -17,16 +17,16 @@
 |-------|--------|-----------|
 | 1. Pin the target surface (red contract first) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Introduce grouped accessors | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Migrate UI callers (25 files) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Migrate UI callers (25 files) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate tests off legacy cache seams | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Delete the legacy surface (root-cause) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Documentation sync | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 complete — `grouped_namespaces.py` authored with 9 namespace dataclasses; `StrategySessionFacade` now exposes `commands`/`fleets`/`planets`/`systems`/`empires`/`events`/`session_meta`/`economy`/`validation` accessors. 35/43 contract assertions go green; the remaining 8 (legacy flat methods + 6 cache forwarders) stay red by design until Phase 5.
-**Next Action:** Phase 3 — mechanical UI caller migration across the 16 files inventoried in Phase 1.
+**Active Phase:** Phase 4
+**Last Action:** Phase 3 complete — UI callers (16 files), strategy service caller (`cargo_transfer_service.py`), and ~50 test files mechanically migrated to the grouped namespace surface. Two production sites (`empire_panel_ctrl.py`, `list_windows.py`) had `hasattr(facade, "get_race_registry")` guards switched to `hasattr(facade, "economy")`. Two SimpleNamespace test doubles (`test_list_windows.py`, `test_empire_panel_ctrl.py`) updated to expose `economy.race_registry`. `MockSession` helpers in 7 build-queue test files gained grouped namespace shims (`economy`, `session_meta` properties). UI + strategy suites green except for the 8 contract assertions intentionally red until Phase 5.
+**Next Action:** Phase 4 — add `seed_*` helpers on `FacadeSessionState` and migrate the 3 cache-forwarder-pinning test files.
 **Blockers:** None
 
 ## Overview

@@ -180,10 +180,10 @@ class TestMoveBlockingWhileBuilding:
         mock_scene.hex_size = 10
 
         mock_facade = MagicMock()
-        mock_facade.get_fleet_path_preview.return_value = [HexCoord(0, 0), HexCoord(1, 0)]
+        mock_facade.fleets.path_preview.return_value = [HexCoord(0, 0), HexCoord(1, 0)]
         mock_facade.handle_command.return_value = MagicMock(is_valid=True)
-        # PROJ-208: get_fleet_at_hex now uses facade.get_fleets_at_hex
-        mock_facade.get_fleets_at_hex.return_value = []  # No fleet at target
+        # PROJ-208: get_fleet_at_hex now uses facade.fleets.at_hex
+        mock_facade.fleets.at_hex.return_value = []  # No fleet at target
 
         fleet_ops = FleetOperations(mock_scene, mock_facade)
 

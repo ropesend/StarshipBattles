@@ -119,7 +119,7 @@ class TestStrategyTurnErrorBoundary:
     def test_baseline_success_does_not_open_error_dialog(self) -> None:
         """No error dialog when process_turn returns cleanly."""
         manager, screen = _make_state_manager_with_screen()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
 
         with patch("pygame.display.get_surface", return_value=None), \
              patch(
@@ -143,7 +143,7 @@ class TestStrategyTurnErrorBoundary:
         converter from raw ``EnginePhaseError``).
         """
         manager, screen = _make_state_manager_with_screen()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         err = TurnFailedError(
             "Phase 'harvesting' failed: simulated",
             code=ErrorCode.PHASE_FAILED.value,
@@ -200,7 +200,7 @@ class TestStrategyTurnErrorBoundary:
         widget construction.
         """
         manager, screen = _make_state_manager_with_screen()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         # PROJ-409 MAJ-014: facade converts EnginePhaseError → TurnFailedError;
         # the UI only sees the facade-wrapped form.
         err = TurnFailedError(
@@ -258,7 +258,7 @@ class TestStrategyTurnErrorBoundary:
         after the exception was caught — a stale-UI bug.
         """
         manager, screen = _make_state_manager_with_screen()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         screen.current_tick = 7
         screen.total_ticks = 100
         # PROJ-409 MAJ-014: facade converts EnginePhaseError → TurnFailedError;
@@ -285,7 +285,7 @@ class TestStrategyTurnErrorBoundary:
     def test_success_path_also_clears_per_tick_progress_overlay(self) -> None:
         """Sanity check: the existing finally behaviour for success is unaffected."""
         manager, screen = _make_state_manager_with_screen()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         screen.current_tick = 7
         screen.total_ticks = 100
 
@@ -307,7 +307,7 @@ class TestStrategyTurnErrorBoundary:
         non-strategy faults.
         """
         manager, screen = _make_state_manager_with_screen()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         screen._facade.process_turn.side_effect = RuntimeError("unexpected")
 
         with patch("pygame.display.get_surface", return_value=None):
@@ -321,7 +321,7 @@ class TestStrategyTurnErrorBoundary:
         from game.core.exceptions import TurnFailedError
 
         manager, screen = _make_state_manager_with_screen()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         err = TurnFailedError(
             "Phase 'production' failed",
             code=ErrorCode.PHASE_FAILED.value,
@@ -428,7 +428,7 @@ class TestRealTurnEngineFailureWiring:
         wrapped_err.__cause__ = real_err
 
         manager, screen = _make_state_manager_with_screen()
-        screen._facade.get_turn_events.return_value = []
+        screen._facade.events.turn_events.return_value = []
         screen._facade.process_turn.side_effect = wrapped_err
 
         with patch("pygame.display.get_surface", return_value=None), \

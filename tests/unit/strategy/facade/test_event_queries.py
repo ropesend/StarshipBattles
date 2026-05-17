@@ -72,7 +72,7 @@ class TestFacadeGetTurnEvents:
         ]
         facade = _make_facade_with_events(events, turn_number=2)
 
-        result = facade.get_turn_events(turn=1)
+        result = facade.events.turn_events(turn=1)
         assert len(result) == 2
         assert all(e["turn"] == 1 for e in result)
 
@@ -84,14 +84,14 @@ class TestFacadeGetTurnEvents:
         ]
         facade = _make_facade_with_events(events, turn_number=3)
 
-        result = facade.get_turn_events()
+        result = facade.events.turn_events()
         assert len(result) == 1
         assert result[0]["message"] == "Current"
 
     def test_returns_empty_list_for_turn_with_no_events(self):
         """get_turn_events() returns [] when no events exist for that turn."""
         facade = _make_facade_with_events([], turn_number=1)
-        assert facade.get_turn_events(turn=5) == []
+        assert facade.events.turn_events(turn=5) == []
 
     def test_returns_dicts_not_event_objects(self):
         """get_turn_events() returns list of dicts (immutable for UI)."""
@@ -100,7 +100,7 @@ class TestFacadeGetTurnEvents:
         ]
         facade = _make_facade_with_events(events, turn_number=1)
 
-        result = facade.get_turn_events(turn=1)
+        result = facade.events.turn_events(turn=1)
         assert len(result) == 1
         assert isinstance(result[0], dict)
         assert result[0]["event_type"] == EventType.SHIP_BUILT
@@ -119,13 +119,13 @@ class TestFacadeGetAllEvents:
         ]
         facade = _make_facade_with_events(events)
 
-        result = facade.get_all_events()
+        result = facade.events.all()
         assert len(result) == 3
 
     def test_returns_empty_list_when_no_events(self):
         """get_all_events() returns [] when log is empty."""
         facade = _make_facade_with_events([])
-        assert facade.get_all_events() == []
+        assert facade.events.all() == []
 
     def test_returns_dicts_not_event_objects(self):
         """get_all_events() returns list of dicts."""
@@ -134,7 +134,7 @@ class TestFacadeGetAllEvents:
         ]
         facade = _make_facade_with_events(events)
 
-        result = facade.get_all_events()
+        result = facade.events.all()
         assert isinstance(result[0], dict)
 
 
@@ -150,7 +150,7 @@ class TestFacadeGetEventsByCategory:
         ]
         facade = _make_facade_with_events(events)
 
-        result = facade.get_events_by_category(EventCategory.PRODUCTION)
+        result = facade.events.by_category(EventCategory.PRODUCTION)
         assert len(result) == 2
         assert all(e["category"] == EventCategory.PRODUCTION for e in result)
 
@@ -162,7 +162,7 @@ class TestFacadeGetEventsByCategory:
         ]
         facade = _make_facade_with_events(events)
 
-        result = facade.get_events_by_category(EventCategory.ALL)
+        result = facade.events.by_category(EventCategory.ALL)
         assert len(result) == 2
 
     def test_returns_empty_for_unmatched_category(self):
@@ -172,7 +172,7 @@ class TestFacadeGetEventsByCategory:
         ]
         facade = _make_facade_with_events(events)
 
-        result = facade.get_events_by_category(EventCategory.COMBAT)
+        result = facade.events.by_category(EventCategory.COMBAT)
         assert result == []
 
     def test_returns_dicts(self):
@@ -182,7 +182,7 @@ class TestFacadeGetEventsByCategory:
         ]
         facade = _make_facade_with_events(events)
 
-        result = facade.get_events_by_category(EventCategory.COMBAT)
+        result = facade.events.by_category(EventCategory.COMBAT)
         assert isinstance(result[0], dict)
 
     def test_accepts_string_category(self):
@@ -192,7 +192,7 @@ class TestFacadeGetEventsByCategory:
         ]
         facade = _make_facade_with_events(events)
 
-        result = facade.get_events_by_category("colonies")
+        result = facade.events.by_category("colonies")
         assert len(result) == 1
 
 
@@ -209,7 +209,7 @@ class TestFacadeEventQueriesEmpireScoping:
 
     def test_get_all_events_scopes_to_empire(self):
         facade = _make_facade_with_events(self._events_for_three_empires())
-        result = facade.get_all_events(empire_id=0)
+        result = facade.events.all(empire_id=0)
         messages = {e["message"] for e in result}
         assert messages == {"E0", "E0t2", "Global"}
         assert "E1" not in messages
@@ -217,18 +217,18 @@ class TestFacadeEventQueriesEmpireScoping:
     def test_get_all_events_unscoped_returns_everything(self):
         """Default (no empire_id) preserves prior behaviour."""
         facade = _make_facade_with_events(self._events_for_three_empires())
-        result = facade.get_all_events()
+        result = facade.events.all()
         assert len(result) == 4
 
     def test_get_turn_events_scopes_to_empire(self):
         facade = _make_facade_with_events(self._events_for_three_empires(), turn_number=1)
-        result = facade.get_turn_events(turn=1, empire_id=1)
+        result = facade.events.turn_events(turn=1, empire_id=1)
         messages = {e["message"] for e in result}
         assert messages == {"E1", "Global"}
 
     def test_get_events_by_category_scopes_to_empire(self):
         facade = _make_facade_with_events(self._events_for_three_empires())
-        result = facade.get_events_by_category(EventCategory.PRODUCTION, empire_id=0)
+        result = facade.events.by_category(EventCategory.PRODUCTION, empire_id=0)
         messages = {e["message"] for e in result}
         assert messages == {"E0", "E0t2"}  # Global is SUPERWEAPONS, not PRODUCTION
         assert "E1" not in messages
@@ -241,7 +241,7 @@ class TestFacadeEventQueryDispatch:
         event_log = _RecordingEventLog()
         facade = _make_facade_with_recording_event_log(event_log, turn_number=9)
 
-        result = facade.get_turn_events()
+        result = facade.events.turn_events()
 
         assert result == [{"marker": "turn"}]
         assert event_log.calls == [("get_events_for_turn", (9,), {})]
@@ -250,7 +250,7 @@ class TestFacadeEventQueryDispatch:
         event_log = _RecordingEventLog()
         facade = _make_facade_with_recording_event_log(event_log)
 
-        result = facade.get_turn_events(turn=3, empire_id=2)
+        result = facade.events.turn_events(turn=3, empire_id=2)
 
         assert result == [{"marker": "turn"}]
         assert event_log.calls == [
@@ -261,7 +261,7 @@ class TestFacadeEventQueryDispatch:
         event_log = _RecordingEventLog()
         facade = _make_facade_with_recording_event_log(event_log)
 
-        result = facade.get_all_events(empire_id=4)
+        result = facade.events.all(empire_id=4)
 
         assert result == [{"marker": "empire"}]
         assert event_log.calls == [("get_events_for_empire", (4,), {})]
@@ -270,7 +270,7 @@ class TestFacadeEventQueryDispatch:
         event_log = _RecordingEventLog()
         facade = _make_facade_with_recording_event_log(event_log)
 
-        result = facade.get_events_by_category(EventCategory.COMBAT)
+        result = facade.events.by_category(EventCategory.COMBAT)
 
         assert result == [{"marker": "category"}]
         assert event_log.calls == [
@@ -281,7 +281,7 @@ class TestFacadeEventQueryDispatch:
         event_log = _RecordingEventLog()
         facade = _make_facade_with_recording_event_log(event_log)
 
-        result = facade.get_events_by_category(EventCategory.PRODUCTION, empire_id=5)
+        result = facade.events.by_category(EventCategory.PRODUCTION, empire_id=5)
 
         assert result == [{"marker": "category"}]
         assert event_log.calls == [

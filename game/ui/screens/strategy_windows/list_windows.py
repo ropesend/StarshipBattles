@@ -46,8 +46,8 @@ class PlanetListRegistrar:
         # viewing empire's species.
         race_registry = None
         facade = getattr(c.scene, "facade", None)
-        if facade is not None and hasattr(facade, "get_race_registry"):
-            race_registry = facade.get_race_registry()
+        if facade is not None and hasattr(facade, "economy"):
+            race_registry = facade.economy.race_registry()
 
         # PROJ-411 Task 2.1: reuse the constructed window instance when
         # available. X-button close hides the window instead of killing

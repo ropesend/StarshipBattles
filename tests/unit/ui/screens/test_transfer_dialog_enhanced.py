@@ -36,11 +36,11 @@ class TestTransferDialogEnhanced:
         f2 = MagicMock(fleet_id=2, owner_id=0)
         f2.configure_mock(name="Fleet 2")
         f2.location = (0, 0)
-        mock_scene._facade.get_fleets_at_hex.return_value = [f1, f2]
-        mock_scene._facade.get_planets_at_hex.return_value = []
+        mock_scene._facade.fleets.at_hex.return_value = [f1, f2]
+        mock_scene._facade.planets.at_hex.return_value = []
         
         # Mock DTOs
-        mock_scene._facade.get_fleet.return_value = MagicMock(passengers_current=100)
+        mock_scene._facade.fleets.get.return_value = MagicMock(passengers_current=100)
         
         rect = pygame.Rect(0, 0, 600, 500)
         dialog = TransferDialog(rect, mock_manager, mock_fleet, (0, 0), mock_scene, window_manager=None)
@@ -57,14 +57,14 @@ class TestTransferDialogEnhanced:
         # Arrange
         f1 = MagicMock(fleet_id=1, owner_id=0)
         f2 = MagicMock(fleet_id=2, owner_id=0)
-        mock_scene._facade.get_fleets_at_hex.return_value = [f1, f2]
-        mock_scene._facade.get_planets_at_hex.return_value = []
+        mock_scene._facade.fleets.at_hex.return_value = [f1, f2]
+        mock_scene._facade.planets.at_hex.return_value = []
 
         mock_fleet_info = MagicMock(spec=FleetInfo)
         mock_fleet_info.passengers_current = 50
         mock_fleet_info.cargo_resources = ()
         mock_fleet_info.cargo_capacities = ()
-        mock_scene._facade.get_fleet.return_value = mock_fleet_info
+        mock_scene._facade.fleets.get.return_value = mock_fleet_info
         mock_scene._facade.handle_command.return_value = MagicMock(is_valid=True)
 
         rect = pygame.Rect(0, 0, 900, 700)

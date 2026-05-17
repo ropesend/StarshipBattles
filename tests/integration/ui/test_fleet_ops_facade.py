@@ -53,12 +53,12 @@ class TestExecuteMove:
     """Tests for execute_move using facade."""
 
     def test_execute_move_uses_facade_for_path_preview(self):
-        """execute_move calls facade.get_fleet_path_preview."""
+        """execute_move calls facade.fleets.path_preview."""
         from game.ui.screens.strategy_fleet_ops import FleetOperations
 
         mock_scene = Mock()
         mock_facade = Mock()
-        mock_facade.get_fleet_path_preview.return_value = [HexCoord(1, 0), HexCoord(2, 0)]
+        mock_facade.fleets.path_preview.return_value = [HexCoord(1, 0), HexCoord(2, 0)]
         mock_facade.handle_command.return_value = ValidationResult()
 
         ops = FleetOperations(mock_scene, mock_facade)
@@ -69,7 +69,7 @@ class TestExecuteMove:
 
         result = ops.execute_move(mock_fleet, target)
 
-        mock_facade.get_fleet_path_preview.assert_called_once_with(101, target)
+        mock_facade.fleets.path_preview.assert_called_once_with(101, target)
 
     def test_execute_move_uses_facade_for_command(self):
         """execute_move calls facade.handle_command for IssueMoveCommand."""
@@ -78,7 +78,7 @@ class TestExecuteMove:
 
         mock_scene = Mock()
         mock_facade = Mock()
-        mock_facade.get_fleet_path_preview.return_value = [HexCoord(1, 0)]
+        mock_facade.fleets.path_preview.return_value = [HexCoord(1, 0)]
         mock_facade.handle_command.return_value = ValidationResult()
 
         ops = FleetOperations(mock_scene, mock_facade)
@@ -102,7 +102,7 @@ class TestExecuteMove:
 
         mock_scene = Mock()
         mock_facade = Mock()
-        mock_facade.get_fleet_path_preview.return_value = None
+        mock_facade.fleets.path_preview.return_value = None
 
         ops = FleetOperations(mock_scene, mock_facade)
 
@@ -121,7 +121,7 @@ class TestExecuteMove:
 
         mock_scene = Mock()
         mock_facade = Mock()
-        mock_facade.get_fleet_path_preview.return_value = [HexCoord(1, 0)]
+        mock_facade.fleets.path_preview.return_value = [HexCoord(1, 0)]
         mock_facade.handle_command.return_value = ValidationResult()
 
         ops = FleetOperations(mock_scene, mock_facade)
@@ -200,7 +200,7 @@ class TestHandleJoinDesignation:
 
         ops = FleetOperations(mock_scene, mock_facade)
 
-        # FEAT-08: facade.get_fleets_at_hex returns list of FleetInfo DTOs
+        # FEAT-08: facade.fleets.at_hex returns list of FleetInfo DTOs
         mock_target = Mock()
         mock_target.fleet_id = 50
         mock_target.owner_id = 1
@@ -209,7 +209,7 @@ class TestHandleJoinDesignation:
         mock_selected.id = 40
         mock_selected.owner_id = 1
 
-        mock_facade.get_fleets_at_hex.return_value = [mock_target]
+        mock_facade.fleets.at_hex.return_value = [mock_target]
 
         result = ops.handle_join_designation(100, 100, mock_selected)
 
@@ -243,7 +243,7 @@ class TestHandleJoinDesignation:
         mock_selected.id = 40
         mock_selected.owner_id = 1
 
-        mock_facade.get_fleets_at_hex.return_value = [mock_target_a, mock_target_b]
+        mock_facade.fleets.at_hex.return_value = [mock_target_a, mock_target_b]
 
         result = ops.handle_join_designation(100, 100, mock_selected)
 
@@ -260,7 +260,7 @@ class TestHandleJoinDesignation:
         mock_scene.hex_size = 60
 
         mock_facade = Mock()
-        mock_facade.get_fleets_at_hex.return_value = []
+        mock_facade.fleets.at_hex.return_value = []
 
         ops = FleetOperations(mock_scene, mock_facade)
 
@@ -293,7 +293,7 @@ class TestHandleJoinDesignation:
         mock_self_fleet = Mock()
         mock_self_fleet.fleet_id = 40
         mock_self_fleet.owner_id = 1
-        mock_facade.get_fleets_at_hex.return_value = [mock_self_fleet]
+        mock_facade.fleets.at_hex.return_value = [mock_self_fleet]
 
         result = ops.handle_join_designation(100, 100, mock_selected)
 
@@ -319,7 +319,7 @@ class TestHandleJoinDesignation:
         mock_selected.id = 40
         mock_selected.owner_id = 1
 
-        mock_facade.get_fleets_at_hex.return_value = [mock_target]
+        mock_facade.fleets.at_hex.return_value = [mock_target]
 
         result = ops.handle_join_designation(100, 100, mock_selected)
 

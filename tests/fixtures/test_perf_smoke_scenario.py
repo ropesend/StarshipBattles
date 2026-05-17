@@ -72,7 +72,7 @@ def test_smoke_scenario_session_exposes_facade(smoke_turn1_scenario):
         facade = StrategySessionFacade(session)
     assert facade is not None
     # Smoke: a basic read query works.
-    all_systems = facade.get_all_systems()
+    all_systems = facade.systems.all()
     assert len(all_systems) == 2
 
 

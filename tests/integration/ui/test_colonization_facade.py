@@ -64,7 +64,7 @@ class TestOnColonizeClick:
     """Tests for on_colonize_click using facade."""
 
     def test_on_colonize_uses_facade_validation(self):
-        """on_colonize_click uses facade.can_colonize for validation."""
+        """on_colonize_click uses facade.validation.can_colonize for validation."""
         from game.ui.screens.strategy_colonization import ColonizationSystem
         from enum import Enum
 
@@ -75,10 +75,10 @@ class TestOnColonizeClick:
         mock_scene.systems = []
 
         mock_facade = Mock()
-        mock_facade.can_colonize.return_value = ValidationResult()
+        mock_facade.validation.can_colonize.return_value = ValidationResult()
         mock_facade.handle_command.return_value = ValidationResult()
         # PROJ-55: Mock pod filtering - must provide pod for planet type
-        mock_facade.get_fleet_remaining_pods.return_value = {'drop_pod': 1}
+        mock_facade.fleets.remaining_pods.return_value = {'drop_pod': 1}
 
         system = ColonizationSystem(mock_scene, mock_facade)
 
@@ -100,8 +100,8 @@ class TestOnColonizeClick:
 
         result = system.on_colonize_click(mock_fleet)
 
-        # Should call facade.can_colonize to validate
-        mock_facade.can_colonize.assert_called()
+        # Should call facade.validation.can_colonize to validate
+        mock_facade.validation.can_colonize.assert_called()
 
 
 class TestIssueColonizeOrder:
@@ -365,7 +365,7 @@ class TestFacadeColonyPodMethods:
         facade = StrategySessionFacade(mock_session)
 
         # Should return empty dict for fleet with no ships
-        result = facade.get_fleet_remaining_pods(10)
+        result = facade.fleets.remaining_pods(10)
         assert isinstance(result, dict)
 
     def test_get_fleet_remaining_pods_accounts_for_committed(self):
@@ -401,7 +401,7 @@ class TestFacadeColonyPodMethods:
         mock_session = _create_mock_session_with_fleet_lookup([mock_empire])
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_fleet_remaining_pods(10)
+        result = facade.fleets.remaining_pods(10)
 
         # 1 available - 1 committed = 0 remaining
         assert result.get('drop_pod', 0) == 0
@@ -413,7 +413,7 @@ class TestFacadeColonyPodMethods:
         mock_session = _create_mock_session_with_fleet_lookup([])
 
         facade = StrategySessionFacade(mock_session)
-        result = facade.get_fleet_remaining_pods(999)
+        result = facade.fleets.remaining_pods(999)
 
         assert result == {}
 
@@ -456,10 +456,10 @@ class TestOnColonizeClickPodFiltering:
         mock_scene.systems = [mock_star_system]
 
         mock_facade = Mock()
-        mock_facade.can_colonize.return_value = ValidationResult()
+        mock_facade.validation.can_colonize.return_value = ValidationResult()
         mock_facade.handle_command.return_value = ValidationResult()
         # Universal pods — fleet has 1 drop pod
-        mock_facade.get_fleet_remaining_pods.return_value = {'drop_pod': 1}
+        mock_facade.fleets.remaining_pods.return_value = {'drop_pod': 1}
 
         system = ColonizationSystem(mock_scene, mock_facade)
         system._get_system_at_hex = Mock(return_value=mock_star_system)
@@ -502,9 +502,9 @@ class TestOnColonizeClickPodFiltering:
         mock_scene.systems = [mock_star_system]
 
         mock_facade = Mock()
-        mock_facade.can_colonize.return_value = ValidationResult()
+        mock_facade.validation.can_colonize.return_value = ValidationResult()
         # No remaining pods (1 pod, 1 already committed)
-        mock_facade.get_fleet_remaining_pods.return_value = {}
+        mock_facade.fleets.remaining_pods.return_value = {}
 
         system = ColonizationSystem(mock_scene, mock_facade)
         system._get_system_at_hex = Mock(return_value=mock_star_system)
@@ -536,9 +536,9 @@ class TestOnColonizeClickPodFiltering:
         mock_scene.systems = [mock_star_system]
 
         mock_facade = Mock()
-        mock_facade.can_colonize.return_value = ValidationResult()
+        mock_facade.validation.can_colonize.return_value = ValidationResult()
         # No pods at all
-        mock_facade.get_fleet_remaining_pods.return_value = {}
+        mock_facade.fleets.remaining_pods.return_value = {}
 
         system = ColonizationSystem(mock_scene, mock_facade)
         system._get_system_at_hex = Mock(return_value=mock_star_system)
@@ -586,7 +586,7 @@ class TestHandleColonizeDesignationPodFiltering:
 
         mock_facade = Mock()
         # Fleet has no pods
-        mock_facade.get_fleet_remaining_pods.return_value = {'drop_pod': 0}
+        mock_facade.fleets.remaining_pods.return_value = {'drop_pod': 0}
 
         mock_fleet = Mock()
         mock_fleet.id = 10
@@ -638,7 +638,7 @@ class TestHandleColonizeDesignationPodFiltering:
 
         mock_facade = Mock()
         # Fleet has ICE_DWARF pod - matches planet
-        mock_facade.get_fleet_remaining_pods.return_value = {'drop_pod': 1}
+        mock_facade.fleets.remaining_pods.return_value = {'drop_pod': 1}
         mock_facade.handle_command.return_value = ValidationResult()
 
         mock_fleet = Mock()
@@ -687,7 +687,7 @@ class TestHandleColonizeDesignationPodFiltering:
 
         mock_facade = Mock()
         # Fleet has NO pods
-        mock_facade.get_fleet_remaining_pods.return_value = {}
+        mock_facade.fleets.remaining_pods.return_value = {}
 
         mock_fleet = Mock()
         mock_fleet.id = 10
@@ -746,7 +746,7 @@ class TestHandleColonizeDesignationPodFiltering:
 
         mock_facade = Mock()
         # Fleet has only CONTINENTAL pod
-        mock_facade.get_fleet_remaining_pods.return_value = {'drop_pod': 1}
+        mock_facade.fleets.remaining_pods.return_value = {'drop_pod': 1}
         mock_facade.handle_command.return_value = ValidationResult()
 
         mock_fleet = Mock()
@@ -803,9 +803,9 @@ class TestPlanetTypeDisplay:
         mock_scene.systems = [mock_star_system]
 
         mock_facade = Mock()
-        mock_facade.can_colonize.return_value = ValidationResult()
+        mock_facade.validation.can_colonize.return_value = ValidationResult()
         # Both pod types available
-        mock_facade.get_fleet_remaining_pods.return_value = {'drop_pod': 2}
+        mock_facade.fleets.remaining_pods.return_value = {'drop_pod': 2}
 
         system = ColonizationSystem(mock_scene, mock_facade)
         system._get_system_at_hex = Mock(return_value=mock_star_system)

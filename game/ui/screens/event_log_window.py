@@ -136,7 +136,7 @@ class EventLogWindow(StrategyModalWindow):
     ) -> None:
         # ---- Stage 1: cheap state ----
         # PROJ-411 Task 1.9: hold a reference rather than a defensive
-        # copy. ``facade.get_all_events()`` already returns a fresh
+        # copy. ``facade.events.all()`` already returns a fresh
         # per-call list (``[e.to_dict() for e in events]``), and the
         # ``EventLogDataSource`` constructor still defensively copies
         # at the data-source boundary — so a window-level copy is pure

@@ -338,7 +338,7 @@ class PlanetReportPanel:
                 the planet info panel renders the per-species sub-block with
                 habitability / happiness / growth / food ratio / allocation
                 instead of the legacy single-line fallback. Resolved upstream
-                via ``facade.get_colony_demographic_view(planet.id)`` —
+                via ``facade.economy.colony_demographic_view(planet.id)`` —
                 ``None`` for uncolonized planets or when the caller doesn't
                 have facade access. Overwrites the construction-time view
                 every call (explicit per-refresh policy from PROJ-289).

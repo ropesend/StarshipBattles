@@ -129,7 +129,7 @@ class StrategyGameStateManager:
             # Issue #9: single source of truth for per-player turn-start UI
             # state (selection clear, camera focus, home-colony auto-select,
             # per-player event log). Must run AFTER _sync_active_empire so
-            # facade.get_turn_events scopes to the correct empire.
+            # facade.events.turn_events scopes to the correct empire.
             self._apply_turn_start_state(self._screen.current_empire)
         else:
             # Switch to next live human player's view.
@@ -262,8 +262,8 @@ class StrategyGameStateManager:
             # happened, then the defeat modal pops on top. Both honour
             # Pattern #31 modal tracking — End Turn is blocked while
             # either is up.
-            turn = screen._facade.get_turn_number()
-            events = screen._facade.get_turn_events(
+            turn = screen._facade.session_meta.turn_number()
+            events = screen._facade.events.turn_events(
                 turn=turn, empire_id=empire.id,
             )
             if events and not self._suppress_event_log:
@@ -289,8 +289,8 @@ class StrategyGameStateManager:
         # `process_full_turn`, `get_turn_number()` returns N+1 while the
         # events the player needs were filed with turn=N. Look up the
         # just-completed turn explicitly so the popup actually fires.
-        turn = screen._facade.get_turn_number() - 1
-        events = screen._facade.get_turn_events(turn=turn, empire_id=empire.id)
+        turn = screen._facade.session_meta.turn_number() - 1
+        events = screen._facade.events.turn_events(turn=turn, empire_id=empire.id)
         empire_name = getattr(empire, "name", None)
         # QA Obs 3 (2026-05-16): unconditional rebind first so a cached
         # window from the previous player's turn cannot surface stale
@@ -321,7 +321,7 @@ class StrategyGameStateManager:
         logger.info("Processing Turn...")
 
         # Capture turn number before processing (events are logged at this turn)
-        processed_turn = self._screen._facade.get_turn_number()
+        processed_turn = self._screen._facade.session_meta.turn_number()
 
         # Force Render "Processing" state
         screen = pygame.display.get_surface()
@@ -392,8 +392,8 @@ class StrategyGameStateManager:
             return []
 
         # Auto-save after turn processing
-        # PROJ-208: Use facade.get_save_path() instead of session.save_path
-        if self._screen._facade.get_save_path():
+        # PROJ-208: Use facade.session_meta.save_path() instead of session.save_path
+        if self._screen._facade.session_meta.save_path():
             success, message, _ = SaveGameService.save_game(self._screen.session)
             if success:
                 logger.info(f"Auto-saved: {message}")
@@ -413,7 +413,7 @@ class StrategyGameStateManager:
         # (``run_n_turns``) can aggregate events across iterations for
         # a single combined end-of-loop log. Scoped per BUG-123.
         active_empire = self._screen.current_empire
-        turn_events = self._screen._facade.get_turn_events(
+        turn_events = self._screen._facade.events.turn_events(
             turn=processed_turn, empire_id=active_empire.id
         )
 

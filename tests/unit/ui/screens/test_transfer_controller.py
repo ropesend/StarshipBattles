@@ -24,8 +24,8 @@ def test_collect_sources_includes_source_fleet_when_facade_omits_it() -> None:
         location=(1, 2),
         orders=[],
     )
-    facade.get_fleets_at_hex.return_value = []
-    facade.get_planets_at_hex.return_value = []
+    facade.fleets.at_hex.return_value = []
+    facade.planets.at_hex.return_value = []
 
     sources = controller.collect_sources_and_targets(source_fleet, (1, 2))
 
@@ -38,8 +38,8 @@ def test_collect_sources_checks_projected_position_when_primary_hex_has_no_plane
     controller, facade, _view_model = _controller()
     source_fleet = SimpleNamespace(id=7, name="Transport")
     colony = SimpleNamespace(planet_id=3, name="Alpha", owner_id=1)
-    facade.get_fleets_at_hex.return_value = []
-    facade.get_planets_at_hex.side_effect = [[], [colony]]
+    facade.fleets.at_hex.return_value = []
+    facade.planets.at_hex.side_effect = [[], [colony]]
     monkeypatch.setattr(
         "game.strategy.services.cargo_transfer_service.project_fleet_position",
         lambda fleet: (9, 9),
@@ -48,7 +48,7 @@ def test_collect_sources_checks_projected_position_when_primary_hex_has_no_plane
     sources = controller.collect_sources_and_targets(source_fleet, (1, 2))
 
     assert sources[-1] == {"label": "Colony: Alpha", "type": "colony", "id": 3}
-    assert facade.get_planets_at_hex.call_args_list[1].args == ((9, 9),)
+    assert facade.planets.at_hex.call_args_list[1].args == ((9, 9),)
 
 
 def test_discover_pod_designs_returns_sorted_unique_drop_pod_names(
@@ -121,8 +121,8 @@ def test_fetch_dto_routes_fleet_and_planet_entries() -> None:
     controller, facade, _view_model = _controller()
     fleet = object()
     planet = object()
-    facade.get_fleet.return_value = fleet
-    facade.get_planet.return_value = planet
+    facade.fleets.get.return_value = fleet
+    facade.planets.get.return_value = planet
 
     assert controller.fetch_dto({"type": "fleet", "id": 5}) is fleet
     assert controller.fetch_dto({"type": "colony", "id": 6}) is planet

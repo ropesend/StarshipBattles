@@ -43,14 +43,14 @@ class TestCargoQuickDialog:
         # Arrange: Fleet with passengers, colony at hex
         mock_fleet_info = MagicMock(spec=FleetInfo)
         mock_fleet_info.passengers_current = 50
-        mock_scene._facade.get_fleet.return_value = mock_fleet_info
+        mock_scene._facade.fleets.get.return_value = mock_fleet_info
 
         # Colony at hex
         mock_colony = MagicMock()
         mock_colony.planet_id = 10
         mock_colony.owner_id = 0
         mock_colony.name = "Colony One"
-        mock_scene._facade.get_planets_at_hex.return_value = [mock_colony]
+        mock_scene._facade.planets.at_hex.return_value = [mock_colony]
 
         # Act
         rect = pygame.Rect(100, 100, 450, 300)
@@ -71,14 +71,14 @@ class TestCargoQuickDialog:
         mock_colony.planet_id = 10
         mock_colony.owner_id = 0
         mock_colony.name = "Terra"
-        mock_scene._facade.get_planets_at_hex.return_value = [mock_colony]
+        mock_scene._facade.planets.at_hex.return_value = [mock_colony]
 
         mock_planet_info = MagicMock(spec=PlanetInfo)
         mock_planet_info.population_details = (
             ("human", 100, 1.0),
             ("vulcan", 25, 0.8)
         )
-        mock_scene._facade.get_planet.return_value = mock_planet_info
+        mock_scene._facade.planets.get.return_value = mock_planet_info
 
         # Act
         rect = pygame.Rect(100, 100, 450, 300)
@@ -97,12 +97,12 @@ class TestCargoQuickDialog:
         # Arrange: Fleet with passengers
         mock_fleet_info = MagicMock(spec=FleetInfo)
         mock_fleet_info.passengers_current = 75
-        mock_scene._facade.get_fleet.return_value = mock_fleet_info
+        mock_scene._facade.fleets.get.return_value = mock_fleet_info
 
         mock_colony = MagicMock()
         mock_colony.planet_id = 10
         mock_colony.owner_id = 0
-        mock_scene._facade.get_planets_at_hex.return_value = [mock_colony]
+        mock_scene._facade.planets.at_hex.return_value = [mock_colony]
 
         rect = pygame.Rect(100, 100, 450, 300)
         dialog = CargoQuickDialog(
@@ -128,13 +128,13 @@ class TestCargoQuickDialog:
         # Arrange
         mock_fleet_info = MagicMock(spec=FleetInfo)
         mock_fleet_info.passengers_current = 80
-        mock_scene._facade.get_fleet.return_value = mock_fleet_info
+        mock_scene._facade.fleets.get.return_value = mock_fleet_info
 
         mock_colony = MagicMock()
         mock_colony.planet_id = 10
         mock_colony.owner_id = 0
         mock_colony.name = "Alpha"
-        mock_scene._facade.get_planets_at_hex.return_value = [mock_colony]
+        mock_scene._facade.planets.at_hex.return_value = [mock_colony]
 
         mock_result = MagicMock()
         mock_result.is_valid = True
@@ -174,12 +174,12 @@ class TestCargoQuickDialog:
         # Arrange
         mock_fleet_info = MagicMock(spec=FleetInfo)
         mock_fleet_info.passengers_current = 40
-        mock_scene._facade.get_fleet.return_value = mock_fleet_info
+        mock_scene._facade.fleets.get.return_value = mock_fleet_info
 
         mock_colony = MagicMock()
         mock_colony.planet_id = 10
         mock_colony.owner_id = 0
-        mock_scene._facade.get_planets_at_hex.return_value = [mock_colony]
+        mock_scene._facade.planets.at_hex.return_value = [mock_colony]
 
         mock_result = MagicMock()
         mock_result.is_valid = True
@@ -213,12 +213,12 @@ class TestCargoQuickDialog:
         # Arrange
         mock_fleet_info = MagicMock(spec=FleetInfo)
         mock_fleet_info.passengers_current = 20
-        mock_scene._facade.get_fleet.return_value = mock_fleet_info
+        mock_scene._facade.fleets.get.return_value = mock_fleet_info
 
         mock_colony = MagicMock()
         mock_colony.planet_id = 10
         mock_colony.owner_id = 0
-        mock_scene._facade.get_planets_at_hex.return_value = [mock_colony]
+        mock_scene._facade.planets.at_hex.return_value = [mock_colony]
 
         rect = pygame.Rect(100, 100, 450, 300)
         dialog = CargoQuickDialog(
@@ -244,13 +244,13 @@ class TestCargoQuickDialog:
         # Arrange: Fleet with no passengers
         mock_fleet_info = MagicMock(spec=FleetInfo)
         mock_fleet_info.passengers_current = 0
-        mock_scene._facade.get_fleet.return_value = mock_fleet_info
+        mock_scene._facade.fleets.get.return_value = mock_fleet_info
 
         # Colony at hex but fleet has nothing to unload
         mock_colony = MagicMock()
         mock_colony.planet_id = 10
         mock_colony.owner_id = 0
-        mock_scene._facade.get_planets_at_hex.return_value = [mock_colony]
+        mock_scene._facade.planets.at_hex.return_value = [mock_colony]
 
         # Act
         rect = pygame.Rect(100, 100, 450, 300)
@@ -268,10 +268,10 @@ class TestCargoQuickDialog:
         # Arrange: Fleet with passengers, but no colony at hex
         mock_fleet_info = MagicMock(spec=FleetInfo)
         mock_fleet_info.passengers_current = 50
-        mock_scene._facade.get_fleet.return_value = mock_fleet_info
+        mock_scene._facade.fleets.get.return_value = mock_fleet_info
 
         # No colony (empty list)
-        mock_scene._facade.get_planets_at_hex.return_value = []
+        mock_scene._facade.planets.at_hex.return_value = []
 
         # Act
         rect = pygame.Rect(100, 100, 450, 300)
@@ -286,7 +286,7 @@ class TestCargoQuickDialog:
     def test_load_with_no_colony_shows_no_items(self, mock_manager, mock_scene, mock_fleet):
         """Load at hex without colony should show no items message."""
         # Arrange: No colony at hex
-        mock_scene._facade.get_planets_at_hex.return_value = []
+        mock_scene._facade.planets.at_hex.return_value = []
 
         # Act
         rect = pygame.Rect(100, 100, 450, 300)

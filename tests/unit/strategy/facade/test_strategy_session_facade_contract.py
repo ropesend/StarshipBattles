@@ -65,42 +65,42 @@ class TestStrategySessionFacadeContract:
     # --- Empire queries ---
 
     def test_get_all_empires_returns_one_dto_per_empire(self, facade):
-        empires = facade.get_all_empires()
+        empires = facade.empires.all()
         assert len(empires) == 2
         assert {e.empire_id for e in empires} == {1, 2}
 
     def test_get_empire_by_id_resolves(self, facade):
-        empire = facade.get_empire(1)
+        empire = facade.empires.get(1)
         assert empire is not None
         assert empire.empire_id == 1
         assert empire.name == "Alpha"
 
     def test_get_empire_unknown_id_returns_none(self, facade):
-        assert facade.get_empire(999) is None
+        assert facade.empires.get(999) is None
 
     # --- System / map queries ---
 
     def test_get_all_systems_returns_empty_list_for_empty_galaxy(self, facade):
         # Behavioral: empty galaxy yields empty list (NOT None).
-        systems = facade.get_all_systems()
+        systems = facade.systems.all()
         assert systems == []
 
     def test_get_system_at_unknown_hex_returns_none(self, facade):
         # Behavioral: unknown coordinate yields None (NOT raises).
-        assert facade.get_system_at_hex(HexCoord(99, 99)) is None
+        assert facade.systems.at_hex(HexCoord(99, 99)) is None
 
     # --- Fleet queries ---
 
     def test_get_fleet_unknown_id_returns_none(self, facade):
-        assert facade.get_fleet(404) is None
+        assert facade.fleets.get(404) is None
 
     def test_get_fleets_at_empty_hex_returns_empty_list(self, facade):
-        assert facade.get_fleets_at_hex(HexCoord(0, 0)) == []
+        assert facade.fleets.at_hex(HexCoord(0, 0)) == []
 
     # --- Game state ---
 
     def test_get_turn_number_forwards_session_value(self, facade):
-        assert facade.get_turn_number() == 7
+        assert facade.session_meta.turn_number() == 7
 
     # --- Command dispatch ---
 

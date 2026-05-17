@@ -121,17 +121,17 @@ class CargoTransferService:
         Returns:
             List of PlanetInfo objects that are colonized (owner_id not None)
         """
-        planets = facade.get_planets_at_hex(hex_coord)
+        planets = facade.planets.at_hex(hex_coord)
 
         # Fallback 1: if no planets at clicked hex, try fleet's current location
         if not planets and fleet.location:
-            planets = facade.get_planets_at_hex(fleet.location)
+            planets = facade.planets.at_hex(fleet.location)
 
         # Fallback 2: try fleet's projected position from queued orders
         if not planets:
             projected = project_fleet_position(fleet)
             if projected != fleet.location:
-                planets = facade.get_planets_at_hex(projected)
+                planets = facade.planets.at_hex(projected)
 
         # Filter to only colonized planets
         colonies = [p for p in planets if p.owner_id is not None]
@@ -155,7 +155,7 @@ class CargoTransferService:
             # No colony to unload to
             return items
 
-        fleet_info = facade.get_fleet(fleet_id)
+        fleet_info = facade.fleets.get(fleet_id)
         if not fleet_info:
             return items
 
@@ -185,7 +185,7 @@ class CargoTransferService:
         items = []
 
         for colony in colonies:
-            planet_info = facade.get_planet(colony.planet_id)
+            planet_info = facade.planets.get(colony.planet_id)
             if not planet_info:
                 continue
 

@@ -236,7 +236,7 @@ class BuildQueuePanelFactory:
             # branch is gone.
             view = None
             if self.build_context.owner_id is not None:
-                view = self._facade.get_colony_demographic_view(self.build_context.id)
+                view = self._facade.economy.colony_demographic_view(self.build_context.id)
             planet_report = PlanetReportPanel(
                 manager=self.manager,
                 rect=pygame.Rect(10, 10, report_width, report_height),
@@ -245,7 +245,7 @@ class BuildQueuePanelFactory:
                 portrait_surface=self.portrait_surface,
                 show_complexes=False,
                 production_rates=compute_planet_production(
-                    self.build_context, self._facade.get_registries()
+                    self.build_context, self._facade.economy.registries()
                 ),
                 view=view,  # PROJ-292 H1
             )
@@ -575,7 +575,7 @@ class BuildQueuePanelFactory:
             container=bar
         )
 
-        turn_number = self._facade.get_turn_number()
+        turn_number = self._facade.session_meta.turn_number()
         ui.UILabel(
             relative_rect=pygame.Rect(self.screen_width - 200, 10, 180, 40),
             text=f"Turn: {turn_number}",

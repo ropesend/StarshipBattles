@@ -402,7 +402,7 @@ class TestOnColonizeClick:
         planet = MagicMock()
         planet.owner_id = 0
         screen._facade = MagicMock()
-        screen._facade.get_planets_at_hex.return_value = [planet]
+        screen._facade.planets.at_hex.return_value = [planet]
 
         screen.on_colonize_click()
 
@@ -416,7 +416,7 @@ class TestOnColonizeClick:
         fleet.location = MagicMock()
         screen.selected_fleet = fleet
         screen._facade = MagicMock()
-        screen._facade.get_planets_at_hex.return_value = []
+        screen._facade.planets.at_hex.return_value = []
 
         screen.on_colonize_click()
 

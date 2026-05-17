@@ -28,7 +28,7 @@ class TestMoveOrderRegistration:
 
         mock_scene = Mock()
         mock_facade = Mock()
-        mock_facade.get_fleet_path_preview.return_value = [HexCoord(1, 0), HexCoord(2, 0)]
+        mock_facade.fleets.path_preview.return_value = [HexCoord(1, 0), HexCoord(2, 0)]
         mock_facade.handle_command.return_value = ValidationResult()
 
         ops = FleetOperations(mock_scene, mock_facade)
@@ -52,7 +52,7 @@ class TestMoveOrderRegistration:
 
         mock_scene = Mock()
         mock_facade = Mock()
-        mock_facade.get_fleet_path_preview.return_value = [HexCoord(1, 0)]
+        mock_facade.fleets.path_preview.return_value = [HexCoord(1, 0)]
         mock_facade.handle_command.return_value = ValidationResult()
 
         ops = FleetOperations(mock_scene, mock_facade)
@@ -71,7 +71,7 @@ class TestMoveOrderRegistration:
 
         mock_scene = Mock()
         mock_facade = Mock()
-        mock_facade.get_fleet_path_preview.return_value = None
+        mock_facade.fleets.path_preview.return_value = None
 
         ops = FleetOperations(mock_scene, mock_facade)
 

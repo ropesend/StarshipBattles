@@ -54,8 +54,8 @@ class TestColonizationSystemZone:
         # Validation passes for Dyson Sphere
         mock_validation_result = MagicMock()
         mock_validation_result.is_valid = True
-        mock_facade.can_colonize.return_value = mock_validation_result
-        mock_facade.get_fleet_remaining_pods.return_value = {"drop_pod": 1}
+        mock_facade.validation.can_colonize.return_value = mock_validation_result
+        mock_facade.fleets.remaining_pods.return_value = {"drop_pod": 1}
 
         # Create system
         system = ColonizationSystem(mock_scene, mock_facade)
@@ -92,7 +92,7 @@ class TestColonizationSystemZone:
         mock_scene.galaxy = mock_galaxy
 
         mock_facade = MagicMock()
-        mock_facade.get_fleet_remaining_pods.return_value = {}
+        mock_facade.fleets.remaining_pods.return_value = {}
 
         system = ColonizationSystem(mock_scene, mock_facade)
         system._get_system_at_hex = MagicMock(return_value=mock_system)

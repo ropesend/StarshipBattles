@@ -97,7 +97,7 @@ class ColonizationSystem:
         # Validate with facade
         valid_planets = []
         for p in potential_planets:
-            res = self.facade.can_colonize(fleet.id, p.id)
+            res = self.facade.validation.can_colonize(fleet.id, p.id)
             if res.is_valid:
                 valid_planets.append(p)
 

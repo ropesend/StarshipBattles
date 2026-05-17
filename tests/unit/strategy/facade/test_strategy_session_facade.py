@@ -71,7 +71,7 @@ class TestFleetQueries:
         empire = self._make_mock_empire(1, fleets=[fleet])
         facade = self._make_facade([empire])
 
-        result = facade.get_fleet(42)
+        result = facade.fleets.get(42)
 
         assert result is not None
         assert result.fleet_id == 42
@@ -81,7 +81,7 @@ class TestFleetQueries:
         empire = self._make_mock_empire(1, fleets=[])
         facade = self._make_facade([empire])
 
-        result = facade.get_fleet(999)
+        result = facade.fleets.get(999)
 
         assert result is None
 
@@ -95,7 +95,7 @@ class TestFleetQueries:
         empire = self._make_mock_empire(1, fleets=[fleet1, fleet2, fleet3])
         facade = self._make_facade([empire])
 
-        result = facade.get_fleets_at_hex(target_hex)
+        result = facade.fleets.at_hex(target_hex)
 
         assert len(result) == 2
         assert all(r.fleet_id in [1, 2] for r in result)
@@ -106,7 +106,7 @@ class TestFleetQueries:
         empire = self._make_mock_empire(1, fleets=[fleet])
         facade = self._make_facade([empire])
 
-        result = facade.get_fleets_at_hex(HexCoord(100, 100))
+        result = facade.fleets.at_hex(HexCoord(100, 100))
 
         assert result == []
 
@@ -122,7 +122,7 @@ class TestFleetQueries:
         facade = StrategySessionFacade(session)
         target_hex = HexCoord(5, 5)
 
-        result = facade.get_fleet_path_preview(1, target_hex)
+        result = facade.fleets.path_preview(1, target_hex)
 
         assert result == [HexCoord(0, 0), HexCoord(1, 0)]
         session.preview_fleet_path.assert_called_once_with(fleet, target_hex)
@@ -131,7 +131,7 @@ class TestFleetQueries:
         """Returns None for unknown fleet."""
         facade = self._make_facade([])
 
-        result = facade.get_fleet_path_preview(999, HexCoord(5, 5))
+        result = facade.fleets.path_preview(999, HexCoord(5, 5))
 
         assert result is None
 
@@ -148,7 +148,7 @@ class TestFleetQueries:
         session._get_fleet_by_id = Mock(return_value=fleet)
 
         facade = StrategySessionFacade(session)
-        result = facade.get_fleet_path_projection(1, max_turns=10)
+        result = facade.fleets.path_projection(1, max_turns=10)
 
         assert len(result) == 2
         session.get_fleet_path_projection.assert_called_once_with(fleet, 10)
@@ -157,7 +157,7 @@ class TestFleetQueries:
         """Returns [] for unknown fleet."""
         facade = self._make_facade([])
 
-        result = facade.get_fleet_path_projection(999)
+        result = facade.fleets.path_projection(999)
 
         assert result == []
 
@@ -191,7 +191,7 @@ class TestSystemQueries:
         session.galaxy.systems = {HexCoord(0, 0): sys1, HexCoord(5, 5): sys2}
 
         facade = StrategySessionFacade(session)
-        result = facade.get_all_systems()
+        result = facade.systems.all()
 
         assert len(result) == 2
 
@@ -209,7 +209,7 @@ class TestSystemQueries:
         session.galaxy.get_system_at_location.return_value = system
 
         facade = StrategySessionFacade(session)
-        result = facade.get_system_at_hex(target_hex)
+        result = facade.systems.at_hex(target_hex)
 
         assert result is not None
         assert result.name == "Alpha Centauri"
@@ -224,7 +224,7 @@ class TestSystemQueries:
 
         facade = StrategySessionFacade(session)
 
-        result = facade.get_system_at_hex(HexCoord(100, 100))
+        result = facade.systems.at_hex(HexCoord(100, 100))
 
         assert result is None
 
@@ -271,7 +271,7 @@ class TestPlanetQueries:
         session.galaxy.systems = {HexCoord(0, 0): system}
 
         facade = StrategySessionFacade(session)
-        result = facade.get_planet(42)
+        result = facade.planets.get(42)
 
         assert result is not None
         assert result.planet_id == 42
@@ -286,7 +286,7 @@ class TestPlanetQueries:
 
         facade = StrategySessionFacade(session)
 
-        result = facade.get_planet(999)
+        result = facade.planets.get(999)
 
         assert result is None
 
@@ -308,7 +308,7 @@ class TestPlanetQueries:
 
         facade = StrategySessionFacade(session)
         # Query at system center where planets are located
-        result = facade.get_planets_at_hex(system_hex)
+        result = facade.planets.at_hex(system_hex)
 
         assert len(result) == 2
 
@@ -322,7 +322,7 @@ class TestPlanetQueries:
 
         facade = StrategySessionFacade(session)
 
-        result = facade.get_planets_at_hex(HexCoord(100, 100))
+        result = facade.planets.at_hex(HexCoord(100, 100))
 
         assert result == []
 
@@ -371,7 +371,7 @@ class TestEmpireQueries:
         session.empires = [empire1, empire2]
 
         facade = StrategySessionFacade(session)
-        result = facade.get_all_empires()
+        result = facade.empires.all()
 
         assert len(result) == 2
 
@@ -382,7 +382,7 @@ class TestEmpireQueries:
         session.empires = [empire]
 
         facade = StrategySessionFacade(session)
-        result = facade.get_empire(42)
+        result = facade.empires.get(42)
 
         assert result is not None
         assert result.empire_id == 42
@@ -395,7 +395,7 @@ class TestEmpireQueries:
 
         facade = StrategySessionFacade(session)
 
-        result = facade.get_empire(999)
+        result = facade.empires.get(999)
 
         assert result is None
 
@@ -409,7 +409,7 @@ class TestEmpireQueries:
         session.empires = [empire]
 
         facade = StrategySessionFacade(session)
-        result = facade.get_empire_colonies(1)
+        result = facade.empires.colonies(1)
 
         assert len(result) == 2
 
@@ -420,7 +420,7 @@ class TestEmpireQueries:
 
         facade = StrategySessionFacade(session)
 
-        result = facade.get_empire_colonies(999)
+        result = facade.empires.colonies(999)
 
         assert result == []
 
@@ -434,7 +434,7 @@ class TestEmpireQueries:
         session.empires = [empire]
 
         facade = StrategySessionFacade(session)
-        result = facade.get_empire_fleets(1)
+        result = facade.empires.fleets(1)
 
         assert len(result) == 2
 
@@ -445,7 +445,7 @@ class TestEmpireQueries:
 
         facade = StrategySessionFacade(session)
 
-        result = facade.get_empire_fleets(999)
+        result = facade.empires.fleets(999)
 
         assert result == []
 
@@ -461,7 +461,7 @@ class TestGameStateQueries:
 
         facade = StrategySessionFacade(session)
 
-        result = facade.get_turn_number()
+        result = facade.session_meta.turn_number()
 
         assert result == 42
 
@@ -473,7 +473,7 @@ class TestGameStateQueries:
 
         facade = StrategySessionFacade(session)
 
-        result = facade.get_human_player_ids()
+        result = facade.session_meta.human_player_ids()
 
         assert set(result) == {1, 3, 5}
 
@@ -525,7 +525,7 @@ class TestValidationQueries:
 
         facade = StrategySessionFacade(session)
 
-        result = facade.can_colonize(999, planet_id=1)
+        result = facade.validation.can_colonize(999, planet_id=1)
 
         assert not result.is_valid
         assert "Fleet not found" in result.errors[0]
@@ -541,7 +541,7 @@ class TestValidationQueries:
 
         facade = StrategySessionFacade(session)
 
-        result = facade.can_colonize(1, planet_id=999)
+        result = facade.validation.can_colonize(1, planet_id=999)
 
         assert not result.is_valid
         assert "Planet not found" in result.errors[0]
@@ -565,7 +565,7 @@ class TestValidationQueries:
 
         facade = StrategySessionFacade(session)
 
-        result = facade.can_colonize(1, planet_id=42)
+        result = facade.validation.can_colonize(1, planet_id=42)
 
         assert result.is_valid
         session.turn_engine.validate_colonize_order.assert_called_once()
@@ -576,7 +576,7 @@ class TestValidationQueries:
 
         facade = StrategySessionFacade(session)
 
-        result = facade.can_move_to(999, HexCoord(5, 5))
+        result = facade.validation.can_move_to(999, HexCoord(5, 5))
 
         assert not result.is_valid
         assert "Fleet not found" in result.errors[0]
@@ -591,7 +591,7 @@ class TestValidationQueries:
 
         facade = StrategySessionFacade(session)
 
-        result = facade.can_move_to(1, HexCoord(100, 100))
+        result = facade.validation.can_move_to(1, HexCoord(100, 100))
 
         assert not result.is_valid
         assert "No path" in result.errors[0]
@@ -606,7 +606,7 @@ class TestValidationQueries:
 
         facade = StrategySessionFacade(session)
 
-        result = facade.can_move_to(1, HexCoord(1, 0))
+        result = facade.validation.can_move_to(1, HexCoord(1, 0))
 
         assert result.is_valid
 
@@ -635,7 +635,7 @@ class TestEventQueries:
 
         facade = StrategySessionFacade(session)
 
-        result = facade.get_turn_events()  # No turn specified
+        result = facade.events.turn_events()  # No turn specified
 
         assert len(result) == 2
         session.event_log.get_events_for_turn.assert_called_once_with(5)
@@ -652,7 +652,7 @@ class TestEventQueries:
 
         facade = StrategySessionFacade(session)
 
-        result = facade.get_turn_events(turn=3)
+        result = facade.events.turn_events(turn=3)
 
         assert len(result) == 1
         session.event_log.get_events_for_turn.assert_called_once_with(3)
@@ -670,7 +670,7 @@ class TestEventQueries:
 
         facade = StrategySessionFacade(session)
 
-        result = facade.get_all_events()
+        result = facade.events.all()
 
         assert len(result) == 3
         assert all(isinstance(r, dict) for r in result)
@@ -686,7 +686,7 @@ class TestEventQueries:
 
         facade = StrategySessionFacade(session)
 
-        result = facade.get_events_by_category("COMBAT")
+        result = facade.events.by_category("COMBAT")
 
         assert len(result) == 1
         session.event_log.get_events_by_category.assert_called_once_with("COMBAT")
@@ -702,7 +702,7 @@ class TestGameStateQueriesSavePath:
 
         facade = StrategySessionFacade(session)
 
-        result = facade.get_save_path()
+        result = facade.session_meta.save_path()
 
         assert result == "/path/to/save.json"
 
@@ -713,7 +713,7 @@ class TestGameStateQueriesSavePath:
 
         facade = StrategySessionFacade(session)
 
-        result = facade.get_save_path()
+        result = facade.session_meta.save_path()
 
         assert result is None
 
@@ -748,7 +748,7 @@ class TestStormQueries:
         session.galaxy = galaxy
 
         facade = StrategySessionFacade(session)
-        result = facade.get_storm_names_at_hex(HexCoord(5, 3))
+        result = facade.systems.storm_names_at_hex(HexCoord(5, 3))
         assert result == ["Ion Storm Alpha", "Plasma Storm"]
         galaxy.get_zones_at_global_hex.assert_called_once_with(HexCoord(5, 3))
 
@@ -760,11 +760,11 @@ class TestStormQueries:
         session.galaxy = galaxy
 
         facade = StrategySessionFacade(session)
-        assert facade.get_storm_names_at_hex(HexCoord(0, 0)) == []
+        assert facade.systems.storm_names_at_hex(HexCoord(0, 0)) == []
 
 
 class TestRaceRegistryAccessor:
-    """PROJ-287 Phase 2: facade.get_race_registry() lazy-init accessor."""
+    """PROJ-287 Phase 2: facade.economy.race_registry() lazy-init accessor."""
 
     def test_returns_iraceregistry(self):
         """Returns an object conforming to the IRaceRegistry protocol."""
@@ -772,7 +772,7 @@ class TestRaceRegistryAccessor:
 
         facade = StrategySessionFacade(Mock())
 
-        registry = facade.get_race_registry()
+        registry = facade.economy.race_registry()
 
         assert isinstance(registry, IRaceRegistry)
 
@@ -780,8 +780,8 @@ class TestRaceRegistryAccessor:
         """Subsequent calls return the cached registry (session-scoped)."""
         facade = StrategySessionFacade(Mock())
 
-        first = facade.get_race_registry()
-        second = facade.get_race_registry()
+        first = facade.economy.race_registry()
+        second = facade.economy.race_registry()
 
         assert first is second
 

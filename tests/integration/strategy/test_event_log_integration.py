@@ -48,7 +48,7 @@ class TestFacadeEventQueries:
         session._event_bus.log_event(EventType.SHIP_BUILT, category=EventCategory.PRODUCTION,
                       message="Scout built", empire_id=0)
 
-        events = facade.get_all_events()
+        events = facade.events.all()
         assert len(events) == 1
         assert isinstance(events[0], dict)
         assert events[0]["event_type"] == EventType.SHIP_BUILT.value
@@ -62,7 +62,7 @@ class TestFacadeEventQueries:
         session._event_bus.log_event(EventType.SHIP_BUILT, category=EventCategory.PRODUCTION,
                       message="Ship 1", empire_id=0)
 
-        events = facade.get_turn_events()
+        events = facade.events.turn_events()
         assert len(events) == 1
         assert events[0]["turn"] == session.turn_number
 
@@ -79,8 +79,8 @@ class TestFacadeEventQueries:
         session._event_bus.log_event(EventType.COLONY_FOUNDED, category=EventCategory.COLONIES,
                       message="Turn 2 colony", empire_id=0)
 
-        turn_1 = facade.get_turn_events(1)
-        turn_2 = facade.get_turn_events(2)
+        turn_1 = facade.events.turn_events(1)
+        turn_2 = facade.events.turn_events(2)
         assert len(turn_1) == 1
         assert turn_1[0]["message"] == "Turn 1 ship"
         assert len(turn_2) == 1
@@ -98,10 +98,10 @@ class TestFacadeEventQueries:
         session._event_bus.log_event(EventType.COLONY_FOUNDED, category=EventCategory.COLONIES,
                       message="Colony", empire_id=0)
 
-        prod = facade.get_events_by_category("production")
-        combat = facade.get_events_by_category("combat")
-        colonies = facade.get_events_by_category("colonies")
-        all_events = facade.get_events_by_category("all")
+        prod = facade.events.by_category("production")
+        combat = facade.events.by_category("combat")
+        colonies = facade.events.by_category("colonies")
+        all_events = facade.events.by_category("all")
 
         assert len(prod) == 1
         assert len(combat) == 1
@@ -117,7 +117,7 @@ class TestFacadeEventQueries:
                       empire_id=0, message="Frigate built at Mars",
                       design_id="frigate_01", planet_id=3)
 
-        events = facade.get_all_events()
+        events = facade.events.all()
         assert len(events) == 1
         assert events[0]["event_type"] == "ship_built"
         assert events[0]["details"]["design_id"] == "frigate_01"
@@ -132,7 +132,7 @@ class TestFacadeEventQueries:
                       empire_id=0, message="Mine built on Alpha",
                       design_id="mining_complex", planet_id=5)
 
-        events = facade.get_all_events()
+        events = facade.events.all()
         assert len(events) == 1
         assert events[0]["event_type"] == "complex_built"
         assert events[0]["category"] == "production"
@@ -146,7 +146,7 @@ class TestFacadeEventQueries:
                       empire_id=0, message="Colony on New Earth",
                       planet_id=10, planet_name="New Earth")
 
-        events = facade.get_all_events()
+        events = facade.events.all()
         assert len(events) == 1
         assert events[0]["event_type"] == "colony_founded"
         assert events[0]["category"] == "colonies"
@@ -163,7 +163,7 @@ class TestFacadeEventQueries:
                       surviving_fleet_ids=[1],
                       destroyed_fleet_ids=[2])
 
-        events = facade.get_all_events()
+        events = facade.events.all()
         assert len(events) == 1
         assert events[0]["event_type"] == "combat_resolved"
         assert events[0]["category"] == "combat"
@@ -228,11 +228,11 @@ class TestEventPersistenceIntegration:
         restored = GameSession.from_dict(data)
         facade = StrategySessionFacade(restored)
 
-        all_events = facade.get_all_events()
+        all_events = facade.events.all()
         assert len(all_events) == 2
 
-        prod = facade.get_events_by_category("production")
-        combat = facade.get_events_by_category("combat")
+        prod = facade.events.by_category("production")
+        combat = facade.events.by_category("combat")
         assert len(prod) == 1
         assert len(combat) == 1
 

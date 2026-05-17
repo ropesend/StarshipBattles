@@ -40,7 +40,7 @@ class TestFacadeRobustResolution:
 
         # Query planet's global position: system.global_location + planet.location = (10,10) + (1,0) = (11,10)
         planet_global_hex = HexCoord(11, 10)
-        result = facade.get_planets_at_hex(planet_global_hex)
+        result = facade.planets.at_hex(planet_global_hex)
         assert len(result) == 1
         
     def test_get_planets_at_hex_radius_match(self, facade, mock_session):
@@ -73,7 +73,7 @@ class TestFacadeRobustResolution:
         with patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.get_system_at_hex') as mock_pathfinding:
             mock_pathfinding.return_value = system
 
-            result = facade.get_planets_at_hex(planet_global_hex)
+            result = facade.planets.at_hex(planet_global_hex)
 
             assert len(result) == 1
             mock_pathfinding.assert_called_once()
@@ -87,6 +87,6 @@ class TestFacadeRobustResolution:
         with patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.get_system_at_hex') as mock_pathfinding:
             mock_pathfinding.return_value = None
             
-            result = facade.get_planets_at_hex(HexCoord(100, 100))
+            result = facade.planets.at_hex(HexCoord(100, 100))
             
             assert len(result) == 0

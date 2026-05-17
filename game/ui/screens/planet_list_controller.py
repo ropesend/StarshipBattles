@@ -37,7 +37,7 @@ class PlanetListController:
         ``None`` for uncolonized / no-facade fallback (PROJ-292 H1)."""
         if planet.owner_id is None or self.facade is None:
             return None
-        return self.facade.get_colony_demographic_view(planet.id)
+        return self.facade.economy.colony_demographic_view(planet.id)
 
     def navigate_to(self, location) -> None:
         """Fire the navigate callback if registered."""

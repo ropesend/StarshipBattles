@@ -108,10 +108,10 @@ def _make_dialog(mock_manager, mock_scene, mock_fleet,
     coupling Phase C refactors away. For characterization we accept
     the cost (these tests still complete in well under a second each).
     """
-    mock_scene._facade.get_fleets_at_hex.return_value = list(fleets or [])
-    mock_scene._facade.get_planets_at_hex.return_value = list(planets or [])
-    mock_scene._facade.get_fleet.return_value = fleet_info or _empty_fleet_info()
-    mock_scene._facade.get_planet.return_value = planet_info or _empty_planet_info()
+    mock_scene._facade.fleets.at_hex.return_value = list(fleets or [])
+    mock_scene._facade.planets.at_hex.return_value = list(planets or [])
+    mock_scene._facade.fleets.get.return_value = fleet_info or _empty_fleet_info()
+    mock_scene._facade.planets.get.return_value = planet_info or _empty_planet_info()
 
     rect = pygame.Rect(0, 0, 900, 700)
     return TransferDialog(
@@ -598,10 +598,10 @@ class TestTwoStageConstruction:
         # the hex.
         f1 = MagicMock(fleet_id=1, owner_id=0)
         f1.configure_mock(name="Fleet 1")
-        scene.facade.get_fleets_at_hex.return_value = [f1]
-        scene.facade.get_planets_at_hex.return_value = []
-        scene.facade.get_fleet.return_value = _empty_fleet_info()
-        scene.facade.get_planet.return_value = _empty_planet_info()
+        scene.facade.fleets.at_hex.return_value = [f1]
+        scene.facade.planets.at_hex.return_value = []
+        scene.facade.fleets.get.return_value = _empty_fleet_info()
+        scene.facade.planets.get.return_value = _empty_planet_info()
 
         dialog = self._build(
             ui_builder=MockTransferUiBuilder(),
@@ -632,10 +632,10 @@ class TestTwoStageConstruction:
         f1.configure_mock(name="Fleet 1")
         p1 = MagicMock(planet_id=10, owner_id=0)
         p1.name = "Alpha"
-        scene.facade.get_fleets_at_hex.return_value = [f1]
-        scene.facade.get_planets_at_hex.return_value = [p1]
-        scene.facade.get_fleet.return_value = _empty_fleet_info()
-        scene.facade.get_planet.return_value = _empty_planet_info()
+        scene.facade.fleets.at_hex.return_value = [f1]
+        scene.facade.planets.at_hex.return_value = [p1]
+        scene.facade.fleets.get.return_value = _empty_fleet_info()
+        scene.facade.planets.get.return_value = _empty_planet_info()
 
         dialog = self._build(
             ui_builder=MockTransferUiBuilder(),

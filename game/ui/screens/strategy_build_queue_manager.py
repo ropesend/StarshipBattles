@@ -176,7 +176,7 @@ class StrategyBuildQueueManager:
                 # PROJ-40: Create dependencies for DI injection.
                 # PROJ-396 MAJ-004: route save_path / galaxy through facade
                 # / screen properties instead of reaching into the session.
-                savegame_path = self._screen.facade.get_save_path()
+                savegame_path = self._screen.facade.session_meta.save_path()
                 empire_id = planet.owner_id
                 # PROJ-411 Phase 1: pass facade_state so scan_designs() reuses
                 # the per-turn cache instead of re-globbing 47 JSON files per open.
@@ -289,7 +289,7 @@ class StrategyBuildQueueManager:
 
         # Create dependencies for DI injection.
         # PROJ-396 MAJ-004: save_path via facade.
-        savegame_path = self._screen.facade.get_save_path()
+        savegame_path = self._screen.facade.session_meta.save_path()
         empire_id = self._screen.current_empire.id
         # PROJ-411 Phase 1: pass facade_state so scan_designs() reuses
         # the per-turn cache instead of re-globbing 47 JSON files per open.
@@ -319,7 +319,7 @@ class StrategyBuildQueueManager:
 
                 # Create dependencies for DI injection.
                 # PROJ-396 MAJ-004: save_path via facade.
-                savegame_path = self._screen.facade.get_save_path()
+                savegame_path = self._screen.facade.session_meta.save_path()
                 empire_id = fleet.owner_id
                 # PROJ-411 Phase 1: pass facade_state so scan_designs() reuses
                 # the per-turn cache instead of re-globbing 47 JSON files per open.

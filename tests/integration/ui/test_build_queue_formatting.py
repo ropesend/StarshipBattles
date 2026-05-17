@@ -50,6 +50,43 @@ class MockSession:
         """PROJ-396 MAJ-004: facade-shaped save-path accessor."""
         return self.save_path
 
+    # PROJ-430 / TD-08: expose grouped namespace accessors so production
+    # code that calls ``facade.economy.registries()`` etc. resolves on the
+    # mock without rewriting every helper method.
+    @property
+    def economy(self):
+        class _EconomyNS:
+            def __init__(self, parent):
+                self._parent = parent
+            def registries(self):
+                return self._parent.get_registries() if hasattr(self._parent, "get_registries") else self._parent.registries
+            def colony_demographic_view(self, planet_id):
+                return self._parent.get_colony_demographic_view(planet_id) if hasattr(self._parent, "get_colony_demographic_view") else None
+            def race_registry(self):
+                return getattr(self._parent, "race_registry", None)
+            def resolve_config(self):
+                return getattr(self._parent, "economy_config", None)
+        return _EconomyNS(self)
+
+    @property
+    def session_meta(self):
+        class _SessionMetaNS:
+            def __init__(self, parent):
+                self._parent = parent
+            def turn_number(self):
+                if hasattr(self._parent, "get_turn_number"):
+                    return self._parent.get_turn_number()
+                return getattr(self._parent, "turn_number", 0)
+            def save_path(self):
+                if hasattr(self._parent, "get_save_path"):
+                    return self._parent.get_save_path()
+                return getattr(self._parent, "savegame_path", None) or getattr(self._parent, "save_path", None)
+            def human_player_ids(self):
+                if hasattr(self._parent, "get_human_player_ids"):
+                    return self._parent.get_human_player_ids()
+                return getattr(self._parent, "human_player_ids", [])
+        return _SessionMetaNS(self)
+
     def handle_command(self, cmd):
         """Mock command handler."""
         from game.core.validation import ValidationResult
