@@ -18,9 +18,10 @@ System documentation for the turn-based strategy layer.
 **File:** `game/strategy/facade/strategy_session_facade.py`
 
 CQRS-lite boundary between UI and `GameSession`. Post-TD-08 the facade
-exposes a deliberately narrow top-level surface: only two callables and
-ten grouped namespace accessors. Every other public verb lives inside the
-appropriate domain group.
+exposes a deliberately narrow top-level surface: two callables
+(`handle_command`, `process_turn`) plus `facade_state` and 9 grouped
+namespace accessors. Every other public verb lives inside the appropriate
+domain group.
 
 ### Top-level surface
 
