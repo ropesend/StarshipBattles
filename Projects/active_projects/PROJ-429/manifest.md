@@ -73,7 +73,7 @@
 | File | Type | Notes |
 |------|------|-------|
 | `docs/systems/strategy_layer.md` | Doc (modify) | Describe `AbilityMetadataRegistry` as the canonical strategy-facing source of truth for ability metadata. Remove prose referencing `_ACTIVATABLE_ABILITIES`, the design-role frozensets, or `ORDER_TO_TIME_FIELD`. |
-| `docs/guides/adding_abilities.md` (if it has a live successor) | Doc (modify) | Point at the unified registry as the **first** edit when adding a new ability. Skip if doc is archived / under `_marked_for_deletion_*/`. |
+| `docs/guides/adding_abilities.md` | Doc (conditional modify) | **Only touch if it is still the live supported guide.** Per TD-07 Phase 7: "Do not update an archived or deletion-bound doc just because a stale reference exists." If active: point at the unified registry as the first edit when adding a new ability. If archived under `_marked_for_deletion_*/`: skip entirely — this file does **not** count toward Phase 7 completion. |
 
 ## Out-of-manifest (read-only references)
 

@@ -10,7 +10,7 @@
   "execution_protocol": "03c-phase-aware-execution",
   "findings": {},
   "phases": {
-    "phase_1": {
+    "phase_0": {
       "depends_on": [],
       "merged_into_project_at_sha": null,
       "phase_base_sha": null,
@@ -19,6 +19,27 @@
       "planned_files": [
         "tests/unit/strategy/turn_engine/test_turn_engine_phase_320_movement_diff.py",
         "tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_1": {
+      "depends_on": [
+        "phase_0"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/engine/turn_engine.py",
+        "game/strategy/engine/turn_phase_registry.py",
+        "tests/unit/strategy/turn_engine/test_turn_engine_lazy_properties.py",
+        "tests/unit/strategy/engine/test_no_lazy_fallback_init.py"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
@@ -38,8 +59,7 @@
       "planned_files": [
         "game/strategy/engine/turn_engine.py",
         "game/strategy/engine/turn_phase_registry.py",
-        "tests/unit/strategy/turn_engine/test_turn_engine_lazy_properties.py",
-        "tests/unit/strategy/engine/test_no_lazy_fallback_init.py"
+        "tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
@@ -51,26 +71,6 @@
     "phase_3": {
       "depends_on": [
         "phase_2"
-      ],
-      "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
-      "phase_branch": null,
-      "phase_head_sha": null,
-      "planned_files": [
-        "game/strategy/engine/turn_engine.py",
-        "game/strategy/engine/turn_phase_registry.py",
-        "tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py"
-      ],
-      "review_dispatch_failed": false,
-      "review_mode": "standard",
-      "review_request_id": null,
-      "scrap_history": [],
-      "status": "not_started",
-      "verifying_review_id": null
-    },
-    "phase_4": {
-      "depends_on": [
-        "phase_3"
       ],
       "merged_into_project_at_sha": null,
       "phase_base_sha": null,
@@ -92,9 +92,9 @@
       "status": "not_started",
       "verifying_review_id": null
     },
-    "phase_5": {
+    "phase_4": {
       "depends_on": [
-        "phase_4"
+        "phase_3"
       ],
       "merged_into_project_at_sha": null,
       "phase_base_sha": null,
@@ -110,9 +110,9 @@
       "status": "not_started",
       "verifying_review_id": null
     },
-    "phase_6": {
+    "phase_5": {
       "depends_on": [
-        "phase_5"
+        "phase_4"
       ],
       "merged_into_project_at_sha": null,
       "phase_base_sha": null,

@@ -1,4 +1,4 @@
-# Phase 5: Add a registry-purity guard
+# Phase 5: Validate and document
 
 > **BEFORE MARKING THIS PHASE COMPLETE:**
 > 1. Run `python Projects/scripts/validate_phase.py PROJ-428 5`
@@ -9,54 +9,58 @@
 **Depends on:** phase_4
 **Review Mode:** standard
 **Files (planned):**
-- `tests/unit/strategy/turn_engine/test_turn_phase_registry_purity.py` (or `test_tick_phase_descriptors.py`)
+- `docs/systems/strategy_layer.md` (only if hook placement / registry ownership is described there)
 
-**Objective:** Add an AST-driven test that prevents future regressions of
-the registry-as-data contract.
+**Objective:** Run the targeted regression gate, then the full sharded
+suite, then update documentation only where it describes the prior hook
+placement.
 
 ---
 
 ## Tasks
 
-### Task 5.1: AST guard — no module-level functions [Simple]
-**File:** `tests/unit/strategy/turn_engine/test_turn_phase_registry_purity.py`
-**Tests:** `pytest tests/unit/strategy/turn_engine/test_turn_phase_registry_purity.py`
+### Task 6.1: Focused regression gate [Simple]
+**Tests:**
 
-- [ ] Parse `turn_phase_registry.py` with the `ast` module.
-- [ ] Assert there are zero top-level `FunctionDef` and `AsyncFunctionDef`
-      nodes.
-- [ ] Confirm the test passes against the post-Phase-4 code.
+```bash
+pytest tests/unit/strategy/turn_engine/ -x
+pytest tests/unit/strategy/engine/test_turn_engine_config.py tests/unit/strategy/engine/test_no_lazy_fallback_init.py -x
+pytest tests/integration/test_fms_b_e2e.py tests/integration/test_fms_b_statistical_balance.py -x
+```
 
-**Notes:**
-
-### Task 5.2: AST guard — no gameplay engine imports [Simple]
-**File:** `tests/unit/strategy/turn_engine/test_turn_phase_registry_purity.py`
-**Tests:** `pytest tests/unit/strategy/turn_engine/test_turn_phase_registry_purity.py`
-
-- [ ] Walk the registry module's `Import` and `ImportFrom` nodes.
-- [ ] Assert `PlanetModifierEffectEngine` and `MinefieldResolver` are not
-      imported (and ideally that nothing from gameplay engine modules is).
-- [ ] Confirm the test passes against the post-Phase-4 code.
+- [ ] All three focused commands are green.
+- [ ] Record commit SHA and any tolerance-band observations.
 
 **Notes:**
 
-### Task 5.3: Golden descriptor list assertions [Simple]
-**File:** `tests/unit/strategy/turn_engine/test_turn_phase_registry_purity.py`
-**Tests:** `pytest tests/unit/strategy/turn_engine/test_turn_phase_registry_purity.py`
+### Task 6.2: Full sharded suite [Complex]
+**Tests:** `python Tools/test_sharded/test_sharded.py`
 
-- [ ] Assert that `DEFAULT_TICK_PHASE_LIST` has the expected phase keys
-      in the expected order with the expected timing buckets.
-- [ ] Assert the same for `DEFAULT_END_OF_TURN_PHASE_LIST`.
-- [ ] Confirm tests pass against the post-Phase-4 code.
+- [ ] Full sharded suite is green.
+- [ ] If any flake recurs, capture stdout/stderr in `findings/` and treat
+      the flake as a separate ticket (do not silently retry-until-green).
 
 **Notes:**
 
-### Task 5.4: Verify the guard fails when violated [Simple]
+### Task 6.3: Documentation update [Simple]
+**File:** `docs/systems/strategy_layer.md`
 
-- [ ] In a scratch experiment, reintroduce a dummy module-level function
-      in `turn_phase_registry.py` and confirm the AST guard fails.
-- [ ] Revert the experimental change.
-- [ ] Verify: focused turn-engine suite is green.
+- [ ] Grep `docs/systems/strategy_layer.md` for references to the deleted
+      registry helpers and any "registry owns X" wording.
+- [ ] Update only the sections that describe hook placement or registry
+      ownership.
+- [ ] If the file does not mention any of this, skip the update and note
+      the skip in `findings/`.
+
+**Notes:**
+
+### Task 6.4: Final acceptance check [Simple]
+
+- [ ] Verify every plan.md verification checkbox can be ticked.
+- [ ] Verify `turn_phase_registry.py` has zero module-level functions and
+      zero gameplay engine imports (sanity check via the Phase 4 guard).
+- [ ] Run `phase_complete.py PROJ-428 phase_5` so the final cumulative
+      review covers all six phases.
 
 **Notes:**
 
@@ -65,7 +69,7 @@ the registry-as-data contract.
 ## Phase Completion Checklist
 When all tasks above are done:
 - [ ] All task checkboxes above are checked
-- [ ] `pytest tests/unit/strategy/turn_engine/ -x` is green
+- [ ] Full sharded suite is green
 - [ ] Update status at top of this file to `Complete (Committed)`
 - [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 6
+- [ ] Update plan.md Current State to "Awaiting final audit"

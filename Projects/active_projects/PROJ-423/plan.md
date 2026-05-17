@@ -21,9 +21,9 @@
 
 ## Current State
 **Last Updated:** 2026-05-16
-**Active Phase:** Phase 1 (Phase 0 is preflight grep + behavioral inventory; if it has not yet been performed, do it as part of Phase 1's setup)
+**Active Phase:** Phase 0 — Preflight and contract freeze
 **Last Action:** Initialized from TD-02 plan
-**Next Action:** Run baseline test sweep (`python Tools/test_sharded/test_sharded.py`) and read the source TD-02 plan in full
+**Next Action:** Run baseline test sweep (`python Tools/test_sharded/test_sharded.py`), read the source TD-02 plan in full, then execute Phase 0 (preflight grep + behavioral inventory + characterization tests) before moving to Phase 1
 **Blockers:** None
 
 ## Overview

@@ -25,10 +25,10 @@
     },
     "claude-discuss-start": {
       "agents": {
-        "claude": 10
+        "claude": 11
       },
-      "count": 10,
-      "last_used": "2026-05-17T05:25:52Z"
+      "count": 11,
+      "last_used": "2026-05-17T06:02:32Z"
     },
     "claude-fix-crash": {
       "agents": {
@@ -123,10 +123,10 @@
     },
     "codex-discuss-respond": {
       "agents": {
-        "codex": 14
+        "codex": 18
       },
-      "count": 14,
-      "last_used": "2026-05-17T05:37:28Z"
+      "count": 18,
+      "last_used": "2026-05-17T06:25:19Z"
     },
     "codex-discuss-start": {
       "agents": {

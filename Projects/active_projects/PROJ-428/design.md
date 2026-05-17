@@ -19,12 +19,12 @@ Six module-level helpers currently live in `turn_phase_registry.py`:
 
 | Helper | Wired to | New home |
 |---|---|---|
-| `_log_turn_start_tick_1` | `turn_start` hook | Named `TurnEngine` method (Phase 3) |
-| `_log_after_construction_tick_1` | post-production hook | Named `TurnEngine` method (Phase 3) |
-| `_accumulate_env_events` | env-event hook | Named `TurnEngine` method (Phase 3) |
-| `_capture_move_queue` | `movement_calc` hook | `MovementPhaseCollaborator.snapshot_before` (Phase 4) |
-| `_derive_moved_fleet_ids` | `movement_apply` hook | `MovementPhaseCollaborator.resolve_after` (Phase 4) |
-| `_resolve_planet_modifier_effects` | planet-modifier hook | `TurnEngine.planet_modifier_effect_engine` lazy property + descriptor lambda (Phase 2) |
+| `_log_turn_start_tick_1` | `turn_start` hook | Named `TurnEngine` method (Phase 2) |
+| `_log_after_construction_tick_1` | post-production hook | Named `TurnEngine` method (Phase 2) |
+| `_accumulate_env_events` | env-event hook | Named `TurnEngine` method (Phase 2) |
+| `_capture_move_queue` | `movement_calc` hook | `MovementPhaseCollaborator.snapshot_before` (Phase 3) |
+| `_derive_moved_fleet_ids` | `movement_apply` hook | `MovementPhaseCollaborator.resolve_after` (Phase 3) |
+| `_resolve_planet_modifier_effects` | planet-modifier hook | `TurnEngine.planet_modifier_effect_engine` lazy property + descriptor lambda (Phase 1) |
 
 In addition, the module currently:
 
@@ -138,7 +138,7 @@ helper in the registry module.
 
 ## Dependencies & Risks
 
-1. **Phase order / key drift** — mitigated by Phase 1 characterization
+1. **Phase order / key drift** — mitigated by Phase 0 characterization
    tests against `DEFAULT_TICK_PHASE_LIST` / `DEFAULT_END_OF_TURN_PHASE_LIST`.
 2. **Subtle minefield behavior drift** — mitigated by FMS-B integration
    tests run before the sharded suite, and by preserving the exact
@@ -149,9 +149,9 @@ helper in the registry module.
 4. **Collaborator scope creep** — explicit guardrail: the collaborator owns
    movement snapshotting, movement diffing, minefield resolution wiring,
    and fleet pruning. Nothing else.
-5. **`_booster_dirty` regression** — Phase 1 tests pin the flip-only-for-moved
+5. **`_booster_dirty` regression** — Phase 0 tests pin the flip-only-for-moved
    behavior before any code moves.
-6. **PROJ-422 (TD-09) interplay** — soft predecessor only. Phase 2 uses a
+6. **PROJ-422 (TD-09) interplay** — soft predecessor only. Phase 1 uses a
    lazy property rather than a new ABC, so the engine-interface monolith does
    not block this work.
 

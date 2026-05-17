@@ -16,24 +16,19 @@
 
 | Phase | Name | Status | Checklist |
 |-------|------|--------|-----------|
-| 1 | Freeze the real contract with red tests | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2 | Move planet-modifier engine resolution onto `TurnEngine` | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3 | Move small hook logic onto named `TurnEngine` methods | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4 | Extract the movement-only collaborator | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5 | Add a registry-purity guard | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6 | Validate and document | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
-
-> Phase numbering note: the source TD-04 plan labels these Phase 0 through
-> Phase 5. They are renumbered 1..6 here to match the canonical phase-state
-> indexing used by `phase_state.json` and the 03c protocol scripts. Phase
-> intent and ordering are unchanged.
+| 0 | Freeze the real contract with red tests | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
+| 1 | Move planet-modifier engine resolution onto `TurnEngine` | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2 | Move small hook logic onto named `TurnEngine` methods | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3 | Extract the movement-only collaborator | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4 | Add a registry-purity guard | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5 | Validate and document | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 
 **Last Updated:** 2026-05-16
-**Active Phase:** 1 — Freeze the real contract with red tests
+**Active Phase:** 0 — Freeze the real contract with red tests
 **Last Action:** Project scaffold populated from TD-04 plan
-**Next Action:** Run `python Projects/scripts/phase_dag.py PROJ-428 eligible`, then start phase 1 characterization tests
+**Next Action:** Run `python Projects/scripts/phase_dag.py PROJ-428 eligible`, then start phase 0 characterization tests
 **Blockers:** None
 
 ## Overview
@@ -95,7 +90,7 @@ single movement-specific collaborator) so the registry can become pure data.
 |-----------|-----------|
 | Registry under refactor | `game/strategy/engine/turn_phase_registry.py` |
 | Primary consumer | `game/strategy/engine/turn_engine.py` |
-| New collaborator (Phase 4) | `game/strategy/engine/movement_phase_collaborator.py` |
+| New collaborator (Phase 3) | `game/strategy/engine/movement_phase_collaborator.py` |
 | Planet modifier engine | `game/strategy/engine/planet_modifier_effect_engine.py` |
 | Minefield resolver | `game/strategy/engine/minefield_resolver.py` |
 | Descriptor tests | `tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py` |
@@ -111,26 +106,26 @@ single movement-specific collaborator) so the registry can become pure data.
 
 ## Phases
 
-### Phase 1: Freeze the real contract with red tests
+### Phase 0: Freeze the real contract with red tests
 Add failing / characterization tests for `last_environmental_events`,
 `move_queue`/`pre_movement_locations` snapshotting, `moved_fleet_ids`,
 `_booster_dirty` flips, the `MinefieldResolver.resolve_minefield_entry`
 call contract, and fleet-pruning after minefield damage. No production
 code changes.
 
-### Phase 2: Move planet-modifier engine resolution onto `TurnEngine`
+### Phase 1: Move planet-modifier engine resolution onto `TurnEngine`
 Introduce `TurnEngine.planet_modifier_effect_engine` lazy property.
 Repoint the descriptor resolver to
 `lambda e: e.planet_modifier_effect_engine.process_modifier_effects_tick`.
 Delete `_resolve_planet_modifier_effects` from the registry. Do NOT add a
 new `TurnEngineConfig` field.
 
-### Phase 3: Move small hook logic onto named `TurnEngine` methods
+### Phase 2: Move small hook logic onto named `TurnEngine` methods
 Add named methods for the tick-1 pre-harvesting log, the tick-1 post-production
 log, and env-event accumulation. Repoint hooks at those methods. Delete the
 three small registry helpers.
 
-### Phase 4: Extract the movement-only collaborator
+### Phase 3: Extract the movement-only collaborator
 Introduce `MovementPhaseCollaborator` with `snapshot_before(ctx, result)` and
 `resolve_after(engine, ctx)`. Internally split `_diff_moved_fleets`,
 `_mark_boosters_dirty`, `_resolve_minefields`, `_prune_destroyed_fleet_contents`.
@@ -138,12 +133,12 @@ Wire `movement_calc` / `movement_apply` hooks to it. Preserve the existing
 broad-catch around minefield resolution and the `registries=engine._registries`
 call contract. Delete `_capture_move_queue` and `_derive_moved_fleet_ids`.
 
-### Phase 5: Add a registry-purity guard
+### Phase 4: Add a registry-purity guard
 Add an AST-driven test that enforces: no module-level functions in
 `turn_phase_registry.py`, no gameplay engine imports, descriptor order and
 keys unchanged.
 
-### Phase 6: Validate and document
+### Phase 5: Validate and document
 Run focused turn-engine + FMS-B suites, then the full sharded suite. Update
 `docs/systems/strategy_layer.md` only if it explicitly describes hook
 placement or registry ownership.

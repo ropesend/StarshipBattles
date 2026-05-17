@@ -1,4 +1,4 @@
-# Phase 2: Move planet-modifier engine resolution onto `TurnEngine`
+# Phase 2: Move small hook logic onto named `TurnEngine` methods
 
 > **BEFORE MARKING THIS PHASE COMPLETE:**
 > 1. Run `python Projects/scripts/validate_phase.py PROJ-428 2`
@@ -11,64 +11,68 @@
 **Files (planned):**
 - `game/strategy/engine/turn_engine.py`
 - `game/strategy/engine/turn_phase_registry.py`
-- `tests/unit/strategy/turn_engine/test_turn_engine_lazy_properties.py`
-- `tests/unit/strategy/engine/test_no_lazy_fallback_init.py`
+- `tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py`
 
-**Objective:** Move `_resolve_planet_modifier_effects` out of the registry by
-adding a `TurnEngine.planet_modifier_effect_engine` lazy property and
-repointing the descriptor resolver. **Do not** add a new `TurnEngineConfig`
-field.
+**Objective:** Replace the three small registry helpers
+(`_log_turn_start_tick_1`, `_log_after_construction_tick_1`,
+`_accumulate_env_events`) with named methods on `TurnEngine`. Do not create
+a separate `TurnLogger` class unless `turn_engine.py` becomes materially
+less clear.
 
 ---
 
 ## Tasks
 
-### Task 2.1: Red test — registry no longer imports `PlanetModifierEffectEngine` [Simple]
-**File:** `tests/unit/strategy/turn_engine/test_turn_engine_lazy_properties.py`
-**Tests:** `pytest tests/unit/strategy/turn_engine/test_turn_engine_lazy_properties.py`
+### Task 3.1: Red tests for the three engine methods [Medium]
+**File:** `tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py`
+**Tests:** `pytest tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py`
 
-- [ ] Add a failing test that imports `game.strategy.engine.turn_phase_registry`,
-      walks the module AST, and asserts no top-level import resolves to
-      `PlanetModifierEffectEngine`.
-- [ ] Confirm the test fails against current code for the intended reason.
+- [ ] Add a failing test that calls `TurnEngine`'s tick-1 pre-harvesting
+      log method directly and asserts the expected log line is emitted.
+- [ ] Add a failing test that calls `TurnEngine`'s tick-1 post-production
+      log method directly and asserts the expected log line is emitted.
+- [ ] Add a failing test that calls `TurnEngine`'s env-event accumulation
+      method directly and asserts `last_environmental_events` is updated.
+- [ ] Confirm all three tests fail for the intended reason.
 
 **Notes:**
 
-### Task 2.2: Add `TurnEngine.planet_modifier_effect_engine` lazy property [Medium]
+### Task 3.2: Implement named methods on `TurnEngine` [Medium]
 **File:** `game/strategy/engine/turn_engine.py`
-**Tests:** `pytest tests/unit/strategy/turn_engine/test_turn_engine_lazy_properties.py tests/unit/strategy/engine/test_no_lazy_fallback_init.py`
+**Tests:** `pytest tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py`
 
-- [ ] Add a lazy property on `TurnEngine` that constructs and caches a
-      `PlanetModifierEffectEngine`.
-- [ ] Add unit coverage that the property returns the same instance on
-      repeated access (cache works).
-- [ ] Confirm no new `TurnEngineConfig` field was added (run
-      `test_turn_engine_config.py`).
-- [ ] Confirm `test_no_lazy_fallback_init.py` is still green.
-
-**Notes:**
-
-### Task 2.3: Repoint descriptor resolver [Simple]
-**File:** `game/strategy/engine/turn_phase_registry.py`
-**Tests:** `pytest tests/unit/strategy/turn_engine/test_default_tick_phase_list.py tests/unit/strategy/turn_engine/test_default_end_of_turn_phase_list.py`
-
-- [ ] Change the descriptor for the planet-modifier phase to
-      `lambda e: e.planet_modifier_effect_engine.process_modifier_effects_tick`.
-- [ ] Confirm `DEFAULT_TICK_PHASE_LIST` and
-      `DEFAULT_END_OF_TURN_PHASE_LIST` golden tests stay green.
+- [ ] Implement the tick-1 pre-harvesting log method on `TurnEngine`,
+      preserving the exact log line and gating (only on tick 1).
+- [ ] Implement the tick-1 post-production log method on `TurnEngine`,
+      preserving the exact log line and gating.
+- [ ] Implement the env-event accumulation method on `TurnEngine`,
+      preserving the contract that `last_environmental_events` accumulates
+      returned events.
+- [ ] Confirm the three new red tests now pass.
 
 **Notes:**
 
-### Task 2.4: Delete `_resolve_planet_modifier_effects` [Simple]
+### Task 3.3: Repoint registry hooks at the new methods [Simple]
 **File:** `game/strategy/engine/turn_phase_registry.py`
 **Tests:** `pytest tests/unit/strategy/turn_engine/ -x`
 
-- [ ] Remove `_resolve_planet_modifier_effects` from
-      `turn_phase_registry.py`.
-- [ ] Remove the `PlanetModifierEffectEngine` import from
-      `turn_phase_registry.py`.
-- [ ] Confirm the Task 2.1 AST test now passes.
+- [ ] Replace the descriptor wiring for the three hooks with resolver
+      lambdas that bind to the new `TurnEngine` methods.
+- [ ] Verify `DEFAULT_TICK_PHASE_LIST` and `DEFAULT_END_OF_TURN_PHASE_LIST`
+      golden tests stay green.
+
+**Notes:**
+
+### Task 3.4: Delete the three small registry helpers [Simple]
+**File:** `game/strategy/engine/turn_phase_registry.py`
+**Tests:** `pytest tests/unit/strategy/turn_engine/ -x`
+
+- [ ] Remove `_log_turn_start_tick_1` from `turn_phase_registry.py`.
+- [ ] Remove `_log_after_construction_tick_1` from `turn_phase_registry.py`.
+- [ ] Remove `_accumulate_env_events` from `turn_phase_registry.py`.
 - [ ] Verify: focused turn-engine suite is green.
+- [ ] Verify: `TURN PERF` output format is unchanged (manual visual check
+      or characterization assertion).
 
 **Notes:**
 
@@ -78,7 +82,6 @@ field.
 When all tasks above are done:
 - [ ] All task checkboxes above are checked
 - [ ] `pytest tests/unit/strategy/turn_engine/ -x` is green
-- [ ] `pytest tests/unit/strategy/engine/test_turn_engine_config.py tests/unit/strategy/engine/test_no_lazy_fallback_init.py -x` is green
 - [ ] Update status at top of this file to `Complete (Committed)`
 - [ ] Update plan.md phase table row to `Complete`
 - [ ] Update plan.md Current State to point to Phase 3

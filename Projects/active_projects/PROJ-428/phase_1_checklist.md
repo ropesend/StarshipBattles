@@ -1,4 +1,4 @@
-# Phase 1: Freeze the real contract with red tests
+# Phase 1: Move planet-modifier engine resolution onto `TurnEngine`
 
 > **BEFORE MARKING THIS PHASE COMPLETE:**
 > 1. Run `python Projects/scripts/validate_phase.py PROJ-428 1`
@@ -6,76 +6,69 @@
 > 3. Update plan.md phase table AND Current State
 
 **Status:** Not Started
-**Depends on:** none
+**Depends on:** phase_0
 **Review Mode:** standard
 **Files (planned):**
-- `tests/unit/strategy/turn_engine/test_turn_engine_phase_320_movement_diff.py`
-- `tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py`
+- `game/strategy/engine/turn_engine.py`
+- `game/strategy/engine/turn_phase_registry.py`
+- `tests/unit/strategy/turn_engine/test_turn_engine_lazy_properties.py`
+- `tests/unit/strategy/engine/test_no_lazy_fallback_init.py`
 
-**Objective:** Add failing / characterization tests that pin the real
-behavioral contract of the six registry hooks before any code moves. Tests
-must fail for the intended reason in a scratch experiment but pass against
-the current code (i.e. they characterize what exists).
+**Objective:** Move `_resolve_planet_modifier_effects` out of the registry by
+adding a `TurnEngine.planet_modifier_effect_engine` lazy property and
+repointing the descriptor resolver. **Do not** add a new `TurnEngineConfig`
+field.
 
 ---
 
 ## Tasks
 
-### Task 1.1: Characterization tests for environmental events [Simple]
-**File:** `tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py`
-**Tests:** `pytest tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py`
+### Task 2.1: Red test — registry no longer imports `PlanetModifierEffectEngine` [Simple]
+**File:** `tests/unit/strategy/turn_engine/test_turn_engine_lazy_properties.py`
+**Tests:** `pytest tests/unit/strategy/turn_engine/test_turn_engine_lazy_properties.py`
 
-- [ ] Add a test that confirms `ctx.last_environmental_events` accumulates
-      every environmental event returned through the env-event hook over a
-      turn.
-- [ ] Verify the test passes against current code.
-
-**Notes:**
-
-### Task 1.2: Characterization tests for movement snapshot [Medium]
-**File:** `tests/unit/strategy/turn_engine/test_turn_engine_phase_320_movement_diff.py`
-**Tests:** `pytest tests/unit/strategy/turn_engine/test_turn_engine_phase_320_movement_diff.py`
-
-- [ ] Add a test that confirms `movement_calc` stores both `move_queue`
-      and `pre_movement_locations` on the turn context.
-- [ ] Add a test that confirms `movement_apply` computes `moved_fleet_ids`
-      from the diff between `pre_movement_locations` and post-movement
-      locations.
-- [ ] Verify both tests pass against current code.
+- [ ] Add a failing test that imports `game.strategy.engine.turn_phase_registry`,
+      walks the module AST, and asserts no top-level import resolves to
+      `PlanetModifierEffectEngine`.
+- [ ] Confirm the test fails against current code for the intended reason.
 
 **Notes:**
 
-### Task 1.3: Characterization tests for `_booster_dirty` propagation [Medium]
-**File:** `tests/unit/strategy/turn_engine/test_turn_engine_phase_320_movement_diff.py`
-**Tests:** `pytest tests/unit/strategy/turn_engine/test_turn_engine_phase_320_movement_diff.py`
+### Task 2.2: Add `TurnEngine.planet_modifier_effect_engine` lazy property [Medium]
+**File:** `game/strategy/engine/turn_engine.py`
+**Tests:** `pytest tests/unit/strategy/turn_engine/test_turn_engine_lazy_properties.py tests/unit/strategy/engine/test_no_lazy_fallback_init.py`
 
-- [ ] Add a test that confirms `_booster_dirty` flips only for empires
-      whose fleets actually moved (not for empires whose fleets stood
-      still).
-- [ ] Verify the test passes against current code.
-
-**Notes:**
-
-### Task 1.4: Characterization tests for minefield call contract [Complex]
-**File:** `tests/unit/strategy/turn_engine/test_turn_engine_phase_320_movement_diff.py`
-**Tests:** `pytest tests/unit/strategy/turn_engine/test_turn_engine_phase_320_movement_diff.py`
-
-- [ ] Add a test that confirms
-      `MinefieldResolver.resolve_minefield_entry(...)` is invoked with
-      `registries=engine._registries` for each moved fleet.
-- [ ] Add a test that confirms fleets emptied by minefield damage are
-      removed from the owning empire.
-- [ ] Verify both tests pass against current code.
+- [ ] Add a lazy property on `TurnEngine` that constructs and caches a
+      `PlanetModifierEffectEngine`.
+- [ ] Add unit coverage that the property returns the same instance on
+      repeated access (cache works).
+- [ ] Confirm no new `TurnEngineConfig` field was added (run
+      `test_turn_engine_config.py`).
+- [ ] Confirm `test_no_lazy_fallback_init.py` is still green.
 
 **Notes:**
 
-### Task 1.5: Confirm characterization tests are valid red gates [Simple]
-**File:** (mental experiment, not committed)
+### Task 2.3: Repoint descriptor resolver [Simple]
+**File:** `game/strategy/engine/turn_phase_registry.py`
+**Tests:** `pytest tests/unit/strategy/turn_engine/test_default_tick_phase_list.py tests/unit/strategy/turn_engine/test_default_end_of_turn_phase_list.py`
 
-- [ ] Temporarily stub out each behavior in a local branch and confirm
-      the characterization tests fail for the intended reason.
-- [ ] Revert the stub.
-- [ ] Verify: characterization suite is green on the unmodified code.
+- [ ] Change the descriptor for the planet-modifier phase to
+      `lambda e: e.planet_modifier_effect_engine.process_modifier_effects_tick`.
+- [ ] Confirm `DEFAULT_TICK_PHASE_LIST` and
+      `DEFAULT_END_OF_TURN_PHASE_LIST` golden tests stay green.
+
+**Notes:**
+
+### Task 2.4: Delete `_resolve_planet_modifier_effects` [Simple]
+**File:** `game/strategy/engine/turn_phase_registry.py`
+**Tests:** `pytest tests/unit/strategy/turn_engine/ -x`
+
+- [ ] Remove `_resolve_planet_modifier_effects` from
+      `turn_phase_registry.py`.
+- [ ] Remove the `PlanetModifierEffectEngine` import from
+      `turn_phase_registry.py`.
+- [ ] Confirm the Task 2.1 AST test now passes.
+- [ ] Verify: focused turn-engine suite is green.
 
 **Notes:**
 
@@ -85,6 +78,7 @@ the current code (i.e. they characterize what exists).
 When all tasks above are done:
 - [ ] All task checkboxes above are checked
 - [ ] `pytest tests/unit/strategy/turn_engine/ -x` is green
+- [ ] `pytest tests/unit/strategy/engine/test_turn_engine_config.py tests/unit/strategy/engine/test_no_lazy_fallback_init.py -x` is green
 - [ ] Update status at top of this file to `Complete (Committed)`
 - [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 2
+- [ ] Update plan.md Current State to point to Phase 3
