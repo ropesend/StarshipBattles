@@ -19,14 +19,14 @@
 | 1. Introduce the engines package | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Align top-level interfaces aggregator | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Validate consumers (regression sweep) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Docs sync | In Progress | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Clean review | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 4. Docs sync | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Clean review | In Progress | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-16
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete — focused strategy-engine tests 681/681 green; TurnEngine AST guard green; full sharded baseline 20857/20857 green (142.2s wall). Zero modifications to `game/strategy/engine/` or pre-existing test files.
-**Next Action:** Phase 4 — docs sync sanity grep (Phase 0 surveyed `docs/` and found no `engines.py` references; expecting a no-op).
+**Active Phase:** Phase 5
+**Last Action:** Phase 4 complete — sanity grep confirmed zero `engines.py` references in `docs/` (matches Phase 0 finding); no doc updates were required.
+**Next Action:** Phase 5 — clean review (diff-shape audit, leaf-module inspection, surface checks).
 **Blockers:** None
 
 ## Overview
