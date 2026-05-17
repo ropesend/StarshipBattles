@@ -22,15 +22,15 @@
 | 3. Migrate `planet_energy_engine` (delete dead `_ACTIVATABLE_ABILITIES`) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate `action_time_resolver` (TD-03 coupling) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Migrate `combat_modifier_collector` and `spec_compiler` | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Migrate `build_queue_source`; stabilizer/superweapon parity contracts | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. Migrate `build_queue_source`; stabilizer/superweapon parity contracts | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Documentation update and final validation | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 6
-**Last Action:** Phase 5 complete — `strategy_modifier_stack_builder.entries_from_sector_effects` reads its COMBAT_MODIFIER set from `abilities_with_kind_tag(StrategicKind.COMBAT_MODIFIER)`; `combat_modifier_collector` resolves the COMBAT_FLAT_BONUS (ShieldProjection) name set through the registry; ThrustModifier remains in COMBAT_MODIFIER (3 names); cross-file name divergence eliminated. 5225 strategy unit+integration tests green.
-**Next Action:** Phase 6 — migrate `build_queue_source` BuildRateBooster literal + add stabilizer/superweapon kind-tag contract tests.
+**Active Phase:** Phase 7
+**Last Action:** Phase 6 complete — `build_queue_source.get_build_rate_booster_mult` resolves the booster name through `abilities_with_kind_tag(StrategicKind.BUILD_RATE_BOOSTER)`; stabilizer + superweapon + build-rate-booster kind-tag contract tests pinned in `test_ability_metadata_contracts.py`. Last hardcoded ability-name literal in `game/strategy/` is retired. (Pre-existing test_build_queue_source.py failures unrelated to TD-07 — confirmed by HEAD~1 baseline.)
+**Next Action:** Phase 7 — docs + full sharded suite.
 **Blockers:** None.
 
 ## Overview

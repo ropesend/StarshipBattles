@@ -14,6 +14,10 @@ from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from game.core.json_utils import load_json
 from game.core.paths import Paths
+from game.strategy.services.ability_metadata import (
+    StrategicKind,
+    abilities_with_kind_tag,
+)
 from game.strategy.services.modifier_resolver import resolve_size_multiplier
 
 if TYPE_CHECKING:
@@ -108,13 +112,19 @@ def get_build_rate_booster_mult(planet, galaxy=None, empire=None, registries=Non
         find_abilities_in_scope, aggregate_multipliers,
     )
 
+    # PROJ-429 / TD-07 Phase 6: source the BuildRateBooster ability name
+    # from the unified ``AbilityMetadataRegistry`` rather than hardcoding
+    # the literal here. The BUILD_RATE_BOOSTER kind tag is singleton
+    # today (``BuildRateBooster``); iterating the set keeps the call
+    # site honest if a second booster ability is ever introduced.
     all_boosters = []
-    for scope in ["planet", "sector", "system", "empire"]:
-        entries = find_abilities_in_scope(
-            "BuildRateBooster", planet, galaxy, empire, scope,
-            registries=registries,
-        )
-        all_boosters.extend(entries)
+    for booster_name in abilities_with_kind_tag(StrategicKind.BUILD_RATE_BOOSTER):
+        for scope in ["planet", "sector", "system", "empire"]:
+            entries = find_abilities_in_scope(
+                booster_name, planet, galaxy, empire, scope,
+                registries=registries,
+            )
+            all_boosters.extend(entries)
 
     return aggregate_multipliers(all_boosters)
 
