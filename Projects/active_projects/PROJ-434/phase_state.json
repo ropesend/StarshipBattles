@@ -1,0 +1,95 @@
+{
+  "audit": {
+    "final_audit_request_id": null,
+    "final_audit_status": "not_run",
+    "merge_to_main_at_utc": null,
+    "merge_to_main_sha": null
+  },
+  "buffer_depth": 0,
+  "buffer_depth_override_reason": null,
+  "execution_protocol": "03c-phase-aware-execution",
+  "findings": {},
+  "phases": {
+    "phase_0": {
+      "depends_on": [],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/systems/design_repository.py",
+        "game/strategy/systems/design_catalog.py",
+        "game/strategy/facade/slices/_facade_state.py",
+        "tests/unit/strategy/design_repository/test_scan_designs.py",
+        "tests/unit/strategy/design_repository/test_save_design.py",
+        "tests/unit/strategy/design_repository/test_load_design_data.py",
+        "tests/unit/strategy/design_catalog/test_search_designs.py",
+        "tests/unit/strategy/design_catalog/test_filter_designs.py",
+        "tests/unit/strategy/design_catalog/test_cache_invalidation.py",
+        "tests/unit/strategy/facade/test_designs_by_empire_through_catalog.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_1": {
+      "depends_on": [
+        "phase_0"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/ui/screens/build_queue_screen.py",
+        "game/ui/screens/build_queue_controller.py",
+        "game/ui/screens/build_queue_drag_handler.py",
+        "game/ui/screens/build_queue_portrait_loader.py",
+        "tests/unit/ui/screens/test_build_queue_screen.py",
+        "tests/unit/ui/screens/test_build_queue_controller.py",
+        "tests/unit/ui/screens/test_build_queue_drag_handler.py",
+        "tests/unit/ui/screens/test_build_queue_portrait_loader.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_2": {
+      "depends_on": [
+        "phase_1"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/ui/screens/workshop_ship_io.py",
+        "game/ui/screens/strategy_build_queue_manager.py",
+        "game/ui/screens/design_selector_window.py",
+        "game/strategy/systems/design_library.py",
+        "tests/unit/ui/screens/test_workshop_ship_io.py",
+        "tests/unit/ui/screens/test_strategy_build_queue_manager.py",
+        "tests/unit/ui/screens/test_design_selector_window.py",
+        "docs/01_ARCHITECTURE.md",
+        "docs/02_PATTERNS.md",
+        "docs/systems/save_load.md"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    }
+  },
+  "project_branch": "proj/PROJ-434/main",
+  "project_id": "PROJ-434",
+  "reviews": {},
+  "schema_version": 1
+}
