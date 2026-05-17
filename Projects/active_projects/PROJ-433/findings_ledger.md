@@ -11,3 +11,13 @@ _(Generated from phase_state.json. Do not edit by hand.)_
 - Import-site grep (`from game.strategy.services.component_inspector ... import ...`): **~50 import statements across ~33 files** (production + tests). The majority are inline imports inside engine / UI / validator methods. Surface A names dominate (`extract_abilities_from_component`, `get_component_abilities`, `iter_facility_ability_entries`, `has_warp_capability`, `ship_has_ability`, `count_ability`, `list_ship_abilities`, `get_ability_list`). Surface B names are imported only by `game/strategy/data/ship_instance.py` (the three layer-view delegates).
 - **Option A (re-export shim) locked.** With ~50 import sites scattered across engines, UI, validators, and tests — many of them inside hot paths and lazy inline imports — the re-export shim is dramatically cheaper than a parallel caller migration. Shim debt is ~25 LOC and well-isolated.
 - Surface placement decision: `lookup_design_max_hp` ships in `component_layers.py` because its only consumer is `iter_components_by_layer` (no non-layer importer found in the grep). Keeping it with its caller avoids cross-module coupling between the two new modules.
+
+## Phase 1 — Split (2026-05-17)
+
+- Created `game/strategy/services/component_abilities.py` — Surface A + `has_warp_capability`. LOC: **403** (under 500, well under the 537 starting point).
+- Created `game/strategy/services/component_layers.py` — Surface B + `lookup_design_max_hp`. LOC: **168** (under 500).
+- Rewrote `game/strategy/services/component_inspector.py` as a thin re-export shim. LOC: **67**.
+- Surface preserved: snapshot test (`tests/unit/strategy/services/test_component_inspector_surface.py`) green; `__all__` identical to the pre-split set.
+- Focused suite after split (`test_component_inspector_surface.py + test_component_inspector_layers.py + tests/unit/strategy/test_component_inspector.py + tests/unit/strategy/ship_instance/`): **172 passed**.
+- No function signatures changed; bodies are verbatim moves.
+- No caller files needed updating because Option A (re-export shim) was chosen.

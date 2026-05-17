@@ -16,14 +16,14 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 0. Characterization — pin current `component_inspector` surface with focused tests | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. Split `component_inspector.py` into `component_abilities.py` + `component_layers.py` | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Split `component_inspector.py` into `component_abilities.py` + `component_layers.py` | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Verification + docs | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 1 (split into component_abilities.py + component_layers.py)
-**Last Action:** Phase 0 complete. Added `tests/unit/strategy/services/test_component_inspector_surface.py` pinning the 16-name `__all__` set. Grep confirmed ~50 import sites across ~33 files. Option A (re-export shim) locked in `decisions.md`. `lookup_design_max_hp` will ship in `component_layers.py` (only consumer is `iter_components_by_layer`).
-**Next Action:** Begin Phase 1 — create `component_abilities.py` (Surface A + `has_warp_capability`) and `component_layers.py` (Surface B + `lookup_design_max_hp`); rewrite `component_inspector.py` as a re-export shim. Snapshot test must stay green.
+**Active Phase:** Phase 2 (verification + docs)
+**Last Action:** Phase 1 complete. Created `component_abilities.py` (403 LOC) and `component_layers.py` (168 LOC); `component_inspector.py` rewritten as a 67-LOC re-export shim. Focused suite green (172 passed). `__all__` snapshot test still green — no surface drift.
+**Next Action:** Phase 2 — run the full sharded suite, back-link the split into PROJ-425's findings_ledger, update any doc references to `component_inspector`.
 **Blockers:** None. Predecessor PROJ-425 Phases 0-5 are complete on `proj/PROJ-425/main`.
 
 ## Overview
