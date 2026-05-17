@@ -19,16 +19,16 @@
 | 0 | Freeze the real contract with red tests | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1 | Move planet-modifier engine resolution onto `TurnEngine` | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2 | Move small hook logic onto named `TurnEngine` methods | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3 | Extract the movement-only collaborator | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3 | Extract the movement-only collaborator | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4 | Add a registry-purity guard | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5 | Validate and document | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 
 **Last Updated:** 2026-05-17
-**Active Phase:** 3 — Extract the movement-only collaborator
-**Last Action:** Phase 2 — three named methods on TurnEngine (`_tick_phase_log_turn_start`, `_tick_phase_log_after_construction`, `_tick_phase_accumulate_env_events`); registry hooks now thin adapter lambdas; the three module-level helpers removed. 146 turn_engine tests green.
-**Next Action:** Phase 3 — extract MovementPhaseCollaborator with snapshot_before / resolve_after.
+**Active Phase:** 4 — Registry-purity AST guard
+**Last Action:** Phase 3 — `MovementPhaseCollaborator` created with `snapshot_before` / `resolve_after` and private `_diff_moved_fleets` / `_mark_boosters_dirty` / `_resolve_minefields` / `_prune_destroyed_fleet_contents`. TurnEngine constructs the collaborator; descriptor hooks repointed; module-level `_capture_move_queue` + `_derive_moved_fleet_ids` deleted. 152 turn_engine tests + 11 FMS-B integration tests green.
+**Next Action:** Phase 4 — registry purity AST guard.
 **Blockers:** None
 
 ## Overview

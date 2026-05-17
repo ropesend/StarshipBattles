@@ -108,114 +108,21 @@ class TickPhase:
 
 
 # ---------------------------------------------------------------------------
-# Hook helpers (module-level so they keep ``TickPhase`` frozen and hashable
-# without anonymous closures cluttering the registry literal below).
+# PROJ-428 (TD-04): all six previous module-level hook helpers have moved
+# off this module.
 #
-# PROJ-428 Phase 2: the three small hook helpers (turn-start log,
-# post-production log, env-event accumulator) moved onto TurnEngine as
-# named methods. Their descriptor wiring lives inline in
-# ``DEFAULT_TICK_PHASE_LIST`` below as thin lambdas that adapt the
-# ``(engine, ctx)``/``(engine, ctx, result)`` hook signatures onto the
-# bound-method signatures.
+# - Phase 1: ``_resolve_planet_modifier_effects`` → ``TurnEngine.planet_modifier_effect_engine``
+# - Phase 2: ``_log_turn_start_tick_1`` / ``_log_after_construction_tick_1``
+#            / ``_accumulate_env_events`` → named ``TurnEngine._tick_phase_*`` methods
+# - Phase 3: ``_capture_move_queue`` → ``MovementPhaseCollaborator.snapshot_before``;
+#            ``_derive_moved_fleet_ids`` → ``MovementPhaseCollaborator.resolve_after``
+#
+# The descriptor hooks below resolve through thin adapter lambdas that
+# route ``(engine, ctx)`` / ``(engine, ctx, result)`` onto the
+# appropriate engine method or collaborator entry point. The registry
+# module imports no gameplay engine classes — see
+# ``test_turn_phase_registry_purity.py`` (Phase 4 AST guard).
 # ---------------------------------------------------------------------------
-
-
-def _capture_move_queue(_engine, ctx: TickContext, result) -> None:
-    """Post-hook on movement_calc: stash the move_queue for movement_apply.
-
-    Also captures ``pre_movement_locations`` so the PROJ-320 diff can
-    derive ``moved_fleet_ids`` after movement_apply.
-    """
-    ctx.move_queue = result
-    ctx.pre_movement_locations = {
-        f.id: f.location for emp in ctx.empires for f in emp.fleets
-    }
-
-
-def _derive_moved_fleet_ids(engine, ctx: TickContext, _result) -> None:
-    """Post-hook on movement_apply: PROJ-320 location-diff derivation.
-
-    PROJ-412 Phase 5: also flips ``_booster_dirty`` on every empire whose
-    fleet actually moved this tick. Fleets can carry ``ResourceHarvestBooster``
-    components, so a move invalidates the harvesting engine's per-turn
-    booster cache for any empire that has a moved fleet.
-
-    PROJ-FMS-B Phase 1: after movement_apply and before combat, run the
-    minefield resolver on every fleet that entered a new hex. This
-    enforces "fleet destroyed by mines never reaches conflict
-    resolution" by pruning destroyed ships from the affected fleet's
-    roster (and the fleet from its empire's fleet list when empty).
-    """
-    pre = ctx.pre_movement_locations or {}
-    moved_owner_ids: set = set()
-    moved_ids: set = set()
-    moved_fleets: list = []
-    for emp in ctx.empires:
-        emp_id = getattr(emp, 'id', None)
-        for f in emp.fleets:
-            if pre.get(f.id) != f.location:
-                moved_ids.add(f.id)
-                moved_fleets.append((emp, f))
-                if emp_id is not None:
-                    moved_owner_ids.add(emp_id)
-    ctx.moved_fleet_ids = moved_ids
-    if moved_owner_ids:
-        for emp in ctx.empires:
-            if getattr(emp, 'id', None) in moved_owner_ids:
-                emp._booster_dirty = True
-
-    # PROJ-FMS-B Phase 1: minefield resolution on moved fleets.
-    # Defensive: only invoke when fleet objects expose ``ships`` (real
-    # ``Fleet`` instances). SimpleNamespace test doubles without
-    # ``ships`` short-circuit cleanly — the hook must never break
-    # existing turn-phase descriptor tests.
-    runnable_movers = [
-        (emp, f) for (emp, f) in moved_fleets
-        if hasattr(f, "ships") and getattr(f, "ships", None)
-        and getattr(f, "group_kind", "fleet") == "fleet"
-    ]
-    if runnable_movers:
-        # Local import keeps the strategy ``turn_phase_registry`` module
-        # free of strategy.engine cycles at import time.
-        from game.strategy.engine.minefield_resolver import (
-            MinefieldResolver,
-        )
-
-        resolver = MinefieldResolver()
-        # PROJ-FMS-B audit Fix 1: thread the engine's GameRegistries through
-        # so :func:`MinefieldResolver._apply_strategic_damage` routes mine
-        # damage through the full :class:`DamageCalculator.apply_damage`
-        # pipeline (shields → emissive armor → SRA → hull). Pre-fix this
-        # kwarg was omitted and every live strategic mine hit silently
-        # took the direct-HP fallback, bypassing shields. Tests that pass
-        # ``engine=None`` (descriptor-shape tests) continue to work because
-        # ``getattr(None, '_registries', None)`` is ``None`` and the
-        # resolver gracefully falls back.
-        registries = getattr(engine, "_registries", None)
-        for owning_empire, fleet in runnable_movers:
-            try:
-                result = resolver.resolve_minefield_entry(
-                    galaxy=ctx.galaxy,
-                    empires=ctx.empires,
-                    fleet=fleet,
-                    registries=registries,
-                )
-            except Exception:  # Intentional broad catch: minefield resolution must never break the turn loop; log and continue.
-                import logging as _logging
-
-                _logging.getLogger(__name__).exception(
-                    "MinefieldResolver raised during turn tick"
-                )
-                continue
-            # Prune destroyed ships from the entering fleet so combat
-            # resolution downstream sees the survivors only.
-            if result.destroyed_ship_ids:
-                fleet.ships = [
-                    s for s in fleet.ships
-                    if s.instance_id not in result.destroyed_ship_ids
-                ]
-                if not fleet.ships and fleet in owning_empire.fleets:
-                    owning_empire.fleets.remove(fleet)
 
 
 # ---------------------------------------------------------------------------
@@ -336,17 +243,19 @@ DEFAULT_TICK_PHASE_LIST: tuple[TickPhase, ...] = (
         phase_key='movement_calc',
         callable_target=lambda e: e.movement_engine.collect_movements,
         args_resolver=lambda ctx: ((ctx.empires, ctx.galaxy, ctx.tick), {}),
-        # PROJ-320: capture move_queue + pre-Phase-3 fleet locations
-        # so movement_apply has its arg and the post-apply diff can
-        # derive moved_fleet_ids for combat.
-        post_exec_hook=_capture_move_queue,
+        # PROJ-320 / PROJ-428 Phase 3: capture move_queue + pre-Phase-3
+        # fleet locations via the movement collaborator on TurnEngine.
+        post_exec_hook=lambda engine, ctx, result: engine._movement_phase_collaborator.snapshot_before(ctx, result),
     ),
     # --- Phase 3: Apply Moves ---
     TickPhase(
         phase_key='movement_apply',
         callable_target=lambda e: e.movement_engine.apply_movements,
         args_resolver=lambda ctx: ((ctx.move_queue, ctx.galaxy), {}),
-        post_exec_hook=_derive_moved_fleet_ids,
+        # PROJ-320 / PROJ-FMS-B / PROJ-428 Phase 3: post-apply diff +
+        # booster-dirty propagation + minefield resolution + pruning
+        # all route through the movement collaborator on TurnEngine.
+        post_exec_hook=lambda engine, ctx, _result: engine._movement_phase_collaborator.resolve_after(engine, ctx),
     ),
     # --- Phase 4: Combat ---
     TickPhase(

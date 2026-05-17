@@ -238,6 +238,15 @@ class TurnEngine:
             else DEFAULT_END_OF_TURN_PHASE_LIST
         )
 
+        # PROJ-428 Phase 3 (TD-04): movement-phase collaborator owns
+        # the snapshot/diff/minefield/pruning pipeline that previously
+        # lived as a module-level hook in turn_phase_registry.
+        from game.strategy.engine.movement_phase_collaborator import (
+            MovementPhaseCollaborator,
+        )
+
+        self._movement_phase_collaborator = MovementPhaseCollaborator()
+
         # PROJ-189: Environmental event storage for UI notification
         self.last_environmental_events: list = []
 

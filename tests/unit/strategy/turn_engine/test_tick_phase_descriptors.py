@@ -52,6 +52,20 @@ def _get_env_post_hook():
     raise AssertionError("environmental phase missing from registry")
 
 
+def _engine_stub_for_movement(_registries=None):
+    """SimpleNamespace stub exposing the movement collaborator surface
+    that the descriptor hooks resolve through (PROJ-428 Phase 3).
+    """
+    from game.strategy.engine.movement_phase_collaborator import (
+        MovementPhaseCollaborator,
+    )
+
+    return SimpleNamespace(
+        _registries=_registries,
+        _movement_phase_collaborator=MovementPhaseCollaborator(),
+    )
+
+
 class TestTickPhaseShape:
     """Pin the ``TickPhase`` dataclass contract."""
 
@@ -108,7 +122,7 @@ class TestTickPhaseHooks:
         move_queue = [(fleet_a, 'C')]
 
         hook = _get_movement_calc_post_hook()
-        hook(None, ctx, move_queue)
+        hook(_engine_stub_for_movement(), ctx, move_queue)
 
         assert ctx.move_queue is move_queue
         assert ctx.pre_movement_locations == {1: 'A', 2: 'B'}
@@ -118,13 +132,15 @@ class TestTickPhaseHooks:
         fleet_b = SimpleNamespace(id=2, location='B')
         ctx = TickContext(
             tick=20,
-            empires=[SimpleNamespace(fleets=[fleet_a, fleet_b])],
+            empires=[SimpleNamespace(
+                id=0, fleets=[fleet_a, fleet_b], _booster_dirty=False,
+            )],
             galaxy=object(),
             pre_movement_locations={1: 'old-A', 2: 'B'},
         )
 
         hook = _get_movement_apply_post_hook()
-        hook(None, ctx, None)
+        hook(_engine_stub_for_movement(), ctx, None)
 
         assert ctx.moved_fleet_ids == {1}
 
@@ -154,7 +170,7 @@ class TestTickPhaseHooks:
         )
 
         sentinel_registries = object()
-        engine = SimpleNamespace(_registries=sentinel_registries)
+        engine = _engine_stub_for_movement(_registries=sentinel_registries)
 
         from game.strategy.engine import minefield_resolver as _mr_mod
 
@@ -229,7 +245,7 @@ class TestPhase428Characterization:
         )
 
         hook = _get_movement_apply_post_hook()
-        hook(SimpleNamespace(_registries=None), ctx, None)
+        hook(_engine_stub_for_movement(), ctx, None)
 
         assert empire_a._booster_dirty is True
         assert empire_b._booster_dirty is False
@@ -253,7 +269,7 @@ class TestPhase428Characterization:
             galaxy=object(),
             pre_movement_locations={42: 'A'},
         )
-        engine = SimpleNamespace(_registries=object())
+        engine = _engine_stub_for_movement(_registries=object())
 
         from game.strategy.engine import minefield_resolver as _mr_mod
 
