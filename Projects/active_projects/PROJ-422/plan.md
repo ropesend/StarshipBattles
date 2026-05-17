@@ -18,15 +18,15 @@
 | 0. Docs read + structural TDD anchor test | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Introduce the engines package | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Align top-level interfaces aggregator | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Validate consumers (regression sweep) | In Progress | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Docs sync | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 3. Validate consumers (regression sweep) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Docs sync | In Progress | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Clean review | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-16
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 complete — `game/strategy/interfaces/__init__.py` rewritten to re-export all 18 engine ABCs (closes the 5-name drift). All 6 layout-test assertions are now green.
-**Next Action:** Phase 3 — run focused strategy-engine test surface, TurnEngine AST guard, and the full sharded baseline to validate consumer source files require zero edits.
+**Active Phase:** Phase 4
+**Last Action:** Phase 3 complete — focused strategy-engine tests 681/681 green; TurnEngine AST guard green; full sharded baseline 20857/20857 green (142.2s wall). Zero modifications to `game/strategy/engine/` or pre-existing test files.
+**Next Action:** Phase 4 — docs sync sanity grep (Phase 0 surveyed `docs/` and found no `engines.py` references; expecting a no-op).
 **Blockers:** None
 
 ## Overview
