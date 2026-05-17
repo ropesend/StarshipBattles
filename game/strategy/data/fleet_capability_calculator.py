@@ -92,18 +92,6 @@ class FleetCapabilityCalculator:
         self._fleet = fleet
         self._component_registry = component_registry
 
-    def _is_real_fleet(self) -> bool:
-        """PROJ-431 Phase 3: every Fleet is a real fleet.
-
-        Deployed mines / fighters / satellites are typed sibling models
-        (:class:`MineGroup`, :class:`FighterWing`,
-        :class:`SatelliteConstellation`) on ``empire.deployed_groups``
-        — they never reach this calculator because they are not Fleets.
-        The early-return is retained as a degenerate no-op so existing
-        call sites don't need a churn-only edit.
-        """
-        return True
-
     @property
     def has_space_shipyard(self) -> bool:
         """
@@ -112,13 +100,11 @@ class FleetCapabilityCalculator:
         Returns True if any combat-capable ship has a component with
         SpaceShipyard ability (e.g., space_shipyard component).
 
-        PROJ-FMS-A + PROJ-431 Phase 2: non-``fleet`` group kinds
-        (``fighter_group`` / ``satellite_group``) are not real fleets
-        and cannot host shipyards, regardless of any ship's components.
-        Mines are a separate type entirely (:class:`MineGroup`).
+        PROJ-431 Phase 3: deployed mines / fighters / satellites are typed
+        sibling models on ``empire.deployed_groups`` and never reach this
+        calculator — every Fleet is a real fleet, so no group-kind gate
+        is needed.
         """
-        if not self._is_real_fleet():
-            return False
         return self.space_shipyard_count > 0
 
     @property
@@ -168,8 +154,6 @@ class FleetCapabilityCalculator:
         Returns:
             True if fleet can build the given vehicle type.
         """
-        if not self._is_real_fleet():
-            return False
         if not self.has_space_shipyard:
             return False
 
@@ -204,10 +188,6 @@ class FleetCapabilityCalculator:
         # INTENTIONAL LATE IMPORT: Query operation, service encapsulates warp logic
         # See docs/ARCHITECTURE.md "Intentional Late Imports" section
         from game.strategy.services.component_inspector import has_warp_capability
-
-        # PROJ-FMS-A: non-fleet groups never qualify for strategic warp.
-        if not self._is_real_fleet():
-            return False
 
         combat_ships = self._fleet.get_combat_capable_ships()
         if not combat_ships:

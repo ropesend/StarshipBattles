@@ -66,10 +66,14 @@ def _can_warp(fleet: Any) -> bool:
 
 
 def _can_strategic_move(fleet: Any) -> bool:
-    """PROJ-FMS-A: non-``fleet`` group_kinds cannot move on the strategy map.
+    """Whether a Fleet can issue strategic-map movement orders.
 
-    Resilient to mock fleets that lack the property entirely (defaults
-    to True so existing tests don't break).
+    PROJ-431 Phase 4: with ``Fleet.group_kind`` retired, every Fleet
+    is a real fleet and can attempt to move; deployed groups
+    (:class:`MineGroup` / :class:`FighterWing` /
+    :class:`SatelliteConstellation`) are not Fleets at all and never
+    reach this helper. The ``getattr`` fallback remains to tolerate
+    mock fleets in test doubles.
     """
     val = getattr(fleet, "can_strategic_move", True)
     return bool(val)
@@ -118,9 +122,8 @@ def _matching_deployed_group_at_fleet_hex(
     """True if a same-empire deployed group of ``group_cls`` sits at hex.
 
     PROJ-431 Phase 3: dispatch on the concrete
-    :class:`DeployedGroup` subclass (FighterWing / SatelliteConstellation),
-    not on a string ``group_kind``. Falls back to ``False`` on mocks
-    that lack ``empires``.
+    :class:`DeployedGroup` subclass (FighterWing / SatelliteConstellation).
+    Falls back to ``False`` on mocks that lack ``empires``.
     """
     if galaxy is None:
         return False
@@ -158,8 +161,9 @@ def build_menu_items(
     emitted — this keeps existing call sites and tests that don't supply
     callbacks unchanged.
     """
-    # PROJ-FMS-A: non-fleet group_kinds (fighter_group / satellite_group /
-    # mine_group) cannot perform strategic moves or merge with other fleets.
+    # PROJ-431 Phase 3: deployed groups (FighterWing / SatelliteConstellation /
+    # MineGroup) are not Fleets and never reach this builder. Every Fleet is a
+    # real fleet that may attempt strategic moves and merges.
     can_move = _can_strategic_move(fleet)
     rows: list[tuple[str, InputAction, bool]] = [
         ("Move", InputAction.FLEET_MOVE, can_move),

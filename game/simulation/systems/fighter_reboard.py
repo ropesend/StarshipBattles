@@ -136,11 +136,12 @@ def apply_reboard(
         if loaded:
             continue
 
-        # Overflow: spill into a new group Fleet in the sector. The
-        # group_kind matches the CarriedVehicle.vehicle_type so a
-        # satellite-overflow lands in a satellite_group (not a
-        # fighter_group). Closes the loop with the strategic
-        # RecoverSatellitesOrderHandler.
+        # Overflow: spill into a new typed deployed group in the sector.
+        # PROJ-431 Phase 3: the CarriedVehicle.vehicle_type chooses the
+        # concrete :class:`DeployedGroup` subclass —
+        # ``"satellite"`` -> :class:`SatelliteConstellation`, anything
+        # else (e.g. ``"fighter"``) -> :class:`FighterWing`. Closes the
+        # loop with the strategic Recover{Fighters,Satellites}OrderHandler.
         empire = empires_by_owner.get(owner_id)
         if empire is None:
             summary["discarded"] += 1

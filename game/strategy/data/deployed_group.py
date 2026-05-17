@@ -23,7 +23,6 @@ per CLAUDE.md "old saves are disposable" — no migration shim.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
 from game.core.hex_math import HexCoord

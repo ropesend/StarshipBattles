@@ -111,24 +111,24 @@ class TestPodStorageBleedRegression:
 
 
 # ---------------------------------------------------------------------------
-# Fix 3: Capability calculator gates on group_kind
+# Fix 3: Capability calculator on Fleet (group_kind retired)
 # ---------------------------------------------------------------------------
 
 
 class TestCapabilityCalculatorOnRealFleet:
-    """PROJ-431 Phase 3: Fleet.group_kind is GONE. Every Fleet is a real
-    fleet — :meth:`FleetCapabilityCalculator._is_real_fleet` is a
-    degenerate no-op that always returns True. The previous "non-fleet
-    group_kind kills warp/build" surface is replaced structurally: a
+    """PROJ-431 Phase 4: Fleet.group_kind is GONE; the
+    :meth:`FleetCapabilityCalculator._is_real_fleet` gate has been
+    deleted along with it. Every Fleet is a real fleet — a
     :class:`FighterWing` / :class:`SatelliteConstellation` /
     :class:`MineGroup` is not a Fleet at all, so it cannot reach this
-    calculator.
+    calculator. This test pins that an empty real Fleet has no shipyard
+    (the previous behaviour that the no-op gate retained).
     """
 
-    def test_real_fleet_is_a_real_fleet(self):
+    def test_empty_real_fleet_has_no_shipyard(self):
         f = Fleet(fleet_id=102, owner_id=0, location=HexCoord(0, 0))
         calc = FleetCapabilityCalculator(f, component_registry={})
-        assert calc._is_real_fleet() is True
+        assert calc.has_space_shipyard is False
 
 
 # ---------------------------------------------------------------------------

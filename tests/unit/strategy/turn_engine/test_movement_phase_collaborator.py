@@ -97,7 +97,6 @@ class TestResolveAfter:
             id=1,
             location='B',
             ships=[SimpleNamespace(instance_id="s1", is_alive=True)],
-            group_kind='fleet',
         )
         empire = SimpleNamespace(id=1, fleets=[moved_fleet], _booster_dirty=False)
         ctx = TickContext(
@@ -138,7 +137,6 @@ class TestResolveAfter:
             id=42,
             location='B',
             ships=[ship],
-            group_kind='fleet',
         )
         empire = SimpleNamespace(
             id=7, fleets=[moved_fleet], _booster_dirty=False,
@@ -184,7 +182,6 @@ class TestResolveAfter:
             id=1,
             location='B',
             ships=[SimpleNamespace(instance_id="s1", is_alive=True)],
-            group_kind='fleet',
         )
         empire = SimpleNamespace(id=1, fleets=[moved_fleet], _booster_dirty=False)
         ctx = TickContext(
