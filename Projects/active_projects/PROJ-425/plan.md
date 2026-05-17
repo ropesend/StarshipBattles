@@ -19,15 +19,15 @@
 | 1. Extract stats-calculation logic before changing storage | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Move component/layer inspection out of `ShipInstance` | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Extract the factory path and keep a thin shim | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Move write behavior onto `ShipInstanceWriteService` + standardize manager names | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Move write behavior onto `ShipInstanceWriteService` + standardize manager names | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Demolish display / consumable / serializer / bridge forwarders (batches 5a/5b/5d/5e) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. **Cargo + deployable forwarder demolition (batch 5c)** — **Blocked by:** PROJ-431 Phase 1 (typed `bay_inventory`) | Blocked | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 4 (write behavior consolidation + manager-name standardization)
-**Last Action:** Phase 3 complete — created `game/strategy/services/ship_instance_factory.py` (166 LOC) with `ShipInstanceFactory.create` + `build_full_hp_components_from_design`. `ShipInstance.create` is now a thin shim. Grep gate: 33 callers across game+tests; shim stays. Fixed broken import in `tests/unit/strategy/test_ship_instance_damage.py`. `ship_instance.py` 629 LOC (-93 this phase; -216 cumulative). 4557 strategy unit tests pass.
-**Next Action:** Phase 4 — rename entity manager fields to `_cargo_manager` / `_consumable_manager` (reconcile with write service), move component-toggle and repair logic onto `ShipInstanceWriteService`.
+**Active Phase:** Phase 5 (forwarder demolition — batches 5a/5b/5d/5e)
+**Last Action:** Phase 4 complete — kept entity manager names (`_cargo_mgr`/`_resource_mgr`/`_display_fmt`/`_bridge`) and fixed the write service to query those (reversed Phase 0 decision after grep showed ~50 callers using short names). Added `set_component_enabled` + `repair` to `ShipInstanceWriteService` with centralized cache invalidation; entity methods now delegate. Strategy + simulation tests: 8368 passed. `ship_instance.py` 617 LOC.
+**Next Action:** Phase 5 — demolish display / consumable / serializer / bridge forwarders in sub-batches 5a → 5b → 5d → 5e with grep gates between. Skip 5c (Phase 6, blocked).
 **Blockers:** None for Phases 0–5. Phase 6 is blocked until [PROJ-431](../PROJ-431/plan.md) Phase 1 lands typed `bay_inventory`.
 
 ## Overview

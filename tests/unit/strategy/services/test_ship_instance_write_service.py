@@ -32,8 +32,11 @@ def instance() -> MagicMock:
     inst.battles_survived = 0
     inst.experience = 0.0
     inst.kills = 0
-    inst._cargo_manager = None
-    inst._consumable_manager = None
+    # PROJ-425 Phase 4: entity attributes are ``_cargo_mgr`` /
+    # ``_resource_mgr`` (write service was previously querying the
+    # never-existing ``_cargo_manager`` / ``_consumable_manager``).
+    inst._cargo_mgr = None
+    inst._resource_mgr = None
     inst.invalidate_stats_cache = MagicMock()
     return inst
 
@@ -111,7 +114,7 @@ def test_pop_carried_item(
 def test_set_cargo_amount_direct_write_when_no_manager(
     service: ShipInstanceWriteService, instance: MagicMock
 ) -> None:
-    instance._cargo_manager = None
+    instance._cargo_mgr = None
     service.set_cargo_amount(instance, "metals", 50.0)
     assert instance.cargo_contents["metals"] == 50.0
 
@@ -130,3 +133,72 @@ def test_add_kill(
     service.add_kill(instance)
     service.add_kill(instance)
     assert instance.kills == 2
+
+
+# ---------------------------------------------------------------------------
+# PROJ-425 Phase 4: write service owns toggle + repair (cache invalidation
+# centralized here, not split across entity + service).
+# ---------------------------------------------------------------------------
+
+
+class TestSetComponentEnabledWrite:
+    """`set_component_enabled(...)` toggles + invalidates the stats cache."""
+
+    def test_enable_writes_toggle_and_invalidates_cache(
+        self, service: ShipInstanceWriteService, instance: MagicMock,
+    ) -> None:
+        service.set_component_enabled(instance, "engine", True)
+        assert instance.component_toggles["engine"] is True
+        instance.invalidate_stats_cache.assert_called_once()
+
+    def test_disable_writes_toggle_and_invalidates_cache(
+        self, service: ShipInstanceWriteService, instance: MagicMock,
+    ) -> None:
+        service.set_component_enabled(instance, "engine", False)
+        assert instance.component_toggles["engine"] is False
+        instance.invalidate_stats_cache.assert_called_once()
+
+
+class TestRepairWrite:
+    """`repair(...)` returns delta + invalidates the stats cache."""
+
+    def test_repair_returns_zero_when_already_full(
+        self, service: ShipInstanceWriteService, instance: MagicMock,
+    ) -> None:
+        instance.current_hp = None  # full health
+        result = service.repair(instance, 50)
+        assert result == 0
+        # No invalidation needed when nothing changed
+        instance.invalidate_stats_cache.assert_not_called()
+
+    def test_repair_partial(
+        self, service: ShipInstanceWriteService, instance: MagicMock,
+    ) -> None:
+        instance.current_hp = 30
+        instance.get_calculated_stats = MagicMock(return_value={"max_hp": 100})
+        instance.components = {}
+        result = service.repair(instance, 20)
+        assert instance.current_hp == 50
+        assert result == 20
+        instance.invalidate_stats_cache.assert_called_once()
+
+    def test_repair_full_restores_components_and_clears_hp(
+        self, service: ShipInstanceWriteService, instance: MagicMock,
+    ) -> None:
+        instance.current_hp = 80
+        instance.get_calculated_stats = MagicMock(return_value={"max_hp": 100})
+        # Two damaged components
+        cs_a = MagicMock(current_hp=20, max_hp=40)
+        cs_b = MagicMock(current_hp=10, max_hp=10)
+        instance.components = {"a#0": cs_a, "b#0": cs_b}
+
+        result = service.repair(instance, 100)
+
+        # Hp set to None (full health)
+        assert instance.current_hp is None
+        # Components restored
+        assert cs_a.current_hp == 40
+        assert cs_b.current_hp == 10
+        # Returned delta uses max_hp - old_hp when fully repaired
+        assert result == 20
+        instance.invalidate_stats_cache.assert_called_once()

@@ -114,7 +114,12 @@ class ShipInstance:
     # PROJ-211: Injected registries for stats calculation (no global fallback)
     _registries: Optional['GameRegistries'] = field(default=None, repr=False, init=False)
 
-    # Delegate managers (initialized in __post_init__)
+    # Delegate managers (initialized in __post_init__).
+    # PROJ-425 Phase 4: canonical names on the entity are `_resource_mgr`
+    # / `_cargo_mgr` / `_display_fmt` / `_bridge`. The write service was
+    # querying `_cargo_manager` / `_consumable_manager` (dead code, since
+    # those attributes never existed); fixed in this phase to match the
+    # entity instead of renaming ~50 callers across production + tests.
     _resource_mgr: Optional['ShipConsumableManager'] = field(default=None, repr=False, init=False)
     _cargo_mgr: Optional['ShipCargoManager'] = field(default=None, repr=False, init=False)
     _display_fmt: Optional['ShipDisplayFormatter'] = field(default=None, repr=False, init=False)
@@ -440,19 +445,17 @@ class ShipInstance:
     # --- Component Toggle Methods ---
 
     def set_component_enabled(self, component_id: str, enabled: bool) -> None:
-        """
-        Enable or disable a component manually.
+        """Enable or disable a component manually.
 
         Disabled components don't contribute abilities to stats but still
         contribute their mass. Useful for conserving resources or managing
         damage states.
 
-        Args:
-            component_id: ID of the component to toggle
-            enabled: True to enable, False to disable
+        PROJ-425 Phase 4: write behavior owned by `ShipInstanceWriteService`.
+        Cache invalidation is centralized there.
         """
-        self.component_toggles[component_id] = enabled
-        self.invalidate_stats_cache()
+        from game.strategy.services.ship_instance_write_service import ShipInstanceWriteService
+        ShipInstanceWriteService().set_component_enabled(self, component_id, enabled)
 
     def is_component_enabled(self, component_id: str) -> bool:
         """
@@ -547,28 +550,13 @@ class ShipInstance:
         self._bridge.update_from_ship(ship)
 
     def repair(self, amount: int) -> int:
-        """
-        Repair the ship by a certain amount.
+        """Repair the ship by a certain amount.
 
+        PROJ-425 Phase 4: write behavior owned by `ShipInstanceWriteService`.
         Returns the actual amount repaired.
         """
-        if self.current_hp is None:
-            return 0  # Already at full health
-
-        max_hp = self.get_calculated_stats().get('max_hp', _DEFAULT_MAX_HP)
-        old_hp = self.current_hp
-        self.current_hp = min(max_hp, self.current_hp + amount)
-
-        # If fully repaired, restore every component to full HP.
-        if self.current_hp >= max_hp:
-            self.current_hp = None
-            for cs in self.components.values():
-                cs.current_hp = cs.max_hp
-
-        # Invalidate stats cache (damage changed)
-        self.invalidate_stats_cache()
-
-        return self.current_hp - old_hp if self.current_hp else max_hp - old_hp
+        from game.strategy.services.ship_instance_write_service import ShipInstanceWriteService
+        return ShipInstanceWriteService().repair(self, amount)
 
     def resupply(self, resource_name: str, amount: float) -> float:
         """

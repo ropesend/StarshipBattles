@@ -88,3 +88,23 @@ Fixed one broken import: `tests/unit/strategy/test_ship_instance_damage.py` had 
 - New test file: `tests/unit/strategy/services/test_ship_instance_factory.py` (7 tests).
 - `tests/unit/strategy/` → **4557 passed**.
 - `ship_instance.py` LOC: **629** (was 722; -93 this phase, -216 cumulative).
+
+## Phase 4 — Write behavior + manager-name standardization (2026-05-17)
+
+### Manager-name reconciliation (Task 4.1)
+
+After mid-phase grep audit, *reversed* the rename direction logged in Phase 0. Production + test callers using the short names `_cargo_mgr` / `_resource_mgr` outnumber the broken write-service references by ~25x. Kept the entity's `_cargo_mgr` / `_resource_mgr` / `_display_fmt` / `_bridge` names; fixed the write service to query those (the previous `_cargo_manager` / `_consumable_manager` getattr lookups were dead code — those attributes never existed on `ShipInstance`).
+
+### Write-service consolidation (Tasks 4.2 / 4.3)
+
+Moved cache-invalidating write behavior onto `ShipInstanceWriteService`:
+
+- `set_component_enabled(instance, component_id, enabled)` — writes toggle + invalidates cache.
+- `repair(instance, amount)` — bumps HP toward max, restores components on full repair, invalidates cache.
+
+`ShipInstance.set_component_enabled` and `ShipInstance.repair` are now thin shims that instantiate `ShipInstanceWriteService()` and delegate. The cache-invalidation rule is centralized in the write service (no longer split between entity methods + service).
+
+- Added tests: `TestSetComponentEnabledWrite` (2 tests), `TestRepairWrite` (3 tests). All green.
+- Strategy + simulation unit tests: **8368 passed**.
+- `ship_instance.py` LOC: **617** (was 629; -12 this phase, -228 cumulative since baseline 845).
+- `ship_instance_write_service.py` LOC: 177 (was 118; +59).
