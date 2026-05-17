@@ -2,6 +2,8 @@
 # User secrets and login state must stay outside the repo.
 
 model = "gpt-5.4"
+model_context_window = 1000000
+model_auto_compact_token_limit = 950000
 model_reasoning_effort = "xhigh"
 personality = "pragmatic"
 project_doc_max_bytes = 65536

@@ -102,10 +102,10 @@
     },
     "codex-starship-analysis-review": {
       "agents": {
-        "codex": 44
+        "codex": 45
       },
-      "count": 44,
-      "last_used": "2026-05-09T12:24:22Z"
+      "count": 45,
+      "last_used": "2026-05-17T13:43:58Z"
     },
     "codex-starship-combat-lab": {
       "agents": {
@@ -137,10 +137,10 @@
     },
     "codex-starship-project-system": {
       "agents": {
-        "codex": 6
+        "codex": 7
       },
-      "count": 6,
-      "last_used": "2026-05-11T23:04:11Z"
+      "count": 7,
+      "last_used": "2026-05-17T13:43:58Z"
     },
     "ocode-audit-shrink": {
       "agents": {
