@@ -22,13 +22,14 @@
 | 4. Move write behavior onto `ShipInstanceWriteService` + standardize manager names | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Demolish display / consumable / serializer / bridge forwarders (batches 5a/5b/5d/5e) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. **Cargo + deployable forwarder demolition (batch 5c)** — **Blocked by:** PROJ-431 Phase 1 (typed `bay_inventory`) | Blocked | [phase_6_checklist.md](phase_6_checklist.md) |
+| 7. Label 5d/5e shims explicitly (Codex consult follow-up) — runs independently of the still-gated Phase 6; documentation-only, no behavior change. `depends_on: phase_5`. | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** All Phases 0-5 Complete. Phase 6 deferred (blocked on PROJ-431 Phase 1).
-**Last Action:** Phase 5 complete — demolished 5a display forwarders (migrated production + test callers to `_display_fmt` direct calls). 5b consumable + 5d serializer + 5e bridge kept as documented thin shims per TD-06 Guardrail #1 (high-value protected entry points and/or extensive test-mock surface). Sharded suite green: 20931 / 20931 passed. `ship_instance.py` 561 LOC (was 845; -284 cumulative; 33.6% reduction).
-**Next Action:** Project execution complete for Phases 0-5. Phase 6 (cargo / deployable forwarder demolition, TD-06 batch 5c) deferred pending PROJ-431 Phase 1 (typed bay_inventory substrate).
-**Blockers:** None for Phases 0–5. Phase 6 is blocked until [PROJ-431](../PROJ-431/plan.md) Phase 1 lands typed `bay_inventory`.
+**Active Phase:** Phases 0-5 + Phase 7 complete. Phase 6 still deferred (blocked on PROJ-431 Phase 1).
+**Last Action:** Phase 7 complete — Codex consult on 2026-05-17 surfaced that the 5d serializer and 5e bridge forwarder groups in `ship_instance.py` lacked the explicit "retained shim" comment block that 5b already had (despite `decisions.md` claiming all shim groups were labeled). Added matching comment blocks above the 5d (lines ~527-540) and 5e (lines ~473-485) forwarder groups documenting why they remain, the canonical delegate (`ShipInstanceSerializer` / `ShipInstanceBridge`), and the removal condition (callers migrated to direct delegate access). Comment-only change — no code behavior change. `ship_instance.py` 590 LOC (was 561; +29 comment LOC, still 30% under baseline 845).
+**Next Action:** Project execution complete for Phases 0-5 + 7. Phase 6 (cargo / deployable forwarder demolition, TD-06 batch 5c) deferred pending PROJ-431 Phase 1 (typed bay_inventory substrate).
+**Blockers:** None for Phases 0–5, 7. Phase 6 is blocked until [PROJ-431](../PROJ-431/plan.md) Phase 1 lands typed `bay_inventory`.
 
 ## Overview
 `game/strategy/data/ship_instance.py` is 845 LOC — well past the 500-LOC project ceiling — and is mostly a wall of one-line forwarders to delegate classes that already exist (`ShipConsumableManager`, `ShipCargoManager`, `ShipDisplayFormatter`, `ShipInstanceBridge`, `ShipInstanceSerializer`, `ShipInstanceWriteService`). Three substantive in-class blocks remain — the stats cache + registry-DI calculation path, the component-introspection helpers, and the `create(...)` factory — and they all want to move out before the forwarders are demolished. This project executes the six-phase TDD extraction in TD-06, slimming `ShipInstance` toward "durable state + identity + small pure predicates" without breaking any caller.
@@ -102,6 +103,15 @@ For each sub-batch: grep for live callers; add or update one focused failing tes
 **Blocked by:** [PROJ-431 (TD-10) Phase 1](../PROJ-431/plan.md) — typed `bay_inventory` substrate must land first. Do **not** start this phase until PROJ-431 Phase 1 is merged.
 
 When unblocked: demolish the cargo/deployable forwarders (cargo queries and mutators, carried-vehicle queries, pod-storage helpers) and migrate their callers to `ShipCargoManager` (or the stable accessor to it post-TD-10). Same sub-batch discipline as Phase 5: grep → failing test for the new direct-call path → migrate callers → remove forwarders → focused tests → next slice. Final grep gate before phase close: `rg -n "ShipInstance\.create\(|\.to_ship\(|\.update_from_ship\(|\.to_dict\(|\.clone\(" game tests` — if any high-value entry point still has many live callers, leave it as a documented thin shim rather than forcing a risky all-callers migration.
+
+### Phase 7: Label 5d/5e shims explicitly (Codex consult follow-up)
+**Ran independently of the still-gated Phase 6.** Phase 7 is documentation-only — comment blocks above the 5d serializer and 5e bridge forwarder groups in `game/strategy/data/ship_instance.py`. No code behavior change; no caller migration. Depends on Phase 5 (which left the 5d/5e forwarders intact as protected shims) and on no other phase, so it does **not** wait for the PROJ-431 gate that blocks Phase 6.
+
+Codex's 2026-05-17 consult on the shipped PROJ-425 work noted that:
+- The 5b consumable group already had an explicit "retained shim" comment block (`# --- Generic Resource Methods (PROJ-425 Phase 5b: thin shims) --- …`).
+- The 5d serializer group and 5e bridge group were plain delegators with no equivalent label, despite `decisions.md` claiming all four shim groups were labeled.
+
+Phase 7 added matching comment blocks above the 5d and 5e groups, mirroring the 5b format: the rationale ("why these are intentional shims, not bugs / dead code"), the canonical delegate that owns the real behavior (`ShipInstanceSerializer` for 5d, `ShipInstanceBridge` for 5e), and the removal condition ("once all callers migrate to direct delegate access; tests under `tests/unit/strategy/ship_instance/` still rely on these"). `pytest tests/unit/strategy/ship_instance/` remained green (128 passed). LOC went from 561 to 590 (+29 comment lines).
 
 ## Related Documents
 - [TD-06 source plan](../../../Reviews/results/2026-05-16_strategy-layer-tech-debt-review/Verified%20Problem%20Remediation%20Plans/TD-06_ship_instance_slimming.md) — canonical specification (verification findings, file touch map, six-phase TDD extraction, risks, acceptance criteria)

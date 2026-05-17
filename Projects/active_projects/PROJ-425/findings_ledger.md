@@ -134,3 +134,16 @@ Per TD-06 Guardrail #1: `to_ship`, `update_from_ship` are protected. ~10 product
 - Sharded suite: **20931 / 20931 passed** (0 failed, 0 errors).
 - `ship_instance.py` LOC: **561** (was 617 at end of Phase 4; -56 this phase; -284 cumulative since baseline 845, a 33.6% reduction).
 - The remaining LOC consists of: dataclass field declarations (~80), identity properties + dunders (~50), the cargo / consumable / serializer / bridge / write delegation shims (~250), the stats-calc + component-inspector + factory delegations (~50), and docstrings. Effectively the entity is now "durable state + identity + small pure predicates + thin shims to delegates" — matching the TD-06 end state goal.
+
+## Phase 7 — Label 5d/5e shims explicitly (Codex consult follow-up, 2026-05-17)
+
+Comment-only follow-up surfaced by Codex's consult on the shipped PROJ-425 work. The 5d serializer group (`to_dict` / `from_dict` / `to_json` / `from_json` / `clone`) and the 5e bridge group (`to_ship` / `update_from_ship`) in `game/strategy/data/ship_instance.py` had no equivalent of the 5b "retained shim" comment block — despite decisions.md claiming all four shim groups were labeled. Added matching comment blocks above the 5d (lines ~527-540) and 5e (lines ~473-485) groups documenting why each remains, the canonical delegate, and the removal condition.
+
+- Focused suite: **128 passed** (`pytest tests/unit/strategy/ship_instance/`).
+- `ship_instance.py` LOC: **590** (was 561; +29 comment lines).
+- No code behavior change.
+- PROJ-433 created as a follow-up for the `component_inspector.py` 537 LOC overrun split (separate small project, not a PROJ-425 phase).
+
+## Open
+
+- [Tooling] `validate_phase.py` / `phase_complete.py` don't honor `cross_project_blockers` (Projects/scripts/validate_phase.py:85-154, Projects/scripts/phase_complete.py:194-247). PROJ-425 phase_6 gate to PROJ-431 phase_1 is documented but not enforced by tooling. Surfaced by PROJ-425 Codex consult on 2026-05-17. Not in TD-06 scope; flagged for separate project-system work.

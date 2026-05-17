@@ -168,6 +168,24 @@
         "PROJ-431/phase_1"
       ],
       "cross_project_blocker_note": "TD-06 Batch 5c — cargo/deployable forwarder demolition is blocked until PROJ-431 (TD-10) Phase 1 lands typed bay_inventory. Gate also recorded in plan.md Dependencies, plan.md Quick Status row, and phase_6_checklist.md body."
+    },
+    "phase_7": {
+      "depends_on": [
+        "phase_5"
+      ],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": null,
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/data/ship_instance.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "lightweight",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "complete",
+      "verifying_review_id": null
     }
   },
   "project_branch": "proj/PROJ-425/main",

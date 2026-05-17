@@ -470,6 +470,20 @@ class ShipInstance:
         from game.strategy.services.component_inspector import damaged_components_by_layer
         return damaged_components_by_layer(self)
 
+    # --- Bridge Methods (PROJ-425 Phase 5e: thin shims) ---
+    #
+    # These remain as forwarders because `to_ship` / `update_from_ship`
+    # are TD-06 Weak-LLM Guardrail #1 high-value entry points with ~10
+    # live production callers (`ship_materializer`, `replay_ship_builder`,
+    # `simulation_adapter`, `minefield_resolver`, `fleet_battle_adapter`,
+    # etc.) plus extensive test usage. Migrating in one batch would
+    # exceed the slimming benefit.
+    # The canonical implementations live on `ShipInstanceBridge`.
+    # Removal condition: once all callers migrate to direct
+    # `ship_instance._bridge.to_ship(...)` / `.update_from_ship(...)`
+    # access. Tests under `tests/unit/strategy/ship_instance/` still
+    # rely on these forwarders.
+
     def to_ship(
         self,
         position: Tuple[float, float],
@@ -509,6 +523,21 @@ class ShipInstance:
     def resupply(self, resource_name: str, amount: float) -> float:
         """Resupply a resource (shim to `_resource_mgr`)."""
         return self._resource_mgr.resupply(resource_name, amount)
+
+    # --- Serializer Methods (PROJ-425 Phase 5d: thin shims) ---
+    #
+    # These remain as forwarders because `to_dict` / `from_dict` /
+    # `to_json` / `from_json` / `clone` are TD-06 Weak-LLM Guardrail #1
+    # high-value entry points with ~18 live production + test callers
+    # on `ShipInstance` directly. Migrating in one batch would force a
+    # risky all-callers sweep across save/load, replay, and fleet
+    # round-trip surfaces.
+    # The canonical implementations live on `ShipInstanceSerializer`.
+    # Removal condition: once all callers migrate to direct
+    # `ShipInstanceSerializer.to_dict(ship)` / `.from_dict(data)` /
+    # `.to_json(ship)` / `.from_json(s)` / `.clone(ship)` access. Tests
+    # under `tests/unit/strategy/ship_instance/` still rely on these
+    # forwarders.
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize for save game."""
