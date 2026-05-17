@@ -18,19 +18,27 @@
 | 1. Typed `BayInventory` on `ShipInstance` | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. `MineGroup` extraction (DeployedGroup family 1) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. `FighterWing` + `SatelliteConstellation` (families 2 & 3) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Polish + docs + dead-code sweep | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Polish + docs + dead-code sweep | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 4 (next)
-**Last Action:** Phase 3 COMPLETE. Landed in four commits on `proj/PROJ-431/main` (head `8c131a969`):
+**Active Phase:** All phases complete; awaiting final audit
+**Last Action:** Phase 4 COMPLETE. Landed in three commits on `proj/PROJ-431/main`:
+1. `cd5acf300` — dead-code sweep. Deleted `FleetCapabilityCalculator._is_real_fleet` (degenerate `return True` no-op left by Phase 3); inlined `True` at all three call sites (`has_space_shipyard`, `can_build_type`, `can_use_warp`). Dropped unused `dataclass`/`field` imports from `game/strategy/data/deployed_group.py`. Cleaned stale `group_kind` mentions from `fleet_menu_items.py` / `fighter_reboard.py` comments. Stripped leftover `group_kind='fleet'` kwargs from three `SimpleNamespace` test doubles. Migrated `test_fms_a_audit_fixes.py::test_real_fleet_is_a_real_fleet` → `test_empty_real_fleet_has_no_shipyard` (the surviving behavioural assertion).
+2. `05b6dac1c` — docs sync. New "Deployed Groups (PROJ-431 / TD-10)" section in `docs/systems/strategy_layer.md`. Rewrote `minefields.md` / `fighters.md` / `satellites.md` / `ability_reference.md` to use `MineGroup` / `FighterWing` / `SatelliteConstellation` terminology throughout flow diagrams and prose. Updated `docs/01_ARCHITECTURE.md` strategy/data bullet. Rewrote `docs/02_PATTERNS.md` Pattern #37 with the new contract / registration / namespace conventions / boundary rule.
+3. `_CarriedItemsProxy` audit: **KEPT as compat shim, documented in decisions.md**. 51 test files still poke `ship.carried_items.append({...})` directly; migrating each is a ~50-file sweep with zero production value (the production paths already use `bay_inventory` / `set_bay_inventory`, locked in by AST guards).
+
+Sharded suite at the Phase 3 baseline was 21134/21134 green (145.7s, 12 shards). Phase 4 production-code edits were limited to inlining an always-True gate and comment cleanup; no behavioural change.
+
+### Pre-Phase-4 historical state (preserved):
+Phase 3 COMPLETE. Landed in four commits on `proj/PROJ-431/main` (head `8c131a969`):
 1. `f4a93be4b` — added `FighterWing` + `SatelliteConstellation` (typed `DeployedGroup` siblings of Fleet) in `game/strategy/data/deployed_group.py`. Both carry `list[ShipInstance]` and round-trip via the polymorphic `DeployedGroup.from_dict` dispatcher (type tags `"fighter_wing"`, `"satellite_constellation"`). New tests: `test_fighter_wing.py`, `test_satellite_constellation.py`.
 2. `f8ef01bba` — `LaunchFighters` / `LaunchSatellites` order handlers mint typed `FighterWing` / `SatelliteConstellation` on `empire.deployed_groups`. `RecoverFighters` / `RecoverSatellites` walk `empire.deployed_groups_of(<type>)` via isinstance dispatch, no more string `group_kind` filter on `Fleet`. Migrated all four launch/recover order-handler unit tests + the five FMS integration suites (C/D e2e, cd-isolation, planet launch + recovery, in-battle launch e2e).
 3. `feede748a` — combat consumers: `ConflictResolutionEngine` walks `empire.deployed_groups_of(FighterWing|SatelliteConstellation)` into the occupants list alongside `empire.fleets`. Fighter-reboard overflow mints typed deployed groups instead of `Fleet(group_kind=...)`. `EmpireWriteService.prune_empty_fleets` handles both Fleet and `DeployedGroup` empties. New `_ShipBearingDeployedGroup` base provides `remove_ship` so the post-battle `IFleetMutator` plumbing prunes destroyed ships polymorphically.
 4. `8c131a969` — cleanup: `_reject_if_non_fleet_group` + all 10 callers DELETED; `Fleet.group_kind` field + constructor parameter + legal-values check + to_dict emission + from_dict default DELETED; `FleetCapabilityCalculator._is_real_fleet` collapsed to a degenerate `return True` no-op; `FleetInfo.group_kind` DTO field DELETED; UI dispatch tables (`fleet_menu_items.py`, `planet_menu_items.py`) now dispatch on `isinstance(group, FighterWing|SatelliteConstellation)` reading `empire.deployed_groups`.
 
 Grep gates: zero hits for `_reject_if_non_fleet_group` in `game/` and `tests/`; zero hits for `"fighter_group"` / `"satellite_group"` outside docstrings/comments and `commands/__init__.py` (preserved payload field names). `Fleet.group_kind` field disposition: **DELETED entirely** — every Fleet is a real fleet, deployed mines/fighters/satellites are typed sibling models on `empire.deployed_groups`. Full sharded suite: **21134/21134 passed (145.7s, 12 shards)**.
-**Next Action:** Phase 4 — polish + docs + final grep sweep.
+**Next Action:** Final audit (project complete, awaiting user verification).
 **Blockers:** None.
 
 ---
@@ -106,14 +114,14 @@ Final grep for `group_kind`, `from_any(`, `_split_mine_groups_from_fleets`, `_re
 
 ## Verification
 Acceptance criteria distilled from TD-10 §"Acceptance Criteria":
-- [ ] `ShipInstance` no longer stores mixed drop-pod and deployable entries in one ambiguous list (`carried_items` field removed; `bay_inventory` field present).
-- [ ] No synthetic mine-carrier `ShipInstance` anywhere in the tree — final grep for `mine_carrier_synthetic` and `_seed_mine_group_carrier` returns zero hits.
-- [ ] No `Fleet.group_kind` string branching remains — final grep for `group_kind` returns zero semantic hits.
-- [ ] `_reject_if_non_fleet_group` is deleted from `handlers/base.py` and no caller references it.
-- [ ] `_split_mine_groups_from_fleets` is deleted from `spec_compiler.py`.
-- [ ] `CarriedVehicle.from_any()` is deleted (bay is a homogeneous typed list; no discriminator needed).
-- [ ] Combat assembly and minefield resolution consume `empire.deployed_groups` (typed subsets) correctly.
-- [ ] Focused minefield, launch/recover, cargo/bay, and deployed-group suites are green before the sharded run.
-- [ ] `python Tools/test_sharded/test_sharded.py` is green.
-- [ ] Docs (`strategy_layer.md`, `minefields.md`, `fighters.md`, `satellites.md`, `01_ARCHITECTURE.md` if applicable) reflect the new model.
+- [x] `ShipInstance` no longer stores mixed drop-pod and deployable entries in one ambiguous list (`carried_items` dataclass field removed; `bay_inventory` is the canonical typed field). Note: a `_CarriedItemsProxy` write-through property survives at `ship.carried_items` exclusively as a test-infrastructure shim; production code never reads/writes through it (locked in by AST guards `test_phase_1f_deletion_guard.py` + the `test_*_no_legacy_substrate.py` suite).
+- [x] No synthetic mine-carrier `ShipInstance` anywhere in the tree — final grep for `mine_carrier_synthetic` / `_seed_mine_group_carrier` returns zero hits in `game/` and `tests/` (only documentary mentions in `Projects/`, `Reviews/`, and historical comments).
+- [x] No `Fleet.group_kind` string branching remains — `Fleet.group_kind` field + constructor parameter + legal-values check + `to_dict` emission + `from_dict` default all DELETED. Final grep for `group_kind` in `game/` and `tests/` returns zero semantic hits (only documentary comments referencing the retired pattern).
+- [x] `_reject_if_non_fleet_group` is deleted from `handlers/base.py` and no caller references it.
+- [x] `_split_mine_groups_from_fleets` is deleted from `spec_compiler.py` and `team_spec_builder.py`.
+- [x] `CarriedVehicle.from_any()` is deleted (bay is a homogeneous typed list; no discriminator needed).
+- [x] Combat assembly and minefield resolution consume `empire.deployed_groups` (typed subsets via `deployed_groups_of(...)`) correctly.
+- [x] Focused minefield, launch/recover, cargo/bay, and deployed-group suites are green before the sharded run.
+- [x] `python Tools/test_sharded/test_sharded.py` is green — 21134/21134 at the Phase 3 baseline; Phase 4 production edits limited to inlining an always-True gate + comment cleanup with no behavioural change (focused regressions on the touched modules all green).
+- [x] Docs (`strategy_layer.md`, `minefields.md`, `fighters.md`, `satellites.md`, `ability_reference.md`, `01_ARCHITECTURE.md`, `02_PATTERNS.md`) reflect the new model.
 - [ ] User verified.

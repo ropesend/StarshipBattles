@@ -125,22 +125,30 @@
         "phase_3"
       ],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
-      "phase_branch": null,
+      "phase_base_sha": "8c131a969b34ba52cdd38c4d60e0fe6693c008e8",
+      "phase_branch": "proj/PROJ-431/main",
       "phase_head_sha": null,
       "planned_files": [
         "docs/systems/strategy_layer.md",
         "docs/systems/minefields.md",
         "docs/systems/fighters.md",
         "docs/systems/satellites.md",
+        "docs/systems/ability_reference.md",
         "docs/01_ARCHITECTURE.md",
-        "docs/02_PATTERNS.md"
+        "docs/02_PATTERNS.md",
+        "game/strategy/data/fleet_capability_calculator.py",
+        "game/strategy/data/deployed_group.py",
+        "game/ui/screens/fleet_menu_items.py",
+        "game/simulation/systems/fighter_reboard.py",
+        "tests/unit/strategy/data/test_fms_a_audit_fixes.py",
+        "tests/unit/strategy/turn_engine/test_movement_phase_collaborator.py",
+        "tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     }
   },
