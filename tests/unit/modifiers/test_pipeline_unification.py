@@ -4,16 +4,40 @@ Tests for Phase 4: Pipeline Unification
 Verifies that the single recalculate() path works correctly after
 removing duplicate stat application code from _apply_base_stats().
 
-PROJ-322 Task 4.1 (S11-CAT7-001): these tests are intentionally
-coupled to the production `data/components.json` balance values
-(railgun energy consumption, beam_weapon ability bindings, etc.).
-That coupling is acceptable here because the tests act as
-data-contract tests for the modifier pipeline — they verify that
-real component data flows through the stat-binding pipeline without
-duplicate application. Changes to component balance values may
-require updating the asserted numbers below.
+PROJ-322 Task 4.1 (S11-CAT7-001): these tests previously hardcoded
+specific component IDs (railgun, fuel_tank, generator, standard_engine)
+and skipped when the hardcoded component dropped the expected ability.
+That wallpapered any registry shape change (PROJ-428 onward).
+
+PROJ-446 Phase 1 Task 1.3 (F-C-024): the hardcoded IDs are replaced
+with `first_component_with_ability(...)` so the tests exercise the
+unified pipeline against whatever component currently provides the
+ability. A test that genuinely cannot find any component with the
+ability still skips, but the skip message now names the missing
+ability rather than the missing hardcoded component.
 """
 import pytest
+
+
+def first_component_with_ability(registries, ability_name: str):
+    """Return the first component in the registry that exposes the named ability.
+
+    Used by pipeline-unification tests to avoid hardcoding component IDs.
+    Returns the constructed component instance, or None if no component in
+    the registry provides the ability.
+    """
+    from game.simulation.components.component import create_component
+
+    for comp_id in registries.components.keys():
+        try:
+            component = create_component(comp_id, registries=registries)
+        except Exception:  # Intentional broad catch: skip non-instantiable test entries
+            continue
+        if component is None:
+            continue
+        if component.get_ability(ability_name) is not None:
+            return component
+    return None
 
 
 class TestSingleRecalculatePath:
@@ -21,80 +45,61 @@ class TestSingleRecalculatePath:
 
     def test_resource_consumption_recalculates_via_stat_bindings(self, fresh_registries):
         """ResourceConsumption.recalculate() should apply consumption_mult correctly."""
-        from game.simulation.components.component import create_component
+        component = first_component_with_ability(fresh_registries, 'ResourceConsumption')
+        if component is None:
+            pytest.skip("no component with ability ResourceConsumption in current registry")
+        component.recalculate_stats()
 
-        # Create a component with ResourceConsumption (railgun has energy consumption)
-        railgun = create_component('railgun', registries=fresh_registries)
-        railgun.recalculate_stats()
-
-        # Get the ResourceConsumption ability
-        rc = railgun.get_ability('ResourceConsumption')
-        if rc is None:
-            pytest.skip("railgun doesn't have ResourceConsumption")
-
+        rc = component.get_ability('ResourceConsumption')
         base_amount = rc._base_amount
 
         # Apply efficiency modifier (reduces consumption)
-        railgun.add_modifier('efficiency_mount', 0.5)  # 50% consumption
+        component.add_modifier('efficiency_mount', 0.5)  # 50% consumption
 
         # Verify consumption was reduced
         assert rc.amount == pytest.approx(base_amount * 0.5)
 
     def test_resource_storage_recalculates_via_stat_bindings(self, fresh_registries):
         """ResourceStorage.recalculate() should apply capacity_mult correctly."""
-        from game.simulation.components.component import create_component
+        component = first_component_with_ability(fresh_registries, 'ResourceStorage')
+        if component is None:
+            pytest.skip("no component with ability ResourceStorage in current registry")
+        component.recalculate_stats()
 
-        # Create a component with ResourceStorage
-        fuel_tank = create_component('fuel_tank', registries=fresh_registries)
-        if fuel_tank is None:
-            pytest.skip("fuel_tank component not found")
-
-        fuel_tank.recalculate_stats()
-
-        # Get the ResourceStorage ability
-        rs = fuel_tank.get_ability('ResourceStorage')
-        if rs is None:
-            pytest.skip("fuel_tank doesn't have ResourceStorage")
-
+        rs = component.get_ability('ResourceStorage')
         base_max = rs._base_max_amount
 
         # Apply simple_size_mount modifier
-        fuel_tank.add_modifier('simple_size_mount', 2.0)
+        component.add_modifier('simple_size_mount', 2.0)
 
         # Verify capacity was scaled
         assert rs.max_amount == pytest.approx(base_max * 2.0)
 
     def test_resource_generation_recalculates_via_stat_bindings(self, fresh_registries):
         """ResourceGeneration.recalculate() should apply energy_gen_mult correctly."""
-        from game.simulation.components.component import create_component
+        component = first_component_with_ability(fresh_registries, 'ResourceGeneration')
+        if component is None:
+            pytest.skip("no component with ability ResourceGeneration in current registry")
+        component.recalculate_stats()
 
-        # Create a component with ResourceGeneration
-        generator = create_component('generator', registries=fresh_registries)
-        generator.recalculate_stats()
-
-        # Get the ResourceGeneration ability
-        rg = generator.get_ability('ResourceGeneration')
-        if rg is None:
-            pytest.skip("generator doesn't have ResourceGeneration")
-
+        rg = component.get_ability('ResourceGeneration')
         base_rate = rg._base_rate
 
         # Apply simple_size_mount modifier
-        generator.add_modifier('simple_size_mount', 2.0)
+        component.add_modifier('simple_size_mount', 2.0)
 
         # Verify rate was scaled
         assert rg.rate == pytest.approx(base_rate * 2.0)
 
     def test_all_abilities_recalculate_called(self, fresh_registries):
         """All ability instances should have recalculate() called during stats recalc."""
-        from game.simulation.components.component import create_component
-
-        # Create a component with multiple abilities
-        railgun = create_component('railgun', registries=fresh_registries)
-        railgun.recalculate_stats()
+        component = first_component_with_ability(fresh_registries, 'WeaponAbility')
+        if component is None:
+            pytest.skip("no component with ability WeaponAbility in current registry")
+        component.recalculate_stats()
 
         # Every ability should have had recalculate() called
-        for ab in railgun.ability_instances:
+        for ab in component.ability_instances:
             # Verify ability has STAT_BINDINGS (all abilities should now)
             assert hasattr(ab.__class__, 'STAT_BINDINGS'), \
                 f"{ab.__class__.__name__} missing STAT_BINDINGS"
@@ -105,17 +110,17 @@ class TestNoManuaStatsApplication:
 
     def test_weapon_damage_from_ability_recalculate(self, fresh_registries):
         """WeaponAbility should apply damage_mult via its own recalculate()."""
-        from game.simulation.components.component import create_component
+        component = first_component_with_ability(fresh_registries, 'WeaponAbility')
+        if component is None:
+            pytest.skip("no component with ability WeaponAbility in current registry")
+        component.recalculate_stats()
 
-        railgun = create_component('railgun', registries=fresh_registries)
-        railgun.recalculate_stats()
-
-        weapon = railgun.get_ability('WeaponAbility')
+        weapon = component.get_ability('WeaponAbility')
         base_damage = weapon._base_damage
         base_range = weapon._base_range
 
         # Apply simple_size_mount (scales damage)
-        railgun.add_modifier('simple_size_mount', 2.0)
+        component.add_modifier('simple_size_mount', 2.0)
 
         # Damage should be scaled
         assert weapon.damage == pytest.approx(base_damage * 2.0)
@@ -124,22 +129,16 @@ class TestNoManuaStatsApplication:
 
     def test_propulsion_thrust_from_ability_recalculate(self, fresh_registries):
         """CombatPropulsion should apply thrust_mult via its own recalculate()."""
-        from game.simulation.components.component import create_component
+        component = first_component_with_ability(fresh_registries, 'CombatPropulsion')
+        if component is None:
+            pytest.skip("no component with ability CombatPropulsion in current registry")
+        component.recalculate_stats()
 
-        engine = create_component('standard_engine', registries=fresh_registries)
-        if engine is None:
-            pytest.skip("engine_basic component not found")
-
-        engine.recalculate_stats()
-
-        prop = engine.get_ability('CombatPropulsion')
-        if prop is None:
-            pytest.skip("engine_basic doesn't have CombatPropulsion")
-
+        prop = component.get_ability('CombatPropulsion')
         base_thrust = prop.base_thrust
 
         # Apply simple_size_mount (scales thrust)
-        engine.add_modifier('simple_size_mount', 3.0)
+        component.add_modifier('simple_size_mount', 3.0)
 
         # Thrust should be scaled
         assert prop.thrust_force == pytest.approx(base_thrust * 3.0)

@@ -11,7 +11,7 @@ import pytest
 from game.simulation.components.component import create_component
 
 from .conftest import (
-    snapshot_full_component, compare_snapshots, load_snapshot, save_snapshot
+    snapshot_full_component, compare_snapshots, load_snapshot, fail_missing_baseline
 )
 
 
@@ -27,9 +27,7 @@ class TestWeaponModifierRegression:
         expected = load_snapshot('railgun_no_modifiers')
 
         if expected is None:
-            # First run - save baseline
-            save_snapshot('railgun_no_modifiers', snapshot)
-            pytest.skip("Baseline snapshot created - re-run test")
+            fail_missing_baseline('railgun_no_modifiers', snapshot)
 
         diffs = compare_snapshots(snapshot, expected)
         assert not diffs, f"Regression detected:\n" + "\n".join(diffs)
@@ -47,8 +45,7 @@ class TestWeaponModifierRegression:
         expected = load_snapshot(snapshot_name)
 
         if expected is None:
-            save_snapshot(snapshot_name, snapshot)
-            pytest.skip(f"Baseline snapshot '{snapshot_name}' created - re-run test")
+            fail_missing_baseline(snapshot_name, snapshot)
 
         diffs = compare_snapshots(snapshot, expected)
         assert not diffs, f"Regression detected:\n" + "\n".join(diffs)
@@ -66,8 +63,7 @@ class TestWeaponModifierRegression:
         expected = load_snapshot(snapshot_name)
 
         if expected is None:
-            save_snapshot(snapshot_name, snapshot)
-            pytest.skip(f"Baseline snapshot '{snapshot_name}' created - re-run test")
+            fail_missing_baseline(snapshot_name, snapshot)
 
         diffs = compare_snapshots(snapshot, expected)
         assert not diffs, f"Regression detected:\n" + "\n".join(diffs)
@@ -85,8 +81,7 @@ class TestWeaponModifierRegression:
         expected = load_snapshot(snapshot_name)
 
         if expected is None:
-            save_snapshot(snapshot_name, snapshot)
-            pytest.skip(f"Baseline snapshot '{snapshot_name}' created - re-run test")
+            fail_missing_baseline(snapshot_name, snapshot)
 
         diffs = compare_snapshots(snapshot, expected)
         assert not diffs, f"Regression detected:\n" + "\n".join(diffs)
@@ -104,8 +99,7 @@ class TestWeaponModifierRegression:
         expected = load_snapshot(snapshot_name)
 
         if expected is None:
-            save_snapshot(snapshot_name, snapshot)
-            pytest.skip(f"Baseline snapshot '{snapshot_name}' created - re-run test")
+            fail_missing_baseline(snapshot_name, snapshot)
 
         diffs = compare_snapshots(snapshot, expected)
         assert not diffs, f"Regression detected:\n" + "\n".join(diffs)
@@ -122,8 +116,7 @@ class TestWeaponModifierRegression:
         expected = load_snapshot('railgun_combined')
 
         if expected is None:
-            save_snapshot('railgun_combined', snapshot)
-            pytest.skip("Baseline snapshot created - re-run test")
+            fail_missing_baseline('railgun_combined', snapshot)
 
         diffs = compare_snapshots(snapshot, expected)
         assert not diffs, f"Regression detected:\n" + "\n".join(diffs)
@@ -141,8 +134,7 @@ class TestLaserCannonModifierRegression:
         expected = load_snapshot('laser_cannon_no_modifiers')
 
         if expected is None:
-            save_snapshot('laser_cannon_no_modifiers', snapshot)
-            pytest.skip("Baseline snapshot created - re-run test")
+            fail_missing_baseline('laser_cannon_no_modifiers', snapshot)
 
         diffs = compare_snapshots(snapshot, expected)
         assert not diffs, f"Regression detected:\n" + "\n".join(diffs)
@@ -160,8 +152,7 @@ class TestLaserCannonModifierRegression:
         expected = load_snapshot(snapshot_name)
 
         if expected is None:
-            save_snapshot(snapshot_name, snapshot)
-            pytest.skip(f"Baseline snapshot '{snapshot_name}' created - re-run test")
+            fail_missing_baseline(snapshot_name, snapshot)
 
         diffs = compare_snapshots(snapshot, expected)
         assert not diffs, f"Regression detected:\n" + "\n".join(diffs)
@@ -179,8 +170,7 @@ class TestSeekerModifierRegression:
         expected = load_snapshot('capital_missile_no_modifiers')
 
         if expected is None:
-            save_snapshot('capital_missile_no_modifiers', snapshot)
-            pytest.skip("Baseline snapshot created - re-run test")
+            fail_missing_baseline('capital_missile_no_modifiers', snapshot)
 
         diffs = compare_snapshots(snapshot, expected)
         assert not diffs, f"Regression detected:\n" + "\n".join(diffs)
@@ -198,8 +188,7 @@ class TestSeekerModifierRegression:
         expected = load_snapshot(snapshot_name)
 
         if expected is None:
-            save_snapshot(snapshot_name, snapshot)
-            pytest.skip(f"Baseline snapshot '{snapshot_name}' created - re-run test")
+            fail_missing_baseline(snapshot_name, snapshot)
 
         diffs = compare_snapshots(snapshot, expected)
         assert not diffs, f"Regression detected:\n" + "\n".join(diffs)
@@ -217,8 +206,7 @@ class TestSeekerModifierRegression:
         expected = load_snapshot(snapshot_name)
 
         if expected is None:
-            save_snapshot(snapshot_name, snapshot)
-            pytest.skip(f"Baseline snapshot '{snapshot_name}' created - re-run test")
+            fail_missing_baseline(snapshot_name, snapshot)
 
         diffs = compare_snapshots(snapshot, expected)
         assert not diffs, f"Regression detected:\n" + "\n".join(diffs)
@@ -236,8 +224,7 @@ class TestSeekerModifierRegression:
         expected = load_snapshot(snapshot_name)
 
         if expected is None:
-            save_snapshot(snapshot_name, snapshot)
-            pytest.skip(f"Baseline snapshot '{snapshot_name}' created - re-run test")
+            fail_missing_baseline(snapshot_name, snapshot)
 
         diffs = compare_snapshots(snapshot, expected)
         assert not diffs, f"Regression detected:\n" + "\n".join(diffs)
@@ -255,8 +242,7 @@ class TestSeekerModifierRegression:
         expected = load_snapshot(snapshot_name)
 
         if expected is None:
-            save_snapshot(snapshot_name, snapshot)
-            pytest.skip(f"Baseline snapshot '{snapshot_name}' created - re-run test")
+            fail_missing_baseline(snapshot_name, snapshot)
 
         diffs = compare_snapshots(snapshot, expected)
         assert not diffs, f"Regression detected:\n" + "\n".join(diffs)

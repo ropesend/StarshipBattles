@@ -198,6 +198,25 @@ def save_snapshot(name: str, data: Dict):
         json.dump(data, f, indent=2)
 
 
+def fail_missing_baseline(name: str, snapshot: Dict):
+    """Write the missing baseline to the snapshots dir and fail the test.
+
+    PROJ-446 Phase 1 Task 1.4 (F-C-025): the previous `pytest.skip(...)` on
+    missing baselines silently masked baseline-absence in CI on fresh
+    checkouts. The regression-test intent is to detect drift, so a missing
+    baseline must be a loud failure, not a silent skip. The maintainer
+    regenerates by deleting and re-running, or by inspecting the just-saved
+    file under `tests/regression/snapshots/`, then committing the new file.
+    """
+    save_snapshot(name, snapshot)
+    snapshot_path = get_snapshots_dir() / f"{name}.json"
+    pytest.fail(
+        f"Baseline snapshot '{name}' was missing. "
+        f"Wrote a fresh baseline to {snapshot_path}; inspect and commit it "
+        f"if the values are correct, then re-run the test."
+    )
+
+
 # =============================================================================
 # FIXTURES
 # =============================================================================

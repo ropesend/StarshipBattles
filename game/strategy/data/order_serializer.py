@@ -148,7 +148,19 @@ class OrderSerializer:
         if target_data.get('type') == 'raw':
             return target_data['value']
 
-        # Unknown format - return as-is
+        # F-A-020: a typed dict whose `type:` does not match any known
+        # branch is a save-format drift signal — fail fast at load time
+        # rather than letting a dict target propagate into an order
+        # handler and crash with AttributeError later.
+        if 'type' in target_data:
+            raise PersistenceException(
+                f"Unknown target type: {target_data['type']!r}",
+                code=ErrorCode.CORRUPT_DATA.value,
+                context={"target_data": target_data},
+            )
+
+        # Untyped dicts (no `type` key) pre-date the typed formats and
+        # round-trip as opaque payloads — keep the pass-through.
         return target_data
 
     @staticmethod

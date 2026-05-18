@@ -4,78 +4,9 @@ Unit tests for data file validation.
 PROJ-40/Phase 9: Data & Config Cleanup validation tests.
 """
 import json
-import re
 from pathlib import Path
 
 import pytest
-
-
-class TestFormationFileNaming:
-    """Tests for formation file naming conventions.
-
-    PROJ-40/NEW-DATA-005: Formation files should have professional names.
-    """
-
-    @pytest.fixture
-    def formations_dir(self):
-        """Get the formations directory path."""
-        return Path(__file__).parent.parent.parent.parent / "data" / "formations"
-
-    def test_formation_files_have_professional_names(self, formations_dir):
-        """All formation files should have professional, appropriate names.
-
-        PROJ-40/NEW-DATA-005: No profanity or unprofessional language in filenames.
-
-        PROJ-443 Phase 3c: `data/formations/` no longer exists — the PROJ-40
-        cleanup completed by removing the directory entirely rather than
-        leaving curated files. Skip when the directory is absent rather than
-        treating "empty inventory" as a test failure (vacuous truth: no files
-        present, so no inappropriate names can exist).
-        """
-        if not formations_dir.exists():
-            pytest.skip("data/formations/ removed by PROJ-40 cleanup; vacuously passes")
-
-        # List of words that should not appear in filenames
-        inappropriate_patterns = [
-            r'\bfuck\w*\b',
-            r'\bshit\w*\b',
-            r'\bdamn\w*\b',
-            r'\bcrap\w*\b',
-            r'\bass\b',
-        ]
-
-        json_files = list(formations_dir.glob("*.json"))
-        assert json_files, "No formation files found"
-
-        for file_path in json_files:
-            filename = file_path.stem.lower()
-            for pattern in inappropriate_patterns:
-                match = re.search(pattern, filename, re.IGNORECASE)
-                assert match is None, (
-                    f"Formation file '{file_path.name}' contains inappropriate language. "
-                    f"Please rename to something professional."
-                )
-
-    def test_formation_files_are_valid_json(self, formations_dir):
-        """All formation files should be valid JSON.
-
-        PROJ-40/NEW-DATA-013: Formation files should be parseable.
-
-        PROJ-443 Phase 3c: see sibling test — formations directory removed.
-        """
-        if not formations_dir.exists():
-            pytest.skip("data/formations/ removed by PROJ-40 cleanup; vacuously passes")
-
-        json_files = list(formations_dir.glob("*.json"))
-        assert json_files, "No formation files found"
-
-        for file_path in json_files:
-            try:
-                with open(file_path, 'r') as f:
-                    data = json.load(f)
-                assert 'arrows' in data, f"Formation file '{file_path.name}' missing 'arrows' key"
-            except json.JSONDecodeError as e:
-                pytest.fail(f"Formation file '{file_path.name}' is not valid JSON: {e}")
 
 
 class TestVehicleClassNaming:

@@ -64,6 +64,7 @@ class FacadeSessionState:
         self.session = session
         # PROJ-254: lazy index caches for O(1) lookups.
         self.planet_index: Optional[dict] = None  # id -> Planet
+        self.empire_index: Optional[Dict[int, "Empire"]] = None  # F-A-031
         self.all_stars_cache: Optional[List["StarInfo"]] = None
         self.all_stars_cache_turn: int = -1
         self.fleets_by_hex_cache: Optional[dict] = None  # HexCoord -> [Fleet]
@@ -91,6 +92,7 @@ class FacadeSessionState:
         """Clear every per-turn cache. Called by `process_turn`."""
         self.fleets_by_hex_cache = None
         self.planet_index = None
+        self.empire_index = None
         self.all_stars_cache = None
         # PROJ-411 Phase 1 per-turn UI caches.
         self.designs_by_empire.clear()
@@ -111,11 +113,10 @@ class FacadeSessionState:
         return self.session._get_fleet_by_id(fleet_id)
 
     def get_empire_by_id(self, empire_id: int) -> Optional["Empire"]:
-        """Look up an empire by ID via linear scan."""
-        for empire in self.session.empires:
-            if empire.id == empire_id:
-                return empire
-        return None
+        """Look up an empire by ID using the lazy empire-index (F-A-031)."""
+        if self.empire_index is None:
+            self.empire_index = {e.id: e for e in self.session.empires}
+        return self.empire_index.get(empire_id)
 
     def build_planet_index(self) -> dict:
         """Build planet-id -> Planet lookup dict (PROJ-254)."""

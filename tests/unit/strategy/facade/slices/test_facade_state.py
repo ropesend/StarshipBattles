@@ -48,6 +48,38 @@ def test_get_empire_by_id_scans_session_empires() -> None:
     assert state.get_empire_by_id(999) is None
 
 
+def test_get_empire_by_id_uses_lazy_index_built_once() -> None:
+    """F-A-031: get_empire_by_id builds the empire-index lazily and reuses it."""
+    empire_a = SimpleNamespace(id=1)
+    empire_b = SimpleNamespace(id=2)
+    empires = [empire_a, empire_b]
+
+    class _ScanCountingEmpires(list):
+        scans = 0
+
+        def __iter__(self):
+            type(self).scans += 1
+            return list.__iter__(self)
+
+    counted = _ScanCountingEmpires(empires)
+    state = FacadeSessionState(SimpleNamespace(empires=counted))
+
+    assert state.get_empire_by_id(2) is empire_b
+    assert state.get_empire_by_id(1) is empire_a
+    assert state.get_empire_by_id(999) is None
+    # Only the first call iterates session.empires to build the index;
+    # subsequent calls hit the cached dict.
+    assert _ScanCountingEmpires.scans == 1
+    assert state.empire_index == {1: empire_a, 2: empire_b}
+
+
+def test_invalidate_all_clears_empire_index() -> None:
+    state = FacadeSessionState(SimpleNamespace())
+    state.empire_index = {1: object()}
+    state.invalidate_all()
+    assert state.empire_index is None
+
+
 def test_invalidate_all_clears_per_turn_caches() -> None:
     state = FacadeSessionState(SimpleNamespace())
     state.planet_index = {1: object()}

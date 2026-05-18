@@ -19,7 +19,7 @@ tests/fixtures/
     paths.py                # Path utilities
     ships.py                # Ship fixtures
     test_scenarios.py       # Combat Lab scenario mocks
-    ui_widget_factory.py    # Non-UIWindow widget factory (PROJ-322 APC-001)
+    ui_widget_factory.py    # pygame_gui widget factory + UIWindow bypass_init helper
     yard_facility.py        # Yard facility factories (PROJ-322 HLP-003)
 ```
 
@@ -307,12 +307,19 @@ def test_ai_targeting(policy_manager_with_test_data):
 
 ### ui_widget_factory.py
 
-**Purpose:** Construct non-UIWindow pygame_gui widgets for unit tests without
-running the full pygame display stack (PROJ-322 APC-001).
+**Purpose:** Construct pygame_gui widgets — including `UIWindow` subclasses —
+for unit tests without running the full pygame display stack.
+
+For the canonical retrofit recipe (two-stage `__init__` with a `bypass_init`
+guard between Stage 1 state and Stage 2 widget construction), see
+**Pattern #33 "UI Widget Test Factory"** in
+[`docs/02_PATTERNS.md`](../../docs/02_PATTERNS.md). The module docstring on
+[`tests/fixtures/ui_widget_factory.py`](ui_widget_factory.py) is the
+authoritative API reference.
 
 **Factory Function:**
 ```python
-from tests.fixtures.ui_widget_factory import make_ui_widget
+from tests.fixtures.ui_widget_factory import make_ui_widget, bypass_init
 
 widget = make_ui_widget(
     SomeWidgetClass,                            # Widget class to instantiate
@@ -324,14 +331,17 @@ widget = make_ui_widget(
 )
 ```
 
-**Limitation — UIWindow super-init chain:** the factory **cannot** construct
-subclasses of `pygame_gui.elements.UIWindow` (including the project's
-`StrategyModalWindow`). The factory's element-class patches do not intercept
-`super().__init__()` calls because the MRO is resolved at class-definition time.
-For UIWindow subclasses, fall back to the legacy `__new__` bypass-init helper or
-write an integration test against a headless pygame_gui session. See
-[docs/known-issues.md — UIWindow super-init chain blocker](../../docs/known-issues.md#uiwindow-super-init-chain-blocker)
-for the affected classes and unblocking paths.
+**UIWindow subclasses:** `make_ui_widget`'s element-class patches do not
+intercept `super().__init__()` because the MRO is resolved at class-definition
+time. For UIWindow subclasses, wrap the call in the `bypass_init(cls)` context
+manager — it scopes the Stage-2 bypass flag to a single test and unwinds the
+flag on exit (never set `Cls.bypass_init = True` bare in a test body — a crash
+mid-test leaks the flag to every subsequent test).
+
+```python
+with bypass_init(FleetReportWindow):
+    window = make_ui_widget(FleetReportWindow, fleet=mock_fleet)
+```
 
 **Usage example** (from `tests/fixtures/test_ui_widget_factory.py`):
 ```python
@@ -584,4 +594,4 @@ For detailed mock patterns and guidelines, see [tests/README.md](../README.md#mo
 
 ---
 
-*Last Updated: 2026-05-03 (PROJ-322 — added make_ui_widget factory + cargo_mock_ship/yard_facility/mock_planet shared factories)*
+*Last Updated: 2026-05-18 (PROJ-446 Phase 1 — `ui_widget_factory.py` section rewritten to point at Pattern #33 and the `bypass_init` scoped helper; dropped the retired "UIWindow super-init chain blocker" framing)*

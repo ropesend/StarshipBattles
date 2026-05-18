@@ -1,6 +1,7 @@
 """Simulation-side combat-entity protocols and TypeGuards."""
+from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Protocol, TypeGuard, runtime_checkable
+from typing import Any, Protocol, TypeGuard, runtime_checkable
 
 from game.core.protocols.common import _has_attrs
 
@@ -84,22 +85,22 @@ class ICombatShip(Protocol):
         ...
 
     @property
-    def layers(self) -> Dict[Any, Any]:
+    def layers(self) -> dict[Any, Any]:
         """Ship layers containing components."""
         ...
 
     @property
-    def resources(self) -> Optional[Any]:
+    def resources(self) -> Any | None:
         """Resource registry (None for ships without consumables)."""
         ...
 
     @property
-    def current_target(self) -> Optional[Any]:
+    def current_target(self) -> Any | None:
         """Current combat target."""
         ...
 
     @property
-    def secondary_targets(self) -> List[Any]:
+    def secondary_targets(self) -> list[Any]:
         """List of secondary combat targets."""
         ...
 

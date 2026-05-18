@@ -107,12 +107,9 @@ class CarriedVehicle:
             component_states=comp_states,
         )
 
-    # PROJ-431 Phase 1f: ``from_any`` deleted. Its only purpose was to
-    # discriminate ``CarriedVehicle``-shaped dicts from drop-pod dicts
-    # while both lived in the same legacy ``ShipInstance.carried_items``
-    # mixed list. Post-Phase-1 the bay is homogeneous
-    # ``list[CarriedVehicle]`` and pods live in their own typed slot, so
-    # the discriminator has no remaining role. Callers that still hold
+    # Vehicles are stored typed in ``bay_inventory.bay`` (homogeneous
+    # ``list[CarriedVehicle]``) and pods in their own typed slot. There
+    # is no shape-discriminator helper here; callers that still hold
     # untyped dicts from out-of-scope substrates (planet staging yard)
     # do an explicit ``isinstance`` + ``vehicle_type in
     # VALID_VEHICLE_TYPES`` shape check, then ``from_dict(...)``.

@@ -143,6 +143,8 @@ class BayInventory:
         Returns False when the slot has fewer units than requested
         (slot is left unchanged in that case).
         """
+        if amount < 0:
+            raise ValueError(f"resource amount must be non-negative, got {amount}")
         current = self.resources.get(resource_id, 0.0)
         if amount > current + 1e-9:
             return False
@@ -174,6 +176,8 @@ class BayInventory:
         self.population[species_id] = self.population.get(species_id, 0) + count
 
     def remove_population(self, species_id: str, count: int) -> bool:
+        if count < 0:
+            raise ValueError(f"population count must be non-negative, got {count}")
         current = self.population.get(species_id, 0)
         if count > current:
             return False

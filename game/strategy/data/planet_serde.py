@@ -1,11 +1,8 @@
 """Save/load helpers for ``Planet``.
 
-PROJ-372 Phase 2: extracted from ``planet.py`` to keep the data class
-file under the 350 LOC ceiling. The 47 fields, validation, and the
-order-deserialization path live here. ``Planet.to_dict`` /
-``Planet.from_dict`` are 1-line facades that call into these helpers.
-
-Save format unchanged.
+The 47 fields, validation, and the order-deserialization path live
+here. ``Planet.to_dict`` / ``Planet.from_dict`` are 1-line facades that
+call into these helpers.
 """
 from __future__ import annotations
 
@@ -156,7 +153,7 @@ def planet_from_dict_kwargs(data: dict) -> Dict[str, Any]:
         owner_id=data.get("owner_id"),
         construction_queue=data.get("construction_queue", []),
         construction_queue_paused=data.get("construction_queue_paused", False),
-        deposits=data.get("deposits", data.get("resources", {})),
+        deposits=data.get("deposits", {}),
         stockpile=data.get("stockpile", {}),
         max_stockpile=data.get("max_stockpile", {}),
         staging_yard=data.get("staging_yard", []),

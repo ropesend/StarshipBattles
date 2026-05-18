@@ -3,8 +3,9 @@
 These protocols define the read-only views one layer takes of the other.
 They aren't strategy-only or combat-only — they ARE the seam.
 """
+from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Protocol, TypeGuard, runtime_checkable
+from typing import Any, Protocol, TypeGuard, runtime_checkable
 
 from game.core.constants import LayerType
 from game.core.protocols.common import _has_attrs
@@ -25,7 +26,7 @@ class IResourceReader(Protocol):
         """Get maximum value of a resource."""
         ...
 
-    def get_resource_names(self) -> List[str]:
+    def get_resource_names(self) -> list[str]:
         """Return list of all registered resource names."""
         ...
 
@@ -40,7 +41,7 @@ class IPostBattleShip(Protocol):
     Defines the Strategy <-> Simulation boundary for post-battle state transfer.
     """
     @property
-    def instance_id(self) -> Optional[str]:
+    def instance_id(self) -> str | None:
         """Unique instance ID from strategy layer (PROJ-254). None for sim-only ships."""
         ...
 
@@ -70,12 +71,12 @@ class IPostBattleShip(Protocol):
         ...
 
     @property
-    def layers(self) -> Dict['LayerType', Any]:
+    def layers(self) -> dict[LayerType, Any]:
         """Ship layers containing components (LayerData instances)."""
         ...
 
     @property
-    def resources(self) -> Optional['IResourceReader']:
+    def resources(self) -> 'IResourceReader | None':
         """Resource registry (None for ships without consumables)."""
         ...
 
@@ -103,7 +104,7 @@ class IResourceHolder(Protocol):
     def is_derelict(self) -> bool: ...
 
     @property
-    def layers(self) -> Dict['LayerType', Any]: ...
+    def layers(self) -> dict[LayerType, Any]: ...
 
 
 # =============================================================================

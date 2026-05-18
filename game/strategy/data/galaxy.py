@@ -7,7 +7,7 @@ from game.core.validation_helpers import require_keys, validate_positive
 from game.core.exceptions import PersistenceException
 from game.core.error_codes import ErrorCode
 from game.strategy.data.naming import NameRegistry
-from game.strategy.data.planet import Planet, PlanetType  # noqa: F401  (PlanetType re-export)
+from game.strategy.data.planet import Planet
 from game.strategy.data.planet_gen import PlanetGenerator
 from game.strategy.data.galaxy_state import GalaxyState
 from game.strategy.generation.planet_image_registry import PlanetImageRegistry

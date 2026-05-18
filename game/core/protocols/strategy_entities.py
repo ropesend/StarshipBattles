@@ -4,8 +4,9 @@ These are the things that occupy a star system: stars, planets, fleets,
 warp points, sector environments, storms. Domain-scoped types (empires,
 facilities, races, ship instances) live in `strategy_domain.py`.
 """
+from __future__ import annotations
 
-from typing import Any, Dict, FrozenSet, List, Optional, Protocol, Tuple, TypeGuard, runtime_checkable
+from typing import Any, Protocol, TypeGuard, runtime_checkable
 
 from game.core.protocols.common import _has_attrs
 
@@ -14,15 +15,15 @@ from game.core.protocols.common import _has_attrs
 class IStarSystem(Protocol):
     """Protocol for StarSystem entities."""
     @property
-    def stars(self) -> List[Any]:
+    def stars(self) -> list[Any]:
         ...
 
     @property
-    def planets(self) -> List[Any]:
+    def planets(self) -> list[Any]:
         ...
 
     @property
-    def warp_points(self) -> List[Any]:
+    def warp_points(self) -> list[Any]:
         ...
 
     @property
@@ -35,7 +36,7 @@ class IStarSystem(Protocol):
         ...
 
     @property
-    def storms(self) -> List[Any]:
+    def storms(self) -> list[Any]:
         """List of Storm objects in this system."""
         ...
 
@@ -44,7 +45,7 @@ class IStarSystem(Protocol):
 class IStar(Protocol):
     """Protocol for Star entities."""
     @property
-    def color(self) -> Tuple[int, int, int]:
+    def color(self) -> tuple[int, int, int]:
         ...
 
     @property
@@ -78,21 +79,21 @@ class IPlanet(Protocol):
         ...
 
     @property
-    def deposits(self) -> Dict[str, Any]:
+    def deposits(self) -> dict[str, Any]:
         ...
 
     @property
-    def stockpile(self) -> Dict[str, float]:
+    def stockpile(self) -> dict[str, float]:
         """Local resource stockpile (harvested/stored resources)."""
         ...
 
     @property
-    def max_stockpile(self) -> Dict[str, float]:
+    def max_stockpile(self) -> dict[str, float]:
         """Maximum local stockpile capacity per resource type."""
         ...
 
     @property
-    def owner_id(self) -> Optional[int]:
+    def owner_id(self) -> int | None:
         ...
 
     @property
@@ -111,7 +112,7 @@ class IPlanet(Protocol):
         ...
 
     @property
-    def populations(self) -> List[Any]:
+    def populations(self) -> list[Any]:
         """List of SpeciesPopulation objects."""
         ...
 
@@ -121,12 +122,12 @@ class IPlanet(Protocol):
         ...
 
     @property
-    def facilities(self) -> List[Any]:
+    def facilities(self) -> list[Any]:
         """List of PlanetaryFacility objects."""
         ...
 
     @property
-    def atmosphere(self) -> Dict[str, float]:
+    def atmosphere(self) -> dict[str, float]:
         """Atmosphere composition: gas name -> partial pressure (Pa)."""
         ...
 
@@ -180,19 +181,19 @@ class IOrderable(Protocol):
     """
 
     @property
-    def orders(self) -> List[Any]:
+    def orders(self) -> list[Any]:
         """The entity's order queue."""
         ...
 
-    def get_current_order(self) -> Optional[Any]:
+    def get_current_order(self) -> Any | None:
         """Peek at the first order in the queue."""
         ...
 
-    def add_order(self, order: Any, index: Optional[int] = None) -> None:
+    def add_order(self, order: Any, index: int | None = None) -> None:
         """Add an order to the queue."""
         ...
 
-    def pop_order(self) -> Optional[Any]:
+    def pop_order(self) -> Any | None:
         """Remove and return the first order."""
         ...
 
@@ -217,12 +218,12 @@ class IZoneOccupant(Protocol):
     coordinates for spatial lookups.
     """
     @property
-    def occupied_hexes(self) -> FrozenSet:
+    def occupied_hexes(self) -> frozenset[Any]:
         """
         Set of LOCAL hex coords this object occupies.
 
         Returns:
-            FrozenSet of HexCoord in LOCAL system coordinates
+            frozenset of HexCoord in LOCAL system coordinates
         """
         ...
 
@@ -238,11 +239,11 @@ class IFleet(Protocol):
     - fleet.battle.to_battle_ships(team_id)
     """
     @property
-    def ships(self) -> List[Any]:
+    def ships(self) -> list[Any]:
         ...
 
     @property
-    def orders(self) -> List[Any]:
+    def orders(self) -> list[Any]:
         ...
 
     @property
@@ -265,12 +266,12 @@ class IFleet(Protocol):
         ...
 
     @property
-    def path(self) -> List[Any]:
+    def path(self) -> list[Any]:
         """Current movement path (list of HexCoord)."""
         ...
 
     @property
-    def construction_queue(self) -> List[Any]:
+    def construction_queue(self) -> list[Any]:
         """Production queue for fleets with shipyards."""
         ...
 
@@ -346,12 +347,12 @@ class IStorm(Protocol):
         ...
 
     @property
-    def abilities(self) -> Dict[str, Any]:
+    def abilities(self) -> dict[str, Any]:
         """PROJ-300: abilities dict matching components.json shape."""
         ...
 
     @property
-    def occupied_hexes(self) -> FrozenSet:
+    def occupied_hexes(self) -> frozenset[Any]:
         """Hexes occupied by this storm (local coordinates)."""
         ...
 
@@ -385,11 +386,11 @@ class IAbilitySource(Protocol):
         ...
 
     @property
-    def owner_id(self) -> Optional[int]:
+    def owner_id(self) -> int | None:
         """None = ownerless (storms; later: stars, warp points, system itself)."""
         ...
 
-    def get_abilities(self) -> Dict[str, Any]:
+    def get_abilities(self) -> dict[str, Any]:
         """Return abilities dict in components.json shape."""
         ...
 
@@ -401,7 +402,7 @@ class IAbilitySource(Protocol):
         """True iff this source's abilities apply within the given star system."""
         ...
 
-    def get_activation_state(self, ability_name: str) -> Optional[Any]:
+    def get_activation_state(self, ability_name: str) -> Any | None:
         """None = always active. Used for activatable abilities on facilities."""
         ...
 

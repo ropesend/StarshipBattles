@@ -54,13 +54,12 @@ class Empire:
         # Galaxy back-reference for auto fleet registration (PROJ-219)
         self._galaxy: Optional['Galaxy'] = None
 
-        # Empire-wide resource economy
-        # PROJ-436 Phase 5: ``resource_pool`` is a pure aggregation query
-        # over ``self.colonies[*].stockpile`` (see property below). The
-        # legacy ``_fleet_resource_pool`` durable storage has been
-        # deleted — fleet construction draws from the build-location's
-        # container (planet stockpile / fleet cargo), not an empire-level
-        # pool.
+        # Empire-wide resource economy.
+        # ``resource_pool`` is a pure aggregation query over
+        # ``self.colonies[*].stockpile`` (see property below). There is
+        # no durable empire-level resource store; fleet construction
+        # draws from the build-location's container (planet stockpile
+        # or fleet cargo).
         self.max_storage = {}     # Dict[str, float] - aggregate storage capacity (set by HarvestingEngine)
 
         # PROJ-412 Phase 5: transient dirty flags consumed by HarvestingEngine's
@@ -313,17 +312,13 @@ class Empire:
             'empire_theme_id': self.empire_theme_id,
             'colony_ids': [p.id for p in self.colonies],  # Store IDs only
             'fleets': [f.to_dict() for f in self.fleets],
-            # PROJ-431 Phase 2: deployed groups serialise as a sibling
-            # collection. Polymorphic dispatch on the ``type`` field at
-            # load time picks the correct DeployedGroup subclass.
+            # Deployed groups serialise as a sibling collection.
+            # Polymorphic dispatch on the ``type`` field at load time
+            # picks the correct DeployedGroup subclass.
             'deployed_groups': [g.to_dict() for g in self.deployed_groups],
             'built_ship_designs': sorted(self.built_ship_designs),
             '_next_fleet_display_number': self._next_fleet_display_number,
             '_design_serial_counters': self._design_serial_counters,
-            # PROJ-436 Phase 5: ``_fleet_resource_pool`` is deleted; the
-            # save shape no longer carries an empire-level resource pool.
-            # ``resource_pool`` is a pure aggregation over colony
-            # stockpiles, persisted via each Planet's serializer.
             'max_storage': dict(self.max_storage),
         }
         # Include race visual identity if set (optional fields)
@@ -388,12 +383,6 @@ class Empire:
         # Restore ship serial counters
         empire._design_serial_counters = data.get('_design_serial_counters', {})
 
-        # Restore resource economy
-        # PROJ-436 Phase 5: ``_fleet_resource_pool`` is gone. Old saves
-        # (pre-Phase-5) that carry a ``resource_pool`` key are silently
-        # ignored — per CLAUDE.md "no save-file migration" rule, old
-        # saves are disposable. New saves persist resources via per-
-        # colony stockpiles only.
         empire.max_storage = data.get('max_storage', {})
 
         # PROJ-251: Strict deserialization — corrupt fleets fail the load

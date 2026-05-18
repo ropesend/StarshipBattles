@@ -35,6 +35,9 @@ def _mock_empire(empire_id: int, name: str = "Test Empire"):
     empire.race_theme = Mock()
     empire.race_theme.theme_id = "test"
     empire.flag_id = 1
+    # F-A-018: EmpireInfo.from_empire reads empire.resource_pool; a plain
+    # Mock would return another Mock and crash the catalog walk.
+    empire.resource_pool = {}
     return empire
 
 

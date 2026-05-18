@@ -382,6 +382,39 @@ class TestPlanetInfoFactory:
         assert info.owner_id == 0
         assert info.is_colonized is True
 
+    def test_from_planet_stockpile_uses_catalog_order(self):
+        """F-A-019: stockpile tuple ordering matches ResourceCatalog.all_ids()."""
+        from game.strategy.facade.dto.planet_dto import PlanetInfo
+        from game.strategy.data.planet import Planet, PlanetType
+        from game.core.resources import ResourceCatalog
+
+        common_kwargs = dict(
+            location=HexCoord(0, 0), orbit_distance=1,
+            mass=5.972e24, radius=6.371e6, surface_area=5.1e14, density=5515,
+            surface_gravity=9.8, surface_pressure=101325, surface_temperature=288,
+            surface_water=0.7, tectonic_activity=0.5, magnetic_field=1.0,
+            planet_type=PlanetType.CONTINENTAL,
+        )
+
+        planet_a = Planet(name="A", **common_kwargs)
+        planet_b = Planet(name="B", **common_kwargs)
+
+        # Different insertion-order stockpile dicts but identical content.
+        planet_a.stockpile = {"organics": 5.0, "metals": 10.0}
+        planet_b.stockpile = {"metals": 10.0, "organics": 5.0}
+
+        info_a = PlanetInfo.from_planet(planet_a)
+        info_b = PlanetInfo.from_planet(planet_b)
+
+        # Both should emit catalog-ordered tuples with identical key sequence.
+        catalog_ids = ResourceCatalog.from_json().all_ids()
+        assert [rid for rid, _ in info_a.stockpile] == catalog_ids
+        assert info_a.stockpile == info_b.stockpile
+
+        as_dict = dict(info_a.stockpile)
+        assert as_dict["metals"] == 10.0
+        assert as_dict["organics"] == 5.0
+
     def test_from_planet_with_shipyard(self):
         """from_planet detects space shipyard."""
         from game.strategy.facade.dto.planet_dto import PlanetInfo
