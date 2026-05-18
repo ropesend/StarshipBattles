@@ -343,8 +343,22 @@ class TestStarSystemStormIntegration:
         system = StarSystem.from_dict(data)
         assert system.storms == []
 
-    def test_star_system_from_dict_skips_invalid_storm_gracefully(self):
-        """StarSystem.from_dict should skip invalid storms and continue."""
+    def test_star_system_from_dict_raises_on_invalid_storm(self):
+        """StarSystem.from_dict should raise PersistenceException for an
+        invalid storm.
+
+        PROJ-443 Phase 3a: this test originally asserted that malformed
+        storms were silently skipped (``len(system.storms) == 2`` with the
+        bad storm dropped). The production contract changed: see
+        `star_system.py:149-152` — storms (along with warp_points and
+        planets) now deserialize with ``strict=True``, so a corrupt entry
+        fails loudly rather than being silently dropped. This is per the
+        project's no-migration / disposable-save rule: save files should
+        be well-formed; corruption is an error to surface, not a
+        condition to paper over.
+        """
+        from game.core.exceptions import PersistenceException
+
         data = {
             'name': "Mixed System",
             'global_location': {'q': 0, 'r': 0},
@@ -361,20 +375,10 @@ class TestStarSystemStormIntegration:
                     'location': {'q': 2, 'r': 2},
                     'hex_offsets': [{'q': 0, 'r': 0}],
                 },
-                {
-                    'name': "Another Good Storm",
-                    'storm_type': "plasma_storm",
-                    'location': {'q': 3, 'r': 3},
-                    'hex_offsets': [{'q': 0, 'r': 0}],
-                }
             ]
         }
-        # Should not raise - invalid storm is skipped
-        system = StarSystem.from_dict(data)
-        # Only 2 valid storms should be loaded
-        assert len(system.storms) == 2
-        assert system.storms[0].name == "Good Storm"
-        assert system.storms[1].name == "Another Good Storm"
+        with pytest.raises(PersistenceException, match="storm at index 1"):
+            StarSystem.from_dict(data)
 
 
 class TestGalaxyStormZoneRegistration:

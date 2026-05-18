@@ -49,8 +49,17 @@ class TestClassificationConfigLoader:
         assert thresholds["magma"] == 700  # temp > 700 for magma
         assert "cold_limit" in thresholds  # temp < 200 for cryo barren boundary
 
-    def test_all_planet_types_have_rules(self):
-        """Verify all 11 planet types have classification rules defined."""
+    def test_all_naturally_classifiable_planet_types_have_rules(self):
+        """Verify every naturally-classifiable planet type has rules.
+
+        PROJ-443 Phase 3a: `PlanetType.DYSON_SPHERE` (added after this test
+        was written) is an artificial megastructure — `planet.py:25-41` calls
+        it "Artificial megastructure enclosing a star", structurally
+        distinct from the 11 physically-derived types. It is placed
+        explicitly during galaxy generation, never auto-classified from
+        mass/temperature/pressure, so no `type_rules` entry is required
+        or appropriate. Exclude it from the rules-coverage check.
+        """
         from game.strategy.generation.loaders.astrophysics_loader import AstrophysicsLoader
         from game.strategy.data.planet import PlanetType
 
@@ -58,8 +67,10 @@ class TestClassificationConfigLoader:
         data = loader.load()
         type_rules = data["classification"].get("type_rules", {})
 
-        # All PlanetType values should have rules
+        artificial_types = {PlanetType.DYSON_SPHERE}
         for ptype in PlanetType:
+            if ptype in artificial_types:
+                continue
             assert ptype.name in type_rules, f"Missing rule for {ptype.name}"
 
 

@@ -170,6 +170,30 @@ class Fleet:
         """Return 'fleet' for BuildContext protocol compliance."""
         return "fleet"
 
+    # ------------------------------------------------------------------
+    # BuildContext protocol compliance (PROJ-67 Phase 4 / PROJ-443 Phase 3a).
+    # ------------------------------------------------------------------
+    # The ``BuildContext`` Protocol (game/strategy/data/build_context.py)
+    # requires ``has_space_shipyard`` and ``can_build_type`` directly on
+    # the context object — the UI consumers in
+    # ``game/ui/panels/build_queue_controller.py`` and
+    # ``game/ui/screens/build_queue_panel_factory.py`` access these via
+    # ``self.build_context.<attr>``. These are short delegations to the
+    # ``FleetCapabilityCalculator`` and are NOT general pass-through
+    # methods (the PROJ-210 Phase 2 "no pass-throughs" rule targeted
+    # large surface-area duplications like the cargo / nav / battle
+    # families); these two are Protocol-mandated and the UI already
+    # depended on them.
+
+    @property
+    def has_space_shipyard(self) -> bool:
+        """BuildContext: True iff any combat-capable ship has a SpaceShipyard."""
+        return self.capabilities.has_space_shipyard
+
+    def can_build_type(self, vehicle_type: str, galaxy: Any = None) -> bool:
+        """BuildContext: True iff the fleet can build the given vehicle type."""
+        return self.capabilities.can_build_type(vehicle_type, galaxy=galaxy)
+
     def add_ship(self, ship: ShipInstance) -> None:
         """Add a ShipInstance to the fleet."""
         self.ships.append(ship)

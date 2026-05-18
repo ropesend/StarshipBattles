@@ -148,9 +148,19 @@ class TestStarAssets:
         assert [call.args[0] for call in mock_folder.call_args_list] == [256, 512]
 
     def test_load_star_image_returns_missing_texture_after_loader_errors(self, asset_manager):
-        """Loader errors are swallowed per-resolution before returning the placeholder."""
+        """Loader errors are swallowed per-resolution before returning the placeholder.
+
+        PROJ-443 Phase 3c: ``load_star_image`` narrowed its broad except to
+        ``(FileNotFoundError, pygame.error, ValueError, OSError)`` per
+        PROJ-381 Phase 2 (ERR-02-001) — fatal types like ``RuntimeError`` /
+        ``MemoryError`` / ``KeyboardInterrupt`` should propagate rather
+        than be silently swallowed. The test now exercises a loader error
+        the production catch handles (``OSError``), keeping the original
+        "loader error → missing texture" semantic without pinning the
+        old broad-catch behavior.
+        """
         with patch.object(asset_manager, "_get_star_folder_for_size", return_value="/stars"), \
-                patch.object(asset_manager, "load_external_image", side_effect=RuntimeError("boom")):
+                patch.object(asset_manager, "load_external_image", side_effect=OSError("simulated loader failure")):
             result = asset_manager.load_star_image("star.png", requested_size=512)
 
         assert result is asset_manager.get_missing_texture()

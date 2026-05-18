@@ -41,8 +41,45 @@ EXPECTED_FLEET_RATES = {
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _make_planet(name="Alpha Prime", hex_coord=HexCoord(5, 5), owner_id=0, planet_id=1) -> Planet:
-    """Create a minimal planet for testing."""
+def _make_planetary_yard_facility(instance_id="planetary-yard") -> PlanetaryFacility:
+    """Create a PlanetaryYard facility — gates the planet's base queue.
+
+    PROJ-443 Phase 3a: the production-code contract changed so that
+    `_collect_planet_sources` (see `build_queue_source.py:330`) only emits
+    a base queue source when `colony_has_planetary_yard(planet, ...)` is
+    True. The previous "every planet has a base queue" assumption is gone.
+    Tests in this file uniformly assume the base queue exists, so
+    `_make_planet(with_planetary_yard=True)` (the default) attaches one
+    of these facilities.
+    """
+    return PlanetaryFacility(
+        instance_id=instance_id,
+        design_id="planetary_yard_core",
+        name="Planetary Yard",
+        design_data={
+            "layers": {
+                "hull": [
+                    {"id": "planetary_yard_core", "abilities": {"PlanetaryYard": {}}}
+                ]
+            }
+        },
+        is_operational=True,
+    )
+
+
+def _make_planet(
+    name="Alpha Prime",
+    hex_coord=HexCoord(5, 5),
+    owner_id=0,
+    planet_id=1,
+    with_planetary_yard: bool = True,
+) -> Planet:
+    """Create a minimal planet for testing.
+
+    By default the planet ships with a PlanetaryYard facility so the
+    base queue is emitted by `_collect_planet_sources` — see
+    `_make_planetary_yard_facility` for the rationale.
+    """
     planet = Planet(
         name=name,
         location=hex_coord,
@@ -60,6 +97,8 @@ def _make_planet(name="Alpha Prime", hex_coord=HexCoord(5, 5), owner_id=0, plane
         owner_id=owner_id,
         id=planet_id,
     )
+    if with_planetary_yard:
+        planet.facilities.append(_make_planetary_yard_facility())
     return planet
 
 
@@ -127,6 +166,15 @@ def _make_fleet_with_yard(fleet_id=100, owner_id=0, location=HexCoord(5, 5)) -> 
         }
     }
     ship.mass = 100
+    # PROJ-443 Phase 3a: pin `_registries.components` to a real empty dict.
+    # Without this, MagicMock's auto-vivification returns a truthy mock from
+    # `ship._registries.components.get(comp_id)`, and `iterate_design_components`'
+    # `if not abilities` fallback (which would route to the inline
+    # `comp_entry.get('abilities', ...)` path) never fires — leaving the
+    # SpaceShipyard ability undetected. Empty dict ensures the registry
+    # lookup yields None and the inline-abilities fallback fires.
+    ship._registries = MagicMock()
+    ship._registries.components = {}
     fleet.ships.append(ship)
     # Set speed directly to avoid triggering FleetSpeedCalculator
     fleet.speed = 5.0
@@ -141,6 +189,9 @@ def _make_fleet_without_yard(fleet_id=200, owner_id=0, location=HexCoord(5, 5)) 
     ship.is_combat_capable.return_value = True
     ship.design_data = {"layers": {"hull": [{"id": "laser_cannon"}]}}
     ship.mass = 50
+    # Same _registries pinning rationale as _make_fleet_with_yard.
+    ship._registries = MagicMock()
+    ship._registries.components = {}
     fleet.ships.append(ship)
     fleet.speed = 5.0
     return fleet
@@ -347,8 +398,11 @@ class TestCollectBuildQueuesAtHex:
 
         # Base queue references planet.construction_queue
         assert sources[0].construction_queue is planet.construction_queue
-        # Shipyard queue references facility.construction_queue
-        assert sources[1].construction_queue is planet.facilities[0].construction_queue
+        # Shipyard queue references facility.construction_queue. Index [-1]
+        # because `_make_planet(with_planetary_yard=True)` already populated
+        # facilities[0] with the PlanetaryYard that gates the base queue;
+        # the shipyard appended above lives at facilities[1].
+        assert sources[1].construction_queue is planet.facilities[-1].construction_queue
 
     def test_mixed_facilities_only_shipyards_get_queues(self):
         """Only shipyard facilities get queue sources, not other facility types."""

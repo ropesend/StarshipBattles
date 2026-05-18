@@ -25,19 +25,25 @@ class TestUtilityScriptNaming:
         """Get the tests directory path."""
         return Path(__file__).parent.parent.parent.parent / "tests"
 
-    def test_verify_builder_imports_renamed(self, tests_dir):
-        """verify_builder_imports.py should be renamed with _ prefix.
+    def test_verify_builder_imports_not_pytest_collected(self, tests_dir):
+        """verify_builder_imports.py should not be present as a pytest-collected name.
 
         PROJ-40/NEW-TEST-002: Utility scripts should not be collected by pytest.
+
+        PROJ-443 Phase 3c: the underscore-rename happened, and then the file
+        was deleted entirely in a later cleanup pass (PROJ-326 Phase 1 per the
+        module docstring: "the files no longer exist"). The original
+        assertion that the underscored name *exists* is therefore obsolete.
+        Rewritten as: neither the pytest-collected name nor the legacy
+        location should pollute the test tree — both gone is the desired
+        steady state.
         """
         old_name = tests_dir / "unit" / "verify_builder_imports.py"
-        new_name = tests_dir / "unit" / "_verify_builder_imports.py"
-
         assert not old_name.exists(), (
-            "verify_builder_imports.py should be renamed to _verify_builder_imports.py "
-            "to avoid pytest collection (it's a utility script, not a test)"
+            "verify_builder_imports.py should not exist in tests/unit/ "
+            "(it was a utility script; PROJ-40 renamed it to use _ prefix "
+            "and PROJ-326 Phase 1 deleted the underscored version entirely)"
         )
-        assert new_name.exists(), "_verify_builder_imports.py should exist"
 
 
 class TestFormationScriptNaming:
@@ -51,35 +57,31 @@ class TestFormationScriptNaming:
         """Get the integration tests directory path."""
         return Path(__file__).parent.parent.parent.parent / "tests" / "integration"
 
-    def test_formation_flight_is_manual_script(self, integration_dir):
-        """test_formation_flight.py should be renamed since it's a manual script.
+    def test_formation_flight_not_pytest_collected(self, integration_dir):
+        """test_formation_flight.py should not be present as a pytest-collected name.
 
-        PROJ-40/NEW-INT-002: This file has no pytest test functions, just a run_test() function.
-        It should be renamed with _ prefix to indicate it's a manual test script.
+        PROJ-40/NEW-INT-002: Manual scripts should not be collected by pytest.
+
+        PROJ-443 Phase 3c: same lifecycle as `_verify_builder_imports.py` —
+        renamed with `_` prefix then deleted entirely. Test rewritten to
+        only assert the pytest-collected name is absent.
         """
         old_name = integration_dir / "test_formation_flight.py"
-        new_name = integration_dir / "_test_formation_flight.py"
-
         assert not old_name.exists(), (
-            "test_formation_flight.py should be renamed to _test_formation_flight.py "
-            "(it's a manual test script with no pytest functions)"
+            "test_formation_flight.py should not exist in tests/integration/ "
+            "(manual script; PROJ-40 renamed it, later deleted entirely)"
         )
-        assert new_name.exists(), "_test_formation_flight.py should exist"
 
-    def test_formation_attack_is_manual_script(self, integration_dir):
-        """test_formation_attack.py should be renamed since it's a manual script.
+    def test_formation_attack_not_pytest_collected(self, integration_dir):
+        """test_formation_attack.py should not be present as a pytest-collected name.
 
-        PROJ-40/NEW-INT-002: This file has no pytest test functions, just a run_test() function.
-        It should be renamed with _ prefix to indicate it's a manual test script.
+        See sibling test — same rationale.
         """
         old_name = integration_dir / "test_formation_attack.py"
-        new_name = integration_dir / "_test_formation_attack.py"
-
         assert not old_name.exists(), (
-            "test_formation_attack.py should be renamed to _test_formation_attack.py "
-            "(it's a manual test script with no pytest functions)"
+            "test_formation_attack.py should not exist in tests/integration/ "
+            "(manual script; PROJ-40 renamed it, later deleted entirely)"
         )
-        assert new_name.exists(), "_test_formation_attack.py should exist"
 
 
 class TestSharedTestHelpers:

@@ -27,16 +27,23 @@ def mock_fleet():
 
 @pytest.fixture
 def mock_ship():
-    """Create a mock ship with resource methods."""
+    """Create a mock ship with resource methods.
+
+    PROJ-443 Phase 3a: cargo accessors moved from direct ``ship.<method>``
+    onto ``ship._cargo_mgr.<method>`` (see PROJ-436 Phase 3's ShipCargoManager
+    extraction). Resource methods (``get_all_resource_costs_per_hex``,
+    ``consume_resource``, ``get_current_resource``, ``get_warp_resource_costs``)
+    still live directly on the ship — see ``fleet_consumable_aggregator.py``.
+    """
     ship = MagicMock()
     ship.get_all_resource_costs_per_hex.return_value = {"fuel": 10.0}
     ship.get_current_resource.return_value = 100.0
     ship.consume_resource = MagicMock()
     ship.get_warp_resource_costs.return_value = {"fuel": 50.0}
-    ship.get_cargo_capacity.return_value = 100
-    ship.get_current_cargo.return_value = 0
-    ship.load_cargo = MagicMock(return_value=100)
-    ship.unload_cargo = MagicMock(return_value=0)
+    ship._cargo_mgr.get_cargo_capacity.return_value = 100
+    ship._cargo_mgr.get_current_cargo.return_value = 0
+    ship._cargo_mgr.load_cargo = MagicMock(return_value=100)
+    ship._cargo_mgr.unload_cargo = MagicMock(return_value=0)
     return ship
 
 
@@ -327,7 +334,7 @@ class TestCargoMethods:
 
     def test_get_fleet_cargo_capacity(self, resource_aggregator, mock_fleet, mock_ship):
         """Fleet cargo capacity summed from ships."""
-        mock_ship.get_cargo_capacity.return_value = 100
+        mock_ship._cargo_mgr.get_cargo_capacity.return_value = 100
         mock_fleet.ships = [mock_ship]
 
         result = resource_aggregator.get_fleet_cargo_capacity("passengers")
@@ -337,10 +344,10 @@ class TestCargoMethods:
     def test_get_fleet_cargo_capacity_multiple_ships(self, resource_aggregator, mock_fleet):
         """Multiple ship cargo capacities are summed."""
         ship1 = MagicMock()
-        ship1.get_cargo_capacity.return_value = 100
+        ship1._cargo_mgr.get_cargo_capacity.return_value = 100
 
         ship2 = MagicMock()
-        ship2.get_cargo_capacity.return_value = 50
+        ship2._cargo_mgr.get_cargo_capacity.return_value = 50
 
         mock_fleet.ships = [ship1, ship2]
 
@@ -350,7 +357,7 @@ class TestCargoMethods:
 
     def test_get_fleet_cargo_current(self, resource_aggregator, mock_fleet, mock_ship):
         """Fleet current cargo summed from all ships."""
-        mock_ship.get_current_cargo.return_value = 50
+        mock_ship._cargo_mgr.get_current_cargo.return_value = 50
         mock_fleet.ships = [mock_ship]
 
         result = resource_aggregator.get_fleet_cargo_current("passengers")
@@ -359,23 +366,23 @@ class TestCargoMethods:
 
     def test_load_cargo_distributes_to_ships(self, resource_aggregator, mock_fleet, mock_ship):
         """Cargo is distributed to ships with capacity."""
-        mock_ship.load_cargo.return_value = 75  # Loaded 75 of 100
+        mock_ship._cargo_mgr.load_cargo.return_value = 75  # Loaded 75 of 100
         mock_fleet.ships = [mock_ship]
 
         result = resource_aggregator.load_cargo_to_fleet("passengers", 100)
 
         assert result == 75
-        mock_ship.load_cargo.assert_called_with("passengers", 100)
+        mock_ship._cargo_mgr.load_cargo.assert_called_with("passengers", 100)
 
     def test_unload_cargo_from_fleet(self, resource_aggregator, mock_fleet, mock_ship):
         """Cargo is unloaded from ships."""
-        mock_ship.unload_cargo.return_value = 50
+        mock_ship._cargo_mgr.unload_cargo.return_value = 50
         mock_fleet.ships = [mock_ship]
 
         result = resource_aggregator.unload_cargo_from_fleet("passengers", 100)
 
         assert result == 50
-        mock_ship.unload_cargo.assert_called_with("passengers", 100)
+        mock_ship._cargo_mgr.unload_cargo.assert_called_with("passengers", 100)
 
     # PROJ-325 Phase 2 Task 2.2 (resolves PROJ-323 Task 3.37): zero/negative
     # cargo amount tests across load/unload collapsed into one parametrized
@@ -402,7 +409,8 @@ class TestCargoMethods:
         result = getattr(resource_aggregator, operation)("passengers", amount)
 
         assert result == 0
-        getattr(mock_ship, ship_method).assert_not_called()
+        # PROJ-443 Phase 3a: ship cargo methods route through _cargo_mgr.
+        getattr(mock_ship._cargo_mgr, ship_method).assert_not_called()
 
 
 # =============================================================================
@@ -823,63 +831,63 @@ class TestCargoDistributionEdgeCases:
     def test_load_cargo_partial_capacity_multiple_ships(self, cargo_aggregator, cargo_fleet):
         """Load cargo distributes remaining to next ship."""
         ship1 = MagicMock()
-        ship1.load_cargo.return_value = 30  # Only loads 30
+        ship1._cargo_mgr.load_cargo.return_value = 30  # Only loads 30
 
         ship2 = MagicMock()
-        ship2.load_cargo.return_value = 50  # Loads remaining 50
+        ship2._cargo_mgr.load_cargo.return_value = 50  # Loads remaining 50
 
         cargo_fleet.ships = [ship1, ship2]
 
         result = cargo_aggregator.load_cargo_to_fleet("passengers", 80)
 
         assert result == 80
-        ship1.load_cargo.assert_called_with("passengers", 80)
-        ship2.load_cargo.assert_called_with("passengers", 50)  # 80 - 30 = 50
+        ship1._cargo_mgr.load_cargo.assert_called_with("passengers", 80)
+        ship2._cargo_mgr.load_cargo.assert_called_with("passengers", 50)  # 80 - 30 = 50
 
     def test_load_cargo_stops_when_fully_loaded(self, cargo_aggregator, cargo_fleet):
         """Load cargo stops when all requested cargo is loaded."""
         ship1 = MagicMock()
-        ship1.load_cargo.return_value = 100  # Loads all
+        ship1._cargo_mgr.load_cargo.return_value = 100  # Loads all
 
         ship2 = MagicMock()
-        ship2.load_cargo.return_value = 100  # Should not be called
+        ship2._cargo_mgr.load_cargo.return_value = 100  # Should not be called
 
         cargo_fleet.ships = [ship1, ship2]
 
         result = cargo_aggregator.load_cargo_to_fleet("passengers", 100)
 
         assert result == 100
-        ship1.load_cargo.assert_called_once()
-        ship2.load_cargo.assert_not_called()
+        ship1._cargo_mgr.load_cargo.assert_called_once()
+        ship2._cargo_mgr.load_cargo.assert_not_called()
 
     def test_unload_cargo_partial_multiple_ships(self, cargo_aggregator, cargo_fleet):
         """Unload cargo collects from multiple ships."""
         ship1 = MagicMock()
-        ship1.unload_cargo.return_value = 30  # Has 30
+        ship1._cargo_mgr.unload_cargo.return_value = 30  # Has 30
 
         ship2 = MagicMock()
-        ship2.unload_cargo.return_value = 50  # Has remaining 50
+        ship2._cargo_mgr.unload_cargo.return_value = 50  # Has remaining 50
 
         cargo_fleet.ships = [ship1, ship2]
 
         result = cargo_aggregator.unload_cargo_from_fleet("passengers", 80)
 
         assert result == 80
-        ship1.unload_cargo.assert_called_with("passengers", 80)
-        ship2.unload_cargo.assert_called_with("passengers", 50)  # 80 - 30 = 50
+        ship1._cargo_mgr.unload_cargo.assert_called_with("passengers", 80)
+        ship2._cargo_mgr.unload_cargo.assert_called_with("passengers", 50)  # 80 - 30 = 50
 
     def test_unload_cargo_stops_when_fully_unloaded(self, cargo_aggregator, cargo_fleet):
         """Unload cargo stops when requested amount is unloaded."""
         ship1 = MagicMock()
-        ship1.unload_cargo.return_value = 100  # Unloads all needed
+        ship1._cargo_mgr.unload_cargo.return_value = 100  # Unloads all needed
 
         ship2 = MagicMock()
-        ship2.unload_cargo.return_value = 50
+        ship2._cargo_mgr.unload_cargo.return_value = 50
 
         cargo_fleet.ships = [ship1, ship2]
 
         result = cargo_aggregator.unload_cargo_from_fleet("passengers", 100)
 
         assert result == 100
-        ship1.unload_cargo.assert_called_once()
-        ship2.unload_cargo.assert_not_called()
+        ship1._cargo_mgr.unload_cargo.assert_called_once()
+        ship2._cargo_mgr.unload_cargo.assert_not_called()
