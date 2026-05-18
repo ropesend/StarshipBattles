@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-443 | Pytest norecursedirs Fix and Hidden-Test Triage | Planning | 2026-05-17 | 2026-05-17 |
 | PROJ-442 | Seam Retirement and Residue Burn-down | Planning | 2026-05-17 | 2026-05-17 |
 | PROJ-441 | Ambient Defaults Containment | Planning | 2026-05-17 | 2026-05-17 |
 | PROJ-440 | Battle Session Convergence | Planning | 2026-05-17 | 2026-05-17 |

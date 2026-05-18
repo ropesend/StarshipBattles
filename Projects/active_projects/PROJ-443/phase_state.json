@@ -1,0 +1,131 @@
+{
+  "audit": {
+    "final_audit_request_id": null,
+    "final_audit_status": "not_run",
+    "merge_to_main_at_utc": null,
+    "merge_to_main_sha": null
+  },
+  "buffer_depth": 0,
+  "buffer_depth_override_reason": null,
+  "execution_protocol": "03c-phase-aware-execution",
+  "findings": {},
+  "phases": {
+    "phase_0": {
+      "depends_on": [],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": "6c37d6accb5b16e0c19157f427bfd7183d1c6e76",
+      "phase_branch": "main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "Projects/active_projects/PROJ-443/findings/hidden_test_baseline.md"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "lightweight",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_1": {
+      "depends_on": ["phase_0"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "tests/unit/strategy/data/test_cargo_tracking.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_2": {
+      "depends_on": ["phase_1"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "tests/unit/strategy/data/test_mutator_boundary_ast_guard.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_3": {
+      "depends_on": ["phase_2"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "tests/unit/strategy/data/"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_4": {
+      "depends_on": ["phase_3"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "pytest.ini",
+        "tests/static_guards/test_no_hidden_test_directories.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_5": {
+      "depends_on": ["phase_4"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "game/strategy/data/ship_instance.py",
+        "tests/unit/strategy/engine/test_production_engine_queue.py",
+        "tests/unit/strategy/engine/test_production_engine_consumption.py",
+        "tests/unit/strategy/engine/test_production_engine_refactor.py",
+        "tests/unit/strategy/engine/test_harvesting_engine.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    },
+    "phase_6": {
+      "depends_on": ["phase_5"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "main",
+      "phase_head_sha": null,
+      "planned_files": [],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "not_started",
+      "verifying_review_id": null
+    }
+  },
+  "project_baseline_sha": "6c37d6accb5b16e0c19157f427bfd7183d1c6e76",
+  "project_baseline_tests": "Sharded 21233/21233 visible + estimated ~1510 pass / ~65 fail in tests/unit/strategy/data/ (hidden from sharded). Phase 0 captures actual current baseline."
+}
