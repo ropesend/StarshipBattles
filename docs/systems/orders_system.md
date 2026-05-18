@@ -272,7 +272,7 @@ Transfer target params:
 
 ## Planet Ability Orders
 
-Command handler: `game/strategy/engine/planet_command_handlers.py::IssuePlanetOrderCommandHandler`
+Command handlers (PROJ-438 Phase 5): `game/strategy/engine/planet_command_handlers.py::ActivatePlanetAbilityCommandHandler` and `DeactivatePlanetAbilityCommandHandler`. The previous stringly `IssuePlanetOrderCommand(order_type: str)` path was retired in PROJ-438 Phase 5 in favor of two typed first-class commands (`ActivatePlanetAbilityCommand` / `DeactivatePlanetAbilityCommand`).
 
 Validation uses `PlanetOrderValidator`, and facility ability checks must use registry-backed component lookup. Facility `design_data` stores component ids; abilities live in `data/components.json`. Do not check only inline `comp["abilities"]`, or loaded designs will silently miss abilities.
 

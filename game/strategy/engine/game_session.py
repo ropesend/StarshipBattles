@@ -72,10 +72,26 @@ from game.strategy.events import EventLog
 logger = logging.getLogger(__name__)
 
 class GameSession:
-    """
-    Manages the lifecycle and state of a single game session.
-    Owns the Galaxy, Empires, and the Turn Engine.
-    Running completely decoupled from the UI/Rendering layer.
+    """Manages the lifecycle and state of a single game session.
+
+    Owns the Galaxy, Empires, and the Turn Engine. Headless-runnable
+    (decoupled from UI/Rendering).
+
+    PROJ-438 Phase 2 ownership categories (pinned by
+    ``tests/unit/strategy/engine/test_game_session_projection_boundary.py``;
+    holder-extraction sweep was rejected — 60+ caller files):
+
+    - **Owned domain state**: ``config``, ``galaxy``, ``empires``,
+      ``systems``, ``turn_engine``, ``turn_number``.
+    - **Owned UI-rotation state**: ``active_empire`` / ``enemy_empire`` —
+      mutable runtime state rotated by ``StrategyGameStateManager.
+      advance_turn`` per BUG-125, NOT derivable projections.
+    - **Owned UI configuration**: ``human_player_ids`` (hot-seat).
+    - **Owned persistence metadata**: ``save_path``.
+    - **Lazy-init owned services**: ``_race_registry`` via the
+      ``race_registry`` property — chicken-and-egg with bootstrap closure.
+    - **Service-bag delegation**: ``services`` property + per-service
+      read-only properties forwarding to ``SessionRuntimeServices``.
     """
     def __init__(
         self,
@@ -268,32 +284,40 @@ class GameSession:
         """Copy a SessionBootstrapState onto self (PROJ-423 Phase 4).
 
         Single canonical assignment path for both `__init__` (new-game)
-        and `from_dict` (rehydrate). Sets `self.config`, `self._services`
-        (the wired-services bag), the owned domain state, and the
-        `active_empire` / `enemy_empire` seed (BUG-125).
+        and `from_dict` (rehydrate). The categorical groupings below
+        match the class docstring (PROJ-438 Phase 2 narrowing).
 
         Does NOT touch `self._race_registry` — that slot is set to None
         by `__init__` before this method runs and stays lazy via the
         `race_registry` property.
         """
+        # Frozen config + the wired services bag.
         self.config = state.config
         self._services = state.services
         self.turn_engine = state.services.turn_engine
 
-        self.turn_number = state.turn_number
+        # Owned persistence metadata.
         self.save_path = state.save_path
+
+        # Owned execution-position counter (domain state).
+        self.turn_number = state.turn_number
+
+        # Owned domain state — the live mutable graph.
         self.galaxy = state.galaxy
         self.empires = state.empires
-        self.human_player_ids = list(state.human_player_ids)
         self.systems = (
             list(state.galaxy.systems.values()) if state.galaxy is not None else []
         )
-        # BUG-125: `active_empire` is the empire whose turn it currently
-        # is. Defaults to empires[0] at session creation; rotated by
-        # `StrategyGameStateManager.advance_turn` on each hot-seat turn
-        # change. Authorization gates in command handlers read this —
-        # never the original session creator. Save/load resets to
-        # empires[0]; the UI rotation index lives in
+
+        # Owned UI configuration — hot-seat human player indices.
+        self.human_player_ids = list(state.human_player_ids)
+
+        # Owned UI-rotation state — BUG-125: `active_empire` is the empire
+        # whose turn it currently is. Defaults to empires[0] at session
+        # creation; rotated by `StrategyGameStateManager.advance_turn` on
+        # each hot-seat turn change. Authorization gates in command
+        # handlers read this — never the original session creator.
+        # Save/load resets to empires[0]; the UI rotation index lives in
         # `StrategyScreen.current_player_index`.
         self.active_empire = (
             self.empires[0] if len(self.empires) > 0 else None

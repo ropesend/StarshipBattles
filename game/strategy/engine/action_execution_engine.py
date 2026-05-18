@@ -302,36 +302,28 @@ class ActionExecutionEngine(IActionExecutionEngine):
         empire: Any,
         component_registry: Optional[Dict[str, Any]],
     ) -> None:
-        """Dispatch a completed planet FMS order through the order-handler
-        registry, wrapping the planet in a PlanetStagingYardIssuerAdapter.
+        """Dispatch a completed planet FMS order through the order handler
+        layer, wrapping the planet in a PlanetStagingYardIssuerAdapter.
+
+        PROJ-438 Phase 6: the previous private reach-in + ``except
+        TypeError`` fallback is retired. ``OrderProcessor`` now exposes a
+        public ``get_handler(order_type)`` accessor, and every concrete
+        ``IOrderHandler`` declares ``execute_for_issuer`` with one
+        canonical 5-kwarg signature (recovery handlers accept and ignore
+        ``galaxy`` / ``registries``). One call, no fallback.
         """
         order = planet.get_current_order()
         if order is None:
             return
-        registry = getattr(self._order_processor, "_handler_registry", None)
-        if registry is None:
-            # Defensive: nothing to dispatch through. Pop the order so the
-            # planet doesn't loop forever.
-            planet.pop_order()
-            return
-        handler = registry.get(order.type)
+        handler = self._order_processor.get_handler(order.type)
         if handler is None or not hasattr(handler, "execute_for_issuer"):
             planet.pop_order()
             return
         issuer = PlanetStagingYardIssuerAdapter(planet)
-        # Recovery handlers have a smaller signature (no galaxy/registries).
-        try:
-            handler.execute_for_issuer(
-                issuer=issuer,
-                order_owner=planet,
-                empire=empire,
-            )
-        except TypeError:
-            # Launch handlers expect (galaxy, registries) kwargs as well.
-            handler.execute_for_issuer(
-                issuer=issuer,
-                order_owner=planet,
-                empire=empire,
-                galaxy=None,
-                registries=getattr(empire, "_registries", None),
-            )
+        handler.execute_for_issuer(
+            issuer=issuer,
+            order_owner=planet,
+            empire=empire,
+            galaxy=None,
+            registries=getattr(empire, "_registries", None),
+        )

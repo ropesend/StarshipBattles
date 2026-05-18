@@ -27,6 +27,7 @@ import logging
 from game.strategy.interfaces.engines import IOrderProcessor
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import OrderType
+from game.strategy.engine.order_handlers.base import IOrderHandler
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
@@ -79,6 +80,19 @@ class OrderProcessor(IOrderProcessor):
             event_bus=event_bus,
             superweapon_processor=self._superweapon_processor,
         )
+
+    def get_handler(self, order_type: OrderType) -> Optional[IOrderHandler]:
+        """Public accessor for the per-OrderType handler (PROJ-438 Phase 6).
+
+        Replaces the previous ``getattr(self._order_processor,
+        "_handler_registry", ...)`` reach-in pattern used by
+        ``ActionExecutionEngine._execute_planet_action``. External callers
+        that need to dispatch through a handler (e.g., the planet-FMS
+        execution path running orders against a
+        ``PlanetStagingYardIssuerAdapter``) must use this method rather
+        than touching ``_handler_registry`` directly.
+        """
+        return self._handler_registry.get(order_type)
 
     def process_join_fleet(
         self,

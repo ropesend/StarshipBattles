@@ -555,23 +555,37 @@ class SetBuildQueuePausedCommand(Command):
 # =============================================================================
 
 @dataclass
-class IssuePlanetOrderCommand(Command):
-    """Command to issue an order to a planet (e.g., activate/deactivate ability).
+class ActivatePlanetAbilityCommand(Command):
+    """Typed command to activate a planet component ability (PROJ-438 Phase 5).
+
+    Replaces the stringly ``IssuePlanetOrderCommand(order_type="ACTIVATE_ABILITY")``
+    path. The command class itself carries the intent — no order_type
+    string is needed.
 
     Args:
-        planet_id: Planet to issue order to.
-        order_type: OrderType name (e.g., "ACTIVATE_ABILITY").
+        planet_id: Planet that owns the facility.
         facility_instance_id: Target facility UUID.
-        component_id: Optional specific component within facility (legacy).
-        ability_name: Ability name for generic ACTIVATE_ABILITY/DEACTIVATE_ABILITY.
-        component_key: Composite key (LAYER:INDEX:COMP_ID) targeting a specific component.
+        ability_name: Ability name (e.g., "shield_activation").
+        component_key: Composite key (LAYER:INDEX:COMP_ID) targeting a
+            specific component instance within the facility.
     """
     planet_id: int
-    order_type: str
     facility_instance_id: str
-    component_id: Optional[str] = None
-    ability_name: Optional[str] = None
-    component_key: Optional[str] = None
+    ability_name: str
+    component_key: str
+
+
+@dataclass
+class DeactivatePlanetAbilityCommand(Command):
+    """Typed command to deactivate a planet component ability (PROJ-438 Phase 5).
+
+    Replaces the stringly ``IssuePlanetOrderCommand(order_type="DEACTIVATE_ABILITY")``
+    path. See ``ActivatePlanetAbilityCommand`` for field documentation.
+    """
+    planet_id: int
+    facility_instance_id: str
+    ability_name: str
+    component_key: str
 
 
 @dataclass

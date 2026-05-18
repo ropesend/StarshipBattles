@@ -80,6 +80,39 @@ class IOrderHandler(Protocol):
         """
         ...
 
+    def execute_for_issuer(
+        self,
+        *,
+        issuer: Any,
+        order_owner: Any,
+        empire: "Empire",
+        galaxy: Optional["Galaxy"] = None,
+        registries: Optional[Any] = None,
+    ) -> OrderExecutionResult:
+        """Execute the order against an arbitrary ``IIssuerAdapter``-wrapped
+        issuer (PROJ-438 Phase 6 unified contract).
+
+        Used by the planet-FMS execution path in
+        ``ActionExecutionEngine._execute_planet_action`` so a planet's
+        action order can be dispatched through the same per-OrderType
+        handler that a fleet uses. The canonical 5-kwarg signature
+        (``issuer``, ``order_owner``, ``empire``, ``galaxy``,
+        ``registries``) is identical across launch and recovery handlers;
+        the recovery handlers ignore the trailing two kwargs. The
+        previous reach-in into ``OrderProcessor._handler_registry`` +
+        ``try / except TypeError`` fallback in
+        ``ActionExecutionEngine._execute_planet_action`` is retired by
+        making this contract uniform.
+
+        Handlers that don't participate in the planet-FMS path may
+        either leave this Protocol method unimplemented (concrete classes
+        without it raise ``AttributeError`` at the call site, which the
+        engine treats as "not dispatchable for an issuer adapter") or
+        provide a no-op that returns a not-supported
+        ``OrderExecutionResult``.
+        """
+        ...
+
 
 class BaseOrderHandler:
     """Mixin providing common event-bus emission for order handlers.

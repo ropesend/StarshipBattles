@@ -1,9 +1,12 @@
 """
 Tests for planet command handlers.
 
-PROJ-264 Phase 1: Coverage for IssuePlanetOrderCommandHandler,
-ClearPlanetOrdersCommandHandler, DeletePlanetOrderCommandHandler,
-SetAtmosphereTargetCommandHandler.
+PROJ-264 Phase 1: Coverage for ClearPlanetOrdersCommandHandler,
+DeletePlanetOrderCommandHandler, SetAtmosphereTargetCommandHandler.
+
+PROJ-438 Phase 5: ``IssuePlanetOrderCommandHandler`` retired. Coverage
+now lives on the typed ``ActivatePlanetAbilityCommandHandler`` /
+``DeactivatePlanetAbilityCommandHandler`` test classes below.
 """
 
 import pytest
@@ -50,139 +53,98 @@ def _session_with_planet(session, planet):
 
 
 # =============================================================================
-# IssuePlanetOrderCommandHandler Tests
+# ActivatePlanetAbilityCommandHandler Tests (PROJ-438 Phase 5)
 # =============================================================================
 
 
-class TestIssuePlanetOrderCommandHandler:
-    """Tests for IssuePlanetOrderCommandHandler.execute()."""
+def _activate_cmd(**overrides):
+    from game.strategy.engine.commands import ActivatePlanetAbilityCommand
+    return ActivatePlanetAbilityCommand(
+        planet_id=overrides.get('planet_id', 100),
+        facility_instance_id=overrides.get('facility_instance_id', 'fac-1'),
+        ability_name=overrides.get('ability_name', 'PlanetaryShield'),
+        component_key=overrides.get('component_key', 'CORE:0:shield_gen'),
+    )
 
-    def _make_cmd(self, **overrides):
-        cmd = MagicMock()
-        cmd.planet_id = overrides.get('planet_id', 100)
-        cmd.order_type = overrides.get('order_type', 'ACTIVATE_ABILITY')
-        cmd.facility_instance_id = overrides.get('facility_instance_id', 'fac-1')
-        cmd.ability_name = overrides.get('ability_name', 'PlanetaryShield')
-        cmd.component_key = overrides.get('component_key', 'CORE:0:shield_gen')
-        cmd.component_id = overrides.get('component_id', None)
-        return cmd
+
+def _deactivate_cmd(**overrides):
+    from game.strategy.engine.commands import DeactivatePlanetAbilityCommand
+    return DeactivatePlanetAbilityCommand(
+        planet_id=overrides.get('planet_id', 100),
+        facility_instance_id=overrides.get('facility_instance_id', 'fac-1'),
+        ability_name=overrides.get('ability_name', 'PlanetaryShield'),
+        component_key=overrides.get('component_key', 'CORE:0:shield_gen'),
+    )
+
+
+class TestActivatePlanetAbilityCommandHandler:
+    """Tests for ActivatePlanetAbilityCommandHandler.execute() (Phase 5)."""
 
     def test_planet_not_found(self, mock_session):
-        """Returns error when planet is not found."""
-        from game.strategy.engine.planet_command_handlers import IssuePlanetOrderCommandHandler
+        from game.strategy.engine.planet_command_handlers import (
+            ActivatePlanetAbilityCommandHandler,
+        )
 
-        handler = IssuePlanetOrderCommandHandler()
-        result = handler.execute(mock_session, self._make_cmd())
-
+        result = ActivatePlanetAbilityCommandHandler().execute(
+            mock_session, _activate_cmd()
+        )
         assert not result.is_valid
         assert "not found" in result.message.lower()
 
     def test_wrong_owner(self, mock_session, mock_planet):
-        """Returns error when planet owned by different empire."""
-        from game.strategy.engine.planet_command_handlers import IssuePlanetOrderCommandHandler
+        from game.strategy.engine.planet_command_handlers import (
+            ActivatePlanetAbilityCommandHandler,
+        )
 
         mock_planet.owner_id = 99
         _session_with_planet(mock_session, mock_planet)
 
-        handler = IssuePlanetOrderCommandHandler()
-        result = handler.execute(mock_session, self._make_cmd())
-
+        result = ActivatePlanetAbilityCommandHandler().execute(
+            mock_session, _activate_cmd()
+        )
         assert not result.is_valid
         assert "does not belong" in result.message.lower()
 
-    def test_unknown_order_type(self, mock_session, mock_planet):
-        """Returns error for unknown order type string."""
-        from game.strategy.engine.planet_command_handlers import IssuePlanetOrderCommandHandler
+    def test_validation_failure(self, mock_session, mock_planet):
+        from game.strategy.engine.planet_command_handlers import (
+            ActivatePlanetAbilityCommandHandler,
+        )
+        from game.strategy.validation.planet_order_validator import (
+            PlanetOrderValidator,
+        )
 
         _session_with_planet(mock_session, mock_planet)
 
-        handler = IssuePlanetOrderCommandHandler()
-        result = handler.execute(mock_session, self._make_cmd(order_type='BOGUS_TYPE'))
-
-        assert not result.is_valid
-        assert "unknown" in result.message.lower()
-
-    def test_activate_without_ability_name(self, mock_session, mock_planet):
-        """Returns error when ACTIVATE_ABILITY lacks ability_name."""
-        from game.strategy.engine.planet_command_handlers import IssuePlanetOrderCommandHandler
-
-        _session_with_planet(mock_session, mock_planet)
-
-        handler = IssuePlanetOrderCommandHandler()
-        result = handler.execute(mock_session, self._make_cmd(ability_name=None))
-
-        assert not result.is_valid
-        assert "ability_name" in result.message.lower()
-
-    def test_deactivate_without_ability_name(self, mock_session, mock_planet):
-        """Returns error when DEACTIVATE_ABILITY lacks ability_name."""
-        from game.strategy.engine.planet_command_handlers import IssuePlanetOrderCommandHandler
-
-        _session_with_planet(mock_session, mock_planet)
-
-        handler = IssuePlanetOrderCommandHandler()
-        result = handler.execute(mock_session, self._make_cmd(
-            order_type='DEACTIVATE_ABILITY', ability_name=None
-        ))
-
-        assert not result.is_valid
-        assert "ability_name" in result.message.lower()
-
-    def test_activate_without_component_key(self, mock_session, mock_planet):
-        """PROJ-393: Returns error when ACTIVATE_ABILITY lacks component_key."""
-        from game.strategy.engine.planet_command_handlers import IssuePlanetOrderCommandHandler
-
-        _session_with_planet(mock_session, mock_planet)
-
-        handler = IssuePlanetOrderCommandHandler()
-        result = handler.execute(mock_session, self._make_cmd(component_key=None))
-
-        assert not result.is_valid
-        assert "component_key" in result.message.lower()
-
-    def test_deactivate_without_component_key(self, mock_session, mock_planet):
-        """PROJ-393: Returns error when DEACTIVATE_ABILITY lacks component_key."""
-        from game.strategy.engine.planet_command_handlers import IssuePlanetOrderCommandHandler
-
-        _session_with_planet(mock_session, mock_planet)
-
-        handler = IssuePlanetOrderCommandHandler()
-        result = handler.execute(mock_session, self._make_cmd(
-            order_type='DEACTIVATE_ABILITY', component_key=None
-        ))
-
-        assert not result.is_valid
-        assert "component_key" in result.message.lower()
-
-    def test_activate_validation_failure(self, mock_session, mock_planet):
-        """Returns error when validator rejects activation."""
-        from game.strategy.engine.planet_command_handlers import IssuePlanetOrderCommandHandler
-
-        _session_with_planet(mock_session, mock_planet)
-
-        handler = IssuePlanetOrderCommandHandler()
         with patch.object(
-            __import__('game.strategy.validation.planet_order_validator', fromlist=['PlanetOrderValidator']).PlanetOrderValidator,
+            PlanetOrderValidator,
             'validate_activate_ability',
             return_value=ValidationResult.error("Facility not found"),
         ):
-            result = handler.execute(mock_session, self._make_cmd())
-
+            result = ActivatePlanetAbilityCommandHandler().execute(
+                mock_session, _activate_cmd()
+            )
         assert not result.is_valid
 
-    def test_activate_success_queues_order(self, mock_session, mock_planet):
-        """Successful activation queues order on planet."""
-        from game.strategy.engine.planet_command_handlers import IssuePlanetOrderCommandHandler
-        from game.strategy.validation.planet_order_validator import PlanetOrderValidator
+    def test_success_queues_activate_ability_order(
+        self, mock_session, mock_planet
+    ):
+        from game.strategy.engine.planet_command_handlers import (
+            ActivatePlanetAbilityCommandHandler,
+        )
+        from game.strategy.validation.planet_order_validator import (
+            PlanetOrderValidator,
+        )
 
         _session_with_planet(mock_session, mock_planet)
 
-        handler = IssuePlanetOrderCommandHandler()
         with patch.object(
-            PlanetOrderValidator, 'validate_activate_ability',
+            PlanetOrderValidator,
+            'validate_activate_ability',
             return_value=ValidationResult.success(),
         ):
-            result = handler.execute(mock_session, self._make_cmd())
+            result = ActivatePlanetAbilityCommandHandler().execute(
+                mock_session, _activate_cmd()
+            )
 
         assert result.is_valid
         mock_planet.add_order.assert_called_once()
@@ -190,60 +152,85 @@ class TestIssuePlanetOrderCommandHandler:
         assert order_arg.type == OrderType.ACTIVATE_ABILITY
         assert order_arg.target['facility_instance_id'] == 'fac-1'
         assert order_arg.target['ability_name'] == 'PlanetaryShield'
-
-    def test_activate_with_component_key_includes_key_in_target(self, mock_session, mock_planet):
-        """Activation with component_key includes it in order target."""
-        from game.strategy.engine.planet_command_handlers import IssuePlanetOrderCommandHandler
-        from game.strategy.validation.planet_order_validator import PlanetOrderValidator
-
-        _session_with_planet(mock_session, mock_planet)
-
-        handler = IssuePlanetOrderCommandHandler()
-        cmd = self._make_cmd(
-            component_key='CORE:0:shield_gen',
-            component_id='shield_gen',
-        )
-        with patch.object(
-            PlanetOrderValidator, 'validate_activate_ability',
-            return_value=ValidationResult.success(),
-        ):
-            result = handler.execute(mock_session, cmd)
-
-        assert result.is_valid
-        order_arg = mock_planet.add_order.call_args[0][0]
         assert order_arg.target['component_key'] == 'CORE:0:shield_gen'
-        assert order_arg.target['component_id'] == 'shield_gen'
 
-    def test_deactivate_success(self, mock_session, mock_planet):
-        """Successful deactivation queues deactivate order."""
-        from game.strategy.engine.planet_command_handlers import IssuePlanetOrderCommandHandler
-        from game.strategy.validation.planet_order_validator import PlanetOrderValidator
+
+class TestDeactivatePlanetAbilityCommandHandler:
+    """Tests for DeactivatePlanetAbilityCommandHandler.execute() (Phase 5)."""
+
+    def test_planet_not_found(self, mock_session):
+        from game.strategy.engine.planet_command_handlers import (
+            DeactivatePlanetAbilityCommandHandler,
+        )
+
+        result = DeactivatePlanetAbilityCommandHandler().execute(
+            mock_session, _deactivate_cmd()
+        )
+        assert not result.is_valid
+        assert "not found" in result.message.lower()
+
+    def test_wrong_owner(self, mock_session, mock_planet):
+        from game.strategy.engine.planet_command_handlers import (
+            DeactivatePlanetAbilityCommandHandler,
+        )
+
+        mock_planet.owner_id = 99
+        _session_with_planet(mock_session, mock_planet)
+
+        result = DeactivatePlanetAbilityCommandHandler().execute(
+            mock_session, _deactivate_cmd()
+        )
+        assert not result.is_valid
+        assert "does not belong" in result.message.lower()
+
+    def test_validation_failure(self, mock_session, mock_planet):
+        from game.strategy.engine.planet_command_handlers import (
+            DeactivatePlanetAbilityCommandHandler,
+        )
+        from game.strategy.validation.planet_order_validator import (
+            PlanetOrderValidator,
+        )
 
         _session_with_planet(mock_session, mock_planet)
 
-        handler = IssuePlanetOrderCommandHandler()
-        cmd = self._make_cmd(order_type='DEACTIVATE_ABILITY')
         with patch.object(
-            PlanetOrderValidator, 'validate_deactivate_ability',
+            PlanetOrderValidator,
+            'validate_deactivate_ability',
+            return_value=ValidationResult.error("Facility not found"),
+        ):
+            result = DeactivatePlanetAbilityCommandHandler().execute(
+                mock_session, _deactivate_cmd()
+            )
+        assert not result.is_valid
+
+    def test_success_queues_deactivate_ability_order(
+        self, mock_session, mock_planet
+    ):
+        from game.strategy.engine.planet_command_handlers import (
+            DeactivatePlanetAbilityCommandHandler,
+        )
+        from game.strategy.validation.planet_order_validator import (
+            PlanetOrderValidator,
+        )
+
+        _session_with_planet(mock_session, mock_planet)
+
+        with patch.object(
+            PlanetOrderValidator,
+            'validate_deactivate_ability',
             return_value=ValidationResult.success(),
         ):
-            result = handler.execute(mock_session, cmd)
+            result = DeactivatePlanetAbilityCommandHandler().execute(
+                mock_session, _deactivate_cmd()
+            )
 
         assert result.is_valid
+        mock_planet.add_order.assert_called_once()
         order_arg = mock_planet.add_order.call_args[0][0]
         assert order_arg.type == OrderType.DEACTIVATE_ABILITY
-
-    def test_unsupported_order_type(self, mock_session, mock_planet):
-        """Returns error for unsupported (but valid) order type."""
-        from game.strategy.engine.planet_command_handlers import IssuePlanetOrderCommandHandler
-
-        _session_with_planet(mock_session, mock_planet)
-
-        handler = IssuePlanetOrderCommandHandler()
-        result = handler.execute(mock_session, self._make_cmd(order_type='MOVE'))
-
-        assert not result.is_valid
-        assert "unsupported" in result.message.lower()
+        assert order_arg.target['facility_instance_id'] == 'fac-1'
+        assert order_arg.target['ability_name'] == 'PlanetaryShield'
+        assert order_arg.target['component_key'] == 'CORE:0:shield_gen'
 
 
 # =============================================================================

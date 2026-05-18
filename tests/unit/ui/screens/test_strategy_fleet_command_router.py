@@ -375,17 +375,21 @@ def test_ability_toggle_returns_without_planet_selection(
 
 
 @pytest.mark.parametrize(
-    ("phase", "expected_order_type"),
+    ("phase", "expected_cmd_class_name"),
     [
-        ("active", "DEACTIVATE_ABILITY"),
-        ("inactive", "ACTIVATE_ABILITY"),
+        ("active", "DeactivatePlanetAbilityCommand"),
+        ("inactive", "ActivatePlanetAbilityCommand"),
     ],
 )
 def test_ability_toggle_issues_order_for_first_operational_facility_component(
     phase: str,
-    expected_order_type: str,
+    expected_cmd_class_name: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """PROJ-438 Phase 5: typed planet-ability commands replace the stringly
+    ``IssuePlanetOrderCommand(order_type=...)`` path. The router now picks
+    ``ActivatePlanetAbilityCommand`` or ``DeactivatePlanetAbilityCommand``
+    based on current activation phase."""
     facility = SimpleNamespace(
         instance_id="facility-1",
         is_operational=True,
@@ -397,10 +401,6 @@ def test_ability_toggle_issues_order_for_first_operational_facility_component(
     class _ActivationPhase:
         ACTIVE = "active"
         ACTIVATING = "activating"
-
-    class _Command:
-        def __init__(self, **kwargs: object) -> None:
-            self.__dict__.update(kwargs)
 
     monkeypatch.setattr(router_module, "is_planet", lambda value: value is planet)
     monkeypatch.setattr(
@@ -419,7 +419,6 @@ def test_ability_toggle_issues_order_for_first_operational_facility_component(
         "game.strategy.data.component_activation_state.ActivationPhase",
         _ActivationPhase,
     )
-    monkeypatch.setattr("game.strategy.engine.commands.IssuePlanetOrderCommand", _Command)
 
     router, _handler, scene = _make_router(current_selection=planet)
     scene.facade.handle_command.return_value = SimpleNamespace(is_valid=True)
@@ -428,8 +427,8 @@ def test_ability_toggle_issues_order_for_first_operational_facility_component(
 
     scene.facade.handle_command.assert_called_once()
     command = scene.facade.handle_command.call_args.args[0]
+    assert type(command).__name__ == expected_cmd_class_name
     assert command.planet_id == 42
-    assert command.order_type == expected_order_type
     assert command.facility_instance_id == "facility-1"
     assert command.ability_name == "PlanetaryShield"
     assert command.component_key == "CORE:0"

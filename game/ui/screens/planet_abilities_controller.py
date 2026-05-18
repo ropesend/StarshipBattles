@@ -4,7 +4,8 @@ Owns the facade-side queries that PlanetAbilitiesWindow used to call
 inline during ``_build_ui``: scanning a planet's facilities for
 toggleable abilities, deciding which environment editors are available,
 formatting per-component status strings, and dispatching
-``IssuePlanetOrderCommand`` when a toggle button is clicked.
+``ActivatePlanetAbilityCommand`` / ``DeactivatePlanetAbilityCommand``
+when a toggle button is clicked (PROJ-438 Phase 5).
 
 The controller does NOT touch ``pygame_gui`` widgets. Widget construction
 lives in ``PlanetAbilitiesUiBuilder`` (in the screen module). The
@@ -27,7 +28,10 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from game.core.patterns.layer_iterator import iter_keyed_components
 from game.strategy.data.component_activation_state import ActivationPhase
-from game.strategy.engine.commands import IssuePlanetOrderCommand
+from game.strategy.engine.commands import (
+    ActivatePlanetAbilityCommand,
+    DeactivatePlanetAbilityCommand,
+)
 
 if TYPE_CHECKING:
     pass
@@ -230,10 +234,13 @@ class PlanetAbilitiesController:
         is_active: bool,
     ) -> Optional[Any]:
         """Dispatch an activate/deactivate command. Returns the result."""
-        order_type = "DEACTIVATE_ABILITY" if is_active else "ACTIVATE_ABILITY"
-        cmd = IssuePlanetOrderCommand(
+        cmd_cls = (
+            DeactivatePlanetAbilityCommand
+            if is_active
+            else ActivatePlanetAbilityCommand
+        )
+        cmd = cmd_cls(
             planet_id=self.planet.id,
-            order_type=order_type,
             facility_instance_id=facility_id,
             ability_name=ability_name,
             component_key=component_key,

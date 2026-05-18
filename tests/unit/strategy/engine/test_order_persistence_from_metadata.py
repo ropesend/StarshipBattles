@@ -1,0 +1,127 @@
+"""PROJ-438 Phase 7: order persistence + metadata convergence.
+
+Per the prompt's D3 default LOCKED stance, ``IMPLICIT_ACTION_ORDER_TYPES``,
+mission decomposition, and the ``JOIN_FLEET`` instant path are acceptable
+specialized behavior unless the implementation audit proves blocking
+leakage. The audit found no blocking leakage; the hardcoded 9-branch
+target serialization in ``Order.to_dict()`` works fine and doesn't *block*
+anything. The remaining metadata convergence step is to surface the
+existing-but-unused ``CommandSpec.serializer_codec`` field through the
+live registry view so a future project can drive ``Order.to_dict()`` and
+``OrderSerializer._deserialize_target`` from metadata rather than from
+inline ``isinstance`` branches.
+
+This file pins:
+
+1. ``CommandRegistry`` exposes ``serializer_codec_for(order_type)`` →
+   the registered codec name (or ``None``).
+2. ``OrderMetadataView`` exposes the same lookup via the canonical lazy
+   facade pattern (no caching, cycle-safe).
+3. The codec names declared on each CommandSpec match the discriminator
+   strings that ``OrderSerializer._deserialize_target`` already
+   understands (``hex_coord``, ``fleet_ref``, ``planet_ref``, ``transfer``,
+   ``warp_params``, ``ship_id_list``, ``dict``). Drift between the two
+   surfaces breaks this test.
+"""
+from __future__ import annotations
+
+import pytest
+
+from game.strategy.data.order_types import OrderType
+from game.strategy.engine.commands.order_metadata_view import order_metadata
+from game.strategy.engine.commands.registry import (
+    command_registry,
+    seed_default_commands,
+)
+
+
+# Codec names that ``OrderSerializer._deserialize_target`` already handles
+# verbatim (see ``game/strategy/data/order_serializer.py:99-152``). New
+# CommandSpec.serializer_codec values introduced after Phase 7 must either
+# extend this set AND the deserializer, or document why the codec is
+# write-only.
+KNOWN_DESERIALIZABLE_CODECS = frozenset({
+    "hex_coord",
+    "fleet_ref",
+    "planet_ref",
+    "transfer",
+    "warp_params",
+    "ship_id_list",
+    "dict",
+    # Special-case codecs handled by their own branches in to_dict:
+    "colonize_params",
+    "raw",
+})
+
+
+@pytest.fixture(autouse=True)
+def _seeded_registry():
+    if len(command_registry) == 0:
+        seed_default_commands(command_registry)
+    yield
+
+
+class TestCommandRegistryExposesSerializerCodec:
+    """Pin that the registry can answer 'what codec serializes this OrderType?'"""
+
+    def test_registry_has_serializer_codec_for_method(self) -> None:
+        assert hasattr(command_registry, "serializer_codec_for"), (
+            "CommandRegistry must expose serializer_codec_for(order_type)"
+        )
+
+    def test_serializer_codec_for_move_is_hex_coord(self) -> None:
+        # IssueMoveCommand declares serializer_codec='hex_coord'.
+        codec = command_registry.serializer_codec_for(OrderType.MOVE)
+        assert codec == "hex_coord", (
+            f"OrderType.MOVE codec must be 'hex_coord', got {codec!r}"
+        )
+
+    def test_serializer_codec_for_transfer_is_transfer(self) -> None:
+        codec = command_registry.serializer_codec_for(OrderType.TRANSFER)
+        assert codec == "transfer"
+
+    def test_serializer_codec_for_implode_planet_is_planet_ref(self) -> None:
+        codec = command_registry.serializer_codec_for(OrderType.IMPLODE_PLANET)
+        assert codec == "planet_ref"
+
+
+class TestOrderMetadataViewExposesSerializerCodec:
+    """Pin the matching lookup on the lazy view facade."""
+
+    def test_view_exposes_serializer_codec_for(self) -> None:
+        assert hasattr(order_metadata, "serializer_codec_for"), (
+            "OrderMetadataView must expose serializer_codec_for(order_type)"
+        )
+
+    def test_view_returns_same_codec_as_registry(self) -> None:
+        for order_type in (
+            OrderType.MOVE,
+            OrderType.TRANSFER,
+            OrderType.IMPLODE_PLANET,
+        ):
+            assert (
+                order_metadata.serializer_codec_for(order_type)
+                == command_registry.serializer_codec_for(order_type)
+            )
+
+
+class TestCodecVocabularyConsistency:
+    """Pin that every declared serializer_codec value is either understood
+    by the deserializer or documented as a special-case."""
+
+    def test_every_registered_codec_is_in_known_set(self) -> None:
+        """Drift detector: every distinct codec value across the registry
+        must be in ``KNOWN_DESERIALIZABLE_CODECS``. A new codec without
+        matching deserializer plumbing breaks this test."""
+        codecs = set()
+        for spec in command_registry.all():
+            codec = spec.serializer_codec
+            if codec is not None:
+                codecs.add(codec)
+        unknown = codecs - KNOWN_DESERIALIZABLE_CODECS
+        assert not unknown, (
+            f"CommandSpec.serializer_codec contains unknown codec(s): "
+            f"{sorted(unknown)}. Either extend "
+            "OrderSerializer._deserialize_target or add to "
+            "KNOWN_DESERIALIZABLE_CODECS with rationale."
+        )

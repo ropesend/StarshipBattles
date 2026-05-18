@@ -146,8 +146,10 @@ class CommandSpec:
 # - LOAD_POPULATION / UNLOAD_POPULATION: emitted by IssueTransferCommand
 #   handler when direction='load'/'unload' (transfer-based, but
 #   classified as their own action order types for engine routing).
-# - ACTIVATE_ABILITY / DEACTIVATE_ABILITY: multiplexed by
-#   IssuePlanetOrderCommand based on the order_type string field.
+# - ACTIVATE_ABILITY / DEACTIVATE_ABILITY: emitted by the typed
+#   ActivatePlanetAbilityCommand / DeactivatePlanetAbilityCommand
+#   handlers (PROJ-438 Phase 5). The previous IssuePlanetOrderCommand
+#   stringly multiplexer was retired in the same phase.
 IMPLICIT_ACTION_ORDER_TYPES: frozenset[OrderType] = frozenset({
     OrderType.LOAD_POPULATION,
     OrderType.UNLOAD_POPULATION,
@@ -321,6 +323,24 @@ class CommandRegistry:
             if "planet_fms" in s.subcategories
             and s.order_type is not None
         )
+
+    def serializer_codec_for(self, order_type: OrderType) -> str | None:
+        """Return the ``CommandSpec.serializer_codec`` declared for the
+        spec(s) emitting ``order_type``, or ``None`` if no codec is
+        declared (PROJ-438 Phase 7).
+
+        Multiple command classes may emit the same ``order_type`` (e.g.,
+        the typed ``ActivatePlanetAbilityCommand`` and
+        ``DeactivatePlanetAbilityCommand`` both map to action_ability
+        order types). When two specs disagree on the codec for the same
+        order_type, the first one registered wins — callers that need a
+        stricter contract should make their CommandSpec declarations
+        consistent (a future test ratchet may pin this).
+        """
+        for spec in self._specs.values():
+            if spec.order_type == order_type and spec.serializer_codec is not None:
+                return spec.serializer_codec
+        return None
 
     def order_to_ability_map(self) -> dict[OrderType, str]:
         """Map OrderType -> ability name for action-time lookups."""

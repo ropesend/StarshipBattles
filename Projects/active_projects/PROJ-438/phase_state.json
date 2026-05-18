@@ -13,164 +13,163 @@
     "phase_0": {
       "depends_on": [],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
+      "phase_base_sha": "eb8da3d85e2cadeb3c5ca7f6b28d1cf0d7d8913d",
       "phase_branch": "proj/PROJ-438/main",
       "phase_head_sha": null,
       "planned_files": [
         "Projects/active_projects/PROJ-438/findings/post_436_437_contact_audit.md",
-        "pytest.ini",
-        "Projects/active_projects/PROJ-438/decisions.md"
+        "Projects/active_projects/PROJ-438/decisions.md",
+        "Projects/active_projects/PROJ-438/phase_1_checklist.md",
+        "Projects/active_projects/PROJ-438/phase_2_checklist.md",
+        "Projects/active_projects/PROJ-438/phase_3_checklist.md"
       ],
       "review_dispatch_failed": false,
       "review_mode": "lightweight",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_1": {
       "depends_on": ["phase_0"],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
+      "phase_base_sha": "eb8da3d85e2cadeb3c5ca7f6b28d1cf0d7d8913d",
       "phase_branch": "proj/PROJ-438/main",
       "phase_head_sha": null,
       "planned_files": [
         "game/strategy/engine/session/persistence_adapter.py",
         "game/strategy/engine/turn_state_snapshot.py",
-        "game/strategy/engine/game_session.py",
-        "tests/unit/strategy/engine/test_restore_path_parity.py"
+        "game/strategy/engine/session/graph_restoration.py",
+        "tests/unit/strategy/engine/test_restore_path_parity.py",
+        "Projects/active_projects/PROJ-438/decisions.md"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_2": {
       "depends_on": ["phase_1"],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
+      "phase_base_sha": "013ae5a3b0448bb3a874279e78452ab34685e488",
       "phase_branch": "proj/PROJ-438/main",
       "phase_head_sha": null,
       "planned_files": [
         "game/strategy/engine/game_session.py",
-        "game/strategy/facade/strategy_session_facade.py",
-        "game/strategy/facade/grouped_namespaces.py",
         "game/strategy/facade/slices/_facade_state.py",
-        "game/strategy/facade/slices/economy_slice.py",
-        "tests/unit/strategy/engine/test_game_session_projection_boundary.py"
+        "tests/unit/strategy/engine/test_game_session_projection_boundary.py",
+        "Projects/active_projects/PROJ-438/decisions.md"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_3": {
       "depends_on": ["phase_2"],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
+      "phase_base_sha": "013ae5a3b0448bb3a874279e78452ab34685e488",
       "phase_branch": "proj/PROJ-438/main",
       "phase_head_sha": null,
       "planned_files": [
         "game/strategy/data/ship_instance.py",
-        "game/strategy/data/ship_instance_serializer.py",
-        "game/strategy/data/ship_instance_bridge.py",
-        "game/core/protocols/strategy_domain.py",
         "tests/unit/strategy/ship_instance/test_post_container_surface.py",
-        "tests/integration/save_load/test_roundtrip_ships.py"
+        "Projects/active_projects/PROJ-438/decisions.md"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_4": {
       "depends_on": ["phase_3"],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
+      "phase_base_sha": "013ae5a3b0448bb3a874279e78452ab34685e488",
       "phase_branch": "proj/PROJ-438/main",
       "phase_head_sha": null,
       "planned_files": [
-        "game/strategy/data/planet.py",
-        "game/strategy/data/planet_serde.py",
-        "game/strategy/data/fleet.py",
-        "game/strategy/data/empire.py",
-        "game/strategy/data/galaxy_protocols.py"
+        "tests/unit/strategy/data/test_planet_fleet_empire_post_436_contract.py",
+        "Projects/active_projects/PROJ-438/decisions.md"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_5": {
       "depends_on": ["phase_4"],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
+      "phase_base_sha": "013ae5a3b0448bb3a874279e78452ab34685e488",
       "phase_branch": "proj/PROJ-438/main",
       "phase_head_sha": null,
       "planned_files": [
         "game/strategy/engine/commands/__init__.py",
         "game/strategy/engine/planet_command_handlers.py",
         "game/strategy/engine/commands/registry.py",
-        "tests/unit/strategy/engine/test_typed_planet_intents.py"
+        "game/ui/screens/planet_abilities_controller.py",
+        "game/ui/screens/strategy_fleet_command_router.py",
+        "tests/unit/strategy/engine/test_typed_planet_intents.py",
+        "tests/unit/strategy/engine/test_planet_command_handlers.py",
+        "tests/unit/strategy/facade/test_facade_dispatch.py",
+        "tests/unit/strategy/engine/test_command_registry_contract.py",
+        "tests/unit/strategy/facade/test_strategy_session_facade_public_api.py",
+        "tests/unit/ui/screens/test_strategy_fleet_command_router.py",
+        "docs/systems/orders_system.md",
+        "docs/systems/strategy_layer.md"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_6": {
       "depends_on": ["phase_5"],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
+      "phase_base_sha": "013ae5a3b0448bb3a874279e78452ab34685e488",
       "phase_branch": "proj/PROJ-438/main",
       "phase_head_sha": null,
       "planned_files": [
-        "game/strategy/engine/action_execution_engine.py",
-        "game/strategy/engine/planet_action_engine.py",
-        "game/strategy/engine/component_activation_engine.py",
-        "game/strategy/engine/order_processor.py",
         "game/strategy/engine/order_handlers/base.py",
-        "game/strategy/engine/order_handlers/registry_factory.py",
+        "game/strategy/engine/order_handlers/recover_fighters.py",
+        "game/strategy/engine/order_handlers/recover_satellites.py",
+        "game/strategy/engine/order_processor.py",
+        "game/strategy/engine/action_execution_engine.py",
         "tests/unit/strategy/engine/test_issuer_execution_contract.py"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_7": {
       "depends_on": ["phase_6"],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
+      "phase_base_sha": "013ae5a3b0448bb3a874279e78452ab34685e488",
       "phase_branch": "proj/PROJ-438/main",
       "phase_head_sha": null,
       "planned_files": [
         "game/strategy/engine/commands/registry.py",
         "game/strategy/engine/commands/order_metadata_view.py",
         "game/strategy/data/order_types.py",
-        "game/strategy/data/order_serializer.py",
-        "game/strategy/services/action_time_resolver.py",
-        "game/strategy/engine/superweapon_command_handlers.py",
-        "game/strategy/engine/order_handlers/join_fleet.py",
         "tests/unit/strategy/engine/test_order_persistence_from_metadata.py"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_8": {
@@ -199,8 +198,8 @@
       "verifying_review_id": null
     }
   },
-  "project_baseline_sha": "4177fef361ec7857f32492a8f829777b0e1de41b",
-  "project_baseline_tests": "Assumed post-PROJ-436/437 green baseline per user instruction; re-establish exact baseline at Phase 0 start",
+  "project_baseline_sha": "eb8da3d85e2cadeb3c5ca7f6b28d1cf0d7d8913d",
+  "project_baseline_tests": "Phase 0 baseline (2026-05-18): sharded suite 23,207 passed / 2 failed / 2 skipped (23,211 total). The 2 failures are tests/unit/ui/test_sprites.py::TestSprites::test_load_sprites and TestSpriteManagerThreadSafety::test_concurrent_load_sprites_no_corruption — checkout-local path-resolution quirks on c:\\Dev2\\StarshipBattles, NOT a regression. Per-phase verification gate = no NEW failures vs. this baseline. See decisions.md row dated 2026-05-18 for full rationale.",
   "project_branch": "proj/PROJ-438/main",
   "project_id": "PROJ-438",
   "reviews": {},

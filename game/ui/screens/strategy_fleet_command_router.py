@@ -290,16 +290,24 @@ class FleetCommandRouter:
         if not target_facility_id or not target_component_key:
             return
 
-        # Determine order type from component state (source of truth)
+        # Determine command class from current activation state (source
+        # of truth). PROJ-438 Phase 5: typed commands replace the stringly
+        # IssuePlanetOrderCommand(order_type=...) path.
         facility = next(f for f in planet.facilities if f.instance_id == target_facility_id)
         state = facility.get_activation_state(target_component_key)
         is_active = state.phase in (ActivationPhase.ACTIVE, ActivationPhase.ACTIVATING)
-        order_type = "DEACTIVATE_ABILITY" if is_active else "ACTIVATE_ABILITY"
 
-        from game.strategy.engine.commands import IssuePlanetOrderCommand
-        cmd = IssuePlanetOrderCommand(
+        from game.strategy.engine.commands import (
+            ActivatePlanetAbilityCommand,
+            DeactivatePlanetAbilityCommand,
+        )
+        cmd_cls = (
+            DeactivatePlanetAbilityCommand
+            if is_active
+            else ActivatePlanetAbilityCommand
+        )
+        cmd = cmd_cls(
             planet_id=planet.id,
-            order_type=order_type,
             facility_instance_id=target_facility_id,
             ability_name=ability_name,
             component_key=target_component_key,

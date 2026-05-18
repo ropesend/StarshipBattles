@@ -110,7 +110,14 @@ class RecoverFightersOrderHandler(BaseOrderHandler):
         issuer: IIssuerAdapter,
         order_owner: Any,
         empire: "Empire",
+        galaxy: Any = None,
+        registries: Any = None,
     ) -> OrderExecutionResult:
+        # PROJ-438 Phase 6: unified 5-kwarg signature. Recovery handlers
+        # don't need galaxy / registries (carrier is the issuer), but
+        # accept them so ActionExecutionEngine._execute_planet_action
+        # can call once without a try/except TypeError fallback.
+        del galaxy, registries
         order = order_owner.get_current_order()
         if not order or order.type != OrderType.RECOVER_FIGHTERS:
             return OrderExecutionResult(

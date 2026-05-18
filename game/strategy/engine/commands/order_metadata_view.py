@@ -117,6 +117,13 @@ class OrderMetadataView:
     def order_to_ability_map(self) -> dict[OrderType, str]:
         return self._registry().order_to_ability_map()
 
+    def serializer_codec_for(self, order_type: OrderType) -> str | None:
+        """PROJ-438 Phase 7: expose the per-OrderType serializer codec
+        through the live view. Future projects can route
+        ``Order.to_dict()`` and ``OrderSerializer._deserialize_target``
+        through this lookup to reduce the inline target-shape branching."""
+        return self._registry().serializer_codec_for(order_type)
+
 
 # Canonical singleton — consumers ``from ... import order_metadata``
 # rather than constructing their own.

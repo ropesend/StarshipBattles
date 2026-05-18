@@ -206,7 +206,7 @@ Registered command families:
 | Fleet actions | `IssueColonizeCommand`, `QueueColonizeMissionCommand`, `IssueTransferCommand`, superweapon commands |
 | Construction | `IssueBuildOrderCommand`, `RemoveBuildOrderCommand`, `AddToConstructionQueueCommand`, `RemoveFromConstructionQueueCommand`, `ReorderConstructionQueueCommand` |
 | Fleet structure | `SplitFleetCommand` |
-| Planet orders | `IssuePlanetOrderCommand`, `ClearPlanetOrdersCommand`, `DeletePlanetOrderCommand`, `SetAtmosphereTargetCommand` |
+| Planet orders | `ActivatePlanetAbilityCommand`, `DeactivatePlanetAbilityCommand` (PROJ-438 Phase 5), `ClearPlanetOrdersCommand`, `DeletePlanetOrderCommand`, `SetAtmosphereTargetCommand` |
 
 Shared helper: `add_move_order_if_needed(session, fleet, target_hex, start_hex=None)` chains a MOVE before follow-up actions when required.
 
