@@ -1,29 +1,30 @@
-"""PROJ-436 Phase 3f deletion guard.
+"""PROJ-436 Phase 3f + Phase 4f deletion guard.
 
-Locks in the final-state contract for Phase 3f:
+Locks in the final-state contract for the legacy storage-field
+deletions:
 
-* :class:`ShipInstance` MUST NOT carry ``cargo_contents`` as a dataclass
-  field.
-* :class:`ShipInstance` MUST NOT carry ``consumable_levels`` as a
-  dataclass field.
+* Phase 3f — :class:`ShipInstance` MUST NOT carry ``cargo_contents``
+  / ``consumable_levels`` as dataclass fields.
+* Phase 4f — :class:`Planet` MUST NOT carry ``stockpile`` /
+  ``max_stockpile`` / ``staging_yard`` as dataclass fields.
 
-Both legacy ``Dict[str, ...]`` fields are replaced by write-through
-property views over private storage owned by the ship's cargo /
-consumable managers (PROJ-436 sub-phases 3b-3e routed every production
-caller through the manager API; the fields themselves are deleted in
-3f). Backward-compatible property accessors of the same names are
-permitted — they exist to keep test infrastructure that pokes
-``ship.cargo_contents[k] = v`` / ``ship.consumable_levels[k] = v``
-working without a per-test migration.
+In both cases the public attribute names survive as backward-compatible
+``@property`` accessors over renamed private dataclass fields
+(``_cargo_contents`` / ``_consumable_levels`` for ShipInstance;
+``_stockpile`` / ``_max_stockpile`` / ``_staging_yard`` for Planet).
+Production callers route through stable manager APIs (the cargo /
+consumable manager surfaces for ShipInstance, and ``IPlanetMutator`` /
+the Planet stockpile-helper methods for Planet).
 
-This test is the explicit ratchet preventing reintroduction of either
-seam as a real dataclass field.
+These tests are explicit ratchets preventing reintroduction of any
+of the five seams as real dataclass fields.
 
 Model: ``tests/unit/strategy/data/test_phase_1f_deletion_guard.py``
 (PROJ-431 Phase 1f deletion guard for ``carried_items``).
 """
 from __future__ import annotations
 
+from game.strategy.data.planet import Planet
 from game.strategy.data.ship_instance import ShipInstance
 
 
@@ -63,4 +64,60 @@ def test_ship_instance_has_no_consumable_levels_dataclass_field() -> None:
         f"(PROJ-436 Phase 3f deletion guard). The stable consumable-"
         f"manager API is the canonical access path. Found fields: "
         f"{sorted(fields.keys())}"
+    )
+
+
+def test_planet_has_no_stockpile_dataclass_field() -> None:
+    """``Planet`` must NOT declare ``stockpile`` as a dataclass field.
+
+    PROJ-436 Phase 4f deletion guard. Production writers route through
+    ``IPlanetMutator.set_stockpile_amount`` / ``set_max_stockpile`` or
+    Planet's own ``add_to_stockpile`` / ``consume_from_stockpile``
+    helpers, which write to the private ``_stockpile`` field. A
+    backward-compatible ``stockpile`` ``@property`` over the private
+    dict is permitted as the read / mutate surface for test fixtures
+    and read-only callers — the dataclass field is gone.
+    """
+    fields = getattr(Planet, "__dataclass_fields__", {})
+    assert "stockpile" not in fields, (
+        f"Planet still has a `stockpile` dataclass field "
+        f"(PROJ-436 Phase 4f deletion guard). The stable Planet "
+        f"stockpile-helper / IPlanetMutator API is the canonical "
+        f"write path. Found fields: {sorted(fields.keys())}"
+    )
+
+
+def test_planet_has_no_max_stockpile_dataclass_field() -> None:
+    """``Planet`` must NOT declare ``max_stockpile`` as a dataclass field.
+
+    PROJ-436 Phase 4f deletion guard. Production writers route through
+    ``IPlanetMutator.set_max_stockpile``. A backward-compatible
+    ``max_stockpile`` ``@property`` over the private ``_max_stockpile``
+    dict is permitted — the dataclass field is gone.
+    """
+    fields = getattr(Planet, "__dataclass_fields__", {})
+    assert "max_stockpile" not in fields, (
+        f"Planet still has a `max_stockpile` dataclass field "
+        f"(PROJ-436 Phase 4f deletion guard). The stable Planet "
+        f"stockpile-helper / IPlanetMutator API is the canonical "
+        f"write path. Found fields: {sorted(fields.keys())}"
+    )
+
+
+def test_planet_has_no_staging_yard_dataclass_field() -> None:
+    """``Planet`` must NOT declare ``staging_yard`` as a dataclass field.
+
+    PROJ-436 Phase 4f deletion guard. Production writers route through
+    ``IPlanetMutator.add_staging_item`` / ``pop_staging_item`` or
+    Planet's own ``add_to_staging_yard`` / ``remove_from_staging_yard``
+    helpers, which append / pop the private ``_staging_yard`` list. A
+    backward-compatible ``staging_yard`` ``@property`` over the
+    private list is permitted — the dataclass field is gone.
+    """
+    fields = getattr(Planet, "__dataclass_fields__", {})
+    assert "staging_yard" not in fields, (
+        f"Planet still has a `staging_yard` dataclass field "
+        f"(PROJ-436 Phase 4f deletion guard). The stable Planet "
+        f"staging-helper / IPlanetMutator API is the canonical "
+        f"write path. Found fields: {sorted(fields.keys())}"
     )

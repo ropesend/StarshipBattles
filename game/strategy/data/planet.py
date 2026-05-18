@@ -76,9 +76,26 @@ class Planet:
     # base queue. Currently-progressing item retains `resources_consumed`.
     construction_queue_paused: bool = False
     deposits: Dict[str, dict] = field(default_factory=dict)  # res_id -> {quantity, quality}
-    stockpile: Dict[str, float] = field(default_factory=dict)
-    max_stockpile: Dict[str, float] = field(default_factory=dict)
-    staging_yard: List[Dict[str, Any]] = field(default_factory=list)
+
+    # PROJ-436 Phase 4f: ``stockpile`` / ``max_stockpile`` / ``staging_yard``
+    # are no longer dataclass fields. They survive as backward-compatible
+    # ``@property`` accessors over the renamed private dataclass fields
+    # below — preserving test infrastructure that pokes
+    # ``planet.stockpile[rid] = v`` and write paths that mutate the
+    # underlying dict / list in place. Production writers route through
+    # ``IPlanetMutator`` (``set_stockpile_amount`` / ``set_max_stockpile``
+    # / ``add_staging_item`` / ``pop_staging_item``) or through Planet's
+    # own ``add_to_stockpile`` / ``consume_from_stockpile`` /
+    # ``add_to_staging_yard`` / ``remove_from_staging_yard`` helpers.
+    # The AST guards at
+    # ``tests/static_guards/test_no_legacy_storage_fields.py`` pin the
+    # absence of the dataclass field names. Per CLAUDE.md "no save-file
+    # migration" rule the durable shape stays ``Dict[str, float]`` /
+    # ``List[Dict[str, Any]]`` for now; the broader Container substrate
+    # is the longer-arc goal addressed by Phases 5-9.
+    _stockpile: Dict[str, float] = field(default_factory=dict)
+    _max_stockpile: Dict[str, float] = field(default_factory=dict)
+    _staging_yard: List[Dict[str, Any]] = field(default_factory=list)
     max_staging_mass: float = 0.0
     facilities: List['PlanetaryFacility'] = field(default_factory=list)
     populations: List['SpeciesPopulation'] = field(default_factory=list)
@@ -193,55 +210,106 @@ class Planet:
         """BuildContext protocol: returns 'planet'."""
         return "planet"
 
+    # --- PROJ-436 Phase 4f legacy-shim properties ---
+    #
+    # The dataclass fields of the same name were deleted in Phase 4f.
+    # Production writers route through ``IPlanetMutator`` and / or the
+    # Planet stockpile / staging-yard helper methods below — both write
+    # to the private dicts / list. These properties expose the
+    # underlying mutable storage directly so test infrastructure that
+    # does ``planet.stockpile[k] = v`` / ``planet.staging_yard.append(item)``
+    # / ``planet.stockpile = {...}`` keeps working without a per-test
+    # migration.
+
+    @property
+    def stockpile(self) -> Dict[str, float]:
+        """Backward-compatible dict view over private stockpile storage.
+
+        Phase 4f deletion shim. The dataclass field is gone; the AST
+        guard at ``tests/static_guards/test_no_legacy_storage_fields.py``
+        pins the absence. ``add_to_stockpile`` / ``consume_from_stockpile``
+        / ``IPlanetMutator.set_stockpile_amount`` write the same
+        underlying dict.
+        """
+        return self._stockpile
+
+    @stockpile.setter
+    def stockpile(self, value: Dict[str, float]) -> None:
+        self._stockpile = dict(value) if value is not None else {}
+
+    @property
+    def max_stockpile(self) -> Dict[str, float]:
+        """Backward-compatible dict view over private max-stockpile storage.
+
+        Phase 4f deletion shim. See ``stockpile`` property.
+        """
+        return self._max_stockpile
+
+    @max_stockpile.setter
+    def max_stockpile(self, value: Dict[str, float]) -> None:
+        self._max_stockpile = dict(value) if value is not None else {}
+
+    @property
+    def staging_yard(self) -> List[Dict[str, Any]]:
+        """Backward-compatible list view over private staging-yard storage.
+
+        Phase 4f deletion shim. See ``stockpile`` property.
+        """
+        return self._staging_yard
+
+    @staging_yard.setter
+    def staging_yard(self, value: List[Dict[str, Any]]) -> None:
+        self._staging_yard = list(value) if value is not None else []
+
     # --- IStockpileHolder protocol (PROJ-372) ---
 
     def add_to_stockpile(self, resource_type: str, amount: float) -> float:
         """Add resources to the local stockpile; return overflow."""
-        current = self.stockpile.get(resource_type, 0.0)
-        max_cap = self.max_stockpile.get(resource_type, float('inf'))
+        current = self._stockpile.get(resource_type, 0.0)
+        max_cap = self._max_stockpile.get(resource_type, float('inf'))
         new_total = current + amount
         if new_total > max_cap:
-            self.stockpile[resource_type] = max_cap
+            self._stockpile[resource_type] = max_cap
             return new_total - max_cap
-        self.stockpile[resource_type] = new_total
+        self._stockpile[resource_type] = new_total
         return 0.0
 
     def consume_from_stockpile(self, resource_type: str, amount: float) -> bool:
         """All-or-nothing consume. Return True iff sufficient stockpile."""
-        current = self.stockpile.get(resource_type, 0.0)
+        current = self._stockpile.get(resource_type, 0.0)
         if current >= amount:
-            self.stockpile[resource_type] = current - amount
+            self._stockpile[resource_type] = current - amount
             return True
         return False
 
     def has_stockpile(self, costs: dict) -> bool:
         """True iff every resource->amount in `costs` is satisfied."""
         return all(
-            self.stockpile.get(rt, 0.0) >= amt for rt, amt in costs.items()
+            self._stockpile.get(rt, 0.0) >= amt for rt, amt in costs.items()
         )
 
     def get_stockpile(self, resource_type: str) -> float:
         """Current stockpiled amount, 0.0 if absent."""
-        return self.stockpile.get(resource_type, 0.0)
+        return self._stockpile.get(resource_type, 0.0)
 
     # --- IStagingYardHolder protocol (PROJ-372) ---
 
     def get_staging_mass(self) -> float:
         """Total mass of items currently in the staging yard."""
-        return sum(item.get('mass', 0.0) for item in self.staging_yard)
+        return sum(item.get('mass', 0.0) for item in self._staging_yard)
 
     def add_to_staging_yard(self, item: Dict[str, Any]) -> bool:
         """Add an item; return False on insufficient capacity."""
         item_mass = item.get('mass', 0.0)
         if self.max_staging_mass > 0 and self.get_staging_mass() + item_mass > self.max_staging_mass:
             return False
-        self.staging_yard.append(item)
+        self._staging_yard.append(item)
         return True
 
     def remove_from_staging_yard(self, index: int) -> Optional[Dict[str, Any]]:
         """Remove and return the item at `index`, or None if out of range."""
-        if 0 <= index < len(self.staging_yard):
-            return self.staging_yard.pop(index)
+        if 0 <= index < len(self._staging_yard):
+            return self._staging_yard.pop(index)
         return None
 
     def can_build_type(self, vehicle_type: str) -> bool:
@@ -293,3 +361,45 @@ class Planet:
         delegating to ``planet_serde.planet_from_dict_kwargs``."""
         from game.strategy.data.planet_serde import planet_from_dict_kwargs
         return cls(**planet_from_dict_kwargs(data))
+
+
+# ---------------------------------------------------------------------------
+# PROJ-436 Phase 4f: legacy-kwarg constructor wrapper.
+# ---------------------------------------------------------------------------
+# The dataclass field rename (``stockpile`` -> ``_stockpile``,
+# ``max_stockpile`` -> ``_max_stockpile``, ``staging_yard`` ->
+# ``_staging_yard``) would break the planet serializer + every test
+# fixture / builder that passes the legacy kwarg names into
+# ``Planet(...)``. Rather than sweep those mechanically (planet_serde
+# itself, ``_build_galaxy_fixture`` and ~15 other test files), wrap
+# the dataclass-generated ``__init__`` with a translator that accepts
+# both spellings. Production callers can freely use either name.
+#
+# Mirrors the PROJ-436 Phase 3f wrapper on ``ShipInstance``.
+
+_dataclass_init = Planet.__init__
+
+
+def _planet_init_with_legacy_kwargs(self, *args, **kwargs):  # noqa: D401
+    """Translate legacy ``stockpile`` / ``max_stockpile`` / ``staging_yard`` kwargs.
+
+    PROJ-436 Phase 4f compat shim. Accepts both the public name and
+    the private-field spelling; raises ``TypeError`` if both are
+    supplied for the same slot.
+    """
+    for public, private in (
+        ("stockpile", "_stockpile"),
+        ("max_stockpile", "_max_stockpile"),
+        ("staging_yard", "_staging_yard"),
+    ):
+        if public in kwargs:
+            if private in kwargs:
+                raise TypeError(
+                    f"Planet.__init__ received both {public!r} and "
+                    f"{private!r}; pass only one."
+                )
+            kwargs[private] = kwargs.pop(public)
+    _dataclass_init(self, *args, **kwargs)
+
+
+Planet.__init__ = _planet_init_with_legacy_kwargs
