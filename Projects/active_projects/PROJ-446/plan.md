@@ -13,17 +13,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Test wallpaper removal (skipped-but-vacuous, stale skips) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Static-guard backfill + protocol read-only narrowing | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Test wallpaper removal (skipped-but-vacuous, stale skips) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Static-guard backfill + protocol read-only narrowing | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. UI back-compat shim retirement (transfer_dialog, battle_setup, new_game_setup, etc.) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. UI LOC-ceiling extraction (build_queue_screen, planet_list_window) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Deferred UIWindow retrofit closure (SettingsWindow + 4 planet target editors) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-18
-**Active Phase:** Planning
-**Last Action:** Charter created from comprehensive residue scan ([findings/bucket_c_ui_core_tests_scan.md](findings/bucket_c_ui_core_tests_scan.md), 30 findings)
-**Next Action:** User review of scope/phasing. Phase 1 (test wallpaper removal) is the natural place to start — clears noise and improves CI trust before tackling shim retirement.
+**Active Phase:** Phase 3 (UI back-compat shim cluster retirement) — NOT YET STARTED
+**Last Action:** Stage 1 complete (Phases 1 + 2). Phase 1 closed 7 wallpaper-skip findings (F-C-016, F-C-022, F-C-023, F-C-024, F-C-025, F-C-026, F-C-021-superseded); Phase 2 closed 5 surface-cracks findings (F-C-013, F-C-014, F-C-018, F-C-019, F-C-030). Phase 1 sharded suite: 23,317 passed / 0 failed. Phase 2 targeted suites: 1,841 passed (static_guards + unit/core). Phase 2 full sharded run still recommended before Phase 3 starts.
+**Next Action:** STOP — Phase 3 (UI shim cluster retirement) is materially bigger than Phases 1+2 together and starts only under separate explicit direction from the user. The 9 UI shim clusters (F-C-001..F-C-012 minus already-noted exclusions, plus F-C-015 + F-C-029 paired-DI sweeps, plus F-C-020 STRUCTURAL JOINT-PHASE with PROJ-444) should be scoped and sequenced afresh. Cross-bucket coordination note dropped into decisions.md: `docs/known-issues.md` still carries the obsolete "Stale-doc warning" pointing at the (now-fixed) `tests/fixtures/README.md`; PROJ-447 owns `docs/**` in this stage's file partition and should drop that paragraph.
 **Blockers:** Phase 5 (UIWindow retrofits) is genuinely 5 mini-projects in a trench coat — likely needs to spin off rather than ship under PROJ-446
 
 ## Overview

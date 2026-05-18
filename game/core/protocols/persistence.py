@@ -1,6 +1,7 @@
 """Serialization contract (PROJ-228)."""
+from __future__ import annotations
 
-from typing import Any, Dict, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 
 @runtime_checkable
@@ -17,11 +18,11 @@ class ISerializable(Protocol):
     domain-specific serialization logic.
     """
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize this object to a dictionary."""
         ...
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ISerializable':
+    def from_dict(cls, data: dict[str, Any]) -> 'ISerializable':
         """Deserialize an instance from a dictionary."""
         ...

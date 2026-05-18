@@ -159,8 +159,10 @@ class TestBuilderUISync:
                     target_class = classes[0]
                     break
 
-        if not target_type:
-            pytest.skip("No vehicle classes found to test type filtering.")
+        assert target_type, (
+            "vehicle_classes registry is unexpectedly empty or lacks a non-Ship "
+            "type — fix the fixture; production registries always have entries."
+        )
 
         self.mock_builder.ship.vehicle_type = target_type
         self.mock_builder.ship.ship_class = target_class

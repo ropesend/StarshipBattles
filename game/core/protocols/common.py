@@ -10,8 +10,9 @@ is imported by `game.simulation.interfaces.entity_protocols`,
 so renaming it would force a multi-package edit. Treat it as public despite
 the name.
 """
+from __future__ import annotations
 
-from typing import Any, Optional, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 
 def _has_attrs(obj: Any, *attrs: str) -> bool:
@@ -41,6 +42,6 @@ class INamed(Protocol):
 class IOwnable(Protocol):
     """Protocol for objects that can be owned by a player."""
     @property
-    def owner_id(self) -> Optional[int]:
+    def owner_id(self) -> int | None:
         """Player ID of owner, None for unowned/neutral entities."""
         ...

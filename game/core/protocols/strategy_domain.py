@@ -4,8 +4,10 @@ These are the abstract organisational types: empires, facilities, races,
 ship instances. Concrete galaxy-map entities (stars, planets, fleets, etc.)
 live in `strategy_entities.py`.
 """
+from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Protocol, TYPE_CHECKING, TypeGuard, runtime_checkable
+from collections.abc import Mapping
+from typing import Any, Protocol, TYPE_CHECKING, TypeGuard, runtime_checkable
 
 from game.core.protocols.common import _has_attrs
 
@@ -47,22 +49,22 @@ class IEmpire(Protocol):
         ...
 
     @property
-    def race_config(self) -> Optional[Any]:
+    def race_config(self) -> Any | None:
         """Full race configuration (RaceConfig or None)."""
         ...
 
     @property
-    def colonies(self) -> List[Any]:
+    def colonies(self) -> list[Any]:
         """List of owned Planet objects."""
         ...
 
     @property
-    def fleets(self) -> List[Any]:
+    def fleets(self) -> list[Any]:
         """List of Fleet objects."""
         ...
 
     @property
-    def resource_pool(self) -> Dict[str, float]:
+    def resource_pool(self) -> dict[str, float]:
         """Read-only aggregate of resource amounts across the empire.
 
         PROJ-436 Phase 5: pure aggregation over the empire's colony
@@ -85,7 +87,7 @@ class IEmpire(Protocol):
         ...
 
     @property
-    def max_storage(self) -> Dict[str, float]:
+    def max_storage(self) -> dict[str, float]:
         """Storage capacity per resource type.
 
         Set by ``HarvestingEngine`` each turn (routed through
@@ -126,7 +128,7 @@ class IFacility(Protocol):
         ...
 
     @property
-    def design_data(self) -> Dict[str, Any]:
+    def design_data(self) -> dict[str, Any]:
         """Full complex design (from JSON)."""
         ...
 
@@ -136,13 +138,31 @@ class IFacility(Protocol):
         ...
 
     @property
-    def construction_queue(self) -> List[Any]:
+    def construction_queue(self) -> list[Any]:
         """Facility's construction queue."""
         ...
 
     @property
-    def consumable_levels(self) -> Dict[str, float]:
-        """Consumable levels stored in this facility."""
+    def consumable_levels(self) -> dict[str, float]:
+        """Consumable levels stored in this facility.
+
+        PROJ-436 Phase 0 D1 / PROJ-446 Phase 2 (F-C-013): the
+        annotation is intentionally a writable ``dict[str, float]``
+        rather than the read-only ``Mapping[str, float]`` used for
+        ship cargo / planet stockpile. The Phase-6 audit chose to
+        leave this as-is because no transfer-UI / mutator use case
+        had materialised, so promoting consumables to a write-service
+        + ``Mapping`` view would have been speculative work.
+
+        The deliberate inconsistency is also pinned at the static-
+        guard layer by
+        ``tests/static_guards/test_no_legacy_protocol_names.py``
+        (``test_ifacility_still_declares_consumable_levels``).
+
+        If a transfer-UI / mutator use case lands later, this
+        annotation should be narrowed to ``Mapping[str, float]`` and
+        a sibling ``IFacilityMutator`` should land alongside.
+        """
         ...
 
 
@@ -156,7 +176,7 @@ class IRaceRegistry(Protocol):
     races gracefully (extinct species, save drift, typos).
     """
 
-    def get_race(self, race_id: str) -> Optional['RaceConfig']:
+    def get_race(self, race_id: str) -> 'RaceConfig | None':
         """Resolve a race_id to its RaceConfig, or None if unknown."""
         ...
 
@@ -175,7 +195,7 @@ class IShipInstance(Protocol):
         ...
 
     @property
-    def design_data(self) -> Dict[str, Any]:
+    def design_data(self) -> dict[str, Any]:
         """Full serialized ship template."""
         ...
 
@@ -185,7 +205,7 @@ class IShipInstance(Protocol):
         ...
 
     @property
-    def cargo_contents(self) -> Dict[str, int]:
+    def cargo_contents(self) -> Mapping[str, int]:
         """Cargo contents (cargo_type -> current amount).
 
         PROJ-436 Phase 3f: the ``cargo_contents`` dataclass field on
@@ -195,6 +215,13 @@ class IShipInstance(Protocol):
         legacy-kwarg constructor wrapper at
         ``ship_instance.py``), so this property is **not** read-only
         in absolute terms.
+
+        PROJ-446 Phase 2 (F-C-014): the protocol annotation is narrowed
+        from ``Dict[str, int]`` to ``Mapping[str, int]`` so a caller
+        that narrows to ``IShipInstance`` sees a read-only view. The
+        concrete-class setter retirement is sequenced into PROJ-444
+        Phase 3 (wrapper retirement); the docstring caveat above stays
+        until that lands, then PROJ-444 Phase 3 drops it.
 
         Production code should **prefer** the cargo manager API for
         writes (``ship._cargo_mgr.set_cargo`` / ``get_all_cargo`` /
@@ -211,11 +238,11 @@ class IShipInstance(Protocol):
         ...
 
     @property
-    def serial_number(self) -> Optional[int]:
+    def serial_number(self) -> int | None:
         """Serial number unique per design within empire."""
         ...
 
-    def get_calculated_stats(self, force_refresh: bool = False) -> Dict[str, Any]:
+    def get_calculated_stats(self, force_refresh: bool = False) -> dict[str, Any]:
         """Get calculated stats from components, respecting damage state."""
         ...
 

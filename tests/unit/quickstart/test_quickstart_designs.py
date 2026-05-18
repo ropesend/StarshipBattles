@@ -128,9 +128,12 @@ class TestQuickstartDesignsValid:
 
     def test_design_stats_match_expected(self, design_name, design_data, quickstart_ship_data, fresh_registries):
         """Design stats should match expected_stats within tolerance."""
-        expected = design_data.get("expected_stats", {})
-        if not expected:
-            pytest.skip(f"{design_name} has no expected_stats")
+        assert "expected_stats" in design_data, (
+            f"{design_name} violates the required-fields convention "
+            f"(docs/03_CONVENTIONS.md → Required starter design fields). "
+            f"`expected_stats` is required on every quickstart design."
+        )
+        expected = design_data["expected_stats"]
 
         ship = Ship.from_dict(design_data, registries=fresh_registries)
         ship.recalculate_stats()

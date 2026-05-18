@@ -1,6 +1,7 @@
 """Data-registry DI protocol (PROJ-27/PROJ-50)."""
+from __future__ import annotations
 
-from typing import Any, Dict, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 
 @runtime_checkable
@@ -21,18 +22,18 @@ class IRegistryProvider(Protocol):
             components = registry.get_components()
             ...
     """
-    def get_components(self) -> Dict[str, Any]:
+    def get_components(self) -> dict[str, Any]:
         """Get the component registry dictionary."""
         ...
 
-    def get_modifiers(self) -> Dict[str, Any]:
+    def get_modifiers(self) -> dict[str, Any]:
         """Get the modifier registry dictionary."""
         ...
 
-    def get_vehicle_classes(self) -> Dict[str, Any]:
+    def get_vehicle_classes(self) -> dict[str, Any]:
         """Get the vehicle classes dictionary."""
         ...
 
-    def get_resources(self) -> Dict[str, Any]:
+    def get_resources(self) -> dict[str, Any]:
         """Get the resources registry dictionary."""
         ...
