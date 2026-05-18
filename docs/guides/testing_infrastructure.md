@@ -1,6 +1,6 @@
 # Testing Infrastructure
 
-> **Last verified:** 2026-05-08 - Checked against `conftest.py`, `tests/conftest.py`, `tests/unit/conftest.py`, `tests/unit/ui/conftest.py`, `tests/infrastructure/session_cache.py`, `pytest.ini`, `Tools/test_sharded/`, `combat_lab/run_tests.py`, and current fixture modules.
+> **Last verified:** 2026-05-17 - Checked against `conftest.py`, `tests/conftest.py`, `tests/unit/conftest.py`, `tests/unit/ui/conftest.py`, `tests/infrastructure/session_cache.py`, `pytest.ini`, `Tools/test_sharded/`, `combat_lab/run_tests.py`, current fixture modules, and the PROJ-443 `norecursedirs` config flip.
 
 Use this as the compact contract for test work. Keep strict TDD: add or identify the failing test first, run it, implement the root-cause fix, then rerun the same test path. Do not read `docs/_ignore/`.
 
@@ -191,7 +191,21 @@ testpaths = tests
 addopts = -n 4 --ignore=Refactoring --ignore-glob=*.txt --ignore=combat_lab --junitxml=./.pytest_cache/test-results.xml
 python_files = test_*.py
 pythonpath = .
+norecursedirs = .* build dist CVS _darcs {arch} *.egg venv env .venv ShipThemes
 ```
+
+`norecursedirs` rationale (PROJ-443): three tokens were removed from the
+default list — `data`, `combat_lab`, and `Assets`. `norecursedirs`
+patterns are matched against directory **basenames at any depth** (per
+`_pytest/main.py:455-458`), so those tokens collided with real test
+directories (`tests/unit/strategy/data/`, `tests/unit/combat_lab/`,
+`tests/unit/assets/`, etc.), silently hiding 126 test files from the
+canonical sharded run. The top-level `data/` / `Assets/` / `combat_lab/`
+directories that the tokens were trying to skip are already excluded by
+`testpaths = tests` (which restricts default collection to `tests/`),
+plus the explicit `--ignore=combat_lab` in `addopts`. The structural
+file-level regression guard at `tests/static_guards/test_no_hidden_test_files.py`
+prevents this class of mistake from recurring.
 
 Markers in `pytest.ini`: `use_custom_data`, `simulation`, `slow`, `integration`, `performance`.
 

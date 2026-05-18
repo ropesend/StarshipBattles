@@ -235,6 +235,28 @@ Per Codex's pre-execution consult, the regression guard added in Phase 4 is file
 
 ---
 
+## Post-flip operations
+
+Phase 4 removed `data`, `combat_lab`, `Assets` from `pytest.ini`'s
+`norecursedirs`. After pulling this change, contributors who use
+`pytest --testmon` should rebuild their local cache to avoid
+stale-state surprises from the ~1952 newly-visible tests:
+
+```bash
+# Bash / Git Bash:
+rm .testmondata && pytest tests/ --testmon
+
+# PowerShell:
+Remove-Item .testmondata; python -m pytest tests/ --testmon
+```
+
+The `.testmondata` file is gitignored — each contributor rebuilds
+once. CI / sharded runs do not use testmon, so no infrastructure-level
+rebuild is required. The rebuild is a one-time hygiene step, not a
+permanent contract change.
+
+---
+
 ## Raw outputs
 
 Per-directory raw pytest stdout is captured under `findings/raw/` for reproducibility:
