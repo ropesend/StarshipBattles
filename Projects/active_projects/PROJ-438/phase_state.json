@@ -175,26 +175,21 @@
     "phase_8": {
       "depends_on": ["phase_7"],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
+      "phase_base_sha": "5c97f090367ea9095d82d0ac8b1b347767185b98",
       "phase_branch": "proj/PROJ-438/main",
       "phase_head_sha": null,
       "planned_files": [
-        "game/core/protocols/strategy_domain.py",
-        "game/core/protocols/strategy_mutators.py",
-        "game/strategy/facade/strategy_session_facade.py",
-        "game/strategy/facade/grouped_namespaces.py",
         "docs/systems/strategy_layer.md",
         "docs/systems/orders_system.md",
-        "docs/04_SERVICES.md",
-        "docs/systems/ability_reference.md",
         "docs/01_ARCHITECTURE.md",
-        "docs/02_PATTERNS.md"
+        "docs/02_PATTERNS.md",
+        "Projects/active_projects/PROJ-438/decisions.md"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "doc_sync_complete_consult_pending",
       "verifying_review_id": null
     }
   },
