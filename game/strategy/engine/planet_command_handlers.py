@@ -1,8 +1,15 @@
 """
 Planet command handlers for issuing planet orders.
 
-PROJ-237: Handles IssuePlanetOrderCommand, ClearPlanetOrdersCommand,
-and DeletePlanetOrderCommand via the command dispatch pipeline.
+PROJ-237: Handles ClearPlanetOrdersCommand and DeletePlanetOrderCommand
+via the command dispatch pipeline.
+
+PROJ-438 Phase 5: typed planet strategic intents
+(``ActivatePlanetAbilityCommand`` / ``DeactivatePlanetAbilityCommand``)
+replaced the stringly ``IssuePlanetOrderCommand(order_type: str)`` path.
+The old class + handler are deleted; each typed command has its own
+handler that calls the matching validator and queues the matching
+``OrderType``.
 """
 
 import logging
@@ -11,9 +18,10 @@ from typing import TYPE_CHECKING
 from game.core.validation import ValidationResult
 from game.strategy.data.order_types import OrderType, Order
 from game.strategy.engine.commands import (
+    ActivatePlanetAbilityCommand,
     ClearPlanetOrdersCommand,
+    DeactivatePlanetAbilityCommand,
     DeletePlanetOrderCommand,
-    IssuePlanetOrderCommand,
     SetAtmosphereTargetCommand,
     SetGravityTargetCommand,
     SetRadiationShieldTargetCommand,
@@ -32,85 +40,119 @@ if TYPE_CHECKING:
     from game.strategy.engine.game_session import GameSession
 
 
+def _queue_ability_order(
+    planet,
+    order_type: OrderType,
+    facility_instance_id: str,
+    ability_name: str,
+    component_key: str,
+) -> ValidationResult:
+    """Shared body for the two typed planet-ability handlers.
+
+    Builds the marker-dict ``target`` payload (preserving the post-load
+    rebinding shape) and queues a single ``Order`` on the planet.
+    """
+    target = {
+        'facility_instance_id': facility_instance_id,
+        'ability_name': ability_name,
+        'component_key': component_key,
+    }
+    planet.add_order(Order(order_type, target=target))
+    logger.info(
+        f"Planet {planet.name}: queued {order_type.name} order "
+        f"(facility={facility_instance_id})"
+    )
+    return ValidationResult.success()
+
+
 @command_spec(
-    command_class=IssuePlanetOrderCommand,
-    order_type=None,  # Routes to ACTIVATE/DEACTIVATE_ABILITY at handle time
+    command_class=ActivatePlanetAbilityCommand,
+    order_type=OrderType.ACTIVATE_ABILITY,
     category='planet',
     execution_model='planet',
-    facade_helper_name='dispatch_issue_planet_order',
+    facade_helper_name='dispatch_activate_planet_ability',
 )
-class IssuePlanetOrderCommandHandler:
-    """Handler for IssuePlanetOrderCommand."""
+class ActivatePlanetAbilityCommandHandler:
+    """Handler for ``ActivatePlanetAbilityCommand`` (PROJ-438 Phase 5)."""
 
-    def execute(self, session: 'GameSession', cmd: 'IssuePlanetOrderCommand') -> ValidationResult:
-        """Issue a planet order (e.g., activate/deactivate shield).
-
-        Args:
-            session: Active game session.
-            cmd: Command with planet_id, order_type, facility_instance_id.
-
-        Returns:
-            ValidationResult indicating success or failure.
-        """
+    def execute(
+        self,
+        session: 'GameSession',
+        cmd: 'ActivatePlanetAbilityCommand',
+    ) -> ValidationResult:
         from game.strategy.engine.handlers.base import BaseCommandHandler
 
-        # 1. Resolve + authorize (PROJ-375 DUP-X-01)
-        planet, error = BaseCommandHandler._resolve_player_planet(session, cmd.planet_id)
+        planet, error = BaseCommandHandler._resolve_player_planet(
+            session, cmd.planet_id
+        )
         if error:
             return error
 
-        # 3. Parse order type
-        try:
-            order_type = OrderType[cmd.order_type]
-        except KeyError:
-            return ValidationResult.error(f"Unknown planet order type: {cmd.order_type}")
-
-        # 4. Validate based on order type
-        component_registry = session.registries.components if session.registries else None
-
-        if order_type == OrderType.ACTIVATE_ABILITY:
-            if not cmd.ability_name:
-                return ValidationResult.error("ability_name is required for ACTIVATE_ABILITY.")
-            if not cmd.component_key:
-                return ValidationResult.error("component_key is required for ACTIVATE_ABILITY.")
-            result = PlanetOrderValidator.validate_activate_ability(
-                planet, cmd.facility_instance_id, cmd.ability_name, component_registry,
-                component_key=cmd.component_key,
-            )
-        elif order_type == OrderType.DEACTIVATE_ABILITY:
-            if not cmd.ability_name:
-                return ValidationResult.error("ability_name is required for DEACTIVATE_ABILITY.")
-            if not cmd.component_key:
-                return ValidationResult.error("component_key is required for DEACTIVATE_ABILITY.")
-            result = PlanetOrderValidator.validate_deactivate_ability(
-                planet, cmd.facility_instance_id, cmd.ability_name, component_registry,
-                component_key=cmd.component_key,
-            )
-        else:
-            return ValidationResult.error(f"Unsupported planet order type: {cmd.order_type}")
-
+        component_registry = (
+            session.registries.components if session.registries else None
+        )
+        result = PlanetOrderValidator.validate_activate_ability(
+            planet,
+            cmd.facility_instance_id,
+            cmd.ability_name,
+            component_registry,
+            component_key=cmd.component_key,
+        )
         if not result.is_valid:
             return result
 
-        # 5. Create and queue the order
-        target = {
-            'facility_instance_id': cmd.facility_instance_id,
-        }
-        if cmd.component_id:
-            target['component_id'] = cmd.component_id
-        if cmd.ability_name:
-            target['ability_name'] = cmd.ability_name
-        if cmd.component_key:
-            target['component_key'] = cmd.component_key
-
-        order = Order(order_type, target=target)
-        planet.add_order(order)
-
-        logger.info(
-            f"Planet {planet.name}: queued {order_type.name} order "
-            f"(facility={cmd.facility_instance_id})"
+        return _queue_ability_order(
+            planet,
+            OrderType.ACTIVATE_ABILITY,
+            cmd.facility_instance_id,
+            cmd.ability_name,
+            cmd.component_key,
         )
-        return ValidationResult.success()
+
+
+@command_spec(
+    command_class=DeactivatePlanetAbilityCommand,
+    order_type=OrderType.DEACTIVATE_ABILITY,
+    category='planet',
+    execution_model='planet',
+    facade_helper_name='dispatch_deactivate_planet_ability',
+)
+class DeactivatePlanetAbilityCommandHandler:
+    """Handler for ``DeactivatePlanetAbilityCommand`` (PROJ-438 Phase 5)."""
+
+    def execute(
+        self,
+        session: 'GameSession',
+        cmd: 'DeactivatePlanetAbilityCommand',
+    ) -> ValidationResult:
+        from game.strategy.engine.handlers.base import BaseCommandHandler
+
+        planet, error = BaseCommandHandler._resolve_player_planet(
+            session, cmd.planet_id
+        )
+        if error:
+            return error
+
+        component_registry = (
+            session.registries.components if session.registries else None
+        )
+        result = PlanetOrderValidator.validate_deactivate_ability(
+            planet,
+            cmd.facility_instance_id,
+            cmd.ability_name,
+            component_registry,
+            component_key=cmd.component_key,
+        )
+        if not result.is_valid:
+            return result
+
+        return _queue_ability_order(
+            planet,
+            OrderType.DEACTIVATE_ABILITY,
+            cmd.facility_instance_id,
+            cmd.ability_name,
+            cmd.component_key,
+        )
 
 
 @command_spec(
@@ -289,7 +331,8 @@ class SetRadiationShieldTargetCommandHandler:
 def register(registry: CommandRegistry) -> None:
     """PROJ-371: register this module's handlers into ``registry``."""
     for handler_cls in (
-        IssuePlanetOrderCommandHandler,
+        ActivatePlanetAbilityCommandHandler,
+        DeactivatePlanetAbilityCommandHandler,
         ClearPlanetOrdersCommandHandler,
         DeletePlanetOrderCommandHandler,
         SetAtmosphereTargetCommandHandler,

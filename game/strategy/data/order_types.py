@@ -78,7 +78,20 @@ class Order:
         return f"Order({self.type.name}, {self.target})"
 
     def to_dict(self) -> Dict[str, Any]:
-        """Serialize for save game."""
+        """Serialize for save game.
+
+        PROJ-438 Phase 7: the inline ``isinstance``/``OrderType`` branching
+        below is the legacy compatible path. Each ``CommandSpec`` declares
+        a ``serializer_codec`` (queryable via
+        ``order_metadata.serializer_codec_for(order_type)``) whose
+        vocabulary already matches the discriminator strings emitted
+        below (``'hex_coord'``, ``'fleet_ref'``, ``'planet_ref'``,
+        ``'transfer'``, ``'warp_params'``, ``'ship_id_list'``, ``'dict'``,
+        ``'colonize_params'``, ``'raw'``). A future project may flip this
+        method to dispatch via the codec lookup; the
+        ``test_order_persistence_from_metadata.py`` suite pins the
+        vocabulary consistency so that flip is safe to attempt.
+        """
         # Import at runtime to avoid circular import with Fleet/Planet
         from game.strategy.data.fleet import Fleet
         from game.strategy.data.planet import Planet

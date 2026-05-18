@@ -70,25 +70,18 @@ class TurnStateSnapshot:
     def restore(self, session: Any) -> None:
         """Restore game state from this snapshot.
 
-        Replaces session.galaxy and session.empires with deserialized
-        objects from the snapshot data, then performs the four post-
-        deserialize wiring steps that mirror
-        ``SessionPersistenceAdapter.rehydrate_state()`` (see
-        ``game/strategy/engine/session/persistence_adapter.py:171-198``):
+        Replaces ``session.galaxy`` and ``session.empires`` with
+        deserialized objects from the snapshot data, then runs the four
+        canonical post-deserialize wiring steps via
+        ``restore_graph_wiring`` (PROJ-438 Phase 1): galaxy back-refs,
+        fleet registration, order-target resolution, and pursuer-tracker
+        rebuild. The same collaborator is reused by
+        ``SessionPersistenceAdapter.rehydrate_state()``.
 
-        1. ``empire.set_galaxy(galaxy)`` — galaxy back-references for
-           downstream consumers (PROJ-219).
-        2. ``galaxy.register_fleet(fleet)`` — deserialized fleets bypass
-           ``add_fleet()`` and must be registered explicitly (PROJ-219).
-        3. ``fleet.resolve_order_references(galaxy, empires)`` — convert
-           marker dicts in fleet orders into live object references
-           (PROJ-207).
-        4. ``order.target.pursuer_tracker.add_pursuer(fleet)`` — rebuild
-           pursuer tracker from resolved ``MOVE_TO_FLEET`` /
-           ``JOIN_FLEET`` orders (PROJ-222).
-
-        PROJ-432: Steps 1 and 4 were previously missing on this path,
-        producing a silent asymmetry with the save-load rehydrate path.
+        Per Phase 1 Task 1.3 the per-empire ``DesignCatalog`` map is
+        intentionally NOT rebuilt here — the in-memory map survives a
+        turn rollback by design; only the save-load path needs to
+        reconstruct it from disk.
 
         Args:
             session: GameSession-like object with .galaxy, .empires, and
@@ -96,7 +89,9 @@ class TurnStateSnapshot:
         """
         from game.strategy.data.galaxy import Galaxy
         from game.strategy.data.empire import Empire
-        from game.strategy.data.order_types import OrderType
+        from game.strategy.engine.session.graph_restoration import (
+            restore_graph_wiring,
+        )
 
         session.galaxy = Galaxy.from_dict(self.galaxy_dict)
         session.empires = [
@@ -106,34 +101,7 @@ class TurnStateSnapshot:
             for d in self.empire_dicts
         ]
 
-        # PROJ-219 (PROJ-432): galaxy back-references for downstream
-        # consumers (auto-fleet-registration, capability calculators).
-        # Mirrors persistence_adapter.py:171-173.
-        for empire in session.empires:
-            empire.set_galaxy(session.galaxy)
-
-        # Re-register fleets with galaxy. Mirrors persistence_adapter.py:175-179.
-        for empire in session.empires:
-            for fleet in empire.fleets:
-                session.galaxy.register_fleet(fleet)
-
-        # Resolve order references (fleet/planet targets).
-        # Mirrors persistence_adapter.py:181-186.
-        for empire in session.empires:
-            for fleet in empire.fleets:
-                fleet.resolve_order_references(session.galaxy, session.empires)
-
-        # PROJ-222 (PROJ-432): rebuild pursuer tracker from resolved
-        # order references. Mirrors persistence_adapter.py:188-197.
-        for empire in session.empires:
-            for fleet in empire.fleets:
-                for order in fleet.orders:
-                    if order.type in (
-                        OrderType.MOVE_TO_FLEET,
-                        OrderType.JOIN_FLEET,
-                    ):
-                        if hasattr(order.target, "pursuer_tracker"):
-                            order.target.pursuer_tracker.add_pursuer(fleet)
+        restore_graph_wiring(session.galaxy, session.empires)
 
         logger.info(f"Turn {self.turn_number} state restored from snapshot.")
 

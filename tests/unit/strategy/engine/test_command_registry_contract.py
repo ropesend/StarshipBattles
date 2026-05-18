@@ -304,7 +304,8 @@ EXISTING_FACADE_DISPATCH_HELPERS = (
     "dispatch_add_to_construction_queue",
     "dispatch_remove_from_construction_queue",
     "dispatch_reorder_construction_queue",
-    "dispatch_issue_planet_order",
+    "dispatch_activate_planet_ability",
+    "dispatch_deactivate_planet_ability",
     "dispatch_clear_planet_orders",
     "dispatch_delete_planet_order",
     "dispatch_set_atmosphere_target",
@@ -373,8 +374,8 @@ ORDER_TYPES_REACHABLE_VIA_COMMAND = {
     OrderType.SELF_DESTRUCT,           # IssueSelfDestructCommand
     OrderType.LOAD_POPULATION,         # IssueTransferCommand (direction=LOAD)
     OrderType.UNLOAD_POPULATION,       # IssueTransferCommand (direction=UNLOAD)
-    OrderType.ACTIVATE_ABILITY,        # IssuePlanetOrderCommand
-    OrderType.DEACTIVATE_ABILITY,      # IssuePlanetOrderCommand
+    OrderType.ACTIVATE_ABILITY,        # ActivatePlanetAbilityCommand (PROJ-438 Phase 5)
+    OrderType.DEACTIVATE_ABILITY,      # DeactivatePlanetAbilityCommand (PROJ-438 Phase 5)
     OrderType.LAY_MINES,               # PROJ-FMS-B Phase 1: IssueLayMinesCommand
     OrderType.LAUNCH_FIGHTERS,         # PROJ-FMS-C Phase 1: IssueLaunchFightersCommand
     OrderType.RECOVER_FIGHTERS,        # PROJ-FMS-C Phase 3: IssueRecoverFightersCommand

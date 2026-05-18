@@ -51,6 +51,77 @@ class ShipInstance:
     - Ship designs (templates from Ship Builder)
     - Strategy fleet management
     - Battle simulation
+
+    PROJ-438 Phase 3 categorization (post-PROJ-436 Phase 9). The class
+    is intentionally large because of D2 default (a) — keep inline
+    ``design_data`` and the explicitly-retained shim entry points
+    documented in PROJ-425 Phase 5d/5e. The 910-caller entry-point sweep
+    is OUT of PROJ-438 scope. Ratchets live at
+    ``tests/unit/strategy/ship_instance/test_post_container_surface.py``.
+
+    **Owned identity** (immutable across the ship's life):
+
+        - ``instance_id`` (uuid), ``design_id``, ``name``, ``owner_id``,
+          ``serial`` (per-design-per-empire)
+
+    **Owned durable state** (inline by design):
+
+        - ``design_data``  — full serialized ship template; D2 (a) keeps
+          this inline instead of design-lookup-by-id
+
+    **Owned runtime state** (private storage backing the manager APIs):
+
+        - ``_consumable_levels`` / ``_cargo_contents``  — private dicts;
+          backward-compat ``consumable_levels`` / ``cargo_contents``
+          properties below are the read view; canonical writes route
+          through ``_resource_mgr`` / ``_cargo_mgr``
+        - ``bay_inventory``  — typed two-slot carried inventory (replaces
+          legacy ``carried_items`` per PROJ-431 Phase 1f; legacy
+          property + test shim deleted in PROJ-436 Phase 9)
+        - ``component_toggles``, ``activation_states``, ``components``
+        - ``current_hp``, ``experience``, ``kills``, ``battles_survived``
+
+    **Status flags**:
+
+        - ``is_alive``, ``is_derelict``, ``is_operational``,
+          ``design_role`` / ``role_override``
+
+    **Cached / DI slots** (not durable state):
+
+        - ``_cached_stats``  — invalidated on damage / repair / DI changes
+        - ``_registries``    — injected via ``set_registries``
+
+    **Delegate manager slots** (PROJ-425 Phase 4 canonical names):
+
+        - ``_resource_mgr`` (``ShipConsumableManager``)
+        - ``_cargo_mgr`` (``ShipCargoManager``)
+        - ``_display_fmt`` (``ShipDisplayFormatter``)
+        - ``_bridge`` (``ShipInstanceBridge``)
+
+    **Protocol-alias properties** (``IShipInstance`` compliance, PROJ-193):
+
+        - ``design_name``, ``hull_class``, ``ship_name``, ``serial_number``,
+          ``effective_role``
+
+    **Retained-shim entry points** (explicitly kept, NOT to be removed
+    without the 910-caller sweep — PROJ-425 Phase 5d/5e):
+
+        - **Serializer shims**: ``to_dict``, ``from_dict``, ``to_json``,
+          ``from_json``, ``clone``  (~18 callers)
+        - **Bridge shims**: ``to_ship``, ``update_from_ship``  (~10
+          callers)
+        - **Resource-manager shims**: ``consume_resource``,
+          ``get_resource_capacity``, ``get_current_resource``,
+          ``get_all_resource_costs_per_hex``,
+          ``get_all_resource_costs_per_turn``, ``get_warp_resource_costs``,
+          ``resupply``
+        - **Write-service shims**: ``set_component_enabled``, ``repair``
+        - **Backward-compat property shims**: ``consumable_levels`` /
+          ``cargo_contents`` (post-Phase-3f read view); ``carried_items``
+          removed in PROJ-436 Phase 9
+        - **Legacy-kwargs constructor wrapper**:
+          ``_ship_instance_init_with_legacy_kwargs`` at module scope —
+          retained per PROJ-443 Phase 5b after 18-file audit
     """
 
     instance_id: str  # Unique across game

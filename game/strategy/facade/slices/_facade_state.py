@@ -44,6 +44,20 @@ class FacadeSessionState:
     attributes (with a leading underscore) so slice code reads natural,
     even though the composer's @property forwarders are what tests touch
     when they assign `facade._planet_index = {...}`.
+
+    **Intentional performance boundary** (PROJ-438 Phase 2 — pinned by
+    ``tests/unit/strategy/engine/test_game_session_projection_boundary.py
+    ::TestFacadeCacheHolderIsDocumentedPerformanceBoundary``):
+
+    This cache holder is NOT compensation debt for a missing query model;
+    it is a kept-by-design performance boundary. The per-turn caches
+    (``planet_index``, ``all_stars_cache``, ``fleets_by_hex_cache``, plus
+    the per-empire caches added by PROJ-411) cut quadratic UI work to
+    linear on hot paths like ``planet_list_window`` and
+    ``fleet_report_ctrl``. ``invalidate_all`` clears every cache at each
+    turn boundary, so freshness is bounded by one turn. Do not remove or
+    inline these caches without an equivalent or better performance
+    boundary in place.
     """
 
     def __init__(self, session: "GameSession") -> None:

@@ -93,7 +93,11 @@ class RecoverSatellitesOrderHandler(BaseOrderHandler):
         issuer: IIssuerAdapter,
         order_owner: Any,
         empire: "Empire",
+        galaxy: Any = None,
+        registries: Any = None,
     ) -> OrderExecutionResult:
+        # PROJ-438 Phase 6: unified 5-kwarg signature (see RecoverFighters).
+        del galaxy, registries
         order = order_owner.get_current_order()
         if not order or order.type != OrderType.RECOVER_SATELLITES:
             return OrderExecutionResult(

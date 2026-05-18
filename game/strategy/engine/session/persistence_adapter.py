@@ -89,9 +89,11 @@ class SessionPersistenceAdapter:
         # Lazy imports avoid top-level cycles with game_session.py.
         from game.strategy.data.empire import Empire
         from game.strategy.data.galaxy import Galaxy
-        from game.strategy.data.order_types import OrderType
         from game.strategy.engine.game_session import GameSession
         from game.strategy.engine.session.bootstrap import SessionBootstrap
+        from game.strategy.engine.session.graph_restoration import (
+            restore_graph_wiring,
+        )
 
         # Restore config with context on error.
         try:
@@ -168,33 +170,10 @@ class SessionPersistenceAdapter:
         # Human player IDs — preserve the existing [0, 1] fallback exactly.
         human_player_ids = data.get("human_player_ids", [0, 1])
 
-        # PROJ-219: galaxy back-references for auto fleet registration.
-        for empire in empires:
-            empire.set_galaxy(galaxy)
-
-        # PROJ-219: deserialised fleets bypass add_fleet(); register
-        # explicitly with galaxy for O(1) lookup.
-        for empire in empires:
-            for fleet in empire.fleets:
-                galaxy.register_fleet(fleet)
-
-        # PROJ-207: fleet orders targeting other fleets/planets are stored
-        # as marker dicts during deserialisation; resolve them to live
-        # object references now that everything is loaded.
-        for empire in empires:
-            for fleet in empire.fleets:
-                fleet.resolve_order_references(galaxy, empires)
-
-        # PROJ-222: rebuild pursuer tracker from resolved order references.
-        for empire in empires:
-            for fleet in empire.fleets:
-                for order in fleet.orders:
-                    if order.type in (
-                        OrderType.MOVE_TO_FLEET,
-                        OrderType.JOIN_FLEET,
-                    ):
-                        if hasattr(order.target, "pursuer_tracker"):
-                            order.target.pursuer_tracker.add_pursuer(fleet)
+        # PROJ-438 Phase 1: four canonical post-deserialize wiring steps
+        # (galaxy back-refs, fleet registration, order-target resolve,
+        # pursuer-tracker rebuild). Shared with TurnStateSnapshot.restore.
+        restore_graph_wiring(galaxy, empires)
 
         # PROJ-427 Phase 2: build per-empire DesignCatalog map now that
         # empires are restored. Catalogs are populated from each
@@ -203,6 +182,16 @@ class SessionPersistenceAdapter:
         # wrapped via dataclasses.replace so the anti-drift contract
         # (test_init_and_from_dict_use_identical_service_classes) sees
         # identical shape between fresh and loaded sessions.
+        #
+        # PROJ-438 Phase 1 Task 1.3 — INTENTIONAL ASYMMETRY: this block
+        # runs on the save-load path ONLY. TurnStateSnapshot.restore()
+        # deliberately does not rebuild the catalog map because a
+        # rollback never crosses a process boundary; the in-memory map
+        # built at session start (or refreshed at the last save-load)
+        # is still valid through a turn rollback. Pinned by
+        # test_restore_path_parity.py::test_documented_design_catalog_
+        # asymmetry. Do not collapse this block into the shared
+        # graph-restoration collaborator without changing that test.
         from dataclasses import replace as _dc_replace
         from game.strategy.systems.design_catalog import DesignCatalog
         from game.strategy.systems.design_repository import DesignRepository

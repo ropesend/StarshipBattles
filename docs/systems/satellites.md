@@ -1,13 +1,16 @@
 # Satellites System
 
-> **Last verified:** 2026-05-17 — PROJ-FMS-D end-to-end satellite
-> system shipped (completing the Fighters / Mines / Satellites
-> sequence); Round 4 QA pass re-architected the system:
-> `satellite_bay_small/medium/large` consolidated to single
-> `satellite_bay` scaled by `simple_size_mount`; `satellite_launch_bay`
-> now collocates `RecoverSatellites`; tactical launch rewritten from
-> count-per-cycle/cooldown to mass-tons/sec budget; planet-issued
-> launch/recovery first-class via `IIssuerAdapter` (Pattern #40).
+> **Last verified:** 2026-05-18 — PROJ-436 Phase 10 doc refresh:
+> lifecycle map now points at the typed `ShipInstance.bay_inventory.bay[*]`
+> slot (Phase 9 deleted the legacy `carried_items` projection).
+> Earlier (2026-05-17): PROJ-FMS-D end-to-end satellite system shipped
+> (completing the Fighters / Mines / Satellites sequence); Round 4 QA
+> pass re-architected the system: `satellite_bay_small/medium/large`
+> consolidated to single `satellite_bay` scaled by `simple_size_mount`;
+> `satellite_launch_bay` now collocates `RecoverSatellites`; tactical
+> launch rewritten from count-per-cycle/cooldown to mass-tons/sec
+> budget; planet-issued launch/recovery first-class via
+> `IIssuerAdapter` (Pattern #40).
 
 End-to-end satellite lifecycle: design → bay → strategic launch →
 tactical combat (stationary AI) → strategic recovery, with mid-battle
@@ -24,8 +27,9 @@ this doc is the runtime reference.
 Workshop / Build queue
         |
         v  (Satellite design as a CarriedVehicle in the carrier's bay)
-ShipInstance.carried_items[*]  ← VehicleBayAbility caps total mass + allowed_types filter
-        |
+ShipInstance.bay_inventory.bay[*]  ← VehicleBayAbility caps total mass + allowed_types filter
+        |                            (PROJ-436 Phase 9 deleted the legacy
+        |                             `carried_items` projection)
         v  IssueLaunchSatellitesCommand → OrderType.LAUNCH_SATELLITES
 LaunchSatellitesCommandHandler
         | ability gate: carrier must mount StrategicSatelliteLaunchAbility

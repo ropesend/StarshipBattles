@@ -1,6 +1,6 @@
 # Strategy Layer System
 
-> **Last verified:** 2026-05-12 — issue #25: defeated players skip rotation; one-shot defeat modal composes with the issue #9 turn-start helper
+> **Last verified:** 2026-05-18 — PROJ-436 Phase 10 doc refresh: minefield-resolver storage indirection note updated (`ship.bay_inventory.bay` typed slot is the canonical write surface; `ship.carried_items` shim deleted in Phase 9). Earlier: issue #25 — defeated players skip rotation; one-shot defeat modal composes with the issue #9 turn-start helper.
 
 System documentation for the turn-based strategy layer.
 
@@ -206,7 +206,7 @@ Registered command families:
 | Fleet actions | `IssueColonizeCommand`, `QueueColonizeMissionCommand`, `IssueTransferCommand`, superweapon commands |
 | Construction | `IssueBuildOrderCommand`, `RemoveBuildOrderCommand`, `AddToConstructionQueueCommand`, `RemoveFromConstructionQueueCommand`, `ReorderConstructionQueueCommand` |
 | Fleet structure | `SplitFleetCommand` |
-| Planet orders | `IssuePlanetOrderCommand`, `ClearPlanetOrdersCommand`, `DeletePlanetOrderCommand`, `SetAtmosphereTargetCommand` |
+| Planet orders | `ActivatePlanetAbilityCommand`, `DeactivatePlanetAbilityCommand` (PROJ-438 Phase 5), `ClearPlanetOrdersCommand`, `DeletePlanetOrderCommand`, `SetAtmosphereTargetCommand` |
 
 Shared helper: `add_move_order_if_needed(session, fleet, target_hex, start_hex=None)` chains a MOVE before follow-up actions when required.
 
@@ -386,8 +386,10 @@ Combat / mine integration:
   `StrategyBattleAssembly.extensions`.
 - `MovementPhaseCollaborator.resolve_after` runs minefield
   resolution against `empire.deployed_groups_of(MineGroup)`; the
-  resolver consumes `mine_group.mines` directly (no
-  `ship.carried_items` indirection).
+  resolver consumes `mine_group.mines` directly (no indirection
+  through the typed `ship.bay_inventory.bay` slot, and certainly
+  none through the deleted `ship.carried_items` shim — PROJ-436
+  Phase 9).
 - `fighter_reboard.apply_reboard` overflow mints typed
   `FighterWing` / `SatelliteConstellation` on
   `empire.deployed_groups` (matching the CarriedVehicle

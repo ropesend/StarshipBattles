@@ -290,30 +290,63 @@
     "phase_10": {
       "depends_on": ["phase_9"],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
+      "phase_base_sha": "09c912d25",
       "phase_branch": "main",
       "phase_head_sha": null,
       "planned_files": [
         "docs/systems/resource_system.md",
         "docs/systems/production_system.md",
         "docs/systems/strategy_layer.md",
+        "docs/systems/satellites.md",
         "docs/01_ARCHITECTURE.md",
-        "docs/02_PATTERNS.md"
+        "docs/02_PATTERNS.md",
+        "Projects/active_projects/PROJ-436/plan.md",
+        "Projects/active_projects/PROJ-436/decisions.md",
+        "Projects/active_projects/PROJ-436/phase_10_checklist.md",
+        "Projects/active_projects/PROJ-436/phase_state.json"
       ],
       "review_dispatch_failed": false,
       "review_mode": "lightweight",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_11": {
       "depends_on": ["phase_10"],
       "merged_into_project_at_sha": null,
+      "phase_base_sha": "622e63055",
+      "phase_branch": "main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "docs/02_PATTERNS.md",
+        "Projects/active_projects/PROJ-436/decisions.md",
+        "Projects/active_projects/PROJ-436/phase_11_checklist.md",
+        "Projects/active_projects/PROJ-436/phase_12_checklist.md",
+        "Projects/active_projects/PROJ-436/phase_state.json",
+        "Projects/active_projects/PROJ-436/plan.md"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "complete",
+      "verifying_review_id": null
+    },
+    "phase_12": {
+      "depends_on": ["phase_11"],
+      "merged_into_project_at_sha": null,
       "phase_base_sha": null,
       "phase_branch": "main",
       "phase_head_sha": null,
-      "planned_files": [],
+      "planned_files": [
+        "game/strategy/engine/production_engine.py",
+        "tests/integration/test_production_engine_fractional_fleet_cost.py",
+        "Projects/active_projects/PROJ-436/decisions.md",
+        "Projects/active_projects/PROJ-436/phase_12_checklist.md",
+        "Projects/active_projects/PROJ-436/phase_state.json",
+        "Projects/active_projects/PROJ-436/plan.md"
+      ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
       "review_request_id": null,
