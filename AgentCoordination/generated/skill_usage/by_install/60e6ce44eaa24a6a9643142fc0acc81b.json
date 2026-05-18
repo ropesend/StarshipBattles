@@ -4,17 +4,17 @@
   "skills": {
     "claude-consult": {
       "agents": {
-        "claude": 1
+        "claude": 2
       },
-      "count": 1,
-      "last_used": "2026-05-18T15:38:04Z"
+      "count": 2,
+      "last_used": "2026-05-18T17:44:58Z"
     },
     "codex-starship-consult-respond": {
       "agents": {
-        "codex": 1
+        "codex": 3
       },
-      "count": 1,
-      "last_used": "2026-05-18T15:40:55Z"
+      "count": 3,
+      "last_used": "2026-05-18T18:15:23Z"
     }
   }
 }

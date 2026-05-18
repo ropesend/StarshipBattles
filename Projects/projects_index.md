@@ -4,6 +4,10 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-447 | Post-refactor residue: Simulation + AI + Research + LowLevelEngine + Docs (Bucket D supplemental) | Planning | 2026-05-18 | 2026-05-18 |
+| PROJ-446 | Post-refactor residue: UI + Core + Tests layer (Bucket C) | Planning | 2026-05-18 | 2026-05-18 |
+| PROJ-445 | Post-refactor residue: Engine + Services layer (Bucket B) | Planning | 2026-05-18 | 2026-05-18 |
+| PROJ-444 | Post-refactor residue: Data + Facade layer (Bucket A) | Planning | 2026-05-18 | 2026-05-18 |
 | PROJ-443 | Pytest norecursedirs Fix and Hidden-Test Triage | Planning | 2026-05-17 | 2026-05-17 |
 | PROJ-442 | Seam Retirement and Residue Burn-down | Planning | 2026-05-17 | 2026-05-17 |
 | PROJ-441 | Ambient Defaults Containment | Planning | 2026-05-17 | 2026-05-17 |
