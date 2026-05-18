@@ -36,12 +36,18 @@ class ResourceDefinition:
         description: Human-readable description
         display_group: Optional UI grouping hint (e.g., "planetary", "operational")
         has_quality: Whether planet deposits of this resource track quality
+        mass_per_unit: Mass in tons of one unit of this resource. Drives
+            the unified Container substrate (PROJ-436). Defaults to 1.0
+            for backward compat with in-memory construction; the
+            canonical catalog at `data/resources.json` overrides per
+            resource (e.g. metals 0.01, fuel 0.0001, energy 1.0).
     """
     id: str
     name: str
     description: str = ""
     display_group: str = ""
     has_quality: bool = False
+    mass_per_unit: float = 1.0
 
 
 class ResourceCatalog:
@@ -128,6 +134,7 @@ class ResourceCatalog:
                 description=entry.get('description', ''),
                 display_group=entry.get('display_group', ''),
                 has_quality=entry.get('has_quality', False),
+                mass_per_unit=float(entry.get('mass_per_unit', 1.0)),
             )
         return cls(definitions)
 
@@ -150,6 +157,18 @@ class ResourceCatalog:
     def by_display_group(self, group: str) -> List[ResourceDefinition]:
         """Return all resources belonging to a display group."""
         return [d for d in self._definitions.values() if d.display_group == group]
+
+    def get_mass_per_unit(self, resource_id: str) -> float:
+        """Mass in tons of one unit of `resource_id`.
+
+        Raises:
+            KeyError: when `resource_id` is not in the catalog. Fail-fast
+                per PROJ-436 Phase 0: silent default would mask data drift.
+        """
+        defn = self._definitions.get(resource_id)
+        if defn is None:
+            raise KeyError(f"Unknown resource id: {resource_id!r}")
+        return defn.mass_per_unit
 
 
 # =============================================================================

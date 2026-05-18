@@ -15,7 +15,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Container substrate + design decisions | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
+| 0. Container substrate + design decisions | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Component ability convergence (`Container` parser) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. `ShipInstance.bay_inventory` widening to full Container | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. `ShipInstance.cargo_contents` + `consumable_levels` migration | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
@@ -29,11 +29,11 @@
 | 11. Codex consult + verified-finding remediation | Not Started | [phase_11_checklist.md](phase_11_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-17
-**Active Phase:** Planning (charter under review with Codex)
-**Last Action:** Project scaffold created via `python Projects/scripts/create_project.py "Unified Storage Substrate and Container Unification"`. Plan / manifest / decisions / design drafted from converged charter at `AgentCoordination/Scratchpad/Discussion/20260517T230029Z_post-435-project-creation/plans/post_435_project_set_r001.md`.
-**Next Action:** Codex review of the created charter files. Iterate to consensus before any phase begins.
-**Blockers:** None — awaiting charter review.
+**Last Updated:** 2026-05-18
+**Active Phase:** Phase 1 (Container ability parser)
+**Last Action:** Phase 0 COMPLETE. Landed substrate (`Container`, `Containable` variants, `ContainerPolicy`, `ContainerEntry`, `AddResult`, `RemoveResult`), extended `ResourceDefinition` with `mass_per_unit` field and `ResourceCatalog.get_mass_per_unit()` accessor, extended `data/resources.json` with `mass_per_unit` on all 8 entries. 102 focused tests; 21151/21151 sharded green (+19 new vs 21132 baseline; 0 regressions). Phase 0 D1/D2/D3 deferred decisions resolved with defaults documented in decisions.md.
+**Next Action:** Phase 1 RED — `tests/unit/simulation/components/abilities/test_container_ability.py` parser parity tests; then GREEN compile the three legacy abilities (`ResourceStorage`, `CargoStorage`, `VehicleBay`) to `Container` internally.
+**Blockers:** None.
 
 ## Overview
 Replace the post-435 fragmented storage model with one mass-based `Container` abstraction shared across resources, constructed items, and population. Today three separate component abilities (`ResourceStorage`, `CargoStorage`, `VehicleBay`) plus eight entity-level storage fields (`Planet.stockpile` / `max_stockpile` / `staging_yard`, `ShipInstance.cargo_contents` / `consumable_levels` / `bay_inventory`, `Empire._fleet_resource_pool` / `resource_pool`) plus a hardcoded `TransferValidator.VALID_CARGO_TYPES` whitelist plus `ProductionEngine.context_type` branching all encode the same domain concept three different ways. The redesign collapses them into one `Container(capacity_mass, policy, resources, items, population)` with three internal slices, mass-based capacity, and policy-driven content type filtering.

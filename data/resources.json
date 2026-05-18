@@ -5,56 +5,64 @@
       "name": "Metals",
       "description": "Refined metallic ores for structural construction.",
       "display_group": "planetary",
-      "has_quality": true
+      "has_quality": true,
+      "mass_per_unit": 0.01
     },
     {
       "id": "organics",
       "name": "Organics",
       "description": "Biological compounds for advanced materials.",
       "display_group": "planetary",
-      "has_quality": true
+      "has_quality": true,
+      "mass_per_unit": 0.01
     },
     {
       "id": "vapors",
       "name": "Vapors",
       "description": "Volatile gases for chemical processes.",
       "display_group": "planetary",
-      "has_quality": true
+      "has_quality": true,
+      "mass_per_unit": 0.001
     },
     {
       "id": "radioactives",
       "name": "Radioactives",
       "description": "Fissile and radioactive materials for power and weapons.",
       "display_group": "planetary",
-      "has_quality": true
+      "has_quality": true,
+      "mass_per_unit": 0.005
     },
     {
       "id": "exotics",
       "name": "Exotics",
       "description": "Rare exotic matter for advanced technology.",
       "display_group": "planetary",
-      "has_quality": true
+      "has_quality": true,
+      "mass_per_unit": 0.001
     },
     {
       "id": "fuel",
       "name": "Fuel",
       "description": "Powers ship engines and thrusters for movement and maneuvering.",
       "display_group": "operational",
-      "has_quality": false
+      "has_quality": false,
+      "mass_per_unit": 0.0001
     },
     {
       "id": "energy",
       "name": "Energy",
       "description": "Powers weapons, shields, and ship systems.",
       "display_group": "operational",
-      "has_quality": false
+      "has_quality": false,
+      "mass_per_unit": 1.0
     },
     {
       "id": "ammo",
       "name": "Ammunition",
       "description": "Projectiles and missiles for kinetic and ballistic weapons.",
       "display_group": "operational",
-      "has_quality": false
+      "has_quality": false,
+      "mass_per_unit": 0.001
     }
   ]
 }
