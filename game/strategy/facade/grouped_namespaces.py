@@ -29,6 +29,7 @@ from game.strategy.facade.dto import (
     BuildQueueSourceDTO,
     ColonyDemographicView,
     ColonySummary,
+    ContainerSnapshotInfo,
     EmpireInfo,
     FleetInfo,
     FleetSummary,
@@ -147,6 +148,12 @@ class FacadeFleetQueries:
         """Get remaining colony pods for a fleet."""
         return self._slice.get_fleet_remaining_pods(fleet_id)
 
+    def get_containers(
+        self, fleet_id: int,
+    ) -> Tuple[ContainerSnapshotInfo, ...]:
+        """Container snapshots for each ship in the fleet (PROJ-437 Phase 1a)."""
+        return self._slice.get_fleet_containers(fleet_id)
+
 
 # ---------------------------------------------------------------------------
 # Planets
@@ -168,6 +175,13 @@ class FacadePlanetQueries:
     def at_hex(self, hex_coord: HexCoord) -> List[PlanetInfo]:
         """Get planets whose global position matches the given hex."""
         return self._slice.get_planets_at_hex(hex_coord)
+
+    def get_containers(
+        self, planet_id: int,
+    ) -> Tuple[ContainerSnapshotInfo, ...]:
+        """Container snapshots for the planet's stockpile + staging yard
+        (PROJ-437 Phase 1a)."""
+        return self._slice.get_planet_containers(planet_id)
 
 
 # ---------------------------------------------------------------------------

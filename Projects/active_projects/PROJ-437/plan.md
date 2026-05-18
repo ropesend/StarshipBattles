@@ -16,7 +16,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 0. Read PROJ-436 Container API; survey current transfer UI | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. Source/destination container browsing against unified API | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Source/destination container browsing against unified API | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Slider quantity + mass-remaining preview against `Container.add()` validation | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Mixed content display (resources/items/population) through one screen model | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Delete `transfer_view_model.RESOURCE_TYPES` consumers; final UI cutover | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -24,9 +24,9 @@
 
 ## Current State
 **Last Updated:** 2026-05-18
-**Active Phase:** Phase 0 complete — handing off to Phase 1.
-**Last Action:** Phase 0 migration map written at [findings/transfer_ui_migration_map.md](findings/transfer_ui_migration_map.md). OD1/OD2/OD3 resolved at defaults (a/a/a). Surfaced manifest correction (`fleet_data_source.py` is the wrong Phase 1 target — actual target is `transfer_controller.py::collect_sources_and_targets` + a new DTO/facade `get_containers(id)` accessor). Two tangential hardcoded-resource-tuple leaks flagged (`fleet_dto.py:217-226`, `builder/stat_rows_dynamic.py:179,252`) for a future TD ticket — out of PROJ-437 scope.
-**Next Action:** Phase 1 start — recommended split: 1a substrate (additive `ContainerRef` + `ContainerSnapshotInfo` + parallel `facade.*.get_containers(id)` accessor) → 1b cutover (`transfer_view_model.get_amounts` / `build_row_data` + `transfer_controller.fetch_dto` / `collect_sources_and_targets`). Phase 1 entrypoint must advance `phase_state.json.project_baseline_sha` from `4177fef36…` to the current `main` HEAD and re-record the sharded baseline (PROJ-443 Phase 4 made 1953 additional `tests/unit/strategy/data/` tests visible).
+**Active Phase:** Phase 1 complete — moving to Phase 2.
+**Last Action:** Phase 1 complete in two sub-phase commits. **1a (`5356222ff`)** landed the additive `ContainerSnapshotInfo` DTO + `facade.{fleets,planets}.get_containers(id)` accessors (10 new tests). **1b** wired the controller (`collect_sources_and_targets` now attaches `containers: tuple[ContainerSnapshotInfo, ...]` per entry — additive, browse-only) and added the `TransferViewModel.get_amounts_from_containers(snapshots)` parity reader (7 new tests). Two pre-existing `test_transfer_controller.py` exact-dict-equality assertions were relaxed to subset checks for the additive field. Legacy DTO-driven row-builder path remains the source-of-truth for `build_row_data` through Phase 3 — Phase 1 is browse-only by spec.
+**Next Action:** Phase 2 — wire `Container.add()` validation into the slider/arrow/Max controls; add mass-remaining preview as transfers stage; surface policy-rejection messaging inline. Per OD3 (a) preview recomputes per-input. Re-audit blast radius at Phase 2 start; likely single commit (read-only addition + a couple of styling tweaks per Phase 0 finding §6).
 **Blockers:** None. PROJ-436 Phase 7 stable; AST guards green. Ross to review the Phase 0 finding about the **"Ammo" → "Ammunition"** UI label change ([findings/transfer_ui_migration_map.md §7](findings/transfer_ui_migration_map.md#7-heads-up-to-user-ross--ui-label-change-pending-review)) before Phase 5 ship — a one-line `data/resources.json` edit reverts it.
 
 ## Overview

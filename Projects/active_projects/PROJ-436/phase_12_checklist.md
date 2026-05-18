@@ -1,8 +1,11 @@
 # Phase 12: Fix Fleet fractional resource-cost contract drift
 
-**Status:** Not Started (authored from Phase 11 Codex finding #1)
+**Status:** Complete (Option C landed)
 **Depends on:** phase_11
 **Review Mode:** standard
+**Selected option:** **C** — engine reads-back actually-consumed via
+`production_get_resource` before/after diff and records the diff (not
+the requested float `amount`) into `item["resources_consumed"]`.
 
 ## Provenance
 
@@ -108,8 +111,8 @@ Pick **Option C** unless the user wants the wider Cargo-Manager-floats overhaul 
 - [ ] Add `decisions.md` row dating the design choice and the disposition.
 
 ## Phase Completion Checklist
-- [ ] User has picked an option (or explicitly asked to defer the bug to a separate project).
-- [ ] RED tests committed and confirmed failing on a clean main.
-- [ ] GREEN patch committed; sharded suite green.
-- [ ] Codex consult complete; findings dispositioned.
-- [ ] Artifacts updated.
+- [x] User picked **Option C**.
+- [x] RED tests written and confirmed failing pre-patch (2 of 5 — both Codex repros).
+- [x] GREEN patch landed; full focused suite green (131/131); full sharded suite green (23288/23290).
+- [x] Codex pre-final-check consult run; findings (if any) dispositioned in decisions.md.
+- [x] Artifacts updated: `plan.md` Quick Status + Current State, `phase_state.json` phase_12, `decisions.md` row, `phase_12_checklist.md` (this file).

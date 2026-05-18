@@ -29,7 +29,15 @@ def test_collect_sources_includes_source_fleet_when_facade_omits_it() -> None:
 
     sources = controller.collect_sources_and_targets(source_fleet, (1, 2))
 
-    assert sources == [{"label": "Detached Fleet", "type": "fleet", "id": 7}]
+    assert len(sources) == 1
+    entry = sources[0]
+    assert entry["label"] == "Detached Fleet"
+    assert entry["type"] == "fleet"
+    assert entry["id"] == 7
+    # PROJ-437 Phase 1b: each entry carries its Container snapshots.
+    # MagicMock returns a Mock by default; the contract here is just
+    # that the field is populated by the facade call.
+    assert "containers" in entry
 
 
 def test_collect_sources_checks_projected_position_when_primary_hex_has_no_planets(
@@ -47,7 +55,12 @@ def test_collect_sources_checks_projected_position_when_primary_hex_has_no_plane
 
     sources = controller.collect_sources_and_targets(source_fleet, (1, 2))
 
-    assert sources[-1] == {"label": "Colony: Alpha", "type": "colony", "id": 3}
+    entry = sources[-1]
+    assert entry["label"] == "Colony: Alpha"
+    assert entry["type"] == "colony"
+    assert entry["id"] == 3
+    # PROJ-437 Phase 1b: per-entry container snapshots.
+    assert "containers" in entry
     assert facade.planets.at_hex.call_args_list[1].args == ((9, 9),)
 
 

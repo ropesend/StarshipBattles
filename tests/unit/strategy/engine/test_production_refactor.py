@@ -31,10 +31,19 @@ class TestProductionEngineRefactor:
         # PROJ-436 Phase 8: engine routes through
         # ``IProductionResourceSource``; MagicMock(spec=Planet)
         # auto-creates Mocks for ``production_has_resources`` /
-        # ``production_get_resource`` / ``production_consume_resource``
-        # which is sufficient for these queue-iteration tests.
+        # ``production_get_resource`` / ``production_consume_resource``.
+        # PROJ-436 Phase 12 (Option C): simulate a well-resourced
+        # source so the ``_apply_resource_consumption`` diff math
+        # equals the requested amount (queue iteration tests behave
+        # as pre-Phase-12).
         colony.construction_queue = []
         colony.facilities = []
+        _balance = {"_v": 1e12}
+        colony.production_get_resource.side_effect = lambda _res: _balance["_v"]
+        def _consume(_res, amount):
+            _balance["_v"] -= amount
+            return True
+        colony.production_consume_resource.side_effect = _consume
         return colony
 
     def test_dynamic_consumption_limiting_resource(self, engine, mock_empire, mock_colony):
@@ -158,9 +167,17 @@ class TestProductionEngineEdgeCases:
         colony = MagicMock(spec=Planet)
         # PROJ-436 Phase 8: engine routes through
         # ``IProductionResourceSource`` protocol — see sibling fixture
-        # docstring above.
+        # docstring above. PROJ-436 Phase 12 (Option C): simulate a
+        # well-resourced source so the diff math equals the requested
+        # amount.
         colony.construction_queue = []
         colony.facilities = []
+        _balance = {"_v": 1e12}
+        colony.production_get_resource.side_effect = lambda _res: _balance["_v"]
+        def _consume(_res, amount):
+            _balance["_v"] -= amount
+            return True
+        colony.production_consume_resource.side_effect = _consume
         return colony
 
     def test_item_without_total_cost_is_skipped_with_warning(

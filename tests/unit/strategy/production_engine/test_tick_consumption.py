@@ -542,8 +542,18 @@ class TestMidTurnCompletion:
         # PROJ-436 Phase 8: engine consumes through
         # ``IProductionResourceSource``; on real Fleet these delegate
         # to ``has_cargo_resources`` / ``consume_cargo_resource``.
+        # PROJ-436 Phase 12 (Option C): simulate a well-resourced fleet
+        # so the engine's before/after diff math equals the requested
+        # amount; queue/spawn assertions behave as pre-Phase-12.
+        _bal = {"_v": 1e12}
+        def _get(_r):
+            return _bal["_v"]
+        def _consume(_r, amount):
+            _bal["_v"] -= amount
+            return True
         fleet.production_has_resources.return_value = True
-        fleet.production_consume_resource.return_value = True
+        fleet.production_consume_resource.side_effect = _consume
+        fleet.production_get_resource.side_effect = _get
 
         empire.fleets = [fleet]
 

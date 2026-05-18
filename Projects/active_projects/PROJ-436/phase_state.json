@@ -336,12 +336,16 @@
     "phase_12": {
       "depends_on": ["phase_11"],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
+      "phase_base_sha": "9f822a38a",
       "phase_branch": "main",
       "phase_head_sha": null,
       "planned_files": [
         "game/strategy/engine/production_engine.py",
         "tests/integration/test_production_engine_fractional_fleet_cost.py",
+        "tests/unit/strategy/engine/test_production_engine_consumption.py",
+        "tests/unit/strategy/engine/test_production_engine_queue.py",
+        "tests/unit/strategy/engine/test_production_refactor.py",
+        "tests/unit/strategy/production_engine/test_tick_consumption.py",
         "Projects/active_projects/PROJ-436/decisions.md",
         "Projects/active_projects/PROJ-436/phase_12_checklist.md",
         "Projects/active_projects/PROJ-436/phase_state.json",
@@ -351,7 +355,7 @@
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     }
   },
