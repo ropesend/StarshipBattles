@@ -1,0 +1,13 @@
+{
+  "install_id": "c7b4677a628a489f91c8a96c84608141",
+  "schema_version": 1,
+  "skills": {
+    "claude-consult": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-18T16:05:32Z"
+    }
+  }
+}

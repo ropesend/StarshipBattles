@@ -3,11 +3,13 @@ the Starship Battles repository at `c:\Dev\Starship Battles` on branch
 `main`.
 
 PROJ-437 is the sibling/subproject of PROJ-436 (Unified Storage Substrate
-and Container Unification). PROJ-436 Phase 7 has landed That phase deleted the
-hardcoded cargo-type whitelist and UI resource-list constants —
-the API surface PROJ-437 Phase 0 was waiting on is now stable.
-PROJ-436 Phases 8–9 are deferred to a separate branch by user
-direction; do NOT extend PROJ-437 into PROJ-436 territory.
+and Container Unification). PROJ-436 Phase 7 has landed — that phase deleted
+the hardcoded cargo-type whitelist and UI resource-list constants, so the
+API surface PROJ-437 builds on is stable. PROJ-437's only hard prerequisite
+is PROJ-436 Phase 7; do not gate this work on the status of any other
+PROJ-436 phase or any PROJ-438 phase, and do not extend PROJ-437 into
+PROJ-436 or PROJ-438 territory regardless of whether those projects are
+complete, in progress, or untouched.
 
 ---
 
@@ -151,23 +153,6 @@ If the user wants "Ammo" back, that's a one-line edit to
 
 ---
 
-# Pre-existing project-wide pytest config issue (NOT YOURS TO FIX)
-
-`pytest.ini` has `norecursedirs = ... data ...`. The `data`
-token matches any directory named `data` — including
-`tests/unit/strategy/data/` — so 1575 tests there are hidden
-from the canonical sharded suite. This is a pre-existing
-issue (predates PROJ-436). Your tests under
-`tests/unit/strategy/data/` will not move the sharded count,
-but that is FINE — the sharded gate still catches regressions
-outside `data/`. Use sharded as the canonical gate. Do NOT
-attempt to fix `norecursedirs`. If you want sanity-check on
-your own data/-directory tests, run
-`python -m pytest tests/unit/strategy/data/ -q -n 4`
-directly; that is acceptable.
-
----
-
 # Sub-phase template — when to use sub-phases vs single-cutover
 
 Mirror the PROJ-436 pattern:
@@ -194,13 +179,17 @@ final cutover commit of that phase.
 2.  **Every commit functional.** `python Tools/test_sharded/test_sharded.py`
     green at every commit boundary. Sharded suite is the canonical
     gate.
-3.  **No worktrees, work on `main`.** Per user standing preference.
+3.  **Work directly on `main`. No branches, no worktrees.** Per
+    user standing preference. Commit straight to `main` at every
+    sub-phase boundary — do not create feature branches, do not
+    open PRs, do not spin up worktrees.
 4.  **No save migration shims.** Old saves are disposable.
 5.  **Commit message convention:** `PROJ-437 Phase NX: <one-line>`
     + body + `Co-Authored-By: Claude Opus 4.7 (1M context)
     <noreply@anthropic.com>`. Use **explicit file paths** in
-    `git add` — there are dirty files from another project
-    (PROJ-438) in the tree that are NOT yours. NEVER `git add -A`.
+    `git add`; NEVER `git add -A`. Other projects may have
+    work-in-progress files in the tree at any time — only stage
+    files you touched for PROJ-437.
 6.  **Update artifacts each sub-phase:** `Projects/active_projects/PROJ-437/plan.md`
     Quick Status + Current State, `decisions.md` (new dated row
     per substantive choice), `phase_state.json` (status +
@@ -234,10 +223,10 @@ final cutover commit of that phase.
   `Container.accepts()` + `ResourceCatalog.has()` +
   `TransferValidator._is_known_cargo_type()`.
 - Don't extend scope to PROJ-436 Phase 8 (`ProductionEngine.context_type`
-  deletion) or Phase 9 (`_CarriedItemsProxy` deletion). User
-  runs those on separate branches later.
-- Don't `git add -A`. Explicit file paths only. There are
-  PROJ-438 dirty files in the tree that are NOT yours.
+  deletion) or Phase 9 (`_CarriedItemsProxy` deletion) — those are
+  PROJ-436 territory regardless of their current status.
+- Don't `git add -A`. Explicit file paths only — other projects
+  may have unrelated work-in-progress files in the tree.
 - Don't use `claude-discuss-start` for consults — use
   `claude-consult` (single round-trip).
 - Don't optimize `Empire.resource_pool` caching here (that's a
@@ -249,6 +238,41 @@ final cutover commit of that phase.
 - Don't touch any `tests/unit/strategy/data/` test files unless
   your own work creates them. Pre-existing 65 failing tests there
   are PROJ-431-flagged + are out-of-scope.
+
+---
+
+# Execution discipline — how far to push in one session
+
+Proceed continuously through phases until ONE of the following is true:
+
+1.  All PROJ-437 work is complete (Phase 5 Codex consult done,
+    verified remediation landed, sharded suite green, plan.md
+    Quick Status marked complete).
+2.  You have consumed ~80% of your context window. At that point,
+    stop at the next clean sub-phase boundary (commit landed,
+    sharded green, artifacts updated), write a concise handoff
+    note in `Projects/active_projects/PROJ-437/phase_state.json`
+    + `plan.md` Quick Status capturing exactly where to resume,
+    and return to the user.
+3.  You hit a question that genuinely blocks forward progress
+    AND cannot be deferred to a later phase. Defer aggressively:
+    if a decision only affects Phase N and you are in Phase M<N,
+    record it in `decisions.md` as an open question and keep
+    going. Only stop for the user when (a) the next required
+    action depends on the answer, AND (b) you cannot make
+    reasonable progress on any other parallel sub-task without it.
+
+Do NOT stop merely because you finished a phase, hit a checkpoint,
+or want acknowledgement. Do NOT stop to ask permission for choices
+already documented as implementer defaults in `decisions.md`. The
+Phase 0 OD1/OD2/OD3 defaults (a/a/a) are pre-authorized — confirm
+in writing and continue.
+
+If you encounter a UI label / visible-behavior change the user
+might want to see before it ships (the kind of thing flagged in
+the "Heads-up" section above), record it in `decisions.md` and
+the Report Back, but keep going — the user reviews at the next
+natural surface, not mid-run.
 
 ---
 
