@@ -339,11 +339,35 @@ class TransferDialog(StrategyModalWindow):
         self._build_grid()
 
     def _build_grid(self) -> None:
-        """Rebuild ``view_model.row_data`` from current source/target
-        DTOs, then ask the renderer to materialize the grid."""
-        source_obj = self._controller.fetch_dto(self.view_model.current_source)
-        target_obj = self._controller.fetch_dto(self.view_model.current_target)
-        self.view_model.build_row_data(source_obj, target_obj)
+        """Rebuild ``view_model.row_data`` from the current source/target
+        Container snapshots, then ask the renderer to materialize the grid.
+
+        PROJ-437 Phase 3b cutover. Reads Container snapshots off the
+        Phase-1b ``containers`` field attached by
+        ``collect_sources_and_targets``; the row builder walks
+        ``ContainerSnapshotInfo.entries`` directly via
+        :func:`game.ui.screens.transfer_container_rows.build_row_data_from_containers`
+        (the Phase-3a substrate). The legacy ``vm.build_row_data(source_obj,
+        target_obj)`` DTO path is dead code from this commit forward —
+        Phase 4 deletes it along with ``_build_pod_rows`` / ``get_amounts``
+        / ``all_pod_names`` and the dialog's back-compat property shims.
+        """
+        source_containers = (self.view_model.current_source or {}).get(
+            "containers", (),
+        )
+        target_containers = (self.view_model.current_target or {}).get(
+            "containers", (),
+        )
+        # MagicMock-friendly: in characterization tests the facade is a
+        # MagicMock and `get_containers(id)` returns a MagicMock too.
+        # MagicMock iterates as empty by default, so the row builder
+        # produces the canonical-8 zero-zero resource rows — same UX
+        # as the legacy DTO path with empty FleetInfo / PlanetInfo.
+        self.view_model.row_data = TransferViewModel.build_row_data_from_containers(
+            source_containers,
+            target_containers,
+            filter_empty=self.view_model.filter_empty,
+        )
         if self.grid_container is not None:
             self._renderer.build_grid(self)
         self._refresh_mass_preview()
