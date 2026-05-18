@@ -121,14 +121,17 @@ def make_colony_ship(name: str, owner_id: int, pod_type: str, registries=None) -
             }
         },
     )
-    # Load drop pod as carried item
-    ship.carried_items.append({
-        "vehicle_type": "drop_pod",
-        "design_id": f"{pod_type.lower()}_drop_pod",
-        "name": f"Drop Pod ({pod_type})",
-        "design_data": {"layers": {"CORE": []}},
-        "mass": 500,
-    })
+    # PROJ-436 Phase 9: typed DropPod into bay_inventory.pods.
+    from game.strategy.data.bay_inventory import DropPod
+    ship.bay_inventory.pods.append(DropPod(
+        design_id=f"{pod_type.lower()}_drop_pod",
+        design_data={"layers": {"CORE": []}},
+        mass=500.0,
+        payload={
+            "name": f"Drop Pod ({pod_type})",
+            "vehicle_type": "drop_pod",
+        },
+    ))
     if registries is not None:
         ship.set_registries(registries)
     return ship
@@ -295,9 +298,8 @@ class TestColonizeWithMatchingPod:
         assert combat_ship in fleet.ships
         assert len(fleet.ships) == 2
 
-        # Drop pod consumed from carried_items
-        drop_pods = [i for i in colony_ship.carried_items if i.get("vehicle_type") == "drop_pod"]
-        assert len(drop_pods) == 0
+        # PROJ-436 Phase 9: drop pod consumed from typed bay_inventory.pods.
+        assert len(colony_ship.bay_inventory.pods) == 0
 
         # Fleet still exists
         assert fleet in empire.fleets

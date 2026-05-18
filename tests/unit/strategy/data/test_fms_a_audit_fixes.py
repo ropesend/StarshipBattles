@@ -100,10 +100,15 @@ def _make_bay_ship_instance(fresh_registries) -> ShipInstance:
 class TestPodStorageBleedRegression:
     def test_pod_storage_used_ignores_vehicle_entries(self, fresh_registries):
         inst = _make_bay_ship_instance(fresh_registries)
-        # Two drop pods + three fighter CarriedVehicles in carried_items.
-        # Drop pods: untyped dicts with mass only.
-        inst.carried_items.append({"name": "pod_a", "mass": 7.0})
-        inst.carried_items.append({"name": "pod_b", "mass": 11.0})
+        # PROJ-436 Phase 9: two drop pods + three fighter CarriedVehicles
+        # land in their typed BayInventory slots directly.
+        from game.strategy.data.bay_inventory import DropPod
+        inst.bay_inventory.pods.append(DropPod(
+            design_id="pod_a", design_data={}, mass=7.0, payload={"name": "pod_a"},
+        ))
+        inst.bay_inventory.pods.append(DropPod(
+            design_id="pod_b", design_data={}, mass=11.0, payload={"name": "pod_b"},
+        ))
         for i in range(3):
             cv = CarriedVehicle(
                 design_id=f"fighter_{i}",
@@ -111,7 +116,7 @@ class TestPodStorageBleedRegression:
                 vehicle_type="fighter",
                 mass=25.0, current_hp=80,
             )
-            inst.carried_items.append(cv.to_dict())
+            inst.bay_inventory.bay.append(cv)
 
         # Drop-pod side sees only 7+11=18.
         assert inst._cargo_mgr.get_pod_storage_used() == pytest.approx(18.0)
@@ -120,7 +125,10 @@ class TestPodStorageBleedRegression:
 
     def test_bay_current_mass_is_zero_with_only_drop_pods(self, fresh_registries):
         inst = _make_bay_ship_instance(fresh_registries)
-        inst.carried_items.append({"name": "pod_x", "mass": 50.0})
+        from game.strategy.data.bay_inventory import DropPod
+        inst.bay_inventory.pods.append(DropPod(
+            design_id="pod_x", design_data={}, mass=50.0, payload={"name": "pod_x"},
+        ))
         assert inst.bay_current_mass == pytest.approx(0.0)
         assert inst._cargo_mgr.get_pod_storage_used() == pytest.approx(50.0)
 
@@ -188,10 +196,8 @@ class TestCarriedVehicleSerializerRoundtrip:
         assert by_id["qs_fighter"].design_data == cv_a.design_data
         assert by_id["qs_mine_small"].vehicle_type == "mine"
         assert by_id["qs_mine_small"].current_hp == 12
-        # Drop-pod entry survived too. PROJ-431 Phase 1f: pods live in
-        # the typed ``bay_inventory.pods`` slot, distinct from vehicles
-        # in ``.bay``; ``carried_items`` is the legacy projection. Probe
-        # the typed slot directly.
+        # Drop-pod entry survived too. PROJ-436 Phase 9: pods live in
+        # the typed ``bay_inventory.pods`` slot.
         assert any(
             pod.payload.get("name") == "pod_a" or pod.design_id == "pod_a"
             for pod in restored.bay_inventory.pods

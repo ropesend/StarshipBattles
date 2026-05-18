@@ -5,6 +5,7 @@ PROJ-12 Phase 3: TDD tests written before implementation.
 Tests order lifecycle management - advance, complete, cancel operations.
 """
 
+from game.strategy.data.bay_inventory import BayInventory, DropPod
 import pytest
 from unittest.mock import MagicMock, patch
 
@@ -167,7 +168,10 @@ class TestColonizeProcessing:
         """Create a mock ship with a drop pod in carried_items."""
         ship = MagicMock()
         ship.name = "Colony Ship"
-        ship.carried_items = [{"vehicle_type": "drop_pod", "design_id": "test_pod", "name": "Test Pod", "design_data": {"layers": {"CORE": []}}, "mass": 500}]
+        ship.bay_inventory = BayInventory(bay=[], pods=[DropPod(
+            design_id="test_pod", design_data={"layers": {"CORE": []}},
+            mass=500.0, payload={"name": "Test Pod", "vehicle_type": "drop_pod"},
+        )])
         return ship
 
     def test_process_colonize_success(
@@ -298,7 +302,10 @@ class TestEndTurnOrderProcessing:
         # Setup fleet with colony ship carrying drop pod
         mock_ship = MagicMock()
         mock_ship.name = "Colony Ship"
-        mock_ship.carried_items = [{"vehicle_type": "drop_pod", "design_id": "test_pod", "name": "Test Pod", "design_data": {"layers": {"CORE": []}}, "mass": 500}]
+        mock_ship.bay_inventory = BayInventory(bay=[], pods=[DropPod(
+            design_id="test_pod", design_data={"layers": {"CORE": []}},
+            mass=500.0, payload={"name": "Test Pod", "vehicle_type": "drop_pod"},
+        )])
         mock_fleet.ships = [mock_ship]
 
         component_registry = {}
@@ -458,7 +465,10 @@ class TestColonizeDropPodDeployment:
         """Create a mock ship with drop pod in carried_items."""
         ship = MagicMock()
         ship.name = "Colony Ship"
-        ship.carried_items = [{"vehicle_type": "drop_pod", "design_id": "test_pod", "name": "Test Pod", "design_data": {"layers": {"CORE": []}}, "mass": 500}]
+        ship.bay_inventory = BayInventory(bay=[], pods=[DropPod(
+            design_id="test_pod", design_data={"layers": {"CORE": []}},
+            mass=500.0, payload={"name": "Test Pod", "vehicle_type": "drop_pod"},
+        )])
         return ship
 
     @pytest.fixture
@@ -466,7 +476,7 @@ class TestColonizeDropPodDeployment:
         """Create a mock combat ship without drop pod."""
         ship = MagicMock()
         ship.name = "Combat Ship"
-        ship.carried_items = []
+        ship.bay_inventory = BayInventory(bay=[], pods=[])
         return ship
 
     @pytest.fixture

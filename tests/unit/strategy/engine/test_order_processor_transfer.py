@@ -381,12 +381,11 @@ def test_process_transfer_load_resource_caps_by_planet_stockpile():
 def test_load_pod_from_staging_yard_iterates_in_reverse():
     """Pod load iterates staging yard in reverse (LIFO) per design.md surprise #3.
 
-    PROJ-431 Phase 1d: ship side now reads ``bay_inventory.pods`` and
-    writes through ``set_bay_inventory(...)``. The legacy
-    ``carried_items`` list is mirrored by the test stub so the LIFO
-    invariant stays observable on the dict shape.
+    PROJ-436 Phase 9: ship side reads ``bay_inventory.pods`` and writes
+    through ``set_bay_inventory(...)``. The legacy ``carried_items``
+    mirror is gone; the LIFO invariant is observed on the typed slot.
     """
-    from game.strategy.data.bay_inventory import BayInventory, DropPod
+    from game.strategy.data.bay_inventory import BayInventory
 
     proc = OrderProcessor()
     fleet = _fleet()
@@ -395,20 +394,10 @@ def test_load_pod_from_staging_yard_iterates_in_reverse():
     ship.get_pod_storage_capacity = MagicMock(return_value=10)
     ship.get_pod_storage_used = MagicMock(return_value=0)
     ship.can_carry_pod = MagicMock(return_value=True)
-    ship.carried_items = []
     ship.bay_inventory = BayInventory(bay=[], pods=[])
 
     def _set_bay_inventory(bi):
         ship.bay_inventory = bi
-        ship.carried_items = []
-        for p in bi.pods:
-            entry = {
-                "design_id": p.design_id,
-                "design_data": p.design_data,
-                "mass": p.mass,
-            }
-            entry.update(p.payload)
-            ship.carried_items.append(entry)
     ship.set_bay_inventory = _set_bay_inventory
     fleet.ships = [ship]
 
@@ -426,8 +415,8 @@ def test_load_pod_from_staging_yard_iterates_in_reverse():
 
     assert loaded == 1
     # Reverse iteration: the LAST pod (PodC) was loaded first.
-    assert len(ship.carried_items) == 1
-    assert ship.carried_items[0]["name"] == "PodC"
+    assert len(ship.bay_inventory.pods) == 1
+    assert ship.bay_inventory.pods[0].payload["name"] == "PodC"
     assert planet.staging_yard == [pod_a, pod_b]
 
 
@@ -452,20 +441,10 @@ def test_unload_pod_to_staging_yard_returns_count_unloaded():
             },
         )
 
-    ship.carried_items = [pod_x, pod_y]
     ship.bay_inventory = BayInventory(bay=[], pods=[_pod(pod_x), _pod(pod_y)])
 
     def _set_bay_inventory(bi):
         ship.bay_inventory = bi
-        ship.carried_items = []
-        for p in bi.pods:
-            entry = {
-                "design_id": p.design_id,
-                "design_data": p.design_data,
-                "mass": p.mass,
-            }
-            entry.update(p.payload)
-            ship.carried_items.append(entry)
     ship.set_bay_inventory = _set_bay_inventory
     fleet.ships = [ship]
 
@@ -475,5 +454,5 @@ def test_unload_pod_to_staging_yard_returns_count_unloaded():
     count = proc._handler_registry.get(OrderType.TRANSFER)._dispatch_drop_pod_unload(fleet, planet, None, 2)
 
     assert count == 2
-    assert ship.carried_items == []
+    assert ship.bay_inventory.pods == []
     assert planet.add_to_staging_yard.call_count == 2

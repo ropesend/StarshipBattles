@@ -36,17 +36,15 @@ def _pod_dict_to_typed(d) -> DropPod:
 
 
 def _make_ship(can_carry=True, carried_items=None):
-    """PROJ-431 Phase 1d: wire both the legacy ``carried_items`` list
-    and the typed ``bay_inventory`` view so the migrated dispatch
-    branches work and legacy assertions on ``carried_items`` still hold
-    (modulo identity — the typed substrate round-trips DropPods through
-    ``to_dict`` so tests asserting ``is pod`` must use payload checks).
+    """PROJ-436 Phase 9: wire the typed ``bay_inventory.pods`` slot
+    from a list of legacy pod dicts. The legacy ``carried_items``
+    mirror is gone — production code reads the typed slot directly.
     """
     ship = MagicMock()
     ship.name = "Colony Ship"
-    ship.carried_items = list(carried_items or [])
+    seed = list(carried_items or [])
     ship.bay_inventory = BayInventory(
-        bay=[], pods=[_pod_dict_to_typed(p) for p in ship.carried_items]
+        bay=[], pods=[_pod_dict_to_typed(p) for p in seed]
     )
     ship.get_pod_storage_capacity = MagicMock(return_value=1000 if can_carry else 0)
     ship.get_pod_storage_used = MagicMock(return_value=0)
@@ -58,17 +56,6 @@ def _make_ship(can_carry=True, carried_items=None):
 
     def _set_bay_inventory(bi: BayInventory) -> None:
         ship.bay_inventory = bi
-        ship.carried_items = []
-        for cv in bi.bay:
-            ship.carried_items.append(cv.to_dict())
-        for p in bi.pods:
-            entry = {
-                "design_id": p.design_id,
-                "design_data": p.design_data,
-                "mass": p.mass,
-            }
-            entry.update(p.payload)
-            ship.carried_items.append(entry)
 
     ship.set_bay_inventory = _set_bay_inventory
     return ship
@@ -109,12 +96,12 @@ class TestLoadPodFromStagingYard:
         result = processor._dispatch_drop_pod_load(fleet, planet)
 
         assert result == 1
-        assert len(ship.carried_items) == 1
+        assert len(ship.bay_inventory.pods) == 1
         # PROJ-431 Phase 1d: pods round-trip through DropPod.to_dict on
         # the typed write-through path, so identity is not preserved.
         # Assert on the payload-equality view instead.
-        assert ship.carried_items[0]["name"] == pod["name"]
-        assert ship.carried_items[0]["design_id"] == pod["design_id"]
+        assert ship.bay_inventory.pods[0].payload["name"] == pod["name"]
+        assert ship.bay_inventory.pods[0].design_id == pod["design_id"]
 
     def test_filters_by_pod_name(self, processor):
         """Only loads pods matching pod_name."""
@@ -127,7 +114,7 @@ class TestLoadPodFromStagingYard:
         result = processor._dispatch_drop_pod_load(fleet, planet, pod_name="Target Pod")
 
         assert result == 1
-        assert ship.carried_items[0]["name"] == "Target Pod"
+        assert ship.bay_inventory.pods[0].payload["name"] == "Target Pod"
         # Wrong pod still in staging yard
         assert len(planet.staging_yard) == 1
         assert planet.staging_yard[0]["name"] == "Wrong Pod"
@@ -142,7 +129,7 @@ class TestLoadPodFromStagingYard:
         result = processor._dispatch_drop_pod_load(fleet, planet, amount=2)
 
         assert result == 2
-        assert len(ship.carried_items) == 2
+        assert len(ship.bay_inventory.pods) == 2
         assert len(planet.staging_yard) == 3
 
     def test_amount_zero_loads_all(self, processor):
@@ -155,7 +142,7 @@ class TestLoadPodFromStagingYard:
         result = processor._dispatch_drop_pod_load(fleet, planet, amount=0)
 
         assert result == 3
-        assert len(ship.carried_items) == 3
+        assert len(ship.bay_inventory.pods) == 3
 
     def test_no_capacity_stays_in_yard(self, processor):
         """Pod stays in yard when no ship can carry it."""
@@ -180,8 +167,8 @@ class TestLoadPodFromStagingYard:
         result = processor._dispatch_drop_pod_load(fleet, planet)
 
         assert result == 1
-        assert len(ship1.carried_items) == 0
-        assert len(ship2.carried_items) == 1
+        assert len(ship1.bay_inventory.pods) == 0
+        assert len(ship2.bay_inventory.pods) == 1
 
 
 # =============================================================================
@@ -208,7 +195,7 @@ class TestUnloadPodToStagingYard:
         delivered = planet.add_to_staging_yard.call_args.args[0]
         assert delivered["name"] == pod["name"]
         assert delivered["design_id"] == pod["design_id"]
-        assert len(ship.carried_items) == 0
+        assert len(ship.bay_inventory.pods) == 0
 
     def test_filters_by_pod_name(self, processor):
         """Only unloads pods matching pod_name."""
@@ -222,8 +209,8 @@ class TestUnloadPodToStagingYard:
 
         assert result == 1
         # Wrong pod still on ship
-        assert len(ship.carried_items) == 1
-        assert ship.carried_items[0]["name"] == "Wrong Pod"
+        assert len(ship.bay_inventory.pods) == 1
+        assert ship.bay_inventory.pods[0].payload["name"] == "Wrong Pod"
 
     def test_amount_zero_unloads_all(self, processor):
         """amount=0 unloads all pods."""
@@ -235,7 +222,7 @@ class TestUnloadPodToStagingYard:
         result = processor._dispatch_drop_pod_unload(fleet, planet, amount=0)
 
         assert result == 3
-        assert len(ship.carried_items) == 0
+        assert len(ship.bay_inventory.pods) == 0
 
     def test_caps_by_amount(self, processor):
         """Respects amount parameter."""
@@ -247,7 +234,7 @@ class TestUnloadPodToStagingYard:
         result = processor._dispatch_drop_pod_unload(fleet, planet, amount=2)
 
         assert result == 2
-        assert len(ship.carried_items) == 3
+        assert len(ship.bay_inventory.pods) == 3
 
     def test_iterates_all_ships(self, processor):
         """Checks all ships in fleet."""
@@ -261,8 +248,8 @@ class TestUnloadPodToStagingYard:
         result = processor._dispatch_drop_pod_unload(fleet, planet, amount=0)
 
         assert result == 2
-        assert len(ship1.carried_items) == 0
-        assert len(ship2.carried_items) == 0
+        assert len(ship1.bay_inventory.pods) == 0
+        assert len(ship2.bay_inventory.pods) == 0
 
     def test_add_fails_stays_on_ship(self, processor):
         """Pod stays on ship when staging yard refuses it."""
@@ -275,4 +262,4 @@ class TestUnloadPodToStagingYard:
         result = processor._dispatch_drop_pod_unload(fleet, planet)
 
         assert result == 0
-        assert len(ship.carried_items) == 1  # Pod still on ship
+        assert len(ship.bay_inventory.pods) == 1  # Pod still on ship

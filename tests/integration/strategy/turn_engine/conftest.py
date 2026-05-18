@@ -106,14 +106,17 @@ def create_colony_ship(name="Colony Ship", owner_id=0, pod_type="ICE_DWARF", reg
             }
         },
     )
-    # Load drop pod as carried item
-    ship.carried_items.append({
-        "vehicle_type": "drop_pod",
-        "design_id": f"{pod_type.lower()}_drop_pod",
-        "name": f"Drop Pod ({pod_type})",
-        "design_data": {"layers": {"CORE": []}},
-        "mass": 500,
-    })
+    # PROJ-436 Phase 9: typed DropPod into bay_inventory.pods.
+    from game.strategy.data.bay_inventory import DropPod
+    ship.bay_inventory.pods.append(DropPod(
+        design_id=f"{pod_type.lower()}_drop_pod",
+        design_data={"layers": {"CORE": []}},
+        mass=500.0,
+        payload={
+            "name": f"Drop Pod ({pod_type})",
+            "vehicle_type": "drop_pod",
+        },
+    ))
     if registries is not None:
         ship.set_registries(registries)
     return ship

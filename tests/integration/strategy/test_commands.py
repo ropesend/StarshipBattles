@@ -21,9 +21,13 @@ class MockPlanetType(Enum):
 
 def create_mock_fleet_with_colony_pod(fleet_id, location, planet_type_str="CONTINENTAL"):
     """Create a mock fleet with a ship carrying a drop pod."""
+    from game.strategy.data.bay_inventory import BayInventory, DropPod
     mock_ship = MagicMock()
     mock_ship.name = "Colony Ship"
-    mock_ship.carried_items = [{"vehicle_type": "drop_pod", "design_id": "test_pod", "name": "Test Pod", "design_data": {"layers": {"CORE": []}}, "mass": 500}]
+    mock_ship.bay_inventory = BayInventory(bay=[], pods=[DropPod(
+        design_id="test_pod", design_data={"layers": {"CORE": []}},
+        mass=500.0, payload={"name": "Test Pod", "vehicle_type": "drop_pod"},
+    )])
 
     fleet = MagicMock(spec=Fleet)
     fleet.id = fleet_id
@@ -150,8 +154,12 @@ class TestCommands:
         class MockPlanetType(Enum):
             CONTINENTAL = "CONTINENTAL"
 
+        from game.strategy.data.bay_inventory import BayInventory, DropPod
         mock_ship = MagicMock()
-        mock_ship.carried_items = [{"vehicle_type": "drop_pod", "design_id": "test_pod", "name": "Test Pod", "design_data": {"layers": {"CORE": []}}, "mass": 500}]
+        mock_ship.bay_inventory = BayInventory(bay=[], pods=[DropPod(
+            design_id="test_pod", design_data={"layers": {"CORE": []}},
+            mass=500.0, payload={"name": "Test Pod", "vehicle_type": "drop_pod"},
+        )])
         fleet.ships = [mock_ship]
 
         planet = MagicMock(spec=Planet)

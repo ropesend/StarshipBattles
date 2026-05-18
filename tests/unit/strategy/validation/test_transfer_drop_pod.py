@@ -127,10 +127,15 @@ class TestDropPodTransferValidation:
 
     def test_drop_pod_unload_succeeds(self):
         """Unloading a drop_pod to a planet should succeed."""
+        from game.strategy.data.bay_inventory import BayInventory, DropPod
         planet = _make_planet(owner_id=0)
         fleet = _make_fleet()
         fleet.ships = [MagicMock()]
-        fleet.ships[0].carried_items = [_pod_item()]
+        pod = _pod_item()
+        fleet.ships[0].bay_inventory = BayInventory(bay=[], pods=[DropPod(
+            design_id='colony_pod', design_data={}, mass=pod['mass'],
+            payload={'name': pod['name'], 'vehicle_type': 'drop_pod'},
+        )])
         galaxy = _make_galaxy(fleet, planet)
 
         result = TransferValidator.validate(

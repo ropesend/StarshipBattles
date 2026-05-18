@@ -24,8 +24,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, Tuple, List, TYPE_CHECKING
 
 from game.core.protocols import IPostBattleShip
-from game.strategy.data.bay_inventory import BayInventory, DropPod
-from game.strategy.data.carried_vehicle import CarriedVehicle, VALID_VEHICLE_TYPES
+from game.strategy.data.bay_inventory import BayInventory
 from game.strategy.data.ship_consumable_manager import ShipConsumableManager
 from game.strategy.data.ship_cargo_manager import ShipCargoManager
 from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
@@ -510,32 +509,9 @@ class ShipInstance:
             )
         self.bay_inventory = bay_inventory
 
-    # --- Legacy-shim: ``carried_items`` property -----------------------
-    #
-    # PROJ-431 Phase 1f: ``carried_items`` is no longer a stored field.
-    # This property exposes a write-through proxy list over the typed
-    # ``bay_inventory`` slots so test infrastructure that does
-    # ``ship.carried_items.append({...})`` / ``ship.carried_items =
-    # [...]`` keeps working without each test having to migrate to the
-    # typed API. Production code uses :attr:`bay_inventory` and
-    # :meth:`set_bay_inventory` directly.
-
-    @property
-    def carried_items(self) -> '_CarriedItemsProxy':
-        """Legacy mixed-shape dict-list write-through view (test shim).
-
-        Returns a :class:`_CarriedItemsProxy` whose mutations
-        (``append``, ``extend``, ``pop``, ``__setitem__``, slice
-        replacement, ``clear``) write back into
-        :attr:`bay_inventory`. Reads behave like the historical
-        ``List[Dict[str, Any]]`` substrate.
-        """
-        return _CarriedItemsProxy(self)
-
-    @carried_items.setter
-    def carried_items(self, items: List[Any]) -> None:
-        """Replace via legacy dict-list shape; routes into typed slots."""
-        self.bay_inventory = _items_to_bay_inventory(items)
+    # PROJ-436 Phase 9: ``carried_items`` property + ``_CarriedItemsProxy``
+    # test shim deleted. Callers route through ``bay_inventory.bay`` /
+    # ``bay_inventory.pods`` / ``set_bay_inventory(...)`` directly.
 
     @property
     def bay_capacity_mass(self) -> float:
@@ -786,152 +762,7 @@ def _ship_instance_init_with_legacy_kwargs(self, *args, **kwargs):  # noqa: D401
 ShipInstance.__init__ = _ship_instance_init_with_legacy_kwargs
 
 
-# ---------------------------------------------------------------------------
-# PROJ-431 Phase 1f legacy-shim helpers
-# ---------------------------------------------------------------------------
-
-
-def _items_to_bay_inventory(items: List[Any]) -> BayInventory:
-    """Split a legacy mixed-shape ``carried_items`` list into typed slots.
-
-    Bay-bound (``CarriedVehicle``-shaped) entries land in
-    :attr:`BayInventory.bay`; everything else lands in
-    :attr:`BayInventory.pods`. Used by the legacy ``carried_items``
-    setter on :class:`ShipInstance` and by the
-    :class:`_CarriedItemsProxy` write paths.
-    """
-    new_bay: List[CarriedVehicle] = []
-    new_pods: List[DropPod] = []
-    for item in items or []:
-        if isinstance(item, CarriedVehicle):
-            new_bay.append(item)
-            continue
-        if isinstance(item, DropPod):
-            new_pods.append(item)
-            continue
-        if not isinstance(item, dict):
-            continue
-        vt = str(item.get('vehicle_type', '')).lower()
-        if vt in VALID_VEHICLE_TYPES:
-            new_bay.append(CarriedVehicle.from_dict(item))
-        else:
-            new_pods.append(DropPod(
-                design_id=str(item.get('design_id', '')),
-                design_data=dict(item.get('design_data', {})),
-                mass=float(item.get('mass', 0.0)),
-                payload={
-                    k: v for k, v in item.items()
-                    if k not in {'design_id', 'design_data', 'mass'}
-                },
-            ))
-    return BayInventory(bay=new_bay, pods=new_pods)
-
-
-def _bay_inventory_to_items(bi: BayInventory) -> List[Dict[str, Any]]:
-    """Project a typed :class:`BayInventory` back to the legacy dict-list."""
-    items: List[Dict[str, Any]] = []
-    for cv in bi.bay:
-        items.append(cv.to_dict())
-    for pod in bi.pods:
-        entry: Dict[str, Any] = {
-            'design_id': pod.design_id,
-            'design_data': pod.design_data,
-            'mass': pod.mass,
-        }
-        entry.update(pod.payload)
-        items.append(entry)
-    return items
-
-
-class _CarriedItemsProxy:
-    """Write-through dict-list proxy over :attr:`ShipInstance.bay_inventory`.
-
-    Mutations rebuild the underlying typed :class:`BayInventory` so test
-    code that pokes ``ship.carried_items.append({...})`` /
-    ``ship.carried_items.pop(0)`` / ``ship.carried_items[i] = {...}`` /
-    slice-replacement / ``clear()`` keeps working without a per-test
-    migration.
-
-    Reads behave like the legacy ``List[Dict[str, Any]]`` substrate:
-    bay entries materialise via :meth:`CarriedVehicle.to_dict`; pods
-    materialise via the historical drop-pod dict shape (``design_id`` +
-    ``design_data`` + ``mass`` + ``payload`` flattened).
-    """
-
-    __slots__ = ('_ship',)
-
-    def __init__(self, ship: 'ShipInstance') -> None:
-        self._ship = ship
-
-    def _snapshot(self) -> List[Dict[str, Any]]:
-        return _bay_inventory_to_items(self._ship.bay_inventory)
-
-    def _writeback(self, items: List[Any]) -> None:
-        self._ship.bay_inventory = _items_to_bay_inventory(items)
-
-    # --- read protocol ------------------------------------------------
-    def __len__(self) -> int:
-        return len(self._snapshot())
-
-    def __iter__(self):
-        return iter(self._snapshot())
-
-    def __getitem__(self, index):
-        return self._snapshot()[index]
-
-    def __contains__(self, item) -> bool:
-        return item in self._snapshot()
-
-    def __eq__(self, other) -> bool:
-        if isinstance(other, _CarriedItemsProxy):
-            return self._snapshot() == other._snapshot()
-        return self._snapshot() == other
-
-    def __ne__(self, other) -> bool:
-        return not self.__eq__(other)
-
-    def __repr__(self) -> str:
-        return repr(self._snapshot())
-
-    def __bool__(self) -> bool:
-        return bool(self._snapshot())
-
-    # --- mutation protocol --------------------------------------------
-    def append(self, item: Any) -> None:
-        items = self._snapshot()
-        items.append(item)
-        self._writeback(items)
-
-    def extend(self, more: Any) -> None:
-        items = self._snapshot()
-        items.extend(more)
-        self._writeback(items)
-
-    def insert(self, index: int, item: Any) -> None:
-        items = self._snapshot()
-        items.insert(index, item)
-        self._writeback(items)
-
-    def pop(self, index: int = -1) -> Any:
-        items = self._snapshot()
-        popped = items.pop(index)
-        self._writeback(items)
-        return popped
-
-    def remove(self, item: Any) -> None:
-        items = self._snapshot()
-        items.remove(item)
-        self._writeback(items)
-
-    def clear(self) -> None:
-        self._writeback([])
-
-    def __setitem__(self, index, value) -> None:
-        items = self._snapshot()
-        items[index] = value
-        self._writeback(items)
-
-    def __delitem__(self, index) -> None:
-        items = self._snapshot()
-        del items[index]
-        self._writeback(items)
+# PROJ-436 Phase 9: ``_items_to_bay_inventory`` / ``_bay_inventory_to_items``
+# / ``_CarriedItemsProxy`` deleted. All test infrastructure now writes to
+# ``ship.bay_inventory.bay`` / ``ship.bay_inventory.pods`` /
+# ``ship.set_bay_inventory(...)`` directly.

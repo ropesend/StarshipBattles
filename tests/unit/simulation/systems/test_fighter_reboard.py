@@ -54,9 +54,11 @@ class _StubCargoMgr:
         self.loaded = []
 
     def load_vehicle(self, cv):
+        # PROJ-436 Phase 9: load through the typed BayInventory.bay slot
+        # (the legacy carried_items proxy on ShipInstance is gone).
         if len(self.loaded) >= self._capacity:
             return False
-        self._carrier.carried_items.append(cv.to_dict())
+        self._carrier.bay_inventory.bay.append(cv)
         self.loaded.append(cv)
         return True
 
@@ -126,8 +128,8 @@ def test_reboard_one_survivor_onto_friendly_carrier():
     assert summary["overflowed"] == 0
     assert summary["discarded"] == 0
     # Carrier got a CarriedVehicle dict.
-    assert len(carrier.carried_items) == 1
-    assert carrier.carried_items[0]["current_hp"] == 70
+    assert len(carrier.bay_inventory.bay) == 1
+    assert carrier.bay_inventory.bay[0].current_hp == 70
 
 
 def test_dead_fighter_is_discarded():
@@ -148,7 +150,7 @@ def test_dead_fighter_is_discarded():
     )
     assert summary["discarded"] == 1
     assert summary["reboarded"] == 0
-    assert len(carrier.carried_items) == 0
+    assert len(carrier.bay_inventory.bay) == 0
 
 
 def test_overflow_spills_into_new_fighter_group():
@@ -176,7 +178,7 @@ def test_overflow_spills_into_new_fighter_group():
     assert summary["reboarded"] == 1
     assert summary["overflowed"] == 2
     # The carrier has 1 fighter loaded.
-    assert len(carrier.carried_items) == 1
+    assert len(carrier.bay_inventory.bay) == 1
     # A new FighterWing exists at the hex with 2 fighters.
     fgs = [g for g in empire.deployed_groups if isinstance(g, FighterWing)]
     assert len(fgs) == 1
@@ -240,5 +242,5 @@ def test_carrier_destroyed_finds_other_friendly_with_bay_space():
     )
     assert summary["reboarded"] == 1
     # Backup got the fighter, not the dead carrier.
-    assert len(backup.carried_items) == 1
-    assert len(dead_carrier.carried_items) == 0
+    assert len(backup.bay_inventory.bay) == 1
+    assert len(dead_carrier.bay_inventory.bay) == 0

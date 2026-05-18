@@ -96,9 +96,9 @@ class _StubCargoMgr:
         self._capacity = capacity
 
     def load_vehicle(self, cv) -> bool:
-        if len(self._carrier.carried_items) >= self._capacity:
+        if len(self._carrier.bay_inventory.bay) >= self._capacity:
             return False
-        self._carrier.carried_items.append(cv.to_dict())
+        self._carrier.bay_inventory.bay.append(cv)
         return True
 
 
@@ -163,7 +163,7 @@ def test_launch_in_battle_then_all_survive_reboards_all(fresh_registries):
     )
     assert summary["reboarded"] == 3
     assert summary["overflowed"] == 0
-    assert len(strategy_carrier.carried_items) == 3
+    assert len(strategy_carrier.bay_inventory.bay) == 3
 
 
 def test_launch_in_battle_overflow_spills_to_sector_group(fresh_registries):
@@ -248,4 +248,4 @@ def test_launch_in_battle_dead_fighters_discarded(fresh_registries):
     assert summary["reboarded"] == 0
     assert summary["overflowed"] == 0
     assert summary["discarded"] == 1
-    assert len(strategy_carrier.carried_items) == 0
+    assert len(strategy_carrier.bay_inventory.bay) == 0

@@ -17,12 +17,11 @@ from game.strategy.events.event_types import EventCategory, EventType
 
 
 def _ship_with_pod(design_id: str, name: str, design_data: dict) -> MagicMock:
-    """PROJ-431 Phase 1d: build a MagicMock ship with both the legacy
-    ``carried_items`` dict and the typed ``bay_inventory`` slot wired up.
-    The handler's ``_deploy_drop_pod`` reads ``ship.bay_inventory.pods``
-    and writes back via ``ship.set_bay_inventory(...)``; we mirror the
-    write-through into ``carried_items`` so existing assertions on the
-    legacy list shape keep working.
+    """PROJ-436 Phase 9: build a MagicMock ship with a typed
+    ``bay_inventory.pods`` slot. The handler's ``_deploy_drop_pod``
+    reads ``ship.bay_inventory.pods`` and writes back via
+    ``ship.set_bay_inventory(...)``. The legacy ``carried_items``
+    mirror is gone — production code reads the typed slot.
     """
     ship = MagicMock()
     pod = DropPod(
@@ -31,28 +30,10 @@ def _ship_with_pod(design_id: str, name: str, design_data: dict) -> MagicMock:
         mass=0.0,
         payload={"name": name},
     )
-    ship.carried_items = [{
-        "design_id": design_id,
-        "name": name,
-        "design_data": design_data,
-    }]
     ship.bay_inventory = BayInventory(bay=[], pods=[pod])
 
     def _set_bay_inventory(bi: BayInventory) -> None:
         ship.bay_inventory = bi
-        # Mirror back to carried_items so legacy assertions remain
-        # meaningful for tests that haven't migrated yet.
-        ship.carried_items = []
-        for cv in bi.bay:
-            ship.carried_items.append(cv.to_dict())
-        for p in bi.pods:
-            entry = {
-                "design_id": p.design_id,
-                "design_data": p.design_data,
-                "mass": p.mass,
-            }
-            entry.update(p.payload)
-            ship.carried_items.append(entry)
 
     ship.set_bay_inventory = _set_bay_inventory
     return ship
@@ -220,7 +201,7 @@ def test_happy_path_claims_planet_and_deploys_pod():
     assert result.planet_name == "New Earth"
     empire.add_colony.assert_called_once_with(planet)
     # Drop pod removed from ship and facility appended on planet.
-    assert fake_ship.carried_items == []
+    assert fake_ship.bay_inventory.pods == []
     assert len(planet.facilities) == 1
     # initial_stockpile seeded.
     planet.add_to_stockpile.assert_called_once_with("metals", 10.0)

@@ -4,6 +4,7 @@ Verifies that ProductionEngine, OrderProcessor, and ConflictResolutionEngine
 emit the correct events via EventBus when significant actions occur.
 """
 
+from game.strategy.data.bay_inventory import BayInventory, DropPod
 import pytest
 from unittest.mock import MagicMock, patch, call
 
@@ -447,7 +448,10 @@ class TestColonyFoundedEvent:
         # Mock ship with drop pod in carried_items
         mock_ship = MagicMock()
         mock_ship.name = "Colony Ship"
-        mock_ship.carried_items = [{"vehicle_type": "drop_pod", "design_id": "test_pod", "name": "Test Pod", "design_data": {"layers": {"CORE": []}}, "mass": 500}]
+        mock_ship.bay_inventory = BayInventory(bay=[], pods=[DropPod(
+            design_id="test_pod", design_data={"layers": {"CORE": []}},
+            mass=500.0, payload={"name": "Test Pod", "vehicle_type": "drop_pod"},
+        )])
         fleet.ships = [mock_ship]
 
         target_planet = _make_mock_planet(planet_id=10, name="New Earth")
@@ -554,7 +558,10 @@ class TestColonyFoundedEvent:
         # Mock ship with drop pod
         mock_ship = MagicMock()
         mock_ship.name = "Colony Ship"
-        mock_ship.carried_items = [{"vehicle_type": "drop_pod", "design_id": "test_pod", "name": "Test Pod", "design_data": {"layers": {"CORE": []}}, "mass": 500}]
+        mock_ship.bay_inventory = BayInventory(bay=[], pods=[DropPod(
+            design_id="test_pod", design_data={"layers": {"CORE": []}},
+            mass=500.0, payload={"name": "Test Pod", "vehicle_type": "drop_pod"},
+        )])
         fleet.ships = [mock_ship]
 
         order = Order(OrderType.COLONIZE, target=None)
@@ -955,7 +962,10 @@ class TestColonizationEventLocationEnrichment:
 
         mock_ship = MagicMock()
         mock_ship.name = "Colony Ship"
-        mock_ship.carried_items = [{"vehicle_type": "drop_pod", "design_id": "test_pod", "name": "Test Pod", "design_data": {"layers": {"CORE": []}}, "mass": 500}]
+        mock_ship.bay_inventory = BayInventory(bay=[], pods=[DropPod(
+            design_id="test_pod", design_data={"layers": {"CORE": []}},
+            mass=500.0, payload={"name": "Test Pod", "vehicle_type": "drop_pod"},
+        )])
         fleet.ships = [mock_ship]
 
         target_planet = _make_mock_planet(planet_id=10, name="New Earth")
@@ -1008,7 +1018,10 @@ class TestColonizationEventLocationEnrichment:
 
         mock_ship = MagicMock()
         mock_ship.name = "Colony Ship"
-        mock_ship.carried_items = [{"vehicle_type": "drop_pod", "design_id": "test_pod", "name": "Test Pod", "design_data": {"layers": {"CORE": []}}, "mass": 500}]
+        mock_ship.bay_inventory = BayInventory(bay=[], pods=[DropPod(
+            design_id="test_pod", design_data={"layers": {"CORE": []}},
+            mass=500.0, payload={"name": "Test Pod", "vehicle_type": "drop_pod"},
+        )])
         fleet.ships = [mock_ship]
 
         target_planet = _make_mock_planet(planet_id=10, name="Lone Rock")

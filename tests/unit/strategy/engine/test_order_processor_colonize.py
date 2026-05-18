@@ -22,13 +22,10 @@ from game.strategy.events.event_types import EventType
 
 
 def _wire_bay(ship: MagicMock, pod_dicts: list) -> None:
-    """PROJ-431 Phase 1d: wire a MagicMock ship's typed bay_inventory
-    to mirror its legacy ``carried_items`` dict list. Tests created
-    before the typed migration set ``ship.carried_items`` directly;
-    this helper retrofits the typed view so the new validator/handler
-    code paths work without touching the rest of the test body.
+    """PROJ-436 Phase 9: wire a MagicMock ship's typed bay_inventory
+    from a list of legacy pod dicts. The legacy ``carried_items``
+    mirror is gone — production code reads the typed pods slot.
     """
-    ship.carried_items = list(pod_dicts)
     ship.bay_inventory = BayInventory(
         bay=[],
         pods=[
@@ -47,17 +44,6 @@ def _wire_bay(ship: MagicMock, pod_dicts: list) -> None:
 
     def _set_bay_inventory(bi: BayInventory) -> None:
         ship.bay_inventory = bi
-        ship.carried_items = []
-        for cv in bi.bay:
-            ship.carried_items.append(cv.to_dict())
-        for p in bi.pods:
-            entry = {
-                "design_id": p.design_id,
-                "design_data": p.design_data,
-                "mass": p.mass,
-            }
-            entry.update(p.payload)
-            ship.carried_items.append(entry)
 
     ship.set_bay_inventory = _set_bay_inventory
 
@@ -229,7 +215,7 @@ def test_process_colonize_adds_colony_pops_order_and_deploys_pod():
     assert result.colonized is True
     empire.add_colony.assert_called_once_with(planet)
     fleet.pop_order.assert_called_once()
-    assert pod_ship.carried_items == []  # pod consumed
+    assert pod_ship.bay_inventory.pods == []  # pod consumed
     assert len(planet.facilities) == 1   # pod deployed as facility
 
 
