@@ -1,0 +1,226 @@
+You are taking over PROJ-436: Unified Storage Substrate and Container
+Unification in c:\Dev\Starship Battles. Phases 0-7 are complete on `main`.
+You own the remaining work: Phase 8, Phase 9, Phase 10, Phase 11, plus a
+small post-project hygiene project that bundles 5 deferred items.
+
+# CURRENT STATE (read first)
+
+- Working tree on `main`. Last project commit: `48a6c0983` (Phase 7
+  closure). Sharded suite: 21233 / 21233 / 0 fail / 0 error / 0 skipped.
+- Project root: `Projects/active_projects/PROJ-436/`. Read the entire
+  directory — `plan.md`, `manifest.md`, `decisions.md`, `design.md`,
+  `phase_state.json`, and every `phase_<N>_checklist.md` from 0 through 7.
+  All are current. Phases 8-11 checklist files exist as stubs.
+- Read `CLAUDE.md`, then `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`,
+  `docs/03_CONVENTIONS.md`. Strict TDD, no shims, no save-file migration,
+  500 LOC ceiling, modern PEP 604 syntax (`int | None`, `list[int]`,
+  `dict[str, T]`).
+- Read `Projects/active_projects/PROJ-431/decisions.md` rows from
+  2026-05-17 — the sub-phase 1a-1f migration template that all PROJ-436
+  phases follow.
+- Read the seven PROJ-436 commits between `3db37e0fa` and `48a6c0983`
+  inclusive. They establish the patterns:
+  * Substrate-then-sweep-per-PROJ-431-model.
+  * Substrate-flip-via-property cutover (Phase 3f / 4f / 5f).
+  * AST guards in `tests/static_guards/test_no_legacy_storage_fields.py`
+    and `test_no_legacy_protocol_names.py`.
+  * End-of-phase Codex pre-final-check consult (mode `pre-final-check`,
+    `--allow-tests`).
+
+# PYTEST CAVEAT (KNOWN PRE-EXISTING ISSUE — do not fix in PROJ-436)
+
+`pytest.ini` has `norecursedirs = .* build dist CVS _darcs {arch} *.egg
+venv env .venv data ShipThemes Assets combat_lab`. The `data` token
+matches `tests/unit/strategy/data/` (1575 tests) and excludes them from
+the sharded suite. Pre-existing — not introduced by PROJ-436.
+
+What you do about it:
+- Use `python Tools/test_sharded/test_sharded.py` as the canonical
+  regression gate. Tests you write under `tests/unit/strategy/data/`
+  will not move the sharded count, but the sharded gate still catches
+  every regression in everything outside `data/`.
+- Optionally run `python -m pytest tests/unit/strategy/data/ -q -n 4`
+  to sanity-check your own data/ tests. As of session end this returns
+  1510 pass / 65 fail — the 65 are pre-existing PROJ-431-flagged
+  `test_cargo_tracking.py` issues + mutator-boundary AST guards. Do NOT
+  attempt to fix them in PROJ-436.
+- The proper fix lives in the post-project hygiene work below.
+
+# REMAINING PROJ-436 SCOPE
+
+## Phase 8 — ProductionEngine.context_type deletion
+
+Branch policy: user wants this on its own branch. Start with
+`git checkout -b proj/PROJ-436/phase_8` (or whatever branch convention
+you prefer; document in `decisions.md`). Do not work on `main`.
+
+Scope: delete the `context_type` branching at
+`game/strategy/engine/production_engine.py:561` and `:629` (Phase 6
+audit confirmed these are the storage-typed branches; the analogous
+build_queue_controller.py reads are UI entity-routing and stay).
+
+Approach: ProductionEngine should read inputs from any Container whose
+policy accepts them and write outputs to any Container whose policy
+accepts them. The "if planet / elif fleet" pattern collapses to a
+typed Container-protocol lookup.
+
+Sub-phase template (audit-driven):
+- 8a — caller audit (`grep -rn "context_type" game/`); decide if you
+  need substrate sub-phases or can collapse to a single cutover.
+- 8b — substrate: helper `_select_input_container(costs)` /
+  `_select_output_container(output)` that dispatches via
+  `Container.accepts()`.
+- 8c — migrate each of the 2 branch sites to use the helpers.
+- 8d — final cutover: delete `getattr(colony_or_fleet, 'context_type',
+  None)` reads; grep gate.
+- 8e — Codex consult, mode `pre-final-check`, `--allow-tests`.
+
+Phase 0 D2 reminder: Empire.resource_pool aggregation is pure-query
+(Phase 5 confirmed net-zero cost). If your production_engine work
+exposes it as hot, that's a follow-up signal.
+
+## Phase 9 — _CarriedItemsProxy final cutover
+
+Branch policy: separate branch per user directive.
+
+Scope: delete the test-only `_CarriedItemsProxy` shim at
+`game/strategy/data/ship_instance.py:371-396` and all the test fixtures
+that poke `ship.carried_items.append({...})` directly. PROJ-431 audit
+found ~51 test files; PROJ-436 Phase 3 didn't touch them because
+`carried_items` lives in `bay_inventory`, not `cargo_contents`.
+
+Sub-phase template:
+- 9a — full audit: `grep -rn "_CarriedItemsProxy\|\.carried_items\b"
+  game/ tests/`. Confirm production paths are zero (PROJ-431 audit was
+  zero post-1f); scope the test sweep.
+- 9b through 9X — sweep test files in tractable batches (~10 files per
+  sub-phase). Each batch is RED→GREEN tested + grep gate.
+- 9Z — delete `_CarriedItemsProxy` class + `carried_items` property
+  from `ship_instance.py`. Add AST guard
+  `tests/static_guards/test_no_carried_items_proxy.py` pinning absence.
+- 9-consult — Codex pre-final-check.
+
+## Phase 10 — Doc refresh
+
+After 8 and 9 are merged back to main.
+
+Scope:
+- `docs/systems/resource_system.md` lines 217, 224, 328, 335 reference
+  `VALID_CARGO_TYPES` (Phase 7 deleted it). Surface flagged by Phase 7
+  Codex consult.
+- `docs/systems/production_system.md` — update for context_type removal.
+- `docs/systems/strategy_layer.md` — storage/inventory section.
+- `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md` — add/update Container
+  pattern entry alongside existing Pattern #37 (Typed DeployedGroup).
+- Update `> **Last verified:**` blockquote per PROJ-307 convention
+  (docs/03_CONVENTIONS.md §9).
+
+## Phase 11 — End-of-project Codex consult + verified-finding remediation
+
+Per user `feedback_consult_at_project_end.md`. Run a final Codex
+consult scoped to the full PROJ-436 work since `f34a60c71` (charter
+creation). Verify each finding against current code. Verified findings
+become sub-phases (12+, 13+, ...). Unverified or out-of-scope go in
+`decisions.md`.
+
+# POST-PROJ-436 HYGIENE PROJECT (bundle these 5 items)
+
+Recommend creating a new project (PROJ-439 or whatever next ID is
+available — check `Projects/active_projects/projects_index.md`) that
+bundles:
+
+1. **Fix `pytest.ini` `norecursedirs`**: switch from
+   `norecursedirs = ... data ...` to `--ignore=data` in `addopts` so
+   only the top-level `data/` directory is excluded. Expect ~65
+   pre-existing failures in `tests/unit/strategy/data/` to become
+   visible; triage them (most are PROJ-431-flagged `test_cargo_tracking.py`
+   tests, plus mutator-boundary AST guards).
+
+2. **Sweep ShipInstance legacy-kwarg wrapper**: PROJ-436 Phase 3
+   shipped a module-level legacy-kwarg constructor wrapper for ~24
+   call sites in 7 test files that pass `consumable_levels=` /
+   `cargo_contents=` to `ShipInstance(...)` directly. Functional but
+   code-smell per Phase 3 Codex consult finding (e). Sweep callers,
+   delete the wrapper.
+
+3. **Sweep test-mock residue**: ~6 inert MagicMock attributes for
+   deleted Empire methods (`add_resources` / `consume_resources` /
+   `_fleet_resource_pool`) across 4 production_engine test files
+   per Phase 6 Codex consult finding. Production never invokes them
+   — purely cosmetic.
+
+4. **Resolve dataclass-introspection drift**: `dataclasses.fields()` /
+   `__match_args__` / `inspect.signature(ShipInstance|Planet)` surface
+   the renamed private field names from Phase 3f / 4f (`_cargo_contents`,
+   `_consumable_levels`, `_stockpile`, etc.). No production caller
+   reads these surfaces today. Decision needed: add `field(repr=False,
+   init=False)` to the private fields and expose via __init_subclass__,
+   or leave as-is. Phase 3 consult marked this cosmetic.
+
+5. **`ResourceCatalog.from_json()` vs `DefaultRegistryProvider.get_resource_catalog()`
+   convention drift**: 16+ production sites including Phase 0
+   `container.py` use `from_json()`; the DI-via-context path uses
+   `get_resource_catalog()`. Pick one canonical access pattern and
+   migrate. Phase 7 consult flagged.
+
+# UI label change pending Ross's decision
+
+Phase 7 made `data/resources.json`'s `name` field the single source of
+truth for resource display labels. The ammo cargo row in the transfer
+dialog now displays as "Ammunition" (the JSON value) instead of "Ammo"
+(the old hardcoded mapping). All other 7 labels unchanged.
+
+If Ross wants "Ammo" back, edit `data/resources.json` `ammo.name` from
+"Ammunition" to "Ammo". One-line change.
+
+# WORKFLOW RULES (hard)
+
+1. **Strict TDD** per CLAUDE.md.
+2. **End-of-phase Codex consult** per user `feedback_consult_at_project_end.md`:
+   `claude-consult` skill, mode `pre-final-check`, `--allow-tests`.
+   Verified findings become added phases. Document rejections in
+   `decisions.md`.
+3. **No worktrees** per user `feedback_no_worktrees.md`. User wants
+   Phase 8 and Phase 9 on **separate branches** — that means git
+   branches in the main checkout, not worktrees.
+4. **No save-file migration shims**. Old saves are disposable per
+   CLAUDE.md.
+5. **Sharded suite is the canonical gate**:
+   `python Tools/test_sharded/test_sharded.py`. Must be green at every
+   commit boundary. Direct `pytest tests/unit/strategy/data/` is
+   sanity-only.
+6. **Commit message convention**: `PROJ-436 Phase NX: <one-line>` +
+   body + `Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>`.
+7. **Use explicit file paths in `git add`**. PROJ-438 has dirty files
+   in the tree that are NOT yours — leave them alone.
+8. **Update artifacts each sub-phase**: `plan.md` Quick Status +
+   Current State, `decisions.md` (dated row), `phase_state.json`
+   (status + planned_files + phase_head_sha).
+9. **If your context drops below 10%, stop and report.** Spawn
+   subagents (sequentially, not parallel) if a phase exceeds your
+   budget — the parent session used this pattern for Phases 3b-3f,
+   4, 5, 6, 7.
+
+# KEY ARTIFACTS TO READ
+
+- `Projects/active_projects/PROJ-436/decisions.md` — 30+ dated decision
+  rows. Critical for understanding why each Phase landed the way it
+  did and what was deferred. Read every row.
+- The 7 Codex consult response files under
+  `AgentCoordination/Scratchpad/Consult/20260518T*_proj436-*/response.md`
+  (gitignored scratchpad). Each captures the consult findings + your
+  predecessor's disposition logic.
+- `Projects/active_projects/PROJ-431/decisions.md` — the sub-phase
+  template that all PROJ-436 phases mirror. The 2026-05-17 rows
+  describe the substrate-then-sweep pattern in detail.
+
+# REPORT BACK FORMAT
+
+When stopping (whether at phase boundary or context floor):
+- What landed (commits with SHA + one-line)
+- Final sharded test count
+- Any Codex consult findings: verified+remediated, verified+deferred,
+  rejected+rationale
+- Anything that needs Ross's decision
+
+Go. Start with Phase 8.
