@@ -14,16 +14,16 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Tiny one-shot fixes (≤30 LOC each) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Container-substrate residue cleanup | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Container-substrate residue cleanup | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. PROJ-436 deletion-shim retirement (cross-coupled with PROJ-443) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. LOC-ceiling extractions (fleet_serde, planet_gen) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-18
-**Active Phase:** Phase 1 Complete — handing off to Phase 2
-**Last Action:** Burned down 12 of 14 Phase 1 polish fixes (F-A-001, F-A-006, F-A-017, F-A-018, F-A-019, F-A-020, F-A-021, F-A-022, F-A-023/026/027, F-A-024/025, F-A-030, F-A-031). Full sharded suite green (23,326 passed, 2 skipped). Two tasks deferred with rationale in [decisions.md](decisions.md): Task 1.3 (F-A-015 + F-A-016 typed BuildQueueItemDTO — requires UI reader migration across PROJ-446 territory) and Task 1.14 (F-A-032 `stars_cache_new` rename — UI and performance-test callers outside the data/facade partition).
-**Next Action:** Begin Phase 2 (Container-substrate residue cleanup): F-A-012, F-A-014, F-A-010 + DI-006, F-A-013 + DI-001, F-A-028, F-A-029. Phase 2 also a natural home for the deferred Task 1.3 / 1.14 once the cross-bucket coordination is feasible.
-**Blockers:** None for Phase 2 start. Phase 3 still gated on PROJ-443 Phase 5b decision + PROJ-446 F-C-020 fixture migration sequencing.
+**Active Phase:** Phase 2 Complete — handing off to Phase 3
+**Last Action:** All 6 Phase 2 Container-substrate cleanups landed: F-A-014 (mass-cap proxy now multiplies by `mass_per_unit`), F-A-012 (`PlanetaryFacility` generic `*_consumable` API + deprecated `*_fuel` delegators), F-A-013 (`_ship_container_snapshot` projects at the real bay capacity), F-A-010 / DI-006 (Fleet `has_cargo_resources` rounds symmetric with consume — Option B), F-A-028 (5 RNG-conditional `pytest.skip` calls in `test_facade_integration.py` replaced with deterministic `_ensure_uncolonized_planet` / `_ensure_enemy_fleet` injectors — verified 10× green), F-A-029 (2 conditional skips in `test_resupply_persistence.py` replaced with fixture-invariant assertions). Full sharded suite: **23,352 passed, 0 skipped** (was 23,326 passed / 2 skipped before — the skip elimination brings the count to zero). DI-006 marked `partially-resolved` in `log.jsonl`; engine-side RESOURCE_SHORTAGE emit still open (PROJ-445 territory).
+**Next Action:** Phase 3 (PROJ-436 deletion-shim retirement) — F-A-002 / F-A-003 / F-A-004 / F-A-005 wrapper retirement + F-A-011 (`Empire.resource_pool` profiling). Phase 3 is a **STRUCTURAL JOINT-PHASE with PROJ-446** (F-C-020 fixture migration must sequence first) and is gated on PROJ-443 Phase 5b. Do NOT start until both gates clear.
+**Blockers:** Phase 3 hard-gated on (1) PROJ-443 Phase 5b decision and (2) PROJ-446 F-C-020 (`tests/fixtures/strategy_entities.py` 3 fixture-site migration) being sequenced into the same PR. See "Phase 3" section in plan.md for the full gate list.
 
 ## Overview
 

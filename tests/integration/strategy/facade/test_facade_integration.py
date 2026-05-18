@@ -18,6 +18,54 @@ from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.ship_instance import ShipInstance
 
 
+def _ensure_uncolonized_planet(session, *, distant_from: HexCoord = None):
+    """F-A-028: deterministic helper — return an uncolonized planet,
+    creating one by unclaiming if procedural generation produced none.
+
+    If ``distant_from`` is passed, prefer a planet in a system whose
+    ``global_location`` differs from that hex. Returns
+    ``(planet, target_hex)``.
+    """
+    candidate = None
+    candidate_hex = None
+    # First pass: prefer naturally uncolonized planets.
+    for sys in session.systems:
+        if distant_from is not None and sys.global_location == distant_from:
+            continue
+        for planet in sys.planets:
+            if planet.owner_id is None:
+                return planet, sys.global_location + planet.location
+            if candidate is None:
+                candidate = planet
+                candidate_hex = sys.global_location + planet.location
+    # Fallback: unclaim a candidate to force a deterministic uncolonized planet.
+    if candidate is not None:
+        candidate.owner_id = None
+        return candidate, candidate_hex
+    raise AssertionError(
+        "Galaxy fixture has no planets at all — config/system_count is too small."
+    )
+
+
+def _ensure_enemy_fleet(session, *, location: HexCoord):
+    """F-A-028: deterministic helper — return an enemy empire's fleet,
+    creating one if none exists. Returns the fleet."""
+    if len(session.empires) < 2:
+        raise AssertionError(
+            "Galaxy fixture has fewer than 2 empires; "
+            "test requires a second empire for intercept/enemy targeting."
+        )
+    enemy_empire = session.empires[1]
+    fleet = Fleet(
+        fleet_id=900_000 + enemy_empire.id,
+        owner_id=enemy_empire.id,
+        location=location,
+    )
+    enemy_empire.fleets.append(fleet)
+    session.galaxy.register_fleet(fleet)
+    return fleet
+
+
 def make_colony_ship_for_planet(planet, owner_id: int) -> ShipInstance:
     """Create a ship with a drop pod in carried_items."""
     planet_type_str = planet.planet_type.name
@@ -121,29 +169,26 @@ class TestColonizeCommandIntegration:
     def game_setup(self):
         """Create a real game session with facade and fleet at uncolonized planet.
 
-        PROJ-55: Fleet now includes a colony ship with the correct pod type.
+        F-A-028: an uncolonized planet is now deterministic — if procedural
+        generation didn't produce one, ``_ensure_uncolonized_planet``
+        unclaims a candidate so the test runs against guaranteed state.
         """
         config = GameConfig(galaxy_radius=5000, system_count=10)
         session = GameSession(config=config)
 
-        # Find an uncolonized planet
-        uncolonized_planet = None
-        target_hex = None
-        for sys in session.systems:
-            for planet in sys.planets:
-                if planet.owner_id is None:
-                    uncolonized_planet = planet
-                    target_hex = sys.global_location + planet.location
-                    break
-            if uncolonized_planet:
-                break
+        uncolonized_planet, target_hex = _ensure_uncolonized_planet(session)
 
-        # Inject a fleet at the uncolonized planet's location
-        # PROJ-55: Add colony ship with correct pod type
+        # Ensure the player has at least one colony so
+        # test_colonize_already_owned_fails has a target. GameSession's
+        # default setup gives every empire one, but assert it explicitly
+        # so the test stops gambling on procedural state.
         player_empire = session.empires[0]
-        fleet = Fleet(fleet_id=102, owner_id=player_empire.id, location=target_hex or HexCoord(0, 0))
-        if uncolonized_planet:
-            fleet.ships = [make_colony_ship_for_planet(uncolonized_planet, player_empire.id)]
+        assert player_empire.colonies, (
+            "Game setup invariant: player empire must have a home colony."
+        )
+
+        fleet = Fleet(fleet_id=102, owner_id=player_empire.id, location=target_hex)
+        fleet.ships = [make_colony_ship_for_planet(uncolonized_planet, player_empire.id)]
         player_empire.fleets.append(fleet)
         session.galaxy.register_fleet(fleet)
 
@@ -153,9 +198,6 @@ class TestColonizeCommandIntegration:
     def test_colonize_command_through_facade(self, game_setup):
         """Colonize command through facade adds colonize order to fleet."""
         session, facade, fleet, planet = game_setup
-
-        if planet is None:
-            pytest.skip("No uncolonized planets available for test")
 
         # Execute colonize through facade
         from game.strategy.engine.commands import IssueColonizeCommand
@@ -177,11 +219,7 @@ class TestColonizeCommandIntegration:
         session, facade, fleet, _ = game_setup
 
         player_empire = session.empires[0]
-
-        # Use the player's home colony (already owned)
-        home_colony = player_empire.colonies[0] if player_empire.colonies else None
-        if home_colony is None:
-            pytest.skip("No home colony for test")
+        home_colony = player_empire.colonies[0]  # Guaranteed by fixture assertion.
 
         from game.strategy.engine.commands import IssueColonizeCommand
         cmd = IssueColonizeCommand(fleet.id, home_colony.id)
@@ -195,25 +233,26 @@ class TestInterceptCommandIntegration:
 
     @pytest.fixture
     def game_setup(self):
-        """Create a game session with fleets for both empires."""
+        """Create a game session with fleets for both empires.
+
+        F-A-028: enemy fleet is now deterministic — the helper asserts
+        a second empire exists (default config has 2) and explicitly
+        creates a fleet for them.
+        """
         config = GameConfig(galaxy_radius=5000, system_count=10)
         session = GameSession(config=config)
 
-        # Inject fleets for both empires
         player_empire = session.empires[0]
-        enemy_empire = session.empires[1] if len(session.empires) > 1 else None
-
-        player_location = session.systems[0].global_location if session.systems else HexCoord(0, 0)
-        player_fleet = Fleet(fleet_id=103, owner_id=player_empire.id, location=player_location)
+        assert session.systems, "Game setup invariant: at least one system."
+        player_location = session.systems[0].global_location
+        player_fleet = Fleet(
+            fleet_id=103, owner_id=player_empire.id, location=player_location,
+        )
         player_empire.fleets.append(player_fleet)
         session.galaxy.register_fleet(player_fleet)
 
-        enemy_fleet = None
-        if enemy_empire:
-            enemy_location = session.systems[-1].global_location if session.systems else HexCoord(10, 10)
-            enemy_fleet = Fleet(fleet_id=104, owner_id=enemy_empire.id, location=enemy_location)
-            enemy_empire.fleets.append(enemy_fleet)
-            session.galaxy.register_fleet(enemy_fleet)
+        enemy_location = session.systems[-1].global_location
+        enemy_fleet = _ensure_enemy_fleet(session, location=enemy_location)
 
         facade = StrategySessionFacade(session)
         return session, facade, player_fleet, enemy_fleet
@@ -221,9 +260,6 @@ class TestInterceptCommandIntegration:
     def test_intercept_command_through_facade(self, game_setup):
         """Intercept command through facade adds intercept order to fleet."""
         session, facade, player_fleet, enemy_fleet = game_setup
-
-        if enemy_fleet is None:
-            pytest.skip("Need enemy fleet for intercept test")
 
         # Execute intercept through facade
         from game.strategy.engine.commands import IssueInterceptCommand
@@ -285,34 +321,28 @@ class TestColonizeMissionIntegration:
 
     @pytest.fixture
     def game_setup(self):
-        """Create a real game session with facade."""
+        """Create a real game session with facade.
+
+        F-A-028: a distant uncolonized planet is deterministic — the
+        helper unclaims a candidate if no naturally uncolonized planet
+        exists outside the fleet's home system.
+        """
         config = GameConfig(galaxy_radius=5000, system_count=10)
         session = GameSession(config=config)
 
-        # Inject a fleet at the first system
         player_empire = session.empires[0]
-        start_location = session.systems[0].global_location if session.systems else HexCoord(0, 0)
-        fleet = Fleet(fleet_id=107, owner_id=player_empire.id, location=start_location)
+        assert session.systems, "Game setup invariant: at least one system."
+        start_location = session.systems[0].global_location
+        fleet = Fleet(
+            fleet_id=107, owner_id=player_empire.id, location=start_location,
+        )
         player_empire.fleets.append(fleet)
         session.galaxy.register_fleet(fleet)
 
-        # Find a distant uncolonized planet (not at fleet's current system)
-        uncolonized_planet = None
-        target_hex = None
-        for sys in session.systems:
-            if sys.global_location == start_location:
-                continue  # Skip fleet's current system
-            for planet in sys.planets:
-                if planet.owner_id is None:
-                    uncolonized_planet = planet
-                    target_hex = sys.global_location + planet.location
-                    break
-            if uncolonized_planet:
-                break
-
-        # PROJ-140: Add colony ship matching target planet type
-        if uncolonized_planet:
-            fleet.ships = [make_colony_ship_for_planet(uncolonized_planet, player_empire.id)]
+        uncolonized_planet, target_hex = _ensure_uncolonized_planet(
+            session, distant_from=start_location,
+        )
+        fleet.ships = [make_colony_ship_for_planet(uncolonized_planet, player_empire.id)]
 
         facade = StrategySessionFacade(session)
         return session, facade, fleet, uncolonized_planet, target_hex
@@ -320,9 +350,6 @@ class TestColonizeMissionIntegration:
     def test_colonize_mission_through_facade(self, game_setup):
         """Colonize mission command queues move + colonize orders."""
         session, facade, fleet, planet, target_hex = game_setup
-
-        if planet is None or target_hex is None:
-            pytest.skip("No distant uncolonized planet for mission test")
 
         # Execute colonize mission through facade
         from game.strategy.engine.commands import QueueColonizeMissionCommand
@@ -341,9 +368,6 @@ class TestColonizeMissionIntegration:
     def test_colonize_mission_with_none_planet_through_facade(self, game_setup):
         """Colonize mission with planet_id=None queues move + colonize any orders."""
         session, facade, fleet, _, target_hex = game_setup
-
-        if target_hex is None:
-            pytest.skip("No distant system for mission test")
 
         # Execute colonize mission through facade with planet_id=None
         from game.strategy.engine.commands import QueueColonizeMissionCommand

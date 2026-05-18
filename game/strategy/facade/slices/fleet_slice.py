@@ -167,26 +167,24 @@ def _ship_container_snapshot(
 ) -> ContainerSnapshotInfo:
     """Project a ship's ``bay_inventory`` into a ``ContainerSnapshotInfo``.
 
-    Capacity falls back to ``inf`` when the ship's cargo manager cannot
-    supply bay capacity (atypical test fixtures) — the snapshot stays
-    usable and Phase 2 validation decides how to treat the uncapped
-    case.
+    F-A-013: the snapshot now projects at the bay's real
+    ``capacity_mass`` so it matches what the engine load/unload
+    handlers enforce. Falls back to ``inf`` only when the ship's cargo
+    manager cannot supply a bay capacity (atypical test fixtures).
     """
     inventory = ship.bay_inventory
     try:
         _used, capacity_max = ship._cargo_mgr.get_vehicle_bay_capacity()
     except Exception:  # Intentional broad catch: fixtures may not wire a cargo mgr; treat as uncapped.
         capacity_max = float("inf")
-    # Project at infinite capacity so the view never drops contents that
-    # already exceed the bay's nominal cap. The snapshot then reports
-    # the *real* cap so the UI can flag over-capacity states explicitly.
-    view = inventory.container_view(capacity_mass=float("inf"))
+    capacity_mass = float(capacity_max)
+    view = inventory.container_view(capacity_mass=capacity_mass)
     return ContainerSnapshotInfo(
         container_id=f"ship:{ship.instance_id}:bay_inventory",
         owner_kind="fleet",
         owner_id=fleet_id,
         label=ship.name,
-        capacity_mass=float(capacity_max),
+        capacity_mass=capacity_mass,
         mass_used=view.mass_used,
         allowed_kinds=view.policy.allowed_kinds,
         entries=tuple(view.contents()),

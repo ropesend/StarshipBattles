@@ -140,6 +140,30 @@ def test_get_fleet_containers_emits_one_snapshot_per_ship() -> None:
     assert b_snap.entries == ()
 
 
+def test_ship_container_snapshot_capacity_matches_bay_inventory() -> None:
+    """F-A-013: snapshot's capacity_mass mirrors the real bay cap.
+
+    A ship with a 50-mass bay holding 10 mass of resources reports
+    ``mass_used == 10`` and ``capacity_mass == 50`` (not ``inf``).
+    """
+    # 1 "vapors" unit is 0.001 mass; 10000 units = 10.0 mass — well
+    # under the 50-mass bay cap.
+    ship = _ship_with_bay(
+        instance_id="cap-test",
+        name="Cap Test",
+        bay_capacity_max=50.0,
+        resources={"vapors": 10000.0},
+    )
+    fleet = SimpleNamespace(id=11, ships=[ship])
+    state = SimpleNamespace(get_fleet_by_id=lambda fid: fleet)
+
+    (snap,) = FleetSlice(state).get_fleet_containers(11)
+
+    assert snap.capacity_mass == 50.0
+    assert snap.mass_used == pytest.approx(10.0)
+    assert snap.capacity_mass != float("inf")
+
+
 def test_get_fleet_containers_capacity_falls_back_to_infinity_when_unreadable() -> None:
     """If the ship's cargo manager cannot supply bay capacity, the
     snapshot reports inf — the projection stays usable and Phase 2
@@ -203,7 +227,14 @@ def test_get_planet_containers_emits_stockpile_and_staging_yard_snapshots() -> N
     assert stockpile.owner_id == 12
     assert stockpile.label == "Alpha Colony — Stockpile"
     assert stockpile.allowed_kinds == frozenset({ContainableKind.RESOURCE})
-    assert stockpile.capacity_mass == pytest.approx(200.0)
+    # F-A-014: caps are resource units, converted to mass per-resource.
+    from game.core.resources import ResourceCatalog
+    _catalog = ResourceCatalog.from_json()
+    expected_cap = (
+        100.0 * _catalog.get_mass_per_unit("metals")
+        + 100.0 * _catalog.get_mass_per_unit("fuel")
+    )
+    assert stockpile.capacity_mass == pytest.approx(expected_cap)
     by_resource = {e.type_id: e for e in stockpile.entries}
     assert by_resource["metals"].quantity == pytest.approx(50.0)
     assert by_resource["fuel"].quantity == pytest.approx(12.0)

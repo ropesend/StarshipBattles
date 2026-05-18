@@ -156,7 +156,18 @@ def _planet_stockpile_snapshot(planet: "Planet") -> ContainerSnapshotInfo:
     stockpile = getattr(planet, "stockpile", None) or {}
     max_stockpile = getattr(planet, "max_stockpile", None) or {}
     if max_stockpile:
-        capacity_mass = float(sum(max_stockpile.values()))
+        # F-A-014: ``max_stockpile`` values are per-resource caps in
+        # resource units, not mass. Convert each cap through
+        # ``ResourceCatalog.get_mass_per_unit`` before summing — the
+        # bare ``sum(...)`` was implicitly treating every resource as
+        # mass_per_unit == 1.0, which is wrong for vapors/fuel/exotics
+        # whose mass_per_unit is ≪ 1.
+        from game.core.resources import ResourceCatalog
+        _catalog = ResourceCatalog.from_json()
+        capacity_mass = float(sum(
+            float(amount) * _catalog.get_mass_per_unit(rid)
+            for rid, amount in max_stockpile.items()
+        ))
     else:
         capacity_mass = float("inf")
 

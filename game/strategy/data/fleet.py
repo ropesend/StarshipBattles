@@ -247,6 +247,15 @@ class Fleet:
 
         Aggregates cargo_contents across all ships in the fleet.
 
+        F-A-010 / DI-2026-05-18-006: the consume side rounds float
+        ``amount`` to ``int(round(amount))`` before unloading from the
+        integer-typed cargo store. We mirror that rounding here so the
+        affordability predicate and consumption agree on what gets
+        charged — both treat ``amount=0.1`` as ``0`` and ``amount=0.6``
+        as ``1``. The remaining UX gap (no RESOURCE_SHORTAGE event when
+        a rounded-to-zero cost still stalls progress) is engine-side
+        and out of scope here; see decisions.md (2026-05-18).
+
         Args:
             costs: Dict mapping resource_type -> required amount.
 
@@ -255,7 +264,7 @@ class Fleet:
         """
         for resource_type, amount in costs.items():
             total = self._resource_agg.get_fleet_cargo_current(resource_type)
-            if total < amount:
+            if total < int(round(amount)):
                 return False
         return True
 

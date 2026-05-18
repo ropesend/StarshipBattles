@@ -217,21 +217,17 @@ class TestResupplyStateSaveLoad:
         """Facility fuel levels survive a full game save → load cycle."""
         session = game_session_with_state
 
-        # Find first colony (if any) or add a facility to a planet
-        # The game_session_with_state may have colonies from generation.
-        # We'll find any planet owned by player 0 and add a facility.
+        # F-A-029: deterministic — the `game_session_with_state` fixture
+        # uses default players=2 over `system_count=2`, so every empire
+        # gets a home colony. Assert that invariant rather than skip.
         target_planet = None
         for empire in session.empires:
-            for colony in empire.colonies:
-                target_planet = colony
+            if empire.colonies:
+                target_planet = empire.colonies[0]
                 break
-            if target_planet:
-                break
-
-        if target_planet is None:
-            # If no colonies exist, we can still test serialization
-            # by directly testing that the session round-trips facility data
-            pytest.skip("No colonies in generated session to test facility persistence")
+        assert target_planet is not None, (
+            "Fixture invariant: at least one empire must have a home colony."
+        )
 
         # Add a fuel facility with specific fuel level
         facility = PlanetaryFacility(
@@ -272,15 +268,20 @@ class TestResupplyStateSaveLoad:
         """Partial ship fuel levels survive a full game save → load cycle."""
         session = game_session_with_state
 
-        # Find a fleet to modify
+        # F-A-029: deterministic — `game_session_with_state` explicitly
+        # adds two fleets (fleet1 + fleet2) each with one mock ship; the
+        # invariant is guaranteed by the fixture, not by RNG.
         target_fleet = None
         for empire in session.empires:
             if empire.fleets:
                 target_fleet = empire.fleets[0]
                 break
-
-        if target_fleet is None or not target_fleet.ships:
-            pytest.skip("No fleets with ships in generated session")
+        assert target_fleet is not None, (
+            "Fixture invariant: at least one empire must have a fleet."
+        )
+        assert target_fleet.ships, (
+            "Fixture invariant: the seeded fleet must contain at least one ship."
+        )
 
         # Set partial fuel on the first ship
         target_ship = target_fleet.ships[0]

@@ -91,3 +91,52 @@ def test_can_colonize_returns_error_for_unknown_planet() -> None:
 
     assert not result.is_valid
     assert result.errors == ["Planet not found."]
+
+
+def test_planet_stockpile_snapshot_uses_per_resource_mass() -> None:
+    """F-A-014: max_stockpile caps are resource units, not mass.
+
+    Multiply each cap by ``ResourceCatalog.get_mass_per_unit`` before
+    summing; the bare sum treated every resource as mass_per_unit==1.0
+    which was wildly wrong for vapors/fuel/exotics.
+    """
+    from game.core.resources import ResourceCatalog
+    from game.strategy.facade.slices.planet_slice import (
+        _planet_stockpile_snapshot,
+    )
+
+    planet = SimpleNamespace(
+        id=42,
+        name="Cap Test",
+        stockpile={},
+        max_stockpile={"vapors": 1000.0, "fuel": 500.0},
+    )
+
+    snap = _planet_stockpile_snapshot(planet)
+
+    catalog = ResourceCatalog.from_json()
+    expected = (
+        1000.0 * catalog.get_mass_per_unit("vapors")
+        + 500.0 * catalog.get_mass_per_unit("fuel")
+    )
+    assert snap.capacity_mass == expected
+    # Sanity: must NOT be the old buggy sum of raw amounts.
+    assert snap.capacity_mass != 1500.0
+
+
+def test_planet_stockpile_snapshot_no_caps_set_reports_inf_capacity() -> None:
+    """No caps set means capacity_mass = inf (unchanged behavior)."""
+    from game.strategy.facade.slices.planet_slice import (
+        _planet_stockpile_snapshot,
+    )
+
+    planet = SimpleNamespace(
+        id=7,
+        name="Uncapped",
+        stockpile={"metals": 50.0},
+        max_stockpile={},
+    )
+
+    snap = _planet_stockpile_snapshot(planet)
+
+    assert snap.capacity_mass == float("inf")
