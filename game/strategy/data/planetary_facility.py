@@ -133,22 +133,33 @@ class PlanetaryFacility:
         """
         self.component_states[component_key] = state.to_dict()
 
-    def get_fuel_storage(self) -> float:
-        """Get current fuel level in this facility."""
-        return self.consumable_levels.get("fuel", 0.0)
+    # ------------------------------------------------------------------
+    # Generic consumable API (F-A-012)
+    # ------------------------------------------------------------------
+    #
+    # ``consumable_levels`` stores per-resource amounts; the four
+    # ``*_consumable`` methods below are the canonical entry points.
+    # The ``*_fuel`` methods are thin deprecated wrappers retained while
+    # ``resupply_engine.py`` and a number of tests still call them by
+    # name. New code SHOULD prefer the generic API.
 
-    def get_max_fuel_storage(self, registries) -> float:
-        """Calculate max fuel capacity from design_data components.
+    def _validate_resource_id(self, resource_id: str) -> None:
+        from game.core.resources import ResourceCatalog
+        if not ResourceCatalog.from_json().has(resource_id):
+            raise ValueError(f"Unknown resource_id: {resource_id!r}")
 
-        Scans all components in the facility's design_data for ResourceStorage
-        abilities with resource type 'fuel' and sums their amounts.
+    def get_consumable_storage(self, resource_id: str) -> float:
+        """Return the current stored amount of ``resource_id``."""
+        return float(self.consumable_levels.get(resource_id, 0.0))
 
-        Args:
-            registries: GameRegistries with component definitions.
+    def get_max_consumable_storage(self, resource_id: str, registries) -> float:
+        """Compute max capacity for ``resource_id`` from design_data.
 
-        Returns:
-            Total fuel storage capacity.
+        Scans the facility's design components for ``ResourceStorage``
+        ability entries matching ``resource_id`` and sums their
+        ``amount`` fields. Unknown resource IDs raise ``ValueError``.
         """
+        self._validate_resource_id(resource_id)
         total = 0.0
         for comp in iter_components(self.design_data):
             comp_id = get_component_id(comp)
@@ -157,40 +168,53 @@ class PlanetaryFacility:
                 continue
             abilities = get_component_abilities(comp_def)
             for storage in (abilities.get('ResourceStorage') or []):
-                if isinstance(storage, dict) and storage.get('resource') == "fuel":
+                if isinstance(storage, dict) and storage.get('resource') == resource_id:
                     total += storage.get('amount', 0)
         return total
 
-    def add_fuel(self, amount: float, registries) -> float:
-        """Add fuel up to max capacity.
+    def add_consumable(self, resource_id: str, amount: float, registries) -> float:
+        """Add ``amount`` of ``resource_id`` up to max capacity.
 
-        Args:
-            amount: Amount of fuel to add.
-            registries: GameRegistries for max capacity lookup.
-
-        Returns:
-            Overflow amount that could not be stored.
+        Returns the overflow amount that could not be stored.
         """
-        max_storage = self.get_max_fuel_storage(registries)
-        current = self.get_fuel_storage()
+        max_storage = self.get_max_consumable_storage(resource_id, registries)
+        current = self.get_consumable_storage(resource_id)
         space = max_storage - current
         added = min(amount, space)
-        self.consumable_levels["fuel"] = current + added
+        self.consumable_levels[resource_id] = current + added
         return amount - added
 
-    def withdraw_fuel(self, amount: float) -> float:
-        """Withdraw fuel from this facility.
-
-        Args:
-            amount: Amount of fuel to withdraw.
-
-        Returns:
-            Actual amount withdrawn (may be less than requested).
-        """
-        current = self.get_fuel_storage()
+    def withdraw_consumable(self, resource_id: str, amount: float) -> float:
+        """Withdraw ``amount`` of ``resource_id``; returns actual amount."""
+        self._validate_resource_id(resource_id)
+        current = self.get_consumable_storage(resource_id)
         withdrawn = min(amount, current)
-        self.consumable_levels["fuel"] = current - withdrawn
+        self.consumable_levels[resource_id] = current - withdrawn
         return withdrawn
+
+    # ------------------------------------------------------------------
+    # Deprecated fuel-specific wrappers (F-A-012)
+    # ------------------------------------------------------------------
+    #
+    # Retained for source-compat with ``resupply_engine`` (PROJ-445
+    # territory) and a number of tests still asserting on the fuel
+    # name. Prefer the generic ``*_consumable`` API above for new code.
+
+    def get_fuel_storage(self) -> float:
+        """Deprecated: prefer ``get_consumable_storage('fuel')``."""
+        return self.get_consumable_storage("fuel")
+
+    def get_max_fuel_storage(self, registries) -> float:
+        """Deprecated: prefer ``get_max_consumable_storage('fuel', ...)``."""
+        return self.get_max_consumable_storage("fuel", registries)
+
+    def add_fuel(self, amount: float, registries) -> float:
+        """Deprecated: prefer ``add_consumable('fuel', ...)``."""
+        return self.add_consumable("fuel", amount, registries)
+
+    def withdraw_fuel(self, amount: float) -> float:
+        """Deprecated: prefer ``withdraw_consumable('fuel', ...)``."""
+        return self.withdraw_consumable("fuel", amount)
 
     @property
     def is_shipyard(self) -> bool:

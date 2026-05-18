@@ -204,6 +204,68 @@ class TestFacilityResourceSerialization:
 # Task 2.3: Helper methods
 # ===========================================================================
 
+class TestGenericConsumableAPI:
+    """F-A-012: generic add/withdraw/get_consumable_* API."""
+
+    def _make_storage_facility(self, resource_id: str, capacity: float = 500.0):
+        facility = PlanetaryFacility(
+            instance_id=f"{resource_id}-depot",
+            design_id="depot",
+            name=f"{resource_id.title()} Depot",
+            design_data={
+                "layers": {"hull": [{"id": f"{resource_id}_tank"}]}
+            },
+            is_operational=True,
+        )
+        registries = MagicMock()
+        tank_comp = MagicMock()
+        tank_comp.abilities = {
+            "ResourceStorage": [{"resource": resource_id, "amount": capacity}],
+        }
+        registries.components.get = lambda cid: (
+            tank_comp if cid == f"{resource_id}_tank" else None
+        )
+        return facility, registries
+
+    def test_add_consumable_organics_increases_level(self):
+        facility, registries = self._make_storage_facility("organics", capacity=400.0)
+        overflow = facility.add_consumable("organics", 150.0, registries)
+        assert overflow == 0.0
+        assert facility.get_consumable_storage("organics") == 150.0
+
+    def test_withdraw_consumable_radioactives_decreases_level(self):
+        facility, _ = self._make_storage_facility("radioactives", capacity=100.0)
+        facility.consumable_levels["radioactives"] = 80.0
+        withdrawn = facility.withdraw_consumable("radioactives", 30.0)
+        assert withdrawn == 30.0
+        assert facility.get_consumable_storage("radioactives") == 50.0
+
+    def test_get_consumable_storage_returns_zero_for_unstored_resource(self):
+        """A resource never stored in this facility reads as 0.0."""
+        facility, _ = self._make_storage_facility("organics")
+        assert facility.get_consumable_storage("fuel") == 0.0
+
+    def test_get_max_consumable_storage_raises_on_unknown_resource_id(self):
+        """Unknown-to-catalog resource IDs fail fast."""
+        facility, registries = self._make_storage_facility("organics")
+        with pytest.raises(ValueError):
+            facility.get_max_consumable_storage("not_a_real_resource", registries)
+
+    def test_add_consumable_returns_overflow_when_capacity_exceeded(self):
+        facility, registries = self._make_storage_facility("organics", capacity=100.0)
+        overflow = facility.add_consumable("organics", 150.0, registries)
+        assert overflow == 50.0
+        assert facility.get_consumable_storage("organics") == 100.0
+
+    def test_fuel_wrappers_delegate_to_generic_consumable_api(self):
+        """add_fuel/get_fuel_storage are now thin wrappers over the generic API."""
+        facility, registries = self._make_storage_facility("fuel", capacity=200.0)
+        facility.add_fuel(75.0, registries)
+        # Same value visible through both APIs.
+        assert facility.get_fuel_storage() == 75.0
+        assert facility.get_consumable_storage("fuel") == 75.0
+
+
 class TestGetFuelStorage:
     """Test PlanetaryFacility.get_fuel_storage()."""
 

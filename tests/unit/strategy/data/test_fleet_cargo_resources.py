@@ -92,6 +92,41 @@ class TestFleetHasCargoResources:
 
         assert fleet.has_cargo_resources({"exotics": 10}) is False
 
+    def test_has_resources_rounds_fractional_costs_symmetric_with_consume(self):
+        """F-A-010 / DI-2026-05-18-006: affordability uses int(round(amount)).
+
+        ``consume_cargo_resource`` charges ``int(round(amount))`` against
+        the integer-typed cargo store. The affordability predicate must
+        round the same way so the two sides agree on what gets charged.
+
+        Concretely: amount=0.6 rounds to 1, amount=0.4 rounds to 0.
+        """
+        ship = _make_ship(
+            cargo_capacity={"metals": 10},
+            cargo_contents={"metals": 1},
+        )
+        fleet = _make_fleet([ship])
+
+        # 1.4 rounds to 1; we have 1 → affordable.
+        assert fleet.has_cargo_resources({"metals": 1.4}) is True
+        # 1.6 rounds to 2; we have 1 → not affordable.
+        assert fleet.has_cargo_resources({"metals": 1.6}) is False
+        # 0.4 rounds to 0; we have 1 → trivially affordable.
+        assert fleet.has_cargo_resources({"metals": 0.4}) is True
+        # 0.6 rounds to 1; we have 1 → affordable.
+        assert fleet.has_cargo_resources({"metals": 0.6}) is True
+
+    def test_has_resources_round_to_zero_against_empty_cargo(self):
+        """A sub-0.5 cost against empty cargo is treated as 0-cost (matches
+        what consume actually charges)."""
+        ship = _make_ship(
+            cargo_capacity={"metals": 10},
+            cargo_contents={"metals": 0},
+        )
+        fleet = _make_fleet([ship])
+        # 0.1 rounds to 0; consume would also charge 0; both sides agree.
+        assert fleet.has_cargo_resources({"metals": 0.1}) is True
+
 
 class TestFleetConsumeCargoResource:
     """Tests for fleet.consume_cargo_resource() method."""
