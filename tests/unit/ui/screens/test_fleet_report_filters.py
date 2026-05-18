@@ -73,6 +73,35 @@ def make_mock_ship(
         'fuel': current_fuel,
         'energy': current_energy,
     }
+    # PROJ-436 Phase 3c: production reads / writes through the stable
+    # manager API (``ship._resource_mgr.get_current_resource`` /
+    # ``ship._cargo_mgr.has_cargo`` / ``.total_cargo_units`` /
+    # ``.get_all_cargo``). Wire the cargo-related manager methods to
+    # read from this mock's ``cargo_contents`` so per-test assignments
+    # like ``ship.cargo_contents = {...}`` keep working without
+    # rewriting every test setup.
+    from game.strategy.data.ship_consumable_manager import (
+        ShipConsumableManager,
+    )
+    from game.strategy.data.ship_cargo_manager import ShipCargoManager
+    ship._resource_mgr = ShipConsumableManager(ship)
+    # ``ShipCargoManager`` is heavier (uses design_data for bays) — keep
+    # the existing MagicMock for bay-related methods but route the
+    # cargo-content reads through a thin closure that follows the mock
+    # ship's ``cargo_contents`` dict assignments.
+    ship._cargo_mgr.has_cargo = MagicMock(
+        side_effect=lambda: bool(ship.cargo_contents) and any(
+            v > 0 for v in ship.cargo_contents.values()
+        )
+    )
+    ship._cargo_mgr.total_cargo_units = MagicMock(
+        side_effect=lambda: sum(
+            int(v) for v in (ship.cargo_contents or {}).values()
+        )
+    )
+    ship._cargo_mgr.get_all_cargo = MagicMock(
+        side_effect=lambda: dict(ship.cargo_contents or {})
+    )
 
     # Combat capable status
     ship.is_combat_capable.return_value = is_alive and not is_derelict

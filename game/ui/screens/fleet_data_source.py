@@ -251,8 +251,13 @@ class FleetDataSource(ITableDataSource):
         return f"{current}/{capacity}" if capacity > 0 else "--"
 
     def _format_cargo(self, ship: "ShipInstance") -> str:
-        """Format total cargo for display."""
-        total = sum(ship.cargo_contents.values()) if ship.cargo_contents else 0
+        """Format total cargo for display.
+
+        PROJ-436 Phase 3c: route through the cargo-manager's stable
+        ``total_cargo_units`` API (Phase 3f reroutes the manager body
+        to ``Container`` without touching this caller).
+        """
+        total = ship._cargo_mgr.total_cargo_units()
         return str(total) if total > 0 else "--"
 
     def _format_capability(self, ship: "ShipInstance", col_id: str) -> str:

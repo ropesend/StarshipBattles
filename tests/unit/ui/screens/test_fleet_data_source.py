@@ -394,33 +394,48 @@ class TestFleetDataSourceCellValueCargo:
     """Test FleetDataSource cargo column."""
 
     def test_cargo_with_contents(self):
-        """Cargo column returns total cargo."""
+        """Cargo column returns total cargo.
+
+        PROJ-436 Phase 3c: production reads through
+        ``ship._cargo_mgr.total_cargo_units()``.
+        """
         from game.ui.screens.fleet_data_source import FleetDataSource
 
         ship = Mock()
-        ship.cargo_contents = {"minerals": 50, "food": 30}
+        ship._cargo_mgr.total_cargo_units = Mock(return_value=80)
 
         ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "cargo") == "80"
 
     def test_cargo_empty(self):
-        """Cargo column returns -- when empty."""
+        """Cargo column returns -- when empty.
+
+        PROJ-436 Phase 3c: production reads through
+        ``ship._cargo_mgr.total_cargo_units()``.
+        """
         from game.ui.screens.fleet_data_source import FleetDataSource
 
         ship = Mock()
-        ship.cargo_contents = {}
+        ship._cargo_mgr.total_cargo_units = Mock(return_value=0)
 
         ds = _make_data_source(ships=[ship])
 
         assert ds.get_cell_value(0, "cargo") == "--"
 
     def test_cargo_none(self):
-        """Cargo column returns -- when cargo_contents is None."""
+        """Cargo column returns -- when there is no cargo.
+
+        PROJ-436 Phase 3c: production reads through
+        ``ship._cargo_mgr.total_cargo_units()`` which never returns
+        None (it always sums to 0 when the underlying dict is empty
+        or absent). The legacy ``cargo_contents is None`` shape has
+        no production source.
+        """
         from game.ui.screens.fleet_data_source import FleetDataSource
 
         ship = Mock()
-        ship.cargo_contents = None
+        ship._cargo_mgr.total_cargo_units = Mock(return_value=0)
 
         ds = _make_data_source(ships=[ship])
 

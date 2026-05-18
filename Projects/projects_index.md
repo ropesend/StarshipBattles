@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-438 | Strategy State Surface and Intent Lifecycle Consolidation | Planning | 2026-05-17 | 2026-05-17 |
 | PROJ-437 | Container-Aware Transfer UI | Planning | 2026-05-17 | 2026-05-17 |
 | PROJ-436 | Unified Storage Substrate and Container Unification | Planning | 2026-05-17 | 2026-05-17 |
 

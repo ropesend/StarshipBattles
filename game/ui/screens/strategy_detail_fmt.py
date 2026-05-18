@@ -533,7 +533,10 @@ def _format_cargo_summary(fleet: IFleet) -> str:
 
     for ship in fleet.ships:
         s: IShipInstance = ship
-        for cargo_type, amount in s.cargo_contents.items():
+        # PROJ-436 Phase 3c: iterate via the cargo manager's snapshot
+        # so the dict-vs-Container substrate stays hidden behind the
+        # stable API.
+        for cargo_type, amount in s._cargo_mgr.get_all_cargo().items():
             if amount > 0:
                 totals[cargo_type] = totals.get(cargo_type, 0) + amount
         # PROJ-431 Phase 1e: read through the typed bay_inventory

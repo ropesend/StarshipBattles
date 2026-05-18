@@ -87,15 +87,16 @@ def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
         calculated_stats = ship.get_calculated_stats()
         resource_storage = calculated_stats.get('resource_storage', {})
 
-        # Fuel
+        # Fuel / Energy: read current levels via the consumable manager
+        # (PROJ-436 Phase 3c — stable read API; the dict-vs-Container
+        # substrate is hidden behind ``get_current_resource``).
         ship_max_fuel = resource_storage.get("fuel", 0)
         max_fuel += ship_max_fuel
-        total_fuel += ship.consumable_levels.get("fuel", 0)
+        total_fuel += ship._resource_mgr.get_current_resource("fuel")
 
-        # Energy
         ship_max_energy = resource_storage.get("energy", 0)
         max_energy += ship_max_energy
-        total_energy += ship.consumable_levels.get("energy", 0)
+        total_energy += ship._resource_mgr.get_current_resource("energy")
 
         # Passenger and General Cargo calculations
         cargo_storage = calculated_stats.get('cargo_storage', {})
@@ -169,7 +170,8 @@ def _should_exclude_by_cargo(ship: 'ShipInstance', filter_state: Dict[str, Any])
     state = filter_state.get('has_cargo', FilterState.IGNORE)
     if state is FilterState.IGNORE:
         return False
-    has_cargo = bool(ship.cargo_contents) and sum(ship.cargo_contents.values()) > 0
+    # PROJ-436 Phase 3c: read via the cargo manager's stable API.
+    has_cargo = ship._cargo_mgr.has_cargo()
     return _check_tri_state(state, has_cargo)
 
 
@@ -302,7 +304,8 @@ def sort_ships(
         elif sort_column == 'transport':
             return ship._cargo_mgr.get_cargo_capacity('passengers')
         elif sort_column == 'cargo':
-            return sum(ship.cargo_contents.values()) if ship.cargo_contents else 0
+            # PROJ-436 Phase 3c: cargo manager owns the sum.
+            return ship._cargo_mgr.total_cargo_units()
         elif sort_column == 'resources':
             # No meaningful sort for combined column
             return 0

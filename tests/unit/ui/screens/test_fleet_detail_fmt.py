@@ -7,12 +7,18 @@ from game.strategy.data.order_types import OrderType
 # --- Mock Helpers ---
 
 def _make_mock_ship(design_id: str, design_name: str, mass: float, cargo=None):
-    """Create a MagicMock ship with design, mass, and optional cargo."""
+    """Create a MagicMock ship with design, mass, and optional cargo.
+
+    PROJ-436 Phase 3c: production reads cargo via
+    ``ship._cargo_mgr.get_all_cargo()``; wire the manager method
+    instead of (or in addition to) the legacy dict.
+    """
     ship = MagicMock()
     ship.design_id = design_id
     ship.design_data = {'name': design_name}
     ship.get_calculated_stats.return_value = {'mass': mass}
     ship.cargo_contents = cargo or {}
+    ship._cargo_mgr.get_all_cargo.return_value = cargo or {}
     return ship
 
 

@@ -368,18 +368,20 @@ class TestFormatFleetInfo:
 
     def test_fleet_with_ships(self, mock_fleet):
         """Test fleet with ships."""
+        # PROJ-436 Phase 3c: production reads via
+        # ``ship._cargo_mgr.get_all_cargo()``.
         ship1 = Mock()
         ship1.design_id = "cruiser"
         ship1.design_data = {"name": "Battle Cruiser"}
         ship1.get_calculated_stats = Mock(return_value={"mass": 1000})
-        ship1.cargo_contents = {}
+        ship1._cargo_mgr.get_all_cargo = Mock(return_value={})
         ship1.bay_inventory = None
 
         ship2 = Mock()
         ship2.design_id = "cruiser"
         ship2.design_data = {"name": "Battle Cruiser"}
         ship2.get_calculated_stats = Mock(return_value={"mass": 1000})
-        ship2.cargo_contents = {}
+        ship2._cargo_mgr.get_all_cargo = Mock(return_value={})
         ship2.bay_inventory = None
 
         mock_fleet.ships = [ship1, ship2]
@@ -485,9 +487,13 @@ class TestFormatCargoSummary:
     """Tests for _format_cargo_summary()."""
 
     def test_no_cargo(self, mock_fleet):
-        """Test fleet with no cargo."""
+        """Test fleet with no cargo.
+
+        PROJ-436 Phase 3c: production reads via
+        ``ship._cargo_mgr.get_all_cargo()``.
+        """
         ship = Mock()
-        ship.cargo_contents = {}
+        ship._cargo_mgr.get_all_cargo = Mock(return_value={})
         ship.bay_inventory = None
         mock_fleet.ships = [ship]
 
@@ -498,11 +504,15 @@ class TestFormatCargoSummary:
     def test_cargo_aggregation(self, mock_fleet):
         """Test cargo aggregated across ships."""
         ship1 = Mock()
-        ship1.cargo_contents = {"colonists": 100, "food": 50}
+        ship1._cargo_mgr.get_all_cargo = Mock(
+            return_value={"colonists": 100, "food": 50}
+        )
         ship1.bay_inventory = None
 
         ship2 = Mock()
-        ship2.cargo_contents = {"colonists": 150, "ore": 200}
+        ship2._cargo_mgr.get_all_cargo = Mock(
+            return_value={"colonists": 150, "ore": 200}
+        )
         ship2.bay_inventory = None
 
         mock_fleet.ships = [ship1, ship2]
@@ -517,7 +527,9 @@ class TestFormatCargoSummary:
     def test_cargo_name_formatting(self, mock_fleet):
         """Test cargo names formatted with title case."""
         ship = Mock()
-        ship.cargo_contents = {"rare_minerals": 100}
+        ship._cargo_mgr.get_all_cargo = Mock(
+            return_value={"rare_minerals": 100}
+        )
         ship.bay_inventory = None
         mock_fleet.ships = [ship]
 

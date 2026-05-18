@@ -11,7 +11,15 @@ class TestShipDisplayFormatter:
         """Create a mock ShipInstance for testing.
 
         PROJ-95: consumable_levels always contains actual values.
+        PROJ-436 Phase 3c: ShipDisplayFormatter now reads via
+        ``ship._resource_mgr.get_current_resource(...)``; the fixture
+        wires a real ``ShipConsumableManager`` around the mock ship so
+        the dict-vs-Container substrate stays hidden behind the
+        stable manager API.
         """
+        from game.strategy.data.ship_consumable_manager import (
+            ShipConsumableManager,
+        )
         ship = Mock()
         ship.design_data = {'name': 'TestShip'}
         ship.design_id = 'test_ship'
@@ -36,6 +44,7 @@ class TestShipDisplayFormatter:
         })
         # Mock is_damaged method
         ship.is_damaged = Mock(return_value=False)
+        ship._resource_mgr = ShipConsumableManager(ship)
         return ship
 
     def test_get_display_id_with_serial(self, mock_ship_instance):
