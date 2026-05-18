@@ -83,6 +83,16 @@ from .warhead import (
 # PROJ-FMS-A Phase 3: VehicleBay substrate for design-backed carried vehicles.
 from .vehicle_bay import VehicleBayAbility
 
+# PROJ-436 Phase 1: unified Container ability (replaces ResourceStorage /
+# CargoStorage / VehicleBay going forward; legacy abilities still
+# registered and parity-compileable via the helpers in this module).
+from .container import (
+    ContainerAbility,
+    container_view_from_cargo_storage,
+    container_view_from_resource_storage,
+    container_view_from_vehicle_bay,
+)
+
 # PROJ-FMS-A Phase 5: launch + recovery ability skeletons. Six launch
 # classes (3 strategic + 3 tactical) and two recovery classes. All
 # data-bearing only; execution lands in PROJ-FMS-B/C/D.
@@ -144,6 +154,8 @@ ABILITY_REGISTRY = {
     "Laserhead": LaserheadAbility,
     # PROJ-FMS-A Phase 3 (vehicle bay substrate).
     "VehicleBay": VehicleBayAbility,
+    # PROJ-436 Phase 1 (unified Container ability).
+    "Container": ContainerAbility,
     # PROJ-FMS-A Phase 5 (launch / recovery skeletons).
     "StrategicMineLayer": StrategicMineLayerAbility,
     "StrategicFighterLaunch": StrategicFighterLaunchAbility,
@@ -326,6 +338,11 @@ __all__ = [
     'LaserheadAbility',
     # PROJ-FMS-A Phase 3
     'VehicleBayAbility',
+    # PROJ-436 Phase 1 (unified Container)
+    'ContainerAbility',
+    'container_view_from_cargo_storage',
+    'container_view_from_resource_storage',
+    'container_view_from_vehicle_bay',
     # PROJ-FMS-A Phase 5
     'StrategicMineLayerAbility',
     'StrategicFighterLaunchAbility',

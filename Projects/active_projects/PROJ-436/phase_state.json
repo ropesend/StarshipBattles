@@ -35,20 +35,19 @@
     "phase_1": {
       "depends_on": ["phase_0"],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
+      "phase_base_sha": "3db37e0fa",
       "phase_branch": "main",
       "phase_head_sha": null,
       "planned_files": [
         "game/simulation/components/abilities/container.py",
-        "game/simulation/components/abilities/cargo.py",
-        "game/simulation/components/abilities/resources.py",
+        "game/simulation/components/abilities/__init__.py",
         "tests/unit/simulation/components/abilities/test_container_ability.py"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_2": {

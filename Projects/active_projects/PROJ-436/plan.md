@@ -16,7 +16,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 0. Container substrate + design decisions | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. Component ability convergence (`Container` parser) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Component ability convergence (`Container` parser) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. `ShipInstance.bay_inventory` widening to full Container | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. `ShipInstance.cargo_contents` + `consumable_levels` migration | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. `Planet.stockpile` + `max_stockpile` + `staging_yard` migration | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -30,9 +30,9 @@
 
 ## Current State
 **Last Updated:** 2026-05-18
-**Active Phase:** Phase 1 (Container ability parser)
-**Last Action:** Phase 0 COMPLETE. Landed substrate (`Container`, `Containable` variants, `ContainerPolicy`, `ContainerEntry`, `AddResult`, `RemoveResult`), extended `ResourceDefinition` with `mass_per_unit` field and `ResourceCatalog.get_mass_per_unit()` accessor, extended `data/resources.json` with `mass_per_unit` on all 8 entries. 102 focused tests; 21151/21151 sharded green (+19 new vs 21132 baseline; 0 regressions). Phase 0 D1/D2/D3 deferred decisions resolved with defaults documented in decisions.md.
-**Next Action:** Phase 1 RED — `tests/unit/simulation/components/abilities/test_container_ability.py` parser parity tests; then GREEN compile the three legacy abilities (`ResourceStorage`, `CargoStorage`, `VehicleBay`) to `Container` internally.
+**Active Phase:** Phase 2 (BayInventory widening)
+**Last Action:** Phase 1 COMPLETE. Landed `ContainerAbility` parser (data shape `{capacity_mass, allowed_kinds, allowed_type_ids}`); registered in `ABILITY_REGISTRY` under "Container". Added parity helpers `container_view_from_resource_storage()`, `container_view_from_cargo_storage()`, `container_view_from_vehicle_bay()` that compile each legacy ability into the equivalent `(capacity_mass, ContainerPolicy)` tuple. 18 focused tests; 21169/21169 sharded green (+18 new vs 21151 Phase 0 baseline; 0 regressions). No data file changes; no runtime behaviour change. Legacy abilities remain in the registry and are unchanged.
+**Next Action:** Phase 2 — widen `ShipInstance.bay_inventory` from `{pods, vehicles}` to a full three-slice `Container`; migrate launch / recovery handlers to source / sink via `container.add()` / `container.remove()`.
 **Blockers:** None.
 
 ## Overview
