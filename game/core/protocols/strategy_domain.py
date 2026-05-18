@@ -63,12 +63,42 @@ class IEmpire(Protocol):
 
     @property
     def resource_pool(self) -> Dict[str, float]:
-        """Current resource amounts by type."""
+        """Read-only aggregate of resource amounts across the empire.
+
+        PROJ-436 Phase 5: pure aggregation over the empire's colony
+        stockpiles. The concrete ``Empire.resource_pool`` walks
+        ``self.colonies[*].stockpile`` and sums by ``resource_id``;
+        the legacy ``Empire._fleet_resource_pool`` durable summand
+        was deleted in Phase 5 and fleet construction now draws
+        directly from the build-location's container.
+
+        Per PROJ-436 Phase 0 D2: uncached pure query. If profiling
+        ever shows the aggregation is hot at large-empire scale,
+        caching with explicit invalidation (PROJ-293 pattern) can
+        land as a sibling sub-phase.
+
+        Used for UI display and economy reporting. **Not** a write
+        surface — protocols never expose write paths against the
+        aggregate; per-colony writes route through
+        ``IPlanetMutator``.
+        """
         ...
 
     @property
     def max_storage(self) -> Dict[str, float]:
-        """Storage capacity per resource type."""
+        """Storage capacity per resource type.
+
+        Set by ``HarvestingEngine`` each turn (routed through
+        ``EmpireWriteService.replace_max_storage``) by summing the
+        capacity contribution of every operational storage component
+        across the empire's planets. Read by the treasury panel,
+        empire-economy snapshot, build-queue affordability helpers,
+        and the strategy-UI resource bar.
+
+        **Not** a write surface — protocols never expose write paths
+        against the aggregate; storage capacity flows from per-
+        component contributions through ``EmpireWriteService``.
+        """
         ...
 
     @property
@@ -156,7 +186,21 @@ class IShipInstance(Protocol):
 
     @property
     def cargo_contents(self) -> Dict[str, int]:
-        """Cargo contents (cargo_type -> current amount)."""
+        """Cargo contents (cargo_type -> current amount).
+
+        PROJ-436 Phase 3f: the ``cargo_contents`` dataclass field on
+        ``ShipInstance`` was deleted; the public name survives as a
+        backward-compatible ``@property`` over the renamed private
+        dict. Production **writers** route through the cargo manager
+        API (``ship._cargo_mgr.set_cargo`` / ``get_all_cargo`` /
+        ``total_cargo_units`` / ``has_cargo``) landed in Phase 3b —
+        this property is the **read** surface for callers that want
+        the raw dict.
+
+        The post-Phase-3 manager-API path is the canonical way to
+        mutate cargo; do **not** introduce new write-side callers
+        that mutate the returned dict in place.
+        """
         ...
 
     @property

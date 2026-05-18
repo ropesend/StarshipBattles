@@ -131,8 +131,19 @@ class IGalaxySpatialQuery(Protocol):
 class IStockpileHolder(Protocol):
     """Read+write surface for planet-side resource stockpiles.
 
-    Planet currently satisfies this structurally. Capacity / conservation
+    Planet satisfies this structurally. Capacity / conservation
     contract tests are PROJ-370's responsibility, not PROJ-372's.
+
+    PROJ-436 Phase 4f: ``Planet.stockpile`` migrated from a dataclass
+    field to a backward-compatible ``@property`` over the renamed
+    private ``_stockpile`` dict. The four methods below continue to
+    satisfy the protocol transparently. PROJ-436 Phase 6 audit
+    explicitly chose to leave the protocol shape unchanged (the
+    Phase 6 brief offered three options; "leave as-is" was the right
+    call because production writers route through ``IPlanetMutator``
+    rather than narrowing through ``IStockpileHolder``). The member
+    shape is pinned by
+    ``tests/static_guards/test_no_legacy_protocol_names.py``.
     """
 
     def add_to_stockpile(self, resource_type: str, amount: float) -> float:
@@ -158,8 +169,17 @@ class IStockpileHolder(Protocol):
 class IStagingYardHolder(Protocol):
     """Read+write surface for planet-side staging-yard storage.
 
-    Planet currently satisfies this structurally. Mass-cap contract
-    tests are PROJ-370's responsibility.
+    Planet satisfies this structurally. Mass-cap contract tests are
+    PROJ-370's responsibility.
+
+    PROJ-436 Phase 4f: ``Planet.staging_yard`` migrated from a
+    dataclass field to a backward-compatible ``@property`` over the
+    renamed private ``_staging_yard`` list. The four methods below
+    continue to satisfy the protocol transparently. PROJ-436 Phase 6
+    audit kept the protocol shape unchanged for the same reason as
+    ``IStockpileHolder`` (see that class's docstring); the member
+    shape is pinned by
+    ``tests/static_guards/test_no_legacy_protocol_names.py``.
     """
 
     def get_staging_mass(self) -> float:
