@@ -19,6 +19,14 @@
       "planned_files": [
         "Projects/active_projects/PROJ-443/findings/hidden_test_baseline.md"
       ],
+      "hidden_directories": [
+        "tests/unit/strategy/data/",
+        "tests/unit/combat_lab/",
+        "tests/unit/data/",
+        "tests/unit/assets/",
+        "tests/unit/ui/assets/",
+        "tests/integration/data/"
+      ],
       "review_dispatch_failed": false,
       "review_mode": "lightweight",
       "review_request_id": null,
@@ -65,7 +73,12 @@
       "phase_branch": "main",
       "phase_head_sha": null,
       "planned_files": [
-        "tests/unit/strategy/data/"
+        "tests/unit/strategy/data/",
+        "tests/unit/combat_lab/",
+        "tests/unit/data/",
+        "tests/unit/assets/",
+        "tests/unit/ui/assets/",
+        "tests/integration/data/"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
@@ -82,7 +95,8 @@
       "phase_head_sha": null,
       "planned_files": [
         "pytest.ini",
-        "tests/static_guards/test_no_hidden_test_directories.py"
+        "tests/static_guards/test_no_hidden_test_files.py",
+        "docs/guides/testing_infrastructure.md"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
