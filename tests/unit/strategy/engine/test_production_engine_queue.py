@@ -51,14 +51,14 @@ def colony():
     col = MagicMock(spec=Planet)
     col.construction_queue = []
     col.facilities = []
-    # PROJ-436 Phase 5: ``context_type=None`` used to route through
-    # the empire-pool fallback in production_engine — that fallback
-    # was deleted (the empire's fleet-side resource pool is gone).
-    # These queue-iteration tests need a real planet context to
-    # exercise the stockpile branch.
-    col.context_type = "planet"
-    col.has_stockpile.return_value = True
-    col.consume_from_stockpile = MagicMock()
+    # PROJ-436 Phase 8: the engine reads through the unified
+    # ``IProductionResourceSource`` protocol — Planet's
+    # ``production_has_resources`` / ``production_consume_resource``
+    # are the dispatch points. The old stockpile-named mocks
+    # (``has_stockpile`` / ``consume_from_stockpile``) and the
+    # legacy ``context_type`` discriminator are gone from
+    # production_engine.py.
+    col.production_has_resources.return_value = True
     return col
 
 
@@ -112,7 +112,6 @@ def test_construction_queue_paused_skips_colony_base_queue(engine, empire, monke
     colony.construction_queue = [item]
     colony.facilities = []
     colony.construction_queue_paused = True
-    colony.context_type = "planet"
     empire.colonies = [colony]
     empire.fleets = []
 
@@ -147,9 +146,8 @@ def test_per_facility_pause_skips_only_that_shipyard(engine, empire, monkeypatch
     colony = MagicMock(spec=Planet)
     colony.construction_queue = []
     colony.facilities = [paused_fac, active_fac]
-    colony.context_type = "planet"
-    colony.has_stockpile.return_value = True
-    colony.consume_from_stockpile = MagicMock()
+    # PROJ-436 Phase 8: unified IProductionResourceSource protocol.
+    colony.production_has_resources.return_value = True
     empire.colonies = [colony]
     empire.fleets = []
 
@@ -368,9 +366,9 @@ def test_first_tick_clears_shortage_logged_flags(engine, empire, colony):
     item["_shortage_logged"] = True
     queue = [item]
     # Make affordability fail so we know the flag would be re-set if cleared.
-    colony.context_type = "planet"
-    colony.has_stockpile.return_value = False
-    colony.get_stockpile.side_effect = lambda res: 0.0
+    # PROJ-436 Phase 8: unified IProductionResourceSource protocol.
+    colony.production_has_resources.return_value = False
+    colony.production_get_resource.side_effect = lambda res: 0.0
     colony.stockpile = {}
 
     engine._process_queue_tick_dynamic(

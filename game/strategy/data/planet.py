@@ -292,6 +292,21 @@ class Planet:
         """Current stockpiled amount, 0.0 if absent."""
         return self._stockpile.get(resource_type, 0.0)
 
+    # --- IProductionResourceSource (PROJ-436 Phase 8) ---
+    # Delegators over the stockpile API above so ProductionEngine reads
+    # through one uniform protocol satisfied by both Planet and Fleet
+    # — no context_type dispatch. Stockpile API above stays as the
+    # public surface for transfer_branches.py / IStockpileHolder.
+
+    def production_has_resources(self, costs: Dict[str, float]) -> bool:
+        return self.has_stockpile(costs)
+
+    def production_get_resource(self, resource_type: str) -> float:
+        return self.get_stockpile(resource_type)
+
+    def production_consume_resource(self, resource_type: str, amount: float) -> bool:
+        return self.consume_from_stockpile(resource_type, amount)
+
     # --- IStagingYardHolder protocol (PROJ-372) ---
 
     def get_staging_mass(self) -> float:

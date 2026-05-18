@@ -69,7 +69,6 @@ class TestBaseQueueRequiresPlanetaryYard:
         empire.fleets = []
 
         colony = MagicMock()
-        colony.context_type = "planet"
         colony.name = "No Yard Colony"
         colony.facilities = []  # No PlanetaryYard
         colony.construction_queue = [

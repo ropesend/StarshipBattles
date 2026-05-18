@@ -15,7 +15,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Read PROJ-436 Container API; survey current transfer UI | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
+| 0. Read PROJ-436 Container API; survey current transfer UI | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Source/destination container browsing against unified API | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Slider quantity + mass-remaining preview against `Container.add()` validation | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Mixed content display (resources/items/population) through one screen model | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
@@ -23,11 +23,11 @@
 | 5. Codex consult + verified-finding remediation | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-17
-**Active Phase:** Planning (charter under review with Codex)
-**Last Action:** Project scaffold created via `python Projects/scripts/create_project.py "Container-Aware Transfer UI"`. Plan / manifest / decisions / design drafted as sibling subproject to PROJ-436.
-**Next Action:** Codex review of charter; iterate to consensus. Implementation cannot start until PROJ-436 Phase 7 ships the stable Container.accepts() API.
-**Blockers:** Soft dependency on PROJ-436 Phase 7 (TransferValidator.VALID_CARGO_TYPES deletion) for the API surface to be stable. PROJ-437 Phase 0 (read-the-API + survey current UI) may start earlier — see Dependencies.
+**Last Updated:** 2026-05-18
+**Active Phase:** Phase 0 complete — handing off to Phase 1.
+**Last Action:** Phase 0 migration map written at [findings/transfer_ui_migration_map.md](findings/transfer_ui_migration_map.md). OD1/OD2/OD3 resolved at defaults (a/a/a). Surfaced manifest correction (`fleet_data_source.py` is the wrong Phase 1 target — actual target is `transfer_controller.py::collect_sources_and_targets` + a new DTO/facade `get_containers(id)` accessor). Two tangential hardcoded-resource-tuple leaks flagged (`fleet_dto.py:217-226`, `builder/stat_rows_dynamic.py:179,252`) for a future TD ticket — out of PROJ-437 scope.
+**Next Action:** Phase 1 start — recommended split: 1a substrate (additive `ContainerRef` + `ContainerSnapshotInfo` + parallel `facade.*.get_containers(id)` accessor) → 1b cutover (`transfer_view_model.get_amounts` / `build_row_data` + `transfer_controller.fetch_dto` / `collect_sources_and_targets`). Phase 1 entrypoint must advance `phase_state.json.project_baseline_sha` from `4177fef36…` to the current `main` HEAD and re-record the sharded baseline (PROJ-443 Phase 4 made 1953 additional `tests/unit/strategy/data/` tests visible).
+**Blockers:** None. PROJ-436 Phase 7 stable; AST guards green. Ross to review the Phase 0 finding about the **"Ammo" → "Ammunition"** UI label change ([findings/transfer_ui_migration_map.md §7](findings/transfer_ui_migration_map.md#7-heads-up-to-user-ross--ui-label-change-pending-review)) before Phase 5 ship — a one-line `data/resources.json` edit reverts it.
 
 ## Overview
 Rebuild the current transfer / loading / unloading UX on top of the unified `Container` API that PROJ-436 lands. The existing dialog ([game/ui/screens/transfer_dialog.py](../../../game/ui/screens/transfer_dialog.py) + `transfer_controller.py` + `transfer_view_model.py` + `transfer_grid_renderer.py`) works adequately today against the legacy `cargo_contents` / `stockpile` / `bay_inventory` / `_fleet_resource_pool` patchwork. After PROJ-436, that patchwork is replaced by one `Container` abstraction. This project rebuilds the UI to source/destination browse, validate, and execute transfers through the unified API while preserving the user's existing slider-driven UX shape.

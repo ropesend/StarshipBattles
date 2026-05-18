@@ -282,6 +282,27 @@ class Fleet:
         """Get total cargo of a resource type across all fleet ships."""
         return float(self._resource_agg.get_fleet_cargo_current(resource_type))
 
+    # --- IProductionResourceSource protocol (PROJ-436 Phase 8) ---
+    # Polymorphic delegators that let ProductionEngine read/consume
+    # resources without dispatching on ``context_type``. Planet exposes
+    # the same three methods over its stockpile. The entity-specific
+    # cargo API above remains as the public surface for non-engine
+    # callers.
+
+    def production_has_resources(self, costs: Dict[str, float]) -> bool:
+        """Affordability check for production from this Fleet's cargo."""
+        return self.has_cargo_resources(costs)
+
+    def production_get_resource(self, resource_type: str) -> float:
+        """Available amount of ``resource_type`` for production from fleet cargo."""
+        return self.get_cargo_resource(resource_type)
+
+    def production_consume_resource(
+        self, resource_type: str, amount: float
+    ) -> bool:
+        """All-or-nothing consume from fleet cargo for production."""
+        return self.consume_cargo_resource(resource_type, amount)
+
     @property
     def battle(self) -> 'FleetBattleAdapter':
         """Public access to fleet battle conversion."""

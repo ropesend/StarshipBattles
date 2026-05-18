@@ -53,7 +53,6 @@ def _make_colony(construction_queue=None, facilities=None, stockpile=None, max_s
     """
     colony = MagicMock()
     colony.name = "Test Colony"
-    colony.context_type = "planet"
     colony.construction_queue = construction_queue or []
     # FEAT-17: pin to False — MagicMock auto-creates a truthy Mock otherwise.
     colony.construction_queue_paused = False
@@ -82,6 +81,13 @@ def _make_colony(construction_queue=None, facilities=None, stockpile=None, max_s
     colony.has_stockpile = has_stockpile
     colony.consume_from_stockpile = consume_from_stockpile
     colony.get_stockpile = get_stockpile
+    # PROJ-436 Phase 8: ProductionEngine reads through the unified
+    # IProductionResourceSource protocol; delegate the new names to the
+    # existing stockpile mocks so engine sees consistent behaviour
+    # without context_type dispatch.
+    colony.production_has_resources = has_stockpile
+    colony.production_consume_resource = consume_from_stockpile
+    colony.production_get_resource = get_stockpile
     return colony
 
 
@@ -526,7 +532,6 @@ class TestMidTurnCompletion:
         )
 
         fleet = MagicMock(spec=Fleet)
-        fleet.context_type = "fleet"
         fleet.is_building = True
         fleet.capabilities = MagicMock()
         fleet.capabilities.has_space_shipyard = True
@@ -534,9 +539,11 @@ class TestMidTurnCompletion:
         fleet.construction_queue = [item]
         fleet.id = 1
         fleet.location = (10, 10)
-        # Fleet construction draws from cargo
-        fleet.has_cargo_resources.return_value = True
-        fleet.consume_cargo_resource.return_value = True
+        # PROJ-436 Phase 8: engine consumes through
+        # ``IProductionResourceSource``; on real Fleet these delegate
+        # to ``has_cargo_resources`` / ``consume_cargo_resource``.
+        fleet.production_has_resources.return_value = True
+        fleet.production_consume_resource.return_value = True
 
         empire.fleets = [fleet]
 
@@ -561,7 +568,6 @@ class TestMidTurnCompletion:
         )
 
         fleet = MagicMock(spec=Fleet)
-        fleet.context_type = "fleet"
         fleet.is_building = True
         fleet.capabilities = MagicMock()
         fleet.capabilities.has_space_shipyard = True
@@ -569,8 +575,9 @@ class TestMidTurnCompletion:
         fleet.construction_queue = [item]
         fleet.id = 1
         fleet.location = (10, 10)
-        # Fleet has cargo but complex needs a planet
-        fleet.has_cargo_resources.return_value = True
+        # Fleet has cargo but complex needs a planet (PROJ-436 Phase 8
+        # protocol method; delegates to ``has_cargo_resources``).
+        fleet.production_has_resources.return_value = True
 
         empire.fleets = [fleet]
 

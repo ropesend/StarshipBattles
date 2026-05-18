@@ -2,6 +2,13 @@
   "install_id": "2b3d855d72ae439c8fbd90ff0d61ea6a",
   "schema_version": 1,
   "skills": {
+    "claude-consult": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-18T07:20:09Z"
+    },
     "claude-delegate-review": {
       "agents": {
         "claude": 1
@@ -29,6 +36,13 @@
       },
       "count": 8,
       "last_used": "2026-05-03T16:56:20Z"
+    },
+    "codex-starship-consult-respond": {
+      "agents": {
+        "codex": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-18T12:53:04Z"
     },
     "codex-starship-project-system": {
       "agents": {
