@@ -35,8 +35,11 @@ def instance() -> MagicMock:
     # PROJ-425 Phase 4: entity attributes are ``_cargo_mgr`` /
     # ``_resource_mgr`` (write service was previously querying the
     # never-existing ``_cargo_manager`` / ``_consumable_manager``).
-    inst._cargo_mgr = None
-    inst._resource_mgr = None
+    # PROJ-436 Phase 3b: the write service now routes through the
+    # stable manager API (``set_cargo`` / ``set_level``) — fixtures
+    # provide MagicMocks so call-shape assertions can be made.
+    inst._cargo_mgr = MagicMock()
+    inst._resource_mgr = MagicMock()
     inst.invalidate_stats_cache = MagicMock()
     return inst
 
@@ -101,12 +104,20 @@ def test_increment_battles_survived(
 # methods had no production callers.
 
 
-def test_set_cargo_amount_direct_write_when_no_manager(
+def test_set_cargo_amount_routes_through_cargo_manager(
     service: ShipInstanceWriteService, instance: MagicMock
 ) -> None:
-    instance._cargo_mgr = None
-    service.set_cargo_amount(instance, "metals", 50.0)
-    assert instance.cargo_contents["metals"] == 50.0
+    """PROJ-436 Phase 3b: write goes through ``_cargo_mgr.set_cargo``.
+
+    Phase 3b made ``set_cargo`` a first-class part of
+    :class:`ShipCargoManager`; the previous ``hasattr``-fallback to a
+    direct ``cargo_contents`` dict write is gone because it would
+    bypass the stable manager API that Phase 3f's substrate cutover
+    depends on. Every real ship instance carries a ``_cargo_mgr``;
+    only test doubles can null it, and they must mock the API surface.
+    """
+    service.set_cargo_amount(instance, "metals", 50)
+    instance._cargo_mgr.set_cargo.assert_called_once_with("metals", 50)
 
 
 def test_add_experience(

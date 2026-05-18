@@ -65,29 +65,20 @@ class ShipInstanceWriteService:
     def set_cargo_amount(
         self, instance: "ShipInstance", resource_id: str, amount: float
     ) -> None:
-        # The ShipCargoManager owns the capacity-aware write; we forward
-        # to it so existing semantics (capacity clamp, sparse-key cleanup)
-        # are preserved.
-        # PROJ-425 Phase 4: query the entity's canonical attribute name
-        # ``_cargo_mgr`` (was ``_cargo_manager`` — dead branch since the
-        # entity never had that attribute).
-        manager = getattr(instance, "_cargo_mgr", None)
-        if manager is not None and hasattr(manager, "set_cargo"):
-            manager.set_cargo(resource_id, amount)
-        else:
-            instance.cargo_contents[resource_id] = amount
+        # PROJ-436 Phase 3b: the ``set_cargo`` manager method is now
+        # guaranteed to exist on every real ship instance (Phase 3b made
+        # it a first-class part of ``ShipCargoManager``). Previously
+        # this was a ``hasattr`` fallback; the fallback path is gone
+        # because the dict-write would bypass the stable manager API
+        # that Phase 3f's substrate cutover depends on.
+        instance._cargo_mgr.set_cargo(resource_id, int(amount))
 
     def set_consumable_level(
         self, instance: "ShipInstance", resource_id: str, level: float
     ) -> None:
-        # PROJ-425 Phase 4: query ``_resource_mgr`` (the entity's
-        # canonical name; the previous ``_consumable_manager`` query was
-        # dead code).
-        manager = getattr(instance, "_resource_mgr", None)
-        if manager is not None and hasattr(manager, "set_level"):
-            manager.set_level(resource_id, level)
-        else:
-            instance.consumable_levels[resource_id] = level
+        # PROJ-436 Phase 3b: route through the stable ``set_level``
+        # manager API; see ``set_cargo_amount`` comment.
+        instance._resource_mgr.set_level(resource_id, level)
 
     # ------------------------------------------------------------------
     # PROJ-431 Phase 1f: ``add_carried_item`` / ``pop_carried_item``

@@ -143,16 +143,23 @@ class ShipInstanceFactory:
         instance._registries = registries
 
         # Initialize all resources to full capacity.
+        # PROJ-436 Phase 3b: route through ``replace_levels`` (the
+        # stable consumable-manager API) instead of poking
+        # ``instance.consumable_levels`` directly. Phase 3f's substrate
+        # cutover will reroute the manager body to a ``Container``; no
+        # change needed here.
         stats = instance.get_calculated_stats()
         storage = stats.get('resource_storage', {})
-        instance.consumable_levels = {
+        instance._resource_mgr.replace_levels({
             name: float(val) for name, val in storage.items()
-        }
+        })
 
         # Initialize cargo from design data (Phase 2: colony pods as cargo).
+        # PROJ-436 Phase 3b: route through ``set_cargo`` (the stable
+        # cargo-manager API). See note above on Phase 3f cutover.
         initial_cargo = design_data.get('cargo', {})
         for cargo_type, amount in initial_cargo.items():
-            instance.cargo_contents[cargo_type] = int(amount)
+            instance._cargo_mgr.set_cargo(cargo_type, int(amount))
 
         # Populate per-component-instance state with full-HP defaults.
         instance.components = build_full_hp_components_from_design(

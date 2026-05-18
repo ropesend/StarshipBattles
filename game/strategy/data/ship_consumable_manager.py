@@ -121,6 +121,46 @@ class ShipConsumableManager:
         stats = self._ship.get_calculated_stats()
         return stats.get('warp_resource_costs', {})
 
+    # ------------------------------------------------------------------
+    # PROJ-436 Phase 3b: stable setter / replace / snapshot API.
+    # ------------------------------------------------------------------
+    # External callers (``ShipInstanceWriteService``,
+    # ``ShipInstanceFactory``, ``ShipInstanceBridge``,
+    # ``ShipInstanceSerializer``) write through these methods instead of
+    # poking ``ship.consumable_levels[...]`` directly. Phase 3f flips the
+    # durable substrate to ``Container``; routing every write through
+    # these methods means the cutover only has to touch the bodies here.
+
+    def set_level(self, resource_type: str, level: float) -> None:
+        """Set a resource's current level (uncapped — caller validates).
+
+        Phase 3b stable write API. The cap-aware path is
+        :meth:`resupply` (which respects ``resource_storage`` capacity);
+        use :meth:`set_level` when the caller has already computed the
+        clamped value (e.g. battle-end resource capture, deserialization,
+        factory initialization).
+        """
+        self._ship.consumable_levels[resource_type] = float(level)
+
+    def replace_levels(self, levels: Dict[str, float]) -> None:
+        """Replace the full consumable-levels dict with ``levels``.
+
+        Used by ``ShipInstanceBridge.update_from_ship`` after a battle to
+        replace levels wholesale with the post-battle snapshot from the
+        simulation ship. The provided dict is copied to avoid aliasing.
+        """
+        self._ship.consumable_levels = {
+            k: float(v) for k, v in levels.items()
+        }
+
+    def get_all_levels(self) -> Dict[str, float]:
+        """Return a copy of the full consumable-levels dict.
+
+        Phase 3b stable read API. The returned dict is a snapshot —
+        mutations on the caller's copy do not propagate back.
+        """
+        return dict(self._ship.consumable_levels)
+
     # --- Resupply Methods ---
 
     def resupply(self, resource_name: str, amount: float) -> float:

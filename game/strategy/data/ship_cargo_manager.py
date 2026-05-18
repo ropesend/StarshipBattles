@@ -33,7 +33,7 @@ so no discrimination is needed. Reads go through
 the round trip.
 """
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 from game.strategy.data.bay_inventory import BayInventory
 from game.strategy.data.carried_vehicle import CarriedVehicle
@@ -421,3 +421,43 @@ class ShipCargoManager:
         """Sum of CarriedVehicle masses in the ship's bay (mirrors ``bay_current_mass``)."""
         current, _max_mass = self.get_vehicle_bay_capacity()
         return current
+
+    # ------------------------------------------------------------------
+    # PROJ-436 Phase 3b: stable setter / aggregator API for cargo.
+    # ------------------------------------------------------------------
+    # External callers (``ShipInstanceWriteService``,
+    # ``ShipInstanceFactory``, UI / DTO formatters, filters,
+    # ``ShipInstanceSerializer``) read / write through these methods
+    # instead of poking ``ship.cargo_contents[...]`` directly. Phase 3f
+    # flips the durable substrate to ``Container``; routing every
+    # external read / write through this manager means the cutover only
+    # has to touch the bodies here.
+
+    def set_cargo(self, cargo_type: str, amount: int) -> None:
+        """Set the cargo amount for ``cargo_type`` (uncapped).
+
+        Mirrors :meth:`load_cargo` / :meth:`unload_cargo` cleanup rules:
+        non-positive amounts remove the entry to keep the dict sparse.
+        The cap-aware path is :meth:`load_cargo`; use :meth:`set_cargo`
+        when the caller has already computed the desired final value
+        (factory initialization, deserialization, post-battle replay).
+        """
+        if amount <= 0:
+            self._ship.cargo_contents.pop(cargo_type, None)
+            return
+        self._ship.cargo_contents[cargo_type] = int(amount)
+
+    def has_cargo(self) -> bool:
+        """True iff the ship carries any positive cargo amount."""
+        cargo = self._ship.cargo_contents
+        if not cargo:
+            return False
+        return any(v > 0 for v in cargo.values())
+
+    def total_cargo_units(self) -> int:
+        """Sum of all cargo-content values (in stored units)."""
+        return sum(int(v) for v in self._ship.cargo_contents.values())
+
+    def get_all_cargo(self) -> Dict[str, int]:
+        """Return a copy of the full cargo-contents dict (snapshot)."""
+        return {k: int(v) for k, v in self._ship.cargo_contents.items()}

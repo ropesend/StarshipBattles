@@ -102,9 +102,13 @@ class ShipInstanceBridge:
                 if damage > 0:
                     comp.take_damage(int(damage))
 
-        # Apply resource levels
+        # Apply resource levels.
+        # PROJ-436 Phase 3b: read via the consumable-manager snapshot so
+        # the source dict-vs-Container is hidden behind a stable API.
         if ship.resources:
-            for resource_name, current in self._ship.consumable_levels.items():
+            for resource_name, current in (
+                self._ship._resource_mgr.get_all_levels().items()
+            ):
                 ship.resources.set_value(resource_name, current)
 
         # Recalculate stats after applying damage
@@ -153,8 +157,14 @@ class ShipInstanceBridge:
 
         self._ship.components = rebuilt_components
 
-        # Update resource levels
-        self._ship.consumable_levels = self._capture_resource_levels(ship)
+        # Update resource levels.
+        # PROJ-436 Phase 3b: route through the consumable-manager
+        # ``replace_levels`` API (stable write surface) — Phase 3f
+        # reroutes the manager body to a ``Container`` without
+        # touching this caller.
+        self._ship._resource_mgr.replace_levels(
+            self._capture_resource_levels(ship)
+        )
 
         # Update battle stats
         self._ship.battles_survived += 1
