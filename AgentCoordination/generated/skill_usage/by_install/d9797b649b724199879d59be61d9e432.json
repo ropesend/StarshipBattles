@@ -2,6 +2,13 @@
   "install_id": "d9797b649b724199879d59be61d9e432",
   "schema_version": 1,
   "skills": {
+    "claude-consult": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-18T05:32:40Z"
+    },
     "claude-discuss-start": {
       "agents": {
         "claude": 8
@@ -22,6 +29,13 @@
       },
       "count": 6,
       "last_used": "2026-05-06T02:54:10Z"
+    },
+    "claude-proj-continue": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-18T04:12:33Z"
     },
     "codex-discuss-continue": {
       "agents": {

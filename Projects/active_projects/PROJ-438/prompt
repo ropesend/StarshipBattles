@@ -1,0 +1,175 @@
+You are picking up PROJ-438 ("Strategy State Surface and Intent Lifecycle
+Consolidation") in the Starship Battles repo. The charter is approved by
+consensus between Claude and Codex. Your job is to execute it per the
+phase plan, not to redesign it.
+
+## Project artifact locations
+- Plan:        Projects/active_projects/PROJ-438/plan.md
+- Design:      Projects/active_projects/PROJ-438/design.md
+- Decisions:   Projects/active_projects/PROJ-438/decisions.md
+- Manifest:    Projects/active_projects/PROJ-438/manifest.md
+- Phase state: Projects/active_projects/PROJ-438/phase_state.json
+- Findings:    Projects/active_projects/PROJ-438/findings/post_436_437_contact_audit.md
+- Phase checklists: phase_0_checklist.md ... phase_8_checklist.md
+
+## Read these FIRST in this order
+1. AGENTS.md (non-negotiable rules, canonical commands)
+2. CLAUDE.md (Claude-host adapter; includes rules 1–3 reinforcement)
+3. docs/README.md, then docs/01_ARCHITECTURE.md, docs/02_PATTERNS.md,
+   docs/03_CONVENTIONS.md
+4. Projects/active_projects/PROJ-438/plan.md (full)
+5. Projects/active_projects/PROJ-438/design.md (the rationale)
+6. Projects/active_projects/PROJ-438/decisions.md (D1/D2/D3 + Phase 4
+   bounded-scope reminder)
+7. AgentCoordination/Scratchpad/Discussion/20260518T015908Z_proj-438-feedback/outcome.md
+   (consensus summary)
+8. Predecessor plans for context only — do not reopen their scope:
+   Projects/active_projects/PROJ-423/, 424/, 425/, 429/, 436/, 437/
+
+## Hard dependencies — do not start implementation until these are true
+- PROJ-436 (Unified Storage Substrate) merged through Phase 9
+  (_CarriedItemsProxy deletion). PROJ-438 Phase 3 directly depends on
+  Phase 9 landing.
+- PROJ-437 (Container-Aware Transfer UI) merged. PROJ-438 does not touch
+  transfer UI itself but assumes the unified Container.accepts() API is
+  the validation surface.
+- If either predecessor partially descopes, STOP and surface to user
+  before continuing. The charter explicitly does NOT carry partial-
+  predecessor branches per user instruction.
+
+## Out of scope — refuse if asked
+- Storage / container / transfer-UI work (PROJ-436/437 own this)
+- Original concern #2 (temporal scheduler / 100-tick model rethink)
+- Battle-boundary work (PROJ-426 owns this)
+- The broad 910-caller ShipInstance entry-point shim sweep
+- Empire.is_eliminated() product-semantics question
+
+## Verified target seams (with file:line evidence from the planning audit)
+Use these as the load-bearing facts. Do not re-audit unless the code
+moved since 436/437 landed.
+
+Residual #1 (persistence-shaped runtime state):
+- Graph-restoration duplication: 4 loops, ~26 lines, literally identical
+  at game/strategy/engine/session/persistence_adapter.py:172-197 and
+  game/strategy/engine/turn_state_snapshot.py:112-136. ~80% of pre-423
+  duplication already absorbed by SessionBootstrap._build_services().
+  Inputs differ: stateless SessionBootstrapState vs. in-place session
+  mutation. Asymmetric DesignCatalog handling (only save-load
+  repopulates). Treat Phase 1 as anti-drift insurance, not high-ROI.
+- GameSession mixed concerns to address in Phase 2 (named in plan.md):
+  save_path (file metadata), human_player_ids (UI hot-seat state),
+  derived active_empire/enemy_empire (projections), lazy race-registry/
+  config ownership, shared façade cache/projection holder.
+- Façade cache holder is a legitimate performance boundary, NOT
+  compensation debt. Do not try to eliminate it.
+
+Residual #3 (strategic intent lifecycle):
+- IssuePlanetOrderCommand.order_type: str at
+  game/strategy/engine/commands/__init__.py:558-574. String→enum mapping
+  at game/strategy/engine/planet_command_handlers.py:63-90 is bounded to
+  {ACTIVATE_ABILITY, DEACTIVATE_ABILITY} with closed else-reject.
+- Private _handler_registry reach-in at
+  game/strategy/engine/action_execution_engine.py:299-337. The
+  try/except TypeError is specifically for issuer-signature divergence:
+  recovery handlers take 3 kwargs (recover_fighters.py:107,
+  recover_satellites.py:90), launch handlers take 5
+  (launch_fighters.py:117, launch_satellites.py:101). Exactly ONE
+  external caller of OrderProcessor._handler_registry exists in the
+  whole repo — this one.
+- Blast radius for retiring IssuePlanetOrderCommand: ~40 contained
+  changes (UI entry point in planet_abilities_controller.py:234, ~32
+  tests, registry registration). Surgical, not systemic.
+
+## Phase 0 is foundation work — DO NOT skip
+Phase 0 has these load-bearing tasks (see phase_0_checklist.md):
+
+1. Re-read predecessor artifacts (423/424/425/429/436/437) and confirm
+   what they actually removed vs. what the charter assumed.
+2. Re-validate the residual #1 contact surface against current code
+   (the audit above may have drifted if 436/437 changed code paths).
+3. Re-validate the residual #3 contact surface.
+4. **Fix pytest.ini collection gap by default.** D1 default is option
+   (a): switch from `norecursedirs = ... data ...` to using
+   `--ignore=data` in `addopts` so only the top-level `data/`
+   directory is excluded. This currently hides ~1575 tests under
+   tests/unit/strategy/data/ from the sharded suite, including PROJ-431
+   BayInventory tests and PROJ-436 container tests. PROJ-438 will modify
+   every entity whose canonical ratchets live in that directory — do
+   not proceed past Phase 0 with this gap open unless the collection
+   fix proves materially riskier than expected (then fall back to a
+   documented supplemental direct-run matrix; record why in
+   decisions.md).
+5. Author detailed subtask lists for phases 1, 2, 3 before starting
+   them. Phases 1–8 currently have stub checklists.
+
+## Phase ordering and per-phase reminders
+- **Phase 1 (graph restoration consolidation):** small ROI; do it for
+  symmetry/anti-drift. The "live mutable graph that must be repaired"
+  framing in design.md is overstated; soften if it bothers a reader
+  during implementation.
+- **Phase 2:** commit to the named concerns from plan.md:84-85. Don't
+  expand into a façade API redesign.
+- **Phase 3:** D2 default is (a) — keep inline design_data; narrow the
+  surface around it. Do NOT trigger the 910-caller sweep.
+- **Phase 4 is intentionally bounded** (see decisions.md:56-63):
+  Planet save-schema breadth + directly-owned adjunct state, Fleet/
+  Empire persistence-facing aggregate behavior, galaxy_protocols.py
+  read contracts. If Phase 0 audit shows no high-value extractions
+  beyond that list, **Phase 4 may collapse to a smaller protocol/doc
+  sync** — that is a valid outcome, not a failure.
+- **Phase 5:** typed planet intents. Surgical. ~40 contained changes.
+- **Phase 6:** issuer-aware execution contract. Replace the private
+  reach-in + TypeError fallback with one explicit signature.
+- **Phase 7:** D3 default LOCKED (plan.md:99-100): JOIN_FLEET, mission
+  decomposition, IMPLICIT_ACTION_ORDER_TYPES are acceptable specialized
+  behavior. Only treat as debt if implementation audit proves they
+  still leak across contracts in a blocking way.
+- **Phase 8:** DTO/protocol/doc sync, then required end-of-project
+  Codex consult. Per standing convention, verified consult findings
+  become added phases (9+, 10+, …) — Phase 8 is unbounded by design.
+
+## Coding rules to remember while working
+- Strict TDD: failing test first, then implementation. Canonical
+  commands in CLAUDE.md and AGENTS.md.
+- Root-cause fixes only. No shims, no monkey-patches, no fallback
+  systems. Old saves are disposable.
+- Each phase boundary leaves the game runnable/savable/loadable.
+- Substrate-then-sweep migration model (per PROJ-431/436): new seam
+  first, callers sweep next, final cutover deletes the old shape.
+- Update docs in the same change when behavior, architecture, workflow,
+  or conventions move (Rule 2 in CLAUDE.md).
+- Never read or write docs/_ignore/.
+- No worktrees per user standing preference. Serial in the main
+  checkout.
+- Public functions/methods require return-type annotations using
+  modern syntax (int | None, dict[str, X]).
+- Production files under game/ stay under 500 LOC; split by
+  responsibility when a touched file approaches that ceiling.
+- Broad `except Exception` requires intentional-reason comment.
+
+## Verification gate per phase
+- `python Tools/test_sharded/test_sharded.py` MUST be green at every
+  phase boundary AFTER Phase 0's pytest.ini fix lands.
+- Before Phase 0 fix lands: also run targeted direct-path commands for
+  affected tests/unit/strategy/data/ subtrees and record them in the
+  phase checklist.
+- Update plan.md "Current State" and run
+  `python Projects/scripts/validate_phase.py PROJ-438 <phase>` before
+  stopping work in a session.
+
+## First action when you start
+Run: `python Projects/scripts/current_task.py PROJ-438`
+This will point at the active phase. If it says Phase 0, open
+phase_0_checklist.md and work the tasks in order. Stop and surface to
+the user before Phase 1 if any of these are true:
+- PROJ-436 has not landed through Phase 9.
+- PROJ-437 has not landed.
+- Phase 0 audit reveals the verified seams above have shifted in ways
+  that invalidate the planning assumptions.
+
+## End-of-project workflow
+Per CLAUDE.md "Consult at end of every project" feedback memory:
+Phase 8 must end with a Codex consult on the landed PROJ-438 work.
+Verified findings from the consult become added phases (NOT new
+project IDs). Out-of-scope / unverified findings are logged in
+decisions.md.

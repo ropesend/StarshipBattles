@@ -172,6 +172,78 @@ class TestResolveAfter:
         assert moved_fleet.ships == []
         assert moved_fleet not in empire.fleets
 
+    def test_resolve_after_prune_path_triggers_speed_recalculation(self):
+        """Partial prune must call `trigger_speed_recalculation` per the
+        fleet-speed invariant.
+
+        PROJ-443 Phase 6 / Codex consult finding (d) MUST-FIX-NOW. The
+        pre-fix collaborator at `movement_phase_collaborator.py:171-174`
+        replaced `fleet.ships` in place without going through
+        `Fleet.remove_ship` and without calling
+        `trigger_speed_recalculation()`. That violates the invariant
+        documented in `test_fleet_speed_invariants.py:3-7,21-22`: every
+        `Fleet.ships` mutation must EITHER route through
+        add_ship/remove_ship/merge_with (which recalc) OR call
+        trigger_speed_recalculation() itself. Without this, a fleet whose
+        slowest ship dies to a minefield keeps the stale slow speed.
+        """
+        class _SpyFleet:
+            """Mock fleet that records `trigger_speed_recalculation` calls."""
+
+            def __init__(self, fleet_id: int, ships: list) -> None:
+                self.id = fleet_id
+                self.location = 'B'
+                self.ships = ships
+                self.trigger_calls = 0
+
+            def trigger_speed_recalculation(self) -> None:
+                self.trigger_calls += 1
+
+        ship_kept = SimpleNamespace(instance_id='kept', is_alive=True)
+        ship_lost = SimpleNamespace(instance_id='lost', is_alive=True)
+        moved_fleet = _SpyFleet(fleet_id=42, ships=[ship_kept, ship_lost])
+        empire = SimpleNamespace(
+            id=7, fleets=[moved_fleet], _booster_dirty=False,
+        )
+        ctx = TickContext(
+            tick=5,
+            empires=[empire],
+            galaxy=object(),
+            pre_movement_locations={42: 'A'},
+        )
+        engine = SimpleNamespace(_registries=object())
+
+        from game.strategy.engine import minefield_resolver as _mr_mod
+
+        class _DestroyOneResolver:
+            def __init__(self, *args, **kwargs) -> None:
+                pass
+
+            def resolve_minefield_entry(self, **kwargs):
+                result = _mr_mod.MinefieldResolutionResult()
+                result.destroyed_ship_ids = ['lost']
+                return result
+
+        original = _mr_mod.MinefieldResolver
+        _mr_mod.MinefieldResolver = _DestroyOneResolver
+        try:
+            collab = MovementPhaseCollaborator()
+            collab.resolve_after(engine, ctx)
+        finally:
+            _mr_mod.MinefieldResolver = original
+
+        # Survivor stays; lost ship pruned.
+        assert moved_fleet.ships == [ship_kept]
+        # Empire still owns a non-empty fleet, so it's not removed.
+        assert moved_fleet in empire.fleets
+        # Critical invariant: prune must trigger speed recalc.
+        assert moved_fleet.trigger_calls == 1, (
+            "movement_phase_collaborator._prune_destroyed_fleet_contents "
+            "mutated fleet.ships without calling "
+            "trigger_speed_recalculation() — fleet.speed will be stale "
+            "after the slowest ship dies to a minefield."
+        )
+
     def test_resolve_after_swallows_minefield_resolver_exceptions(self):
         """The broad catch around minefield resolution must remain intact.
 
