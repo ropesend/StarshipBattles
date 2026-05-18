@@ -2,30 +2,37 @@
 Tests for cargo tracking on ShipInstance and Fleet.
 
 PROJ-68 Phase 5: Cargo state tracking for passenger/goods transport.
+
+PROJ-443 Phase 1: fixtures pre-cache stats from `design_data['expected_stats']`
+because `ShipStatsCache.calculate` (PROJ-211/PROJ-425) requires real registries.
+The cargo manager only reads `stats['cargo_storage']`, so the pre-cached dict
+needs only that key to satisfy the manager paths under test. Fleet-level
+methods were moved off `Fleet` onto `Fleet.resources` (FleetConsumableAggregator)
+in PROJ-210 Phase 2.
 """
 
 import pytest
-from unittest.mock import patch, MagicMock
 
 from game.strategy.data.ship_instance import ShipInstance
 from game.strategy.data.fleet import Fleet
 from game.core.hex_math import HexCoord
 
 
+def _prime_stats(ship: ShipInstance) -> ShipInstance:
+    """Pre-populate `_cached_stats` so the cargo manager's stats reads
+    bypass the registry-dependent `ShipStatsCache.calculate` path.
+
+    These tests exercise cargo manager semantics, not stats calculation;
+    handing the cache a minimal `cargo_storage`-bearing dict is enough.
+    """
+    ship._cached_stats = ship.design_data.get('expected_stats', {})
+    return ship
+
+
 # --- Fixtures ---
 
 @pytest.fixture
-def mock_registries():
-    """Create mock registries for stats calculation."""
-    registries = MagicMock()
-    registries.vehicle_classes = {}
-    registries.modifiers = MagicMock()
-    registries.modifiers.get = MagicMock(return_value=None)
-    return registries
-
-
-@pytest.fixture
-def ship_with_cargo_capacity(mock_registries):
+def ship_with_cargo_capacity():
     """Create a ShipInstance with cargo capacity in stats."""
     instance = ShipInstance(
         instance_id="test-ship-1",
@@ -41,7 +48,7 @@ def ship_with_cargo_capacity(mock_registries):
             }
         },
     )
-    return instance
+    return _prime_stats(instance)
 
 
 @pytest.fixture
@@ -61,7 +68,7 @@ def ship_without_cargo():
             }
         },
     )
-    return instance
+    return _prime_stats(instance)
 
 
 @pytest.fixture
@@ -73,7 +80,7 @@ def fleet_with_cargo_ships(ship_with_cargo_capacity, ship_without_cargo):
         location=HexCoord(0, 0),
     )
     # Add two cargo ships (create a second one)
-    ship2 = ShipInstance(
+    ship2 = _prime_stats(ShipInstance(
         instance_id="test-ship-3",
         design_id="transport",
         name="Transport Ship 2",
@@ -86,7 +93,7 @@ def fleet_with_cargo_ships(ship_with_cargo_capacity, ship_without_cargo):
                 'cargo_storage': {'passengers': 3000},
             }
         },
-    )
+    ))
     fleet.ships.append(ship_with_cargo_capacity)
     fleet.ships.append(ship2)
     fleet.ships.append(ship_without_cargo)
@@ -227,7 +234,7 @@ class TestShipInstanceCargoSerialization:
         assert data['cargo_contents'] == {'passengers': 2500, 'generic': 750}
 
         # Deserialize
-        restored = ShipInstance.from_dict(data)
+        restored = _prime_stats(ShipInstance.from_dict(data))
 
         # Verify cargo restored
         assert restored._cargo_mgr.get_current_cargo('passengers') == 2500
@@ -253,7 +260,10 @@ class TestShipInstanceCargoClone:
     def test_clone_preserves_cargo(self, ship_with_cargo_capacity):
         """Test that clone() deep copies cargo contents."""
         ship_with_cargo_capacity._cargo_mgr.load_cargo('passengers', 1500)
-        clone = ship_with_cargo_capacity.clone()
+        # Clone copies design_data but starts with `_cached_stats=None`
+        # (init=False dataclass field); re-prime so cargo-capacity reads
+        # don't route through the registry-dependent calc path.
+        clone = _prime_stats(ship_with_cargo_capacity.clone())
 
         # Clone should have same cargo
         assert clone._cargo_mgr.get_current_cargo('passengers') == 1500
@@ -267,32 +277,32 @@ class TestShipInstanceCargoClone:
 # --- Fleet Cargo Tests ---
 
 class TestFleetCargoCapacity:
-    """Tests for Fleet.get_fleet_cargo_capacity()."""
+    """Tests for Fleet.resources.get_fleet_cargo_capacity()."""
 
     def test_fleet_cargo_capacity_sum(self, fleet_with_cargo_ships):
         """Test fleet cargo capacity sums across all ships."""
         # Ship 1: 5000 passengers, Ship 2: 3000 passengers, Ship 3: 0
-        capacity = fleet_with_cargo_ships.get_fleet_cargo_capacity('passengers')
+        capacity = fleet_with_cargo_ships.resources.get_fleet_cargo_capacity('passengers')
         assert capacity == 8000
 
     def test_fleet_cargo_capacity_generic(self, fleet_with_cargo_ships):
         """Test fleet generic cargo capacity."""
         # Only Ship 1 has generic: 1000
-        capacity = fleet_with_cargo_ships.get_fleet_cargo_capacity('generic')
+        capacity = fleet_with_cargo_ships.resources.get_fleet_cargo_capacity('generic')
         assert capacity == 1000
 
     def test_fleet_cargo_capacity_missing_type(self, fleet_with_cargo_ships):
         """Test fleet cargo capacity for missing type returns 0."""
-        capacity = fleet_with_cargo_ships.get_fleet_cargo_capacity('fuel_pods')
+        capacity = fleet_with_cargo_ships.resources.get_fleet_cargo_capacity('fuel_pods')
         assert capacity == 0
 
 
 class TestFleetLoadCargo:
-    """Tests for Fleet.load_cargo_to_fleet()."""
+    """Tests for Fleet.resources.load_cargo_to_fleet()."""
 
     def test_fleet_load_distributes_across_ships(self, fleet_with_cargo_ships):
         """Test loading distributes cargo across ships."""
-        loaded = fleet_with_cargo_ships.load_cargo_to_fleet('passengers', 6000)
+        loaded = fleet_with_cargo_ships.resources.load_cargo_to_fleet('passengers', 6000)
         assert loaded == 6000
 
         # Should have filled first ship (5000) and put 1000 in second
@@ -303,26 +313,26 @@ class TestFleetLoadCargo:
 
     def test_fleet_load_caps_at_capacity(self, fleet_with_cargo_ships):
         """Test loading more than fleet capacity is capped."""
-        loaded = fleet_with_cargo_ships.load_cargo_to_fleet('passengers', 20000)
+        loaded = fleet_with_cargo_ships.resources.load_cargo_to_fleet('passengers', 20000)
         assert loaded == 8000  # Total fleet capacity
 
     def test_fleet_load_to_empty_fleet(self):
         """Test loading to fleet with no cargo capacity."""
         fleet = Fleet(fleet_id=2, owner_id=0, location=HexCoord(0, 0))
-        ship = ShipInstance(
+        ship = _prime_stats(ShipInstance(
             instance_id="no-cargo",
             design_id="fighter",
             name="Fighter",
             owner_id=0,
             design_data={'expected_stats': {'cargo_storage': {}}},
-        )
+        ))
         fleet.ships.append(ship)
         loaded = fleet.resources.load_cargo_to_fleet('passengers', 100)
         assert loaded == 0
 
 
 class TestFleetUnloadCargo:
-    """Tests for Fleet.unload_cargo_from_fleet()."""
+    """Tests for Fleet.resources.unload_cargo_from_fleet()."""
 
     def test_fleet_unload_from_multiple_ships(self, fleet_with_cargo_ships):
         """Test unloading collects from multiple ships."""
@@ -331,37 +341,37 @@ class TestFleetUnloadCargo:
         fleet_with_cargo_ships.ships[1]._cargo_mgr.load_cargo('passengers', 2000)
 
         # Unload 4000 - should take from both ships
-        unloaded = fleet_with_cargo_ships.unload_cargo_from_fleet('passengers', 4000)
+        unloaded = fleet_with_cargo_ships.resources.unload_cargo_from_fleet('passengers', 4000)
         assert unloaded == 4000
 
         # Verify total remaining
-        remaining = fleet_with_cargo_ships.get_fleet_cargo_current('passengers')
+        remaining = fleet_with_cargo_ships.resources.get_fleet_cargo_current('passengers')
         assert remaining == 1000
 
     def test_fleet_unload_more_than_available(self, fleet_with_cargo_ships):
         """Test unloading more than available is capped."""
         fleet_with_cargo_ships.ships[0]._cargo_mgr.load_cargo('passengers', 1000)
-        unloaded = fleet_with_cargo_ships.unload_cargo_from_fleet('passengers', 5000)
+        unloaded = fleet_with_cargo_ships.resources.unload_cargo_from_fleet('passengers', 5000)
         assert unloaded == 1000
 
     def test_fleet_unload_from_empty(self, fleet_with_cargo_ships):
         """Test unloading from fleet with no cargo."""
-        unloaded = fleet_with_cargo_ships.unload_cargo_from_fleet('passengers', 100)
+        unloaded = fleet_with_cargo_ships.resources.unload_cargo_from_fleet('passengers', 100)
         assert unloaded == 0
 
 
 class TestFleetCargoCurrent:
-    """Tests for Fleet.get_fleet_cargo_current()."""
+    """Tests for Fleet.resources.get_fleet_cargo_current()."""
 
     def test_fleet_cargo_current_sum(self, fleet_with_cargo_ships):
         """Test fleet current cargo sums across ships."""
         fleet_with_cargo_ships.ships[0]._cargo_mgr.load_cargo('passengers', 1000)
         fleet_with_cargo_ships.ships[1]._cargo_mgr.load_cargo('passengers', 500)
 
-        current = fleet_with_cargo_ships.get_fleet_cargo_current('passengers')
+        current = fleet_with_cargo_ships.resources.get_fleet_cargo_current('passengers')
         assert current == 1500
 
     def test_fleet_cargo_current_empty(self, fleet_with_cargo_ships):
         """Test fleet current cargo when empty."""
-        current = fleet_with_cargo_ships.get_fleet_cargo_current('passengers')
+        current = fleet_with_cargo_ships.resources.get_fleet_cargo_current('passengers')
         assert current == 0
