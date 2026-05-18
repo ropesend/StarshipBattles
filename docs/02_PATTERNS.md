@@ -1,16 +1,21 @@
 # 02_PATTERNS Compact Agent Reference
 
+> **Last verified:** 2026-05-18 — PROJ-436 Phase 10 doc refresh: added Pattern #43 (Unified Container Substrate); updated Pattern #38 (CarriedVehicle Substrate) and Pattern #41 (Polymorphic Order Issuer) to reflect the Phase 9 deletion of `_CarriedItemsProxy` + `ShipInstance.carried_items` (typed `BayInventory.bay` slot is the canonical write surface). Earlier: source doc last verified 2026-05-17.
+
 Balanced compact derivative of `docs/02_PATTERNS.md` and
 `AgentCoordination/Scratchpad/reports/02_PATTERNS_ALT_compact.md`.
-Source doc last verified 2026-05-17. This version removes release-note
-archaeology, preserves current contracts and extension recipes, and the
-current pattern count is 42. Patterns #37, #38, #41 came from the
-PROJ-FMS series + Round 4 QA: group-kind discriminator, CarriedVehicle
-substrate, polymorphic `IIssuerAdapter`. Patterns #39 (typed-sidecar
-extensions on frozen DTOs) and #40 (named pre-tick setup registry)
-came from PROJ-426 (TD-01) and replace the prior
-`_compose_setup_callbacks` + `object.__setattr__(spec, ...)`
-side-channel pattern.
+This version removes release-note archaeology, preserves current
+contracts and extension recipes, and the current pattern count is 43.
+Patterns #37, #38, #41 came from the PROJ-FMS series + Round 4 QA:
+group-kind discriminator, CarriedVehicle substrate, polymorphic
+`IIssuerAdapter`. Patterns #39 (typed-sidecar extensions on frozen
+DTOs) and #40 (named pre-tick setup registry) came from PROJ-426
+(TD-01) and replace the prior `_compose_setup_callbacks` +
+`object.__setattr__(spec, ...)` side-channel pattern. Pattern #43
+(unified Container substrate) came from PROJ-436 alongside the
+deletion of `VALID_CARGO_TYPES` (Phase 7),
+`ProductionEngine.context_type` storage dispatch (Phase 8), and the
+`_CarriedItemsProxy` test shim (Phase 9).
 
 ## Global Rules
 
@@ -69,6 +74,7 @@ side-channel pattern.
 | 40 | Named Pre-Tick Setup Registry | `PreTickBattleSetupRegistry` chains battle-setup closures (`mine_setup`, `reboard_setup`, etc.) by string name in registration order. `composed_callback()` returns the single `run_battle(..., pre_tick_loop_callback=...)` callable or `None` when empty. Independent subsystems register their own setup without coupling to others or fighting for the single hook slot. |
 | 41 | Polymorphic Order Issuer (`IIssuerAdapter`) | Order handlers accept an `IIssuerAdapter` protocol (`FleetShipIssuerAdapter` / `PlanetStagingYardIssuerAdapter`) instead of a concrete `(Fleet, ShipInstance)` pair, so a single handler family serves both fleet-ship and planet-facility issuers; `ActionExecutionEngine` ticks both `fleet.orders` and `planet.orders`. |
 | 42 | Bootstrap-State Single Assignment Path | One frozen-dataclass payload (`SessionBootstrapState`) backs both fresh construction and rehydration; one private `_apply_bootstrap_state(state)` method is the only place that mutates `self` from state. Canonical example: `GameSession`. Eliminates the PROJ-396 CRIT-002 service-wiring drift surface. |
+| 43 | Unified Container Substrate | `Container(capacity_mass, policy, resources, items, population)` is one mass-priced storage abstraction with three internal slices and one `ContainerPolicy` filter. Used directly by `BayInventory` (typed four-slot widening: `bay`, `pods`, `resources`, `population`); production-engine read/consume goes through the narrower `IProductionResourceSource` Protocol satisfied by both `Planet` and `Fleet` via polymorphic delegators. Replaced the three pre-PROJ-436 storage abilities (`ResourceStorage`, `CargoStorage`, `VehicleBay`) and eight legacy entity-level storage fields. |
 
 ## 1. ApplicationContext
 
@@ -935,7 +941,10 @@ Boundary: real fleets (have orders, can move, can build) remain
 
 ## 38. CarriedVehicle Substrate
 
-Where: `game/strategy/data/ship_instance.py::ShipInstance.carried_items`;
+Where: `game/strategy/data/ship_instance.py::ShipInstance.bay_inventory`
+(typed `BayInventory.bay: list[CarriedVehicle]` slot — PROJ-436
+Phase 9 deleted the legacy `_CarriedItemsProxy` shim and the
+`carried_items` property);
 `game/simulation/components/abilities/vehicle_bay.py::VehicleBayAbility`;
 `game/strategy/data/carried_vehicle_deploy.py::carried_vehicle_to_ship_instance`;
 `game/strategy/data/ship_cargo_manager.py`; order handlers under
@@ -949,7 +958,7 @@ Contract:
   `["mine"]`, and universal `vehicle_bay` carries all three. Capacity
   scales via the `simple_size_mount` modifier and the
   `bay_capacity_mult` stat key (Round 4 Obs C).
-- `CarriedVehicle` (a typed payload in `carried_items`) holds
+- `CarriedVehicle` (a typed payload in `bay_inventory.bay`) holds
   `design_id`, `design_data`, `current_hp`, optional
   `component_states`, and `vehicle_type`. Mass is the capacity gate;
   `ShipCargoManager.can_accept_vehicle` queries `allowed_types`.
@@ -960,16 +969,20 @@ Contract:
   `BattleEngine.launch_*_in_battle`.
 - Reboard: `fighter_reboard.apply_reboard` and the satellite reboard
   hook convert deployed `ShipInstance`s back into `CarriedVehicle`s
-  for the recovering carrier's bay (HP + component_states preserved).
+  appended to the recovering carrier's `bay_inventory.bay` (HP +
+  component_states preserved).
 
 Use for: any future design-backed cargo (drones, drop pods, boarding
 craft). Reuse `VehicleBayAbility` with a new `vehicle_type` plus an
 `allowed_types` entry on the bay rather than inventing a parallel
 storage concept.
 
-Boundary: pods and other non-design-backed cargo continue to use the
-legacy `PodStorage` / `CargoStorage` surface. `VehicleBay` is for
-items that round-trip a full design through the bay.
+Boundary: drop pods and other non-design-backed cargo live in
+`bay_inventory.pods` as typed `DropPod` entries. Other resource and
+population cargo lives in `bay_inventory.resources` /
+`bay_inventory.population`. The four-slot `BayInventory` is the
+canonical write surface; `VehicleBay` capacity gates only the `bay`
+slot's `CarriedVehicle` items.
 
 ## 39. Typed-Sidecar Extensions on Frozen DTOs
 
@@ -1051,12 +1064,14 @@ Contract:
   `count_carried(...)`, `append_carried(...)`, `append_recovered(...)`.
 - Two production implementations: `FleetShipIssuerAdapter` wraps a
   `(Fleet, ShipInstance)` pair and operates on
-  `ship.carried_items`; `PlanetStagingYardIssuerAdapter` wraps a
-  `Planet` and operates on `planet.staging_yard`
+  `ship.bay_inventory.bay` (typed `CarriedVehicle` entries — the
+  Phase 9 deletion of the legacy `carried_items` shim made the typed
+  slot the canonical write surface); `PlanetStagingYardIssuerAdapter`
+  wraps a `Planet` and operates on `planet.staging_yard`
   (capacity-checked via `Planet.add_to_staging_yard`).
 - Order handlers expose `execute_for_issuer(adapter, order, ...)` and
   treat the adapter as the only mutation surface — no direct
-  `fleet.ships[i].carried_items` access.
+  `fleet.ships[i].bay_inventory.bay` access.
 - `ActionExecutionEngine` ticks both `fleet.orders` and `planet.orders`
   in Round 4; each iteration constructs the matching adapter and
   dispatches to the same handler.
@@ -1146,6 +1161,90 @@ class GameSession:
 ```
 
 Boundary: this pattern is for *structural* drift, not behavioral cleanup. If the two construction paths have intentionally different semantics (e.g. `human_player_ids` fallback differing between fresh and load paths), keep that asymmetry inside the state-builder for each path. The single-assignment method only copies from the state; it does not enforce equality across paths.
+
+## 43. Unified Container Substrate
+
+Where: `game/strategy/data/container.py::Container` (PROJ-436 Phase 0
+substrate), `game/strategy/data/containable.py`,
+`game/strategy/data/bay_inventory.py::BayInventory` (Phase 2 widened to
+the four-slot Container projection), `game/strategy/engine/production_engine.py::IProductionResourceSource`
+(Phase 8 polymorphic-protocol seam).
+
+Use this pattern when a storage surface needs to hold heterogeneous
+mass-priced content (resources, items, population) under one
+capacity cap with one policy filter. PROJ-436 unified eight separate
+storage fields and three ability variants (`ResourceStorage`,
+`CargoStorage`, `VehicleBay`) into one `Container` abstraction; the
+typed `BayInventory` shipped four parallel slots
+(`bay: list[CarriedVehicle]`, `pods: list[DropPod]`,
+`resources: dict[str, float]`, `population: dict[str, int]`) sharing
+one mass cap.
+
+Contract:
+
+- `Container(capacity_mass, policy, resources, items, population)`
+  carries three internal slices. Mass is the universal capacity gate
+  — resource mass-per-unit resolves through
+  `ResourceCatalog.get_mass_per_unit()`; item mass comes from the
+  `ItemRef`; population mass comes from `species_mass_per_unit()`.
+- `ContainerPolicy(allowed_kinds, allowed_type_ids=None)` filters by
+  `ContainableKind` (RESOURCE / ITEM / POPULATION) plus an optional
+  type-id allowlist. Policy is data, not code — a `metals_silo` with
+  `allowed_type_ids=["metals"]` and a generic cargo hold with
+  `allowed_type_ids=None` use the same engine path.
+- `Container.accepts(containable)` is the policy seam for
+  container-backed write paths and the unified projection surface
+  (`BayInventory.container_view()` is a snapshot for callers that
+  want unified accounting). **Transfer-kind validation does NOT go
+  through `Container.accepts()` today** — `TransferValidator._is_known_cargo_type`
+  routes through `ResourceCatalog.has()` plus three categorical
+  sentinels (`passengers`, `drop_pod`, `vehicle`) directly; a future
+  pass could wire the validator through `Container.accepts()` if a
+  per-container policy check is needed, but that is not the current
+  contract.
+- For the production-engine read/consume path, the
+  `IProductionResourceSource` Protocol (Phase 8) is the narrower
+  polymorphic seam — `Planet` (over its stockpile API) and `Fleet`
+  (over its cargo API) both satisfy
+  `production_has_resources` / `production_get_resource` /
+  `production_consume_resource`. The engine reads through these
+  three methods without dispatching on entity type.
+- Test-only: `set_resource_catalog(catalog)` on `container.py` injects
+  a deterministic catalog for unit tests (PROJ-258
+  `get_default_*` / `set_default_*` accessor convention).
+
+Use for: any new storage surface that holds mixed mass-priced
+content (drones-on-a-shipyard, planet-side civilian housing, etc.).
+Reuse `Container` with a tailored `ContainerPolicy` rather than
+inventing a parallel typed-list field per category. For
+production-engine integration, satisfy `IProductionResourceSource`
+via thin polymorphic delegators (do not extend the Protocol with
+entity-specific methods).
+
+Boundary: launch / recovery / life support / production stay
+**separate** abilities — `Container` is storage only. Today's
+**live** write substrates remain typed: `CarriedVehicle` items live
+in `BayInventory.bay` (a `list[CarriedVehicle]` — see Pattern #38);
+`DropPod` items live in `BayInventory.pods` (a `list[DropPod]`);
+`Planet.stockpile` is a `dict[str, float]` over the `IStockpileHolder`
+protocol; fleet cargo aggregates per-ship `BayInventory.resources`
+slices through `Fleet.get_cargo_resource` / `consume_cargo_resource`.
+`Container` and `Container.accepts()` are the unified projection /
+policy seam over those typed substrates, not a wholesale replacement
+of them — `BayInventory.container_view()` returns a snapshot, not a
+mutable view. Deployed groups (`FighterWing`,
+`SatelliteConstellation`, `MineGroup` on `empire.deployed_groups`)
+are not in any container — Container handles only pre-deployment /
+post-recovery storage. See Pattern #37 for the typed `DeployedGroup`
+family.
+
+> **Last verified:** 2026-05-18 — PROJ-436 Phase 10 doc refresh.
+> Container substrate landed in Phase 0; `BayInventory` widened to
+> four slots in Phase 2; `TransferValidator.VALID_CARGO_TYPES`
+> deleted in Phase 7 with `Container.accepts()` taking over;
+> `ProductionEngine.context_type` storage-dispatch deleted in
+> Phase 8 via the `IProductionResourceSource` Protocol;
+> `_CarriedItemsProxy` deleted in Phase 9.
 
 ## Critical Naming Reminders
 

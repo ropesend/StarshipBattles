@@ -26,7 +26,7 @@
 | 7. `TransferValidator` / resource-list deletion | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
 | 8. `ProductionEngine.context_type` deletion | Complete | [phase_8_checklist.md](phase_8_checklist.md) |
 | 9. `_CarriedItemsProxy` final cutover | Complete | [phase_9_checklist.md](phase_9_checklist.md) |
-| 10. Doc refresh | Not Started | [phase_10_checklist.md](phase_10_checklist.md) |
+| 10. Doc refresh | Complete | [phase_10_checklist.md](phase_10_checklist.md) |
 | 11. Codex consult + verified-finding remediation | Not Started | [phase_11_checklist.md](phase_11_checklist.md) |
 
 ## Current State

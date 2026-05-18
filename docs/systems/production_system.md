@@ -1,6 +1,6 @@
 # Production System - Compact Agent Reference
 
-> **Last verified:** 2026-05-08 - Balanced against `docs/systems/production_system.md`, the compact ALT draft, and current production/queue/spawn code paths.
+> **Last verified:** 2026-05-18 — PROJ-436 Phase 10 doc refresh: `ProductionEngine.context_type` storage-dispatch deleted (Phase 8) — replaced with the `IProductionResourceSource` Protocol (`production_has_resources` / `production_get_resource` / `production_consume_resource`) satisfied by both `Planet` and `Fleet` via polymorphic delegators. `BuildQueueSource.context_type` is **UI entity routing only** (Phase 6a kept it for that purpose); the engine no longer reads it. Staging-yard pods are typed `DropPod` entries in `ship.bay_inventory.pods` (Phase 9).
 
 This is the strategy-layer construction pipeline. Players queue designs in the
 Build Queue UI; `ProductionEngine` consumes local resources over 100 ticks per
@@ -105,7 +105,11 @@ BuildQueueSource(
     construction_queue: list,   # reference to the real queue list
     can_build_ships: bool,
     can_build_complexes: bool,
-    context_type: "planet" | "fleet",
+    context_type: "planet" | "fleet",   # UI entity routing only —
+                                        # NOT engine storage dispatch
+                                        # (PROJ-436 Phase 6a kept this
+                                        # for UI; Phase 8 deleted the
+                                        # engine-side context_type read)
     build_rate: dict[str, float],
     planet_id: int | None = None,
     is_paused: bool = False,
@@ -235,17 +239,30 @@ capacity `1.0`.
 
 ## Resource Sources
 
-Production consumes resources at the build location:
+Production consumes resources at the build location through the
+unified `IProductionResourceSource` Protocol declared in
+`game/strategy/engine/production_engine.py` (PROJ-436 Phase 8):
 
-- Planet contexts use `Planet.context_type == "planet"`,
-  `has_stockpile()`, `consume_from_stockpile()`, and `get_stockpile()`.
-- Fleet contexts use `Fleet.context_type == "fleet"`,
-  `has_cargo_resources()`, `consume_cargo_resource()`, and
-  `get_cargo_resource()`.
-- Empire pool is only a fallback when the build context has no recognized
-  `context_type`.
+- `production_has_resources(costs)` — affordability check.
+- `production_get_resource(resource_type)` — read available amount.
+- `production_consume_resource(resource_type, amount)` — all-or-nothing
+  consume.
 
-Do not reintroduce the old "empire pool pays for everything" assumption.
+Both `Planet` and `Fleet` satisfy this Protocol via thin polymorphic
+delegators:
+
+- Planet delegators forward to the existing stockpile API
+  (`has_stockpile` / `get_stockpile` / `consume_from_stockpile`).
+- Fleet delegators forward to the existing cargo API
+  (`has_cargo_resources` / `get_cargo_resource` /
+  `consume_cargo_resource`).
+
+The engine no longer branches on `context_type` for storage routing,
+and the Phase 5 `ValueError`-on-unknown-owner contract is gone — an
+owner that does not satisfy `IProductionResourceSource` raises the
+natural `AttributeError` Python emits when a method is missing. The
+empire pool is not a fallback; do not reintroduce the old "empire
+pool pays for everything" assumption.
 
 ## Pause Contract
 
@@ -410,8 +427,10 @@ pause state, dispatches `SetBuildQueuePausedCommand`, and recollects sources so
 `is_paused` reflects the mutated owner. The renderer refreshes the pause button
 label on selection and queue refresh.
 
-Staging-yard pods/items are discrete `carried_items`, not bulk cargo. Transfer
-to ships happens through the Transfer dialog.
+Staging-yard pods/items are discrete typed `DropPod` entries in
+`ship.bay_inventory.pods` (PROJ-436 Phase 9 deleted the legacy
+`carried_items` projection), not bulk cargo. Transfer to ships happens
+through the Transfer dialog.
 
 ## Components and Abilities
 
@@ -446,10 +465,15 @@ component needs that central detection contract updated.
 Adding a new build context:
 
 1. Add a data holder with `construction_queue`,
-   `construction_queue_paused`, resource access methods, and a clear
-   `context_type`.
-2. Extend queue discovery to emit `BuildQueueSource` with a live queue-list
-   reference.
+   `construction_queue_paused`, and implementations of the three
+   `IProductionResourceSource` Protocol methods
+   (`production_has_resources` / `production_get_resource` /
+   `production_consume_resource`) over whatever storage substrate the
+   new entity uses.
+2. Extend queue discovery to emit `BuildQueueSource` with a live
+   queue-list reference and a `context_type` UI-routing string (the
+   `BuildQueueSource.context_type` field is UI entity routing, not
+   storage dispatch — see PROJ-436 Phase 6a audit).
 3. Add central rate resolution in `build_queue_source.py` or a sibling helper.
 4. Reuse `_process_queue_tick_dynamic`; do not fork the tick algorithm.
 5. Add spawn behavior to `ProductionSpawner` only if completion materializes a
