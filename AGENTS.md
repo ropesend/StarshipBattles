@@ -78,6 +78,7 @@ Key patterns: Registry, ApplicationContext DI (`game/context.py` manages 10 serv
 - Reviews: `Reviews/protocols/` and `Reviews/results/`. Historical audit reports stored here.
 - Archive: `Projects/archived_projects/` and `Projects/deep_archive/` — do not reference as current.
 - Scratchpad: `AgentCoordination/Scratchpad/` (gitignored) — transient agent files. Subdirs: `plans/`, `reviews/`, `reports/`, `handoffs/`, `tmp/`. **Do not write transient files outside the repo.** Persist-worthy artifacts go in tracked dirs (`Projects/`, `docs/`, `Reviews/results/`). Full rules: `AgentCoordination/SCRATCHPAD.md`.
+- Discovered-issues inbox: `AgentCoordination/discovered_issues/log.jsonl` (tracked, shared across agents). When you notice an out-of-scope issue mid-task — bug, security smell, perf pathology, dead code, lying docstring, test gap — record it and keep working. Do NOT investigate or fix at the time of discovery, and do NOT log issues that are part of your current task. Helper: `Tools/agent_coordination/log_discovered_issue.py`. Claude wrapper: `/claude-di-log`. Triage (verify against current code, prune resolved, promote survivors): `Tools/agent_coordination/triage_discovered_issues.py` and `/claude-di-triage`. Full schema and workflow: `AgentCoordination/discovered_issues/README.md`.
 
 ## Skill Usage Logging
 

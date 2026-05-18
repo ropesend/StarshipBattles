@@ -149,6 +149,27 @@ Historical (read-only) archived tickets from the retired legacy
 [`AgentCoordination/legacy_tickets/`](AgentCoordination/legacy_tickets/).
 Do not cite them as current behavior.
 
+### Discovered-issues inbox
+
+When you notice an out-of-scope issue while doing something else — a real
+bug, a security smell, a perf pathology, dead code, a lying docstring, a
+test gap — record it with `/claude-di-log` and keep going. Do not
+investigate, do not file a GitHub issue, do not fix it in place. Logging is
+seconds; context-switching is not.
+
+Entries land in the shared log
+[`AgentCoordination/discovered_issues/log.jsonl`](AgentCoordination/discovered_issues/log.jsonl)
+(tracked, all agents share it). Use `/claude-di-triage` (or run
+`python Tools/agent_coordination/triage_discovered_issues.py` directly) to
+verify entries against current code, prune resolved/non-issues, and surface
+survivors for promotion to GH issues or a project. Full rules:
+[`AgentCoordination/discovered_issues/README.md`](AgentCoordination/discovered_issues/README.md).
+
+Do **not** log:
+- Anything you are about to change as part of the current task — fix it.
+- Subjective style preferences.
+- Speculative refactors with no concrete problem behind them.
+
 **Setup (one-time per machine)** for the GitHub Issues system:
 
 1. Install the GitHub CLI: `winget install GitHub.cli` (Windows), `brew install gh` (macOS), or per platform.
