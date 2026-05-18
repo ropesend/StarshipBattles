@@ -40,6 +40,7 @@ _DEFAULT_MAX_HP = 100
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
     from game.core.registry import GameRegistries
+    from game.strategy.data.container import Container
 
 
 @dataclass
@@ -337,6 +338,92 @@ class ShipInstance:
         ``bay_inventory.bay`` (simulation ``Ship`` cannot see those).
         """
         return self._cargo_mgr.get_carried_vehicle_mass()
+
+    # ------------------------------------------------------------------
+    # PROJ-436 Phase 3a — unified Container projections.
+    # ------------------------------------------------------------------
+    #
+    # These are read-only snapshot views over the legacy
+    # `consumable_levels` and `cargo_contents` dataclass fields. Later
+    # sub-phases of Phase 3 migrate callers off the legacy fields; the
+    # final cutover deletes both fields and these views become the
+    # canonical read API. Until then, the views serve callers that
+    # want to work in the unified Container abstraction without
+    # forcing a wholesale migration.
+    #
+    # Snapshot semantics: mutations on the returned Container are NOT
+    # propagated back to the ship. Treat as a read view.
+
+    def consumable_container(self) -> 'Container':
+        """Container snapshot of this ship's `consumable_levels`.
+
+        Every entry in `consumable_levels` (resource_name -> amount)
+        appears in the resource slice. Unknown resource ids (not in
+        `ResourceCatalog`) raise via `Container.add_resource` —
+        consumable_levels keys are assumed to be canonical resource ids
+        per the existing component-driven loading code.
+        """
+        from game.strategy.data.container import (
+            Container,
+            ContainerPolicy,
+        )
+        from game.strategy.data.containable import (
+            ContainableKind,
+            ResourceContainable,
+        )
+
+        policy = ContainerPolicy(
+            allowed_kinds=frozenset({ContainableKind.RESOURCE}),
+            allowed_type_ids=None,
+        )
+        c = Container(capacity_mass=float("inf"), policy=policy)
+        for resource_id, amount in self.consumable_levels.items():
+            c.add(ResourceContainable(resource_id), amount)
+        return c
+
+    def cargo_container(self) -> 'Container':
+        """Container snapshot of this ship's `cargo_contents`.
+
+        Translation rules for cargo_contents keys:
+        - "passengers" -> population slice (default species id).
+        - Known resource ids (in `ResourceCatalog`) -> resource slice.
+        - Other keys -> logged and skipped (no representation in the
+          snapshot). The most common skipped keys are "drop_pod" and
+          "vehicle" which live in `bay_inventory` instead.
+        """
+        from game.core.resources import ResourceCatalog
+        from game.strategy.data.container import (
+            Container,
+            ContainerPolicy,
+            _get_resource_catalog,
+        )
+        from game.strategy.data.containable import (
+            ContainableKind,
+            PopulationContainable,
+            ResourceContainable,
+        )
+
+        catalog: ResourceCatalog = _get_resource_catalog()
+        policy = ContainerPolicy(
+            allowed_kinds=frozenset({
+                ContainableKind.RESOURCE,
+                ContainableKind.POPULATION,
+            }),
+            allowed_type_ids=None,
+        )
+        c = Container(capacity_mass=float("inf"), policy=policy)
+        for key, amount in self.cargo_contents.items():
+            if key == "passengers":
+                c.add(PopulationContainable("default"), int(amount))
+            elif catalog.has(key):
+                c.add(ResourceContainable(key), float(amount))
+            else:
+                logger.debug(
+                    "cargo_container: skipping cargo_contents key %r "
+                    "(not a known resource id or 'passengers')",
+                    key,
+                )
+        return c
 
     # ------------------------------------------------------------------
     # PROJ-431 Phase 1f: bay_inventory IS the canonical storage.
