@@ -10,24 +10,35 @@
 > - Run `python Projects/scripts/validate_phase.py PROJ-443 [phase]` before stopping
 > - Update Current State with specific handoff context
 
-**Execution Protocol:** 03c-phase-aware-execution
+**Execution Protocol:** 03a-continue-working (legacy; serial on main)
+
+> Originally scaffolded as 03c, but the scaffolder left `phase_state.json`
+> without the canonical `schema_version` / `project_id` / `project_branch`
+> fields (affects PROJ-436, PROJ-437, and PROJ-443 alike), so the 03c
+> scripts (`phase_dag.py`, `phase_complete.py`, `pending_reviews.py`) all
+> fail to load state. Per user direction on 2026-05-17, this project drops
+> the 03c machinery and runs serially on `main` per legacy 03a — matching
+> the project's already-documented "no worktrees, serial on main"
+> standing preference (see `decisions.md`). The state-file repair is a
+> separate concern affecting the scaffolder itself; not in scope here.
+> `phase_state.json` is retained for reference but is not authoritative.
 
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Capture hidden-test baseline (all 6 hidden dirs) | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. Triage `test_cargo_tracking.py` (~30 PROJ-431-flagged failures) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Triage `test_mutator_boundary_ast_guard.py` (~9 AST guard drift failures) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 0. Capture hidden-test baseline (all 6 hidden dirs) | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
+| 1. Triage `test_cargo_tracking.py` (30 actual failures) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Triage `test_mutator_boundary_ast_guard.py` (4 actual failures) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Triage remaining `tests/unit/strategy/data/` failures + 5 smaller hidden dirs | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. `pytest.ini` config flip (remove `data` + `combat_lab` + `Assets`) + regression guard + docs + testmon wipe | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Bundled hygiene: PROJ-436 deferred items | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Codex consult + verified-finding remediation | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-18
-**Active Phase:** Planning (charter revised per Codex consult)
-**Last Action:** Project scaffolded; Codex pre-execution consult at `AgentCoordination/Scratchpad/Consult/20260518T034917Z_proj443-charter-review/response.md` surfaced two must-fix issues: (1) scope was too narrow — `pytest.ini` has THREE problematic tokens (`data`, `combat_lab`, `Assets`), not just `data`, collectively hiding **126 test files across 6 directories** (95 + 24 + 3 + 1 + 2 + 1); (2) the proposed `--ignore=./data` is cwd-relative per `_pytest/pathlib.py:998-1004`, not config-root anchored — and `pytest.ini` already sets `testpaths = tests` so no `--ignore` is needed at all. Charter revised to: expand scope to all 3 tokens, switch to removal-only config change, rename Phase 4 regression guard scope to "no hidden test files," add `docs/guides/testing_infrastructure.md` snippet update and `.testmondata` wipe to Phase 4.
-**Next Action:** Phase 0 — run `pytest <dir> -q -n 4` against each of the 6 hidden test directories to capture the current baseline failure ledger.
+**Last Updated:** 2026-05-17
+**Active Phase:** Phase 0 complete; Phase 1 ready to start
+**Last Action:** Phase 0 baseline captured at HEAD `42ac82eece7c40b47c02e1fae8d0bf30357cb0b6`. Inventory confirmed: 126 hidden `test_*.py` files across 6 directories (matches plan). Per-directory pytest counts: **strategy/data** 1506P/67F, **combat_lab** 268P/0F, **unit/data** 22P/7F, **unit/assets** 28P/1F, **ui/assets** 30P/0F, **integration/data** 23P/0F — total **1877 passed / 75 failed** across **1952 hidden tests**. Visible sharded baseline `21233/21233` (green). Cluster breakdown: Phase 1 (`test_cargo_tracking.py`) 30 failures (matches plan); Phase 2 (`test_mutator_boundary_ast_guard.py`) **4** failures (plan said ~9 — protocol consolidation already trimmed most drift); Phase 3a strategy/data long-tail **33** (plan said ~26 — `test_build_queue_source.py` dominates with 19, `test_fleet_consumable_aggregator.py` 9); Phase 3b combat_lab 0 (plan flagged this as risk #3 — confirmed no-op); Phase 3c small-dir cluster 8. Post-flip projection: **21233 → ~23185** sharded tests (plan's "21359+" conflated file count with test count; actual delta is +1952 tests, not +126). Findings ledger at [findings/hidden_test_baseline.md](findings/hidden_test_baseline.md), raw outputs under `findings/raw/`. **03c execution protocol dropped** — scaffolder left `phase_state.json` without canonical schema fields (affects PROJ-436/437/443 alike); per user direction, project runs serially on `main` per legacy 03a, matching the project's pre-existing "no worktrees" preference.
+**Next Action:** Phase 1 — triage 30 failures in `tests/unit/strategy/data/test_cargo_tracking.py`. Per the file's structure (Codex's pre-execution sample), most tests now exercise the cargo manager API after PROJ-436 Phase 3's substrate migration; a small subset still assert against legacy `cargo_contents` (lines 185-247). Run the file via `python -m pytest tests/unit/strategy/data/test_cargo_tracking.py -q --no-header`, classify each failure per Phase 1 task taxonomy (a) now passing, (b) test wrong vs. current contract → fix test, (c) test exposes real bug → fix production, (d) obsolete → delete with `decisions.md` rationale, commit per category.
 **Blockers:** None.
 
 ## Overview
