@@ -167,10 +167,28 @@ class MovementPhaseCollaborator:
     ) -> None:
         """Remove destroyed ships from the fleet, and the fleet from
         its empire when emptied.
+
+        PROJ-443 Phase 6 (per Codex consult finding (d) MUST-FIX-NOW):
+        the in-place replacement of ``fleet.ships`` must trigger speed
+        recalculation when the roster changes. Otherwise the fleet keeps
+        the slowest-ship speed even after that ship dies to a
+        minefield. See
+        ``tests/unit/strategy/engine/test_fleet_speed_invariants.py:3-7,21-22``
+        for the invariant contract and
+        ``game/strategy/data/fleet.py:202-208`` (`Fleet.remove_ship`) for
+        the canonical recalc-paired mutation pattern.
         """
-        fleet.ships = [
+        survivors = [
             s for s in fleet.ships
             if s.instance_id not in destroyed_ship_ids
         ]
+        if len(survivors) != len(fleet.ships):
+            fleet.ships = survivors
+            # Defensive: the test SimpleNamespace fleets do not always
+            # expose trigger_speed_recalculation. Real Fleet objects
+            # always do (game/strategy/data/fleet.py:210-223).
+            recalc = getattr(fleet, "trigger_speed_recalculation", None)
+            if callable(recalc):
+                recalc()
         if not fleet.ships and fleet in owning_empire.fleets:
             owning_empire.fleets.remove(fleet)
