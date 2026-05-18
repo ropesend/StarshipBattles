@@ -46,10 +46,10 @@
     },
     "claude-proj-archive": {
       "agents": {
-        "claude": 2
+        "claude": 3
       },
-      "count": 2,
-      "last_used": "2026-05-05T00:46:10Z"
+      "count": 3,
+      "last_used": "2026-05-18T00:45:15Z"
     },
     "claude-proj-from-audit-shrink": {
       "agents": {

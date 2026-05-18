@@ -392,3 +392,17 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-399 | Branch hygiene — pre-existing test failures and pytest collection errors (Galaxy._intercept, docs-drift, basename collisions) | 2026-05-10 | PROJ-351-400 |
 | PROJ-400 | Tier 1 B-01: NewGameSetupScreen deleted-wrapper call | 2026-05-10 | PROJ-351-400 |
 | PROJ-401 | Tier 1 B-02: Passenger-load validator missing species_id rejection | 2026-05-15 | PROJ-401-450 |
+| PROJ-402 | Tier 1 B-03: SimulationBattleResolver catch ValidationException | 2026-05-15 | PROJ-401-450 |
+| PROJ-403 | Tier 1 B-04: Migrate stale _MockGalaxy doubles to GalaxyState | 2026-05-15 | PROJ-401-450 |
+| PROJ-404 | Tier 1 B-05: Eradicate save-format compatibility (Rule 3 follow-on) | 2026-05-15 | PROJ-401-450 |
+| PROJ-405 | Tier 1 B-06: Wire EventBus through Projectile/Seeker construction | 2026-05-15 | PROJ-401-450 |
+| PROJ-406 | Tier 2: audit-readiness reconciliation across 14 PROJ-380..399 projects | 2026-05-15 | PROJ-401-450 |
+| PROJ-407 | Tier 3: stale docs + architecture wording sweep (D-01..D-09) | 2026-05-15 | PROJ-401-450 |
+| PROJ-408 | Tier 4: coverage gaps from PROJ-380..399 review (C-01..C-06) | 2026-05-15 | PROJ-401-450 |
+| PROJ-409 | Tier 5: closeout MAJ-013 EventBus shim + MAJ-014 raw EnginePhaseError catch | 2026-05-15 | PROJ-401-450 |
+| PROJ-410 | Build Queue Widget Cache Invalidation | 2026-05-15 | PROJ-401-450 |
+| PROJ-411 | Optimize Strategy Panel Load Times | 2026-05-15 | PROJ-401-450 |
+| PROJ-412 | Reduce Strategy Turn Processing Time | 2026-05-15 | PROJ-401-450 |
+| PROJ-413 | Legacy removal — stars.py + galaxy.py re-export shims (2026-05-13) | 2026-05-15 | PROJ-401-450 |
+| PROJ-414 | Legacy removal — pathfinding.py shim (PROJ-376) (2026-05-13) | 2026-05-15 | PROJ-401-450 |
+| PROJ-415 | Legacy removal — planet.py re-exports (PROJ-210/284 vestige) (2026-05-13) | 2026-05-15 | PROJ-401-450 |

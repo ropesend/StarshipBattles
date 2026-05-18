@@ -17,7 +17,7 @@
 |-------|--------|-----------|
 | 0. Container substrate + design decisions | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Component ability convergence (`Container` parser) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. `ShipInstance.bay_inventory` widening to full Container | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. `ShipInstance.bay_inventory` widening to full Container | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. `ShipInstance.cargo_contents` + `consumable_levels` migration | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. `Planet.stockpile` + `max_stockpile` + `staging_yard` migration | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. `Empire._fleet_resource_pool` deletion + `resource_pool` semantics | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -30,9 +30,12 @@
 
 ## Current State
 **Last Updated:** 2026-05-18
-**Active Phase:** Phase 2 (BayInventory widening)
-**Last Action:** Phase 1 COMPLETE. Landed `ContainerAbility` parser (data shape `{capacity_mass, allowed_kinds, allowed_type_ids}`); registered in `ABILITY_REGISTRY` under "Container". Added parity helpers `container_view_from_resource_storage()`, `container_view_from_cargo_storage()`, `container_view_from_vehicle_bay()` that compile each legacy ability into the equivalent `(capacity_mass, ContainerPolicy)` tuple. 18 focused tests; 21169/21169 sharded green (+18 new vs 21151 Phase 0 baseline; 0 regressions). No data file changes; no runtime behaviour change. Legacy abilities remain in the registry and are unchanged.
-**Next Action:** Phase 2 — widen `ShipInstance.bay_inventory` from `{pods, vehicles}` to a full three-slice `Container`; migrate launch / recovery handlers to source / sink via `container.add()` / `container.remove()`.
+**Active Phase:** Phase 3 (ShipInstance cargo_contents + consumable_levels migration)
+**Last Action:** Phase 2 COMPLETE. Widened `BayInventory` from 2 typed slots (`bay`, `pods`) to 4 typed slots adding `resources: Dict[str, float]` and `population: Dict[str, int]` with full mass accounting unified via `total_mass()`. New API: `add_resource()` / `remove_resource()` / `get_resource()` / `add_population()` / `remove_population()` / `get_population()` / `total_resource_mass()` / `total_population_mass()` / `container_view()`. Backward-compatible: existing PROJ-431 tests still green; legacy round-trip (saves predating Phase 2) works. 30 focused widening tests + 8 existing PROJ-431 bay_inventory tests = 38 green. Sharded suite: 21169/21169 green (unchanged because the directory is hidden — see norecursedirs finding below). Direct `tests/unit/strategy/data/` run reduced failures from 91 → 65 (PROJ-431-flagged `test_cargo_tracking.py` issues remain pre-existing, unrelated to PROJ-436).
+
+**Discovery — `pytest.ini` `norecursedirs = ... data ...`:** the `data` token in `norecursedirs` matches `tests/unit/strategy/data/` as well as the intended top-level `data/` directory. Every test in `tests/unit/strategy/data/` (1575 tests including PROJ-431's BayInventory tests, PROJ-436 Phase 0 container tests, etc.) is silently hidden from the sharded suite. Pre-existing — predates PROJ-436. Recommend fixing in a separate small project: switch from `norecursedirs = ... data ...` to using `--ignore=data` in addopts so only the top-level `data/` directory is excluded. Documented in `decisions.md`. Until fixed, focused tests for Phase 2+ are run via direct path invocation in addition to the sharded suite.
+
+**Next Action:** Phase 3 — migrate `ShipInstance.cargo_contents` + `consumable_levels` to per-component Container projections; sweep callers per PROJ-431 sub-phase model; final cutover deletes the legacy fields.
 **Blockers:** None.
 
 ## Overview

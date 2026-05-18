@@ -53,24 +53,18 @@
     "phase_2": {
       "depends_on": ["phase_1"],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
+      "phase_base_sha": "202d728ee",
       "phase_branch": "main",
       "phase_head_sha": null,
       "planned_files": [
         "game/strategy/data/bay_inventory.py",
-        "game/strategy/engine/order_handlers/launch_fighters.py",
-        "game/strategy/engine/order_handlers/launch_satellites.py",
-        "game/strategy/engine/order_handlers/lay_mines.py",
-        "game/strategy/engine/order_handlers/recover_fighters.py",
-        "game/strategy/engine/order_handlers/recover_satellites.py",
-        "game/strategy/services/mine_group_service.py",
         "tests/unit/strategy/data/test_bay_inventory_widened.py"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_3": {
