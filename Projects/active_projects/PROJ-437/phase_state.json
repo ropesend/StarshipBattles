@@ -91,12 +91,14 @@
     "phase_3": {
       "depends_on": ["phase_2"],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
+      "phase_base_sha": "aa7d60a0a",
       "phase_branch": "proj/PROJ-437/main",
       "phase_head_sha": null,
       "planned_files": [
         "game/ui/screens/transfer_view_model.py",
+        "game/ui/screens/transfer_container_rows.py",
         "game/ui/screens/transfer_grid_renderer.py",
+        "game/ui/screens/transfer_dialog.py",
         "game/ui/screens/strategy_windows/transfer_dialogs.py",
         "tests/unit/ui/screens/test_transfer_mixed_content.py",
         "tests/integration/ui/test_transfer_container_e2e.py"
@@ -105,7 +107,19 @@
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "in_progress",
+      "sub_phases": {
+        "phase_3a": {
+          "status": "complete",
+          "head_sha": null,
+          "summary": "Substrate: build_row_data_from_containers classmethod + transfer_container_rows.py module (kind-field-additive row dicts; canonical 8 resources always emitted; population alphabetical; items drop_pod prefix). Additive — dialog still calls legacy DTO path. 9 new tests at test_transfer_mixed_content.py."
+        },
+        "phase_3b": {
+          "status": "not_started",
+          "head_sha": null,
+          "summary": "Cutover: dialog switches to container-based row builder; renderer learns kind dispatch (identical rendering for Phase 3); retire all_pod_names + _build_pod_rows + back-compat property shims; update legacy DTO tests."
+        }
+      },
       "verifying_review_id": null
     },
     "phase_4": {

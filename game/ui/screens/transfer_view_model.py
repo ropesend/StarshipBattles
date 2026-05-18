@@ -22,6 +22,9 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 from game.core.resources import ResourceCatalog, ResourceDefinition
+from game.ui.screens.transfer_container_rows import (
+    build_row_data_from_containers as _build_row_data_from_containers,
+)
 from game.ui.screens.transfer_mass_preview import (
     MassPreview,
     compute_mass_preview as _compute_mass_preview,
@@ -354,6 +357,33 @@ class TransferViewModel:
             pending_transfers,
             max_load_sentinel=cls.MAX_LOAD,
             max_drop_sentinel=cls.MAX_DROP,
+        )
+
+    # ------------------------------------------------------------------
+    # PROJ-437 Phase 3a — container-driven row builder (substrate)
+    # ------------------------------------------------------------------
+
+    @classmethod
+    def build_row_data_from_containers(
+        cls,
+        source_containers,
+        target_containers,
+        *,
+        filter_empty: bool = False,
+    ) -> List[dict]:
+        """Build the dialog's row list directly from container snapshots.
+
+        Thin wrapper over
+        :func:`game.ui.screens.transfer_container_rows.build_row_data_from_containers`
+        that injects the canonical resource list so that helper module
+        stays pygame-/catalog-free. See the helper module's docstring
+        for row-dict shape, ordering, and Phase 3a scope notes.
+        """
+        return _build_row_data_from_containers(
+            source_containers,
+            target_containers,
+            resource_definitions=_iter_resource_definitions(),
+            filter_empty=filter_empty,
         )
 
     def _build_pod_rows(self, source_obj, target_obj) -> List[dict]:
