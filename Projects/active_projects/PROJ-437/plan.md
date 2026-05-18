@@ -17,16 +17,16 @@
 |-------|--------|-----------|
 | 0. Read PROJ-436 Container API; survey current transfer UI | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Source/destination container browsing against unified API | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Slider quantity + mass-remaining preview against `Container.add()` validation | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Slider quantity + mass-remaining preview against `Container.add()` validation | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Mixed content display (resources/items/population) through one screen model | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Delete `transfer_view_model.RESOURCE_TYPES` consumers; final UI cutover | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Codex consult + verified-finding remediation | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-18
-**Active Phase:** Phase 1 complete — moving to Phase 2.
-**Last Action:** Phase 1 complete in two sub-phase commits. **1a (`5356222ff`)** landed the additive `ContainerSnapshotInfo` DTO + `facade.{fleets,planets}.get_containers(id)` accessors (10 new tests). **1b** wired the controller (`collect_sources_and_targets` now attaches `containers: tuple[ContainerSnapshotInfo, ...]` per entry — additive, browse-only) and added the `TransferViewModel.get_amounts_from_containers(snapshots)` parity reader (7 new tests). Two pre-existing `test_transfer_controller.py` exact-dict-equality assertions were relaxed to subset checks for the additive field. Legacy DTO-driven row-builder path remains the source-of-truth for `build_row_data` through Phase 3 — Phase 1 is browse-only by spec.
-**Next Action:** Phase 2 — wire `Container.add()` validation into the slider/arrow/Max controls; add mass-remaining preview as transfers stage; surface policy-rejection messaging inline. Per OD3 (a) preview recomputes per-input. Re-audit blast radius at Phase 2 start; likely single commit (read-only addition + a couple of styling tweaks per Phase 0 finding §6).
+**Active Phase:** Phase 2 complete — moving to Phase 3.
+**Last Action:** Phase 2 single-commit cutover. New `MassPreview` dataclass + `TransferViewModel.compute_mass_preview(source_containers, target_containers, pending)` (delegating to `transfer_mass_preview.py` helper module). Chrome gains two `UILabel`s under the dropdowns showing source/target mass-remaining-after-pending; the dialog calls `_refresh_mass_preview()` after every arrow / Max / Zero / Clear-All mutation (OD3 = (a) per-input granularity). 16 new tests at [tests/unit/ui/screens/test_transfer_mass_preview.py](../../../tests/unit/ui/screens/test_transfer_mass_preview.py); one existing renderer test updated for the +2 chrome labels and the new grid Y-offset (10, 105, 860, 475).
+**Next Action:** Phase 3 — mixed-content row presentation. Resources show as float + per-resource icons; items show as discrete counts + design-name labels + damage indicators; population shows per-species integer counts. Drop-pod-name special-casing folds into the items-row presentation, retiring `all_pod_names` and the back-compat property shims in `transfer_dialog.py`. Per Phase 0 finding §6, this phase likely needs sub-phases (touches view model + grid renderer + `strategy_windows/transfer_dialogs.py` alt entry point). Re-audit blast radius at Phase 3 start.
 **Blockers:** None. PROJ-436 Phase 7 stable; AST guards green. Ross to review the Phase 0 finding about the **"Ammo" → "Ammunition"** UI label change ([findings/transfer_ui_migration_map.md §7](findings/transfer_ui_migration_map.md#7-heads-up-to-user-ross--ui-label-change-pending-review)) before Phase 5 ship — a one-line `data/resources.json` edit reverts it.
 
 ## Overview

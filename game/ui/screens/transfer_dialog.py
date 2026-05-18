@@ -174,6 +174,10 @@ class TransferDialog(StrategyModalWindow):
         self.btn_clear_all = None
         self.grid_container = None
         self._grid_top_y = 0
+        # PROJ-437 Phase 2: mass-remaining preview labels (one per side,
+        # below their dropdowns). Refresh on every pending mutation.
+        self.lbl_source_remaining = None
+        self.lbl_target_remaining = None
 
         # Per-row mappings for event routing.
         self._arrow_buttons: Dict[int, Tuple[str, int]] = {}
@@ -342,17 +346,44 @@ class TransferDialog(StrategyModalWindow):
         self.view_model.build_row_data(source_obj, target_obj)
         if self.grid_container is not None:
             self._renderer.build_grid(self)
+        self._refresh_mass_preview()
 
     def _on_arrow_click(self, cargo_key: str, delta: int) -> None:
         self.view_model.apply_arrow(cargo_key, delta)
         self._update_pending_label(cargo_key)
+        self._refresh_mass_preview()
 
     def _on_max_click(self, cargo_key: str, direction: str) -> None:
         self.view_model.apply_max(cargo_key, direction)
         self._update_pending_label(cargo_key)
+        self._refresh_mass_preview()
 
     def _update_pending_label(self, cargo_key: str) -> None:
         self._renderer.update_pending_label(self, cargo_key)
+
+    def _refresh_mass_preview(self) -> None:
+        """Recompute + render the source/target mass-remaining indicators.
+
+        PROJ-437 Phase 2 (OD3 = (a) per-input granularity). Pulls
+        Container snapshots off the currently-selected source/target
+        dropdown entries (attached by Phase 1b), computes the
+        ``MassPreview`` via the view model, and asks the renderer to
+        update the chrome labels. No-ops cleanly under bypass-init
+        tests where the renderer or labels are absent.
+        """
+        if self.lbl_source_remaining is None and self.lbl_target_remaining is None:
+            return
+        source_containers = (self.view_model.current_source or {}).get(
+            "containers", (),
+        )
+        target_containers = (self.view_model.current_target or {}).get(
+            "containers", (),
+        )
+        preview = TransferViewModel.compute_mass_preview(
+            source_containers, target_containers,
+            self.view_model.pending_transfers,
+        )
+        self._renderer.update_mass_preview(self, preview)
 
     def _on_filter_toggle(self) -> None:
         new_state = self.view_model.toggle_filter_empty()
@@ -363,6 +394,7 @@ class TransferDialog(StrategyModalWindow):
         self.view_model.clear_all_pending()
         for key in self._pending_labels:
             self._update_pending_label(key)
+        self._refresh_mass_preview()
         logger.info("TransferDialog: Cleared all pending transfers")
 
     def _on_confirm(self) -> None:
@@ -452,6 +484,7 @@ class TransferDialog(StrategyModalWindow):
                 cargo_key = self._zero_buttons[id(btn)]
                 self.view_model.set_pending_zero(cargo_key)
                 self._update_pending_label(cargo_key)
+                self._refresh_mass_preview()
             elif btn == self.btn_clear_all:
                 self._on_clear_all()
 

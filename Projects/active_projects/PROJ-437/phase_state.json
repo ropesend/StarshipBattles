@@ -69,20 +69,23 @@
     "phase_2": {
       "depends_on": ["phase_1"],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
+      "phase_base_sha": "942b85d80",
       "phase_branch": "proj/PROJ-437/main",
       "phase_head_sha": null,
       "planned_files": [
         "game/ui/screens/transfer_view_model.py",
+        "game/ui/screens/transfer_mass_preview.py",
         "game/ui/screens/transfer_grid_renderer.py",
         "game/ui/screens/transfer_dialog.py",
-        "tests/unit/ui/screens/test_transfer_mass_preview.py"
+        "tests/unit/ui/screens/test_transfer_mass_preview.py",
+        "tests/unit/ui/screens/test_transfer_grid_renderer.py"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
+      "summary": "Single-commit cutover: MassPreview + TransferViewModel.compute_mass_preview (extracted helpers to transfer_mass_preview.py for LOC ceiling). Chrome gains two mass-remaining labels under the dropdowns, refreshed on every pending mutation. 16 new tests at test_transfer_mass_preview.py; renderer test updated for +2 labels and new grid Y-offset.",
       "verifying_review_id": null
     },
     "phase_3": {

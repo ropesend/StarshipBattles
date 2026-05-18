@@ -20,6 +20,7 @@ into a renderer."
 """
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple
 
 import pygame
@@ -32,6 +33,7 @@ from pygame_gui.elements import (
 
 if TYPE_CHECKING:
     from game.ui.screens.transfer_dialog import TransferDialog
+    from game.ui.screens.transfer_view_model import MassPreview
 
 
 # Arrow button increments (5 gradations per direction).
@@ -129,6 +131,26 @@ class TransferGridRenderer:
             container=dialog,
         )
         curr_y += element_h + padding
+
+        # Mass-remaining indicators (PROJ-437 Phase 2). One per side,
+        # directly under each dropdown so the user can correlate
+        # "what's selected" with "how much room is left after pending
+        # transfers apply". Updated on every pending mutation through
+        # `update_mass_preview`.
+        remaining_label_h = 20
+        dialog.lbl_source_remaining = UILabel(
+            pygame.Rect(75, curr_y, content_w // 2 - 80, remaining_label_h),
+            "Source: —",
+            dialog.ui_manager,
+            container=dialog,
+        )
+        dialog.lbl_target_remaining = UILabel(
+            pygame.Rect(target_x + 65, curr_y, content_w // 2 - 80, remaining_label_h),
+            "Target: —",
+            dialog.ui_manager,
+            container=dialog,
+        )
+        curr_y += remaining_label_h + padding
 
         # Column headers.
         UILabel(
@@ -334,6 +356,36 @@ class TransferGridRenderer:
         val = dialog.view_model.get_pending(cargo_key)
         lbl.set_text(dialog.view_model.format_pending(val))
 
+    def update_mass_preview(
+        self, dialog: "TransferDialog", preview: "MassPreview",
+    ) -> None:
+        """Refresh the source/target mass-remaining indicators.
+
+        PROJ-437 Phase 2 (OD3 = (a) per-input). Dialog calls this
+        after every arrow / Max / Zero / Clear-All mutation. Labels
+        format as ``"<side>: <remaining>.<1f> / <capacity>.<1f>t"``;
+        infinite capacity collapses to ``"<side>: —"``; over-capacity
+        target gets an explicit ``OVER`` suffix.
+        """
+        if dialog.lbl_source_remaining is not None:
+            dialog.lbl_source_remaining.set_text(
+                _format_remaining_text(
+                    "Source",
+                    preview.source_mass_remaining_after,
+                    preview.source_capacity_mass,
+                    over_capacity=False,
+                )
+            )
+        if dialog.lbl_target_remaining is not None:
+            dialog.lbl_target_remaining.set_text(
+                _format_remaining_text(
+                    "Target",
+                    preview.target_mass_remaining_after,
+                    preview.target_capacity_mass,
+                    over_capacity=preview.target_over_capacity,
+                )
+            )
+
     def set_filter_button_text(self, dialog: "TransferDialog",
                                filter_empty: bool) -> None:
         """Toggle the filter button label."""
@@ -342,6 +394,23 @@ class TransferGridRenderer:
         dialog.btn_filter.set_text(
             "Show All" if filter_empty else "Filter Empty",
         )
+
+
+def _format_remaining_text(
+    side: str, remaining: float, capacity: float, *, over_capacity: bool,
+) -> str:
+    """Format one side's mass-remaining label.
+
+    PROJ-437 Phase 2 helper. Pure string formatting — kept module-
+    level so the renderer's `update_mass_preview` is trivially
+    testable through the view-model layer and the format choice is
+    one easy-to-spot site if Ross wants different precision.
+    """
+    if math.isinf(capacity):
+        return f"{side}: —"
+    if over_capacity:
+        return f"{side}: OVER (cap {capacity:.1f}t)"
+    return f"{side}: {remaining:.1f} / {capacity:.1f}t"
 
 
 class TransferDialogUiBuilder:
@@ -363,4 +432,5 @@ __all__ = [
     "ARROW_LABELS_DROP",
     "TransferGridRenderer",
     "TransferDialogUiBuilder",
+    "_format_remaining_text",
 ]

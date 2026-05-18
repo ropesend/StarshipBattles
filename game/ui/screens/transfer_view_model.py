@@ -22,6 +22,10 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 from game.core.resources import ResourceCatalog, ResourceDefinition
+from game.ui.screens.transfer_mass_preview import (
+    MassPreview,
+    compute_mass_preview as _compute_mass_preview,
+)
 
 
 # Module-level catalog handle. Lazy-loaded on first access so import
@@ -324,6 +328,34 @@ class TransferViewModel:
         self.row_data = rows
         return rows
 
+    # ------------------------------------------------------------------
+    # PROJ-437 Phase 2 — Mass-remaining preview
+    # ------------------------------------------------------------------
+
+    @classmethod
+    def compute_mass_preview(
+        cls,
+        source_containers,
+        target_containers,
+        pending_transfers: Dict[str, Any],
+    ) -> MassPreview:
+        """Project mass-remaining on source and target after pending.
+
+        Thin wrapper over
+        :func:`game.ui.screens.transfer_mass_preview.compute_mass_preview`
+        that injects the view-model's :attr:`MAX_LOAD` / :attr:`MAX_DROP`
+        sentinels so the helper module stays sentinel-agnostic.
+        See the helper module's docstring for cargo-key coverage,
+        sign conventions, and OD3 rationale.
+        """
+        return _compute_mass_preview(
+            source_containers,
+            target_containers,
+            pending_transfers,
+            max_load_sentinel=cls.MAX_LOAD,
+            max_drop_sentinel=cls.MAX_DROP,
+        )
+
     def _build_pod_rows(self, source_obj, target_obj) -> List[dict]:
         """Return drop-pod and carried-vehicle rows.
 
@@ -386,5 +418,6 @@ class TransferViewModel:
 
 
 __all__ = [
+    "MassPreview",
     "TransferViewModel",
 ]

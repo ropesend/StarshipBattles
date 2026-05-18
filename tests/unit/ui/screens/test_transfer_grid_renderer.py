@@ -55,7 +55,11 @@ def test_build_chrome_constructs_dropdown_grid_and_bottom_buttons() -> None:
     ):
         renderer.build_chrome(dialog)
 
-    assert label_cls.call_count == 5
+    # PROJ-437 Phase 2: chrome now also builds two mass-remaining
+    # indicators (one per side, below their dropdowns) — +2 UILabels,
+    # and the grid container shifts down by remaining_label_h + padding
+    # (20 + 10 = 30 px from y=75 → y=105).
+    assert label_cls.call_count == 7
     assert dropdown_cls.call_count == 2
     assert button_cls.call_count == 4
     assert container_cls.call_count == 1
@@ -67,8 +71,10 @@ def test_build_chrome_constructs_dropdown_grid_and_bottom_buttons() -> None:
     assert dialog.btn_confirm.text == "Confirm All"
     assert dialog.btn_clear_all.text == "Clear All"
     assert dialog.btn_cancel.text == "Cancel"
-    assert dialog.grid_container.relative_rect == pygame.Rect(10, 75, 860, 505)
-    assert dialog._grid_top_y == 75
+    assert dialog.grid_container.relative_rect == pygame.Rect(10, 105, 860, 475)
+    assert dialog._grid_top_y == 105
+    assert dialog.lbl_source_remaining.text == "Source: —"
+    assert dialog.lbl_target_remaining.text == "Target: —"
 
 
 def test_build_grid_clears_old_widgets_and_populates_row_maps() -> None:
