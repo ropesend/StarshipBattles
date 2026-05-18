@@ -36,11 +36,7 @@ from game.ui.screens.transfer_grid_renderer import (
     TransferDialogUiBuilder,
     TransferGridRenderer,
 )
-from game.ui.screens.transfer_view_model import (
-    RESOURCE_DISPLAY_NAMES,
-    RESOURCE_TYPES,
-    TransferViewModel,
-)
+from game.ui.screens.transfer_view_model import TransferViewModel
 
 logger = logging.getLogger(__name__)
 
@@ -484,12 +480,8 @@ class TransferDialog(StrategyModalWindow):
             self._on_target_changed(target_label)
 
 
-# Re-exports for back-compat with importers that did
-# ``from game.ui.screens.transfer_dialog import RESOURCE_TYPES`` etc.
 __all__ = [
     "TransferDialog",
-    "RESOURCE_TYPES",
-    "RESOURCE_DISPLAY_NAMES",
     "ARROW_INCREMENTS_LOAD",
     "ARROW_INCREMENTS_DROP",
     "ARROW_LABELS_LOAD",

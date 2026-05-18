@@ -5,7 +5,14 @@ import pytest
 from game.core.hex_math import HexCoord
 from game.strategy.facade.dto.fleet_dto import FleetInfo
 from game.strategy.facade.dto.planet_dto import PlanetInfo
-from game.ui.screens.transfer_view_model import RESOURCE_TYPES, TransferViewModel
+from game.core.resources import ResourceCatalog
+from game.ui.screens.transfer_view_model import TransferViewModel
+
+
+# PROJ-436 Phase 7: the deleted ``RESOURCE_TYPES`` hardcoded list is
+# replaced by ``ResourceCatalog.all_ids()`` ordering. The test layer
+# resolves the canonical list once at import.
+_CANONICAL_RESOURCE_IDS = ResourceCatalog.from_json().all_ids()
 
 
 class TestTransferViewModelPendingMath:
@@ -84,9 +91,9 @@ class TestTransferViewModelRows:
 
         rows = vm.build_row_data(planet, fleet)
 
-        assert [row["cargo_key"] for row in rows[:len(RESOURCE_TYPES)]] == RESOURCE_TYPES
+        assert [row["cargo_key"] for row in rows[:len(_CANONICAL_RESOURCE_IDS)]] == _CANONICAL_RESOURCE_IDS
 
-        species_start = len(RESOURCE_TYPES)
+        species_start = len(_CANONICAL_RESOURCE_IDS)
         assert [row["cargo_key"] for row in rows[species_start:species_start + 3]] == [
             "passengers",
             "passengers_alpha",

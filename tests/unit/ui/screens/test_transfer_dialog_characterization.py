@@ -44,12 +44,18 @@ import pygame_gui
 
 from game.strategy.engine.commands import IssueTransferCommand
 from game.strategy.facade.dto import FleetInfo, PlanetInfo
+from game.core.resources import ResourceCatalog
 from game.ui.screens.transfer_dialog import (
     ARROW_INCREMENTS_DROP,
     ARROW_INCREMENTS_LOAD,
-    RESOURCE_TYPES,
     TransferDialog,
 )
+
+
+# PROJ-436 Phase 7: the deleted ``RESOURCE_TYPES`` hardcoded list is
+# replaced by ``ResourceCatalog.all_ids()`` ordering. Resolved once at
+# module import; canonical for every test in this file.
+_CANONICAL_RESOURCE_IDS = ResourceCatalog.from_json().all_ids()
 
 
 # ---------------------------------------------------------------------------
@@ -529,13 +535,20 @@ class TestConfirmCommandEmission:
 
 
 # ---------------------------------------------------------------------------
-# RESOURCE_TYPES constant pin
+# Resource-catalog ordering pin (PROJ-436 Phase 7)
 # ---------------------------------------------------------------------------
 
 
 class TestResourceTypesConstant:
     def test_8_resource_types_in_canonical_order(self):
-        assert RESOURCE_TYPES == [
+        """PROJ-436 Phase 7: the canonical 8-resource display order
+        now comes from ``data/resources.json`` via
+        ``ResourceCatalog.all_ids()`` (single source of truth)
+        rather than a hardcoded ``RESOURCE_TYPES`` list. This test
+        pins the JSON contents so a stray re-order or addition
+        trips the UI characterization gate.
+        """
+        assert _CANONICAL_RESOURCE_IDS == [
             "metals", "organics", "vapors", "radioactives", "exotics",
             "fuel", "energy", "ammo",
         ]
@@ -618,7 +631,7 @@ class TestTwoStageConstruction:
         # populate_initial_data ran → row_data has the canonical
         # 8 resource rows.
         resource_keys = [r["cargo_key"] for r in dialog._row_data
-                         if r["cargo_key"] in RESOURCE_TYPES]
+                         if r["cargo_key"] in _CANONICAL_RESOURCE_IDS]
         assert len(resource_keys) == 8
 
     def test_bypassed_dialog_pending_math_works_end_to_end(self):

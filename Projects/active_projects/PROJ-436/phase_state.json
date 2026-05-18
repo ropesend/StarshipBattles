@@ -177,21 +177,29 @@
     "phase_7": {
       "depends_on": ["phase_6"],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
+      "phase_base_sha": "13d355374",
       "phase_branch": "main",
       "phase_head_sha": null,
       "planned_files": [
         "game/strategy/validation/transfer_validator.py",
         "game/ui/screens/transfer_view_model.py",
         "game/ui/screens/transfer_dialog.py",
-        "game/strategy/engine/order_handlers/transfer_branches.py",
-        "tests/integration/test_transfer_container_validation.py"
+        "tests/static_guards/test_no_legacy_storage_fields.py",
+        "tests/integration/test_transfer_container_validation.py",
+        "tests/integration/strategy/test_resource_transfer.py",
+        "tests/unit/strategy/data/test_fms_a_audit_fixes.py",
+        "tests/unit/ui/screens/test_transfer_view_model.py",
+        "tests/unit/ui/screens/test_transfer_dialog_characterization.py",
+        "Projects/active_projects/PROJ-436/plan.md",
+        "Projects/active_projects/PROJ-436/decisions.md",
+        "Projects/active_projects/PROJ-436/phase_7_checklist.md",
+        "Projects/active_projects/PROJ-436/phase_state.json"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_8": {

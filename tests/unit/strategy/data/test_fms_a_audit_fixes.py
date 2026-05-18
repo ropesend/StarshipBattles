@@ -32,8 +32,23 @@ from game.strategy.validation.transfer_validator import TransferValidator
 
 
 class TestTransferValidatorAcceptsVehicleCargoType:
-    def test_vehicle_in_valid_cargo_types(self):
-        assert "vehicle" in TransferValidator.VALID_CARGO_TYPES
+    def test_vehicle_cargo_type_accepted(self, fresh_registries):
+        """PROJ-436 Phase 7: ``cargo_type="vehicle"`` is no longer
+        whitelisted via a hardcoded set; it is a categorical sentinel
+        in the registry-driven contract. The validator must still
+        accept it (and reject genuinely-unknown cargo types — covered
+        by ``test_invalid_cargo_type_still_rejected``).
+        """
+        fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
+        result = TransferValidator.validate(
+            galaxy=None, fleet=fleet, target=fleet,
+            cargo_type="vehicle", direction="load", amount=1,
+            skip_location_check=True,
+        )
+        # "vehicle" passes the cargo-type gate. Other failures (e.g.
+        # SAME_ENTITY) are unrelated to this test; the point is that
+        # the error code is NOT ``INVALID_CARGO_TYPE``.
+        assert result.error_code != "INVALID_CARGO_TYPE"
 
     def test_invalid_cargo_type_still_rejected(self, fresh_registries):
         # Use a dummy fleet/target — both real objects so protocol checks pass.

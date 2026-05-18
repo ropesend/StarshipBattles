@@ -21,18 +21,36 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+from game.core.resources import ResourceCatalog, ResourceDefinition
 
-# All resource types in display order.
-RESOURCE_TYPES = [
-    "metals", "organics", "vapors", "radioactives", "exotics",
-    "fuel", "energy", "ammo",
-]
 
-RESOURCE_DISPLAY_NAMES = {
-    "metals": "Metals", "organics": "Organics", "vapors": "Vapors",
-    "radioactives": "Radioactives", "exotics": "Exotics",
-    "fuel": "Fuel", "energy": "Energy", "ammo": "Ammo",
-}
+# Module-level catalog handle. Lazy-loaded on first access so import
+# order does not require ``data/resources.json`` to be present.
+_resource_catalog: ResourceCatalog | None = None
+
+
+def _get_resource_catalog() -> ResourceCatalog:
+    global _resource_catalog
+    if _resource_catalog is None:
+        _resource_catalog = ResourceCatalog.from_json()
+    return _resource_catalog
+
+
+def _iter_resource_definitions() -> List[ResourceDefinition]:
+    """Return the canonical resource list in display order.
+
+    PROJ-436 Phase 7: replaces the deleted ``RESOURCE_TYPES`` hardcoded
+    list. The display order comes directly from ``data/resources.json``
+    (the catalog preserves insertion order). The display label for each
+    resource is :attr:`ResourceDefinition.name`, replacing the deleted
+    ``RESOURCE_DISPLAY_NAMES`` mapping.
+
+    Note: ``ResourceDefinition.name`` is the canonical label. With the
+    current ``data/resources.json`` this means the ammo row now reads
+    "Ammunition" instead of the old hardcoded "Ammo" — the JSON name
+    field is the single source of truth.
+    """
+    return _get_resource_catalog().all_definitions()
 
 
 class TransferViewModel:
@@ -234,12 +252,12 @@ class TransferViewModel:
 
         rows: List[dict] = []
 
-        for res in RESOURCE_TYPES:
+        for defn in _iter_resource_definitions():
             rows.append({
-                "cargo_key": res,
-                "display_name": RESOURCE_DISPLAY_NAMES.get(res, res.capitalize()),
-                "source_amt": source_amounts.get(res, 0),
-                "target_amt": target_amounts.get(res, 0),
+                "cargo_key": defn.id,
+                "display_name": defn.name,
+                "source_amt": source_amounts.get(defn.id, 0),
+                "target_amt": target_amounts.get(defn.id, 0),
             })
 
         species_seen = set()
@@ -328,7 +346,5 @@ class TransferViewModel:
 
 
 __all__ = [
-    "RESOURCE_TYPES",
-    "RESOURCE_DISPLAY_NAMES",
     "TransferViewModel",
 ]

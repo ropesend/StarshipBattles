@@ -1,4 +1,4 @@
-"""PROJ-436 Phase 3f + Phase 4f + Phase 5 deletion guard.
+"""PROJ-436 Phase 3f + Phase 4f + Phase 5 + Phase 7 deletion guard.
 
 Locks in the final-state contract for the legacy storage-field
 deletions:
@@ -12,6 +12,13 @@ deletions:
   aggregation query that walks colony stockpiles only; the fleet-side
   durable storage was always a self-flagged TODO ("temporary storage
   for fleet construction") and is gone.
+* Phase 7  — :class:`TransferValidator` MUST NOT carry the legacy
+  ``VALID_CARGO_TYPES`` hardcoded whitelist as a class attribute, and
+  ``game.ui.screens.transfer_view_model`` / ``transfer_dialog`` MUST
+  NOT expose the legacy ``RESOURCE_TYPES`` / ``RESOURCE_DISPLAY_NAMES``
+  constants. The unified contract routes through
+  ``ResourceCatalog`` + the three categorical sentinels in
+  :data:`game.strategy.validation.transfer_validator._CATEGORICAL_CARGO_TYPES`.
 
 For ShipInstance / Planet the public attribute names survive as
 backward-compatible ``@property`` accessors over renamed private
@@ -177,4 +184,82 @@ def test_empire_resource_pool_is_pure_aggregation_with_no_colonies() -> None:
         "Empire.resource_pool should aggregate colony stockpiles only; "
         "an empire with no colonies must return an empty dict. Got: "
         f"{empire.resource_pool}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Phase 7 deletion guards
+# ---------------------------------------------------------------------------
+
+
+def test_transfer_validator_has_no_valid_cargo_types_attribute() -> None:
+    """``TransferValidator`` must NOT carry the legacy ``VALID_CARGO_TYPES``.
+
+    PROJ-436 Phase 7 deletion guard. The hardcoded whitelist is gone.
+    Cargo-type validation now consults
+    :class:`game.core.resources.ResourceCatalog` plus three categorical
+    sentinels (``passengers`` / ``drop_pod`` / ``vehicle``) in
+    :mod:`game.strategy.validation.transfer_validator`. Adding a new
+    resource to ``data/resources.json`` makes it transferrable; no
+    validator change required.
+    """
+    from game.strategy.validation.transfer_validator import TransferValidator
+
+    assert not hasattr(TransferValidator, "VALID_CARGO_TYPES"), (
+        "TransferValidator still exposes a `VALID_CARGO_TYPES` class "
+        "attribute (PROJ-436 Phase 7 deletion guard). Cargo-type "
+        "validation must route through ResourceCatalog + categorical "
+        "sentinels, not a hardcoded whitelist."
+    )
+
+
+def test_transfer_view_model_has_no_resource_types_constant() -> None:
+    """``transfer_view_model`` MUST NOT expose ``RESOURCE_TYPES``.
+
+    PROJ-436 Phase 7 deletion guard. The UI iterates
+    ``ResourceCatalog.all_ids()`` (Core-layer single source of truth)
+    in display order; the previous hardcoded ordered list is gone.
+    """
+    import game.ui.screens.transfer_view_model as vm
+
+    assert not hasattr(vm, "RESOURCE_TYPES"), (
+        "transfer_view_model still exposes a `RESOURCE_TYPES` "
+        "module-level constant (PROJ-436 Phase 7 deletion guard). UI "
+        "iteration must consult ResourceCatalog.all_ids()."
+    )
+
+
+def test_transfer_view_model_has_no_resource_display_names_constant() -> None:
+    """``transfer_view_model`` MUST NOT expose ``RESOURCE_DISPLAY_NAMES``.
+
+    PROJ-436 Phase 7 deletion guard. The UI looks up display labels
+    via ``ResourceDefinition.name`` from the same catalog; the previous
+    hardcoded mapping is gone.
+    """
+    import game.ui.screens.transfer_view_model as vm
+
+    assert not hasattr(vm, "RESOURCE_DISPLAY_NAMES"), (
+        "transfer_view_model still exposes a `RESOURCE_DISPLAY_NAMES` "
+        "module-level constant (PROJ-436 Phase 7 deletion guard). "
+        "Display labels must come from ResourceDefinition.name."
+    )
+
+
+def test_transfer_dialog_has_no_resource_types_re_export() -> None:
+    """``transfer_dialog`` MUST NOT re-export the deleted UI constants.
+
+    PROJ-436 Phase 7 deletion guard. The re-export at
+    ``transfer_dialog.py:39-43`` (the legacy convenience shim for
+    importers that wrote ``from game.ui.screens.transfer_dialog import
+    RESOURCE_TYPES``) is gone.
+    """
+    import game.ui.screens.transfer_dialog as td
+
+    assert not hasattr(td, "RESOURCE_TYPES"), (
+        "transfer_dialog still re-exports `RESOURCE_TYPES` "
+        "(PROJ-436 Phase 7 deletion guard)."
+    )
+    assert not hasattr(td, "RESOURCE_DISPLAY_NAMES"), (
+        "transfer_dialog still re-exports `RESOURCE_DISPLAY_NAMES` "
+        "(PROJ-436 Phase 7 deletion guard)."
     )

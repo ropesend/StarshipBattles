@@ -2,27 +2,81 @@
 TransferValidator - Validates TRANSFER orders for fleets.
 
 PROJ-68: Validates cargo transfer operations between fleets and colonies.
+
+PROJ-436 Phase 7: the legacy ``VALID_CARGO_TYPES`` hardcoded whitelist is
+gone. The cargo-type acceptance check now consults
+``ResourceCatalog.has(...)`` for resource IDs and a tiny set of categorical
+sentinels (``"passengers"`` for population, ``"drop_pod"`` / ``"vehicle"``
+for the ``BayInventory`` item slices). The resource list is now driven by
+``data/resources.json`` as the single source of truth — adding a new
+resource there makes it transferrable automatically, no validator update
+needed.
 """
 import logging
 from typing import Any, Dict
+from game.core.resources import ResourceCatalog
 from game.core.validation import ValidationResult
 
 logger = logging.getLogger(__name__)
 
 
+# Categorical (non-resource) cargo-type sentinels.
+#
+# These three are recognised in addition to any resource ID in the
+# Core-layer ``ResourceCatalog``:
+#
+# * ``"passengers"`` — population transfer (Container POPULATION slice;
+#   on fleets, currently aggregated as one bucket).
+# * ``"drop_pod"`` — :class:`DropPod` item transfer via
+#   :class:`BayInventory.pods` / :attr:`Planet.staging_yard`.
+# * ``"vehicle"`` — design-backed :class:`CarriedVehicle` item transfer
+#   via the same bay/staging substrate (PROJ-FMS-A).
+#
+# Each maps to a distinct dispatch branch in
+# :mod:`game.strategy.engine.order_handlers.transfer_branches`. They are
+# NOT resources and intentionally live outside ``data/resources.json``.
+_CATEGORICAL_CARGO_TYPES: frozenset[str] = frozenset({
+    "passengers",
+    "drop_pod",
+    "vehicle",
+})
+
+
+# Module-level catalog handle. Lazy-loaded on first access so import
+# order does not require ``data/resources.json`` to be present. Tests
+# may not need to override this — the canonical catalog covers the
+# eight production resource IDs.
+_resource_catalog: ResourceCatalog | None = None
+
+
+def _get_resource_catalog() -> ResourceCatalog:
+    global _resource_catalog
+    if _resource_catalog is None:
+        _resource_catalog = ResourceCatalog.from_json()
+    return _resource_catalog
+
+
+def _is_known_cargo_type(cargo_type: str) -> bool:
+    """Return True iff ``cargo_type`` is a recognised transfer kind.
+
+    A cargo type is recognised when it is either:
+
+    * one of the categorical sentinels (``"passengers"``,
+      ``"drop_pod"``, ``"vehicle"``), or
+    * a resource ID present in the Core-layer
+      :class:`ResourceCatalog` (which loads ``data/resources.json``).
+
+    PROJ-436 Phase 7: replaces the deleted ``VALID_CARGO_TYPES``
+    hardcoded set. New resources added to ``data/resources.json``
+    become transferrable automatically.
+    """
+    if cargo_type in _CATEGORICAL_CARGO_TYPES:
+        return True
+    return _get_resource_catalog().has(cargo_type)
+
+
 class TransferValidator:
     """Validates TRANSFER orders for cargo operations between fleets and colonies."""
-
-    # Valid cargo types (resources + passengers + drop pods + carried vehicles)
-    VALID_CARGO_TYPES = {
-        "passengers",
-        "metals", "organics", "vapors", "radioactives", "exotics",
-        "fuel", "energy", "ammo",
-        "drop_pod",
-        # PROJ-FMS-A: design-backed carried vehicles
-        # (mines/fighters/satellites) routed through VehicleBay.
-        "vehicle",
-    }
 
     # Valid directions
     VALID_DIRECTIONS = {"load", "unload"}  # str values match TransferDirection enum
@@ -68,8 +122,12 @@ class TransferValidator:
                 code="INVALID_DIRECTION"
             )
 
-        # 4. Validate cargo_type
-        if cargo_type not in TransferValidator.VALID_CARGO_TYPES:
+        # 4. Validate cargo_type via the registry-driven contract
+        #    (PROJ-436 Phase 7). Resource IDs come from the Core-layer
+        #    ``ResourceCatalog`` (``data/resources.json``); the three
+        #    categorical sentinels ("passengers" / "drop_pod" /
+        #    "vehicle") cover the non-resource transfer kinds.
+        if not _is_known_cargo_type(cargo_type):
             return ValidationResult.error(
                 f"Invalid cargo type '{cargo_type}'.",
                 code="INVALID_CARGO_TYPE"

@@ -61,17 +61,40 @@ def _make_cargo_ship(cargo_capacity=None, cargo_contents=None):
 
 
 class TestResourceTransferValidation:
-    """Tests for resource transfer validation."""
+    """Tests for resource transfer validation.
 
-    def test_resource_cargo_types_are_valid(self):
-        """All 8 resource types are accepted as valid cargo types."""
-        for res in ["metals", "organics", "vapors", "radioactives", "exotics",
-                     "fuel", "energy", "ammo"]:
-            assert res in TransferValidator.VALID_CARGO_TYPES
+    PROJ-436 Phase 7: validation now consults the Core-layer
+    ``ResourceCatalog`` + categorical sentinels instead of the deleted
+    ``VALID_CARGO_TYPES`` hardcoded set. We exercise the validator
+    end-to-end with ``skip_location_check`` so the cargo-type gate
+    fires alone; an unknown type yields ``INVALID_CARGO_TYPE`` and a
+    known type does not.
+    """
+
+    @pytest.mark.parametrize(
+        "cargo_type",
+        ["metals", "organics", "vapors", "radioactives", "exotics",
+         "fuel", "energy", "ammo"],
+    )
+    def test_resource_cargo_types_are_valid(self, cargo_type):
+        """All 8 resource types from ``data/resources.json`` are accepted."""
+        fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
+        result = TransferValidator.validate(
+            galaxy=None, fleet=fleet, target=fleet,
+            cargo_type=cargo_type, direction="load", amount=1,
+            skip_location_check=True,
+        )
+        assert result.error_code != "INVALID_CARGO_TYPE"
 
     def test_passengers_still_valid(self):
-        """Passengers remain a valid cargo type."""
-        assert "passengers" in TransferValidator.VALID_CARGO_TYPES
+        """The ``passengers`` categorical sentinel remains accepted."""
+        fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
+        result = TransferValidator.validate(
+            galaxy=None, fleet=fleet, target=fleet,
+            cargo_type="passengers", direction="load", amount=1,
+            skip_location_check=True,
+        )
+        assert result.error_code != "INVALID_CARGO_TYPE"
 
 
 class TestResourceLoadFromPlanet:
