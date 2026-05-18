@@ -1,0 +1,6 @@
+game\simulation\systems\battle_logger.py:35: unused variable 'exc_tb' (100% confidence)
+game\simulation\systems\battle_logger.py:35: unused variable 'exc_type' (100% confidence)
+game\simulation\systems\battle_logger.py:35: unused variable 'exc_val' (100% confidence)
+game\strategy\data\galaxy.py:26: unused import 'RegionClassifier' (90% confidence)
+game\strategy\data\galaxy_warp_generator.py:16: unused import 'RegionClassifier' (90% confidence)
+game\ui\panels\build_queue_controller.py:19: unused import 'BuildContext' (90% confidence)

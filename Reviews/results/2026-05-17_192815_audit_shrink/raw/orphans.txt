@@ -1,0 +1,14 @@
+Orphaned modules: 13
+  ai/group_target_coordinator
+  simulation/components/modifier_introspection
+  simulation/designs
+  simulation/systems/tech_preset_loader
+  strategy/data/design_role
+  strategy/facade/dto/fleet_hierarchy_dto
+  strategy/services/deployment_zone_calculator
+  strategy/services/mine_group_service
+  strategy/services/task_group_suggester
+  ui/screens/build_queue_viewmodel
+  ui/screens/setup_screen
+  ui/widgets/panel_factory
+  ui/widgets/ui_element_registry

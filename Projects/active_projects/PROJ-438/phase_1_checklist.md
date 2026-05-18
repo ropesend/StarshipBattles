@@ -1,4 +1,4 @@
-# Phase 1: TBD
+# Phase 1: Canonical graph restoration path
 
 > **BEFORE MARKING THIS PHASE COMPLETE:**
 > 1. Run `python Projects/scripts/validate_phase.py PROJ-438 1`
@@ -6,21 +6,17 @@
 > 3. Update plan.md phase table AND Current State
 
 **Status:** Not Started
-**Objective:** [What this phase accomplishes]
+**Objective:** Remove duplicated graph-repair knowledge between save-load and rollback restore paths by introducing one canonical restoration path or restoration collaborator.
 
 ---
 
 ## Tasks
 
-### Task 1.1: [Task Name] [Simple/Medium/Complex]
-**File:** `path/to/file.py`
-**Tests:** `pytest tests/path/`
+### Task 1.1: [Task list to be authored at phase start]
+**File:** `game/strategy/engine/session/persistence_adapter.py` / `game/strategy/engine/turn_state_snapshot.py`
+**Tests:** `pytest tests/unit/strategy/engine/session/test_bootstrap.py tests/unit/strategy/engine/test_restore_path_parity.py`
 
-- [ ] Subtask with specific action
-- [ ] Another subtask
-- [ ] Verify: [what to check]
-
-**Notes:** [Filled during implementation]
+- [ ] Author detailed subtasks at phase start after re-reading predecessor state.
 
 ---
 
