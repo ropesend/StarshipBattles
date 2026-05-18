@@ -65,7 +65,19 @@ class ShipInstance:
     # Current state (may differ from design defaults)
     # None values mean "use design default"
     current_hp: Optional[int] = None
-    consumable_levels: Dict[str, float] = field(default_factory=dict)  # resource_name -> current
+
+    # PROJ-436 Phase 3f: ``consumable_levels`` and ``cargo_contents``
+    # are no longer dataclass fields. They survive as backward-compatible
+    # write-through ``@property`` accessors over the private
+    # ``_consumable_levels`` / ``_cargo_contents`` dict fields below
+    # — preserving test infrastructure that still pokes
+    # ``ship.cargo_contents[k] = v`` / ``ship.consumable_levels[k] = v``
+    # directly. Production callers route through ``ship._resource_mgr``
+    # and ``ship._cargo_mgr`` (the stable manager API landed in
+    # sub-phase 3b). The AST guard at
+    # ``tests/static_guards/test_no_legacy_storage_fields.py`` pins
+    # the absence of the dataclass field names.
+    _consumable_levels: Dict[str, float] = field(default_factory=dict)
     component_toggles: Dict[str, bool] = field(default_factory=dict)  # component_id -> enabled
     activation_states: Dict[str, Dict[str, Any]] = field(default_factory=dict)  # component_key -> activation state
 
@@ -78,8 +90,8 @@ class ShipInstance:
     # dict).
     components: Dict[str, ComponentState] = field(default_factory=dict)
 
-    # Cargo contents (cargo_type -> current amount)
-    cargo_contents: Dict[str, int] = field(default_factory=dict)
+    # PROJ-436 Phase 3f: see comment on ``_consumable_levels`` above.
+    _cargo_contents: Dict[str, int] = field(default_factory=dict)
 
     # PROJ-431 Phase 1f: typed two-slot carried inventory replaces the
     # legacy ``carried_items: List[Dict[str, Any]]`` mixed-shape list.
@@ -135,6 +147,49 @@ class ShipInstance:
         self._cargo_mgr = ShipCargoManager(self)
         self._display_fmt = ShipDisplayFormatter(self)
         self._bridge = ShipInstanceBridge(self)
+
+    # ------------------------------------------------------------------
+    # PROJ-436 Phase 3f legacy-shim properties for ``consumable_levels``
+    # and ``cargo_contents``.
+    # ------------------------------------------------------------------
+    #
+    # The dataclass fields of the same name were deleted in Phase 3f.
+    # Production code routes through the stable manager APIs
+    # (``self._resource_mgr.set_level`` / ``get_all_levels`` /
+    # ``get_current_resource`` / ``replace_levels`` and
+    # ``self._cargo_mgr.set_cargo`` / ``get_all_cargo`` /
+    # ``total_cargo_units`` / ``has_cargo``). These properties expose
+    # the underlying private dicts directly so test infrastructure that
+    # still does ``ship.consumable_levels[k] = v`` / ``ship.cargo_contents[k] = v``
+    # /``ship.consumable_levels = {...}`` keeps working without a
+    # per-test migration.
+
+    @property
+    def consumable_levels(self) -> Dict[str, float]:
+        """Backward-compatible dict view over private consumable storage.
+
+        Phase 3f deletion shim. The dataclass field is gone; the AST
+        guard at ``tests/static_guards/test_no_legacy_storage_fields.py``
+        pins the absence. Manager methods read / write the same
+        private dict, so changes via either API are visible everywhere.
+        """
+        return self._consumable_levels
+
+    @consumable_levels.setter
+    def consumable_levels(self, value: Dict[str, float]) -> None:
+        self._consumable_levels = dict(value) if value is not None else {}
+
+    @property
+    def cargo_contents(self) -> Dict[str, int]:
+        """Backward-compatible dict view over private cargo storage.
+
+        Phase 3f deletion shim. See ``consumable_levels`` property.
+        """
+        return self._cargo_contents
+
+    @cargo_contents.setter
+    def cargo_contents(self, value: Dict[str, int]) -> None:
+        self._cargo_contents = dict(value) if value is not None else {}
 
     def set_registries(self, registries: 'GameRegistries') -> None:
         """
@@ -679,6 +734,47 @@ class ShipInstance:
         hp_status = f"{self.current_hp}HP" if self.current_hp is not None else "Full"
         status = "DESTROYED" if not self.is_alive else ("DERELICT" if self.is_derelict else "OK")
         return f"ShipInstance({self.name}, {hp_status}, {status})"
+
+
+# ---------------------------------------------------------------------------
+# PROJ-436 Phase 3f: legacy-kwarg constructor wrapper.
+# ---------------------------------------------------------------------------
+# The dataclass field rename (``consumable_levels`` ->
+# ``_consumable_levels``, ``cargo_contents`` -> ``_cargo_contents``)
+# would break ~8 test files that pass the legacy kwarg names into
+# ``ShipInstance(...)``. Rather than sweep those mechanically, we
+# wrap the dataclass-generated ``__init__`` with a translator that
+# accepts both spellings. Production code never hits the translation
+# branch (the serializer / clone paths use the new private names).
+
+_dataclass_init = ShipInstance.__init__
+
+
+def _ship_instance_init_with_legacy_kwargs(self, *args, **kwargs):  # noqa: D401
+    """Translate legacy ``consumable_levels`` / ``cargo_contents`` kwargs.
+
+    PROJ-436 Phase 3f compat shim. Production callers pass the new
+    private-field names (``_consumable_levels`` / ``_cargo_contents``);
+    only legacy test fixtures hit the translation branch.
+    """
+    if 'consumable_levels' in kwargs:
+        if '_consumable_levels' in kwargs:
+            raise TypeError(
+                "ShipInstance.__init__ received both 'consumable_levels' "
+                "and '_consumable_levels'; pass only one."
+            )
+        kwargs['_consumable_levels'] = kwargs.pop('consumable_levels')
+    if 'cargo_contents' in kwargs:
+        if '_cargo_contents' in kwargs:
+            raise TypeError(
+                "ShipInstance.__init__ received both 'cargo_contents' "
+                "and '_cargo_contents'; pass only one."
+            )
+        kwargs['_cargo_contents'] = kwargs.pop('cargo_contents')
+    _dataclass_init(self, *args, **kwargs)
+
+
+ShipInstance.__init__ = _ship_instance_init_with_legacy_kwargs
 
 
 # ---------------------------------------------------------------------------

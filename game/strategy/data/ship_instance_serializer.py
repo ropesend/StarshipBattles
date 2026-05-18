@@ -125,6 +125,11 @@ class ShipInstanceSerializer:
             else BayInventory()
         )
 
+        # PROJ-436 Phase 3f: ``consumable_levels`` and ``cargo_contents``
+        # are no longer dataclass fields; pass via the renamed private
+        # dataclass fields ``_consumable_levels`` / ``_cargo_contents``.
+        # The public property of the same name reads / writes the same
+        # dict.
         instance = ShipInstance(
             instance_id=data['instance_id'],
             design_id=data['design_id'],
@@ -132,10 +137,10 @@ class ShipInstanceSerializer:
             owner_id=data['owner_id'],
             design_data=data.get('design_data', {}),
             current_hp=data.get('current_hp'),
-            consumable_levels=data.get('consumable_levels', {}),
+            _consumable_levels=data.get('consumable_levels', {}),
             component_toggles=data.get('component_toggles', {}),
             activation_states=data.get('activation_states', {}),
-            cargo_contents=data.get('cargo_contents', {}),
+            _cargo_contents=data.get('cargo_contents', {}),
             bay_inventory=bay_inventory,
             is_alive=data.get('is_alive', True),
             is_derelict=data.get('is_derelict', False),
@@ -182,6 +187,9 @@ class ShipInstanceSerializer:
         """
         from game.strategy.data.ship_instance import ShipInstance
 
+        # PROJ-436 Phase 3f: see ``from_dict`` comment about the
+        # private ``_consumable_levels`` / ``_cargo_contents`` field
+        # rename.
         return ShipInstance(
             instance_id=str(uuid.uuid4()),
             design_id=ship.design_id,
@@ -189,9 +197,9 @@ class ShipInstanceSerializer:
             owner_id=ship.owner_id,
             design_data=copy.deepcopy(ship.design_data),
             current_hp=ship.current_hp,
-            consumable_levels=copy.deepcopy(ship._resource_mgr.get_all_levels()),
+            _consumable_levels=copy.deepcopy(ship._resource_mgr.get_all_levels()),
             component_toggles=copy.deepcopy(ship.component_toggles),
-            cargo_contents=copy.deepcopy(ship._cargo_mgr.get_all_cargo()),
+            _cargo_contents=copy.deepcopy(ship._cargo_mgr.get_all_cargo()),
             bay_inventory=copy.deepcopy(ship.bay_inventory),
             is_alive=ship.is_alive,
             is_derelict=ship.is_derelict,

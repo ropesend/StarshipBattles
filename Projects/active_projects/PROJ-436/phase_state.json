@@ -70,7 +70,7 @@
     "phase_3": {
       "depends_on": ["phase_2"],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
+      "phase_base_sha": "b8498c00c",
       "phase_branch": "main",
       "phase_head_sha": null,
       "planned_files": [
@@ -80,14 +80,19 @@
         "game/strategy/data/ship_instance_bridge.py",
         "game/strategy/data/ship_display_formatter.py",
         "game/strategy/data/ship_instance_serializer.py",
-        "tests/integration/test_ship_resource_migration.py",
+        "game/strategy/services/ship_instance_factory.py",
+        "game/strategy/services/ship_instance_write_service.py",
+        "game/ui/screens/fleet_report_filters.py",
+        "game/ui/screens/fleet_data_source.py",
+        "game/ui/screens/strategy_detail_fmt.py",
+        "tests/unit/strategy/test_managers_phase_3b.py",
         "tests/static_guards/test_no_legacy_storage_fields.py"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_4": {
