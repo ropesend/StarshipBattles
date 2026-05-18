@@ -143,6 +143,53 @@ def test_command_registry_planet_fms_action_order_types_derivation() -> None:
     })
 
 
+def test_planet_fms_subcategory_tag_spelling_or_set_size() -> None:
+    """PROJ-445 Phase 1 (F-B-020) — typo-and-size ratchet on the
+    planet-FMS subcategory tag.
+
+    The :meth:`CommandRegistry.planet_fms_action_order_types` derivation
+    keys off the literal string ``"planet_fms"`` in each CommandSpec's
+    ``subcategories``. A typo (``"plnaet_fms"``, ``"planet-fms"``,
+    ``"planet_fms "``) silently drops that handler from the planet-FMS
+    surface, which would manifest only when a player tries to issue
+    the order from a planet — i.e., far too late.
+
+    This ratchet asserts:
+
+    - exactly 5 entries are derived (size guard),
+    - the derived set equals the expected canonical OrderType set
+      (set-equality guard catches drift either way: a typo drops one,
+      a spuriously-tagged sixth handler adds one).
+    """
+    from game.strategy.engine.commands.registry import (
+        command_registry,
+        seed_default_commands,
+    )
+
+    if len(command_registry) == 0:
+        seed_default_commands(command_registry)
+    derived = command_registry.planet_fms_action_order_types()
+    expected = {
+        OrderType.LAY_MINES,
+        OrderType.LAUNCH_FIGHTERS,
+        OrderType.LAUNCH_SATELLITES,
+        OrderType.RECOVER_FIGHTERS,
+        OrderType.RECOVER_SATELLITES,
+    }
+    assert len(derived) == 5, (
+        f"planet_fms subcategory tag count drift: expected 5, got "
+        f"{len(derived)} ({sorted(t.name for t in derived)}). A typo in "
+        f"one handler's `subcategories=frozenset({{\"planet_fms\"}})` "
+        f"declaration silently drops that handler from the planet-FMS "
+        f"dispatch surface."
+    )
+    assert set(derived) == expected, (
+        f"planet_fms subcategory tag set drift: derived "
+        f"{sorted(t.name for t in derived)} != expected "
+        f"{sorted(t.name for t in expected)}."
+    )
+
+
 def test_action_order_types_contains_all_known_members() -> None:
     """Pin action_order_types contents.
 

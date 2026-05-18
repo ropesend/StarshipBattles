@@ -188,12 +188,21 @@ class LayMinesOrderHandler(BaseOrderHandler):
         order_owner: Any,
         empire: "Empire",
         galaxy: "Galaxy",
+        registries: Any = None,
     ) -> OrderExecutionResult:
         """Run the handler against any IIssuerAdapter (planet or fleet).
 
         ``order_owner`` is the entity whose ``orders`` queue holds the
         active order — usually the same as the wrapped fleet/planet.
+
+        PROJ-445 Phase 1 (F-B-001): ``registries`` accepted to match the
+        unified ``IOrderHandler`` 5-kwarg contract — see
+        :meth:`game.strategy.engine.order_handlers.recover_fighters.RecoverFightersOrderHandler.execute_for_issuer`
+        for the canonical accept-and-ignore shape. Without it,
+        :meth:`ActionExecutionEngine._execute_planet_action` raises
+        ``TypeError`` on any planet-issued ``LAY_MINES`` order.
         """
+        del registries
         order = order_owner.get_current_order()
         if not order or order.type != OrderType.LAY_MINES:
             return OrderExecutionResult(success=False, message="Not a LAY_MINES order")
