@@ -4,6 +4,10 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-442 | Seam Retirement and Residue Burn-down | Planning | 2026-05-17 | 2026-05-17 |
+| PROJ-441 | Ambient Defaults Containment | Planning | 2026-05-17 | 2026-05-17 |
+| PROJ-440 | Battle Session Convergence | Planning | 2026-05-17 | 2026-05-17 |
+| PROJ-439 | Content Contracts and Loader Validation | Planning | 2026-05-17 | 2026-05-17 |
 | PROJ-438 | Strategy State Surface and Intent Lifecycle Consolidation | Planning | 2026-05-17 | 2026-05-17 |
 | PROJ-437 | Container-Aware Transfer UI | Planning | 2026-05-17 | 2026-05-17 |
 | PROJ-436 | Unified Storage Substrate and Container Unification | Planning | 2026-05-17 | 2026-05-17 |

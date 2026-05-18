@@ -4,10 +4,10 @@
   "skills": {
     "claude-consult": {
       "agents": {
-        "claude": 3
+        "claude": 6
       },
-      "count": 3,
-      "last_used": "2026-05-18T01:56:48Z"
+      "count": 6,
+      "last_used": "2026-05-18T03:13:42Z"
     },
     "claude-delegate-review": {
       "agents": {
@@ -25,10 +25,10 @@
     },
     "claude-discuss-start": {
       "agents": {
-        "claude": 11
+        "claude": 12
       },
-      "count": 11,
-      "last_used": "2026-05-17T22:59:43Z"
+      "count": 12,
+      "last_used": "2026-05-18T03:06:53Z"
     },
     "claude-doc-audit-apply": {
       "agents": {
@@ -102,10 +102,10 @@
     },
     "codex-discuss-respond": {
       "agents": {
-        "codex": 17
+        "codex": 18
       },
-      "count": 17,
-      "last_used": "2026-05-17T23:01:29Z"
+      "count": 18,
+      "last_used": "2026-05-18T03:07:10Z"
     },
     "codex-discuss-start": {
       "agents": {
@@ -116,10 +116,10 @@
     },
     "codex-starship-analysis-review": {
       "agents": {
-        "codex": 48
+        "codex": 49
       },
-      "count": 48,
-      "last_used": "2026-05-18T01:21:47Z"
+      "count": 49,
+      "last_used": "2026-05-18T02:27:54Z"
     },
     "codex-starship-combat-lab": {
       "agents": {
@@ -137,10 +137,10 @@
     },
     "codex-starship-consult-respond": {
       "agents": {
-        "codex": 2
+        "codex": 4
       },
-      "count": 2,
-      "last_used": "2026-05-18T01:57:42Z"
+      "count": 4,
+      "last_used": "2026-05-18T03:14:30Z"
     },
     "codex-starship-design-assets": {
       "agents": {
@@ -151,10 +151,10 @@
     },
     "codex-starship-project-system": {
       "agents": {
-        "codex": 8
+        "codex": 9
       },
-      "count": 8,
-      "last_used": "2026-05-18T01:21:47Z"
+      "count": 9,
+      "last_used": "2026-05-18T03:24:45Z"
     },
     "ocode-audit-shrink": {
       "agents": {
