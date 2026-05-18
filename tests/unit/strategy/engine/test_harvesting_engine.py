@@ -35,18 +35,10 @@ def _make_empire(colonies=None, resource_pool=None, max_storage=None, empire_id=
     empire._storage_dirty = True
     empire._booster_dirty = True
 
-    # Wire add_resources to behave like the real Empire
-    def add_resources(resource_type, amount):
-        current = empire.resource_pool.get(resource_type, 0.0)
-        max_cap = empire.max_storage.get(resource_type, float('inf'))
-        new_total = current + amount
-        if new_total > max_cap:
-            empire.resource_pool[resource_type] = max_cap
-            return new_total - max_cap
-        empire.resource_pool[resource_type] = new_total
-        return 0.0
-
-    empire.add_resources = add_resources
+    # PROJ-443 Phase 5c: dropped the `empire.add_resources = ...` wiring —
+    # `Empire.add_resources` was deleted in PROJ-436 Phase 5 (harvest now
+    # deposits to `colony.stockpile`, not `empire.resource_pool`), so the
+    # mock implementation was inert.
     return empire
 
 

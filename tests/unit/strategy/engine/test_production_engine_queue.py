@@ -36,11 +36,13 @@ def engine(fresh_registries):
 
 @pytest.fixture
 def empire():
+    # PROJ-443 Phase 5c: dropped `emp.consume_resources = MagicMock()` —
+    # `Empire.consume_resources` was deleted in PROJ-436 Phase 5; the inert
+    # attachment masked the rename rather than catching a real call.
     emp = MagicMock(spec=Empire)
     emp.id = "emp1"
     emp.resource_pool = {"metals": 1000.0}
     emp.has_resources.return_value = True
-    emp.consume_resources = MagicMock()
     return emp
 
 

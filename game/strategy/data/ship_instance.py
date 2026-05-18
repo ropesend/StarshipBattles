@@ -741,11 +741,20 @@ class ShipInstance:
 # ---------------------------------------------------------------------------
 # The dataclass field rename (``consumable_levels`` ->
 # ``_consumable_levels``, ``cargo_contents`` -> ``_cargo_contents``)
-# would break ~8 test files that pass the legacy kwarg names into
+# would break ~18 test files that pass the legacy kwarg names into
 # ``ShipInstance(...)``. Rather than sweep those mechanically, we
 # wrap the dataclass-generated ``__init__`` with a translator that
 # accepts both spellings. Production code never hits the translation
 # branch (the serializer / clone paths use the new private names).
+#
+# PROJ-443 Phase 5b retained-with-rationale: an initial sweep attempt
+# found the real test-side footprint is 18 files (the original PROJ-436
+# audit estimated ~7). The wrapper is small (~20 LOC), production
+# carries no runtime cost (kwargs are not the production path), and
+# the cleanup value does not justify the change to 18 test files. See
+# `Projects/active_projects/PROJ-443/decisions.md` 2026-05-17 row
+# "Phase 5b implementation: retained wrapper after audit found 18
+# files (not ~7)".
 
 _dataclass_init = ShipInstance.__init__
 
