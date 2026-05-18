@@ -63,7 +63,6 @@ def _make_colony(
 ):
     colony = MagicMock()
     colony.name = "Test Colony"
-    colony.context_type = "planet"
     colony.construction_queue = construction_queue or []
     colony.construction_queue_paused = paused
     colony.facilities = facilities if facilities is not None else [
@@ -86,6 +85,13 @@ def _make_colony(
     colony.has_stockpile = has_stockpile
     colony.consume_from_stockpile = consume_from_stockpile
     colony.get_stockpile = get_stockpile
+    # PROJ-436 Phase 8: ProductionEngine reads through the unified
+    # IProductionResourceSource protocol; delegate the new names to the
+    # existing stockpile mocks above so the engine sees consistent
+    # behaviour without context_type dispatch.
+    colony.production_has_resources = has_stockpile
+    colony.production_consume_resource = consume_from_stockpile
+    colony.production_get_resource = get_stockpile
     return colony
 
 
@@ -220,9 +226,8 @@ class TestPausedFleetYardQueue:
         empire.colonies = []
         empire.fleets = []
 
-        # Use a MagicMock for the fleet — easier to wire context_type/cargo
+        # Use a MagicMock for the fleet — easier to wire cargo behaviour.
         fleet = MagicMock()
-        fleet.context_type = "fleet"
         fleet.is_building = True
         fleet.capabilities.has_space_shipyard = True
         fleet.capabilities.space_shipyard_count = 1
@@ -230,13 +235,17 @@ class TestPausedFleetYardQueue:
         item = _make_queue_item(total_cost={"metals": 500}, vehicle_type="ship")
         fleet.construction_queue = [item]
         cargo = {"metals": 10000.0}
-        fleet.has_cargo_resources = lambda costs: all(
+        # PROJ-436 Phase 8: production_engine reads through the unified
+        # ``IProductionResourceSource`` protocol; on a real Fleet these
+        # delegate to has_cargo_resources / consume_cargo_resource /
+        # get_cargo_resource.
+        fleet.production_has_resources = lambda costs: all(
             cargo.get(r, 0.0) >= a for r, a in costs.items()
         )
-        fleet.consume_cargo_resource = lambda r, a: cargo.__setitem__(
+        fleet.production_consume_resource = lambda r, a: cargo.__setitem__(
             r, cargo.get(r, 0.0) - a
         )
-        fleet.get_cargo_resource = lambda r: cargo.get(r, 0.0)
+        fleet.production_get_resource = lambda r: cargo.get(r, 0.0)
         empire.fleets = [fleet]
 
         engine.process_construction_tick(1, [empire], None)

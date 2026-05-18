@@ -205,18 +205,32 @@
     "phase_8": {
       "depends_on": ["phase_7"],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
-      "phase_branch": "main",
+      "phase_base_sha": "412ea51d2",
+      "phase_branch": "proj/PROJ-436/phase_8",
       "phase_head_sha": null,
       "planned_files": [
         "game/strategy/engine/production_engine.py",
-        "tests/integration/test_production_engine_container_unified.py"
+        "game/strategy/data/planet.py",
+        "game/strategy/data/fleet.py",
+        "tests/integration/test_production_engine_container_unified.py",
+        "tests/static_guards/test_no_legacy_storage_fields.py",
+        "tests/unit/strategy/engine/test_production_engine_consumption.py",
+        "tests/unit/strategy/engine/test_production_engine_queue.py",
+        "tests/unit/strategy/engine/test_production_refactor.py",
+        "tests/unit/strategy/engine/test_planetary_yard_requirement.py",
+        "tests/unit/strategy/production_engine/test_tick_consumption.py",
+        "tests/unit/strategy/production_engine/test_paused_queue.py",
+        "tests/unit/strategy/data/test_galaxy_planet_star_loc_ceilings.py",
+        "Projects/active_projects/PROJ-436/plan.md",
+        "Projects/active_projects/PROJ-436/decisions.md",
+        "Projects/active_projects/PROJ-436/phase_8_checklist.md",
+        "Projects/active_projects/PROJ-436/phase_state.json"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
       "verifying_review_id": null
     },
     "phase_9": {

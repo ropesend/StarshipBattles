@@ -263,3 +263,99 @@ def test_transfer_dialog_has_no_resource_types_re_export() -> None:
         "transfer_dialog still re-exports `RESOURCE_DISPLAY_NAMES` "
         "(PROJ-436 Phase 7 deletion guard)."
     )
+
+
+def test_production_engine_has_no_context_type_storage_dispatch() -> None:
+    """``production_engine.py`` MUST NOT read ``context_type`` for storage routing.
+
+    PROJ-436 Phase 8 deletion guard. The three storage-typed branch
+    sites in ``ProductionEngine._check_affordability`` /
+    ``_log_resource_shortage`` / ``_apply_resource_consumption``
+    previously dispatched on
+    ``getattr(colony_or_fleet, 'context_type', None) == 'planet' /
+    'fleet'`` to pick between
+    ``has_stockpile`` / ``has_cargo_resources`` etc. Phase 8 collapses
+    the dispatch via a unified ``IProductionResourceSource`` protocol
+    satisfied by both Planet and Fleet through
+    ``production_has_resources`` / ``production_get_resource`` /
+    ``production_consume_resource`` methods. The engine reads through
+    the protocol; ``context_type`` is no longer a storage routing
+    signal.
+
+    This guard reads ``production_engine.py`` as text and asserts the
+    pattern ``getattr(colony_or_fleet, 'context_type'`` does not
+    appear. UI ``context_type`` reads in
+    ``build_queue_controller.py`` / ``build_queue_source.py`` etc.
+    remain — they are entity-routing, not storage-typed (PROJ-436
+    Phase 6a audit).
+    """
+    from pathlib import Path
+
+    engine_path = (
+        Path(__file__).parent.parent.parent
+        / "game" / "strategy" / "engine" / "production_engine.py"
+    )
+    source = engine_path.read_text(encoding="utf-8")
+    forbidden = "getattr(colony_or_fleet, 'context_type'"
+    assert forbidden not in source, (
+        f"production_engine.py still reads colony_or_fleet.context_type "
+        f"for storage routing (PROJ-436 Phase 8 deletion guard). "
+        f"Production code must route storage through the unified "
+        f"``production_has_resources`` / ``production_get_resource`` "
+        f"/ ``production_consume_resource`` methods on the resource-"
+        f"source entity. Found {forbidden!r} in the engine source."
+    )
+
+
+def test_planet_has_production_resource_source_methods() -> None:
+    """``Planet`` MUST expose the unified production-resource-source API.
+
+    PROJ-436 Phase 8 substrate. Planet satisfies the
+    ``IProductionResourceSource`` protocol by exposing
+    ``production_has_resources(costs)`` /
+    ``production_get_resource(resource_type)`` /
+    ``production_consume_resource(resource_type, amount)``. These are
+    thin polymorphic delegators over the existing
+    ``has_stockpile`` / ``get_stockpile`` / ``consume_from_stockpile``
+    stockpile API — the existing methods stay because non-engine
+    callers (``transfer_branches.py``, the ``IStockpileHolder``
+    protocol) target the stockpile-specific names.
+    """
+    for method_name in (
+        "production_has_resources",
+        "production_get_resource",
+        "production_consume_resource",
+    ):
+        assert hasattr(Planet, method_name), (
+            f"Planet missing `{method_name}` "
+            f"(PROJ-436 Phase 8 substrate). The production-engine "
+            f"contract requires unified resource-source methods on "
+            f"both Planet and Fleet."
+        )
+
+
+def test_fleet_has_production_resource_source_methods() -> None:
+    """``Fleet`` MUST expose the unified production-resource-source API.
+
+    PROJ-436 Phase 8 substrate. Fleet satisfies the
+    ``IProductionResourceSource`` protocol by exposing
+    ``production_has_resources(costs)`` /
+    ``production_get_resource(resource_type)`` /
+    ``production_consume_resource(resource_type, amount)``. Thin
+    delegators over the existing
+    ``has_cargo_resources`` / ``get_cargo_resource`` /
+    ``consume_cargo_resource`` fleet-cargo API.
+    """
+    from game.strategy.data.fleet import Fleet
+
+    for method_name in (
+        "production_has_resources",
+        "production_get_resource",
+        "production_consume_resource",
+    ):
+        assert hasattr(Fleet, method_name), (
+            f"Fleet missing `{method_name}` "
+            f"(PROJ-436 Phase 8 substrate). The production-engine "
+            f"contract requires unified resource-source methods on "
+            f"both Planet and Fleet."
+        )

@@ -1,10 +1,17 @@
 """PROJ-333 Phase 1: ProductionEngine consumption + affordability characterization.
 
-Pins resource math + affordability routing: planet stockpile vs fleet
-cargo vs empire pool dispatch via `context_type`, shortage-event
+Pins resource math + affordability routing through the unified
+``IProductionResourceSource`` protocol (PROJ-436 Phase 8), shortage-event
 emission, completion epsilon, design-cost cache, and the
 `_calculate_tick_expenditure` math (zero-rate-required-resource halts,
 already-complete short-circuit).
+
+PROJ-436 Phase 8: the engine no longer dispatches on
+``colony_or_fleet.context_type``. Both Planet and Fleet satisfy
+``IProductionResourceSource`` via
+``production_has_resources`` / ``production_get_resource`` /
+``production_consume_resource`` polymorphic delegators; this test
+file mirrors that contract.
 
 Companion file: ``test_production_engine_queue.py`` covers queue
 iteration semantics on the same ProductionEngine class.
@@ -42,44 +49,55 @@ def empire():
 
 
 # ---------------------------------------------------------------------------
-# _check_affordability dispatch by context_type
+# _check_affordability dispatch through IProductionResourceSource
 # ---------------------------------------------------------------------------
 
 
-def test_check_affordability_routes_to_planet_stockpile_when_context_planet(engine, empire):
-    """`context_type='planet'` calls `colony.has_stockpile`."""
+def test_check_affordability_routes_to_planet_production_method(engine, empire):
+    """Planet's ``production_has_resources`` is the engine's read path.
+
+    PROJ-436 Phase 8: the engine no longer dispatches on
+    ``context_type``; Planet satisfies ``IProductionResourceSource``
+    via ``production_has_resources`` which delegates to the existing
+    ``has_stockpile`` stockpile API.
+    """
     colony = MagicMock(spec=Planet)
-    colony.context_type = "planet"
-    colony.has_stockpile.return_value = True
+    colony.production_has_resources.return_value = True
 
     result = engine._check_affordability(empire, {"metals": 5.0}, colony)
 
-    colony.has_stockpile.assert_called_once_with({"metals": 5.0})
+    colony.production_has_resources.assert_called_once_with({"metals": 5.0})
     assert result is True
 
 
-def test_check_affordability_routes_to_fleet_cargo_when_context_fleet(engine, empire):
-    """`context_type='fleet'` calls `fleet.has_cargo_resources`."""
+def test_check_affordability_routes_to_fleet_production_method(engine, empire):
+    """Fleet's ``production_has_resources`` is the engine's read path.
+
+    PROJ-436 Phase 8: Fleet satisfies ``IProductionResourceSource``
+    via ``production_has_resources`` which delegates to the existing
+    ``has_cargo_resources`` cargo API.
+    """
     fleet = MagicMock(spec=Fleet)
-    fleet.context_type = "fleet"
-    fleet.has_cargo_resources.return_value = False
+    fleet.production_has_resources.return_value = False
 
     result = engine._check_affordability(empire, {"metals": 3.0}, fleet)
 
-    fleet.has_cargo_resources.assert_called_once_with({"metals": 3.0})
+    fleet.production_has_resources.assert_called_once_with({"metals": 3.0})
     assert result is False
 
 
-def test_check_affordability_raises_when_no_context_type(engine, empire):
-    """PROJ-436 Phase 5: bare object without `context_type` raises ValueError.
+def test_check_affordability_raises_when_not_production_resource_source(engine, empire):
+    """PROJ-436 Phase 8: a bare object lacking ``production_has_resources``
+    raises ``AttributeError``.
 
-    Pre-Phase-5 this branch fell back to ``empire.has_resources``
-    against the now-deleted ``Empire._fleet_resource_pool``. Production
-    callers always pass a Planet or Fleet, so the fallback was dead
-    code; Phase 5 hardens it into an explicit error.
+    The Phase 5 ``ValueError`` contract on ``context_type`` is gone —
+    Phase 8 collapsed the dispatch into a uniform protocol call. An
+    owner that does not satisfy ``IProductionResourceSource`` is a
+    programmer error, surfaced as the natural ``AttributeError`` raised
+    by Python when the method is missing.
     """
     bare = object()
-    with pytest.raises(ValueError, match="context_type"):
+    with pytest.raises(AttributeError, match="production_has_resources"):
         engine._check_affordability(empire, {"metals": 1.0}, bare)
 
 
@@ -89,56 +107,55 @@ def test_check_affordability_raises_when_no_context_type(engine, empire):
 
 
 def test_apply_resource_consumption_updates_resources_consumed_dict(engine, empire):
-    """Consumption sums into the existing `resources_consumed[res]` entry."""
+    """Consumption sums into the existing `resources_consumed[res]` entry.
+
+    PROJ-436 Phase 8: the engine calls
+    ``planet.production_consume_resource`` (which delegates to
+    ``consume_from_stockpile`` on a real Planet).
+    """
     colony = MagicMock(spec=Planet)
-    colony.context_type = "planet"
-    colony.consume_from_stockpile = MagicMock()
     item = {"resources_consumed": {"metals": 2.0}}
 
     engine._apply_resource_consumption(empire, item, {"metals": 3.0}, colony)
 
     assert item["resources_consumed"]["metals"] == 5.0
-    colony.consume_from_stockpile.assert_called_once_with("metals", 3.0)
+    colony.production_consume_resource.assert_called_once_with("metals", 3.0)
 
 
-def test_apply_resource_consumption_routes_to_fleet_cargo_when_context_fleet(engine, empire):
-    """PROJ-345 T3.5: `context_type='fleet'` calls `fleet.consume_cargo_resource`.
-
-    Pins the fleet-context branch of `_apply_resource_consumption`. The
-    empire pool is NOT touched, and the per-resource cargo consumer is
-    called with (resource, amount); resources_consumed is summed.
+def test_apply_resource_consumption_routes_to_fleet_production_method(engine, empire):
+    """PROJ-436 Phase 8: Fleet's ``production_consume_resource`` is the
+    engine's write path; on a real Fleet this delegates to the existing
+    ``consume_cargo_resource`` cargo API. The empire pool is NOT touched,
+    and ``resources_consumed`` is summed.
     """
     fleet = MagicMock(spec=Fleet)
-    fleet.context_type = "fleet"
-    fleet.consume_cargo_resource = MagicMock()
     item = {"resources_consumed": {"metals": 1.5}}
 
     engine._apply_resource_consumption(empire, item, {"metals": 2.5}, fleet)
 
-    fleet.consume_cargo_resource.assert_called_once_with("metals", 2.5)
+    fleet.production_consume_resource.assert_called_once_with("metals", 2.5)
     assert item["resources_consumed"]["metals"] == 4.0
 
 
-def test_apply_resource_consumption_raises_when_no_context_type(engine, empire):
-    """PROJ-436 Phase 5: no `context_type` on owner raises ValueError.
+def test_apply_resource_consumption_raises_when_not_production_resource_source(engine, empire):
+    """PROJ-436 Phase 8: a bare object lacking
+    ``production_consume_resource`` raises ``AttributeError``.
 
-    Pre-Phase-5 this branch called ``empire.consume_resources`` against
-    the now-deleted ``Empire._fleet_resource_pool``. The mutator and
-    its backing field are gone; production callers always pass a
-    Planet or Fleet, so an unrecognised owner is a programmer error.
+    The Phase 5 ``ValueError`` contract on ``context_type`` is gone —
+    Phase 8 collapsed the dispatch into a uniform protocol call. An
+    owner that does not satisfy ``IProductionResourceSource`` is a
+    programmer error.
     """
-    bare = object()  # No context_type attribute at all.
+    bare = object()
     item = {"resources_consumed": {"metals": 0.0}}
 
-    with pytest.raises(ValueError, match="context_type"):
+    with pytest.raises(AttributeError, match="production_consume_resource"):
         engine._apply_resource_consumption(empire, item, {"metals": 7.0}, bare)
 
 
 def test_apply_resource_consumption_skips_zero_amount_resources(engine, empire):
-    """Resources with `amount <= 0` are not consumed (guard at line 601)."""
+    """Resources with `amount <= 0` are not consumed (guard preserved)."""
     fleet = MagicMock(spec=Fleet)
-    fleet.context_type = "fleet"
-    fleet.consume_cargo_resource = MagicMock()
     item = {"resources_consumed": {}}
 
     engine._apply_resource_consumption(
@@ -146,7 +163,7 @@ def test_apply_resource_consumption_skips_zero_amount_resources(engine, empire):
     )
 
     # Only the non-zero resource was consumed.
-    fleet.consume_cargo_resource.assert_called_once_with("organics", 5.0)
+    fleet.production_consume_resource.assert_called_once_with("organics", 5.0)
     assert item["resources_consumed"] == {"organics": 5.0}
 
 
@@ -175,8 +192,7 @@ def test_log_resource_shortage_picks_largest_shortfall_ratio_as_limiting():
     empire.resource_pool = {"metals": 100.0, "organics": 0.5}
 
     colony = MagicMock(spec=Planet)
-    colony.context_type = "planet"
-    colony.get_stockpile.side_effect = lambda res: {"metals": 100.0, "organics": 0.5}[res]
+    colony.production_get_resource.side_effect = lambda res: {"metals": 100.0, "organics": 0.5}[res]
 
     item = {"design_id": "frig", "type": "ship"}
     engine._log_resource_shortage(empire, item, {"metals": 5.0, "organics": 5.0}, colony)
@@ -188,14 +204,15 @@ def test_log_resource_shortage_picks_largest_shortfall_ratio_as_limiting():
     assert payload["needed"] == 5.0
 
 
-def test_log_resource_shortage_uses_fleet_cargo_for_available_in_fleet_context():
-    """PROJ-345 T3.5: `context_type='fleet'` reads `fleet.get_cargo_resource`.
+def test_log_resource_shortage_uses_fleet_cargo_for_available_for_fleet_owner():
+    """PROJ-436 Phase 8: ``Fleet.production_get_resource`` is the source
+    of truth for shortage event ``available`` when the owner is a Fleet.
 
-    Pins the fleet-context branch of `_log_resource_shortage`
-    (production_engine.py:545). The shortfall ratio is computed from
-    cargo levels, NOT from empire.resource_pool or planet stockpile,
-    and the emitted RESOURCE_SHORTAGE event records the fleet-cargo
-    available value plus the fleet's hex location.
+    On a real Fleet, ``production_get_resource`` delegates to
+    ``get_cargo_resource``. The shortfall ratio is computed from cargo
+    levels, NOT from empire.resource_pool, and the emitted
+    RESOURCE_SHORTAGE event records the fleet-cargo available value
+    plus the fleet's hex location.
     """
     captured: list = []
 
@@ -211,16 +228,15 @@ def test_log_resource_shortage_uses_fleet_cargo_for_available_in_fleet_context()
 
     empire = MagicMock(spec=Empire)
     empire.id = 7
-    # Empire has plenty — but fleet cargo is the source of truth for fleet ctx.
+    # Empire has plenty — but fleet cargo is the source of truth.
     empire.resource_pool = {"metals": 99999.0, "organics": 99999.0}
 
     fleet = MagicMock(spec=Fleet)
-    fleet.context_type = "fleet"
     fleet.location = MagicMock()
     fleet.location.q = 3
     fleet.location.r = -2
     cargo = {"metals": 100.0, "organics": 0.5}
-    fleet.get_cargo_resource.side_effect = lambda res: cargo[res]
+    fleet.production_get_resource.side_effect = lambda res: cargo[res]
 
     item = {"design_id": "frig", "type": "ship"}
     eng._log_resource_shortage(empire, item, {"metals": 5.0, "organics": 5.0}, fleet)
@@ -233,17 +249,16 @@ def test_log_resource_shortage_uses_fleet_cargo_for_available_in_fleet_context()
     assert payload["needed"] == 5.0
     assert payload["empire_id"] == 7
     assert payload["location_hex"] == [3, -2]
-    # `get_cargo_resource` was the source — not stockpile, not pool.
-    assert fleet.get_cargo_resource.call_count >= 1
+    # `production_get_resource` was the source — not stockpile, not pool.
+    assert fleet.production_get_resource.call_count >= 1
 
 
-def test_log_resource_shortage_raises_when_no_context_type():
-    """PROJ-436 Phase 5: no `context_type` on owner raises ValueError.
+def test_log_resource_shortage_raises_when_not_production_resource_source():
+    """PROJ-436 Phase 8: a bare object lacking
+    ``production_get_resource`` raises ``AttributeError``.
 
-    Pre-Phase-5 this branch read ``empire.resource_pool.get(...)`` to
-    pick the limiting resource. With the empire's fleet-side resource
-    pool deleted, an owner that is neither a Planet nor a Fleet is a
-    programmer error.
+    The Phase 5 ``ValueError`` contract on ``context_type`` is gone —
+    Phase 8 collapsed the dispatch into a uniform protocol call.
     """
     class _Bus:
         def log_event(self, event_type, **kwargs):
@@ -258,10 +273,10 @@ def test_log_resource_shortage_raises_when_no_context_type():
     empire = MagicMock(spec=Empire)
     empire.id = 9
 
-    bare = object()  # No context_type attribute → error branch.
+    bare = object()
     item = {"design_id": "frig", "type": "ship"}
 
-    with pytest.raises(ValueError, match="context_type"):
+    with pytest.raises(AttributeError, match="production_get_resource"):
         eng._log_resource_shortage(empire, item, {"metals": 10.0}, bare)
 
 
@@ -280,9 +295,8 @@ def test_log_resource_shortage_emitted_once_per_item_per_turn(engine, empire):
     )
 
     colony = MagicMock(spec=Planet)
-    colony.context_type = "planet"
-    colony.has_stockpile.return_value = False
-    colony.get_stockpile.side_effect = lambda res: 0.0
+    colony.production_has_resources.return_value = False
+    colony.production_get_resource.side_effect = lambda res: 0.0
     colony.stockpile = {}
 
     item = {

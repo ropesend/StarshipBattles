@@ -28,11 +28,11 @@ class TestProductionEngineRefactor:
     @pytest.fixture
     def mock_colony(self, mock_empire):
         colony = MagicMock(spec=Planet)
-        # PROJ-436 Phase 5: production_engine now raises if
-        # ``context_type`` isn't 'planet'/'fleet'. MagicMock auto-creates
-        # truthy Mocks for unset attributes, so pin the context type
-        # explicitly to route through the planet-stockpile branch.
-        colony.context_type = "planet"
+        # PROJ-436 Phase 8: engine routes through
+        # ``IProductionResourceSource``; MagicMock(spec=Planet)
+        # auto-creates Mocks for ``production_has_resources`` /
+        # ``production_get_resource`` / ``production_consume_resource``
+        # which is sufficient for these queue-iteration tests.
         colony.construction_queue = []
         colony.facilities = []
         return colony
@@ -156,10 +156,9 @@ class TestProductionEngineEdgeCases:
     @pytest.fixture
     def mock_colony(self):
         colony = MagicMock(spec=Planet)
-        # PROJ-436 Phase 5: pin context_type so production_engine routes
-        # through the planet-stockpile branch (the empire-pool fallback
-        # was deleted along with ``_fleet_resource_pool``).
-        colony.context_type = "planet"
+        # PROJ-436 Phase 8: engine routes through
+        # ``IProductionResourceSource`` protocol — see sibling fixture
+        # docstring above.
         colony.construction_queue = []
         colony.facilities = []
         return colony
@@ -341,13 +340,13 @@ class TestResourceShortageEventLogging:
     @pytest.fixture
     def colony(self):
         colony = MagicMock(spec=Planet)
-        colony.context_type = "planet"
         colony.construction_queue = []
         colony.facilities = []
         # Default: insufficient stockpile (triggers shortage)
         colony.stockpile = {"metals": 10.0, "organics": 2.0}
-        colony.has_stockpile.return_value = False
-        colony.get_stockpile.side_effect = lambda res: colony.stockpile.get(res, 0.0)
+        # PROJ-436 Phase 8: unified IProductionResourceSource protocol.
+        colony.production_has_resources.return_value = False
+        colony.production_get_resource.side_effect = lambda res: colony.stockpile.get(res, 0.0)
         return colony
 
     def test_shortage_event_logged_on_affordability_failure(self, engine, empire, colony, captured_events):
@@ -394,7 +393,8 @@ class TestResourceShortageEventLogging:
 
         # Planet stockpile has plenty of Metals but almost no Organics
         colony.stockpile = {"metals": 1000.0, "organics": 0.5}
-        colony.get_stockpile.side_effect = lambda res: colony.stockpile.get(res, 0.0)
+        # PROJ-436 Phase 8: unified IProductionResourceSource protocol.
+        colony.production_get_resource.side_effect = lambda res: colony.stockpile.get(res, 0.0)
 
         engine._process_queue_tick_dynamic(
             colony.construction_queue, empire, 1, MagicMock(),
@@ -445,8 +445,9 @@ class TestResourceShortageEventLogging:
         empire_poor.has_resources.return_value = False
         # Set planet stockpile to empty so affordability check fails
         colony.stockpile = {"metals": 0.0}
-        colony.has_stockpile.return_value = False
-        colony.get_stockpile.side_effect = lambda res: colony.stockpile.get(res, 0.0)
+        # PROJ-436 Phase 8: unified IProductionResourceSource protocol.
+        colony.production_has_resources.return_value = False
+        colony.production_get_resource.side_effect = lambda res: colony.stockpile.get(res, 0.0)
 
         item = {
             "design_id": "frigate_mk1",
@@ -497,8 +498,9 @@ class TestResourceShortageEventLogging:
         empire_rich.consume_resources = MagicMock(return_value=True)
         # Planet stockpile is rich - affordability check passes
         colony.stockpile = {"metals": 10000.0}
-        colony.has_stockpile.return_value = True
-        colony.get_stockpile.side_effect = lambda res: colony.stockpile.get(res, 0.0)
+        # PROJ-436 Phase 8: unified IProductionResourceSource protocol.
+        colony.production_has_resources.return_value = True
+        colony.production_get_resource.side_effect = lambda res: colony.stockpile.get(res, 0.0)
 
         item = {
             "design_id": "frigate_mk1",
