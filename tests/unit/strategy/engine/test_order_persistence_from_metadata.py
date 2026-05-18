@@ -158,7 +158,105 @@ class TestCodecVocabularyConsistency:
         assert not ambiguous, (
             f"Multiple CommandSpecs share an OrderType but declare "
             f"different serializer_codec values: {ambiguous}. "
-            "serializer_codec_for() returns first-match; this drift "
-            "makes the lookup non-authoritative. Align the codecs or "
-            "narrow the OrderType-sharing."
+            "serializer_codec_for() raises ValueError on this drift; "
+            "align the codecs or narrow the OrderType-sharing."
         )
+
+    def test_serializer_codec_for_raises_on_multi_spec_ambiguity(self) -> None:
+        """PROJ-445 Phase 2 (DI-2026-05-18-002): the runtime guard on
+        ``CommandRegistry.serializer_codec_for(order_type)``.
+
+        The class-level
+        :meth:`test_specs_sharing_order_type_declare_same_codec` ratchet
+        pins the production registry shape, but it can only see specs
+        present at the time the test runs. A future overlay, mod, or
+        dynamic registration that violates the contract would otherwise
+        bypass the ratchet and silently mis-route the codec at the
+        first-match call site. The hardened lookup raises
+        :class:`ValueError` on any multi-spec / multi-codec mismatch
+        instead of returning a first-match guess.
+
+        We exercise it against a fresh local registry so the production
+        singleton is unaffected.
+        """
+        from game.strategy.engine.commands.registry import (
+            CommandRegistry,
+            CommandSpec,
+        )
+
+        class _DummyCommandA:
+            pass
+
+        class _DummyCommandB:
+            pass
+
+        class _DummyHandler:
+            pass
+
+        local_registry = CommandRegistry()
+        local_registry.register(
+            CommandSpec(
+                command_class=_DummyCommandA,
+                order_type=OrderType.MOVE,
+                handler_class=_DummyHandler,
+                category='action',
+                execution_model='action',
+                serializer_codec='hex_coord',
+            )
+        )
+        local_registry.register(
+            CommandSpec(
+                command_class=_DummyCommandB,
+                order_type=OrderType.MOVE,
+                handler_class=_DummyHandler,
+                category='action',
+                execution_model='action',
+                serializer_codec='fleet_ref',  # intentional drift
+            )
+        )
+
+        with pytest.raises(ValueError, match="Ambiguous serializer_codec"):
+            local_registry.serializer_codec_for(OrderType.MOVE)
+
+    def test_serializer_codec_for_accepts_multiple_specs_with_same_codec(self) -> None:
+        """PROJ-445 Phase 2 (DI-2026-05-18-002) companion: multi-spec
+        registration on the same OrderType with *matching* codecs is
+        unambiguous and must still resolve cleanly (rather than raising
+        because the registry returned >1 row)."""
+        from game.strategy.engine.commands.registry import (
+            CommandRegistry,
+            CommandSpec,
+        )
+
+        class _DummyCommandA:
+            pass
+
+        class _DummyCommandB:
+            pass
+
+        class _DummyHandler:
+            pass
+
+        local_registry = CommandRegistry()
+        local_registry.register(
+            CommandSpec(
+                command_class=_DummyCommandA,
+                order_type=OrderType.MOVE,
+                handler_class=_DummyHandler,
+                category='action',
+                execution_model='action',
+                serializer_codec='hex_coord',
+            )
+        )
+        local_registry.register(
+            CommandSpec(
+                command_class=_DummyCommandB,
+                order_type=OrderType.MOVE,
+                handler_class=_DummyHandler,
+                category='action',
+                execution_model='action',
+                serializer_codec='hex_coord',  # matches
+            )
+        )
+
+        assert local_registry.serializer_codec_for(OrderType.MOVE) == 'hex_coord'

@@ -29,17 +29,21 @@ logger = logging.getLogger(__name__)
 def _parse_close_target(target: Any) -> tuple[str, HexCoord | None]:
     """Parse target into ``(destination_id, expected_hex)``.
 
-    Legacy back-compat: a plain string target was the pre-PROJ-228 form.
+    PROJ-445 Phase 2 (F-B-014): the pre-PROJ-228 plain-string target
+    form was retired; the only emitter
+    (:class:`IssueCloseWarpPointCommandHandler`) has always produced
+    the dict shape ``{"destination_id": str, "target_hex": {"q", "r"}}``
+    since PROJ-228 landed. Non-dict targets resolve to an empty
+    ``destination_id`` so the per-weapon precheck rejects them with
+    "No destination specified" rather than mis-routing.
     """
-    if isinstance(target, dict):
-        destination_id = target.get("destination_id", "")
-        hex_data = target.get("target_hex")
-        expected_hex = (
-            HexCoord(hex_data["q"], hex_data["r"]) if hex_data else None
-        )
-    else:
-        destination_id = target
-        expected_hex = None
+    if not isinstance(target, dict):
+        return "", None
+    destination_id = target.get("destination_id", "")
+    hex_data = target.get("target_hex")
+    expected_hex = (
+        HexCoord(hex_data["q"], hex_data["r"]) if hex_data else None
+    )
     return destination_id, expected_hex
 
 

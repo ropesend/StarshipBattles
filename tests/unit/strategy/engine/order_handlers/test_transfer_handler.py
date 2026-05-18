@@ -401,6 +401,77 @@ def test_dispatch_drop_pod_unload():
 
 
 # ---------------------------------------------------------------------------
+# F-B-002 regression: carried-vehicle load rollback respects capacity API
+# ---------------------------------------------------------------------------
+
+
+def test_dispatch_carried_vehicle_load_rollback_routes_through_capacity_check():
+    """PROJ-445 Phase 2 (F-B-002) — when ``_dispatch_carried_vehicle_load``
+    has to roll back a removed staging-yard item because the carrier's
+    ``load_vehicle`` returned False, the restore MUST go through
+    :meth:`Planet.add_to_staging_yard` (the capacity-checked API), not
+    through the raw ``staging_yard.append``. Without this contract,
+    any future change to ``add_to_staging_yard`` (e.g., adding a type
+    check, an ownership check, or a max-count cap) would be silently
+    bypassed by the rollback path.
+
+    The scenario: one fighter is staged on the planet; the fleet has a
+    ship that ``can_accept_vehicle`` (so it becomes the load target)
+    but whose ``load_vehicle`` returns False (so the dispatch enters
+    the rollback branch). Assert ``planet.add_to_staging_yard`` was
+    called exactly once with the rolled-back item.
+    """
+    handler = TransferHandler()
+    fleet = _fleet()
+    fighter_dict = {
+        "design_id": "fighter_alpha",
+        "design_data": {"name": "fighter_alpha"},
+        "vehicle_type": "fighter",
+        "mass": 20.0,
+        "current_hp": 80,
+    }
+
+    ship = MagicMock()
+    ship.name = "Carrier"
+    ship._cargo_mgr.can_accept_vehicle = MagicMock(return_value=True)
+    ship._cargo_mgr.load_vehicle = MagicMock(return_value=False)  # forces rollback
+    fleet.ships = [ship]
+
+    planet = _planet()
+    planet.staging_yard = [fighter_dict]
+    planet.remove_from_staging_yard = MagicMock(
+        side_effect=lambda i: planet.staging_yard.pop(i)
+    )
+    planet.add_to_staging_yard = MagicMock(return_value=True)
+
+    galaxy = MagicMock()
+    galaxy.get_planet_by_id.return_value = planet
+
+    fleet.get_current_order.return_value = Order(
+        OrderType.TRANSFER,
+        {
+            "direction": "load",
+            "cargo_type": "vehicle",
+            "amount": 1,
+            "planet_id": 1,
+            "species_id": "fighter_alpha",
+        },
+    )
+
+    with patch(
+        "game.strategy.validation.TransferValidator.validate",
+        return_value=_ok_validation(),
+    ):
+        handler.execute_action_order(fleet, _empire(), galaxy)
+
+    planet.add_to_staging_yard.assert_called_once()
+    restored = planet.add_to_staging_yard.call_args.args[0]
+    assert restored is fighter_dict, (
+        "Rollback must restore the originally-removed item, unchanged."
+    )
+
+
+# ---------------------------------------------------------------------------
 # Branch 7: fleet <-> fleet
 # ---------------------------------------------------------------------------
 
@@ -470,6 +541,163 @@ def test_dispatch_fleet_to_fleet_unload_direction():
     assert result.success is True
     fleet.resources.unload_cargo_from_fleet.assert_called_once_with("metals", 20)
     target.resources.load_cargo_to_fleet.assert_called_once_with("metals", 20)
+
+
+# ---------------------------------------------------------------------------
+# PROJ-445 Phase 2 (F-B-003 + DI-2026-05-18-001 fleet-to-fleet half):
+# drop_pod and vehicle cargo_types route through bay_inventory, not the
+# generic resource path. Previously these silently returned 0.
+# ---------------------------------------------------------------------------
+
+
+def test_dispatch_fleet_to_fleet_drop_pod_moves_pod_to_target_bay():
+    """Source fleet's ship has a drop_pod; target fleet's ship has bay
+    capacity; the pod ends up in the target ship's typed pod slot and
+    the source ship's pod slot is drained. Pre-fix this returned 0
+    because the generic cargo path doesn't know about
+    ``bay_inventory.pods``.
+    """
+    handler = TransferHandler()
+
+    pod_payload = {"name": "PodAlpha", "design_id": "drop_pod_basic", "mass": 100.0}
+    src_ship = _bay_ship(name="Carrier-S", pods=[pod_payload])
+    src_ship._cargo_mgr = MagicMock()
+    src_ship._cargo_mgr.can_carry_pod = MagicMock(return_value=False)  # source full
+
+    dst_ship = _bay_ship(name="Carrier-D")
+    dst_ship._cargo_mgr = MagicMock()
+    dst_ship._cargo_mgr.can_carry_pod = MagicMock(return_value=True)
+
+    fleet = _fleet(fleet_id=1)
+    fleet.ships = [src_ship]
+    target = _fleet(fleet_id=2)
+    target.ships = [dst_ship]
+
+    empire = _empire()
+    empire.fleets = [fleet, target]
+    galaxy = MagicMock(spec=[])
+    fleet.get_current_order.return_value = Order(
+        OrderType.TRANSFER,
+        {
+            "direction": "unload",
+            "cargo_type": "drop_pod",
+            "amount": 1,
+            "target_fleet_id": 2,
+        },
+    )
+    with patch(
+        "game.strategy.validation.TransferValidator.validate",
+        return_value=_ok_validation(),
+    ):
+        result = handler.execute_action_order(fleet, empire, galaxy)
+
+    assert result.success is True
+    assert result.amount_transferred == 1
+    assert src_ship.bay_inventory.pods == []
+    assert len(dst_ship.bay_inventory.pods) == 1
+    assert dst_ship.bay_inventory.pods[0].payload.get("name") == "PodAlpha"
+
+
+def test_dispatch_fleet_to_fleet_vehicle_moves_carried_vehicle_to_target():
+    """Source fleet's ship carries a vehicle; target fleet's ship has
+    bay capacity; ``load_vehicle`` is called on the destination ship
+    and ``unload_vehicle(idx)`` is called on the source. Pre-fix this
+    returned 0 because the generic cargo path doesn't know about the
+    bay's typed CarriedVehicle list.
+    """
+    from game.strategy.data.carried_vehicle import CarriedVehicle
+
+    handler = TransferHandler()
+    cv = CarriedVehicle(
+        design_id="fighter_alpha",
+        design_data={"name": "fighter_alpha", "vehicle_class": "Fighter (Small)"},
+        vehicle_type="fighter",
+        mass=20.0,
+        current_hp=80,
+    )
+
+    src_ship = MagicMock()
+    src_ship.name = "Src"
+    src_ship._cargo_mgr = MagicMock()
+    src_ship._cargo_mgr.get_carried_vehicles = MagicMock(return_value=[cv])
+    src_ship._cargo_mgr.can_accept_vehicle = MagicMock(return_value=False)
+
+    dst_ship = MagicMock()
+    dst_ship.name = "Dst"
+    dst_ship._cargo_mgr = MagicMock()
+    dst_ship._cargo_mgr.can_accept_vehicle = MagicMock(return_value=True)
+    dst_ship._cargo_mgr.load_vehicle = MagicMock(return_value=True)
+
+    fleet = _fleet(fleet_id=1)
+    fleet.ships = [src_ship]
+    target = _fleet(fleet_id=2)
+    target.ships = [dst_ship]
+
+    empire = _empire()
+    empire.fleets = [fleet, target]
+    galaxy = MagicMock(spec=[])
+    fleet.get_current_order.return_value = Order(
+        OrderType.TRANSFER,
+        {
+            "direction": "unload",
+            "cargo_type": "vehicle",
+            "amount": 1,
+            "target_fleet_id": 2,
+            "species_id": "fighter_alpha",
+        },
+    )
+    with patch(
+        "game.strategy.validation.TransferValidator.validate",
+        return_value=_ok_validation(),
+    ):
+        result = handler.execute_action_order(fleet, empire, galaxy)
+
+    assert result.success is True
+    assert result.amount_transferred == 1
+    dst_ship._cargo_mgr.load_vehicle.assert_called_once_with(cv)
+    src_ship._cargo_mgr.unload_vehicle.assert_called_once_with(0)
+
+
+def test_dispatch_fleet_to_fleet_drop_pod_returns_zero_when_dest_full():
+    """When the destination fleet has no ship with pod capacity, the
+    pod stays on the source ship and the transferred count is 0."""
+    handler = TransferHandler()
+    pod_payload = {"name": "PodAlpha", "design_id": "drop_pod_basic", "mass": 100.0}
+
+    src_ship = _bay_ship(name="Src", pods=[pod_payload])
+    src_ship._cargo_mgr = MagicMock()
+
+    dst_ship = _bay_ship(name="Dst")
+    dst_ship._cargo_mgr = MagicMock()
+    dst_ship._cargo_mgr.can_carry_pod = MagicMock(return_value=False)  # full
+
+    fleet = _fleet(fleet_id=1)
+    fleet.ships = [src_ship]
+    target = _fleet(fleet_id=2)
+    target.ships = [dst_ship]
+
+    empire = _empire()
+    empire.fleets = [fleet, target]
+    galaxy = MagicMock(spec=[])
+    fleet.get_current_order.return_value = Order(
+        OrderType.TRANSFER,
+        {
+            "direction": "unload",
+            "cargo_type": "drop_pod",
+            "amount": 1,
+            "target_fleet_id": 2,
+        },
+    )
+    with patch(
+        "game.strategy.validation.TransferValidator.validate",
+        return_value=_ok_validation(),
+    ):
+        result = handler.execute_action_order(fleet, empire, galaxy)
+
+    assert result.success is True
+    assert result.amount_transferred == 0
+    assert len(src_ship.bay_inventory.pods) == 1  # pod still on source
+    assert dst_ship.bay_inventory.pods == []
 
 
 # ---------------------------------------------------------------------------

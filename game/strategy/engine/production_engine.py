@@ -64,6 +64,18 @@ class IProductionResourceSource(Protocol):
         ``True`` iff the source had at least the (possibly-rounded)
         amount to charge.
 
+        Affordability/consumption symmetry contract (PROJ-445 Phase 2,
+        DI-2026-05-18-006/007): an implementation MUST return ``True``
+        whenever :meth:`production_has_resources` returned ``True`` for
+        the same ``(resource_type, amount)`` in the same engine tick
+        (no concurrent mutation between the two calls). In other words,
+        ``has_resources(costs)`` is the authoritative affordability
+        predicate and a successful affordability check MUST imply
+        successful consumption — implementers that perform rounding
+        (integer-typed sources) MUST do so symmetrically across both
+        methods so the precondition can never disagree with the
+        commit.
+
         PROJ-436 Phase 12 (Option C): integer-typed sources (e.g.
         ``Fleet`` over its `_cargo_contents` substrate) MAY round the
         requested ``amount`` before consumption — `Fleet.consume_cargo_resource`

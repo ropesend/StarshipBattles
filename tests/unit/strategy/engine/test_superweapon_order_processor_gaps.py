@@ -360,17 +360,25 @@ class TestOpenWarpPointFarEndGeometry:
 
 
 # ---------------------------------------------------------------------------
-# §2.3 CLOSE_WARP_POINT legacy back-compat (OBS-005)
+# §2.3 CLOSE_WARP_POINT dict-without-target_hex (PROJ-445 Phase 2 / F-B-014)
 # ---------------------------------------------------------------------------
 
 
-class TestCloseWarpPointLegacy:
+class TestCloseWarpPointTargetShape:
 
-    def test_close_warp_point_accepts_legacy_string_target_without_sector_check(
+    def test_close_warp_point_dict_without_target_hex_skips_sector_check(
         self, mock_fleet, mock_galaxy, component_registry
     ):
-        """OBS-005: when `order.target` is a plain string, expected_hex is
-        None and the wrong-sector check is skipped."""
+        """PROJ-445 Phase 2 (F-B-014): the pre-PROJ-228 plain-string
+        target form was retired — the only emitter, the typed
+        :class:`IssueCloseWarpPointCommandHandler`, has always shipped
+        the dict shape since PROJ-228. The "no sector check" semantics
+        are still reachable via a dict target that omits ``target_hex``
+        (e.g., legacy save data deserialised through ``Order.from_dict``
+        with an absent hex). This test pins that semantic — when
+        ``target_hex`` is absent, the wrong-sector check is skipped and
+        the close still succeeds.
+        """
         current_system = MagicMock(spec=StarSystem)
         current_system.name = "Alpha"
         current_system.global_location = HexCoord(10, 10)
@@ -378,11 +386,14 @@ class TestCloseWarpPointLegacy:
 
         ship = MagicMock(id="s1")
         mock_fleet.ships = [ship]
-        # Fleet is at the system center — would fail expected_hex if it
-        # had been provided. Legacy path should still succeed.
+        # Fleet is at the system center; with target_hex absent the
+        # sector check is skipped, so this should still succeed.
         mock_fleet.location = current_system.global_location
 
-        order = Order(OrderType.CLOSE_WARP_POINT, target="Beta")
+        order = Order(
+            OrderType.CLOSE_WARP_POINT,
+            target={"destination_id": "Beta"},
+        )
         mock_fleet.get_current_order.return_value = order
 
         processor = SuperweaponOrderProcessor()
@@ -399,6 +410,32 @@ class TestCloseWarpPointLegacy:
 
         assert result.success is True
         mock_galaxy.remove_warp_link.assert_called_once_with("Alpha", "Beta")
+
+    def test_close_warp_point_rejects_plain_string_target(
+        self, mock_fleet, mock_galaxy, component_registry
+    ):
+        """PROJ-445 Phase 2 (F-B-014) regression: a plain-string target
+        is no longer accepted; the superweapon precheck flags the empty
+        ``destination_id`` resolved from a non-dict target and returns
+        a failure result rather than mis-routing the close.
+        """
+        ship = MagicMock(id="s1")
+        mock_fleet.ships = [ship]
+        mock_fleet.location = HexCoord(10, 10)
+
+        order = Order(OrderType.CLOSE_WARP_POINT, target="Beta")
+        mock_fleet.get_current_order.return_value = order
+
+        processor = SuperweaponOrderProcessor()
+        empire = MagicMock()
+
+        with patch(FBS_PATH, return_value=None):
+            result = processor.process_close_warp_point(
+                mock_fleet, empire, mock_galaxy, [empire], component_registry
+            )
+
+        assert result.success is False
+        mock_galaxy.remove_warp_link.assert_not_called()
 
 
 # ---------------------------------------------------------------------------

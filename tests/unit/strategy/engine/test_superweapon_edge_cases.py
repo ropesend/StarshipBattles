@@ -457,11 +457,41 @@ class TestOrderProcessorErrorCases:
         fleet.pop_order.assert_called_once()
 
     def test_close_warp_point_no_destination(self):
-        """process_close_warp_point fails when no destination specified."""
+        """process_close_warp_point fails when no destination specified.
+
+        PROJ-445 Phase 2 (F-B-014): the structural target-shape check
+        rejects ``target=None`` with "Invalid warp point params" rather
+        than letting it fall through to the per-weapon precheck (which
+        previously emitted "No destination specified"). The plain-string
+        and ``None`` targets are no longer special-cased; only the
+        typed ``{destination_id, target_hex}`` dict shape is accepted.
+        """
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
 
         fleet = Mock()
         fleet.get_current_order.return_value = Order(OrderType.CLOSE_WARP_POINT, target=None)
+        fleet.pop_order = Mock()
+
+        processor = SuperweaponOrderProcessor()
+        result = processor.process_close_warp_point(fleet, Mock(), Mock())
+
+        assert not result.success
+        assert "Invalid warp point params" in result.message
+        fleet.pop_order.assert_called_once()
+
+    def test_close_warp_point_dict_with_empty_destination(self):
+        """PROJ-445 Phase 2 (F-B-014) companion: a dict target with an
+        empty ``destination_id`` reaches the per-weapon precheck and
+        emits the canonical "No destination specified" failure. This
+        keeps the per-weapon precheck's failure-message surface
+        reachable now that ``target=None`` is rejected structurally."""
+        from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
+
+        fleet = Mock()
+        fleet.location = HexCoord(0, 0)
+        fleet.get_current_order.return_value = Order(
+            OrderType.CLOSE_WARP_POINT, target={"destination_id": ""}
+        )
         fleet.pop_order = Mock()
 
         processor = SuperweaponOrderProcessor()

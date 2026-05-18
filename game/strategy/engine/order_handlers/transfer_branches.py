@@ -361,8 +361,22 @@ class _TransferDispatchMixin:
             if removed and target_ship._cargo_mgr.load_vehicle(cv):
                 loaded += 1
             elif removed:
-                # Restore: load failed unexpectedly. Put it back at end of staging.
-                planet.staging_yard.append(removed)
+                # Restore: load failed unexpectedly. Route through the
+                # capacity-checked API rather than the raw list to keep
+                # the ``max_staging_mass`` invariant consistent with
+                # every other staging-yard write site. The remove above
+                # just freed this exact item's mass, so the cap allows
+                # the rollback in normal operation; a False return here
+                # would only happen if something else mutated the yard
+                # concurrently, in which case dropping the item is
+                # safer than violating the invariant.
+                if not planet.add_to_staging_yard(removed):
+                    logger.warning(
+                        "_dispatch_carried_vehicle_load: rollback of %r dropped "
+                        "(planet %s staging_yard capacity insufficient even though "
+                        "the item was just removed — concurrent mutation suspected)",
+                        removed, getattr(planet, "name", "?"),
+                    )
         return loaded
 
     def _dispatch_carried_vehicle_unload(
@@ -464,12 +478,34 @@ class _TransferDispatchMixin:
         amount: int,
         species_id: Optional[str] = None,
     ) -> int:
-        """Branch 7: fleet -> fleet (generic, any cargo type).
+        """Branch 7: fleet -> fleet (generic + drop_pod + vehicle).
 
-        Lifted verbatim from `OrderProcessor._execute_fleet_transfer`.
+        PROJ-445 Phase 2 (DI-2026-05-18-001 fleet-to-fleet half): the
+        ``drop_pod`` and ``vehicle`` cargo types route through the
+        typed ``bay_inventory`` slots, not through the generic-cargo
+        ``source.resources.get_fleet_cargo_current(...)`` path. Pre-fix
+        the generic path silently returned 0 for these cargo types
+        because pod / carried-vehicle storage lives on
+        ``ShipInstance.bay_inventory`` rather than the resource
+        aggregator — the UI staged a pending transfer, the engine
+        accepted the order, and no movement occurred. The two explicit
+        branches below close that silent no-op for fleet-to-fleet
+        transfers (the planet branches were already correct).
+
+        Generic-cargo branch lifted verbatim from
+        ``OrderProcessor._execute_fleet_transfer``.
         """
         source = fleet if direction == "unload" else target_fleet
         dest = target_fleet if direction == "unload" else fleet
+
+        if cargo_type == "drop_pod":
+            return self._dispatch_fleet_to_fleet_drop_pod(
+                source, dest, pod_name=species_id, amount=amount,
+            )
+        if cargo_type == "vehicle":
+            return self._dispatch_fleet_to_fleet_vehicle(
+                source, dest, design_id=species_id, amount=amount,
+            )
 
         current_cargo = source.resources.get_fleet_cargo_current(cargo_type)
         capacity = dest.resources.get_fleet_cargo_capacity(cargo_type)
@@ -485,3 +521,112 @@ class _TransferDispatchMixin:
         actual_transferred = source.resources.unload_cargo_from_fleet(cargo_type, to_transfer)
         dest.resources.load_cargo_to_fleet(cargo_type, actual_transferred)
         return actual_transferred
+
+    def _dispatch_fleet_to_fleet_drop_pod(
+        self,
+        source: Fleet,
+        dest: Fleet,
+        *,
+        pod_name: Optional[str],
+        amount: int,
+    ) -> int:
+        """Move drop pods from ``source`` ships' bays into ``dest``
+        ships' bays. Pods are kept in :class:`ShipInstance.bay_inventory.pods`
+        (typed) — the planet staging yard substrate is not involved.
+
+        Capacity is checked per dest ship via the same
+        ``_cargo_mgr.can_carry_pod`` predicate used by
+        :meth:`_dispatch_drop_pod_load`. PROJ-445 Phase 2 deliberately
+        retains the ``ship._cargo_mgr`` reach until PROJ-444 ships the
+        public ``ship.can_carry_pod`` / ``ship.load_pod`` delegators
+        (F-A-007). Two call sites; one migration sweep when the
+        delegators land.
+        """
+        transferred = 0
+        to_transfer = amount if amount > 0 else sum(
+            len(s.bay_inventory.pods) for s in source.ships
+        )
+
+        for src_ship in source.ships:
+            if transferred >= to_transfer:
+                break
+            current_bay = src_ship.bay_inventory
+            kept_pods: List[DropPod] = []
+            for pod in current_bay.pods:
+                if transferred >= to_transfer:
+                    kept_pods.append(pod)
+                    continue
+                if pod_name and pod.payload.get("name") != pod_name:
+                    kept_pods.append(pod)
+                    continue
+                target_ship = None
+                for dst_ship in dest.ships:
+                    if dst_ship._cargo_mgr.can_carry_pod(pod.mass):
+                        target_ship = dst_ship
+                        break
+                if target_ship is None:
+                    kept_pods.append(pod)
+                    continue
+                # Move pod into target ship's typed pod slot.
+                target_bay = target_ship.bay_inventory
+                target_ship.set_bay_inventory(
+                    BayInventory(
+                        bay=list(target_bay.bay),
+                        pods=list(target_bay.pods) + [pod],
+                    )
+                )
+                transferred += 1
+                # pod consumed — do not re-append to kept_pods
+            if len(kept_pods) != len(current_bay.pods):
+                src_ship.set_bay_inventory(
+                    BayInventory(bay=list(current_bay.bay), pods=kept_pods)
+                )
+
+        return transferred
+
+    def _dispatch_fleet_to_fleet_vehicle(
+        self,
+        source: Fleet,
+        dest: Fleet,
+        *,
+        design_id: Optional[str],
+        amount: int,
+    ) -> int:
+        """Move :class:`CarriedVehicle` instances from ``source``
+        ships' bays into ``dest`` ships' bays.
+
+        Each transfer goes through ``_cargo_mgr.load_vehicle`` on the
+        destination side (so per-vehicle-type bay slots are respected)
+        and ``_cargo_mgr.unload_vehicle(idx)`` on the source side. As
+        with the drop-pod branch, this retains the ``_cargo_mgr``
+        reach until PROJ-444 lands the public delegators (F-A-007);
+        the migration is mechanical at that point.
+        """
+        transferred = 0
+        total_count = sum(
+            len(s._cargo_mgr.get_carried_vehicles()) for s in source.ships
+        )
+        to_transfer = amount if amount > 0 else total_count
+
+        for src_ship in source.ships:
+            if transferred >= to_transfer:
+                break
+            carried = src_ship._cargo_mgr.get_carried_vehicles()
+            for idx in range(len(carried) - 1, -1, -1):
+                if transferred >= to_transfer:
+                    break
+                cv: CarriedVehicle = carried[idx]
+                if design_id and cv.design_id != design_id:
+                    continue
+                target_ship = None
+                for dst_ship in dest.ships:
+                    if dst_ship._cargo_mgr.can_accept_vehicle(cv):
+                        target_ship = dst_ship
+                        break
+                if target_ship is None:
+                    continue
+                if target_ship._cargo_mgr.load_vehicle(cv):
+                    src_ship._cargo_mgr.unload_vehicle(idx)
+                    transferred += 1
+
+        return transferred

@@ -331,16 +331,36 @@ class CommandRegistry:
 
         Multiple command classes may emit the same ``order_type`` (e.g.,
         the typed ``ActivatePlanetAbilityCommand`` and
-        ``DeactivatePlanetAbilityCommand`` both map to action_ability
-        order types). When two specs disagree on the codec for the same
-        order_type, the first one registered wins — callers that need a
-        stricter contract should make their CommandSpec declarations
-        consistent (a future test ratchet may pin this).
+        ``DeactivatePlanetAbilityCommand``); when more than one spec
+        declares a non-None codec for the same ``order_type``, all of
+        them must agree.
+
+        PROJ-445 Phase 2 (DI-2026-05-18-002): the previous first-match
+        resolution was a silent ambiguity hazard — a precondition fix
+        for any future ``Order.to_dict()`` flip to metadata-driven
+        dispatch. The lookup now raises ``ValueError`` on multi-spec
+        ambiguity with differing codecs. The
+        ``test_specs_sharing_order_type_declare_same_codec`` ratchet
+        in ``test_order_persistence_from_metadata.py`` covers the
+        production registry; this guard catches runtime registrations
+        and overlays that bypass module-load.
         """
+        codecs: set[str] = set()
         for spec in self._specs.values():
-            if spec.order_type == order_type and spec.serializer_codec is not None:
-                return spec.serializer_codec
-        return None
+            if spec.order_type != order_type:
+                continue
+            if spec.serializer_codec is not None:
+                codecs.add(spec.serializer_codec)
+        if not codecs:
+            return None
+        if len(codecs) == 1:
+            return next(iter(codecs))
+        raise ValueError(
+            f"Ambiguous serializer_codec for {order_type.name}: "
+            f"{sorted(codecs)}. Align the CommandSpec declarations or "
+            f"narrow the OrderType-sharing — first-match resolution was "
+            f"retired in PROJ-445 Phase 2."
+        )
 
     def order_to_ability_map(self) -> dict[OrderType, str]:
         """Map OrderType -> ability name for action-time lookups."""

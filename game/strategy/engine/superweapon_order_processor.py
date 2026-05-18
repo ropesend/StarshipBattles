@@ -174,8 +174,7 @@ class SuperweaponOrderProcessor:
 
             1. Order present + matches ``spec.order_type``.
             2. Target shape resolution per ``spec.target_type``:
-               'planet' → must not be None; 'dict' → must be dict (with
-               legacy plain-string passthrough for CLOSE_WARP_POINT);
+               'planet' → must not be None; 'dict' → must be dict;
                'none' → no check.
             3. Per-weapon precheck (``precheck_fn`` — may return
                ``SuperweaponResult(success=False, ...)`` to short-circuit).
@@ -215,18 +214,16 @@ class SuperweaponOrderProcessor:
                 return SuperweaponResult(success=False, message="No target planet")
         elif spec.target_type == "dict":
             if not isinstance(order.target, dict):
-                # CLOSE_WARP_POINT preserves a legacy plain-string back-compat
-                # path; the precheck closure validates whether the raw value
-                # has a usable destination_id. OPEN_WARP_POINT rejects
-                # non-dict outright.
-                if spec.order_type == OrderType.CLOSE_WARP_POINT:
-                    pass
-                else:
-                    fleet.pop_order()
-                    return SuperweaponResult(
-                        success=False,
-                        message="Invalid warp point params",
-                    )
+                # PROJ-445 Phase 2 (F-B-014): both OPEN_WARP_POINT and
+                # CLOSE_WARP_POINT now require a dict target. The
+                # CLOSE_WARP_POINT plain-string back-compat path was
+                # retired — the only emitter has been the dict-shaped
+                # IssueCloseWarpPointCommandHandler since PROJ-228.
+                fleet.pop_order()
+                return SuperweaponResult(
+                    success=False,
+                    message="Invalid warp point params",
+                )
 
         # Step 3: per-weapon precheck (early failures, e.g. system missing).
         if precheck_fn is not None:
