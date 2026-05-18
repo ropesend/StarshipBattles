@@ -1,11 +1,9 @@
-"""Fleet capability calculator - extracted from Fleet class.
+"""Fleet capability calculator.
 
-PROJ-87 Phase 4: Encapsulates fleet capability queries like space yards,
-warp capability, and build type checking.
-
-PROJ-212 Phase 3: Added constructor DI for component_registry.
-PROJ-211 Task 5.7: Removed fallback to global registry - now requires
-ships have _registries set or explicit registry parameter.
+Encapsulates fleet capability queries — space yards, warp capability,
+build-type checking — over the ship list. Requires every ship to have
+its `_registries` set (via DI) or be invoked with an explicit registry
+parameter; there is no fallback to a global registry.
 """
 
 from typing import Any, Dict, List, Optional, TYPE_CHECKING

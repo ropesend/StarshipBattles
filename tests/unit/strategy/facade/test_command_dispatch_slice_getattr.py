@@ -101,3 +101,34 @@ def test_dispatch_method_appears_callable_on_class_via_instance() -> None:
     slice_inst, _ = _make_slice()
     assert hasattr(slice_inst, "dispatch_issue_move")
     assert not hasattr(slice_inst, "dispatch_does_not_exist")
+
+
+def test_specs_by_facade_helper_called_once_across_many_dispatches() -> None:
+    """F-A-030: resolver caches the spec lookup across calls."""
+    from game.strategy.engine.commands.registry import CommandRegistry
+    from game.strategy.facade.slices import command_dispatch_slice as cds_mod
+
+    cds_mod._invalidate_specs_cache()
+    slice_inst, _ = _make_slice()
+
+    call_count = 0
+    real = CommandRegistry.specs_by_facade_helper
+
+    def counting(self):
+        nonlocal call_count
+        call_count += 1
+        return real(self)
+
+    CommandRegistry.specs_by_facade_helper = counting  # type: ignore[assignment]
+    try:
+        for _ in range(5):
+            slice_inst.dispatch_issue_move  # noqa: B018 — attribute access
+            slice_inst.dispatch_issue_build_order  # noqa: B018
+    finally:
+        CommandRegistry.specs_by_facade_helper = real  # type: ignore[assignment]
+        cds_mod._invalidate_specs_cache()
+
+    assert call_count == 1, (
+        f"Expected exactly one spec lookup across 10 dispatch resolves, "
+        f"saw {call_count}"
+    )

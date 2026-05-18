@@ -135,6 +135,42 @@ class TestEmpireInfoFactory:
         assert info.fleet_count == 2
 
 
+class TestEmpireInfoTotalResources:
+    """F-A-018 — total_resources aggregates colony stockpiles in catalog order."""
+
+    def test_empire_info_total_resources_aggregates_colony_stockpiles(self):
+        from game.strategy.facade.dto.empire_dto import EmpireInfo
+        from game.strategy.data.empire import Empire
+        from game.core.resources import ResourceCatalog
+        from unittest.mock import MagicMock
+
+        empire = Empire(
+            empire_id=0,
+            name="Aggregation Test Empire",
+            color=(100, 150, 200),
+        )
+
+        colony_a = MagicMock()
+        colony_a.stockpile = {"metals": 10.0, "organics": 5.0}
+        colony_b = MagicMock()
+        colony_b.stockpile = {"metals": 3.0, "fuel": 2.0}
+        empire.colonies.extend([colony_a, colony_b])
+
+        info = EmpireInfo.from_empire(empire)
+
+        catalog_ids = ResourceCatalog.from_json().all_ids()
+        # Ordering must match the catalog and contain every id.
+        assert [rid for rid, _ in info.total_resources] == catalog_ids
+        as_dict = dict(info.total_resources)
+        assert as_dict["metals"] == 13.0
+        assert as_dict["organics"] == 5.0
+        assert as_dict["fuel"] == 2.0
+        # Resources not present on any colony report as 0.0.
+        for rid in catalog_ids:
+            if rid not in {"metals", "organics", "fuel"}:
+                assert as_dict[rid] == 0.0
+
+
 class TestColonySummaryFactory:
     """Tests for ColonySummary.from_planet factory method."""
 

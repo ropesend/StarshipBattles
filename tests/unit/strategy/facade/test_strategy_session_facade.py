@@ -360,6 +360,8 @@ class TestEmpireQueries:
         empire.race_theme = Mock()
         empire.race_theme.theme_id = "test"
         empire.flag_id = 1
+        # F-A-018: EmpireInfo.from_empire reads empire.resource_pool.
+        empire.resource_pool = {}
         return empire
 
     def test_get_all_empires(self):

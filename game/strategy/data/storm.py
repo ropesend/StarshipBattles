@@ -11,7 +11,7 @@ from typing import Any, Dict, FrozenSet
 
 from game.core.hex_math import HexCoord, hex_to_dict, hex_from_dict
 from game.core.validation_helpers import require_keys
-from game.core.exceptions import PersistenceException, ValidationException
+from game.core.exceptions import PersistenceException
 from game.core.error_codes import ErrorCode
 
 
@@ -123,16 +123,6 @@ class Storm:
                     "error": str(e),
                 }
             ) from e
-
-        # PROJ-300 D19: legacy `effects` shape on saves fails loudly.
-        # Save files are disposable per CLAUDE.md System Migration Policy.
-        if 'effects' in data and 'abilities' not in data:
-            raise ValidationException(
-                "Storm: legacy 'effects' shape detected — save predates PROJ-300 "
-                "storm migration. Old saves are not migrated; start a new game.",
-                code=ErrorCode.CORRUPT_DATA.value,
-                context={"source": "Storm", "field": "effects"},
-            )
 
         abilities_data = data.get('abilities', {})
         if not isinstance(abilities_data, dict):

@@ -188,6 +188,17 @@ class TestDeserializeTargetUnknownFormat:
         result = OrderSerializer.deserialize_orders(data, fleet_id="f1")
         assert result[0].target == weird
 
+    def test_deserialize_unknown_typed_target_raises(self):
+        """F-A-020: a dict carrying an unknown ``type`` key fails fast at load."""
+        data = [{'type': 'BUILD', 'target': {'type': 'star_ref', 'id': 1}}]
+        with pytest.raises(PersistenceException) as exc:
+            OrderSerializer.deserialize_orders(data, fleet_id="f1")
+        # deserialize_orders wraps the original; both wrapper and cause are CORRUPT_DATA.
+        assert exc.value.code == "P003"
+        assert exc.value.__cause__ is not None
+        assert getattr(exc.value.__cause__, "code", None) == "P003"
+        assert "star_ref" in str(exc.value.__cause__)
+
     def test_non_dict_non_none_target_returned_as_is(self):
         """A plain scalar target is returned as-is."""
         data = [{'type': 'BUILD', 'target': 42}]

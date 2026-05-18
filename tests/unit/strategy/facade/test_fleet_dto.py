@@ -269,6 +269,52 @@ class TestFleetInfo:
         assert len(info.projected_path) == 3
 
 
+class TestFleetInfoCapabilitiesExceptionHandling:
+    """F-A-017 — from_fleet splits AttributeError (silent) vs ValueError (WARN)."""
+
+    def test_attribute_error_returns_empty_capabilities_silently(self, caplog):
+        """A test-stub fleet without a usable capabilities object: empty tuple, no warning."""
+        from unittest.mock import patch
+        from game.strategy.facade.dto.fleet_dto import FleetInfo
+
+        fleet = Fleet(fleet_id=99, owner_id=0, location=HexCoord(0, 0), speed=1.0)
+
+        with caplog.at_level("WARNING"), patch.object(
+            fleet.capabilities,
+            "list_abilities",
+            side_effect=AttributeError("no registry"),
+        ):
+            info = FleetInfo.from_fleet(fleet)
+
+        assert info.capabilities == ()
+        assert not any(
+            "from_fleet" in rec.message and rec.levelname == "WARNING"
+            for rec in caplog.records
+        )
+
+    def test_value_error_logs_warning_and_returns_empty(self, caplog):
+        """A capabilities object whose list_abilities raises ValueError emits a WARN."""
+        from unittest.mock import patch
+        from game.strategy.facade.dto.fleet_dto import FleetInfo
+
+        fleet = Fleet(fleet_id=77, owner_id=0, location=HexCoord(0, 0), speed=1.0)
+
+        with caplog.at_level("WARNING"), patch.object(
+            fleet.capabilities,
+            "list_abilities",
+            side_effect=ValueError("ability registry not configured"),
+        ):
+            info = FleetInfo.from_fleet(fleet)
+
+        assert info.capabilities == ()
+        warn_msgs = [
+            rec.message for rec in caplog.records
+            if rec.levelname == "WARNING" and "ValueError" in rec.message
+        ]
+        assert warn_msgs, "Expected a WARNING log mentioning ValueError"
+        assert any("77" in m for m in warn_msgs), "Fleet id should appear in the log"
+
+
 class TestFleetInfoFactory:
     """Tests for FleetInfo.from_fleet factory method."""
 
