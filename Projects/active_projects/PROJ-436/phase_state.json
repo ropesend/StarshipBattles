@@ -179,7 +179,7 @@
       "merged_into_project_at_sha": null,
       "phase_base_sha": "13d355374",
       "phase_branch": "main",
-      "phase_head_sha": null,
+      "phase_head_sha": "9fb85facf",
       "planned_files": [
         "game/strategy/validation/transfer_validator.py",
         "game/ui/screens/transfer_view_model.py",
