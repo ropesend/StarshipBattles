@@ -1,6 +1,6 @@
 # Phase 0: Read PROJ-436 Container API; survey current transfer UI
 
-**Status:** Not Started
+**Status:** Complete (2026-05-18)
 **Depends on:** none (but recommend waiting until PROJ-436 Phase 6 is stable)
 **Review Mode:** lightweight
 **Files (planned):**
@@ -16,43 +16,39 @@
 **Files:** `game/strategy/data/container.py`, `game/strategy/data/containable.py`, `game/core/resources.py`, `data/resources.json`
 **Tests:** none — discovery
 
-- [ ] Read `Container`, `Containable`, `ContainerPolicy`, `ContainableKind` definitions end-to-end
-- [ ] Read `Container.add()` / `Container.remove()` / `Container.accepts()` / `Container.contents()` signatures and return types
-- [ ] Read the **extended** `game/core/resources.py:ResourceCatalog` (`all_ids()`, `get()`, the new `get_mass_per_unit()` per PROJ-436 Phase 0) — this is the Core-layer single source of truth; no parallel strategy/UI registry
-- [ ] Confirm PROJ-436 Phase 6+ has merged (or document which phase the API derives from if reading mid-implementation)
-- [ ] Sketch the `ContainerRef` shape — what minimum data does the UI need to address a specific container? (suggested: `(container_id, owning_entity_label, allowed_kinds)`)
+- [x] Read `Container`, `Containable`, `ContainerPolicy`, `ContainableKind` definitions end-to-end
+- [x] Read `Container.add()` / `Container.remove()` / `Container.accepts()` / `Container.contents()` signatures and return types
+- [x] Read the **extended** `game/core/resources.py:ResourceCatalog` (`all_ids()`, `get()`, the new `get_mass_per_unit()` per PROJ-436 Phase 0) — this is the Core-layer single source of truth; no parallel strategy/UI registry
+- [x] Confirm PROJ-436 Phase 6+ has merged — Phase 7 landed at `48a6c0983`; current HEAD `6bd11e444` is post-PROJ-443 cleanup.
+- [x] Sketch the `ContainerRef` shape — captured in [design.md §Architecture](design.md#architecture) (target view model shape) + [findings/transfer_ui_migration_map.md §3.2](findings/transfer_ui_migration_map.md#32-gameuiscreenstransfer_controllerpy) (per-entity enumeration). Detailed type design lands in Phase 1a substrate step.
 
 ### Task 0.2: Audit existing transfer UI surface [Medium]
 **Files:** `game/ui/screens/transfer_dialog.py`, `transfer_controller.py`, `transfer_view_model.py`, `transfer_grid_renderer.py`, `strategy_windows/transfer_dialogs.py`
 **Tests:** none — discovery
 
-- [ ] Read each file end-to-end
-- [ ] Enumerate every reference to legacy storage shapes (`cargo_contents`, `stockpile`, `_fleet_resource_pool`, `consumable_levels`, `bay_inventory.bay` raw accesses, `RESOURCE_TYPES` constant, `VALID_CARGO_TYPES` references)
-- [ ] Enumerate every reference to per-entity accessors (`Fleet.cargo_aggregate`, `Planet.get_stockpile`, etc.) — note which become `Container.contents()` queries
-- [ ] Identify any code paths that special-case kinds (resources vs items vs population currently)
+- [x] Read each file end-to-end
+- [x] Enumerate every reference to legacy storage shapes — captured per file in [findings/transfer_ui_migration_map.md §3](findings/transfer_ui_migration_map.md#3-current-transfer-ui-surface-audit-file-by-file). `RESOURCE_TYPES` / `RESOURCE_DISPLAY_NAMES` / `VALID_CARGO_TYPES` are already gone post-Phase-7 (AST-guard pinned).
+- [x] Enumerate per-entity accessors — DTOs (`FleetInfo.cargo_resources`, `PlanetInfo.stockpile`, etc.) become `Container.contents()` queries via new `get_containers(id)` accessor (Phase 1a target). Mapped per file in §3.1, §3.2 of the migration map.
+- [x] Identify any code paths that special-case kinds — the three-arm split in `transfer_view_model.build_row_data` (resources / passengers / pod rows) is the single special-casing site; Phase 3 collapses to a unified `Container.contents()` walk with per-kind formatting hooks.
 
 ### Task 0.3: Produce migration map [Medium]
 **File:** `Projects/active_projects/PROJ-437/findings/transfer_ui_migration_map.md` (new)
 **Tests:** none — documentation
 
-- [ ] Per file, list:
-  - Current legacy references (file:line)
-  - Target Container API call
-  - Phase that migrates it (1, 2, 3, or 4)
-  - Test coverage that locks in current behavior (so we know what stays green)
-- [ ] Flag any reference where the migration is non-obvious — escalate to PROJ-436 owner for API clarification
+- [x] Per file, list current legacy refs / target API / phase / test coverage — see [findings/transfer_ui_migration_map.md §3](findings/transfer_ui_migration_map.md#3-current-transfer-ui-surface-audit-file-by-file).
+- [x] Flag any reference where the migration is non-obvious — the `fetch_dto` → `ContainerSnapshotInfo` projection path is the one open design choice (new DTO field vs. parallel facade accessor); decision deferred to Phase 1a substrate step. No escalation to PROJ-436 owner required — the substrate API is stable.
 
 ### Task 0.4: Resolve open decisions OD1, OD2, OD3 [Simple]
 **File:** `decisions.md`
 
-- [ ] OD1 (source/dest enumeration scope): default (a) every container; if Task 0.2 audit suggests (b) or (c) is cleaner, escalate
-- [ ] OD2 (cross-kind transfer in one operation): default (a) preserve existing UX
-- [ ] OD3 (mass-remaining preview granularity): default (a) per-input; profile if `Container.add()` validation is expensive
+- [x] OD1 → (a) every container per entity (decisions.md 2026-05-18).
+- [x] OD2 → (a) cross-kind transfer in one operation (decisions.md 2026-05-18).
+- [x] OD3 → (a) per-input mass-remaining preview (decisions.md 2026-05-18).
 
 ---
 
 ## Phase Completion Checklist
-- [ ] Migration map committed at `findings/transfer_ui_migration_map.md`
-- [ ] OD1/OD2/OD3 defaults documented in `decisions.md`
-- [ ] No production-code changes this phase
-- [ ] Update status at top to Complete; update plan.md + phase_state.json
+- [x] Migration map committed at `findings/transfer_ui_migration_map.md`
+- [x] OD1/OD2/OD3 defaults documented in `decisions.md`
+- [x] No production-code changes this phase
+- [x] Update status at top to Complete; update plan.md + phase_state.json
