@@ -33,20 +33,37 @@
     "phase_1": {
       "depends_on": ["phase_0"],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
+      "phase_base_sha": "89ff42dd1a3af2213cae4c19c70be6b94bc0179f",
       "phase_branch": "proj/PROJ-437/main",
       "phase_head_sha": null,
       "planned_files": [
+        "game/strategy/facade/dto/container_snapshot.py",
+        "game/strategy/facade/dto/__init__.py",
+        "game/strategy/facade/slices/fleet_slice.py",
+        "game/strategy/facade/slices/planet_slice.py",
+        "game/strategy/facade/grouped_namespaces.py",
         "game/ui/screens/transfer_view_model.py",
         "game/ui/screens/transfer_controller.py",
-        "game/ui/screens/fleet_data_source.py",
+        "tests/unit/strategy/facade/test_container_snapshots.py",
         "tests/unit/ui/screens/test_transfer_view_model_container.py"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "in_progress",
+      "sub_phases": {
+        "phase_1a": {
+          "status": "complete",
+          "head_sha": null,
+          "summary": "Substrate: ContainerSnapshotInfo DTO + facade.{fleets,planets}.get_containers(id) accessors. Additive — no caller migration. 10 new tests under tests/unit/strategy/facade/test_container_snapshots.py."
+        },
+        "phase_1b": {
+          "status": "not_started",
+          "head_sha": null,
+          "summary": "Cutover: transfer_controller.collect_sources_and_targets emits per-entity 'containers' field; transfer_view_model reads source/target amounts through ContainerSnapshotInfo."
+        }
+      },
       "verifying_review_id": null
     },
     "phase_2": {
@@ -121,7 +138,7 @@
       "verifying_review_id": null
     }
   },
-  "project_baseline_sha": "4177fef361ec7857f32492a8f829777b0e1de41b",
-  "project_baseline_tests": "21132 passed, 0 failed, 0 errors, 0 skipped (sharded suite, 85.9s, 2026-05-17)",
+  "project_baseline_sha": "89ff42dd1a3af2213cae4c19c70be6b94bc0179f",
+  "project_baseline_tests": "23209 passed, 2 skipped (pytest -n auto, 321.32s, 2026-05-18). PROJ-443 Phase 4 (commit e12603992) made +2077 previously hidden tests under tests/unit/strategy/data/ visible vs the prior 21132-test baseline.",
   "soft_dependency": "PROJ-436 Phase 7 (TransferValidator.VALID_CARGO_TYPES deletion + Container.accepts() stable). PROJ-437 Phase 0 may begin during PROJ-436 Phase 6-8; Phase 1+ blocked on PROJ-436 Phase 7 verified."
 }

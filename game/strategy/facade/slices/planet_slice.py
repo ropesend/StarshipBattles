@@ -7,11 +7,18 @@ the same cache.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Tuple
 
 from game.core.hex_math import HexCoord
 from game.core.validation import ValidationResult
-from game.strategy.facade.dto import PlanetInfo
+from game.strategy.data.containable import (
+    ContainableKind,
+    ItemContainable,
+    ItemRef,
+    ResourceContainable,
+)
+from game.strategy.data.container import Container, ContainerPolicy
+from game.strategy.facade.dto import ContainerSnapshotInfo, PlanetInfo
 
 if TYPE_CHECKING:
     from game.strategy.data.planet import Planet
@@ -82,6 +89,32 @@ class PlanetSlice:
         return [PlanetInfo.from_planet(planet) for planet in target_planets]
 
     # ------------------------------------------------------------------
+    # Container snapshots (PROJ-437 Phase 1a)
+    # ------------------------------------------------------------------
+
+    def get_planet_containers(
+        self, planet_id: int,
+    ) -> Tuple[ContainerSnapshotInfo, ...]:
+        """Return container snapshots for a planet.
+
+        PROJ-437 Phase 1a substrate. Emits two snapshots — the
+        resource stockpile and the staging-yard items — projected from
+        the planet's legacy storage shapes. The mutable Container is
+        not constructed; the snapshot is built directly from the
+        underlying dicts / list so per-resource caps do not reject
+        existing contents at projection time.
+
+        Returns an empty tuple when the planet ID is unknown.
+        """
+        planet = self._state.get_planet_by_id(planet_id)
+        if planet is None:
+            return ()
+        return (
+            _planet_stockpile_snapshot(planet),
+            _planet_staging_yard_snapshot(planet),
+        )
+
+    # ------------------------------------------------------------------
     # Validation
     # ------------------------------------------------------------------
 
@@ -107,3 +140,74 @@ class PlanetSlice:
         return self._state.session.turn_engine.validate_colonize_order(
             self._state.session.galaxy, fleet, planet
         )
+
+
+_RESOURCE_POLICY = ContainerPolicy(
+    allowed_kinds=frozenset({ContainableKind.RESOURCE}),
+    allowed_type_ids=None,
+)
+_ITEM_POLICY = ContainerPolicy(
+    allowed_kinds=frozenset({ContainableKind.ITEM}),
+    allowed_type_ids=None,
+)
+
+
+def _planet_stockpile_snapshot(planet: "Planet") -> ContainerSnapshotInfo:
+    stockpile = getattr(planet, "stockpile", None) or {}
+    max_stockpile = getattr(planet, "max_stockpile", None) or {}
+    if max_stockpile:
+        capacity_mass = float(sum(max_stockpile.values()))
+    else:
+        capacity_mass = float("inf")
+
+    # Project at infinite capacity so existing contents are never
+    # rejected even if the per-resource max sum is below the running
+    # total. The snapshot reports the real cap so the UI can flag
+    # over-capacity explicitly.
+    container = Container(capacity_mass=float("inf"), policy=_RESOURCE_POLICY)
+    for resource_id, amount in stockpile.items():
+        container.add(ResourceContainable(resource_id), float(amount))
+
+    return ContainerSnapshotInfo(
+        container_id=f"planet:{planet.id}:stockpile",
+        owner_kind="planet",
+        owner_id=planet.id,
+        label=f"{planet.name} — Stockpile",
+        capacity_mass=capacity_mass,
+        mass_used=container.mass_used,
+        allowed_kinds=_RESOURCE_POLICY.allowed_kinds,
+        entries=tuple(container.contents()),
+    )
+
+
+def _planet_staging_yard_snapshot(planet: "Planet") -> ContainerSnapshotInfo:
+    items_raw = getattr(planet, "staging_yard", None) or []
+    capacity_mass = float(getattr(planet, "max_staging_mass", 0.0) or 0.0)
+    if capacity_mass <= 0.0:
+        capacity_mass = float("inf")
+
+    container = Container(capacity_mass=float("inf"), policy=_ITEM_POLICY)
+    for idx, item in enumerate(items_raw):
+        design_id = item.get("design_id") or item.get("name", "unknown")
+        instance_id = item.get("instance_id") or f"staging-{idx}"
+        mass = float(item.get("mass", 0.0))
+        container.add(
+            ItemContainable(ItemRef(
+                design_id=design_id,
+                instance_id=instance_id,
+                mass=mass,
+                state={},
+            )),
+            1,
+        )
+
+    return ContainerSnapshotInfo(
+        container_id=f"planet:{planet.id}:staging_yard",
+        owner_kind="planet",
+        owner_id=planet.id,
+        label=f"{planet.name} — Staging Yard",
+        capacity_mass=capacity_mass,
+        mass_used=container.mass_used,
+        allowed_kinds=_ITEM_POLICY.allowed_kinds,
+        entries=tuple(container.contents()),
+    )

@@ -13,6 +13,7 @@ from game.strategy.facade.dto.colony_demographic_view import (
     SpeciesDemographicView,
     ColonyDemographicView,
 )
+from game.strategy.facade.dto.container_snapshot import ContainerSnapshotInfo
 __all__ = [
     "FleetOrderInfo",
     "ShipInfo",
@@ -27,4 +28,5 @@ __all__ = [
     "BuildQueueSourceDTO",
     "SpeciesDemographicView",
     "ColonyDemographicView",
+    "ContainerSnapshotInfo",
 ]

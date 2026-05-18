@@ -7,11 +7,11 @@ composer can expose it as a writable property for tests.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Tuple
 
 from game.core.hex_math import HexCoord
 from game.core.validation import ValidationResult
-from game.strategy.facade.dto import FleetInfo
+from game.strategy.facade.dto import ContainerSnapshotInfo, FleetInfo
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
@@ -122,6 +122,30 @@ class FleetSlice:
     # Colony pods (PROJ-55)
     # ------------------------------------------------------------------
 
+    # ------------------------------------------------------------------
+    # Container snapshots (PROJ-437 Phase 1a)
+    # ------------------------------------------------------------------
+
+    def get_fleet_containers(
+        self, fleet_id: int,
+    ) -> Tuple[ContainerSnapshotInfo, ...]:
+        """Return a snapshot per ship's unified storage container.
+
+        PROJ-437 Phase 1a substrate. Each ship in the fleet contributes
+        one ``ContainerSnapshotInfo`` projected from
+        ``ship.bay_inventory.container_view()``. Mutable Container
+        instances do not cross the facade boundary — the UI receives
+        only immutable snapshots.
+
+        Returns an empty tuple when the fleet ID is unknown.
+        """
+        fleet = self._state.get_fleet_by_id(fleet_id)
+        if fleet is None:
+            return ()
+        return tuple(
+            _ship_container_snapshot(fleet_id, ship) for ship in fleet.ships
+        )
+
     def get_fleet_remaining_pods(self, fleet_id: int) -> dict:
         """Get remaining colony pods for a fleet (available minus committed).
 
@@ -136,3 +160,34 @@ class FleetSlice:
         available = ColonizeValidator.count_drop_pods(fleet)
         committed = ColonizeValidator.count_committed_colonize_orders(fleet)
         return {"drop_pod": available - committed}
+
+
+def _ship_container_snapshot(
+    fleet_id: int, ship: "Fleet",
+) -> ContainerSnapshotInfo:
+    """Project a ship's ``bay_inventory`` into a ``ContainerSnapshotInfo``.
+
+    Capacity falls back to ``inf`` when the ship's cargo manager cannot
+    supply bay capacity (atypical test fixtures) — the snapshot stays
+    usable and Phase 2 validation decides how to treat the uncapped
+    case.
+    """
+    inventory = ship.bay_inventory
+    try:
+        _used, capacity_max = ship._cargo_mgr.get_vehicle_bay_capacity()
+    except Exception:  # Intentional broad catch: fixtures may not wire a cargo mgr; treat as uncapped.
+        capacity_max = float("inf")
+    # Project at infinite capacity so the view never drops contents that
+    # already exceed the bay's nominal cap. The snapshot then reports
+    # the *real* cap so the UI can flag over-capacity states explicitly.
+    view = inventory.container_view(capacity_mass=float("inf"))
+    return ContainerSnapshotInfo(
+        container_id=f"ship:{ship.instance_id}:bay_inventory",
+        owner_kind="fleet",
+        owner_id=fleet_id,
+        label=ship.name,
+        capacity_mass=float(capacity_max),
+        mass_used=view.mass_used,
+        allowed_kinds=view.policy.allowed_kinds,
+        entries=tuple(view.contents()),
+    )
