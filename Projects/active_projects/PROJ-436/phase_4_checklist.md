@@ -25,4 +25,4 @@ Result: a single cutover commit, mirroring Phase 3f's substrate-flip-via-propert
 - [x] Planet-detail UI tests + planet-stockpile / staging-yard / harvesting / consumption / write-service tests green
 - [x] Full sharded suite green (21187/21187, +3 vs Phase 3 baseline 21184)
 - [x] Update status to Complete; update plan.md + phase_state.json
-- [ ] End-of-phase Codex consult pre-final-check (in progress)
+- [x] End-of-phase Codex consult pre-final-check complete — zero verified findings require remediation (see decisions.md)

@@ -4,10 +4,10 @@
   "skills": {
     "claude-consult": {
       "agents": {
-        "claude": 2
+        "claude": 3
       },
-      "count": 2,
-      "last_used": "2026-05-18T01:31:48Z"
+      "count": 3,
+      "last_used": "2026-05-18T01:56:48Z"
     },
     "claude-delegate-review": {
       "agents": {
@@ -15,6 +15,13 @@
       },
       "count": 2,
       "last_used": "2026-05-08T23:01:36Z"
+    },
+    "claude-discuss-respond": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-18T01:56:23Z"
     },
     "claude-discuss-start": {
       "agents": {
@@ -100,6 +107,13 @@
       "count": 17,
       "last_used": "2026-05-17T23:01:29Z"
     },
+    "codex-discuss-start": {
+      "agents": {
+        "codex": 2
+      },
+      "count": 2,
+      "last_used": "2026-05-18T01:58:36Z"
+    },
     "codex-starship-analysis-review": {
       "agents": {
         "codex": 48
@@ -123,10 +137,10 @@
     },
     "codex-starship-consult-respond": {
       "agents": {
-        "codex": 1
+        "codex": 2
       },
-      "count": 1,
-      "last_used": "2026-05-12T02:13:32Z"
+      "count": 2,
+      "last_used": "2026-05-18T01:57:42Z"
     },
     "codex-starship-design-assets": {
       "agents": {

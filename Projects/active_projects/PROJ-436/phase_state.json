@@ -100,7 +100,7 @@
       "merged_into_project_at_sha": null,
       "phase_base_sha": "c3a39858c",
       "phase_branch": "main",
-      "phase_head_sha": null,
+      "phase_head_sha": "3d7e8189b",
       "planned_files": [
         "game/strategy/data/planet.py",
         "tests/static_guards/test_no_legacy_storage_fields.py",
