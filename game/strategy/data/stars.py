@@ -152,10 +152,12 @@ class Star:
         )
 
 
-# PROJ-372 Phase 1 backwards-compat shim. ``StarGenerator`` lives in
-# ``game.strategy.generation.star_generator``; downstream importers
-# may migrate at their leisure. Late import avoids circular deps
-# (``star_generator`` itself imports ``Star`` and ``StarType`` from here).
+# ``StarGenerator`` lives in ``game.strategy.generation.star_generator``;
+# this module-level ``__getattr__`` preserves the legacy import path
+# ``from game.strategy.data.stars import StarGenerator`` for current
+# non-test consumers (galaxy_test UI and the diagnose_blueprints tool).
+# Late import avoids a circular dep — ``star_generator`` itself imports
+# ``Star`` / ``StarType`` from this module.
 def __getattr__(name: str) -> Any:
     if name == "StarGenerator":
         from game.strategy.generation.star_generator import StarGenerator

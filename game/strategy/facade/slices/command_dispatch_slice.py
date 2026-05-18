@@ -14,12 +14,27 @@ caller-supplied ``handle_command`` callable so tests that monkey-patch
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Dict, Optional
 
 if TYPE_CHECKING:
     from game.core.validation import ValidationResult
     from game.strategy.engine.commands import Command
+    from game.strategy.engine.commands.registry import CommandSpec
     from game.strategy.facade.slices._facade_state import FacadeSessionState
+
+
+# F-A-030: ``command_registry.specs_by_facade_helper()`` walks every
+# registered spec on each call. The facade resolves dispatch helpers
+# once per UI action so this used to be an O(N) hot-path; cache the
+# mapping on first build. Registration is one-shot at app start
+# (``seed_default_commands``) so there is no mutation hook to invalidate.
+_specs_cache: Optional[Dict[str, "CommandSpec"]] = None
+
+
+def _invalidate_specs_cache() -> None:
+    """Test seam: drop the cached spec lookup."""
+    global _specs_cache
+    _specs_cache = None
 
 
 class CommandDispatchSlice:
@@ -86,7 +101,10 @@ class CommandDispatchSlice:
         if len(command_registry) == 0:
             seed_default_commands(command_registry)
 
-        spec = command_registry.specs_by_facade_helper().get(name)
+        global _specs_cache
+        if _specs_cache is None:
+            _specs_cache = command_registry.specs_by_facade_helper()
+        spec = _specs_cache.get(name)
         if spec is None:
             raise AttributeError(
                 f"{type(self).__name__!r} object has no attribute {name!r}: "

@@ -41,6 +41,21 @@ def _dict_to_tuple(d) -> Tuple[Tuple[str, float], ...]:
     return ()
 
 
+def _resource_dict_to_catalog_tuple(d) -> Tuple[Tuple[str, float], ...]:
+    """Project a resource dict into catalog-id order.
+
+    F-A-019: stockpile / max_stockpile dicts are emitted in
+    ``ResourceCatalog.all_ids()`` order so the UI sees a stable
+    ordering regardless of dict-insertion history. Resources absent
+    from the input report as ``0.0``.
+    """
+    if not isinstance(d, dict):
+        return ()
+    from game.core.resources import ResourceCatalog
+    catalog_ids = ResourceCatalog.from_json().all_ids()
+    return tuple((rid, float(d.get(rid, 0.0))) for rid in catalog_ids)
+
+
 @dataclass(frozen=True)
 class PlanetInfo:
     """Immutable DTO representing a planet.
@@ -127,7 +142,7 @@ class PlanetInfo:
             shield_active=_is_any_planetary_shield_active(
                 getattr(planet, 'active_abilities', {})
             ),
-            stockpile=_dict_to_tuple(getattr(planet, 'stockpile', None)),
-            max_stockpile=_dict_to_tuple(getattr(planet, 'max_stockpile', None)),
+            stockpile=_resource_dict_to_catalog_tuple(getattr(planet, 'stockpile', None)),
+            max_stockpile=_resource_dict_to_catalog_tuple(getattr(planet, 'max_stockpile', None)),
             staging_yard_summary=staging_summary,
         )

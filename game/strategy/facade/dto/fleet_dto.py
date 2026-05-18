@@ -2,10 +2,13 @@
 
 Immutable DTOs representing fleet data for the UI layer.
 """
+import logging
 from dataclasses import dataclass, field
 from typing import Tuple, Optional
 
 from game.core.hex_math import HexCoord
+
+_LOG = logging.getLogger(__name__)
 
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.planet import Planet
@@ -191,8 +194,18 @@ class FleetInfo:
         # Get fleet capabilities (ability names)
         try:
             capabilities = tuple(fleet.capabilities.list_abilities())
-        except (ValueError, AttributeError):
-            # No registry available or no ships - empty capabilities
+        except AttributeError:
+            # Test-stub fleet without a capabilities object - empty list
+            capabilities = ()
+        except ValueError as exc:
+            # Production DI configuration bug (e.g. no registry available);
+            # surface visibly rather than silently returning empty.
+            _LOG.warning(
+                "FleetInfo.from_fleet: list_abilities() raised ValueError for "
+                "fleet id=%r: %s",
+                getattr(fleet, "id", None),
+                exc,
+            )
             capabilities = ()
 
         return cls(

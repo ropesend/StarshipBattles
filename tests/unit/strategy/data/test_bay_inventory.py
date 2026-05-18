@@ -72,6 +72,18 @@ class TestBayInventoryMassAccounting:
         assert bi.total_bay_mass() == 30.0
 
 
+class TestBayInventoryRemoveGuards:
+    def test_remove_resource_rejects_negative_amount(self) -> None:
+        bi = BayInventory()
+        with pytest.raises(ValueError):
+            bi.remove_resource("metals", -3.0)
+
+    def test_remove_population_rejects_negative_count(self) -> None:
+        bi = BayInventory()
+        with pytest.raises(ValueError):
+            bi.remove_population("human", -2)
+
+
 class TestBayInventoryRoundTrip:
     def test_to_dict_from_dict(self) -> None:
         cv = _make_carried_vehicle(15.0)

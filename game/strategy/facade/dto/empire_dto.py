@@ -85,6 +85,8 @@ class EmpireInfo:
         flag_id: Flag/emblem identifier
         colony_count: Number of colonies owned
         fleet_count: Number of fleets owned
+        total_resources: Empire-wide resource totals in catalog order
+            (every catalog id appears, missing resources reported as 0.0).
     """
 
     empire_id: int
@@ -94,17 +96,18 @@ class EmpireInfo:
     flag_id: str
     colony_count: int = 0
     fleet_count: int = 0
+    total_resources: Tuple[Tuple[str, float], ...] = ()
 
     @classmethod
     def from_empire(cls, empire: 'Empire') -> 'EmpireInfo':
-        """Create an EmpireInfo DTO from an Empire domain object.
+        """Create an EmpireInfo DTO from an Empire domain object."""
+        from game.core.resources import ResourceCatalog
 
-        Args:
-            empire: The Empire domain object to convert
-
-        Returns:
-            An immutable EmpireInfo DTO
-        """
+        pool = empire.resource_pool
+        total_resources = tuple(
+            (rid, float(pool.get(rid, 0.0)))
+            for rid in ResourceCatalog.from_json().all_ids()
+        )
         return cls(
             empire_id=empire.id,
             name=empire.name,
@@ -113,4 +116,5 @@ class EmpireInfo:
             flag_id=empire.flag_id,
             colony_count=len(empire.colonies),
             fleet_count=len(empire.fleets),
+            total_resources=total_resources,
         )

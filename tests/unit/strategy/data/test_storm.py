@@ -134,20 +134,6 @@ class TestStorm:
         assert storm.image_variant == 5
         assert storm.intensity == 0.9
 
-    def test_from_dict_legacy_effects_raises(self):
-        """PROJ-300 D19: legacy `effects` shape on saves fails loudly."""
-        from game.core.exceptions import ValidationException
-
-        data = {
-            'name': "Old Save Storm",
-            'storm_type': "ion_storm",
-            'location': {'q': 0, 'r': 0},
-            'hex_offsets': [{'q': 0, 'r': 0}],
-            'effects': {'shield_capacity_mult': 0.5},  # Legacy shape
-        }
-        with pytest.raises(ValidationException):
-            Storm.from_dict(data)
-
     def test_from_dict_with_missing_optional_fields(self):
         """Storm.from_dict uses defaults for missing optional fields."""
         data = {

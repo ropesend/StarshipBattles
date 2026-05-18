@@ -13,17 +13,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Tiny one-shot fixes (≤30 LOC each) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Tiny one-shot fixes (≤30 LOC each) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Container-substrate residue cleanup | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. PROJ-436 deletion-shim retirement (cross-coupled with PROJ-443) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. LOC-ceiling extractions (fleet_serde, planet_gen) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-18
-**Active Phase:** Planning
-**Last Action:** Charter created from comprehensive residue scan ([findings/bucket_a_data_facade_scan.md](findings/bucket_a_data_facade_scan.md), 32 findings)
-**Next Action:** User review of scope/phasing, then expand phase checklists from the findings file
-**Blockers:** None — but Phase 3 is coupled to PROJ-443 Phase 5b decision (shared 18-file test sweep)
+**Active Phase:** Phase 1 Complete — handing off to Phase 2
+**Last Action:** Burned down 12 of 14 Phase 1 polish fixes (F-A-001, F-A-006, F-A-017, F-A-018, F-A-019, F-A-020, F-A-021, F-A-022, F-A-023/026/027, F-A-024/025, F-A-030, F-A-031). Full sharded suite green (23,326 passed, 2 skipped). Two tasks deferred with rationale in [decisions.md](decisions.md): Task 1.3 (F-A-015 + F-A-016 typed BuildQueueItemDTO — requires UI reader migration across PROJ-446 territory) and Task 1.14 (F-A-032 `stars_cache_new` rename — UI and performance-test callers outside the data/facade partition).
+**Next Action:** Begin Phase 2 (Container-substrate residue cleanup): F-A-012, F-A-014, F-A-010 + DI-006, F-A-013 + DI-001, F-A-028, F-A-029. Phase 2 also a natural home for the deferred Task 1.3 / 1.14 once the cross-bucket coordination is feasible.
+**Blockers:** None for Phase 2 start. Phase 3 still gated on PROJ-443 Phase 5b decision + PROJ-446 F-C-020 fixture migration sequencing.
 
 ## Overview
 
