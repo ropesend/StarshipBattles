@@ -377,13 +377,11 @@ class TestFacadeColonyPodMethods:
         class MockPlanetType(Enum):
             ICE_DWARF = "ICE_DWARF"
 
-        # PROJ-431 Phase 1f: ColonizeValidator now reads pods from the
-        # typed ``ship.bay_inventory.pods`` slot. Configure both the
-        # legacy ``carried_items`` projection (for any inspection) and
-        # the typed substrate.
+        # PROJ-436 Phase 9: ColonizeValidator reads pods from the typed
+        # ``ship.bay_inventory.pods`` slot. The legacy ``carried_items``
+        # projection is gone.
         from game.strategy.data.bay_inventory import BayInventory, DropPod
         mock_ship = Mock()
-        mock_ship.carried_items = [{"vehicle_type": "drop_pod", "design_id": "test_pod", "name": "Test Pod", "design_data": {}, "mass": 500}]
         mock_ship.bay_inventory = BayInventory(
             bay=[],
             pods=[DropPod(

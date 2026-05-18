@@ -26,7 +26,9 @@ def instance() -> MagicMock:
     inst.components = {}
     inst.cargo_contents = {}
     inst.consumable_levels = {}
-    inst.carried_items = []
+    # PROJ-436 Phase 9: typed bay_inventory (legacy carried_items is gone).
+    from game.strategy.data.bay_inventory import BayInventory
+    inst.bay_inventory = BayInventory(bay=[], pods=[])
     inst.component_toggles = {}
     inst.activation_states = {}
     inst.battles_survived = 0

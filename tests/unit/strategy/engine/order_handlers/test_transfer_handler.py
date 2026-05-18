@@ -17,10 +17,10 @@ from game.strategy.engine.order_handlers.transfer import TransferHandler
 
 
 def _bay_ship(*, name: str = "Ship", pods: list | None = None) -> MagicMock:
-    """PROJ-431 Phase 1d helper: MagicMock ship with a wired-up typed
-    :class:`BayInventory` and a ``set_bay_inventory`` write-through that
-    mirrors the new inventory back onto ``ship.carried_items`` so legacy
-    assertions remain meaningful.
+    """PROJ-436 Phase 9 helper: MagicMock ship with a wired-up typed
+    :class:`BayInventory` and a ``set_bay_inventory`` write-through.
+    The legacy ``carried_items`` mirror is gone — production code
+    reads the typed ``bay_inventory.pods`` slot directly.
     """
     ship = MagicMock()
     ship.name = name
@@ -43,29 +43,9 @@ def _bay_ship(*, name: str = "Ship", pods: list | None = None) -> MagicMock:
 
     typed_pods = [_typed_pod(p) for p in pods]
     ship.bay_inventory = BayInventory(bay=[], pods=typed_pods)
-    ship.carried_items = []
-    for p in typed_pods:
-        entry = {
-            "design_id": p.design_id,
-            "design_data": p.design_data,
-            "mass": p.mass,
-        }
-        entry.update(p.payload)
-        ship.carried_items.append(entry)
 
     def _set_bay_inventory(bi: BayInventory) -> None:
         ship.bay_inventory = bi
-        ship.carried_items = []
-        for cv in bi.bay:
-            ship.carried_items.append(cv.to_dict())
-        for p in bi.pods:
-            entry = {
-                "design_id": p.design_id,
-                "design_data": p.design_data,
-                "mass": p.mass,
-            }
-            entry.update(p.payload)
-            ship.carried_items.append(entry)
 
     ship.set_bay_inventory = _set_bay_inventory
     return ship
@@ -416,10 +396,8 @@ def test_dispatch_drop_pod_unload():
     delivered = planet.add_to_staging_yard.call_args.args[0]
     assert delivered.get("name") == "PodX"
     assert delivered.get("design_id") == "drop_pod_basic"
-    # PROJ-431 Phase 1d: ship's bay_inventory.pods is drained; the
-    # mirrored carried_items list also reflects that.
+    # PROJ-436 Phase 9: ship's bay_inventory.pods is drained.
     assert ship.bay_inventory.pods == []
-    assert ship.carried_items == []
 
 
 # ---------------------------------------------------------------------------

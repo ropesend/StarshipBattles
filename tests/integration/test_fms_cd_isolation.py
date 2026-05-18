@@ -50,11 +50,12 @@ class _StubCargoMgr:
         self._accepts = accepts
 
     def load_vehicle(self, cv) -> bool:
-        if len(self._carrier.carried_items) >= self._capacity:
+        # PROJ-436 Phase 9: load into the typed BayInventory.bay slot.
+        if len(self._carrier.bay_inventory.bay) >= self._capacity:
             return False
         if cv.vehicle_type not in self._accepts:
             return False
-        self._carrier.carried_items.append(cv.to_dict())
+        self._carrier.bay_inventory.bay.append(cv)
         return True
 
 
@@ -156,7 +157,7 @@ def test_fighter_only_bay_cannot_recover_satellites():
         fleet, empire, galaxy,
     )
     assert not result.success
-    assert len(carrier.carried_items) == 0
+    assert len(carrier.bay_inventory.bay) == 0
     assert len(sg.ships) == 3
     assert sg in empire.deployed_groups
 
@@ -188,7 +189,7 @@ def test_satellite_only_bay_cannot_recover_fighters():
         fleet, empire, galaxy,
     )
     assert not result.success
-    assert len(carrier.carried_items) == 0
+    assert len(carrier.bay_inventory.bay) == 0
     assert len(fg.ships) == 3
     assert fg in empire.deployed_groups
 
@@ -319,8 +320,8 @@ def test_universal_bay_handles_both_types():
     )
     assert r2.success
 
-    assert len(carrier.carried_items) == 2
-    types_loaded = {item["vehicle_type"] for item in carrier.carried_items}
+    assert len(carrier.bay_inventory.bay) == 2
+    types_loaded = {item.vehicle_type for item in carrier.bay_inventory.bay}
     assert types_loaded == {"fighter", "satellite"}
 
 
@@ -338,9 +339,9 @@ def test_launch_handlers_filter_by_vehicle_type():
     )
     # 2 fighters + 2 satellites.
     for _ in range(2):
-        carrier.carried_items.append(_fighter_dict())
+        carrier.bay_inventory.bay.append(CarriedVehicle.from_dict(_fighter_dict()))
     for _ in range(2):
-        carrier.carried_items.append(_satellite_dict())
+        carrier.bay_inventory.bay.append(CarriedVehicle.from_dict(_satellite_dict()))
 
     fleet = Fleet(
         fleet_id=1, owner_id=42, location=hex_c, speed=5.0
@@ -361,8 +362,8 @@ def test_launch_handlers_filter_by_vehicle_type():
     )
 
     # 2 fighters remain in the bay; 2 satellites are in a satellite_group.
-    assert len(carrier.carried_items) == 2
-    assert all(item["vehicle_type"] == "fighter" for item in carrier.carried_items)
+    assert len(carrier.bay_inventory.bay) == 2
+    assert all(item.vehicle_type == "fighter" for item in carrier.bay_inventory.bay)
     sg = empire.deployed_groups_of(SatelliteConstellation)[0]
     assert len(sg.ships) == 2
 
@@ -376,6 +377,6 @@ def test_launch_handlers_filter_by_vehicle_type():
     LaunchFightersOrderHandler().execute_action_order(
         fleet, empire, galaxy,
     )
-    assert len(carrier.carried_items) == 0
+    assert len(carrier.bay_inventory.bay) == 0
     fg = empire.deployed_groups_of(FighterWing)[0]
     assert len(fg.ships) == 2

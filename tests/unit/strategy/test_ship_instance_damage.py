@@ -731,11 +731,13 @@ class TestShipInstanceOperationalMethods:
 
     def test_pod_storage_uses_calculated_stats_and_carried_item_mass(self, monkeypatch):
         ship = self._ship()
-        ship.carried_items = [
-            {'name': 'Pod A', 'mass': 2.5},
-            {'name': 'Pod Without Mass'},
-            {'name': 'Pod B', 'mass': 4.0},
-        ]
+        # PROJ-436 Phase 9: typed DropPod into bay_inventory.pods.
+        from game.strategy.data.bay_inventory import DropPod
+        ship.bay_inventory.pods.extend([
+            DropPod(design_id='pod_a', design_data={}, mass=2.5, payload={'name': 'Pod A'}),
+            DropPod(design_id='pod_no_mass', design_data={}, mass=0.0, payload={'name': 'Pod Without Mass'}),
+            DropPod(design_id='pod_b', design_data={}, mass=4.0, payload={'name': 'Pod B'}),
+        ])
         monkeypatch.setattr(
             ship,
             'get_calculated_stats',

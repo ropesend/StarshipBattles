@@ -50,13 +50,11 @@ def _drop_pod_typed(design_id="test_pod", name="Test Pod") -> DropPod:
 
 
 def _attach_pods(ship_mock: MagicMock, pod_dicts: list) -> None:
-    """Wire a MagicMock ship so both the legacy ``carried_items`` list
-    and the PROJ-431 typed ``bay_inventory`` / ``set_bay_inventory``
-    surface mirror each other. Tests can continue to assert on
-    ``ship.carried_items`` while the production validator walks
-    ``ship.bay_inventory.pods``.
+    """Wire a MagicMock ship's typed ``bay_inventory.pods`` slot from a
+    list of legacy pod dicts. PROJ-436 Phase 9: the legacy
+    ``carried_items`` mirror is gone — the production validator walks
+    ``ship.bay_inventory.pods`` directly.
     """
-    ship_mock.carried_items = list(pod_dicts)
     ship_mock.bay_inventory = BayInventory(
         bay=[],
         pods=[
@@ -153,7 +151,7 @@ class TestColonizeValidatorBasic:
 
         # Give fleet a ship with a drop pod in carried_items
         ship = MagicMock()
-        ship.carried_items = [_drop_pod_item()]
+        _attach_pods(ship, [_drop_pod_item()])
         mock_fleet.ships = [ship]
 
         result = ColonizeValidator.validate(mock_galaxy, mock_fleet, mock_planet)
@@ -203,7 +201,7 @@ class TestColonizeValidatorAnyPlanet:
 
         # Give fleet a ship with a drop pod in carried_items
         ship = MagicMock()
-        ship.carried_items = [_drop_pod_item()]
+        _attach_pods(ship, [_drop_pod_item()])
         mock_fleet.ships = [ship]
 
         result = ColonizeValidator.validate(mock_galaxy, mock_fleet, None)
@@ -262,7 +260,7 @@ class TestColonizeValidatorEdgeCases:
 
         # Give fleet a ship with a drop pod in carried_items
         ship = MagicMock()
-        ship.carried_items = [_drop_pod_item()]
+        _attach_pods(ship, [_drop_pod_item()])
         mock_fleet.ships = [ship]
 
         result = ColonizeValidator.validate(mock_galaxy, mock_fleet, None)
@@ -312,7 +310,7 @@ class TestColonizeValidatorEdgeCases:
 
         # Give fleet a ship with a drop pod in carried_items
         ship = MagicMock()
-        ship.carried_items = [_drop_pod_item()]
+        _attach_pods(ship, [_drop_pod_item()])
         mock_fleet.ships = [ship]
 
         # Initially valid
@@ -336,7 +334,7 @@ class TestColonizeValidatorEdgeCases:
 
         # Give fleet a ship with a drop pod in carried_items
         ship = MagicMock()
-        ship.carried_items = [_drop_pod_item()]
+        _attach_pods(ship, [_drop_pod_item()])
         mock_fleet.ships = [ship]
 
         # Initially valid
@@ -761,7 +759,7 @@ class TestColonizeValidatorZoneColonization:
 
         # Give fleet a ship with a drop pod in carried_items
         ship = MagicMock()
-        ship.carried_items = [_drop_pod_item()]
+        _attach_pods(ship, [_drop_pod_item()])
         mock_fleet.ships = [ship]
 
         mock_galaxy.get_planets_at_global_hex.return_value = []
@@ -785,7 +783,7 @@ class TestColonizeValidatorZoneColonization:
 
         # Give fleet a ship with a drop pod
         ship = MagicMock()
-        ship.carried_items = [_drop_pod_item()]
+        _attach_pods(ship, [_drop_pod_item()])
         mock_fleet.ships = [ship]
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_dyson]
@@ -809,7 +807,7 @@ class TestColonizeValidatorZoneColonization:
 
         # Give fleet a ship with a drop pod
         ship = MagicMock()
-        ship.carried_items = [_drop_pod_item()]
+        _attach_pods(ship, [_drop_pod_item()])
         mock_fleet.ships = [ship]
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
@@ -878,7 +876,7 @@ class TestColonizeValidatorAnyPlanetPods:
         """Create a mock ship with a drop pod in carried_items."""
         ship = MagicMock()
         ship.name = f"{pod_type} Colony Ship"
-        ship.carried_items = [_drop_pod_item(f"{pod_type.lower()}_pod", f"{pod_type} Pod")]
+        _attach_pods(ship, [_drop_pod_item(f"{pod_type.lower()}_pod", f"{pod_type} Pod")])
         return ship
 
     def test_any_planet_no_ships_fails(
@@ -930,7 +928,7 @@ class TestColonizeValidatorAnyPlanetPods:
 
         # Fleet has ship but no drop pods
         ship = MagicMock()
-        ship.carried_items = []
+        _attach_pods(ship, [])
         mock_fleet.ships = [ship]
 
         # Planet available
@@ -1001,7 +999,7 @@ class TestColonizeValidatorAdvancedEdgeCases:
 
         # Fleet with one drop pod, already committed
         ship = MagicMock()
-        ship.carried_items = [_drop_pod_item()]
+        _attach_pods(ship, [_drop_pod_item()])
 
         existing_order = MagicMock()
         existing_order.type = OrderType.COLONIZE
@@ -1030,7 +1028,7 @@ class TestColonizeValidatorAdvancedEdgeCases:
 
         # Ship with drop pod in carried_items
         ship = MagicMock()
-        ship.carried_items = [_drop_pod_item()]
+        _attach_pods(ship, [_drop_pod_item()])
 
         fleet = MagicMock()
         fleet.id = 1
@@ -1052,7 +1050,7 @@ class TestColonizeValidatorAdvancedEdgeCases:
 
         # Ship with empty carried_items (no drop pods)
         ship = MagicMock()
-        ship.carried_items = []
+        _attach_pods(ship, [])
 
         fleet = MagicMock()
         fleet.id = 1
@@ -1130,7 +1128,7 @@ class TestColonizeValidatorAdvancedEdgeCases:
         from game.strategy.validation import ColonizeValidator
 
         ship = MagicMock()
-        ship.carried_items = []
+        _attach_pods(ship, [])
 
         fleet = MagicMock()
         fleet.ships = [ship]
@@ -1144,10 +1142,10 @@ class TestColonizeValidatorAdvancedEdgeCases:
         from game.strategy.validation import ColonizeValidator
 
         ship1 = MagicMock()
-        ship1.carried_items = [_drop_pod_item()]
+        _attach_pods(ship1, [_drop_pod_item()])
 
         ship2 = MagicMock()
-        ship2.carried_items = [_drop_pod_item()]
+        _attach_pods(ship2, [_drop_pod_item()])
 
         fleet = MagicMock()
         fleet.ships = [ship1, ship2]
@@ -1186,7 +1184,7 @@ class TestColonizeValidatorAdvancedEdgeCases:
         galaxy.get_planets_at_global_hex = MagicMock(return_value=[weird_planet])
 
         ship = MagicMock()
-        ship.carried_items = [_drop_pod_item()]
+        _attach_pods(ship, [_drop_pod_item()])
 
         fleet = MagicMock()
         fleet.id = 1
@@ -1216,10 +1214,10 @@ class TestColonizeValidatorAdvancedEdgeCases:
 
         # Fleet has two ships, each with a drop pod
         ice_ship = MagicMock()
-        ice_ship.carried_items = [_drop_pod_item("pod_1")]
+        _attach_pods(ice_ship, [_drop_pod_item("pod_1")])
 
         cont_ship = MagicMock()
-        cont_ship.carried_items = [_drop_pod_item("pod_2")]
+        _attach_pods(cont_ship, [_drop_pod_item("pod_2")])
 
         # Commit one pod
         ice_order = MagicMock()
@@ -1271,7 +1269,7 @@ class TestColonizeValidatorAdvancedEdgeCases:
 
         # Give fleet a ship with a drop pod
         ship = MagicMock()
-        ship.carried_items = [_drop_pod_item()]
+        _attach_pods(ship, [_drop_pod_item()])
 
         fleet = MagicMock()
         fleet.id = 1

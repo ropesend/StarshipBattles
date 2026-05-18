@@ -43,11 +43,10 @@ class _StubCargoMgr:
         self._capacity = capacity
 
     def load_vehicle(self, cv: CarriedVehicle) -> bool:
-        if len(self._carrier.carried_items) >= self._capacity:
+        # PROJ-436 Phase 9: load through the typed BayInventory.bay slot.
+        if len(self._carrier.bay_inventory.bay) >= self._capacity:
             return False
-        # Phase-3 contract: store the dataclass directly so callers
-        # downstream can inspect ``component_states`` without re-parsing.
-        self._carrier.carried_items.append(cv)
+        self._carrier.bay_inventory.bay.append(cv)
         return True
 
 

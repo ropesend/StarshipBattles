@@ -150,7 +150,7 @@ class TestShipCargoManagerVehicles:
         )
         ok = inst._cargo_mgr.load_vehicle(cv)
         assert ok
-        assert len(inst.carried_items) == 1
+        assert len(inst.bay_inventory.bay) == 1
         current, max_mass = inst._cargo_mgr.get_vehicle_bay_capacity()
         assert current == 50
         assert max_mass >= 250  # vehicle_bay base capacity is 250 mass
@@ -167,7 +167,7 @@ class TestShipCargoManagerVehicles:
         )
         ok = inst._cargo_mgr.load_vehicle(cv)
         assert ok is False
-        assert len(inst.carried_items) == 0
+        assert len(inst.bay_inventory.bay) == 0
 
     def test_unload_vehicle_returns_original(self, fresh_registries):
         inst = self._make_ship_instance(fresh_registries)
@@ -182,7 +182,7 @@ class TestShipCargoManagerVehicles:
         popped = inst._cargo_mgr.unload_vehicle(0)
         assert popped.design_id == "qs_fighter"
         assert popped.current_hp == 33
-        assert len(inst.carried_items) == 0
+        assert len(inst.bay_inventory.bay) == 0
 
     def test_get_carried_vehicles_filters_by_type(self, fresh_registries):
         inst = self._make_ship_instance(fresh_registries)

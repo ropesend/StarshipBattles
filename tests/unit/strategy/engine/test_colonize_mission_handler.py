@@ -30,13 +30,17 @@ def make_colony_ship(planet_type: str, owner_id: int, instance_id: str = "colony
             }
         },
     )
-    ship.carried_items.append({
-        "vehicle_type": "drop_pod",
-        "design_id": f"{planet_type.lower()}_drop_pod",
-        "name": f"Drop Pod ({planet_type})",
-        "design_data": {"layers": {"CORE": []}},
-        "mass": 500,
-    })
+    # PROJ-436 Phase 9: typed DropPod into bay_inventory.pods.
+    from game.strategy.data.bay_inventory import DropPod
+    ship.bay_inventory.pods.append(DropPod(
+        design_id=f"{planet_type.lower()}_drop_pod",
+        design_data={"layers": {"CORE": []}},
+        mass=500.0,
+        payload={
+            "name": f"Drop Pod ({planet_type})",
+            "vehicle_type": "drop_pod",
+        },
+    ))
     return ship
 
 

@@ -38,11 +38,12 @@ class _StubCargoMgr:
         self.loaded: List[Any] = []
 
     def load_vehicle(self, cv) -> bool:
+        # PROJ-436 Phase 9: load into the typed BayInventory.bay slot.
         if len(self.loaded) >= self._capacity:
             return False
         if cv.vehicle_type not in self._accepts:
             return False
-        self._carrier.carried_items.append(cv.to_dict())
+        self._carrier.bay_inventory.bay.append(cv)
         self.loaded.append(cv)
         return True
 
@@ -129,8 +130,8 @@ def test_satellite_reboards_into_universal_bay():
     assert summary["reboarded"] == 1
     assert summary["overflowed"] == 0
     assert summary["discarded"] == 0
-    # The stored CarriedVehicle dict declares satellite vehicle_type.
-    assert carrier.carried_items[0]["vehicle_type"] == "satellite"
+    # The stored typed CarriedVehicle declares satellite vehicle_type.
+    assert carrier.bay_inventory.bay[0].vehicle_type == "satellite"
 
 
 def test_satellite_overflows_into_new_satellite_group():

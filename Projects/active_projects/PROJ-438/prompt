@@ -26,16 +26,59 @@ phase plan, not to redesign it.
 8. Predecessor plans for context only — do not reopen their scope:
    Projects/active_projects/PROJ-423/, 424/, 425/, 429/, 436/, 437/
 
-## Hard dependencies — do not start implementation until these are true
-- PROJ-436 (Unified Storage Substrate) merged through Phase 9
-  (_CarriedItemsProxy deletion). PROJ-438 Phase 3 directly depends on
-  Phase 9 landing.
-- PROJ-437 (Container-Aware Transfer UI) merged. PROJ-438 does not touch
-  transfer UI itself but assumes the unified Container.accepts() API is
-  the validation surface.
-- If either predecessor partially descopes, STOP and surface to user
-  before continuing. The charter explicitly does NOT carry partial-
-  predecessor branches per user instruction.
+## Predecessor work runs in parallel on a separate machine
+PROJ-436 and PROJ-437 are being executed on a different machine and
+will be merged into `main` later. This checkout will pick them up
+through normal `git pull` of `main`. Do NOT attempt to advance 436 or
+437 from this checkout, and do NOT block on them landing before you
+start Phase 0 here.
+
+Current snapshot on this machine (verify with `git log` before Phase 0):
+- PROJ-436: Phases 0–7 are merged to `main`. Phases 8 (production
+  engine container unification), 9 (`_CarriedItemsProxy` deletion in
+  `ship_instance.py`), 10 (docs), and 11 are still outstanding on the
+  other machine.
+- PROJ-437: Not yet started on the other machine.
+
+Phase-by-phase gating against the parallel work:
+- Phases 0, 1, 2: independent — start whenever ready.
+- Phase 3 (ShipInstance post-container surface) HARD-BLOCKS on PROJ-436
+  Phase 9 (`_CarriedItemsProxy` deletion) landing on `main`. Phase 3
+  must NOT begin until you have pulled that commit.
+- Phase 4 (Planet/Fleet/Empire persistence surface) and Phase 8 (docs)
+  touch files PROJ-436 Phase 10 also rewrites
+  (`docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`,
+  `docs/systems/strategy_layer.md`). If 436 Phase 10 has not landed by
+  the time you reach 438 Phase 8, stop and pull before doing the doc
+  pass to avoid a manual three-way merge.
+- Phases 5, 6, 7 (intent lifecycle) are independent of the remaining
+  436/437 work and can proceed unblocked.
+
+If a predecessor partially descopes when it lands (e.g. 436 ships
+without Phase 9), STOP and surface to user before continuing past the
+gated phase. The charter explicitly does NOT carry partial-predecessor
+branches per user instruction.
+
+## Conflict audit vs. PROJ-436 Phase 7 (already on main)
+This was verified at prompt-update time. Files touched by completed
+PROJ-436 phases (0–7) that PROJ-438 also plans to touch:
+- `game/strategy/data/ship_instance.py` — PROJ-438 Phase 3. 436 already
+  reshaped this through Phase 3; treat the current `main` shape as the
+  baseline and wait for 436 Phase 9 before the Phase 3 cutover.
+- `game/strategy/data/empire.py` — PROJ-438 Phase 4. 436 Phase 5
+  already migrated empire resources; build on the post-436 shape, do
+  NOT revert.
+- `game/strategy/data/galaxy_protocols.py`,
+  `game/core/protocols/strategy_domain.py` — PROJ-438 Phases 3/4/8.
+  436 Phase 6 already moved these to the unified storage protocol
+  shape; PROJ-438 extends, does not redefine.
+- `game/strategy/data/planet.py` — PROJ-438 Phase 4. 436 Phase 4 has
+  already removed legacy storage fields; verify before extending.
+- `docs/systems/resource_system.md` — already updated by 436 Phase 5;
+  PROJ-438 does not need to revisit it unless intent lifecycle
+  introduces new resource semantics.
+No file overlap was found with PROJ-437 (transfer UI), which is
+isolated to `game/ui/screens/transfer_*.py` and related tests.
 
 ## Out of scope — refuse if asked
 - Storage / container / transfer-UI work (PROJ-436/437 own this)
@@ -88,17 +131,17 @@ Phase 0 has these load-bearing tasks (see phase_0_checklist.md):
 2. Re-validate the residual #1 contact surface against current code
    (the audit above may have drifted if 436/437 changed code paths).
 3. Re-validate the residual #3 contact surface.
-4. **Fix pytest.ini collection gap by default.** D1 default is option
-   (a): switch from `norecursedirs = ... data ...` to using
-   `--ignore=data` in `addopts` so only the top-level `data/`
-   directory is excluded. This currently hides ~1575 tests under
-   tests/unit/strategy/data/ from the sharded suite, including PROJ-431
-   BayInventory tests and PROJ-436 container tests. PROJ-438 will modify
-   every entity whose canonical ratchets live in that directory — do
-   not proceed past Phase 0 with this gap open unless the collection
-   fix proves materially riskier than expected (then fall back to a
-   documented supplemental direct-run matrix; record why in
-   decisions.md).
+4. **pytest.ini collection gap — already corrected.** The previously
+   flagged issue (`norecursedirs = ... data ...` hiding ~1575 tests
+   under `tests/unit/strategy/data/`) has been fixed: `pytest.ini`
+   line 6 no longer lists `data`, so the top-level exclusion is the
+   only one in effect and the strategy `data/` ratchets are collected
+   by the sharded suite. D1 is effectively settled in option (a) on
+   disk. Phase 0 should: (i) confirm `pytest.ini` still matches that
+   shape, (ii) re-run the sharded suite to verify the
+   `tests/unit/strategy/data/` tests are visible, (iii) record the
+   confirmation in `decisions.md`. No code change required unless the
+   audit reveals regression.
 5. Author detailed subtask lists for phases 1, 2, 3 before starting
    them. Phases 1–8 currently have stub checklists.
 
@@ -149,23 +192,32 @@ Phase 0 has these load-bearing tasks (see phase_0_checklist.md):
 
 ## Verification gate per phase
 - `python Tools/test_sharded/test_sharded.py` MUST be green at every
-  phase boundary AFTER Phase 0's pytest.ini fix lands.
-- Before Phase 0 fix lands: also run targeted direct-path commands for
-  affected tests/unit/strategy/data/ subtrees and record them in the
-  phase checklist.
+  phase boundary. The pytest.ini collection fix is already in place,
+  so the sharded suite alone is the canonical gate — no supplemental
+  direct-run matrix is required.
 - Update plan.md "Current State" and run
   `python Projects/scripts/validate_phase.py PROJ-438 <phase>` before
   stopping work in a session.
+- Before starting Phase 3 or Phase 8, run `git pull origin main` and
+  re-check `Projects/active_projects/PROJ-436/phase_state.json` to
+  confirm the dependencies above have landed.
 
 ## First action when you start
 Run: `python Projects/scripts/current_task.py PROJ-438`
 This will point at the active phase. If it says Phase 0, open
-phase_0_checklist.md and work the tasks in order. Stop and surface to
-the user before Phase 1 if any of these are true:
-- PROJ-436 has not landed through Phase 9.
-- PROJ-437 has not landed.
+phase_0_checklist.md and work the tasks in order. Phases 0–2 may run
+without PROJ-436 Phases 8–11 or PROJ-437 being merged.
+
+Stop and surface to the user before starting **Phase 3** if either is
+true:
+- PROJ-436 Phase 9 (`_CarriedItemsProxy` deletion) has not landed on
+  `main` in this checkout.
 - Phase 0 audit reveals the verified seams above have shifted in ways
   that invalidate the planning assumptions.
+
+Stop and surface before starting **Phase 8** if PROJ-436 Phase 10
+(docs sync) has not landed yet — otherwise you will be writing into
+files the other machine is about to rewrite.
 
 ## End-of-project workflow
 Per CLAUDE.md "Consult at end of every project" feedback memory:

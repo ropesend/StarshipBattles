@@ -15,14 +15,13 @@ def _drop_pod(name="Colony Pod", mass=500.0):
 
 
 def _make_ship(num_pods=1):
-    """PROJ-431 Phase 1d: ship stub with typed ``bay_inventory.pods``
-    mirroring the legacy ``carried_items`` list so validator pod counts
-    work against the typed substrate while legacy assertions on
-    ``carried_items`` remain meaningful.
+    """PROJ-436 Phase 9: ship stub with typed ``bay_inventory.pods``.
+
+    The legacy ``carried_items`` mirror is gone — the validator reads
+    the typed pods slot directly since PROJ-431 Phase 1d.
     """
     ship = MagicMock()
     pods_data = [_drop_pod() for _ in range(num_pods)]
-    ship.carried_items = pods_data
     ship.bay_inventory = BayInventory(
         bay=[],
         pods=[
@@ -124,9 +123,6 @@ class TestMultiPodChainValidation:
         assert ColonizeValidator.count_drop_pods(fleet) == 2
 
         # Simulate first colonization: remove 1 pod and 1 order.
-        # PROJ-431 Phase 1d: validator reads the typed pods slot, so
-        # mutate that alongside the legacy carried_items mirror.
-        ship.carried_items.pop(0)
         ship.bay_inventory = BayInventory(
             bay=list(ship.bay_inventory.bay), pods=ship.bay_inventory.pods[1:]
         )
@@ -137,7 +133,6 @@ class TestMultiPodChainValidation:
         assert ColonizeValidator.count_committed_colonize_orders(fleet) == 1
 
         # After second colonization: 0 pods, 0 orders
-        ship.carried_items.pop(0)
         ship.bay_inventory = BayInventory(
             bay=list(ship.bay_inventory.bay), pods=ship.bay_inventory.pods[1:]
         )

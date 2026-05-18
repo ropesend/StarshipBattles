@@ -1,14 +1,13 @@
-"""Tests for drop pod transfer between staging yard and ship carried_items.
+"""Tests for drop pod transfer between staging yard and ship bay_inventory.
 
-Phase 3: Pods are transferred via the TRANSFER order with cargo_type='drop_pod'.
+Pods are transferred via the TRANSFER order with cargo_type='drop_pod':
 Load: planet.staging_yard -> ship.bay_inventory.pods
 Unload: ship.bay_inventory.pods -> planet.staging_yard
 
-PROJ-431 Phase 1d: the ``_make_ship`` helper now mirrors the typed
-:class:`BayInventory` substrate the dispatch branches consume. It
-projects ``carried_items`` into a typed view at construction time and
-on every ``set_bay_inventory(...)`` write-through, so legacy assertions
-on ``ship.carried_items`` keep working.
+PROJ-436 Phase 9: the ``_make_ship`` helper now constructs the typed
+:class:`BayInventory` directly from a list of pod dicts. The legacy
+``carried_items`` mirror is gone — assertions read the typed
+``bay_inventory.pods`` slot.
 """
 from unittest.mock import MagicMock, patch
 from game.strategy.data.bay_inventory import BayInventory, DropPod
@@ -61,13 +60,13 @@ def _make_planet(staging_items=None):
 
 def _make_ship(carried_items=None, pod_capacity=2000.0):
     ship = MagicMock()
-    ship.carried_items = list(carried_items or [])
-    ship.bay_inventory = _bi_from_carried(ship.carried_items)
+    seed = list(carried_items or [])
+    ship.bay_inventory = _bi_from_carried(seed)
 
     # PROJ-425 Phase 6: pod-storage helpers live on ``_cargo_mgr``,
     # not on ``ShipInstance`` directly.
     def _get_pod_storage_used() -> float:
-        return sum(i.get('mass', 0.0) for i in ship.carried_items)
+        return sum(p.mass for p in ship.bay_inventory.pods)
 
     def _can_carry_pod(mass: float) -> bool:
         return (
@@ -83,17 +82,6 @@ def _make_ship(carried_items=None, pod_capacity=2000.0):
 
     def _set_bay_inventory(bi: BayInventory) -> None:
         ship.bay_inventory = bi
-        ship.carried_items = []
-        for cv in bi.bay:
-            ship.carried_items.append(cv.to_dict())
-        for p in bi.pods:
-            entry = {
-                "design_id": p.design_id,
-                "design_data": p.design_data,
-                "mass": p.mass,
-            }
-            entry.update(p.payload)
-            ship.carried_items.append(entry)
 
     ship.set_bay_inventory = _set_bay_inventory
     return ship
@@ -121,7 +109,7 @@ class TestLoadPodFromStagingYard:
         loaded = proc._dispatch_drop_pod_load(fleet, planet, amount=1)
 
         assert loaded == 1
-        assert len(ship.carried_items) == 1
+        assert len(ship.bay_inventory.pods) == 1
         assert len(planet.staging_yard) == 0
 
     def test_load_all_pods(self):
@@ -133,7 +121,7 @@ class TestLoadPodFromStagingYard:
         loaded = proc._dispatch_drop_pod_load(fleet, planet, amount=0)
 
         assert loaded == 3
-        assert len(ship.carried_items) == 3
+        assert len(ship.bay_inventory.pods) == 3
         assert len(planet.staging_yard) == 0
 
     def test_load_respects_ship_capacity(self):
@@ -145,7 +133,7 @@ class TestLoadPodFromStagingYard:
         loaded = proc._dispatch_drop_pod_load(fleet, planet, amount=0)
 
         assert loaded == 2
-        assert len(ship.carried_items) == 2
+        assert len(ship.bay_inventory.pods) == 2
         assert len(planet.staging_yard) == 1
 
     def test_load_by_name(self):
@@ -160,7 +148,7 @@ class TestLoadPodFromStagingYard:
         loaded = proc._dispatch_drop_pod_load(fleet, planet, pod_name="Small Pod", amount=1)
 
         assert loaded == 1
-        assert ship.carried_items[0]['name'] == "Small Pod"
+        assert ship.bay_inventory.pods[0].payload['name'] == "Small Pod"
         assert len(planet.staging_yard) == 1
         assert planet.staging_yard[0]['name'] == "Large Pod"
 
@@ -185,8 +173,8 @@ class TestLoadPodFromStagingYard:
         loaded = proc._dispatch_drop_pod_load(fleet, planet, amount=0)
 
         assert loaded == 3
-        assert len(ship1.carried_items) == 2
-        assert len(ship2.carried_items) == 1
+        assert len(ship1.bay_inventory.pods) == 2
+        assert len(ship2.bay_inventory.pods) == 1
 
 
 class TestUnloadPodToStagingYard:
@@ -202,7 +190,7 @@ class TestUnloadPodToStagingYard:
         unloaded = proc._dispatch_drop_pod_unload(fleet, planet, amount=1)
 
         assert unloaded == 1
-        assert len(ship.carried_items) == 0
+        assert len(ship.bay_inventory.pods) == 0
         assert len(planet.staging_yard) == 1
 
     def test_unload_all_pods(self):
@@ -214,7 +202,7 @@ class TestUnloadPodToStagingYard:
         unloaded = proc._dispatch_drop_pod_unload(fleet, planet, amount=0)
 
         assert unloaded == 2
-        assert len(ship.carried_items) == 0
+        assert len(ship.bay_inventory.pods) == 0
         assert len(planet.staging_yard) == 2
 
     def test_unload_by_name(self):
@@ -229,8 +217,8 @@ class TestUnloadPodToStagingYard:
         unloaded = proc._dispatch_drop_pod_unload(fleet, planet, pod_name="Large Pod", amount=1)
 
         assert unloaded == 1
-        assert len(ship.carried_items) == 1
-        assert ship.carried_items[0]['name'] == "Small Pod"
+        assert len(ship.bay_inventory.pods) == 1
+        assert ship.bay_inventory.pods[0].payload['name'] == "Small Pod"
         assert planet.staging_yard[0]['name'] == "Large Pod"
 
     def test_unload_respects_staging_capacity(self):
@@ -243,5 +231,5 @@ class TestUnloadPodToStagingYard:
         unloaded = proc._dispatch_drop_pod_unload(fleet, planet, amount=0)
 
         assert unloaded == 1
-        assert len(ship.carried_items) == 1
+        assert len(ship.bay_inventory.pods) == 1
         assert len(planet.staging_yard) == 1

@@ -436,8 +436,10 @@ def make_colony_ship_for_planet(planet, owner_id=0, name="Colony Ship", registri
     """
     Create a colony ship that can colonize a specific planet.
 
-    Phase 3: Drop pods are carried items in ship.carried_items.
-    Ship is reusable after colonization.
+    PROJ-436 Phase 9: Drop pods load into ship.bay_inventory.pods as
+    typed DropPod entries (the legacy mixed-shape carried_items list
+    + _CarriedItemsProxy shim are gone). Ship is reusable after
+    colonization.
 
     Args:
         planet: The Planet object to create a colony ship for
@@ -446,8 +448,9 @@ def make_colony_ship_for_planet(planet, owner_id=0, name="Colony Ship", registri
         registries: Optional GameRegistries for DI compliance
 
     Returns:
-        ShipInstance: A colony ship with a drop pod in carried_items
+        ShipInstance: A colony ship with a typed DropPod in bay_inventory.pods
     """
+    from game.strategy.data.bay_inventory import DropPod
     from game.strategy.data.ship_instance import ShipInstance
 
     planet_type_str = planet.planet_type.name
@@ -467,14 +470,15 @@ def make_colony_ship_for_planet(planet, owner_id=0, name="Colony Ship", registri
             }
         },
     )
-    # Load drop pod as carried item
-    ship.carried_items.append({
-        "vehicle_type": "drop_pod",
-        "design_id": f"{planet_type_str.lower()}_drop_pod",
-        "name": f"Drop Pod ({planet_type_str})",
-        "design_data": {"layers": {"CORE": []}},
-        "mass": 500,
-    })
+    ship.bay_inventory.pods.append(DropPod(
+        design_id=f"{planet_type_str.lower()}_drop_pod",
+        design_data={"layers": {"CORE": []}},
+        mass=500.0,
+        payload={
+            "name": f"Drop Pod ({planet_type_str})",
+            "vehicle_type": "drop_pod",
+        },
+    ))
     if registries is not None:
         ship.set_registries(registries)
     return ship

@@ -3,8 +3,7 @@ the Starship Battles repository at `c:\Dev\Starship Battles` on branch
 `main`.
 
 PROJ-437 is the sibling/subproject of PROJ-436 (Unified Storage Substrate
-and Container Unification). PROJ-436 Phase 7 just landed at commit
-`48a6c0983` (sharded suite: 21233/21233 green). That phase deleted the
+and Container Unification). PROJ-436 Phase 7 has landed That phase deleted the
 hardcoded cargo-type whitelist and UI resource-list constants —
 the API surface PROJ-437 Phase 0 was waiting on is now stable.
 PROJ-436 Phases 8–9 are deferred to a separate branch by user

@@ -91,11 +91,12 @@ class _StubCargoMgr:
         self._accepts = accepts
 
     def load_vehicle(self, cv) -> bool:
-        if len(self._carrier.carried_items) >= self._capacity:
+        # PROJ-436 Phase 9: load into the typed BayInventory.bay slot.
+        if len(self._carrier.bay_inventory.bay) >= self._capacity:
             return False
         if cv.vehicle_type not in self._accepts:
             return False
-        self._carrier.carried_items.append(cv.to_dict())
+        self._carrier.bay_inventory.bay.append(cv)
         return True
 
 
@@ -178,9 +179,9 @@ def test_launch_satellites_in_battle_then_all_survive_reboards_all(
     )
     assert summary["reboarded"] == 3
     assert summary["overflowed"] == 0
-    assert len(strategy_carrier.carried_items) == 3
-    for item in strategy_carrier.carried_items:
-        assert item["vehicle_type"] == "satellite"
+    assert len(strategy_carrier.bay_inventory.bay) == 3
+    for item in strategy_carrier.bay_inventory.bay:
+        assert item.vehicle_type == "satellite"
 
 
 def test_launch_satellites_overflow_spills_to_sector_satellite_group(
@@ -280,4 +281,4 @@ def test_launch_satellites_dead_satellites_discarded(fresh_registries):
     assert summary["reboarded"] == 0
     assert summary["overflowed"] == 0
     assert summary["discarded"] == 1
-    assert len(strategy_carrier.carried_items) == 0
+    assert len(strategy_carrier.bay_inventory.bay) == 0
