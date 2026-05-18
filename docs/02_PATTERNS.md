@@ -978,11 +978,16 @@ craft). Reuse `VehicleBayAbility` with a new `vehicle_type` plus an
 storage concept.
 
 Boundary: drop pods and other non-design-backed cargo live in
-`bay_inventory.pods` as typed `DropPod` entries. Other resource and
-population cargo lives in `bay_inventory.resources` /
-`bay_inventory.population`. The four-slot `BayInventory` is the
-canonical write surface; `VehicleBay` capacity gates only the `bay`
-slot's `CarriedVehicle` items.
+`bay_inventory.pods` as typed `DropPod` entries. The
+`bay_inventory.resources` / `bay_inventory.population` slots **exist**
+(PROJ-436 Phase 2 widening) but production fleet-cargo today still
+routes through the Phase 3 `ShipCargoManager` / `_cargo_contents`
+substrate exposed via `Fleet.get_cargo_resource` /
+`consume_cargo_resource`; migration into the typed BayInventory
+slots is intentionally deferred (no production caller needs it
+today). The four-slot `BayInventory` is the canonical
+**typed** surface for `bay` and `pods`; `VehicleBay` capacity gates
+only the `bay` slot's `CarriedVehicle` items.
 
 ## 39. Typed-Sidecar Extensions on Frozen DTOs
 
@@ -1227,21 +1232,27 @@ Boundary: launch / recovery / life support / production stay
 in `BayInventory.bay` (a `list[CarriedVehicle]` — see Pattern #38);
 `DropPod` items live in `BayInventory.pods` (a `list[DropPod]`);
 `Planet.stockpile` is a `dict[str, float]` over the `IStockpileHolder`
-protocol; fleet cargo aggregates per-ship `BayInventory.resources`
-slices through `Fleet.get_cargo_resource` / `consume_cargo_resource`.
-`Container` and `Container.accepts()` are the unified projection /
-policy seam over those typed substrates, not a wholesale replacement
-of them — `BayInventory.container_view()` returns a snapshot, not a
-mutable view. Deployed groups (`FighterWing`,
+protocol; fleet cargo aggregates per-ship `_cargo_contents`
+substrate through `Fleet.get_cargo_resource` /
+`consume_cargo_resource` (the `BayInventory.resources` slot exists
+from Phase 2 widening but production cargo has not been migrated
+into it). `Container` and `Container.accepts()` are the unified
+projection / policy seam over those typed substrates, not a
+wholesale replacement of them — `BayInventory.container_view()`
+returns a snapshot, not a mutable view. Deployed groups (`FighterWing`,
 `SatelliteConstellation`, `MineGroup` on `empire.deployed_groups`)
 are not in any container — Container handles only pre-deployment /
 post-recovery storage. See Pattern #37 for the typed `DeployedGroup`
 family.
 
-> **Last verified:** 2026-05-18 — PROJ-436 Phase 10 doc refresh.
+> **Last verified:** 2026-05-18 — PROJ-436 Phase 10 doc refresh +
+> Phase 11 consult disposition.
 > Container substrate landed in Phase 0; `BayInventory` widened to
 > four slots in Phase 2; `TransferValidator.VALID_CARGO_TYPES`
-> deleted in Phase 7 with `Container.accepts()` taking over;
+> deleted in Phase 7 — replaced by `ResourceCatalog.has()` + three
+> categorical sentinels (`Container.accepts()` is the analogous
+> seam for container-backed write paths but is NOT called by the
+> current transfer validator);
 > `ProductionEngine.context_type` storage-dispatch deleted in
 > Phase 8 via the `IProductionResourceSource` Protocol;
 > `_CarriedItemsProxy` deleted in Phase 9.
