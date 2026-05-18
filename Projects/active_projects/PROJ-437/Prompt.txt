@@ -1,0 +1,317 @@
+You are starting execution of PROJ-437 — Container-Aware Transfer UI — in
+the Starship Battles repository at `c:\Dev\Starship Battles` on branch
+`main`.
+
+PROJ-437 is the sibling/subproject of PROJ-436 (Unified Storage Substrate
+and Container Unification). PROJ-436 Phase 7 just landed at commit
+`48a6c0983` (sharded suite: 21233/21233 green). That phase deleted the
+hardcoded cargo-type whitelist and UI resource-list constants —
+the API surface PROJ-437 Phase 0 was waiting on is now stable.
+PROJ-436 Phases 8–9 are deferred to a separate branch by user
+direction; do NOT extend PROJ-437 into PROJ-436 territory.
+
+---
+
+# Read first (in this exact order, end-to-end)
+
+1.  `CLAUDE.md` — strict TDD, no shims, no save migration, 500 LOC
+    ceiling, modern PEP 604 type syntax, broad-except justification
+    rule, layer rules.
+2.  `docs/01_ARCHITECTURE.md` — pay attention to §"Strategy" + §"UI"
+    + §"Cross-Layer Communication".
+3.  `docs/03_CONVENTIONS.md` — especially §"MVVM and UI Decomposition
+    Names", §"Test Conventions", §"Code Quality", §"No Hardcoded
+    Type Lists".
+4.  `docs/06_UI_STYLE_GUIDE.md` — UI patterns + minimum 2560×1600 /
+    optimized 3840×2160 target.
+5.  `Projects/active_projects/PROJ-437/plan.md` — your project plan
+    (6 phases: 0 read-API+survey, 1 source/dest browsing, 2 slider
+    + mass preview, 3 mixed-content display, 4 final RESOURCE_TYPES
+    cutover, 5 Codex consult).
+6.  `Projects/active_projects/PROJ-437/decisions.md` — every entry.
+    Note the three implementer-choice open decisions (OD1
+    source/dest enumeration scope, OD2 cross-kind transfer in one
+    operation, OD3 mass-preview granularity) with documented
+    defaults (a/a/a). Confirm or change each at Phase 0 with
+    rationale.
+7.  `Projects/active_projects/PROJ-437/design.md` — target view-model
+    shape and validation contract.
+8.  `Projects/active_projects/PROJ-437/manifest.md` — file touch map
+    per phase.
+9.  `Projects/active_projects/PROJ-437/phase_state.json` and
+    `phase_0_checklist.md` through `phase_5_checklist.md`.
+10. `Projects/active_projects/PROJ-436/plan.md` and `decisions.md` —
+    you depend on the API contracts established by PROJ-436. Read
+    the Phase 0/1/2/3/4/5/6/7 decision rows.
+11. `Projects/active_projects/PROJ-431/decisions.md` rows from
+    2026-05-17 — the canonical sub-phase migration template
+    (1a–1f). Phases 2/3 of PROJ-437 should mirror this when
+    blast radius warrants it; smaller phases may collapse to a
+    single cutover commit (PROJ-436 Phases 4f/5f/6b/7 pattern).
+12. The PROJ-436 cutover commits `3db37e0fa..48a6c0983` — read the
+    commit messages, they document the substrate-then-sweep-then-
+    delete pattern you should reuse.
+
+---
+
+# The stable API surfaces you build on (post-PROJ-436 Phase 7)
+
+- `game/strategy/data/container.py::Container` — the unified
+  storage abstraction. Three internal slices: resources (dict[str,
+  float]), items (list[ItemRef]), population (dict[str, int]).
+  Mass-cap accounting. Public ops: `add(containable, quantity) ->
+  AddResult`, `remove(...) -> RemoveResult`, `accepts(containable)
+  -> bool`, `contents() -> Iterable[ContainerEntry]`,
+  `mass_used` / `mass_remaining`, `to_dict` / `from_dict`.
+- `game/strategy/data/containable.py` — `ContainableKind`
+  (RESOURCE / ITEM / POPULATION), `ResourceContainable`,
+  `ItemContainable`, `PopulationContainable`, `ItemRef`. Resource
+  mass resolves via Core `ResourceCatalog`. Population default
+  0.1 tons / individual per user directive.
+- `game/strategy/data/bay_inventory.py::BayInventory` — four-slot
+  per-ship inventory (bay, pods, resources, population).
+  `container_view(capacity_mass, policy)` returns a snapshot
+  Container projection for UI consumption.
+- `game/strategy/data/ship_instance.py` —
+  `cargo_container()` and `consumable_container()` snapshot views;
+  manager-API canonical writes via `ship._cargo_mgr` /
+  `ship._resource_mgr` (`get_all_levels` / `set_level` /
+  `replace_levels` / `get_current_resource` /
+  `get_all_cargo` / `set_cargo` / `total_cargo_units` /
+  `has_cargo`).
+- `game/strategy/data/planet.py` — `stockpile` /
+  `max_stockpile` / `staging_yard` are `@property` over private
+  `_-prefixed` fields. Writes route through `IPlanetMutator` or
+  Planet's own helpers (`add_to_stockpile` /
+  `consume_from_stockpile` / `add_to_staging_yard` etc.).
+- `game/strategy/data/empire.py::Empire.resource_pool` — pure
+  aggregation over `self.colonies[*].stockpile`. NOT a fleet pool.
+  No setter.
+- `game/core/resources.py::ResourceCatalog` — Core-layer single
+  source of truth. `all_ids()` / `all_definitions()` /
+  `get(rid)` / `has(rid)` / `get_mass_per_unit(rid)`. The
+  catalog is loaded once at app start; UI consumers can
+  freely call `ResourceCatalog.from_json()` (existing
+  convention used at 16+ sites).
+- `game/simulation/components/abilities/container.py::ContainerAbility`
+  — the unified storage ability declared on components
+  via `data/components.json` shape
+  `{capacity_mass, allowed_kinds, allowed_type_ids}`. Parity
+  helpers `container_view_from_resource_storage()`,
+  `container_view_from_cargo_storage()`,
+  `container_view_from_vehicle_bay()` compile legacy abilities
+  into the unified shape.
+- `game/strategy/validation/transfer_validator.py::TransferValidator`
+  — post-Phase-7 validator: `_is_known_cargo_type(cargo_type)`
+  consults `ResourceCatalog.has()` + a `_CATEGORICAL_CARGO_TYPES`
+  frozenset of `{"passengers", "drop_pod", "vehicle"}`.
+
+---
+
+# Current transfer UI surface (Phase 0 audit target)
+
+You will replace / re-plumb these files:
+
+- `game/ui/screens/transfer_view_model.py` — `TransferViewModel`
+  owning `available_sources` / `available_targets`,
+  `current_source` / `current_target`,
+  `pending_transfers: Dict[cargo_key, signed_amount]` with
+  `MAX_LOAD` / `MAX_DROP` sentinels, `row_data: List[dict]`,
+  `filter_empty`, `all_pod_names`. **Post-Phase-7 reality:** the
+  hardcoded `RESOURCE_TYPES` and `RESOURCE_DISPLAY_NAMES`
+  constants are GONE; the view model iterates
+  `_iter_resource_definitions()` (lazy
+  `ResourceCatalog.from_json().all_definitions()`) and uses
+  `ResourceDefinition.name` for display labels. Insertion
+  order from `data/resources.json` is preserved.
+- `game/ui/screens/transfer_controller.py` — event handler
+  wiring; dispatches arrow clicks, Max clicks, confirm.
+- `game/ui/screens/transfer_dialog.py` — pygame_gui dialog
+  shell. The `RESOURCE_TYPES` / `RESOURCE_DISPLAY_NAMES`
+  re-export at lines ~39-43 was deleted in Phase 7.
+- `game/ui/screens/transfer_grid_renderer.py` — renders grid
+  rows.
+- `game/ui/screens/strategy_windows/transfer_dialogs.py` —
+  alternate entry point in the strategy-window family. Easy
+  to forget — Phase 3 explicitly mirrors changes here.
+- `game/ui/screens/fleet_data_source.py` — provides
+  source/destination options.
+
+---
+
+# Heads-up: UI label change you may want to revisit
+
+In PROJ-436 Phase 7 the user accepted the default that
+`ResourceDefinition.name` from `data/resources.json` becomes the
+single source of truth for UI labels. This changed the ammo cargo
+row from "Ammo" to **"Ammunition"** because the JSON name is
+"Ammunition". All other 7 resource labels (Metals / Organics /
+Vapors / Radioactives / Exotics / Fuel / Energy) are unchanged.
+If the user wants "Ammo" back, that's a one-line edit to
+`data/resources.json`. Do not silently revert it.
+
+---
+
+# Pre-existing project-wide pytest config issue (NOT YOURS TO FIX)
+
+`pytest.ini` has `norecursedirs = ... data ...`. The `data`
+token matches any directory named `data` — including
+`tests/unit/strategy/data/` — so 1575 tests there are hidden
+from the canonical sharded suite. This is a pre-existing
+issue (predates PROJ-436). Your tests under
+`tests/unit/strategy/data/` will not move the sharded count,
+but that is FINE — the sharded gate still catches regressions
+outside `data/`. Use sharded as the canonical gate. Do NOT
+attempt to fix `norecursedirs`. If you want sanity-check on
+your own data/-directory tests, run
+`python -m pytest tests/unit/strategy/data/ -q -n 4`
+directly; that is acceptable.
+
+---
+
+# Sub-phase template — when to use sub-phases vs single-cutover
+
+Mirror the PROJ-436 pattern:
+
+- If a phase has narrow scope (Phase 0 read-only research, Phase 4
+  small UI sweep) — collapse to a single commit.
+- If a phase has wide blast radius (Phase 1 source/dest browsing
+  potentially touches view model + controller + fleet_data_source
+  + multiple test files; Phase 3 mixed-content display) — use the
+  PROJ-431 sub-phase model (Xa substrate / Xb-Xe migration /
+  Xf cutover). Audit blast radius FIRST.
+
+Direction rule: when changing a contract, land the new shape as a
+projection over the old; migrate callers; delete the old in the
+final cutover commit of that phase.
+
+---
+
+# Hard rules
+
+1.  **Strict TDD.** Write or identify the failing test, run it to
+    confirm failure, then implement. No backfilling tests after
+    code.
+2.  **Every commit functional.** `python Tools/test_sharded/test_sharded.py`
+    green at every commit boundary. Sharded suite is the canonical
+    gate.
+3.  **No worktrees, work on `main`.** Per user standing preference.
+4.  **No save migration shims.** Old saves are disposable.
+5.  **Commit message convention:** `PROJ-437 Phase NX: <one-line>`
+    + body + `Co-Authored-By: Claude Opus 4.7 (1M context)
+    <noreply@anthropic.com>`. Use **explicit file paths** in
+    `git add` — there are dirty files from another project
+    (PROJ-438) in the tree that are NOT yours. NEVER `git add -A`.
+6.  **Update artifacts each sub-phase:** `Projects/active_projects/PROJ-437/plan.md`
+    Quick Status + Current State, `decisions.md` (new dated row
+    per substantive choice), `phase_state.json` (status +
+    planned_files + phase_head_sha for the active phase).
+7.  **End-of-project Codex consult is Phase 5 + ad-hoc per-phase
+    consults if scope warrants.** Use the `claude-consult` skill,
+    mode `pre-final-check`, `--allow-tests`. Verify every finding
+    against current code (grep file:line — consults occasionally
+    hallucinate refs). Verified findings → remediation sub-phase
+    (RED→GREEN). Unverified / out-of-scope → document in
+    `decisions.md`.
+8.  **Do not use `TodoWrite`** (your parent agent tracks at the
+    phase level if you are spawned as a subagent; otherwise you
+    own progress tracking via plan.md Quick Status).
+9.  **No fallback paths.** When two ways of doing something exist
+    temporarily during a sweep, the legacy way is durable and the
+    new way is the projection; final cutover deletes legacy. No
+    runtime "if X has Y else Z has Y" branching.
+10. **Layer rule:** UI may import from any layer. View model is
+    pure Python (no pygame); controller is the pygame_gui boundary.
+
+---
+
+# Anti-patterns to avoid
+
+- Don't re-introduce `RESOURCE_TYPES` or `RESOURCE_DISPLAY_NAMES`
+  hardcoded lists. AST guard at
+  `tests/static_guards/test_no_legacy_storage_fields.py` pins
+  their absence.
+- Don't re-introduce `VALID_CARGO_TYPES`. Use
+  `Container.accepts()` + `ResourceCatalog.has()` +
+  `TransferValidator._is_known_cargo_type()`.
+- Don't extend scope to PROJ-436 Phase 8 (`ProductionEngine.context_type`
+  deletion) or Phase 9 (`_CarriedItemsProxy` deletion). User
+  runs those on separate branches later.
+- Don't `git add -A`. Explicit file paths only. There are
+  PROJ-438 dirty files in the tree that are NOT yours.
+- Don't use `claude-discuss-start` for consults — use
+  `claude-consult` (single round-trip).
+- Don't optimize `Empire.resource_pool` caching here (that's a
+  Phase 5 D2 follow-up tracked in PROJ-436 decisions.md).
+- Don't reroute `ProductionEngine.context_type` (that's PROJ-436
+  Phase 8 territory).
+- Don't touch `PlanetaryFacility.consumable_levels` (Phase 0 D1
+  default kept it as internal state).
+- Don't touch any `tests/unit/strategy/data/` test files unless
+  your own work creates them. Pre-existing 65 failing tests there
+  are PROJ-431-flagged + are out-of-scope.
+
+---
+
+# Phase 0 — what to actually deliver
+
+Phase 0 is research-only. Produce:
+
+- A migration map at
+  `Projects/active_projects/PROJ-437/findings/transfer_ui_migration_map.md`
+  documenting, per source file:
+  - current legacy references (file:line)
+  - target Container / ResourceCatalog API call
+  - which Phase (1, 2, 3, or 4) migrates it
+  - test coverage that locks in current behavior
+- Resolution of OD1 / OD2 / OD3 (defaults already in `decisions.md`;
+  audit may move you off them — if so, document why).
+- A reasoned plan for whether Phase 1 collapses to a single
+  commit or needs sub-phases.
+- No production-code changes in Phase 0.
+
+---
+
+# Report back format (every phase boundary)
+
+≤300 words:
+- Sub-phase commits landed (SHA + one-line)
+- Final sharded test count
+- Codex consult (if run): response file path, summary of
+  findings, what was remediated, what was rejected / deferred.
+- Anything that exceeded scope or needs user (Ross) to decide,
+  ESPECIALLY UI label / behavior changes the user might want to
+  see before they ship.
+
+---
+
+# Final Phase 5 — end-of-project Codex consult
+
+After Phase 4 cutover and sharded green:
+
+1.  `claude-consult` skill with Codex, mode `pre-final-check`,
+    `--allow-tests`. Frame: "Review PROJ-437 — Container-Aware
+    Transfer UI built atop PROJ-436's unified Container API.
+    Verify: (a) source/dest enumeration covers every entity kind
+    callers expect (planet / fleet / docked ship);
+    (b) pending-transfer math correctly composes across mixed
+    kinds (resource + item + population in one staged operation
+    if OD2 default kept); (c) mass-remaining preview math is
+    correct for all three kinds; (d) Container.accepts() and
+    ResourceCatalog gating cover all validation paths;
+    (e) `MAX_LOAD` / `MAX_DROP` sentinels preserved;
+    (f) `strategy_windows/transfer_dialogs.py` alternate entry
+    in sync with the main path; (g) `RESOURCE_TYPES` /
+    `RESOURCE_DISPLAY_NAMES` truly gone with AST guard pinning
+    absence; (h) UI label set matches `data/resources.json`
+    name fields end-to-end; (i) any seams missed."
+2.  Read response in full.
+3.  Verify findings against code. Consults sometimes
+    hallucinate file:line refs — always grep to confirm.
+4.  Verified findings → remediation sub-phase (Phase 5 5g, 5h, …
+    or extend Phase 4 if scope-appropriate).
+5.  Unverified / out-of-scope → document in `decisions.md`.
+6.  Mark PROJ-437 complete only after consult + verified
+    remediation.
+
+Go.
