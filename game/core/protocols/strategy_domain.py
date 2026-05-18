@@ -190,16 +190,18 @@ class IShipInstance(Protocol):
 
         PROJ-436 Phase 3f: the ``cargo_contents`` dataclass field on
         ``ShipInstance`` was deleted; the public name survives as a
-        backward-compatible ``@property`` over the renamed private
-        dict. Production **writers** route through the cargo manager
-        API (``ship._cargo_mgr.set_cargo`` / ``get_all_cargo`` /
-        ``total_cargo_units`` / ``has_cargo``) landed in Phase 3b —
-        this property is the **read** surface for callers that want
-        the raw dict.
+        backward-compatible dict view over the renamed private dict.
+        A concrete-class setter still exists (and is exercised by the
+        legacy-kwarg constructor wrapper at
+        ``ship_instance.py``), so this property is **not** read-only
+        in absolute terms.
 
-        The post-Phase-3 manager-API path is the canonical way to
-        mutate cargo; do **not** introduce new write-side callers
-        that mutate the returned dict in place.
+        Production code should **prefer** the cargo manager API for
+        writes (``ship._cargo_mgr.set_cargo`` / ``get_all_cargo`` /
+        ``total_cargo_units`` / ``has_cargo``, the manager surface
+        landed in Phase 3b) over mutating the returned dict in place.
+        The protocol declares the public read surface; concrete-class
+        write paths are left to the implementer.
         """
         ...
 
