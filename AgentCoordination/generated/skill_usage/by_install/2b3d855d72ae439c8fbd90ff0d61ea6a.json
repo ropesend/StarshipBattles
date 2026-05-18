@@ -16,12 +16,26 @@
       "count": 1,
       "last_used": "2026-05-03T19:11:42Z"
     },
+    "claude-di-log": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-18T16:54:12Z"
+    },
     "claude-discuss-start": {
       "agents": {
         "claude": 7
       },
       "count": 7,
       "last_used": "2026-05-03T16:50:44Z"
+    },
+    "claude-proj-continue": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-18T17:05:21Z"
     },
     "claude-proj-from-test-review": {
       "agents": {
