@@ -1,0 +1,14 @@
+[
+  {
+    "session_id": "6e3f2044-007f-4f6f-977a-aa078d6fd417",
+    "timestamp": "2026-05-18T07:04:13.940392",
+    "records": [
+      {
+        "name": "action1",
+        "duration_ms": 100.0,
+        "timestamp": 1779113053.940288,
+        "metadata": {}
+      }
+    ]
+  }
+]

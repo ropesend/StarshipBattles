@@ -1,6 +1,6 @@
 # Resource System Compact Reference
 
-> **Last verified:** 2026-05-08 - Compared against `docs/systems/resource_system.md`, `AgentCoordination/Scratchpad/reports/systems_resource_system_ALT_compact.md`, current resource data, and resource/production/transfer source paths.
+> **Last verified:** 2026-05-18 — PROJ-436 Phase 10 doc refresh: `TransferValidator.VALID_CARGO_TYPES` deletion (Phase 7), `ProductionEngine.context_type` deletion via `IProductionResourceSource` Protocol (Phase 8), `_CarriedItemsProxy` + `ShipInstance.carried_items` deletion (Phase 9). Drop-pod shape now describes the typed `DropPod` dataclass. Transferable-resource recipe simplified — no validator update needed when adding a resource to `data/resources.json`.
 
 Source baseline: `docs/systems/resource_system.md`
 
@@ -197,8 +197,12 @@ central cost path.
   and simple facility structures.
 - Production queue items must carry `total_cost` plus tracking fields such as
   `resources_consumed`; items missing `total_cost` are skipped with a warning.
-- `ProductionEngine._check_affordability()` reads from `planet.stockpile` when
-  `context_type == "planet"` and from fleet cargo when `context_type == "fleet"`.
+- `ProductionEngine._check_affordability()` reads through the unified
+  `IProductionResourceSource` Protocol (PROJ-436 Phase 8) — both `Planet`
+  and `Fleet` satisfy the protocol via `production_has_resources` /
+  `production_get_resource` / `production_consume_resource` delegators
+  (`planet.py` over the stockpile API; `fleet.py` over the cargo API).
+  The legacy `context_type`-string dispatch is gone.
 
 ## Transfers
 
@@ -221,12 +225,14 @@ Execution contracts:
 - Passenger and drop-pod transfers use the same order family but separate branch
   methods.
 
-Warning: `TransferValidator.VALID_CARGO_TYPES` currently hardcodes the default
-resources plus `passengers` and `drop_pod`. A new resource can work in catalog,
-planet generation, ship stats, movement, warp, and production without Python
-changes, but making it transferable through the current transfer validator
-requires either updating that whitelist or replacing it with catalog-backed
-validation.
+PROJ-436 Phase 7 deleted `TransferValidator.VALID_CARGO_TYPES`. The new
+contract: `_is_known_cargo_type(cargo_type)` returns True iff
+`cargo_type` is one of three categorical sentinels (`passengers`,
+`drop_pod`, `vehicle`) — which route to distinct dispatch branches in
+`transfer_branches.py` and intentionally live outside
+`data/resources.json` — OR `ResourceCatalog.has(cargo_type)` returns
+True. Adding a new resource to `data/resources.json` makes it
+transferable automatically; no validator update required.
 
 ## Operational Consumption
 
@@ -279,25 +285,31 @@ design data.
 - Staging capacity is mass-limited by `StagingYard` abilities and
   `planet.max_staging_mass`.
 - Transfer uses `cargo_type == "drop_pod"`: load from staging yard into
-  `ship.carried_items`; unload from `ship.carried_items` back to staging yard.
-- Colonization requires a carried item with `vehicle_type == "drop_pod"`.
-  `ColonizeHandler._deploy_drop_pod()` removes the carried item, creates a
+  `ship.bay_inventory.pods` (typed `DropPod` entries); unload from
+  `ship.bay_inventory.pods` back to staging yard.
+- Colonization requires a `DropPod` in `ship.bay_inventory.pods`.
+  `ColonizeHandler._deploy_drop_pod()` removes the typed pod, creates a
   `PlanetaryFacility` from its `design_data`, and seeds any
   `design_data.initial_stockpile` into the new colony. The colony ship remains
   in the fleet.
 
-Carried item shape:
+Typed `DropPod` shape (`game/strategy/data/bay_inventory.py`):
 
 ```python
-{
-    "design_id": "...",
-    "name": "...",
-    "vehicle_type": "drop_pod",
-    "design_data": {...},
-    "mass": ...,
-    "owner_id": ...
-}
+@dataclass
+class DropPod:
+    design_id: str
+    design_data: Dict[str, Any]
+    mass: float = 0.0
+    payload: Dict[str, Any] = field(default_factory=dict)
+    # payload preserves the legacy `name` / `vehicle_type` keys
+    # for callers that round-trip through it
 ```
+
+PROJ-436 Phase 9 deleted the legacy `_CarriedItemsProxy` shim and
+the `ShipInstance.carried_items` property/setter; the typed
+`BayInventory` (`bay`, `pods`, `resources`, `population` slots) is
+the canonical write surface.
 
 ## Extension Recipes
 
@@ -332,8 +344,10 @@ Add a construction material:
 Add a transferable resource:
 
 1. Complete the catalog/storage/cargo setup above.
-2. Update or replace `TransferValidator.VALID_CARGO_TYPES` so the new ID passes
-   validation.
+2. **No validator change required.** `TransferValidator._is_known_cargo_type`
+   delegates to `ResourceCatalog.has()` for any non-sentinel cargo
+   type — adding the resource to `data/resources.json` (step 1) is
+   enough.
 3. Add transfer coverage for planet->fleet, fleet->planet, and any fleet->fleet
    behavior the new resource needs.
 
