@@ -206,7 +206,7 @@ class ShipStatsCalculator:
         # counter that VehicleLaunch / VehicleStorage feed). Note: there
         # is intentionally no ``ship.bay_current_mass`` here — current
         # bay usage is a strategy-layer runtime value (depends on what's
-        # in ``ShipInstance.carried_items``) and is exposed via
+        # in ``ShipInstance.bay_inventory.bay``) and is exposed via
         # ``ShipInstance.bay_current_mass`` / ``ShipCargoManager
         # .get_vehicle_bay_capacity()``. See PROJ-FMS-A audit fix pass.
         ship.bay_capacity_mass = 0.0

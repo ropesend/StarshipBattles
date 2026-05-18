@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Optional
 
 import pygame
 from game.core.json_utils import load_json
@@ -12,7 +11,7 @@ from game.core.error_codes import ErrorCode
 
 logger = logging.getLogger(__name__)
 
-_default_asset_manager: Optional['AssetManager'] = None
+_default_asset_manager: AssetManager | None = None
 
 
 class AssetManager:
@@ -28,7 +27,7 @@ class AssetManager:
         - Use clear() to reset caches but preserve instance
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.assets = {}  # Cache: {key: Surface} or {key: [Surfaces]}
         self.manifest = {}
         self.manifest_path = Paths.ASSET_MANIFEST_FILE
@@ -51,7 +50,7 @@ class AssetManager:
         self.manifest = {}
         self.missing_texture = None 
         
-    def load_manifest(self, path=None) -> None:
+    def load_manifest(self, path: str | None = None) -> None:
         """Load the asset manifest JSON."""
         if path:
             self.manifest_path = path
@@ -67,7 +66,7 @@ class AssetManager:
         else:
             logger.error(f"Failed to load asset manifest from {self.manifest_path}")
 
-    def load_image(self, category, key) -> pygame.Surface:
+    def load_image(self, category: str, key: str) -> pygame.Surface:
         """Load a single image from the manifest. Returns cached copy if available."""
         # Check cache
         cache_key = f"{category}.{key}"
@@ -92,7 +91,7 @@ class AssetManager:
             logger.error(f"Failed to load image {file_path} (pygame error): {e}")
             return self.get_missing_texture()
 
-    def load_group(self, category, group_key) -> list[pygame.Surface]:
+    def load_group(self, category: str, group_key: str) -> list[pygame.Surface]:
         """Load a group of images (e.g., planet variations). Returns cached copy if available."""
         cache_key = f"{category}.{group_key}"
         if cache_key in self.assets:
@@ -118,7 +117,7 @@ class AssetManager:
         self.assets[cache_key] = images
         return images
         
-    def get_random_from_group(self, category, group_key, seed_id=None) -> pygame.Surface:
+    def get_random_from_group(self, category: str, group_key: str, seed_id: int | None = None) -> pygame.Surface:
         """Get a specific item from a group deterministically using an ID."""
         group = self.load_group(category, group_key)
         if not group:
@@ -194,7 +193,7 @@ class AssetManager:
         return type_assets.get(star_type_name, 'yellow')
 
 
-    def load_external_image(self, path) -> pygame.Surface:
+    def load_external_image(self, path: str) -> pygame.Surface:
         """Load an image from an absolute or relative path, using the cache."""
         if not path:
              return self.get_missing_texture()
@@ -337,7 +336,7 @@ class AssetManager:
         logger.error(f"Could not load planet image {image_filename} at any resolution")
         return self.get_missing_texture()
 
-    def _load_image(self, cache_key, path) -> pygame.Surface:
+    def _load_image(self, cache_key: str, path: str) -> pygame.Surface:
         """Internal load helper."""
         if not os.path.exists(path):
             raise FileNotFoundError(f"File not found: {path}")

@@ -29,7 +29,7 @@ domain group.
 |---|---|---|
 | `handle_command(command)` | callable | The single write entry point. Delegates to `GameSession.handle_command()` and `CommandHandlerRegistry`. Returns `ValidationResult`. |
 | `process_turn(*, progress_callback=None)` | callable | Turn advance. Delegates to `GameSession.process_turn()`, converts `EnginePhaseError` to `TurnFailedError`, invalidates per-turn caches. |
-| `facade_state` | attribute | `FacadeSessionState` per-turn cache holder. UI collaborators (`DesignLibrary`, etc.) share this so per-turn caches stick across opens. Engine-side code must NOT read this — caches are irrelevant inside the turn loop. |
+| `facade_state` | attribute | `FacadeSessionState` per-turn cache holder. UI collaborators (`DesignCatalog`, etc.) share this so per-turn caches stick across opens. Engine-side code must NOT read this — caches are irrelevant inside the turn loop. |
 | `commands` / `fleets` / `planets` / `systems` / `empires` / `events` / `session_meta` / `economy` / `validation` | attributes | Nine grouped namespace accessors. See per-group breakdown below. |
 
 ### Grouped namespaces (`game/strategy/facade/grouped_namespaces.py`)

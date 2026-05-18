@@ -551,7 +551,7 @@ Reason: facility and ship design data often stores component IDs. The abilities 
 ### Add A New Activatable Planet Ability
 
 - If component data carries `activation_time`, `PlanetAbilitiesController.scan_abilities()` auto-discovers it for the abilities window.
-- Add persistent energy handling to `_ACTIVATABLE_ABILITIES` in `game/strategy/engine/planet_energy_engine.py`.
+- Register the ability in `game/strategy/services/ability_metadata.py` with an `EnergyFacet(drains_energy=True, ...)`; the PROJ-429 unified registry is the activation-discovery surface and `ability_drains_energy(name)` / `abilities_with_kind_tag(StrategicKind.ENERGY_DRAINING)` are the consumer queries.
 - Add display text to `_ACTIVATABLE_DISPLAY_NAMES` in `game/ui/screens/strategy_detail_fmt.py`.
 - If CamelCase humanization is not acceptable, add an override in `ABILITY_DISPLAY_NAME_OVERRIDES` in `game/ui/screens/planet_abilities_controller.py`.
 - If it needs a dedicated environment editor, add the editor window, `ENVIRONMENT_EDITORS` entry, event-router method, and window-manager wiring.

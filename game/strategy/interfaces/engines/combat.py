@@ -79,12 +79,12 @@ class IEnvironmentalHazardEngine(ABC):
 
     Implementations handle:
     - Processing storm effects (damage, fuel drain) each tick
-    - Querying AreaEffectManager for effects at fleet locations
+    - Querying ability_iterator / SystemEffectsCollector at fleet locations for environmental effects
     - Applying damage and fuel drain to ships in storm hexes
     - Tracking environmental events for logging/UI
 
     Example usage:
-        engine = EnvironmentalHazardEngine(area_effect_manager)
+        engine = EnvironmentalHazardEngine()
         events = engine.process_environmental_tick(tick, empires, galaxy)
     """
 

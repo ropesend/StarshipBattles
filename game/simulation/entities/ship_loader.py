@@ -5,7 +5,6 @@ PROJ-174: Migrated to IRegistryProvider pattern for registry access.
 """
 import logging
 import os
-from typing import Optional
 
 from game.core.exceptions import MissingResourceException
 from game.core.error_codes import ErrorCode
@@ -48,8 +47,8 @@ def get_or_create_validator(*, registry_provider) -> ShipDesignValidator:
 
 
 def load_vehicle_classes_data(
-    file_path: str = None,
-    layers_file_path: Optional[str] = None
+    file_path: str | None = None,
+    layers_file_path: str | None = None
 ) -> dict:
     """
     Pure function to load vehicle class definitions from JSON.
@@ -115,8 +114,8 @@ def load_vehicle_classes_data(
 
 
 def load_vehicle_classes(
-    file_path: str = None,
-    layers_file_path: Optional[str] = None,
+    file_path: str | None = None,
+    layers_file_path: str | None = None,
     *,
     registry_provider=None
 ) -> None:
@@ -160,7 +159,7 @@ def load_vehicle_classes(
     logger.info(f"Loaded {len(classes)} vehicle classes.")
 
 
-def initialize_ship_data(base_path: Optional[str] = None, *, registry_provider=None) -> None:
+def initialize_ship_data(base_path: str | None = None, *, registry_provider=None) -> None:
     """Facade for initializing all ship-related data.
 
     Args:

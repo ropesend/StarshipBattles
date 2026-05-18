@@ -13,17 +13,18 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Docs drift cleanup (deleted-class references in docs/) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Stale-comment cleanup (simulation/ai narrating retired surfaces) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Pre-PEP-604 annotation sweep (research/assets/engine/simulation loaders) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Test-wallpaper + static-guard backfill | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 1. Docs drift cleanup (deleted-class references in docs/) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Stale-comment cleanup (simulation/ai narrating retired surfaces) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Pre-PEP-604 annotation sweep (research/assets/engine/simulation loaders) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Test-wallpaper + static-guard backfill | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Simulation LOC-ceiling extractions (battle_state, battle_controller, etc.) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-18
-**Active Phase:** Planning
-**Last Action:** Charter created from supplemental Bucket D scan ([findings/bucket_d_simulation_ai_research_engine_docs_scan.md](findings/bucket_d_simulation_ai_research_engine_docs_scan.md), 28 findings)
-**Next Action:** User review of phasing. Phase 1 (docs drift) is the natural starting point — 7 small text-only fixes, no code risk.
+**Active Phase:** Stage 1 complete — Phase 5 SPIN-OUT recommended
+**Last Action:** Phases 1-4 all complete and validated. Phase 4 added the `commands/specs.py` re-emergence guard (1 new test) and dropped tech-tree skip wallpaper (sharded suite up to 23,327 tests; full suite green). F-D-024 deferred to PROJ-445; F-D-021 rename half noted moot. PROJ-446 F-C-021 superseded by F-D-020 (corrected filename) — PROJ-446 to mark its own bookkeeping.
+**Next Action:** Spin Phase 5 out as 2-3 dedicated extraction projects (suggested PROJ-449A: battle_state serde extract / F-D-028; PROJ-449B: battle_controller spec-in extract; PROJ-449C: replay_serialization capture-vs-replay split). The remaining 10 LOC-ceiling files (F-D-011) lack clean cuts and should be tracked as a "next-touch" rule rather than shipped inline. Stage 1 STOPS here per project charter.
+**Blockers:** None for Stage 1. Phase 5 awaits user direction on spin-out.
 **Blockers:** None
 
 ## Overview

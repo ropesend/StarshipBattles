@@ -1,9 +1,8 @@
-"""PROJ-FMS-A Phase 3 — VehicleBayAbility.
+"""VehicleBayAbility.
 
-Strategic-layer storage ability that holds design-backed vehicles
-(mines / fighters / satellites) inside a ship. Mass is the capacity gate.
-Generalises the previous drop-pod-specific ``carried_items`` flow into a
-typed substrate. Actual load/unload bookkeeping is performed by the
+Typed substrate for design-backed vehicles (mines / fighters / satellites)
+stored in ``BayInventory.bay``. Mass is the capacity gate. Actual
+load/unload bookkeeping is performed by the
 :class:`~game.strategy.data.ship_cargo_manager.ShipCargoManager` extensions
 that read ``capacity_mass`` off this ability and ``allowed_types`` to gate
 which vehicle types can be stowed.

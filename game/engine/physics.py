@@ -50,7 +50,7 @@ class PhysicsBody:
     - Projectile: Direct velocity integration (position += velocity per tick)
     """
 
-    def __init__(self, x, y, angle=0):
+    def __init__(self, x: float, y: float, angle: float = 0.0) -> None:
         self.position = Vector2(x, y)
         self.velocity = Vector2(0, 0)
         self.acceleration = Vector2(0, 0)

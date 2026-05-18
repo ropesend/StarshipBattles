@@ -185,11 +185,8 @@ class TestTechTreeIntegration:
 
     def test_load_real_tech_tree(self):
         """Can load the real tech tree from JSON."""
-        try:
-            tree = TechTree.load_from_json()
-            assert len(tree.nodes) > 0
-        except FileNotFoundError:
-            pytest.skip("Tech tree JSON not found")
+        tree = TechTree.load_from_json()
+        assert len(tree.nodes) > 0
 
     def test_tech_tree_validation(self, simple_tech_tree):
         """Tech tree validation catches errors."""

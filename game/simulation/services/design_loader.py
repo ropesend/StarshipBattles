@@ -1,15 +1,8 @@
-"""
-Simulation Design Loader - Load ship designs from files into Ship objects.
+"""Simulation Design Loader — instantiates Ship objects from design data files.
 
-This module handles the instantiation of Ship objects from design data files.
-This belongs in the simulation layer because it creates simulation entities (Ships).
-
-Part of PROJ-30: Strategy Mode Layer Boundary Cleanup (STRAT-01 fix).
-Previously, this functionality was incorrectly placed in DesignLibrary (strategy layer),
-which violated the architectural boundary between strategy and simulation layers.
-
-PROJ-45: Added specific exception handling with exception chaining.
-PROJ-50: Added registries parameter for strict DI compliance.
+Lives in the simulation layer because it creates simulation entities (Ships).
+Strategy-layer code that only needs raw design data should call
+DesignRepository.load_design_data / DesignCatalog.load_design_data instead.
 """
 import json
 import logging
@@ -36,10 +29,11 @@ class SimulationDesignLoader:
     from design data. It should be used by UI/simulation layer code that needs
     to load ships for editing or display, NOT by strategy layer code.
 
-    Strategy layer code should use DesignLibrary.load_design_data() to get
-    raw design data without creating Ship objects.
+    Strategy layer code should use DesignRepository.load_design_data(design_id)
+    (engine-internal) or DesignCatalog.load_design_data (workshop/UI-facing) to
+    get raw design data without creating Ship objects.
 
-    PROJ-50: Accepts registries for strict DI compliance.
+    Accepts registries for strict DI compliance.
     """
 
     def __init__(self, *, registries: 'GameRegistries'):

@@ -14,7 +14,7 @@ Compact reference for exception contracts, error codes, logging, JSON persistenc
 - `game/strategy/engine/turn_engine.py`: `_time_phase()` and rollback boundary.
 - `game/strategy/engine/turn_state_snapshot.py`: pre-turn snapshot capture, restore, crash dump.
 - `game/strategy/engine/turn_phase_registry.py`: 15 tick phases and 6 end-of-turn phases.
-- `game/strategy/systems/design_library.py`: `DesignLoadResult` result-object pattern.
+- `game/strategy/systems/design_repository.py`: `DesignLoadResult` result-object pattern.
 - `game/services/llm/` and `game/ui/services/image/`: provider/service error mapping.
 
 ## Exception Contract
@@ -332,7 +332,7 @@ Targeted references:
 ```bash
 pytest tests/unit/core/test_exceptions.py tests/unit/core/test_error_codes.py
 pytest tests/unit/core/test_json_utils.py tests/unit/core/test_validation_helpers.py
-pytest tests/unit/strategy/design_library/test_design_load_result.py
+pytest tests/unit/strategy/design_repository/test_repository.py
 pytest tests/unit/strategy/turn_engine/test_turn_engine_phase_timing.py
 pytest tests/unit/strategy/turn_engine/test_turn_engine_snapshot_integration.py
 pytest tests/unit/strategy/turn_engine/test_turn_snapshot_capture_failure.py

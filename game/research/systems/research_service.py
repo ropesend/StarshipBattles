@@ -11,7 +11,7 @@ Implements the "Leaky Bucket" algorithm:
 import logging
 import math
 import random
-from typing import List, Dict, Any
+from typing import Any
 
 from game.research.data.tech_tree import TechTree
 
@@ -30,7 +30,7 @@ class ResearchService:
 
     @classmethod
     def process_turn(cls, tech_tree: TechTree, tracker: ResearchTracker,
-                     tech_levels: Dict[str, int] = None) -> List[Dict[str, Any]]:
+                     tech_levels: dict[str, int] | None = None) -> list[dict[str, Any]]:
         """
         Process one turn of research for a session.
 

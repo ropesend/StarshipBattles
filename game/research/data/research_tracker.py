@@ -3,7 +3,7 @@ ResearchTracker - Manages per-session research state including node levels,
 breakthrough chances, and RP allocations.
 """
 from dataclasses import dataclass, field
-from typing import Dict, List, Any, Optional, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 import logging
 import random
 
@@ -20,7 +20,7 @@ class NodeState:
     current_chance: float = 0.0  # Current breakthrough probability (0.0 - 0.95)
     rp_allocation: int = 0  # RP allocated per turn (persists across turns)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             'current_level': self.current_level,
@@ -29,7 +29,7 @@ class NodeState:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'NodeState':
+    def from_dict(cls, data: dict[str, Any]) -> 'NodeState':
         """Deserialize from dictionary."""
         return cls(
             current_level=data.get('current_level', 0),
@@ -53,7 +53,7 @@ class ResearchTracker:
     MAX_RP_BUDGET = 500
     DEFAULT_RP_BUDGET = 200
 
-    def __init__(self, session_seed: int = None):
+    def __init__(self, session_seed: int | None = None) -> None:
         """
         Initialize the research tracker.
 
@@ -61,11 +61,11 @@ class ResearchTracker:
             session_seed: Seed for fuzzy requirement resolution.
                          If None, generates a random seed.
         """
-        self.node_states: Dict[str, NodeState] = {}
+        self.node_states: dict[str, NodeState] = {}
         self.session_seed = session_seed if session_seed is not None else random.randint(0, 2**31 - 1)
         self.rp_budget: int = self.DEFAULT_RP_BUDGET
         self.turn_number: int = 0
-        self.turn_log: List[Dict[str, Any]] = []  # Events from last turn
+        self.turn_log: list[dict[str, Any]] = []  # Events from last turn
         self.auto_spread_enabled: bool = False  # Toggle for auto-spreading RP
 
     def get_state(self, node_id: str) -> NodeState:
@@ -82,7 +82,7 @@ class ResearchTracker:
             self.node_states[node_id] = NodeState()
         return self.node_states[node_id]
 
-    def get_all_tech_levels(self) -> Dict[str, int]:
+    def get_all_tech_levels(self) -> dict[str, int]:
         """
         Get mapping of node_id -> current_level for all nodes with state.
 
@@ -165,7 +165,7 @@ class ResearchTracker:
         for state in self.node_states.values():
             state.rp_allocation = 0
 
-    def spread_rp_evenly(self, tech_tree: 'TechTree', tech_levels: Dict[str, int] = None) -> int:
+    def spread_rp_evenly(self, tech_tree: 'TechTree', tech_levels: dict[str, int] | None = None) -> int:
         """
         Spread RP budget evenly across all available (unlocked, not maxed) nodes.
 
@@ -247,7 +247,7 @@ class ResearchTracker:
         """Increment the turn counter."""
         self.turn_number += 1
 
-    def set_turn_log(self, events: List[Dict[str, Any]]) -> None:
+    def set_turn_log(self, events: list[dict[str, Any]]) -> None:
         """
         Set the turn log with events from the last turn.
 
@@ -256,7 +256,7 @@ class ResearchTracker:
         """
         self.turn_log = events
 
-    def get_nodes_with_allocation(self) -> List[str]:
+    def get_nodes_with_allocation(self) -> list[str]:
         """
         Get list of node IDs that have RP allocated.
 
@@ -265,7 +265,7 @@ class ResearchTracker:
         """
         return [nid for nid, state in self.node_states.items() if state.rp_allocation > 0]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
         return {
             'session_seed': self.session_seed,
@@ -276,7 +276,7 @@ class ResearchTracker:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ResearchTracker':
+    def from_dict(cls, data: dict[str, Any]) -> 'ResearchTracker':
         """Deserialize from dictionary."""
         tracker = cls(session_seed=data.get('session_seed'))
         tracker.rp_budget = data.get('rp_budget', cls.DEFAULT_RP_BUDGET)

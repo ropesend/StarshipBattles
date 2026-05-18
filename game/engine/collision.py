@@ -65,7 +65,7 @@ class CollisionSystem:
     Accepts an optional RNG instance for deterministic hit rolls (PROJ-252).
     """
 
-    def __init__(self, rng: 'random.Random' = None):
+    def __init__(self, rng: random.Random | None = None) -> None:
         self.rng: random.Random = rng if rng is not None else random.Random()
 
     def process_beam_attack(self, attack: 'BeamResolution', recent_beams: List[Dict[str, Any]]) -> None:

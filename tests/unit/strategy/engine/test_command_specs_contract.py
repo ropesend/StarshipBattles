@@ -84,7 +84,9 @@ def test_every_command_class_has_a_spec() -> None:
     missing = declared - spec_classes
     assert not missing, (
         f"Command DTOs without a CommandSpec entry: {sorted(missing)}. "
-        f"Add an entry in game/strategy/engine/commands/specs.py."
+        f"Add a `@command_spec(...)` decorator on the Command DTO and a "
+        f"`register(registry)` call in the owning handler module "
+        f"(see `docs/systems/orders_system.md`)."
     )
 
 

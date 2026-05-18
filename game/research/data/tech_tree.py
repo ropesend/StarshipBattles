@@ -1,7 +1,6 @@
 """
 TechTree container class for loading and managing the tech tree structure.
 """
-from typing import Dict, List, Optional
 import logging
 import os
 import random
@@ -23,12 +22,12 @@ class TechTree:
     - Depth calculation for left-to-right layout
     """
 
-    def __init__(self):
-        self.nodes: Dict[str, TechNode] = {}
-        self._depth_cache: Dict[str, int] = {}
+    def __init__(self) -> None:
+        self.nodes: dict[str, TechNode] = {}
+        self._depth_cache: dict[str, int] = {}
 
     @classmethod
-    def load_from_json(cls, file_path: str = None) -> 'TechTree':
+    def load_from_json(cls, file_path: str | None = None) -> 'TechTree':
         """
         Load tech tree from JSON file.
 
@@ -146,7 +145,7 @@ class TechTree:
         self._depth_cache[node_id] = max_dep_depth + 1
         return max_dep_depth + 1
 
-    def get_nodes_at_depth(self, depth: int) -> List[TechNode]:
+    def get_nodes_at_depth(self, depth: int) -> list[TechNode]:
         """
         Get all nodes at a specific depth level.
 
@@ -169,7 +168,7 @@ class TechTree:
             return 0
         return max(self.calculate_depth(n.id) for n in self.nodes.values())
 
-    def get_node(self, node_id: str) -> Optional[TechNode]:
+    def get_node(self, node_id: str) -> TechNode | None:
         """
         Get a node by ID.
 
@@ -181,7 +180,7 @@ class TechTree:
         """
         return self.nodes.get(node_id)
 
-    def get_all_node_ids(self) -> List[str]:
+    def get_all_node_ids(self) -> list[str]:
         """
         Get all node IDs in the tree.
 
@@ -190,7 +189,7 @@ class TechTree:
         """
         return list(self.nodes.keys())
 
-    def validate_requirements(self) -> List[str]:
+    def validate_requirements(self) -> list[str]:
         """
         Validate that all requirement references point to existing nodes.
 
@@ -207,7 +206,7 @@ class TechTree:
                         )
         return errors
 
-    def detect_cycles(self) -> List[str]:
+    def detect_cycles(self) -> list[str]:
         """
         Detect circular dependencies in the tech tree.
 
@@ -222,7 +221,7 @@ class TechTree:
         visited = set()
         rec_stack = set()  # Nodes in current recursion path
 
-        def dfs(node_id: str, path: List[str]) -> None:
+        def dfs(node_id: str, path: list[str]) -> None:
             if node_id in rec_stack:
                 # Found a cycle - extract the cycle portion
                 cycle_start = path.index(node_id)
@@ -253,7 +252,7 @@ class TechTree:
 
         return errors
 
-    def validate(self) -> List[str]:
+    def validate(self) -> list[str]:
         """
         Run all validations (missing refs + cycles).
 

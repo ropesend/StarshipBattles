@@ -75,7 +75,7 @@ def reset_component_caches() -> None:
 # =============================================================================
 
 def load_components_data(
-    file_path: str = None,
+    file_path: str | None = None,
     *,
     registries: 'GameRegistries'
 ) -> dict:
@@ -183,7 +183,7 @@ def load_components(file_path: Optional[str] = None, *, registry_provider=None) 
 # Modifier Loading
 # =============================================================================
 
-def load_modifiers_data(file_path: str = None) -> dict:
+def load_modifiers_data(file_path: str | None = None) -> dict:
     """Pure function to load modifiers from JSON file.
 
     Args:

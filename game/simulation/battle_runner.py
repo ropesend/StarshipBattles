@@ -5,11 +5,12 @@ simulator. All three contexts (Combat Lab, Battle Setup, Strategy) build
 a `BattleSpec` via their own compiler and hand it here. The engine is
 context-blind.
 
-PROJ-269 Phase 6 Tasks 6.1-6.3: `run_battle` now constructs and drives
-`BattleEngine` directly. The legacy `BattleController` + `BattleConfig` +
-`BattleMode` chain is bypassed entirely — those types are slated for
-deletion in the same phase. Operational concerns (`headless`,
-`per_tick_callback`, `pre_tick_loop_callback`) remain function arguments.
+`run_battle` constructs and drives `BattleEngine` directly. The legacy
+`BattleController` + `BattleConfig` + `BattleMode` chain remains the
+visual-mode and replay-replay path; this entry covers headless / spec-in
+`run_battle`. A future project to retire the legacy chain remains open.
+Operational concerns (`headless`, `per_tick_callback`,
+`pre_tick_loop_callback`) remain function arguments.
 
 What `run_battle` enforces:
   - spec → engine: teams added in spec order, team_id preserved

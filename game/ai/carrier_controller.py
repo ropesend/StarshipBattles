@@ -268,15 +268,11 @@ class CarrierAIController(AIController):
     ) -> List[CarriedVehicle]:
         """Pop up to ``max_count`` ``CarriedVehicle``s of ``vehicle_type``.
 
-        Legacy count-based pop, retained for the pre-QA-C tests and the
+        Count-based pop, retained for the pre-QA-C tests and the
         fighter-recovery-test setup paths. New tactical launches go
-        through :meth:`_pop_cvs_within_budget`.
-
-        PROJ-431 Phase 1e: reads through ``carrier.bay_inventory.bay``
-        (homogeneous ``list[CarriedVehicle]``) and writes back via
-        ``carrier.set_bay_inventory(...)``. The legacy
-        ``carried_items`` / ``CarriedVehicle.from_any`` discriminator
-        path is gone.
+        through :meth:`_pop_cvs_within_budget`. Reads through
+        ``carrier.bay_inventory.bay`` (homogeneous ``list[CarriedVehicle]``)
+        and writes back via ``carrier.set_bay_inventory(...)``.
         """
         from game.strategy.data.bay_inventory import BayInventory
 

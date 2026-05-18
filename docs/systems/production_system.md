@@ -54,10 +54,10 @@ PlanetaryFacility(
     name: str,
     design_data: dict,
     is_operational: bool = True,
-    construction_queue: list[dict] = [],
+    construction_queue: list[dict],
     construction_queue_paused: bool = False,
-    consumable_levels: dict[str, float] = {},
-    component_states: dict[str, dict] = {},
+    consumable_levels: dict[str, float],
+    component_states: dict[str, dict],
 )
 ```
 
@@ -550,7 +550,8 @@ changes should run the relevant targeted tests before the full sharded suite.
 | Yard/harvester abilities | `game/simulation/components/abilities/harvester.py` |
 | Component definitions | `data/components.json` |
 | Production rates | `data/production_rates.json` |
-| Design library | `game/strategy/systems/design_library.py` |
+| Design repository (engine-internal) | `game/strategy/systems/design_repository.py` |
+| Design catalog (workshop / UI-facing) | `game/strategy/systems/design_catalog.py` |
 | Design costs | `game/strategy/services/design_cost_calculator.py` |
 | Design validation | `game/strategy/services/design_validator.py` |
 | Habitability service | `game/strategy/services/planet_habitability_service.py` |

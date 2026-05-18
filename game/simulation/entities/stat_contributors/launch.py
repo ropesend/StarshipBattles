@@ -108,7 +108,7 @@ def contribute_vehicle_bay(
     Sums ``capacity_mass`` across all active ``VehicleBay`` components
     into ``ship.bay_capacity_mass``. ``bay_current_mass`` is *not* set
     here — it is a strategy-layer property (depends on what's actually
-    loaded into ``ShipInstance.carried_items``) and is computed via
+    loaded into ``ShipInstance.bay_inventory.bay``) and is computed via
     ``ShipCargoManager.get_vehicle_bay_capacity()``. Mirrors
     ``contribute_vehicle_launch`` above.
     """
