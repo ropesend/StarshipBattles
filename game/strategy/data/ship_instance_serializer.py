@@ -29,6 +29,13 @@ class ShipInstanceSerializer:
         PROJ-276 Phase 5: `component_damage` is NOT emitted. Per-component
         HP lives under the `components` key as `ComponentState` dicts.
         """
+        # PROJ-436 Phase 3d: read consumable / cargo state via the
+        # stable manager APIs. Phase 3f flips the durable substrate to
+        # ``Container`` and reroutes the manager bodies; this serializer
+        # keeps emitting the same ``consumable_levels`` / ``cargo_contents``
+        # dict-shaped JSON keys for now — Phase 3f decides the final
+        # save-schema name (per CLAUDE.md the old format is disposable
+        # so a key rename is acceptable).
         data = {
             'instance_id': ship.instance_id,
             'design_id': ship.design_id,
@@ -36,7 +43,7 @@ class ShipInstanceSerializer:
             'owner_id': ship.owner_id,
             'design_data': ship.design_data,
             'current_hp': ship.current_hp,
-            'consumable_levels': ship.consumable_levels,
+            'consumable_levels': ship._resource_mgr.get_all_levels(),
             'component_toggles': ship.component_toggles,
             'activation_states': ship.activation_states if ship.activation_states else {},
             'is_alive': ship.is_alive,
@@ -47,9 +54,10 @@ class ShipInstanceSerializer:
             'battles_survived': ship.battles_survived,
             'serial': ship.serial,
         }
-        # Only include cargo_contents if non-empty
-        if ship.cargo_contents:
-            data['cargo_contents'] = ship.cargo_contents
+        # Only include cargo_contents if non-empty.
+        cargo_snapshot = ship._cargo_mgr.get_all_cargo()
+        if cargo_snapshot:
+            data['cargo_contents'] = cargo_snapshot
         # PROJ-431 Phase 1f: emit the typed bay_inventory substrate. The
         # legacy ``carried_items`` dict-list shape is no longer the
         # storage surface; the typed BayInventory.to_dict() schema is
@@ -166,7 +174,12 @@ class ShipInstanceSerializer:
 
     @staticmethod
     def clone(ship: 'ShipInstance') -> 'ShipInstance':
-        """Create a deep copy of a ShipInstance with a new instance_id."""
+        """Create a deep copy of a ShipInstance with a new instance_id.
+
+        PROJ-436 Phase 3d: read consumable / cargo state via the stable
+        manager APIs so Phase 3f's substrate cutover doesn't have to
+        touch this clone path.
+        """
         from game.strategy.data.ship_instance import ShipInstance
 
         return ShipInstance(
@@ -176,9 +189,9 @@ class ShipInstanceSerializer:
             owner_id=ship.owner_id,
             design_data=copy.deepcopy(ship.design_data),
             current_hp=ship.current_hp,
-            consumable_levels=copy.deepcopy(ship.consumable_levels),
+            consumable_levels=copy.deepcopy(ship._resource_mgr.get_all_levels()),
             component_toggles=copy.deepcopy(ship.component_toggles),
-            cargo_contents=copy.deepcopy(ship.cargo_contents),
+            cargo_contents=copy.deepcopy(ship._cargo_mgr.get_all_cargo()),
             bay_inventory=copy.deepcopy(ship.bay_inventory),
             is_alive=ship.is_alive,
             is_derelict=ship.is_derelict,
