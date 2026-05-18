@@ -58,7 +58,25 @@ def colony():
     # (``has_stockpile`` / ``consume_from_stockpile``) and the
     # legacy ``context_type`` discriminator are gone from
     # production_engine.py.
+    # PROJ-436 Phase 12 (Option C): ``_apply_resource_consumption``
+    # now does a before/after diff via ``production_get_resource`` to
+    # truth-up resources_consumed against actually-consumed amounts.
+    # Wire the stub to simulate a well-resourced source that actually
+    # consumes what the engine requests — so the diff equals the
+    # requested amount and queue iteration tests behave as pre-Phase-12
+    # (queue progress matches the items' total_cost).
+    _balance = {"_v": 1e12}
+
+    def _get(_res):
+        return _balance["_v"]
+
+    def _consume(_res, amount):
+        _balance["_v"] -= amount
+        return True
+
     col.production_has_resources.return_value = True
+    col.production_get_resource.side_effect = _get
+    col.production_consume_resource.side_effect = _consume
     return col
 
 
@@ -146,8 +164,15 @@ def test_per_facility_pause_skips_only_that_shipyard(engine, empire, monkeypatch
     colony = MagicMock(spec=Planet)
     colony.construction_queue = []
     colony.facilities = [paused_fac, active_fac]
-    # PROJ-436 Phase 8: unified IProductionResourceSource protocol.
+    # PROJ-436 Phase 8 + Phase 12: unified IProductionResourceSource
+    # protocol; simulate well-resourced source for the diff math.
     colony.production_has_resources.return_value = True
+    _bal = {"_v": 1e12}
+    colony.production_get_resource.side_effect = lambda _r: _bal["_v"]
+    def _consume(_r, amount):
+        _bal["_v"] -= amount
+        return True
+    colony.production_consume_resource.side_effect = _consume
     empire.colonies = [colony]
     empire.fleets = []
 

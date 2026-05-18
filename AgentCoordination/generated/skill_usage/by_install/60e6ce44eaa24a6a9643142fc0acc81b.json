@@ -1,0 +1,20 @@
+{
+  "install_id": "60e6ce44eaa24a6a9643142fc0acc81b",
+  "schema_version": 1,
+  "skills": {
+    "claude-consult": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-18T15:38:04Z"
+    },
+    "codex-starship-consult-respond": {
+      "agents": {
+        "codex": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-18T15:40:55Z"
+    }
+  }
+}

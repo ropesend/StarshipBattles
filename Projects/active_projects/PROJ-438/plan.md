@@ -23,11 +23,26 @@
 | 5. Typed planet strategic intents | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Issuer-aware execution contract cleanup | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Order persistence + metadata-driven serialization convergence | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
-| 8. DTO / protocol / doc sync + Codex consult remediation | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
+| 8. DTO / protocol / doc sync + Codex consult remediation | Complete | [phase_8_checklist.md](phase_8_checklist.md) |
+| 9. Bundled small follow-ups from Codex consult | Complete | [phase_9_checklist.md](phase_9_checklist.md) |
+| 10. Behavioral E2E test for ActionExecutionEngine planet-FMS tick | Deferred | [phase_10_checklist.md](phase_10_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-18
-**Active Phase:** 8 — HARD STOP. Phase 8 (docs + Codex consult) is hard-blocked on PROJ-436 Phase 10 (docs) landing on `main`. Per kickoff prompt: stop and surface to user before starting Phase 8 if not yet merged. As of this writing, no PROJ-436 Phase 10 commit appears in `git log`.
+**Active Phase:** PROJ-438 COMPLETE through Phase 9. Phase 10 deferred as standalone follow-up.
+
+**Status:**
+- Phases 0–8 committed across 2 commits (`820d6d4b8` Phases 0–7, `fd6b456ab` Phase 8 doc sync).
+- Codex consult run on `20260518T153829Z`. Response at `AgentCoordination/Scratchpad/Consult/20260518T153829Z_proj-438-end-of-project/response.md`. 6 verified findings; bundled small items into Phase 9, deferred medium engine-tick behavioral test as Phase 10.
+- Phase 9 (bundled consult follow-ups): framing fix in decisions.md, duplicate-codec consistency ratchet, `MOVE_TO_FLEET` parity coverage, planet ability order save/load round-trip. 27 affected tests green.
+- Phase 10 (deferred): behavioral E2E test through `ActionExecutionEngine._process_planet_action_tick` for planet FMS. Checklist created with full briefing for a future contributor; not blocking PROJ-438.
+- Final sharded suite: see Phase 9 close-out artifacts (pending final commit's verification run).
+
+**Next Action:** Final close-out commit + sharded suite verification + project-archive consideration.
+
+**Blockers:** None. Phase 10 is intentionally deferred, not blocked.
+
+**Context for Next Agent:** PROJ-438 is functionally done. The deferred Phase 10 has a self-contained briefing in `phase_10_checklist.md` and decisions.md. The strict-green canonical baseline is the post-PROJ-438 + PROJ-436 Phase 10/11 state.
 **Last Action:** Phase 3 complete. Like Phase 2, collapsed to a documentation + invariant-pinning pass after audit. Added categorical class docstring on `ShipInstance` enumerating the post-Phase-9 attribute/method categories (Owned identity / Owned durable state / Owned runtime state / Status flags / Cached & DI / Delegate-manager slots / Protocol-alias properties / Retained-shim entry points). New test file `tests/unit/strategy/ship_instance/test_post_container_surface.py` (10 ratchets: categorical shape + legacy-shim docs contracts + `IShipInstance` protocol minimum surface + cargo_contents future-removal pointer). `IShipInstance.cargo_contents` removal ruled out (30+ caller files); DTO-side narrowing ruled out (DTOs already read concrete post-storage attributes). During close-out, the Phase 2 docstring tripped the `game_session.py` 500 LOC budget (529 LOC) — fixed by shrinking the docstring to a terse category list (now 498 LOC). All ratchets remain green.
 **Next Action:** Start Phase 4. Re-audit the bounded scope (Planet save-schema breadth + Fleet/Empire persistence-facing aggregate behavior + `galaxy_protocols.py` read contracts). Per decisions.md, Phase 4 MAY collapse to a smaller protocol/doc sync if no high-value extractions are found — that is a valid outcome, not a failure.
 **Blockers:** None for Phases 4–7. Phase 8 still hard-blocked on PROJ-436 Phase 10 (docs) landing on `main` — stop and surface before Phase 8 if not yet merged.
@@ -101,6 +116,12 @@ Make order persistence derive more directly from live executable metadata. Revis
 
 ### Phase 8: DTO / protocol / doc sync + Codex consult remediation
 Update affected protocols, DTO builders, façade surfaces, and docs to the post-438 state. Then run the required Codex consult; any verified findings become added phases per the end-of-project workflow.
+
+### Phase 9: Bundled small follow-ups from Codex consult
+Added 2026-05-18 from the Phase 8 Codex consult. Four small verified findings bundled: framing fix in decisions.md (planet orders flow through `planet_serde._deserialize_planet_orders → Order.from_dict()` on the `'dict'` codec branch, not `OrderSerializer._deserialize_target`); duplicate-codec consistency ratchet so `serializer_codec_for(order_type)` becomes authoritative before any future `Order.to_dict()` flip; `MOVE_TO_FLEET` parity coverage in the restore-path parity tests; planet ability order save/load round-trip pin.
+
+### Phase 10: Behavioral E2E test for ActionExecutionEngine planet-FMS tick (DEFERRED)
+Added 2026-05-18 from the Phase 8 Codex consult. Behavioral end-to-end test that drives a planet FMS recovery / launch order through `ActionExecutionEngine._process_planet_action_tick()`. Today the engine-mediated dispatch path is protected by structural / inspect-based tests plus unit-level handler tests, but no behavioral test drives the full engine tick. **Deferred** rather than blocking PROJ-438 completion: the integration fixture work is ~100-200 LOC, didn't fit the "small bundled follow-up" shape of Phase 9, and the strict-green sharded suite + unit + structural coverage protects against the specific regressions Phase 6 was designed to prevent. Self-contained briefing in `phase_10_checklist.md` for a future contributor.
 
 ## Related Documents
 - [blank_sheet_remediation_r003.md](../../../AgentCoordination/Scratchpad/Discussion/20260517T150720Z_strategy-layer-blank-sheet/plans/blank_sheet_remediation_r003.md) — original post-435 remediation consensus

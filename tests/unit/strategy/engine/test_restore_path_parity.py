@@ -20,6 +20,8 @@ rollback never crosses a process boundary.
 """
 from __future__ import annotations
 
+import pytest
+
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
@@ -44,6 +46,14 @@ def _small_config() -> GameConfig:
 def _session_with_join_fleet_order() -> GameSession:
     """Build a session with one source-and-target fleet pair so the
     pursuer-tracker rebuild step has something to do."""
+    return _session_with_pursuit_order(OrderType.JOIN_FLEET)
+
+
+def _session_with_pursuit_order(order_type: OrderType) -> GameSession:
+    """Build a session with a source fleet carrying a pursuit-style order
+    (``JOIN_FLEET`` or ``MOVE_TO_FLEET``) at a target fleet, so the
+    pursuer-tracker rebuild step in ``restore_graph_wiring`` has something
+    to do."""
     session = GameSession(config=_small_config())
     empire = session.empires[0]
     target = Fleet(
@@ -58,7 +68,7 @@ def _session_with_join_fleet_order() -> GameSession:
         location=HexCoord(1, 1),
         speed=5.0,
     )
-    source.add_order(Order(OrderType.JOIN_FLEET, target))
+    source.add_order(Order(order_type, target))
     empire.add_fleet(target)
     empire.add_fleet(source)
     return session
@@ -144,10 +154,19 @@ class TestRestorePathParity:
                 f"{label} path failed to resolve order target marker dict"
             )
 
-    def test_parity_pursuer_tracker_rebuild(self) -> None:
-        """Step 4: JOIN_FLEET / MOVE_TO_FLEET orders re-add source to
-        target's pursuer tracker."""
-        session = _session_with_join_fleet_order()
+    @pytest.mark.parametrize(
+        "order_type",
+        [OrderType.JOIN_FLEET, OrderType.MOVE_TO_FLEET],
+        ids=["join_fleet", "move_to_fleet"],
+    )
+    def test_parity_pursuer_tracker_rebuild(self, order_type: OrderType) -> None:
+        """Step 4: JOIN_FLEET *and* MOVE_TO_FLEET orders both re-add the
+        source fleet to the target's pursuer tracker. Phase 9 / Codex
+        consult 2026-05-18 finding 6a — the original test only covered
+        JOIN_FLEET; this parametrization adds the sibling MOVE_TO_FLEET
+        branch that the collaborator handles identically at
+        `graph_restoration.py:70-79`."""
+        session = _session_with_pursuit_order(order_type)
         rehydrate_galaxy, _ = _rehydrate_path(session)
         snapshot_galaxy, _ = _snapshot_path(session)
 
@@ -159,7 +178,8 @@ class TestRestorePathParity:
             tgt = galaxy.get_fleet_by_id(7002)
             assert src is not None and tgt is not None
             assert src in tgt.pursuer_tracker.pursuers, (
-                f"{label} path failed to rebuild pursuer tracker"
+                f"{label} path failed to rebuild pursuer tracker for "
+                f"{order_type.name}"
             )
 
 

@@ -287,6 +287,14 @@ Order target keys:
 
 `PlanetActionEngine` cancels an order if its target facility no longer exists. Activation starts only from `INACTIVE`; deactivation cancels `ACTIVATING` immediately or starts a timer from `ACTIVE`.
 
+## Issuer-aware execution contract (PROJ-438 Phase 6)
+
+`IOrderHandler.execute_for_issuer(*, issuer, order_owner, empire, galaxy=None, registries=None) -> OrderExecutionResult` is the unified contract used by external dispatchers that need to run an order against an arbitrary `IIssuerAdapter`-wrapped issuer (planet via `PlanetStagingYardIssuerAdapter`, fleet via `FleetShipIssuerAdapter`). Launch handlers consume all five kwargs; recovery handlers accept and ignore the trailing `galaxy` / `registries` (their carrier is the issuer). `OrderProcessor.get_handler(order_type)` is the public accessor — external callers must NOT touch `OrderProcessor._handler_registry` directly. `ActionExecutionEngine._execute_planet_action` is the canonical caller; pinned by `tests/unit/strategy/engine/test_issuer_execution_contract.py`.
+
+## Metadata-driven serialization lookup (PROJ-438 Phase 7)
+
+`order_metadata.serializer_codec_for(order_type)` exposes the `CommandSpec.serializer_codec` field declared on each handler module (e.g. `'hex_coord'`, `'fleet_ref'`, `'planet_ref'`, `'transfer'`, `'warp_params'`, `'ship_id_list'`, `'dict'`). The vocabulary matches the discriminator strings `OrderSerializer._deserialize_target` already understands; a vocabulary-consistency ratchet at `tests/unit/strategy/engine/test_order_persistence_from_metadata.py::TestCodecVocabularyConsistency` pins this so a future project can flip `Order.to_dict()`'s inline branching to dispatch via the codec lookup with confidence. Today `Order.to_dict()` still uses the inline `isinstance` / `OrderType` branching (the lookup is additive, not breaking).
+
 ## UI Order Editing
 
 Orders UI file: `game/ui/screens/orders_window.py`

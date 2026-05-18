@@ -175,26 +175,56 @@
     "phase_8": {
       "depends_on": ["phase_7"],
       "merged_into_project_at_sha": null,
-      "phase_base_sha": null,
+      "phase_base_sha": "5c97f090367ea9095d82d0ac8b1b347767185b98",
       "phase_branch": "proj/PROJ-438/main",
       "phase_head_sha": null,
       "planned_files": [
-        "game/core/protocols/strategy_domain.py",
-        "game/core/protocols/strategy_mutators.py",
-        "game/strategy/facade/strategy_session_facade.py",
-        "game/strategy/facade/grouped_namespaces.py",
         "docs/systems/strategy_layer.md",
         "docs/systems/orders_system.md",
-        "docs/04_SERVICES.md",
-        "docs/systems/ability_reference.md",
         "docs/01_ARCHITECTURE.md",
-        "docs/02_PATTERNS.md"
+        "docs/02_PATTERNS.md",
+        "Projects/active_projects/PROJ-438/decisions.md"
       ],
       "review_dispatch_failed": false,
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "not_started",
+      "status": "complete",
+      "verifying_review_id": null
+    },
+    "phase_9": {
+      "depends_on": ["phase_8"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": "fd6b456ab",
+      "phase_branch": "proj/PROJ-438/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "tests/unit/strategy/engine/test_restore_path_parity.py",
+        "tests/unit/strategy/engine/test_typed_planet_intents.py",
+        "tests/unit/strategy/engine/test_order_persistence_from_metadata.py",
+        "Projects/active_projects/PROJ-438/decisions.md"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "complete",
+      "verifying_review_id": null
+    },
+    "phase_10": {
+      "depends_on": ["phase_9"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-438/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "tests/integration/strategy/test_action_execution_planet_fms.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "deferred",
       "verifying_review_id": null
     }
   },

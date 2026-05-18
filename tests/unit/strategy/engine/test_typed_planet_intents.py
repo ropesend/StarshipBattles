@@ -222,3 +222,62 @@ class TestNewFacadeHelpersExist:
         assert not hasattr(facade.commands, "issue_planet_order"), (
             "Legacy commands.issue_planet_order verb must be removed (Phase 5)."
         )
+
+
+class TestPlanetAbilityOrderRoundtrip:
+    """PROJ-438 Phase 9 / Codex consult 2026-05-18 finding 6b: pin that a
+    planet ``ACTIVATE_ABILITY`` / ``DEACTIVATE_ABILITY`` order survives
+    the save/load round-trip through ``planet_serde`` with the
+    ``facility_instance_id`` / ``ability_name`` / ``component_key``
+    target dict intact.
+
+    The Phase 5 typed-intent migration deliberately preserved the
+    marker-dict target shape that ``Order.to_dict()`` emits under the
+    ``'dict'`` codec branch (``order_types.py:118``) and that
+    ``planet_serde._deserialize_planet_orders -> Order.from_dict()``
+    consumes (``planet_serde.py:188``). If a future change accidentally
+    drops or renames a key in ``_queue_ability_order``'s target dict,
+    this test catches it before save/load corruption surfaces in the
+    field.
+    """
+
+    def test_activate_ability_order_roundtrips_through_planet_serde(
+        self,
+    ) -> None:
+        from game.strategy.data.order_types import Order, OrderType
+        # Build the order shape the typed Activate handler queues today.
+        target = {
+            'facility_instance_id': 'fac-7',
+            'ability_name': 'PlanetaryShield',
+            'component_key': 'CORE:0:shield_gen',
+        }
+        order = Order(OrderType.ACTIVATE_ABILITY, target=target)
+
+        # Serialize via Order.to_dict (the 'dict' codec branch).
+        serialized = order.to_dict()
+        assert serialized['type'] == 'ACTIVATE_ABILITY'
+        # The 'dict' codec wraps the target as {'type': 'dict', 'value': ...}.
+        assert serialized['target'] == {'type': 'dict', 'value': target}
+
+        # Deserialize via Order.from_dict — this is what
+        # planet_serde._deserialize_planet_orders ultimately calls.
+        restored = Order.from_dict(serialized)
+        assert restored.type is OrderType.ACTIVATE_ABILITY
+        assert restored.target == target, (
+            "Planet ability order target dict must survive save/load "
+            "round-trip with all three keys intact."
+        )
+
+    def test_deactivate_ability_order_roundtrips_through_planet_serde(
+        self,
+    ) -> None:
+        from game.strategy.data.order_types import Order, OrderType
+        target = {
+            'facility_instance_id': 'fac-7',
+            'ability_name': 'PlanetaryShield',
+            'component_key': 'CORE:0:shield_gen',
+        }
+        order = Order(OrderType.DEACTIVATE_ABILITY, target=target)
+        restored = Order.from_dict(order.to_dict())
+        assert restored.type is OrderType.DEACTIVATE_ABILITY
+        assert restored.target == target

@@ -60,7 +60,26 @@ class IProductionResourceSource(Protocol):
     def production_consume_resource(
         self, resource_type: str, amount: float
     ) -> bool:
-        """All-or-nothing consume; return ``True`` on success."""
+        """Attempt to consume ``amount`` of ``resource_type``; return
+        ``True`` iff the source had at least the (possibly-rounded)
+        amount to charge.
+
+        PROJ-436 Phase 12 (Option C): integer-typed sources (e.g.
+        ``Fleet`` over its `_cargo_contents` substrate) MAY round the
+        requested ``amount`` before consumption — `Fleet.consume_cargo_resource`
+        calls ``int(round(amount))`` against the integer cargo store —
+        so the actually-charged amount can be less than (or zero for
+        very small fractional requests) or greater than the requested
+        ``amount``. The boolean return reflects whether the rounded
+        charge succeeded, not whether the requested ``amount`` was
+        consumed exactly. Callers that need exact accounting MUST
+        reconcile via a :meth:`production_get_resource` before/after
+        diff rather than trusting the requested ``amount`` — see
+        :meth:`ProductionEngine._apply_resource_consumption` for the
+        canonical pattern. Float-typed sources (e.g. ``Planet`` over
+        its float stockpile) consume the exact ``amount``; the diff
+        equals the requested amount.
+        """
         ...
 
 if TYPE_CHECKING:
@@ -629,6 +648,13 @@ class ProductionEngine(IProductionEngine):
         ``production_consume_resource`` rather than dispatching on
         ``context_type``.
 
+        PROJ-436 Phase 12 (Option C): the recorded ``resources_consumed``
+        amount comes from a :meth:`production_get_resource` before/after
+        diff, NOT the requested ``amount``. Integer-typed sources (Fleet
+        over its integer cargo store) may round the requested amount
+        before unloading, so trusting the requested amount silently
+        de-syncs construction progress from actual cargo charge.
+
         Args:
             empire: Empire (unused, kept for ABI parity).
             item: Queue item to update resources_consumed on.
@@ -638,9 +664,13 @@ class ProductionEngine(IProductionEngine):
         """
         for res, amount in cost_this_step.items():
             if amount > 0:
+                before = colony_or_fleet.production_get_resource(res)
                 colony_or_fleet.production_consume_resource(res, amount)
+                after = colony_or_fleet.production_get_resource(res)
+                actually_consumed = before - after
                 item['resources_consumed'][res] = (
-                    item.get('resources_consumed', {}).get(res, 0.0) + amount
+                    item.get('resources_consumed', {}).get(res, 0.0)
+                    + actually_consumed
                 )
 
     def _check_item_completion(self, item: Dict) -> bool:

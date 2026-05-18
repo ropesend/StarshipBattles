@@ -1074,8 +1074,11 @@ Contract:
   slot the canonical write surface); `PlanetStagingYardIssuerAdapter`
   wraps a `Planet` and operates on `planet.staging_yard`
   (capacity-checked via `Planet.add_to_staging_yard`).
-- Order handlers expose `execute_for_issuer(adapter, order, ...)` and
-  treat the adapter as the only mutation surface — no direct
+- Order handlers expose `execute_for_issuer(*, issuer, order_owner,
+  empire, galaxy=None, registries=None) -> OrderExecutionResult` (the
+  PROJ-438 Phase 6 unified 5-kwarg signature; recovery handlers accept
+  and ignore the trailing `galaxy` / `registries`) and treat the
+  `IIssuerAdapter` as the only mutation surface — no direct
   `fleet.ships[i].bay_inventory.bay` access.
 - `ActionExecutionEngine` ticks both `fleet.orders` and `planet.orders`
   in Round 4; each iteration constructs the matching adapter and

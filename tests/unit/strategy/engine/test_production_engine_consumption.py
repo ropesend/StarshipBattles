@@ -111,13 +111,19 @@ def test_apply_resource_consumption_updates_resources_consumed_dict(engine, empi
 
     PROJ-436 Phase 8: the engine calls
     ``planet.production_consume_resource`` (which delegates to
-    ``consume_from_stockpile`` on a real Planet).
+    ``consume_from_stockpile`` on a real Planet). PROJ-436 Phase 12:
+    the recorded amount is the ``production_get_resource`` before/after
+    diff, not the requested ``amount`` — mock the diff to simulate
+    Planet's float-exact consumption (3.0 consumed against 100.0
+    starting balance).
     """
     colony = MagicMock(spec=Planet)
+    colony.production_get_resource.side_effect = [100.0, 97.0]  # before, after
     item = {"resources_consumed": {"metals": 2.0}}
 
     engine._apply_resource_consumption(empire, item, {"metals": 3.0}, colony)
 
+    # 2.0 (prior) + 3.0 (diff) = 5.0.
     assert item["resources_consumed"]["metals"] == 5.0
     colony.production_consume_resource.assert_called_once_with("metals", 3.0)
 
@@ -126,36 +132,47 @@ def test_apply_resource_consumption_routes_to_fleet_production_method(engine, em
     """PROJ-436 Phase 8: Fleet's ``production_consume_resource`` is the
     engine's write path; on a real Fleet this delegates to the existing
     ``consume_cargo_resource`` cargo API. The empire pool is NOT touched,
-    and ``resources_consumed`` is summed.
+    and ``resources_consumed`` is summed. PROJ-436 Phase 12: recorded
+    amount is the before/after diff — mock 2.5 actually-consumed.
     """
     fleet = MagicMock(spec=Fleet)
+    fleet.production_get_resource.side_effect = [50.0, 47.5]  # before, after
     item = {"resources_consumed": {"metals": 1.5}}
 
     engine._apply_resource_consumption(empire, item, {"metals": 2.5}, fleet)
 
     fleet.production_consume_resource.assert_called_once_with("metals", 2.5)
+    # 1.5 (prior) + 2.5 (diff) = 4.0.
     assert item["resources_consumed"]["metals"] == 4.0
 
 
 def test_apply_resource_consumption_raises_when_not_production_resource_source(engine, empire):
-    """PROJ-436 Phase 8: a bare object lacking
-    ``production_consume_resource`` raises ``AttributeError``.
+    """PROJ-436 Phase 8: a bare object lacking the
+    ``IProductionResourceSource`` Protocol raises ``AttributeError``.
 
     The Phase 5 ``ValueError`` contract on ``context_type`` is gone —
     Phase 8 collapsed the dispatch into a uniform protocol call. An
     owner that does not satisfy ``IProductionResourceSource`` is a
-    programmer error.
+    programmer error. PROJ-436 Phase 12: the failing attribute is now
+    ``production_get_resource`` (the first Protocol method called in
+    the diff path) rather than ``production_consume_resource``.
     """
     bare = object()
     item = {"resources_consumed": {"metals": 0.0}}
 
-    with pytest.raises(AttributeError, match="production_consume_resource"):
+    with pytest.raises(AttributeError, match="production_get_resource"):
         engine._apply_resource_consumption(empire, item, {"metals": 7.0}, bare)
 
 
 def test_apply_resource_consumption_skips_zero_amount_resources(engine, empire):
-    """Resources with `amount <= 0` are not consumed (guard preserved)."""
+    """Resources with `amount <= 0` are not consumed (guard preserved).
+
+    PROJ-436 Phase 12: the before/after diff math also runs only for
+    non-zero amounts; ``production_get_resource`` is mocked so the
+    one non-zero call has numeric inputs.
+    """
     fleet = MagicMock(spec=Fleet)
+    fleet.production_get_resource.side_effect = [50.0, 45.0]  # before, after
     item = {"resources_consumed": {}}
 
     engine._apply_resource_consumption(

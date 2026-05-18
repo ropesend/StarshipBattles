@@ -125,3 +125,40 @@ class TestCodecVocabularyConsistency:
             "OrderSerializer._deserialize_target or add to "
             "KNOWN_DESERIALIZABLE_CODECS with rationale."
         )
+
+    def test_specs_sharing_order_type_declare_same_codec(self) -> None:
+        """Authority-strength ratchet (PROJ-438 Phase 9 / Codex consult 2026-05-18).
+
+        ``CommandRegistry.serializer_codec_for(order_type)`` resolves the
+        first matching spec when multiple commands map to the same
+        OrderType (e.g., ``ActivatePlanetAbilityCommand`` and
+        ``DeactivatePlanetAbilityCommand`` both emit
+        ``ACTIVATE_ABILITY``/``DEACTIVATE_ABILITY`` respectively; no
+        OrderType-sharing example exists in production today, but the
+        guard must fire before one slips in with inconsistent codecs).
+
+        If multiple specs share an OrderType, they MUST declare the same
+        ``serializer_codec`` — otherwise the lookup is ambiguous and
+        any future ``Order.to_dict()`` flip to metadata-driven dispatch
+        would silently pick the wrong codec. This test is the gate that
+        must pass before that flip is attempted.
+        """
+        codec_by_order_type: dict[OrderType, set[str | None]] = {}
+        for spec in command_registry.all():
+            if spec.order_type is None:
+                continue
+            codec_by_order_type.setdefault(spec.order_type, set()).add(
+                spec.serializer_codec
+            )
+        ambiguous = {
+            ot: codecs
+            for ot, codecs in codec_by_order_type.items()
+            if len(codecs) > 1
+        }
+        assert not ambiguous, (
+            f"Multiple CommandSpecs share an OrderType but declare "
+            f"different serializer_codec values: {ambiguous}. "
+            "serializer_codec_for() returns first-match; this drift "
+            "makes the lookup non-authoritative. Align the codecs or "
+            "narrow the OrderType-sharing."
+        )
