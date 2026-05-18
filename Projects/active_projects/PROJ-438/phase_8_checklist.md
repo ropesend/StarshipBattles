@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Doc-sync complete; **Codex consult pending user authorization** (separate cost — see plan.md Current State).
+**Status:** Complete. Consult ran 2026-05-18; response at `AgentCoordination/Scratchpad/Consult/20260518T153829Z_proj-438-end-of-project/response.md`; verified findings absorbed as Phase 9 (small bundled items) and Phase 10 (deferred standalone follow-up).
 **Depends on:** PROJ-436 Phase 10 (docs) merged on `main` (commit `622e63055`, merged via `5c97f0903`).
 **Objective:** Sync public seams and docs to the landed post-PROJ-438 reality, then run the required Codex consult and absorb verified findings.
 
@@ -35,24 +35,28 @@
 - [x] No protocol-file changes needed (see Task 8.1 audit conclusion).
 
 ### Task 8.3: Required Codex consult on landed PROJ-438 work
-**Files:** consult artifact under `AgentCoordination/Scratchpad/...` or `Reviews/results/...`
+**Files:** `AgentCoordination/Scratchpad/Consult/20260518T153829Z_proj-438-end-of-project/`
 
-- [ ] **Pending user authorization** — external cost (codex API tokens). Per CLAUDE.md feedback memory, end-of-project consult is required. Verified findings become added phases 9+, 10+; out-of-scope / unverified findings logged in `decisions.md`.
+- [x] User authorized; consult ran 2026-05-18.
+- [x] Codex (pre-final-check mode) returned 6 verified findings (response.md). Per CLAUDE.md feedback memory + kickoff prompt: verified findings become added phases. Triage:
+  - **Phase 9 (bundled small items)**: Finding 2 framing fix, Risk 2 / Finding 5b (duplicate-codec consistency ratchet), Finding 6a (MOVE_TO_FLEET parity), Finding 6b (planet ability order save/load round-trip).
+  - **Phase 10 (deferred)**: Finding 6c / Risk 3 — behavioral E2E test through `ActionExecutionEngine._process_planet_action_tick`. Medium-scope; non-blocking; documented in `phase_10_checklist.md`.
+  - **No out-of-scope or unverified findings** to log in decisions.md beyond the phase additions themselves.
 
 ### Task 8.4: Sharded suite + validate_phase
 **Tests:** `python Tools/test_sharded/test_sharded.py`
 
 - [x] Sharded suite green after merge (23,268 passed / 0 failed / 0 errors / 2 skipped).
-- [ ] Final pass after Phase 8.3 consult remediation.
+- [x] Final pass after Phase 8.3 consult remediation — see Phase 9 close-out.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [x] Doc-sync subset of tasks complete
+- [x] All subtasks complete (doc sync + consult ran + findings triaged)
 - [x] `python Tools/test_sharded/test_sharded.py` green
-- [ ] Required Codex consult run + verified findings absorbed (pending user authorization)
-- [x] Update status at top of this file to reflect partial completion
-- [x] Update plan.md phase table row to reflect partial completion
-- [x] Update plan.md Current State to call out Codex consult authorization
-- [ ] `python Projects/scripts/validate_phase.py PROJ-438 8` passes
+- [x] Required Codex consult run + verified findings absorbed as Phase 9 (small) and Phase 10 (deferred)
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to reflect project completion through Phase 9 + Phase 10 deferral
+- [x] `python Projects/scripts/validate_phase.py PROJ-438 8` passes

@@ -189,7 +189,42 @@
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "doc_sync_complete_consult_pending",
+      "status": "complete",
+      "verifying_review_id": null
+    },
+    "phase_9": {
+      "depends_on": ["phase_8"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": "fd6b456ab",
+      "phase_branch": "proj/PROJ-438/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "tests/unit/strategy/engine/test_restore_path_parity.py",
+        "tests/unit/strategy/engine/test_typed_planet_intents.py",
+        "tests/unit/strategy/engine/test_order_persistence_from_metadata.py",
+        "Projects/active_projects/PROJ-438/decisions.md"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "complete",
+      "verifying_review_id": null
+    },
+    "phase_10": {
+      "depends_on": ["phase_9"],
+      "merged_into_project_at_sha": null,
+      "phase_base_sha": null,
+      "phase_branch": "proj/PROJ-438/main",
+      "phase_head_sha": null,
+      "planned_files": [
+        "tests/integration/strategy/test_action_execution_planet_fms.py"
+      ],
+      "review_dispatch_failed": false,
+      "review_mode": "standard",
+      "review_request_id": null,
+      "scrap_history": [],
+      "status": "deferred",
       "verifying_review_id": null
     }
   },
