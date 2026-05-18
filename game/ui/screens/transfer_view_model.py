@@ -77,8 +77,6 @@ class TransferViewModel:
       display_name, source_amt, target_amt}``).
     * ``filter_empty`` — when True, ``visible_rows`` excludes rows
       with both source and target amount of 0.
-    * ``all_pod_names`` — known drop-pod design names that should
-      always show (even at 0/0).
     """
 
     # Sentinel values for "transfer all available". The engine
@@ -90,7 +88,7 @@ class TransferViewModel:
     MAX_LOAD: float = float("inf")
     MAX_DROP: float = float("-inf")
 
-    def __init__(self, all_pod_names: Optional[List[str]] = None) -> None:
+    def __init__(self) -> None:
         self.available_sources: List[dict] = []
         self.available_targets: List[dict] = []
         self.current_source: Optional[dict] = None
@@ -99,7 +97,6 @@ class TransferViewModel:
         self.pending_transfers: Dict[str, Any] = {}
         self.row_data: List[dict] = []
         self.filter_empty: bool = False
-        self.all_pod_names: List[str] = list(all_pod_names or [])
 
     # ------------------------------------------------------------------
     # Pending-transfer math
@@ -226,12 +223,12 @@ class TransferViewModel:
     ) -> Dict[str, int]:
         """Aggregate resource + population amounts across container snapshots.
 
-        PROJ-437 Phase 1b: parity surface to :meth:`get_amounts` (which
-        reads from ``FleetInfo`` / ``PlanetInfo`` DTOs) — returns the
-        same ``cargo_key → int`` mapping but reads from
-        :class:`ContainerSnapshotInfo` instances. Phase 3 switches the
-        row-builder consumers; Phase 1b ships the reader additively so
-        the existing DTO path stays authoritative until then.
+        PROJ-437 Phase 1b. Returns a ``cargo_key → int`` mapping
+        consumed (historically) by the legacy row builder. Post-
+        Phase-4 the dialog drives its row data through
+        :meth:`build_row_data_from_containers` and this method is
+        retained as a focused helper for callers that need only the
+        resource/population aggregation.
 
         Mapping rules:
 
@@ -239,9 +236,7 @@ class TransferViewModel:
           Quantities from multiple snapshots aggregate.
         * ``ContainableKind.POPULATION`` entries →
           ``{f"passengers_{species_id}": int(count)}``.
-        * ``ContainableKind.ITEM`` entries are skipped — they render
-          through the existing ``_build_pod_rows`` path until Phase 3's
-          mixed-content cutover.
+        * ``ContainableKind.ITEM`` entries are skipped.
         """
         # Local import keeps the module pygame-free and avoids circular
         # imports — the DTO module sits below the UI layer.
@@ -259,77 +254,6 @@ class TransferViewModel:
                     amounts[key] = amounts.get(key, 0) + int(entry.quantity)
                 # ITEM entries handled in Phase 3.
         return amounts
-
-    @staticmethod
-    def get_amounts(info_obj) -> Dict[str, int]:
-        """Extract resource/population/passengers amounts from a DTO.
-
-        Returns a dict mapping cargo_key → integer amount. Passenger
-        species use the ``passengers_<race_id>`` key; bare
-        ``passengers`` is the fleet-side single bucket.
-        """
-        amounts: Dict[str, int] = {}
-        if not info_obj:
-            return amounts
-
-        # Local imports — DTOs only, no pygame.
-        from game.strategy.facade.dto.fleet_dto import FleetInfo
-        from game.strategy.facade.dto.planet_dto import PlanetInfo
-
-        if isinstance(info_obj, FleetInfo):
-            for res, amt in getattr(info_obj, "cargo_resources", ()):
-                amounts[res] = int(amt)
-            amounts["passengers"] = info_obj.passengers_current
-        elif isinstance(info_obj, PlanetInfo):
-            for res, amt in getattr(info_obj, "stockpile", ()):
-                amounts[res] = int(amt)
-            for race_id, count, _ in info_obj.population_details:
-                amounts[f"passengers_{race_id}"] = count
-
-        return amounts
-
-    def build_row_data(self, source_obj, target_obj) -> List[dict]:
-        """Rebuild ``row_data`` from a pair of DTOs and return it.
-
-        The order is: 8 canonical resources, then any species seen
-        on either side (sorted), then drop-pod rows.
-        """
-        source_amounts = self.get_amounts(source_obj)
-        target_amounts = self.get_amounts(target_obj)
-
-        rows: List[dict] = []
-
-        for defn in _iter_resource_definitions():
-            rows.append({
-                "cargo_key": defn.id,
-                "display_name": defn.name,
-                "source_amt": source_amounts.get(defn.id, 0),
-                "target_amt": target_amounts.get(defn.id, 0),
-            })
-
-        species_seen = set()
-        for key in list(source_amounts.keys()) + list(target_amounts.keys()):
-            if key.startswith("passengers_"):
-                species_seen.add(key)
-            elif key == "passengers":
-                species_seen.add("passengers")
-
-        for species_key in sorted(species_seen):
-            if species_key == "passengers":
-                display = "Population"
-            else:
-                display = species_key.replace("passengers_", "")
-            rows.append({
-                "cargo_key": species_key,
-                "display_name": display,
-                "source_amt": source_amounts.get(species_key, 0),
-                "target_amt": target_amounts.get(species_key, 0),
-            })
-
-        rows.extend(self._build_pod_rows(source_obj, target_obj))
-
-        self.row_data = rows
-        return rows
 
     # ------------------------------------------------------------------
     # PROJ-437 Phase 2 — Mass-remaining preview
@@ -385,58 +309,6 @@ class TransferViewModel:
             resource_definitions=_iter_resource_definitions(),
             filter_empty=filter_empty,
         )
-
-    def _build_pod_rows(self, source_obj, target_obj) -> List[dict]:
-        """Return drop-pod and carried-vehicle rows.
-
-        PROJ-FMS-A Phase 3: rows whose ``vehicle_type`` is one of
-        {mine, fighter, satellite} get the ``vehicle:<name>`` cargo_key
-        so the transfer dispatcher routes them through the
-        ``_dispatch_carried_vehicle_*`` branches. Everything else stays
-        on the legacy ``drop_pod:<name>`` key.
-        """
-        from game.strategy.facade.dto.fleet_dto import FleetInfo
-        from game.strategy.facade.dto.planet_dto import PlanetInfo
-
-        vehicle_types = {"mine", "fighter", "satellite"}
-
-        def _collect(obj) -> Dict[str, dict]:
-            """Walk both staging_yard_summary and carried_items_summary;
-            return {name: {"count": N, "is_vehicle": bool}}."""
-            out: Dict[str, dict] = {}
-            if isinstance(obj, PlanetInfo):
-                tuples = getattr(obj, "staging_yard_summary", ())
-            elif isinstance(obj, FleetInfo):
-                tuples = getattr(obj, "carried_items_summary", ())
-            else:
-                tuples = ()
-            for name, vtype, _mass, count in tuples:
-                row = out.setdefault(name, {"count": 0, "is_vehicle": False})
-                row["count"] += count
-                if str(vtype).lower() in vehicle_types:
-                    row["is_vehicle"] = True
-            return out
-
-        source_pods = _collect(source_obj)
-        target_pods = _collect(target_obj)
-
-        all_pod_names = set(self.all_pod_names)
-        all_pod_names.update(source_pods.keys())
-        all_pod_names.update(target_pods.keys())
-
-        out: List[dict] = []
-        for pod_name in sorted(all_pod_names):
-            s = source_pods.get(pod_name, {"count": 0, "is_vehicle": False})
-            t = target_pods.get(pod_name, {"count": 0, "is_vehicle": False})
-            is_vehicle = s["is_vehicle"] or t["is_vehicle"]
-            prefix = "vehicle" if is_vehicle else "drop_pod"
-            out.append({
-                "cargo_key": f"{prefix}:{pod_name}",
-                "display_name": pod_name,
-                "source_amt": s["count"],
-                "target_amt": t["count"],
-            })
-        return out
 
     def visible_rows(self) -> List[dict]:
         """Return the subset of ``row_data`` to render given

@@ -2,17 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from game.core.hex_math import HexCoord
-from game.strategy.facade.dto.fleet_dto import FleetInfo
-from game.strategy.facade.dto.planet_dto import PlanetInfo
-from game.core.resources import ResourceCatalog
 from game.ui.screens.transfer_view_model import TransferViewModel
-
-
-# PROJ-436 Phase 7: the deleted ``RESOURCE_TYPES`` hardcoded list is
-# replaced by ``ResourceCatalog.all_ids()`` ordering. The test layer
-# resolves the canonical list once at import.
-_CANONICAL_RESOURCE_IDS = ResourceCatalog.from_json().all_ids()
 
 
 class TestTransferViewModelPendingMath:
@@ -61,54 +51,11 @@ class TestTransferViewModelPendingMath:
 
 
 class TestTransferViewModelRows:
-    def test_worker_i_transfer_vm_species_key_ordering(self) -> None:
-        vm = TransferViewModel(all_pod_names=["Empty Pod"])
-        planet = PlanetInfo(
-            planet_id=1,
-            name="Colony",
-            planet_type="CONTINENTAL",
-            location=HexCoord(0, 0),
-            orbit_distance=2,
-            stockpile=(("metals", 50),),
-            population_details=(
-                ("zeta", 7, 0.7),
-                ("alpha", 3, 0.9),
-            ),
-            staging_yard_summary=(("Drop Pod B", "Ship", 10.0, 1),),
-        )
-        fleet = FleetInfo(
-            fleet_id=2,
-            owner_id=1,
-            name="Lift Fleet",
-            composition_summary="1 transport",
-            location=HexCoord(1, 0),
-            speed=1.0,
-            ship_count=1,
-            passengers_current=5,
-            cargo_resources=(("fuel", 12),),
-            carried_items_summary=(("Drop Pod A", "Ship", 8.0, 2),),
-        )
-
-        rows = vm.build_row_data(planet, fleet)
-
-        assert [row["cargo_key"] for row in rows[:len(_CANONICAL_RESOURCE_IDS)]] == _CANONICAL_RESOURCE_IDS
-
-        species_start = len(_CANONICAL_RESOURCE_IDS)
-        assert [row["cargo_key"] for row in rows[species_start:species_start + 3]] == [
-            "passengers",
-            "passengers_alpha",
-            "passengers_zeta",
-        ]
-        assert [row["display_name"] for row in rows[species_start:species_start + 3]] == [
-            "Population",
-            "alpha",
-            "zeta",
-        ]
-        assert [row["cargo_key"] for row in rows[-3:]] == [
-            "drop_pod:Drop Pod A",
-            "drop_pod:Drop Pod B",
-            "drop_pod:Empty Pod",
-        ]
+    # PROJ-437 Phase 4: legacy DTO row-builder retired
+    # (`build_row_data`, `get_amounts`, `_build_pod_rows`,
+    # `all_pod_names`). The container-driven builder is covered at
+    # tests/unit/ui/screens/test_transfer_mixed_content.py — equivalent
+    # row-ordering pins live there.
 
     def test_filter_empty_limits_visible_rows_to_rows_with_amounts(self) -> None:
         vm = TransferViewModel()

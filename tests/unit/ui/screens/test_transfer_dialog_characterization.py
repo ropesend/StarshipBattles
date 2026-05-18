@@ -228,37 +228,12 @@ class TestPendingTransferMath:
 
 
 # ---------------------------------------------------------------------------
-# _get_amounts extraction
+# `_get_amounts` extraction — retired (PROJ-437 Phase 4)
+#
+# The legacy `vm.get_amounts(info_obj)` DTO accessor is gone; the
+# container-driven equivalent (`vm.get_amounts_from_containers`) is
+# covered at tests/unit/ui/screens/test_transfer_view_model_container.py.
 # ---------------------------------------------------------------------------
-
-
-class TestGetAmounts:
-    def test_get_amounts_none_returns_empty(self, mock_manager, mock_scene, mock_fleet):
-        dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        assert dialog._get_amounts(None) == {}
-
-    def test_get_amounts_fleet_includes_resources_and_passengers(
-            self, mock_manager, mock_scene, mock_fleet):
-        dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        info = MagicMock(spec=FleetInfo)
-        info.cargo_resources = (("metals", 100), ("fuel", 50.0))
-        info.passengers_current = 7
-        amounts = dialog._get_amounts(info)
-        assert amounts["metals"] == 100
-        assert amounts["fuel"] == 50  # Coerced to int.
-        assert amounts["passengers"] == 7
-
-    def test_get_amounts_planet_includes_stockpile_and_population(
-            self, mock_manager, mock_scene, mock_fleet):
-        dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        info = MagicMock(spec=PlanetInfo)
-        info.stockpile = (("metals", 1234.5),)
-        # population_details: (race_id, count, _)
-        info.population_details = [("humans", 100, None), ("elves", 25, None)]
-        amounts = dialog._get_amounts(info)
-        assert amounts["metals"] == 1234  # int-coerced.
-        assert amounts["passengers_humans"] == 100
-        assert amounts["passengers_elves"] == 25
 
 
 # ---------------------------------------------------------------------------
@@ -292,37 +267,15 @@ class TestSourceChange:
 
 
 # ---------------------------------------------------------------------------
-# _add_pod_rows merging
+# `_add_pod_rows` merging — retired (PROJ-437 Phase 4)
+#
+# Drop-pod (and vehicle) rendering now flows through
+# `build_row_data_from_containers` — Container ITEM entries become the
+# unified item rows. Vehicle vs drop-pod prefix discrimination is
+# deferred until `ItemRef.state` reaches the snapshot (PROJ-436 Phase 9
+# substrate change); container coverage at
+# tests/unit/ui/screens/test_transfer_mixed_content.py.
 # ---------------------------------------------------------------------------
-
-
-class TestAddPodRows:
-    def test_pod_rows_merge_known_designs_with_present_pods(
-            self, mock_manager, mock_scene, mock_fleet):
-        dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        # Reset to known-pod-design list.
-        dialog._all_pod_names = ["MarinePod"]
-        dialog._row_data = []
-
-        source = MagicMock(spec=PlanetInfo)
-        source.staging_yard_summary = (("MarinePod", "Drop Pod", 5, 3),)
-        target = MagicMock(spec=FleetInfo)
-        target.carried_items_summary = (("HazmatPod", "Drop Pod", 5, 1),)
-
-        dialog._add_pod_rows(source, target)
-
-        keys = [r["cargo_key"] for r in dialog._row_data]
-        assert "drop_pod:MarinePod" in keys
-        assert "drop_pod:HazmatPod" in keys
-        # source carries 3 MarinePods; target carries 1 HazmatPod.
-        marine_row = next(r for r in dialog._row_data
-                          if r["cargo_key"] == "drop_pod:MarinePod")
-        hazmat_row = next(r for r in dialog._row_data
-                          if r["cargo_key"] == "drop_pod:HazmatPod")
-        assert marine_row["source_amt"] == 3
-        assert marine_row["target_amt"] == 0
-        assert hazmat_row["source_amt"] == 0
-        assert hazmat_row["target_amt"] == 1
 
 
 # ---------------------------------------------------------------------------

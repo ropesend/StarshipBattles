@@ -130,11 +130,6 @@ class TransferDialog(StrategyModalWindow):
             self.facade, self.view_model,
         )
 
-        # Pod design discovery is a side-effecting query — do it now
-        # so the view model has its baseline pod-name list before
-        # any row build. Falls back to [] on I/O / schema error.
-        self.view_model.all_pod_names = self._controller.discover_pod_designs(scene)
-
         # Widget reference placeholders. Populated by the renderer in
         # Stage 3 (production) or by ``MockTransferUiBuilder`` (tests).
         self._init_widget_refs()
@@ -248,14 +243,6 @@ class TransferDialog(StrategyModalWindow):
     def _current_target(self, value: Optional[dict]) -> None:
         self.view_model.current_target = value
 
-    @property
-    def _all_pod_names(self) -> List[str]:
-        return self.view_model.all_pod_names
-
-    @_all_pod_names.setter
-    def _all_pod_names(self, value: List[str]) -> None:
-        self.view_model.all_pod_names = value
-
     # ------------------------------------------------------------------
     # Population
     # ------------------------------------------------------------------
@@ -295,18 +282,8 @@ class TransferDialog(StrategyModalWindow):
     def _format_pending(self, amount: Any) -> str:
         return self.view_model.format_pending(amount)
 
-    def _get_amounts(self, info_obj) -> Dict[str, int]:
-        return self.view_model.get_amounts(info_obj)
-
     def _discover_pod_designs(self) -> List[str]:
         return self._controller.discover_pod_designs(self.scene)
-
-    def _add_pod_rows(self, source_obj, target_obj) -> None:
-        # Append pod rows to the existing row_data (matches the old
-        # in-place behaviour the characterization tests pin).
-        self.view_model.row_data.extend(
-            self.view_model._build_pod_rows(source_obj, target_obj)
-        )
 
     # ------------------------------------------------------------------
     # Event handlers
