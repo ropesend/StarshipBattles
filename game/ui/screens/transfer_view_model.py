@@ -214,6 +214,46 @@ class TransferViewModel:
     # ------------------------------------------------------------------
 
     @staticmethod
+    def get_amounts_from_containers(
+        snapshots,
+    ) -> Dict[str, int]:
+        """Aggregate resource + population amounts across container snapshots.
+
+        PROJ-437 Phase 1b: parity surface to :meth:`get_amounts` (which
+        reads from ``FleetInfo`` / ``PlanetInfo`` DTOs) — returns the
+        same ``cargo_key → int`` mapping but reads from
+        :class:`ContainerSnapshotInfo` instances. Phase 3 switches the
+        row-builder consumers; Phase 1b ships the reader additively so
+        the existing DTO path stays authoritative until then.
+
+        Mapping rules:
+
+        * ``ContainableKind.RESOURCE`` entries → ``{type_id: int(qty)}``.
+          Quantities from multiple snapshots aggregate.
+        * ``ContainableKind.POPULATION`` entries →
+          ``{f"passengers_{species_id}": int(count)}``.
+        * ``ContainableKind.ITEM`` entries are skipped — they render
+          through the existing ``_build_pod_rows`` path until Phase 3's
+          mixed-content cutover.
+        """
+        # Local import keeps the module pygame-free and avoids circular
+        # imports — the DTO module sits below the UI layer.
+        from game.strategy.data.containable import ContainableKind
+
+        amounts: Dict[str, int] = {}
+        for snapshot in snapshots:
+            for entry in snapshot.entries:
+                if entry.kind is ContainableKind.RESOURCE:
+                    amounts[entry.type_id] = (
+                        amounts.get(entry.type_id, 0) + int(entry.quantity)
+                    )
+                elif entry.kind is ContainableKind.POPULATION:
+                    key = f"passengers_{entry.type_id}"
+                    amounts[key] = amounts.get(key, 0) + int(entry.quantity)
+                # ITEM entries handled in Phase 3.
+        return amounts
+
+    @staticmethod
     def get_amounts(info_obj) -> Dict[str, int]:
         """Extract resource/population/passengers amounts from a DTO.
 

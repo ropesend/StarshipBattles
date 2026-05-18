@@ -51,17 +51,17 @@
       "review_mode": "standard",
       "review_request_id": null,
       "scrap_history": [],
-      "status": "in_progress",
+      "status": "complete",
       "sub_phases": {
         "phase_1a": {
           "status": "complete",
-          "head_sha": null,
+          "head_sha": "5356222ff",
           "summary": "Substrate: ContainerSnapshotInfo DTO + facade.{fleets,planets}.get_containers(id) accessors. Additive — no caller migration. 10 new tests under tests/unit/strategy/facade/test_container_snapshots.py."
         },
         "phase_1b": {
-          "status": "not_started",
+          "status": "complete",
           "head_sha": null,
-          "summary": "Cutover: transfer_controller.collect_sources_and_targets emits per-entity 'containers' field; transfer_view_model reads source/target amounts through ContainerSnapshotInfo."
+          "summary": "Cutover: transfer_controller.collect_sources_and_targets attaches `containers` tuple per entry; transfer_view_model.get_amounts_from_containers reader added (parity surface to legacy get_amounts(info_obj)). Legacy DTO row-builder path stays alive until Phase 3 mixed-content. Two existing test_transfer_controller.py assertions relaxed from exact-dict-eq to subset checks for the additive field. New tests at tests/unit/ui/screens/test_transfer_view_model_container.py (7)."
         }
       },
       "verifying_review_id": null

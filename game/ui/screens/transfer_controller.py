@@ -133,6 +133,18 @@ class TransferController:
                     "id": p.planet_id,
                 })
 
+        # PROJ-437 Phase 1b: attach the per-entity Container snapshots so
+        # downstream phases (view-model row data, mass-remaining preview,
+        # mixed-content display) can read storage state through the
+        # unified Container API without re-querying the facade. Field is
+        # additive — existing consumers that only read `label`/`type`/`id`
+        # are unaffected.
+        for entry in sources:
+            if entry["type"] == "fleet":
+                entry["containers"] = self.facade.fleets.get_containers(entry["id"])
+            else:
+                entry["containers"] = self.facade.planets.get_containers(entry["id"])
+
         return sources
 
     def discover_pod_designs(self, scene) -> List[str]:
