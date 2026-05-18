@@ -207,7 +207,7 @@
       "merged_into_project_at_sha": null,
       "phase_base_sha": "412ea51d2",
       "phase_branch": "proj/PROJ-436/phase_8",
-      "phase_head_sha": null,
+      "phase_head_sha": "11baf7efe",
       "planned_files": [
         "game/strategy/engine/production_engine.py",
         "game/strategy/data/planet.py",
