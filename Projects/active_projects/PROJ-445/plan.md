@@ -13,17 +13,19 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. **F-B-001 LayMines TypeError fix** (urgent — single high-severity finding) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. **F-B-001 LayMines TypeError fix** (urgent — single high-severity finding) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Engine boundary tightening (DI-001/006/007 fix sites + transfer_branches private slots) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Annotation + ratchet test polish | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. OrderProcessor PROJ-368 facade unwinding (F-B-017/018) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-18
-**Active Phase:** Planning
-**Last Action:** Charter created from comprehensive residue scan ([findings/bucket_b_engine_services_scan.md](findings/bucket_b_engine_services_scan.md), 22 findings)
-**Next Action:** **PHASE 1 PRIORITY** — fix F-B-001 (LayMinesOrderHandler signature drift will TypeError on any planet-issued LAY_MINES order). Three-line change; no reason to wait.
-**Blockers:** None
+**Active Phase:** Phase 2 (queued — not started)
+**Last Action:** Phase 1 complete. F-B-001 fixed: `LayMinesOrderHandler.execute_for_issuer` now accepts `registries: Any = None` (mirrors `recover_fighters.py:107-120`). Added integration test [`tests/integration/test_fms_planet_lay_mines.py`](../../../tests/integration/test_fms_planet_lay_mines.py) parametrised across all 5 planet-FMS order types, driven through `ActionExecutionEngine._execute_planet_action` (catches the registries-kwarg drift on any future handler that ships in the same shape). Extended contract ratchet at [`tests/unit/strategy/engine/test_issuer_execution_contract.py`](../../../tests/unit/strategy/engine/test_issuer_execution_contract.py) with `test_lay_mines_signature_accepts_galaxy_and_registries` + `test_launch_satellites_signature_accepts_galaxy_and_registries` (closes the PROJ-438 ratchet parity gap Codex flagged). Added `test_planet_fms_subcategory_tag_spelling_or_set_size` at [`tests/unit/strategy/engine/test_command_registry_contract.py`](../../../tests/unit/strategy/engine/test_command_registry_contract.py) locking the planet-FMS surface at 5 entries and catching typo regressions (verified by temporarily mutating `"planet_fms"` → `"planet-fms"` on `handlers/lay_mines.py:40`, observing the test fail, then reverting). Full sharded suite green: 23326 passed, 0 failed. `python Projects/scripts/validate_phase.py PROJ-445 1` reports PASSED.
+**Next Action:** **PHASE 2** — engine boundary tightening. Order: (1) F-B-002 single-line fix to `transfer_branches.py:365` rollback path → call `planet.add_to_staging_yard(removed)` (capacity-checked) instead of `planet.staging_yard.append(removed)`; (2) F-B-003 + DI-2026-05-18-001 fleet-to-fleet pod/vehicle dispatch — coordinate with PROJ-444 to add public `ship.can_carry_pod` / `ship.load_vehicle` / `ship.unload_vehicle` delegators before this project migrates `transfer_branches.py`'s 6 call sites off `ship._cargo_mgr` and adds the missing fleet-to-fleet drop_pod/vehicle branch in `_dispatch_fleet_to_fleet`; (3) F-B-014 audit + delete pre-PROJ-228 plain-string CLOSE_WARP_POINT target form; (4) F-B-019 + DI-2026-05-18-007 tighten `IProductionResourceSource.production_consume_resource` Protocol contract; (5) DI-2026-05-18-002 harden `CommandRegistry.serializer_codec_for` ambiguity. F-B-013 typed `staging_yard_typed` is structural joint-phase with PROJ-444 — do not attempt independently. DI-2026-05-18-001 (planet-FMS coverage gap) remains open — the LAY_MINES slice closed in Phase 1 but the broader 1-empire-1-planet-with-facility tick-driven scaffold is the Phase-2 / future-project work the original entry described.
+**Blockers:** None for Phase 2 single-handler items. Cross-bucket coordination required for F-B-003 (PROJ-444 owns ShipInstance delegators) and F-B-013 (PROJ-444 owns Planet field rename).
+
+> **STOP CONDITION REACHED:** Phase 1 was the urgent stage-1 scope. A future session must explicitly trigger Phase 2 work — do not auto-continue.
 
 ## Overview
 

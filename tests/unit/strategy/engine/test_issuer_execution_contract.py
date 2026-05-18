@@ -65,6 +65,35 @@ class TestUnifiedIOrderHandlerSignature:
                 f"LaunchFightersOrderHandler.execute_for_issuer missing {kw}"
             )
 
+    def test_launch_satellites_signature_accepts_galaxy_and_registries(self) -> None:
+        """PROJ-445 Phase 1 parity-gap fix — the original PROJ-438 ratchet
+        omitted ``LaunchSatellitesOrderHandler``. The handler already had
+        the 5-kwarg shape; this ratchet pins it so the next refactor that
+        narrows the signature is caught here, not in production."""
+        from game.strategy.engine.order_handlers.launch_satellites import (
+            LaunchSatellitesOrderHandler,
+        )
+        sig = inspect.signature(LaunchSatellitesOrderHandler.execute_for_issuer)
+        for kw in ("issuer", "order_owner", "empire", "galaxy", "registries"):
+            assert kw in sig.parameters, (
+                f"LaunchSatellitesOrderHandler.execute_for_issuer missing {kw}"
+            )
+
+    def test_lay_mines_signature_accepts_galaxy_and_registries(self) -> None:
+        """PROJ-445 Phase 1 (F-B-001) — the original PROJ-438 ratchet also
+        omitted ``LayMinesOrderHandler``, which is exactly how the
+        ``registries`` kwarg drift slipped through PROJ-438's audit and
+        sat unobserved until the post-refactor residue review. Pinning
+        the 5-kwarg shape here is the prophylactic test for F-B-001."""
+        from game.strategy.engine.order_handlers.lay_mines import (
+            LayMinesOrderHandler,
+        )
+        sig = inspect.signature(LayMinesOrderHandler.execute_for_issuer)
+        for kw in ("issuer", "order_owner", "empire", "galaxy", "registries"):
+            assert kw in sig.parameters, (
+                f"LayMinesOrderHandler.execute_for_issuer missing {kw}"
+            )
+
 
 class TestOrderProcessorPublicGetHandler:
     """Pin that ``OrderProcessor`` exposes a public ``get_handler`` accessor
