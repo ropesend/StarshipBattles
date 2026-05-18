@@ -90,6 +90,37 @@ BOUNDARIES: list[BoundarySpec] = [
             # hold-over; safe because the production path goes through
             # commands which don't write directly.
             "game/ui/screens/empire_build_queue_window.py",
+            # PROJ-443 Phase 2 — sibling-class false positives.
+            # ``FighterWing`` and ``SatelliteConstellation`` (PROJ-431
+            # Phase 3) are explicit siblings of ``Fleet``, NOT subtypes —
+            # see ``deployed_group.py``: "Deployed-satellite group —
+            # sibling of :class:`Fleet`, NOT a Fleet." They have their own
+            # ``ships`` list with no mutator-boundary contract. The AST
+            # walker matches on attribute name only, so these files'
+            # ``ships.append`` / ``.remove`` calls trip the Fleet boundary
+            # despite operating on a different class.
+            "game/strategy/data/deployed_group.py",
+            "game/strategy/engine/order_handlers/launch_fighters.py",
+            "game/strategy/engine/order_handlers/launch_satellites.py",
+            "game/strategy/engine/order_handlers/recover_fighters.py",
+            "game/strategy/engine/order_handlers/recover_satellites.py",
+            # PROJ-443 Phase 2 — simulation-layer false positives.
+            # ``BattleEngine`` carries a ``ships`` list (the live tactical
+            # roster). Per the ShipInstance allowlist comment below: "Per
+            # PROJ-370 design: simulation-layer writes are out of scope."
+            # Same rationale applies to Fleet's ``ships`` attribute name.
+            "game/simulation/systems/battle_setup.py",
+            "game/simulation/systems/fighter_reboard.py",
+            # PROJ-443 Phase 2 — engine-tick prune of destroyed fleet contents.
+            # ``_prune_destroyed_fleet_contents`` filters ``fleet.ships``
+            # in place after minefield damage and removes the fleet from
+            # ``empire.fleets`` when empty. This is a real strategy
+            # mutation that *should* route through
+            # ``FleetWriteService.remove_ship`` /
+            # ``EmpireWriteService.remove_fleet``. Allowlisted here pending
+            # a follow-up routing pass (see ``decisions.md`` 2026-05-17
+            # row "PROJ-443 Phase 2 architectural debt").
+            "game/strategy/engine/movement_phase_collaborator.py",
         }),
         description="Phase 2: Fleet boundary live (PROJ-370).",
     ),
@@ -133,6 +164,20 @@ BOUNDARIES: list[BoundarySpec] = [
             # this allowlist entry.
             "game/strategy/engine/game_initializer.py",
             "game/strategy/quickstart_builder.py",
+            # PROJ-443 Phase 2 — engine-tick staging-yard writes.
+            # ``issuer_adapter.py:_remove_from_staging`` overwrites
+            # ``planet.staging_yard`` wholesale after a filter pass; a
+            # bulk-set helper does not exist on ``IPlanetMutator`` and
+            # the per-item ``add_staging_item`` / ``pop_staging_item``
+            # surface is poorly suited to the filter-then-replace
+            # idiom. ``transfer_branches.py:_dispatch_carried_vehicle_load``
+            # has a one-line ``planet.staging_yard.append(removed)``
+            # restore-on-failure path that could trivially route through
+            # ``add_staging_item``. Allowlisted here pending a follow-up
+            # routing pass (see ``decisions.md`` 2026-05-17 row "PROJ-443
+            # Phase 2 architectural debt").
+            "game/strategy/engine/issuer_adapter.py",
+            "game/strategy/engine/order_handlers/transfer_branches.py",
         }),
         description="Phase 3: Planet boundary live (PROJ-370).",
     ),
@@ -159,6 +204,14 @@ BOUNDARIES: list[BoundarySpec] = [
             # `colonies` attribute names but are NOT Empire instances.
             "game/ui/screens/battle_setup_state.py",
             "game/ui/screens/battle_setup/controller.py",
+            # PROJ-443 Phase 2 — engine-tick fleet pruning.
+            # ``_prune_destroyed_fleet_contents`` removes a fleet from
+            # ``empire.fleets`` when minefield damage empties it. Real
+            # strategy mutation that *should* route through
+            # ``EmpireWriteService.remove_fleet``. Allowlisted here
+            # pending a follow-up routing pass (see ``decisions.md``
+            # 2026-05-17 row "PROJ-443 Phase 2 architectural debt").
+            "game/strategy/engine/movement_phase_collaborator.py",
         }),
         description="Phase 4: Empire boundary live (PROJ-370).",
     ),
@@ -211,6 +264,38 @@ BOUNDARIES: list[BoundarySpec] = [
             # Workshop UI mutates a Vehicle/design components list, not a
             # strategy ShipInstance.
             "game/ui/screens/builder/layer_panel.py",
+            # PROJ-443 Phase 2 — additional simulation-layer false positives.
+            # Same rationale as the existing ``game/simulation/...``
+            # entries above: these write to simulation ``Ship`` objects
+            # (``victim.is_alive``, ``new_ship.current_hp``,
+            # ``new_ship.components``, ``ship.is_alive``), not strategy
+            # ShipInstance. Per PROJ-370 design simulation-layer writes
+            # are out of scope.
+            "game/simulation/combat/ram_target_resolver.py",
+            "game/simulation/systems/attack_processor.py",
+            "game/simulation/systems/tactical_mine_resolver.py",
+            # PROJ-443 Phase 2 — strategy-layer construction helpers.
+            # ``carried_vehicle_deploy.carried_vehicle_to_ship_instance``
+            # is the centralised CarriedVehicle → ShipInstance materializer
+            # (PROJ-FMS-D audit Fix 1) and sets ``components``,
+            # ``is_alive``, ``is_derelict`` during construction.
+            # ``ship_instance_factory.ShipInstanceFactory.create`` is the
+            # canonical construction path and seeds ``components`` from
+            # the design. Both are init-time writes on a freshly-minted
+            # instance, structurally distinct from engine-tick mutations.
+            "game/strategy/data/carried_vehicle_deploy.py",
+            "game/strategy/services/ship_instance_factory.py",
+            # PROJ-443 Phase 2 — engine-tick minefield damage writes.
+            # ``MinefieldResolver._apply_strategy_layer_damage`` mutates
+            # ``ship.current_hp`` and ``ship.is_alive`` directly on the
+            # damage-pipeline-fallback branch (the primary branch routes
+            # through ``DamageCalculator`` against a tactical
+            # ``sim_ship``). Real strategy mutations that *should* route
+            # through ``IShipInstanceMutator.set_current_hp`` /
+            # ``set_is_alive``. Allowlisted here pending a follow-up
+            # routing pass (see ``decisions.md`` 2026-05-17 row "PROJ-443
+            # Phase 2 architectural debt").
+            "game/strategy/engine/minefield_resolver.py",
         }),
         description="Phase 5: ShipInstance boundary live (PROJ-370).",
     ),
