@@ -503,10 +503,18 @@ class ProductionEngine(IProductionEngine):
         """Check if the build location can afford the resource cost.
 
         For planet construction: checks planet.stockpile (local storage).
-        For fleet construction: checks empire pool (Phase 6 will switch to fleet cargo).
+        For fleet construction: checks fleet cargo.
+
+        PROJ-436 Phase 5: the legacy ``else`` branch fell back to
+        ``empire.has_resources`` against the now-deleted
+        ``_fleet_resource_pool``. Every production caller passes a
+        Planet (``context_type='planet'``) or a Fleet
+        (``context_type='fleet'``) — the fallback was dead. Phase 8
+        will dissolve the remaining planet/fleet branching into a
+        single ``Container``-based check.
 
         Args:
-            empire: The empire (fallback for fleet construction).
+            empire: The owning empire (unused — kept for ABI parity).
             cost_this_step: Resources needed this step.
             colony_or_fleet: Build location (Planet or Fleet).
 
@@ -518,7 +526,11 @@ class ProductionEngine(IProductionEngine):
             return colony_or_fleet.has_stockpile(cost_this_step)
         if ctx == 'fleet':
             return colony_or_fleet.has_cargo_resources(cost_this_step)
-        return empire.has_resources(cost_this_step)
+        raise ValueError(
+            "ProductionEngine._check_affordability requires a Planet "
+            "(context_type='planet') or Fleet (context_type='fleet'); "
+            f"got {type(colony_or_fleet).__name__} with context_type={ctx!r}"
+        )
 
     def _log_resource_shortage(
         self,
@@ -552,7 +564,18 @@ class ProductionEngine(IProductionEngine):
             elif ctx == 'fleet':
                 available = colony_or_fleet.get_cargo_resource(resource)
             else:
-                available = empire.resource_pool.get(resource, 0.0)
+                # PROJ-436 Phase 5: legacy `empire.resource_pool.get(...)`
+                # fallback removed. Production callers always pass a
+                # Planet or Fleet; an unrecognised context_type is a
+                # programmer error caught earlier in
+                # ``_check_affordability``.
+                raise ValueError(
+                    "ProductionEngine._log_resource_shortage requires a "
+                    "Planet (context_type='planet') or Fleet "
+                    "(context_type='fleet'); got "
+                    f"{type(colony_or_fleet).__name__} with "
+                    f"context_type={ctx!r}"
+                )
             if available >= needed:
                 continue
             shortfall_ratio = needed / max(available, 0.0001)
@@ -611,7 +634,17 @@ class ProductionEngine(IProductionEngine):
                 elif ctx == 'fleet':
                     colony_or_fleet.consume_cargo_resource(res, amount)
                 else:
-                    empire.consume_resources(res, amount)
+                    # PROJ-436 Phase 5: legacy `empire.consume_resources`
+                    # fallback removed (Empire's fleet-side resource pool
+                    # is deleted). Production callers always pass a
+                    # Planet or Fleet; this branch is a programmer error.
+                    raise ValueError(
+                        "ProductionEngine._apply_resource_consumption "
+                        "requires a Planet (context_type='planet') or "
+                        f"Fleet (context_type='fleet'); got "
+                        f"{type(colony_or_fleet).__name__} with "
+                        f"context_type={ctx!r}"
+                    )
                 item['resources_consumed'][res] = (
                     item.get('resources_consumed', {}).get(res, 0.0) + amount
                 )

@@ -147,13 +147,23 @@ class TestEmpireRoundTrip:
         assert restored._design_serial_counters == {"escort": 5, "frigate": 3}
 
     def test_resource_economy_fields(self):
+        """PROJ-436 Phase 5: ``max_storage`` survives the empire save
+        round-trip; ``resource_pool`` is now a pure aggregation over
+        colony stockpiles and is no longer part of the empire save
+        shape (per-Planet stockpile serializers own that durable state).
+        """
         e = create_test_empire(
             resource_pool={"fuel": 500.0, "minerals": 300.0},
             max_storage={"fuel": 1000.0, "minerals": 1000.0},
         )
         d = e.to_dict()
+        # No empire-level resource_pool key in the post-Phase-5 save shape.
+        assert "resource_pool" not in d
         restored = Empire.from_dict(d)
-        assert restored.resource_pool == {"fuel": 500.0, "minerals": 300.0}
+        # With no galaxy to resolve colony_ids, the restored aggregate
+        # is empty — colony stockpiles round-trip via the galaxy/planet
+        # save path, not via the empire's own to_dict.
+        assert restored.resource_pool == {}
         assert restored.max_storage == {"fuel": 1000.0, "minerals": 1000.0}
 
     def test_optional_flag_and_portrait(self):

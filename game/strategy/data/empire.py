@@ -55,9 +55,12 @@ class Empire:
         self._galaxy: Optional['Galaxy'] = None
 
         # Empire-wide resource economy
-        # resource_pool is now a read-only aggregate of colony stockpiles (see property below).
-        # _fleet_resource_pool is temporary storage for fleet construction until Phase 6 (fleet cargo).
-        self._fleet_resource_pool = {}  # Dict[str, float] - fleet construction resources
+        # PROJ-436 Phase 5: ``resource_pool`` is a pure aggregation query
+        # over ``self.colonies[*].stockpile`` (see property below). The
+        # legacy ``_fleet_resource_pool`` durable storage has been
+        # deleted — fleet construction draws from the build-location's
+        # container (planet stockpile / fleet cargo), not an empire-level
+        # pool.
         self.max_storage = {}     # Dict[str, float] - aggregate storage capacity (set by HarvestingEngine)
 
         # PROJ-412 Phase 5: transient dirty flags consumed by HarvestingEngine's
@@ -227,76 +230,31 @@ class Empire:
     def resource_pool(self) -> Dict[str, float]:
         """Read-only aggregate of all colony stockpiles.
 
-        Returns the sum of stockpile values across all colonies.
+        PROJ-436 Phase 5: pure aggregation query. Walks every colony's
+        ``stockpile`` and sums by ``resource_id``. The legacy
+        ``_fleet_resource_pool`` summand has been deleted along with
+        the durable field — fleet construction draws from the build-
+        location's container, not an empire-level pool.
+
+        Per Phase 0 D2 default this stays an uncached pure query; if
+        post-Phase-5 profiling shows the aggregation is hot at large-
+        empire scale, caching with explicit invalidation (PROJ-293
+        pattern) can land as a sibling sub-phase.
+
         Used for UI display and economy reporting.
         """
         totals: Dict[str, float] = {}
         for colony in self.colonies:
             for res, amount in colony.stockpile.items():
                 totals[res] = totals.get(res, 0.0) + amount
-        # Include fleet resource pool (temporary, until Phase 6 fleet cargo)
-        for res, amount in self._fleet_resource_pool.items():
-            totals[res] = totals.get(res, 0.0) + amount
         return totals
-
-    @resource_pool.setter
-    def resource_pool(self, value: Dict[str, float]) -> None:
-        """Setter for backward compatibility (used by deserialization).
-
-        Distributes resources to first colony's stockpile if colonies exist,
-        otherwise stores in fleet resource pool.
-        """
-        if self.colonies:
-            # Distribute to first colony (for save game loading)
-            self.colonies[0].stockpile = dict(value)
-        else:
-            self._fleet_resource_pool = dict(value)
-
-    def add_resources(self, resource_type: str, amount: float) -> float:
-        """Add resources to the fleet resource pool.
-
-        Used for fleet construction resources. For planet resources,
-        use planet.add_to_stockpile() directly.
-
-        Args:
-            resource_type: Resource identifier (e.g. "metals", "organics").
-            amount: Amount to add.
-
-        Returns:
-            Overflow amount (0.0 if all fit within storage).
-        """
-        current = self._fleet_resource_pool.get(resource_type, 0.0)
-        max_cap = self.max_storage.get(resource_type, float('inf'))
-        new_total = current + amount
-        if new_total > max_cap:
-            self._fleet_resource_pool[resource_type] = max_cap
-            return new_total - max_cap
-        self._fleet_resource_pool[resource_type] = new_total
-        return 0.0
-
-    def consume_resources(self, resource_type: str, amount: float) -> bool:
-        """Consume resources from the fleet resource pool (all-or-nothing).
-
-        Used for fleet construction. For planet resources,
-        use planet.consume_from_stockpile() directly.
-
-        Args:
-            resource_type: Resource identifier.
-            amount: Amount to consume.
-
-        Returns:
-            True if successful, False if insufficient (no deduction made).
-        """
-        current = self._fleet_resource_pool.get(resource_type, 0.0)
-        if current >= amount:
-            self._fleet_resource_pool[resource_type] = current - amount
-            return True
-        return False
 
     def has_resources(self, costs: dict) -> bool:
         """Check if the empire has all required resources (aggregate).
 
-        Checks across all colony stockpiles plus fleet resource pool.
+        Reads ``self.resource_pool`` — i.e. the sum across colony
+        stockpiles. Used by UI affordability checks; production code
+        consults the build-location's container directly.
 
         Args:
             costs: Dict mapping resource_type -> required amount.
@@ -362,7 +320,10 @@ class Empire:
             'built_ship_designs': sorted(self.built_ship_designs),
             '_next_fleet_display_number': self._next_fleet_display_number,
             '_design_serial_counters': self._design_serial_counters,
-            'resource_pool': dict(self._fleet_resource_pool),
+            # PROJ-436 Phase 5: ``_fleet_resource_pool`` is deleted; the
+            # save shape no longer carries an empire-level resource pool.
+            # ``resource_pool`` is a pure aggregation over colony
+            # stockpiles, persisted via each Planet's serializer.
             'max_storage': dict(self.max_storage),
         }
         # Include race visual identity if set (optional fields)
@@ -428,9 +389,11 @@ class Empire:
         empire._design_serial_counters = data.get('_design_serial_counters', {})
 
         # Restore resource economy
-        # For old saves: resources stored at empire level go to _fleet_resource_pool
-        # (colonies loaded below will have their own stockpiles in new saves)
-        empire._fleet_resource_pool = data.get('resource_pool', {})
+        # PROJ-436 Phase 5: ``_fleet_resource_pool`` is gone. Old saves
+        # (pre-Phase-5) that carry a ``resource_pool`` key are silently
+        # ignored — per CLAUDE.md "no save-file migration" rule, old
+        # saves are disposable. New saves persist resources via per-
+        # colony stockpiles only.
         empire.max_storage = data.get('max_storage', {})
 
         # PROJ-251: Strict deserialization — corrupt fleets fail the load

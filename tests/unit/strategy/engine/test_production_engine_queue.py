@@ -49,7 +49,14 @@ def colony():
     col = MagicMock(spec=Planet)
     col.construction_queue = []
     col.facilities = []
-    col.context_type = None  # falls back to empire pool
+    # PROJ-436 Phase 5: ``context_type=None`` used to route through
+    # the empire-pool fallback in production_engine — that fallback
+    # was deleted (the empire's fleet-side resource pool is gone).
+    # These queue-iteration tests need a real planet context to
+    # exercise the stockpile branch.
+    col.context_type = "planet"
+    col.has_stockpile.return_value = True
+    col.consume_from_stockpile = MagicMock()
     return col
 
 

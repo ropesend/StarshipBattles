@@ -409,7 +409,22 @@ def create_test_empire(
         empire.fleets.append(fleet)
 
     # Economy
-    empire.resource_pool = overrides.pop("resource_pool", {"fuel": 500.0, "minerals": 300.0, "energy": 200.0})
+    # PROJ-436 Phase 5: ``Empire.resource_pool`` is a read-only pure
+    # aggregation over colony stockpiles. The default-fixture seed
+    # pool became invisible at the empire level the moment the legacy
+    # ``_fleet_resource_pool`` was deleted, so the default is now
+    # empty — callers that want seeded resources pass an explicit
+    # ``resource_pool=...`` override which is routed through a hidden
+    # "_starting_reserve" colony.
+    seed_pool = overrides.pop("resource_pool", None)
+    if seed_pool:
+        reserve = create_test_planet(
+            has_facilities=False,
+            has_population=False,
+            name="_starting_reserve",
+            stockpile=dict(seed_pool),
+        )
+        empire.colonies.append(reserve)
     empire.max_storage = overrides.pop("max_storage", {"fuel": 1000.0, "minerals": 1000.0, "energy": 1000.0})
     empire.built_ship_designs = overrides.pop("built_ship_designs", {"test_escort", "test_frigate"})
     empire._design_serial_counters = overrides.pop("_design_serial_counters", {"test_escort": 5, "test_frigate": 3})

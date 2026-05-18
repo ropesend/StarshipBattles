@@ -163,16 +163,23 @@ Resources are local to planets and fleets, not a mutable global empire pool.
 - `planet.add_to_stockpile(resource, amount)`: adds locally and returns overflow.
 - `planet.consume_from_stockpile(resource, amount)`: all-or-nothing local consume.
 - `planet.has_stockpile(costs)`: affordability check for local construction.
-- `empire.resource_pool`: read-only aggregate for UI/economy views. Do not mutate
-  it to add colony resources; mutate the owning planet stockpile instead.
-- `empire._fleet_resource_pool`: fallback fleet-side aggregate still exists
-  behind `Empire.add_resources()` and `consume_resources()`, but planet/fleet build
-  paths prefer local stockpile or fleet cargo.
+- `empire.resource_pool`: read-only **pure aggregation query** over every
+  colony's stockpile (PROJ-436 Phase 5). Returns `{resource_id: sum_over_colonies}`.
+  Do not mutate the returned dict — it is a snapshot. To change empire-visible
+  resources, mutate the owning planet's stockpile (`planet.add_to_stockpile` /
+  `planet.consume_from_stockpile`).
+- `empire.has_resources(costs)` / `empire.get_resource(resource_id)`: read-only
+  helpers over `resource_pool`. Used by UI affordability widgets; production code
+  consults the build-location's container (planet stockpile / fleet cargo)
+  directly.
 
 Stale-reference correction: older comments in some engine files still mention
 harvesting or production through an empire pool. Current code harvests into
 `planet.stockpile`; planet construction consumes `planet.stockpile`; fleet
-construction consumes fleet cargo.
+construction consumes fleet cargo. PROJ-436 Phase 5 deleted the legacy
+`Empire._fleet_resource_pool` durable storage along with the
+`Empire.add_resources` / `Empire.consume_resources` mutators that wrote against
+it — the empire-level resource view is now purely derivative.
 
 ## Production Contract
 

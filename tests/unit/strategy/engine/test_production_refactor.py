@@ -19,12 +19,20 @@ class TestProductionEngineRefactor:
         emp = MagicMock(spec=Empire)
         emp.id = "emp1"
         emp.has_resources.return_value = True
-        emp.consume_resources = MagicMock()
+        # PROJ-436 Phase 5: ``Empire.consume_resources`` no longer exists,
+        # but production code never reaches the deleted else branch — the
+        # mock colony always has ``context_type='planet'``. Keeping the
+        # mock attribute is harmless (Mock auto-creates it anyway).
         return emp
 
     @pytest.fixture
     def mock_colony(self, mock_empire):
         colony = MagicMock(spec=Planet)
+        # PROJ-436 Phase 5: production_engine now raises if
+        # ``context_type`` isn't 'planet'/'fleet'. MagicMock auto-creates
+        # truthy Mocks for unset attributes, so pin the context type
+        # explicitly to route through the planet-stockpile branch.
+        colony.context_type = "planet"
         colony.construction_queue = []
         colony.facilities = []
         return colony
@@ -143,12 +151,15 @@ class TestProductionEngineEdgeCases:
         emp = MagicMock(spec=Empire)
         emp.id = "emp1"
         emp.has_resources.return_value = True
-        emp.consume_resources = MagicMock()
         return emp
 
     @pytest.fixture
     def mock_colony(self):
         colony = MagicMock(spec=Planet)
+        # PROJ-436 Phase 5: pin context_type so production_engine routes
+        # through the planet-stockpile branch (the empire-pool fallback
+        # was deleted along with ``_fleet_resource_pool``).
+        colony.context_type = "planet"
         colony.construction_queue = []
         colony.facilities = []
         return colony

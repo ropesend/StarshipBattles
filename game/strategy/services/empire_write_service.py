@@ -1,10 +1,15 @@
 """EmpireWriteService — owns Empire writes from outside the data class.
 
 PROJ-370 Phase 4: implements ``IEmpireMutator``. Single owner service for
-the 6 Empire mutation surfaces (colonies, fleets, _fleet_resource_pool,
-max_storage, built_ship_designs/designed_ships) plus the post-battle
-empty-fleet pruning that previously lived inline at
+the Empire mutation surfaces (colonies, fleets, max_storage,
+built_ship_designs/designed_ships) plus the post-battle empty-fleet
+pruning that previously lived inline at
 ``combat/post_battle_hook.py:200-218``.
+
+PROJ-436 Phase 5: the legacy ``Empire._fleet_resource_pool`` surface
+listed in earlier project docs has been deleted — empire-level
+resources are a pure aggregation over ``self.colonies[*].stockpile``,
+mutated via ``IPlanetMutator`` on the owning planets.
 
 Wiring:
     Constructed in ``GameSession.__init__``. Threaded through

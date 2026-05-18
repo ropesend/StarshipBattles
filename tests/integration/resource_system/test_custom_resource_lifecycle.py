@@ -27,11 +27,21 @@ from tests.fixtures.strategy_entities import create_test_planet
 
 
 def _make_empire(resources=None, storage=None, empire_id=0):
-    """Create an empire with optional starting resources and storage caps."""
+    """Create an empire with optional starting resources and storage caps.
+
+    PROJ-436 Phase 5: ``Empire._fleet_resource_pool`` was deleted —
+    starting resources are seeded onto a hidden "_starting_reserve"
+    colony so ``empire.resource_pool`` aggregates them via the new
+    pure-query contract.
+    """
     empire = Empire(empire_id=empire_id, name="Test Empire", color=(0, 0, 255))
     if resources:
-        for res, amount in resources.items():
-            empire._fleet_resource_pool[res] = amount
+        reserve = create_test_planet(
+            has_facilities=False, has_population=False,
+            name="_starting_reserve",
+            stockpile=dict(resources),
+        )
+        empire.colonies.append(reserve)
     if storage:
         for res, cap in storage.items():
             empire.max_storage[res] = cap
@@ -143,10 +153,17 @@ class TestCustomResourceHarvesting:
 
 
 class TestCustomResourceEmpirePool:
-    """Tests for custom resources in the empire economy."""
+    """Tests for custom resources in the empire economy.
 
-    def test_empire_pool_stores_custom_resource(self):
-        """Empire resource pool can store and track any resource type."""
+    PROJ-436 Phase 5: ``Empire.add_resources`` / ``consume_resources``
+    against the legacy fleet-side ``_fleet_resource_pool`` have been
+    deleted. The empire's resource view is a pure aggregation over
+    colony stockpiles; mutation happens through ``Planet.add_to_stockpile``
+    / ``Planet.consume_from_stockpile``.
+    """
+
+    def test_empire_pool_aggregates_custom_resource_from_colony(self):
+        """Empire resource pool aggregates any resource type from colonies."""
         empire = _make_empire(
             resources={"dilithium": 500.0},
             storage={"dilithium": 10000.0},
@@ -155,15 +172,18 @@ class TestCustomResourceEmpirePool:
         assert empire.resource_pool["dilithium"] == 500.0
         assert empire.max_storage["dilithium"] == 10000.0
 
-        # Can add more
-        empire.add_resources("dilithium", 200.0)
+        # PROJ-436 Phase 5: mutate through the colony's stockpile API.
+        # The "starting reserve" colony attached by _make_empire is the
+        # single colony at this point.
+        reserve = empire.colonies[0]
+        reserve.add_to_stockpile("dilithium", 200.0)
         assert empire.resource_pool["dilithium"] == 700.0
 
-        # Can consume
-        assert empire.consume_resources("dilithium", 300.0) is True
+        assert reserve.consume_from_stockpile("dilithium", 300.0) is True
         assert empire.resource_pool["dilithium"] == pytest.approx(400.0)
 
-        # Can check affordability
+        # ``has_resources`` and ``get_resource`` still work as read
+        # aggregates over the colony pool.
         assert empire.has_resources({"dilithium": 400.0}) is True
         assert empire.has_resources({"dilithium": 500.0}) is False
 

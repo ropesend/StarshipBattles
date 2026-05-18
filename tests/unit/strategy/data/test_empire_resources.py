@@ -1,13 +1,38 @@
-"""Tests for Empire resource pool functionality (PROJ-75 Phase 1)."""
+"""Tests for Empire resource pool functionality (PROJ-75 Phase 1).
+
+PROJ-436 Phase 5 rewrite: the legacy ``_fleet_resource_pool`` durable
+storage and the ``Empire.add_resources`` / ``Empire.consume_resources``
+mutators that wrote against it have been deleted. ``Empire.resource_pool``
+is now a pure aggregation query over ``self.colonies[*].stockpile``.
+The retained read APIs (``resource_pool`` / ``has_resources`` /
+``get_resource``) are tested through colony seeding.
+"""
 import pytest
 
 from game.strategy.data.empire import Empire
+from tests.fixtures.strategy_entities import create_test_planet
 
 
 @pytest.fixture
 def empire():
     """Create a basic empire for testing."""
     return Empire(empire_id=1, name="Test Empire", color=(255, 0, 0))
+
+
+def _seed_colony(empire: Empire, stockpile: dict, *, name: str = "Colony") -> None:
+    """Attach a colony with the given stockpile to the empire.
+
+    PROJ-436 Phase 5: tests seed the resource pool by writing to a
+    colony's stockpile, since the legacy fleet-side ``_fleet_resource_pool``
+    has been deleted.
+    """
+    colony = create_test_planet(
+        has_facilities=False,
+        has_population=False,
+        name=name,
+        stockpile=dict(stockpile),
+    )
+    empire.colonies.append(colony)
 
 
 class TestEmpireResourcePoolInit:
@@ -20,107 +45,24 @@ class TestEmpireResourcePoolInit:
         assert empire.max_storage == {}
 
 
-class TestAddResources:
-    """Test add_resources() method."""
-
-    def test_add_resources_basic(self, empire):
-        """Adding resources increases the pool."""
-        overflow = empire.add_resources("metals", 500.0)
-        assert empire.resource_pool["metals"] == 500.0
-        assert overflow == 0.0
-
-    def test_add_resources_accumulates(self, empire):
-        """Multiple additions accumulate."""
-        empire.add_resources("metals", 300.0)
-        empire.add_resources("metals", 200.0)
-        assert empire.resource_pool["metals"] == 500.0
-
-    def test_add_resources_respects_max_storage(self, empire):
-        """Adding beyond max_storage caps and returns overflow."""
-        empire.max_storage["metals"] = 1000.0
-        overflow = empire.add_resources("metals", 1200.0)
-        assert empire.resource_pool["metals"] == 1000.0
-        assert overflow == 200.0
-
-    def test_add_resources_respects_max_storage_with_existing(self, empire):
-        """Overflow calculated correctly with existing stock."""
-        empire.max_storage["metals"] = 1000.0
-        empire.add_resources("metals", 800.0)
-        overflow = empire.add_resources("metals", 400.0)
-        assert empire.resource_pool["metals"] == 1000.0
-        assert overflow == 200.0
-
-    def test_add_resources_no_max_storage_means_unlimited(self, empire):
-        """No max_storage entry means unlimited capacity."""
-        overflow = empire.add_resources("metals", 999999.0)
-        assert empire.resource_pool["metals"] == 999999.0
-        assert overflow == 0.0
-
-    def test_add_resources_multiple_types(self, empire):
-        """Different resource types are independent."""
-        empire.add_resources("metals", 100.0)
-        empire.add_resources("organics", 200.0)
-        assert empire.resource_pool["metals"] == 100.0
-        assert empire.resource_pool["organics"] == 200.0
-
-
-class TestConsumeResources:
-    """Test consume_resources() method."""
-
-    def test_consume_resources_success(self, empire):
-        """Successful consumption deducts and returns True."""
-        empire._fleet_resource_pool["metals"] = 500.0
-        result = empire.consume_resources("metals", 200.0)
-        assert result is True
-        assert empire.resource_pool.get("metals", 0.0) == 300.0
-
-    def test_consume_resources_failure_insufficient(self, empire):
-        """Insufficient resources returns False, no deduction."""
-        empire._fleet_resource_pool["metals"] = 100.0
-        result = empire.consume_resources("metals", 200.0)
-        assert result is False
-        assert empire.resource_pool.get("metals", 0.0) == 100.0
-
-    def test_consume_resources_exact_amount(self, empire):
-        """Consuming exactly available amount succeeds."""
-        empire._fleet_resource_pool["metals"] = 500.0
-        result = empire.consume_resources("metals", 500.0)
-        assert result is True
-        assert empire.resource_pool.get("metals", 0.0) == 0.0
-
-    def test_consume_resources_missing_type(self, empire):
-        """Consuming a type not in pool fails."""
-        result = empire.consume_resources("metals", 100.0)
-        assert result is False
-
-    def test_consume_resources_partial_not_allowed(self, empire):
-        """All-or-nothing: partial consumption not performed."""
-        empire._fleet_resource_pool["metals"] = 50.0
-        result = empire.consume_resources("metals", 100.0)
-        assert result is False
-        assert empire.resource_pool.get("metals", 0.0) == 50.0
-
-
 class TestHasResources:
-    """Test has_resources() method."""
+    """Test has_resources() reads the aggregated resource_pool."""
 
     def test_has_resources_single_type_sufficient(self, empire):
-        empire._fleet_resource_pool["metals"] = 500.0
+        _seed_colony(empire, {"metals": 500.0})
         assert empire.has_resources({"metals": 300.0}) is True
 
     def test_has_resources_single_type_insufficient(self, empire):
-        empire._fleet_resource_pool["metals"] = 100.0
+        _seed_colony(empire, {"metals": 100.0})
         assert empire.has_resources({"metals": 300.0}) is False
 
     def test_has_resources_multiple_types_all_sufficient(self, empire):
-        empire._fleet_resource_pool["metals"] = 500.0
-        empire._fleet_resource_pool["organics"] = 300.0
+        _seed_colony(empire, {"metals": 500.0, "organics": 300.0})
         assert empire.has_resources({"metals": 200.0, "organics": 100.0}) is True
 
     def test_has_resources_multiple_types_one_insufficient(self, empire):
         """Returns False if ANY resource is insufficient."""
-        empire._fleet_resource_pool["metals"] = 500.0
-        empire._fleet_resource_pool["organics"] = 50.0
+        _seed_colony(empire, {"metals": 500.0, "organics": 50.0})
         assert empire.has_resources({"metals": 200.0, "organics": 100.0}) is False
 
     def test_has_resources_empty_costs(self, empire):
@@ -133,10 +75,10 @@ class TestHasResources:
 
 
 class TestGetResource:
-    """Test get_resource() method."""
+    """Test get_resource() reads the aggregated resource_pool."""
 
     def test_get_resource_existing(self, empire):
-        empire._fleet_resource_pool["metals"] = 500.0
+        _seed_colony(empire, {"metals": 500.0})
         assert empire.get_resource("metals") == 500.0
 
     def test_get_resource_missing_returns_zero(self, empire):
@@ -144,26 +86,33 @@ class TestGetResource:
 
 
 class TestEmpireResourceSerialization:
-    """Test to_dict/from_dict for resource fields."""
+    """Test to_dict/from_dict for resource fields.
 
-    def test_to_dict_includes_resource_pool(self, empire):
-        empire.resource_pool = {"metals": 500.0, "organics": 200.0}
+    PROJ-436 Phase 5: ``resource_pool`` is no longer a serialised
+    durable shape — it derives from ``self.colonies[*].stockpile``.
+    Only ``max_storage`` remains as a serialised top-level resource
+    field on the Empire.
+    """
+
+    def test_to_dict_does_not_emit_resource_pool_key(self, empire):
+        """PROJ-436 Phase 5: the empire-level ``resource_pool`` key is gone."""
         data = empire.to_dict()
-        assert data["resource_pool"] == {"metals": 500.0, "organics": 200.0}
+        assert "resource_pool" not in data
 
     def test_to_dict_includes_max_storage(self, empire):
         empire.max_storage = {"metals": 10000.0}
         data = empire.to_dict()
         assert data["max_storage"] == {"metals": 10000.0}
 
-    def test_from_dict_restores_resource_pool(self, empire):
-        empire.resource_pool = {"metals": 500.0, "radioactives": 100.0}
+    def test_from_dict_restores_max_storage(self, empire):
         empire.max_storage = {"metals": 10000.0}
         data = empire.to_dict()
 
         restored = Empire.from_dict(data)
-        assert restored.resource_pool == {"metals": 500.0, "radioactives": 100.0}
         assert restored.max_storage == {"metals": 10000.0}
+        # PROJ-436 Phase 5: with no colonies, resource_pool is empty
+        # (no fleet-side pool exists anymore to back it).
+        assert restored.resource_pool == {}
 
     def test_from_dict_handles_missing_fields(self):
         """Old saves without resource fields get safe defaults."""
@@ -176,20 +125,43 @@ class TestEmpireResourceSerialization:
         assert restored.resource_pool == {}
         assert restored.max_storage == {}
 
-    def test_to_dict_empty_pools(self, empire):
-        """Empty pools are still serialized."""
+    def test_from_dict_ignores_legacy_resource_pool_key(self):
+        """PROJ-436 Phase 5: pre-Phase-5 saves that carry the legacy
+        ``resource_pool`` top-level key are silently ignored.
+
+        Per CLAUDE.md "no save-file migration" rule old saves are
+        disposable — the new save shape simply omits the key, and
+        ``from_dict`` does not resurrect the deleted field.
+        """
+        data = {
+            "id": 1,
+            "name": "Legacy",
+            "color": [255, 0, 0],
+            "resource_pool": {"metals": 999.0},  # legacy pre-Phase-5 shape
+        }
+        restored = Empire.from_dict(data)
+        # The legacy key is dropped; with no colonies the aggregate is empty.
+        assert restored.resource_pool == {}
+        assert not hasattr(restored, "_fleet_resource_pool"), (
+            "PROJ-436 Phase 5: legacy `_fleet_resource_pool` must not "
+            "be resurrected from old saves."
+        )
+
+    def test_to_dict_empty_storage(self, empire):
+        """Empty max_storage is still serialized."""
         data = empire.to_dict()
-        assert data["resource_pool"] == {}
         assert data["max_storage"] == {}
 
 
-class TestResourcePoolComputedProperty:
-    """Test that resource_pool is a computed aggregate of colony stockpiles."""
+class TestResourcePoolPureAggregation:
+    """Test that resource_pool is a pure computed aggregate of colony stockpiles.
+
+    PROJ-436 Phase 5: ``resource_pool`` walks ``self.colonies[*].stockpile``
+    only — there is no longer a fleet-side summand.
+    """
 
     def test_resource_pool_sums_colony_stockpiles(self):
         """resource_pool returns sum of all colony stockpiles."""
-        from tests.fixtures.strategy_entities import create_test_planet
-
         empire = Empire(empire_id=1, name="Test", color=(255, 0, 0))
         colony1 = create_test_planet(
             has_facilities=False, has_population=False,
@@ -207,41 +179,30 @@ class TestResourcePoolComputedProperty:
         assert pool["organics"] == pytest.approx(50.0)
         assert pool["fuel"] == pytest.approx(30.0)
 
-    def test_resource_pool_includes_fleet_pool(self):
-        """resource_pool includes _fleet_resource_pool for backward compat."""
-        empire = Empire(empire_id=1, name="Test", color=(255, 0, 0))
-        empire._fleet_resource_pool = {"metals": 500.0}
-
-        pool = empire.resource_pool
-        assert pool["metals"] == 500.0
-
-    def test_resource_pool_combines_colonies_and_fleet_pool(self):
-        """resource_pool sums colony stockpiles + fleet pool."""
-        from tests.fixtures.strategy_entities import create_test_planet
-
-        empire = Empire(empire_id=1, name="Test", color=(255, 0, 0))
-        colony = create_test_planet(
-            has_facilities=False, has_population=False,
-            stockpile={"metals": 100.0},
-        )
-        empire.colonies = [colony]
-        empire._fleet_resource_pool = {"metals": 200.0}
-
-        pool = empire.resource_pool
-        assert pool["metals"] == pytest.approx(300.0)
-
     def test_resource_pool_empty_with_no_colonies(self):
-        """resource_pool returns empty dict with no colonies and no fleet pool."""
+        """resource_pool returns empty dict with no colonies."""
         empire = Empire(empire_id=1, name="Test", color=(255, 0, 0))
         assert empire.resource_pool == {}
 
     def test_resource_pool_is_not_mutable(self):
         """Mutating the returned dict doesn't affect the empire."""
         empire = Empire(empire_id=1, name="Test", color=(255, 0, 0))
-        empire._fleet_resource_pool = {"metals": 100.0}
+        _seed_colony(empire, {"metals": 100.0})
 
         pool = empire.resource_pool
         pool["metals"] = 999.0  # Mutate the returned dict
 
-        # Should not affect the actual pool
+        # Should not affect the actual aggregate
         assert empire.resource_pool["metals"] == 100.0
+
+    def test_resource_pool_has_no_fleet_side_durable_state(self):
+        """PROJ-436 Phase 5 deletion guard at the data-class boundary.
+
+        Constructing a fresh Empire does not produce a fleet-side
+        resource pool attribute; the aggregate over zero colonies is
+        empty. This complements the static-guard test in
+        ``tests/static_guards/test_no_legacy_storage_fields.py``.
+        """
+        empire = Empire(empire_id=1, name="Test", color=(255, 0, 0))
+        assert "_fleet_resource_pool" not in vars(empire)
+        assert empire.resource_pool == {}

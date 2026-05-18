@@ -16,10 +16,22 @@ from tests.fixtures.yard_facility import make_planetary_yard_facility as _make_y
 
 
 def _make_empire(resources: dict = None) -> Empire:
-    """Create a real Empire with optional starting resources."""
+    """Create a real Empire with optional starting resources.
+
+    PROJ-436 Phase 5: ``Empire._fleet_resource_pool`` was deleted —
+    starting resources are seeded onto a hidden colony so that
+    ``empire.resource_pool`` aggregates them via the new pure-query
+    contract.
+    """
     empire = Empire(empire_id=0, name="Test Empire", color=(255, 0, 0))
     if resources:
-        empire._fleet_resource_pool = dict(resources)
+        from tests.fixtures.strategy_entities import create_test_planet
+        reserve = create_test_planet(
+            has_facilities=False, has_population=False,
+            name="_starting_reserve",
+            stockpile=dict(resources),
+        )
+        empire.colonies.append(reserve)
     return empire
 
 

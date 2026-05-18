@@ -133,13 +133,22 @@ class TestEmpireValidation:
         assert empire.built_ship_designs == {'design-001', 'design-002'}
 
     def test_empire_with_resource_pool(self):
-        """Empire restores resource economy data."""
+        """PROJ-436 Phase 5: ``max_storage`` round-trips; the legacy
+        ``resource_pool`` empire-save key is silently dropped.
+
+        ``Empire.resource_pool`` is now a pure aggregation over colony
+        stockpiles. Pre-Phase-5 saves carrying a top-level
+        ``resource_pool`` key are loaded but the key is ignored — per
+        CLAUDE.md "no save-file migration" rule.
+        """
         data = make_valid_empire_data()
         data['resource_pool'] = {'energy': 1000, 'minerals': 500}
         data['max_storage'] = {'energy': 5000, 'minerals': 2000}
 
         empire = Empire.from_dict(data)
-        assert empire.resource_pool == {'energy': 1000, 'minerals': 500}
+        # Legacy top-level resource_pool is ignored; no fleet-side
+        # durable backing exists anymore.
+        assert empire.resource_pool == {}
         assert empire.max_storage == {'energy': 5000, 'minerals': 2000}
 
 

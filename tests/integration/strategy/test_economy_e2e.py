@@ -60,12 +60,25 @@ def _make_mock_non_economy_engines():
 def _make_empire(resources=None, max_storage=None, empire_id=0):
     """Create an empire with optional starting resources and storage.
 
-    Resources go to _fleet_resource_pool since colonies haven't been added yet.
-    empire.resource_pool is a computed aggregate of colony stockpiles + fleet pool.
+    PROJ-436 Phase 5: ``Empire._fleet_resource_pool`` was deleted —
+    resources now live in colony stockpiles. Tests that want pre-
+    seeded resources attach a stub colony carrying them. If the test
+    also adds its own colonies, ``empire._test_starting_stockpile``
+    captures the initial pool so subsequent ``add_colony`` calls can
+    fold it in (legacy ergonomics).
     """
     empire = Empire(empire_id=empire_id, name="Test Empire", color=(255, 0, 0))
     if resources:
-        empire._fleet_resource_pool = dict(resources)
+        # Attach a hidden "starting reserve" colony so resource_pool
+        # aggregates the test's seed values. The actual colonies the
+        # test adds later append to ``empire.colonies`` after this.
+        from tests.fixtures.strategy_entities import create_test_planet
+        reserve = create_test_planet(
+            has_facilities=False, has_population=False,
+            name="_starting_reserve",
+            stockpile=dict(resources),
+        )
+        empire.colonies.append(reserve)
     if max_storage:
         empire.max_storage = dict(max_storage)
     return empire
@@ -287,9 +300,10 @@ class TestEconomyE2E:
 
         # Harvest: 50 * 0.8 = 40, deposited into colony stockpile
         assert planet.stockpile.get("metals", 0.0) == pytest.approx(40.0)
-        # Fleet resource pool unchanged by harvesting (harvest goes to colony stockpile)
-        assert empire._fleet_resource_pool.get("metals", 0.0) == pytest.approx(500.0)
-        # Aggregate resource_pool = fleet pool (500) + colony stockpile (40) = 540
+        # PROJ-436 Phase 5: ``Empire._fleet_resource_pool`` is gone.
+        # The 500 metals seeded via ``_make_empire(resources=...)`` live
+        # on the hidden "_starting_reserve" colony; the harvested 40
+        # live on the actual colony. ``resource_pool`` aggregates both.
         assert empire.resource_pool["metals"] == pytest.approx(540.0)
 
     def test_construction_consumes_resources_per_tick(self, fresh_registries):
@@ -384,23 +398,32 @@ class TestEconomyE2E:
         # Harvest: 200, but colony stockpile cap at 1000 (only 100 fits)
         assert planet.stockpile["metals"] == pytest.approx(1000.0)
 
-    def test_save_load_preserves_economy_state(self):
-        """Empire resource pool and storage survive serialization round-trip."""
-        empire = _make_empire(
-            resources={"metals": 500.0, "organics": 200.0},
-            max_storage={"metals": 10000.0, "organics": 5000.0},
-        )
+    def test_save_load_preserves_empire_max_storage(self):
+        """Empire ``max_storage`` survives serialization round-trip.
+
+        PROJ-436 Phase 5: ``Empire.resource_pool`` is no longer
+        durable state — it derives from each colony's stockpile.
+        ``resource_pool`` is persisted via per-Planet serializers, not
+        via ``Empire.to_dict``. Per CLAUDE.md "no save-file migration"
+        rule the pre-Phase-5 ``resource_pool`` save key is dropped
+        from the empire save shape; this test pins what the empire-
+        level save still preserves (``max_storage``).
+        """
+        empire = Empire(empire_id=0, name="Test Empire", color=(255, 0, 0))
+        empire.max_storage = {"metals": 10000.0, "organics": 5000.0}
 
         # Serialize
         data = empire.to_dict()
+        # The legacy empire-level resource_pool key is gone.
+        assert "resource_pool" not in data
 
         # Deserialize
         restored = Empire.from_dict(data, galaxy=None)
 
-        assert restored.resource_pool["metals"] == pytest.approx(500.0)
-        assert restored.resource_pool["organics"] == pytest.approx(200.0)
         assert restored.max_storage["metals"] == pytest.approx(10000.0)
         assert restored.max_storage["organics"] == pytest.approx(5000.0)
+        # No fleet-side pool to round-trip; resource_pool is derived.
+        assert restored.resource_pool == {}
 
     def test_multi_resource_construction(self, fresh_registries):
         """Construction that costs multiple resources completes correctly.

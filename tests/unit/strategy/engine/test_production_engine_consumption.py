@@ -68,13 +68,17 @@ def test_check_affordability_routes_to_fleet_cargo_when_context_fleet(engine, em
     assert result is False
 
 
-def test_check_affordability_falls_back_to_empire_pool_when_no_context_type(engine, empire):
-    """Bare object without `context_type` falls back to empire.has_resources."""
-    bare = object()
-    empire.has_resources.return_value = True
+def test_check_affordability_raises_when_no_context_type(engine, empire):
+    """PROJ-436 Phase 5: bare object without `context_type` raises ValueError.
 
-    assert engine._check_affordability(empire, {"metals": 1.0}, bare) is True
-    empire.has_resources.assert_called_once_with({"metals": 1.0})
+    Pre-Phase-5 this branch fell back to ``empire.has_resources``
+    against the now-deleted ``Empire._fleet_resource_pool``. Production
+    callers always pass a Planet or Fleet, so the fallback was dead
+    code; Phase 5 hardens it into an explicit error.
+    """
+    bare = object()
+    with pytest.raises(ValueError, match="context_type"):
+        engine._check_affordability(empire, {"metals": 1.0}, bare)
 
 
 # ---------------------------------------------------------------------------
@@ -111,21 +115,21 @@ def test_apply_resource_consumption_routes_to_fleet_cargo_when_context_fleet(eng
 
     fleet.consume_cargo_resource.assert_called_once_with("metals", 2.5)
     assert item["resources_consumed"]["metals"] == 4.0
-    empire.consume_resources.assert_not_called()
 
 
-def test_apply_resource_consumption_falls_back_to_empire_pool_when_no_context(engine, empire):
-    """PROJ-345 T3.5: no `context_type` on owner → empire.consume_resources
-    is the consumer. Pins the empire-pool fallback branch (third branch);
-    neither stockpile nor cargo APIs are touched.
+def test_apply_resource_consumption_raises_when_no_context_type(engine, empire):
+    """PROJ-436 Phase 5: no `context_type` on owner raises ValueError.
+
+    Pre-Phase-5 this branch called ``empire.consume_resources`` against
+    the now-deleted ``Empire._fleet_resource_pool``. The mutator and
+    its backing field are gone; production callers always pass a
+    Planet or Fleet, so an unrecognised owner is a programmer error.
     """
     bare = object()  # No context_type attribute at all.
     item = {"resources_consumed": {"metals": 0.0}}
 
-    engine._apply_resource_consumption(empire, item, {"metals": 7.0}, bare)
-
-    empire.consume_resources.assert_called_once_with("metals", 7.0)
-    assert item["resources_consumed"]["metals"] == 7.0
+    with pytest.raises(ValueError, match="context_type"):
+        engine._apply_resource_consumption(empire, item, {"metals": 7.0}, bare)
 
 
 def test_apply_resource_consumption_skips_zero_amount_resources(engine, empire):
@@ -231,17 +235,17 @@ def test_log_resource_shortage_uses_fleet_cargo_for_available_in_fleet_context()
     assert fleet.get_cargo_resource.call_count >= 1
 
 
-def test_log_resource_shortage_uses_empire_pool_when_no_context_type():
-    """PROJ-345 T3.5: no `context_type` on owner → `empire.resource_pool`
-    is the source. Pins the third (fallback) branch at
-    production_engine.py:548. Neither `get_stockpile` nor
-    `get_cargo_resource` is consulted.
-    """
-    captured: list = []
+def test_log_resource_shortage_raises_when_no_context_type():
+    """PROJ-436 Phase 5: no `context_type` on owner raises ValueError.
 
+    Pre-Phase-5 this branch read ``empire.resource_pool.get(...)`` to
+    pick the limiting resource. With the empire's fleet-side resource
+    pool deleted, an owner that is neither a Planet nor a Fleet is a
+    programmer error.
+    """
     class _Bus:
         def log_event(self, event_type, **kwargs):
-            captured.append((event_type, kwargs))
+            pass
 
     from game.core.registry import GameRegistries
     eng = ProductionEngine(
@@ -251,19 +255,12 @@ def test_log_resource_shortage_uses_empire_pool_when_no_context_type():
 
     empire = MagicMock(spec=Empire)
     empire.id = 9
-    empire.resource_pool = {"metals": 1.0}
 
-    bare = object()  # No context_type attribute → fallback branch.
+    bare = object()  # No context_type attribute → error branch.
     item = {"design_id": "frig", "type": "ship"}
 
-    eng._log_resource_shortage(empire, item, {"metals": 10.0}, bare)
-
-    assert len(captured) == 1
-    payload = captured[0][1]
-    assert payload["limiting_resource"] == "metals"
-    assert payload["available"] == 1.0
-    assert payload["needed"] == 10.0
-    assert payload["location_hex"] is None  # bare object has no `location`.
+    with pytest.raises(ValueError, match="context_type"):
+        eng._log_resource_shortage(empire, item, {"metals": 10.0}, bare)
 
 
 def test_log_resource_shortage_emitted_once_per_item_per_turn(engine, empire):
