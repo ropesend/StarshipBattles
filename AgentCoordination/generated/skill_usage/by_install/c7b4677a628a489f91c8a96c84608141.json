@@ -8,6 +8,13 @@
       },
       "count": 1,
       "last_used": "2026-05-18T16:05:32Z"
+    },
+    "claude-di-log": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-18T16:56:21Z"
     }
   }
 }
