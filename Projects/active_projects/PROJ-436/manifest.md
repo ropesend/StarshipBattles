@@ -67,9 +67,10 @@
 
 | File | Type | Notes |
 |------|------|-------|
-| `game/strategy/data/empire.py` | Production | Delete `_fleet_resource_pool: Dict[str, float]` durable state. `resource_pool` property becomes pure aggregation query (per Phase 0 decision: cached or pure). Fleet construction resources move into ship/fleet containers. Migrate `add_to_fleet_resource_pool` / `consume_from_fleet_resource_pool` / `get_resource_pool_total` / `has_resource_pool` callers (likely in build-queue projector + production engine). Empire serializer drops `_fleet_resource_pool` key. |
-| `game/strategy/engine/empire_economy_calculator.py` | Production | Aggregation queries through containers. |
-| `game/strategy/services/empire_write_service.py` | Production | Resource writes routed through specific containers, not empire-level. |
+| `game/strategy/data/empire.py` | Production | **DONE (5f).** Deleted `_fleet_resource_pool: Dict[str, float]` durable state, `Empire.add_resources`, `Empire.consume_resources`, and the `resource_pool` property setter. `resource_pool` is a pure aggregation over `self.colonies[*].stockpile` (Phase 0 D2 default — no caching). `to_dict` drops the legacy `resource_pool` key; `from_dict` ignores it on pre-Phase-5 saves. The "fleet construction resources move into ship/fleet containers" framing in the original Phase 5 plan was aspirational — production code never read fleet cargo through `Empire.resource_pool`; fleet construction reads `Fleet.has_cargo_resources` / `Fleet.consume_cargo_resource` directly in `ProductionEngine`. |
+| `game/strategy/engine/production_engine.py` | Production | **DONE (5f).** Dead `else` fallback branches (`empire.has_resources` / `empire.consume_resources` / `empire.resource_pool.get(...)`) replaced with explicit `ValueError`. Every production caller passes a Planet or a Fleet; the fallback was unreachable. The `if planet / elif fleet` branching itself stays for Phase 8. |
+| `game/strategy/engine/empire_economy_calculator.py` | Production | **No-op for Phase 5.** Reads `empire.resource_pool.copy()` (line 168) — tolerates the new pure-aggregate semantics unchanged. Treasury "Total In Storage" now reports colony-stockpile totals only (matches what the pre-Phase-5 implementation reported in practice, because `_fleet_resource_pool` was never populated by production code). |
+| `game/strategy/services/empire_write_service.py` | Production | **No-op for Phase 5.** Docstring updated to drop the `_fleet_resource_pool` mutation surface from the listed responsibilities. |
 
 ### Production — modified (Phase 6)
 
@@ -113,7 +114,7 @@
 | `tests/unit/strategy/data/test_bay_inventory_widened.py` | Test (new) | Phase 2. Widened BayInventory three-slice behavior; backward-compatible `pods` / `vehicles` accessors still work. |
 | `tests/integration/test_ship_resource_migration.py` | Test (new) | Phase 3. End-to-end ship resource production / consumption through unified Container. |
 | `tests/integration/test_planet_storage_migration.py` | Test (new) | Phase 4. End-to-end planet stockpile + staging yard through unified Container. |
-| `tests/integration/test_empire_resource_aggregation.py` | Test (new) | Phase 5. `Empire.resource_pool` aggregation across all containers. |
+| `tests/integration/test_empire_resource_aggregation.py` | Test (new) | **DONE (5g).** `Empire.resource_pool` pure-aggregation contract across colony stockpiles. 14 tests in 3 classes: aggregation walk + snapshot semantics, `has_resources`/`get_resource` routing, save-shape contract incl. legacy-key drop. Landed as the Phase 5g verified-finding remediation after Codex flagged its absence in the post-5f consult. |
 | `tests/static_guards/test_no_legacy_storage_fields.py` | Test (new) | Phases 3/4/5 gates. AST assertion that no `cargo_contents`, `consumable_levels`, `stockpile`, `max_stockpile`, `staging_yard`, `_fleet_resource_pool` fields exist on the targeted dataclasses. |
 | `tests/static_guards/test_no_legacy_protocol_names.py` | Test (new) | Phase 6 gate. AST assertion against the old protocol method names. |
 | `tests/integration/test_transfer_container_validation.py` | Test (new) | Phase 7. Transfer flow through `Container.accepts()` end-to-end. |
