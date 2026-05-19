@@ -49,7 +49,7 @@ def _make_component_registry(comp_id: str, ability_name: str) -> dict:
 
     Real games load this from `data/components.json`; for tests we emit
     just the component(s) under test. The scanner accepts either
-    `GameRegistries` or a plain components dict (see component_inspector).
+    `GameRegistries` or a plain components dict (see component_abilities).
     """
     return {
         comp_id: {

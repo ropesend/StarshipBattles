@@ -1,12 +1,19 @@
 """
-Tests for ComponentInspector utility.
+Tests for the ``component_abilities`` ability-inspection helpers.
 
-PROJ-108 Phase 3: Tests for consolidated component/ability inspection functions.
+PROJ-108 Phase 3: original consolidation tests targeting the
+``ComponentInspector`` utility. PROJ-433 split the helpers between
+``component_abilities`` (Surface A — exercised here) and
+``component_layers`` (Surface B — tested in
+``test_component_layers.py``). PROJ-454 Phase 2 retired the
+``component_inspector`` re-export shim; the file was renamed to
+``test_component_abilities.py`` and moved to
+``tests/unit/strategy/services/`` to match the canonical module path.
 """
 import pytest
 from unittest.mock import Mock
 
-from game.strategy.services.component_inspector import (
+from game.strategy.services.component_abilities import (
     extract_abilities_from_component,
     get_component_abilities,
     get_ability_list,

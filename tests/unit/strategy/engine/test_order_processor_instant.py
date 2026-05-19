@@ -244,7 +244,7 @@ def test_process_join_fleet_pops_order_when_target_invalid_destroyed():
     fleet.get_current_order.return_value = Order(OrderType.JOIN_FLEET, None)
     fleet.pop_order = MagicMock()
 
-    result = proc.process_join_fleet(fleet, MagicMock(), MagicMock())
+    result = proc.get_handler(OrderType.JOIN_FLEET).execute_action_order(fleet, MagicMock(), MagicMock())
 
     assert result.merged is False
     assert result.cancelled is True
@@ -265,7 +265,7 @@ def test_process_join_fleet_pops_order_when_not_at_same_location():
 
     fleet.get_current_order.return_value = Order(OrderType.JOIN_FLEET, target)
 
-    result = proc.process_join_fleet(fleet, MagicMock(), MagicMock())
+    result = proc.get_handler(OrderType.JOIN_FLEET).execute_action_order(fleet, MagicMock(), MagicMock())
 
     assert result.merged is False
     fleet.pop_order.assert_called_once()

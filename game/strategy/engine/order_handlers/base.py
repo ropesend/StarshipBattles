@@ -37,22 +37,28 @@ if TYPE_CHECKING:
 class OrderExecutionResult:
     """Unified result type for `IOrderHandler.execute_action_order`.
 
-    Internal handlers work with this single type; the `OrderProcessor`
-    facade reshapes it back into the legacy typed result dataclasses
-    (`JoinFleetResult`, `ColonizeResult`, `TransferResult`,
-    `SuperweaponResult`) for backward compatibility with existing
-    characterization tests.
+    All concrete handlers populate the fields they care about; readers
+    consume the unified result directly. The class carries per-handler
+    fields side by side because the runtime overhead is negligible and
+    per-handler payload subclasses would complicate caller ergonomics.
+
+    PROJ-454 Phase 3 retired the typed-result reshape on the
+    `OrderProcessor` facade; the per-handler fields below are the live
+    unified surface, not legacy.
+
+    `SuperweaponResult` is still produced separately by
+    `SuperweaponOrderProcessor` and is NOT this type.
     """
 
     success: bool
     fleet_consumed: bool = False
     message: str = ""
-    # Per-handler extras kept for backward-compat at the facade layer.
-    merged: bool = False              # JoinFleet legacy field
-    cancelled: bool = False           # JoinFleet legacy field
-    colonized: bool = False           # Colonize legacy field
-    planet_name: Optional[str] = None  # Colonize legacy field
-    amount_transferred: int = 0       # Transfer legacy field
+    # Per-handler extras read directly off the unified result.
+    merged: bool = False
+    cancelled: bool = False
+    colonized: bool = False
+    planet_name: Optional[str] = None
+    amount_transferred: int = 0
 
 
 @runtime_checkable

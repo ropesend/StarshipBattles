@@ -15,17 +15,34 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. F-B-004 — Retire `effect_ability_metadata.py` (131 LOC, 2 callers) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. F-B-005 — Retire `component_inspector.py` (~68 caller sites — 52 imports + 16 patch targets — across ~31 files; sized up from `~45` after codex audit 2026-05-19) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. F-B-017 — Unwind `OrderProcessor.process_*` facade reshape; delete legacy typed result dataclasses (68 sites / 12 files; sized up from `~15 / 7` after codex audit 2026-05-19) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. F-B-018 — Remove "legacy field" framing on `OrderExecutionResult` (fields become live unified surface post-Phase-3 facade unwind; delete specific fields ONLY if Phase 4 audit shows they're dead) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 1. F-B-004 — Retire `effect_ability_metadata.py` (131 LOC, 2 callers) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. F-B-005 — Retire `component_inspector.py` (~68 caller sites — 52 imports + 16 patch targets — across ~31 files; sized up from `~45` after codex audit 2026-05-19) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. F-B-017 — Unwind `OrderProcessor.process_*` facade reshape; delete legacy typed result dataclasses (68 sites / 12 files; sized up from `~15 / 7` after codex audit 2026-05-19) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. F-B-018 — Remove "legacy field" framing on `OrderExecutionResult` (fields become live unified surface post-Phase-3 facade unwind; delete specific fields ONLY if Phase 4 audit shows they're dead) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Codex-audit polish (3 doc/comment residues + 5 test-narration docstrings) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-19
-**Active Phase:** Planning
-**Last Action:** Cross-group collision resolution applied 2026-05-19; Group B is ready for execution. Serial order confirmed: PROJ-453 → PROJ-454 → PROJ-456 → PROJ-457. PROJ-454 is the SECOND project in Group B's series; PROJ-453 must complete first (the soft `order_processor.py` ordering preference is now operative as a hard gate within Group B). Coordinator confirmed Group A's serial was re-ordered to put PROJ-450 LAST, which resolves the `test_order_processor_transfer.py` overlap (PROJ-454 lands first; PROJ-450 rebases). Prior fixes retained: Quick Status Phase 4 reframed to "Remove legacy framing"; `~45 sites` → `~68 sites`; pre-delete `rg` check for `test_component_inspector_surface.py`; TDD-exception rationale in decisions.md for retirement-style Phases 1-3; Phase 3 caller inventory at 68 strict calls / 12 test files; Phase 2 sizing at 68 sites (52 imports + 16 patch targets) / ~31 files.
-**Next Action:** Run agent starts PROJ-454 Phase 1 after PROJ-453 is Complete.
-**Blockers:** PROJ-453 must complete first (Group B serial order; hard gate per coordinator 2026-05-19).
+**Last Updated:** 2026-05-17
+**Active Phase:** All phases complete; ready for end-of-project merge to main
+**Last Action:** Phase 5 closed the three doc/comment residues + five test-narration sites surfaced by the end-of-project codex audit (response.md verified all 4 findings closed). All Phase 5 edits are comment/docstring-only, no behaviour changes. Per protocol PART 3 Step D, skipping the re-audit (trivial polish).
+**Next Action:** Merge group-b through PROJ-454 to main per protocol §3.
+**Blockers:** None.
+
+## Checkpoint Log
+
+### 2026-05-17 — phase-2-complete-checkpoint
+- **Done so far**: PROJ-453 fully closed (Phases 1+2, merged at `82b751fe0`). PROJ-454 Phases 1 + 2 closed. Phase 1: deleted `effect_ability_metadata.py` shim and rewrote 2 callers to use `get_ability_metadata(name).effect` (the planning doc's "drop-in import swap" claim was wrong — canonical API has different verb name + nested shape). Phase 2: ~68-site sweep retiring `component_inspector.py`; routine work but large. Net: -2 shim modules (~200 LOC) + 4 test files renamed/deleted.
+- **Key decisions**: (1) Phase 1 deviation documented in decisions.md (no compat shim in the canonical module). (2) Task 2.9 — deleted drift-gate test rather than refactor as re-emergence guard. Both decisions enforced CLAUDE.md Rule 4 (no compat shims) more strictly than the original plan anticipated.
+- **Open threads**: Phase 3 (F-B-017 facade unwind) and Phase 4 (legacy-field reframing) still pending.
+- **Next action**: PROJ-454 Phase 3 Task 3.1 — call-site inventory for `OrderProcessor.process_join_fleet` / `process_colonize` / `process_transfer` (68 sites / 12 files).
+- **Cross-group state observed**: `origin/main` = `82b751fe0` (post-PROJ-453 merge). `origin/group-a` advanced to `d531b430a`; `origin/group-c` exists. No `_doc_consolidation/` files on origin/main yet.
+
+### 2026-05-17 — project-454-start
+- **Done so far**: PROJ-453 closed and merged (`82b751fe0`). Group B serial gate cleared for PROJ-454.
+- **Key decisions**: Following Phase 1 → 2 → 3 → 4 ordering strictly (Phase 1 deletes a 131-LOC shim, Phase 2 is the 68-site `component_inspector` sweep, Phase 3 is the 68-site facade unwind, Phase 4 reframes `OrderExecutionResult` legacy fields).
+- **Open threads**: None.
+- **Next action**: Phase 1 Task 1.1.
+- **Cross-group state observed**: origin/main = `82b751fe0`. Group A pushed updates (`d531b430a` on group-a); Group C published `origin/group-c`.
 
 ## Overview
 

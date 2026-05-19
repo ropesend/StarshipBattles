@@ -62,7 +62,7 @@ class FleetCapabilityCalculator:
             ValueError: If no registry available (ship has no _registries and
                 none passed explicitly).
         """
-        from game.strategy.services.component_inspector import ship_has_ability
+        from game.strategy.services.component_abilities import ship_has_ability
         registry = component_registry
         if registry is None:
             registry = _get_ship_component_registry(ship)
@@ -108,7 +108,7 @@ class FleetCapabilityCalculator:
     @property
     def space_shipyard_count(self) -> int:
         """Count total fleet space yard components across all combat-capable ships."""
-        from game.strategy.services.component_inspector import count_ability
+        from game.strategy.services.component_abilities import count_ability
         combat_ships = self._fleet.get_combat_capable_ships()
         if not combat_ships:
             return 0
@@ -185,7 +185,7 @@ class FleetCapabilityCalculator:
         """
         # INTENTIONAL LATE IMPORT: Query operation, service encapsulates warp logic
         # See docs/ARCHITECTURE.md "Intentional Late Imports" section
-        from game.strategy.services.component_inspector import has_warp_capability
+        from game.strategy.services.component_abilities import has_warp_capability
 
         combat_ships = self._fleet.get_combat_capable_ships()
         if not combat_ships:
@@ -205,7 +205,7 @@ class FleetCapabilityCalculator:
         """
         # INTENTIONAL LATE IMPORT: Query operation, service encapsulates warp logic
         # See docs/ARCHITECTURE.md "Intentional Late Imports" section
-        from game.strategy.services.component_inspector import has_warp_capability
+        from game.strategy.services.component_abilities import has_warp_capability
 
         for ship in self._fleet.get_combat_capable_ships():
             if not has_warp_capability(ship):
@@ -234,7 +234,7 @@ class FleetCapabilityCalculator:
         Returns:
             List of ShipInstance objects that have the ability.
         """
-        from game.strategy.services.component_inspector import ship_has_ability as check_ability
+        from game.strategy.services.component_abilities import ship_has_ability as check_ability
         combat_ships = self._fleet.get_combat_capable_ships()
         if not combat_ships:
             return []
@@ -253,7 +253,7 @@ class FleetCapabilityCalculator:
             List of unique ability names found on any ship in the fleet.
             Returns empty list if fleet has no combat-capable ships.
         """
-        from game.strategy.services.component_inspector import list_ship_abilities
+        from game.strategy.services.component_abilities import list_ship_abilities
 
         combat_ships = self._fleet.get_combat_capable_ships()
         if not combat_ships:

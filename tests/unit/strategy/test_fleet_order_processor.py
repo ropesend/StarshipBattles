@@ -79,7 +79,7 @@ class TestJoinFleetProcessing:
         order = Order(OrderType.JOIN_FLEET, target_fleet)
         mock_fleet.get_current_order.return_value = order
 
-        result = processor.process_join_fleet(mock_fleet, mock_empire, mock_galaxy)
+        result = processor.get_handler(OrderType.JOIN_FLEET).execute_action_order(mock_fleet, mock_empire, mock_galaxy)
 
         assert result.merged is True
         mock_fleet.merge_with.assert_called_with(target_fleet, event_bus=None)
@@ -99,7 +99,7 @@ class TestJoinFleetProcessing:
         order = Order(OrderType.JOIN_FLEET, target_fleet)
         mock_fleet.get_current_order.return_value = order
 
-        result = processor.process_join_fleet(mock_fleet, mock_empire, mock_galaxy)
+        result = processor.get_handler(OrderType.JOIN_FLEET).execute_action_order(mock_fleet, mock_empire, mock_galaxy)
 
         assert result.merged is False
         mock_fleet.merge_with.assert_not_called()
@@ -113,7 +113,7 @@ class TestJoinFleetProcessing:
         order = Order(OrderType.JOIN_FLEET, None)  # Invalid target
         mock_fleet.get_current_order.return_value = order
 
-        result = processor.process_join_fleet(mock_fleet, mock_empire, mock_galaxy)
+        result = processor.get_handler(OrderType.JOIN_FLEET).execute_action_order(mock_fleet, mock_empire, mock_galaxy)
 
         assert result.merged is False
         assert result.cancelled is True
@@ -126,7 +126,7 @@ class TestJoinFleetProcessing:
         processor = OrderProcessor()
         mock_fleet.get_current_order.return_value = None
 
-        result = processor.process_join_fleet(mock_fleet, mock_empire, mock_galaxy)
+        result = processor.get_handler(OrderType.JOIN_FLEET).execute_action_order(mock_fleet, mock_empire, mock_galaxy)
 
         assert result.merged is False
 
@@ -193,10 +193,8 @@ class TestColonizeProcessing:
         mock_fleet.location = HexCoord(5, 5)
 
         with patch.object(processor._handler_registry.get(OrderType.COLONIZE), '_deploy_drop_pod'):
-            result = processor.process_colonize(
-                mock_fleet, mock_empire, mock_galaxy,
-                component_registry=component_registry
-            )
+            result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+                mock_fleet, mock_empire, mock_galaxy, component_registry=component_registry)
 
         assert result.colonized is True
         mock_empire.add_colony.assert_called_with(mock_planet_continental)
@@ -221,10 +219,8 @@ class TestColonizeProcessing:
         mock_fleet.location = HexCoord(5, 5)
 
         with patch.object(processor._handler_registry.get(OrderType.COLONIZE), '_deploy_drop_pod'):
-            result = processor.process_colonize(
-                mock_fleet, mock_empire, mock_galaxy,
-                component_registry=component_registry
-            )
+            result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+                mock_fleet, mock_empire, mock_galaxy, component_registry=component_registry)
 
         assert result.colonized is True
         mock_empire.add_colony.assert_called_with(mock_planet_continental)
@@ -242,10 +238,8 @@ class TestColonizeProcessing:
         order = Order(OrderType.COLONIZE, None)
         mock_fleet.get_current_order.return_value = order
 
-        result = processor.process_colonize(
-            mock_fleet, mock_empire, mock_galaxy,
-            component_registry=component_registry
-        )
+        result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            mock_fleet, mock_empire, mock_galaxy, component_registry=component_registry)
 
         assert result.colonized is False
         mock_fleet.pop_order.assert_called()
@@ -266,10 +260,8 @@ class TestColonizeProcessing:
         order = Order(OrderType.COLONIZE, mock_planet_continental)
         mock_fleet.get_current_order.return_value = order
 
-        result = processor.process_colonize(
-            mock_fleet, mock_empire, mock_galaxy,
-            component_registry=component_registry
-        )
+        result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            mock_fleet, mock_empire, mock_galaxy, component_registry=component_registry)
 
         assert result.colonized is False
 
@@ -517,10 +509,8 @@ class TestColonizeDropPodDeployment:
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_ice_dwarf]
 
         with patch.object(processor._handler_registry.get(OrderType.COLONIZE), '_deploy_drop_pod') as mock_deploy:
-            result = processor.process_colonize(
-                mock_fleet, mock_empire, mock_galaxy,
-                component_registry=mock_component_registry
-            )
+            result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+                mock_fleet, mock_empire, mock_galaxy, component_registry=mock_component_registry)
 
         assert result.colonized is True
         # Drop pod deployed
@@ -546,10 +536,8 @@ class TestColonizeDropPodDeployment:
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_ice_dwarf]
 
         with patch.object(processor._handler_registry.get(OrderType.COLONIZE), '_deploy_drop_pod'):
-            result = processor.process_colonize(
-                mock_fleet, mock_empire, mock_galaxy,
-                component_registry=mock_component_registry
-            )
+            result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+                mock_fleet, mock_empire, mock_galaxy, component_registry=mock_component_registry)
 
         assert result.colonized is True
         # Fleet NOT removed - ship is reusable
@@ -574,10 +562,8 @@ class TestColonizeDropPodDeployment:
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_ice_dwarf]
 
         with patch.object(processor._handler_registry.get(OrderType.COLONIZE), '_deploy_drop_pod'):
-            result = processor.process_colonize(
-                mock_fleet, mock_empire, mock_galaxy,
-                component_registry=mock_component_registry
-            )
+            result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+                mock_fleet, mock_empire, mock_galaxy, component_registry=mock_component_registry)
 
         assert result.colonized is True
         # No ships removed, fleet stays

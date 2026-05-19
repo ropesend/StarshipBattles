@@ -19,7 +19,7 @@ from game.core.hex_math import HexCoord
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.species_population import SpeciesPopulation
 from game.strategy.data.ship_instance import ShipInstance
-from game.strategy.engine.order_processor import OrderProcessor, ColonizeResult
+from game.strategy.engine.order_processor import OrderProcessor
 from game.core.registry import GameRegistries
 
 
@@ -177,10 +177,8 @@ class TestColonizeDoesNotTransfer:
 
         # Process colonization
         processor = OrderProcessor()
-        result = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=_make_component_registry()
-        )
+        result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=_make_component_registry())
 
         # Verify planet claimed
         assert result.colonized is True
@@ -208,10 +206,8 @@ class TestColonizeDoesNotTransfer:
         assert fleet.resources.get_fleet_cargo_current("passengers") == 75
 
         processor = OrderProcessor()
-        processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=_make_component_registry()
-        )
+        processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=_make_component_registry())
 
         # Passengers remain on fleet, planet has no population
         assert planet.total_population == 0
@@ -242,10 +238,8 @@ class TestColonizeWithoutPassengers:
         empire.add_fleet(fleet)
 
         processor = OrderProcessor()
-        result = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=_make_component_registry()
-        )
+        result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=_make_component_registry())
 
         assert result.colonized is True
         assert planet.owner_id == empire.id
@@ -277,10 +271,8 @@ class TestColonizeMultipleShips:
         assert fleet.resources.get_fleet_cargo_current("passengers") == 75
 
         processor = OrderProcessor()
-        processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=_make_component_registry()
-        )
+        processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=_make_component_registry())
 
         # Planet claimed but no population transferred
         assert planet.owner_id == empire.id
@@ -307,10 +299,8 @@ class TestExistingColonizationBehavior:
         empire.add_fleet(fleet)
 
         processor = OrderProcessor()
-        result = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=_make_component_registry()
-        )
+        result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=_make_component_registry())
 
         assert result.colonized is True
         assert result.planet_name == "Test Planet"
@@ -338,7 +328,7 @@ class TestExistingColonizationBehavior:
         empire.add_fleet(fleet)
 
         processor = OrderProcessor()
-        result = processor.process_colonize(fleet, empire, galaxy, component_registry={})
+        result = processor.get_handler(OrderType.COLONIZE).execute_action_order(fleet, empire, galaxy, component_registry={})
 
         assert result.colonized is True
         # Phase 3: Both ships stay in fleet

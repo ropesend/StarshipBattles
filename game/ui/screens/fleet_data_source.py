@@ -231,7 +231,7 @@ class FleetDataSource(ITableDataSource):
 
     def _format_warp(self, ship: "ShipInstance") -> str:
         """Format warp capability for display."""
-        from game.strategy.services.component_inspector import has_warp_capability
+        from game.strategy.services.component_abilities import has_warp_capability
 
         return "Yes" if has_warp_capability(ship) else "No"
 
@@ -263,7 +263,7 @@ class FleetDataSource(ITableDataSource):
     def _format_capability(self, ship: "ShipInstance", col_id: str) -> str:
         """Format special capability for display."""
         # INTENTIONAL LATE IMPORT: Avoid circular import
-        from game.strategy.services.component_inspector import ship_has_ability
+        from game.strategy.services.component_abilities import ship_has_ability
 
         ability_name = SPECIAL_CAPABILITY_COLUMNS[col_id]
         registry = ship._registries.components if ship._registries else {}

@@ -260,7 +260,7 @@ class FleetCommandRouter:
         planet = current_sel
 
         # Find first facility + component with this ability
-        from game.strategy.services.component_inspector import extract_abilities_from_component
+        from game.strategy.services.component_abilities import extract_abilities_from_component
         from game.core.patterns.layer_iterator import iter_keyed_components
         from game.core.registry import get_default_registry_provider
         from game.strategy.data.component_activation_state import ActivationPhase

@@ -402,7 +402,7 @@ def _get_ability_status_text(planet, ability_name: str) -> str:
 def _planet_has_ability_facility(planet, ability_key: str) -> bool:
     """Check if a planet has any facility with a specific ability."""
     from game.core.patterns.layer_iterator import iter_components
-    from game.strategy.services.component_inspector import extract_abilities_from_component
+    from game.strategy.services.component_abilities import extract_abilities_from_component
 
     registries = None
     try:

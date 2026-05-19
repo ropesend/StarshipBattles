@@ -88,13 +88,13 @@ def processor():
 # =============================================================================
 
 class TestProcessTransfer:
-    """Tests for process_transfer() method."""
+    """Tests for the TRANSFER handler's execute_action_order path."""
 
     def test_transfer_no_order_returns_failure(self, processor, mock_fleet, mock_empire, mock_galaxy):
         """Returns failure when no TRANSFER order exists."""
         mock_fleet.get_current_order.return_value = None
 
-        result = processor.process_transfer(mock_fleet, mock_empire, mock_galaxy)
+        result = processor.get_handler(OrderType.TRANSFER).execute_action_order(mock_fleet, mock_empire, mock_galaxy)
 
         assert result.success is False
 
@@ -103,7 +103,7 @@ class TestProcessTransfer:
         order = Order(OrderType.MOVE, HexCoord(10, 10))
         mock_fleet.get_current_order.return_value = order
 
-        result = processor.process_transfer(mock_fleet, mock_empire, mock_galaxy)
+        result = processor.get_handler(OrderType.TRANSFER).execute_action_order(mock_fleet, mock_empire, mock_galaxy)
 
         assert result.success is False
 
@@ -112,7 +112,7 @@ class TestProcessTransfer:
         order = Order(OrderType.TRANSFER, "not_a_dict")
         mock_fleet.get_current_order.return_value = order
 
-        result = processor.process_transfer(mock_fleet, mock_empire, mock_galaxy)
+        result = processor.get_handler(OrderType.TRANSFER).execute_action_order(mock_fleet, mock_empire, mock_galaxy)
 
         assert result.success is False
         mock_fleet.pop_order.assert_called()

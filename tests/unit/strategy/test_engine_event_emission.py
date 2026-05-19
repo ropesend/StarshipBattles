@@ -475,7 +475,7 @@ class TestColonyFoundedEvent:
         }
 
     def test_process_colonize_emits_colony_founded_event(self):
-        """process_colonize() emits colony_founded on success."""
+        """ColonizeHandler.execute_action_order emits colony_founded on success."""
         from game.strategy.engine.order_processor import OrderProcessor
 
         calls, fake, bus = _capture_log_event_calls()
@@ -493,10 +493,8 @@ class TestColonyFoundedEvent:
             mock_val.find_ship_with_drop_pod.return_value = (fleet.ships[0], 0)
 
             with patch.object(processor._handler_registry.get(OrderType.COLONIZE), '_deploy_drop_pod'):
-                result = processor.process_colonize(
-                    fleet, empire, galaxy,
-                    component_registry=component_registry
-                )
+                result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+                    fleet, empire, galaxy, component_registry=component_registry)
 
         assert result.colonized is True
         assert len(calls) == 1
@@ -525,10 +523,8 @@ class TestColonyFoundedEvent:
             mock_result.message = "Invalid"
             mock_val.validate.return_value = mock_result
 
-            result = processor.process_colonize(
-                    fleet, empire, galaxy,
-                    component_registry=component_registry
-                )
+            result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+                    fleet, empire, galaxy, component_registry=component_registry)
 
         assert result.colonized is False
         assert len(calls) == 0
@@ -589,10 +585,8 @@ class TestColonyFoundedEvent:
             mock_val.find_ship_with_drop_pod.return_value = (mock_ship, 0)
 
             with patch.object(processor._handler_registry.get(OrderType.COLONIZE), '_deploy_drop_pod'):
-                result = processor.process_colonize(
-                    fleet, empire, galaxy,
-                    component_registry=component_registry
-                )
+                result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+                    fleet, empire, galaxy, component_registry=component_registry)
 
         assert result.colonized is True
         assert len(calls) == 1
@@ -988,7 +982,7 @@ class TestColonizationEventLocationEnrichment:
             mock_val.find_ship_with_drop_pod.return_value = (mock_ship, 0)
 
             with patch.object(processor._handler_registry.get(OrderType.COLONIZE), '_deploy_drop_pod'):
-                processor.process_colonize(fleet, empire, galaxy, component_registry=component_registry)
+                processor.get_handler(OrderType.COLONIZE).execute_action_order(fleet, empire, galaxy, component_registry=component_registry)
 
         _, kw = calls[0]
         assert kw["system_name"] == "Kepler"
@@ -1044,7 +1038,7 @@ class TestColonizationEventLocationEnrichment:
             mock_val.find_ship_with_drop_pod.return_value = (mock_ship, 0)
 
             with patch.object(processor._handler_registry.get(OrderType.COLONIZE), '_deploy_drop_pod'):
-                processor.process_colonize(fleet, empire, galaxy, component_registry=component_registry)
+                processor.get_handler(OrderType.COLONIZE).execute_action_order(fleet, empire, galaxy, component_registry=component_registry)
 
         _, kw = calls[0]
         assert kw["system_name"] == ""

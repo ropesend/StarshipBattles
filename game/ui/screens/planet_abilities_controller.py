@@ -109,7 +109,7 @@ class PlanetAbilitiesController:
     def get_available_editors(self) -> List[tuple]:
         """Return list of (ability_key, label) for editors where the
         planet has the facility."""
-        from game.strategy.services.component_inspector import (
+        from game.strategy.services.component_abilities import (
             extract_abilities_from_component,
         )
         from game.core.patterns.layer_iterator import iter_components
@@ -139,7 +139,7 @@ class PlanetAbilitiesController:
         are derived from the CamelCase ability name (with optional override
         via ``ABILITY_DISPLAY_NAME_OVERRIDES``).
         """
-        from game.strategy.services.component_inspector import (
+        from game.strategy.services.component_abilities import (
             extract_abilities_from_component,
         )
 

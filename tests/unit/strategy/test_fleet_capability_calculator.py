@@ -254,7 +254,7 @@ class TestFleetCapabilityCalculator:
         calc = FleetCapabilityCalculator(fleet)
 
         with patch(
-            'game.strategy.services.component_inspector.has_warp_capability',
+            'game.strategy.services.component_abilities.has_warp_capability',
             return_value=True
         ):
             assert calc.can_use_warp() is True
@@ -276,7 +276,7 @@ class TestFleetCapabilityCalculator:
             return ship.name == "Warper"
 
         with patch(
-            'game.strategy.services.component_inspector.has_warp_capability',
+            'game.strategy.services.component_abilities.has_warp_capability',
             side_effect=mock_warp
         ):
             assert calc.can_use_warp() is False
@@ -293,7 +293,7 @@ class TestFleetCapabilityCalculator:
         calc = FleetCapabilityCalculator(fleet)
 
         with patch(
-            'game.strategy.services.component_inspector.has_warp_capability',
+            'game.strategy.services.component_abilities.has_warp_capability',
             return_value=True
         ):
             assert calc.get_warp_limiting_ship() is None
@@ -315,7 +315,7 @@ class TestFleetCapabilityCalculator:
             return ship.name == "Warper"
 
         with patch(
-            'game.strategy.services.component_inspector.has_warp_capability',
+            'game.strategy.services.component_abilities.has_warp_capability',
             side_effect=mock_warp
         ):
             limiting = calc.get_warp_limiting_ship()

@@ -12,7 +12,7 @@ from game.strategy.data.ship_instance import ShipInstance
 from game.core.hex_math import HexCoord
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.species_population import SpeciesPopulation
-from game.strategy.engine.order_processor import OrderProcessor, TransferResult
+from game.strategy.engine.order_processor import OrderProcessor
 from game.strategy.engine.commands import IssueTransferCommand
 
 
@@ -100,7 +100,7 @@ class TestTransferCommand:
 
 
 class TestOrderProcessorTransfer:
-    """Tests for OrderProcessor.process_transfer()."""
+    """Tests for OrderProcessor.get_handler(OrderType.TRANSFER).execute_action_order()."""
 
     def make_mock_galaxy_with_planet(self, planet):
         """Create a mock galaxy with proper system containment for the planet.
@@ -193,7 +193,7 @@ class TestOrderProcessorTransfer:
         empire.race_config = None
 
         # Process
-        result = processor.process_transfer(fleet, empire, galaxy)
+        result = processor.get_handler(OrderType.TRANSFER).execute_action_order(fleet, empire, galaxy)
 
         assert result.success
         assert result.amount_transferred == 50
@@ -227,7 +227,7 @@ class TestOrderProcessorTransfer:
         empire.race_config.race_id = "human"
 
         # Process
-        result = processor.process_transfer(fleet, empire, galaxy)
+        result = processor.get_handler(OrderType.TRANSFER).execute_action_order(fleet, empire, galaxy)
 
         assert result.success
         assert result.amount_transferred == 30
@@ -259,7 +259,7 @@ class TestOrderProcessorTransfer:
         empire = MagicMock()
         empire.race_config = None
 
-        result = processor.process_transfer(fleet, empire, galaxy)
+        result = processor.get_handler(OrderType.TRANSFER).execute_action_order(fleet, empire, galaxy)
 
         assert result.success
         # Should only transfer what's available (20)
@@ -290,7 +290,7 @@ class TestOrderProcessorTransfer:
         empire.race_config = MagicMock()
         empire.race_config.race_id = "human"
 
-        result = processor.process_transfer(fleet, empire, galaxy)
+        result = processor.get_handler(OrderType.TRANSFER).execute_action_order(fleet, empire, galaxy)
 
         assert result.success
         assert result.amount_transferred == 75  # All cargo
@@ -324,7 +324,7 @@ class TestOrderProcessorTransfer:
         empire.race_config = MagicMock()
         empire.race_config.race_id = "human"
 
-        result = processor.process_transfer(fleet, empire, galaxy)
+        result = processor.get_handler(OrderType.TRANSFER).execute_action_order(fleet, empire, galaxy)
 
         assert result.success
         assert result.amount_transferred == 25
@@ -369,7 +369,7 @@ class TestOrderProcessorTransfer:
         empire = MagicMock()
 
         # Process
-        result = processor.process_transfer(fleet, empire, galaxy)
+        result = processor.get_handler(OrderType.TRANSFER).execute_action_order(fleet, empire, galaxy)
 
         assert result.success
         assert result.amount_transferred == 50
@@ -411,7 +411,7 @@ class TestOrderProcessorTransfer:
         empire = MagicMock()
 
         # Process
-        result = processor.process_transfer(fleet, empire, galaxy)
+        result = processor.get_handler(OrderType.TRANSFER).execute_action_order(fleet, empire, galaxy)
 
         assert result.success
         assert result.amount_transferred == 30

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Dict, Any, List
 
-from game.strategy.services.component_inspector import has_warp_capability
+from game.strategy.services.component_abilities import has_warp_capability
 from game.ui.filters.filter_state import FilterState
 from game.ui.screens.fleet_data_source import SPECIAL_CAPABILITY_COLUMNS
 
@@ -183,7 +183,7 @@ def _should_exclude_by_special_capabilities(ship: 'ShipInstance', filter_state: 
         if state is FilterState.IGNORE:
             continue
         # INTENTIONAL LATE IMPORT: Avoid circular import with strategy data
-        from game.strategy.services.component_inspector import ship_has_ability
+        from game.strategy.services.component_abilities import ship_has_ability
         registry = ship._registries.components if ship._registries else {}
         has_ability = ship_has_ability(ship, ability_name, registry)
         if _check_tri_state(state, has_ability):
@@ -310,7 +310,7 @@ def sort_ships(
             # No meaningful sort for combined column
             return 0
         elif sort_column in SPECIAL_CAPABILITY_COLUMNS:
-            from game.strategy.services.component_inspector import ship_has_ability
+            from game.strategy.services.component_abilities import ship_has_ability
             ability_name = SPECIAL_CAPABILITY_COLUMNS[sort_column]
             registry = ship._registries.components if ship._registries else {}
             return 1 if ship_has_ability(ship, ability_name, registry) else 0

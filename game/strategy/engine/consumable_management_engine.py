@@ -18,10 +18,10 @@ from game.core.registry import GameRegistries
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
 from game.strategy.interfaces.engines import IConsumableEngine
-from game.strategy.services.component_inspector import get_component_abilities
+from game.strategy.services.component_abilities import get_component_abilities
 
 logger = logging.getLogger(__name__)
-from game.strategy.services.component_inspector import get_ability_list
+from game.strategy.services.component_abilities import get_ability_list
 
 
 @dataclass

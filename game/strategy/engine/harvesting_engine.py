@@ -24,7 +24,7 @@ import logging
 
 from game.core.registry import GameRegistries
 from game.core.patterns.layer_iterator import iter_components
-from game.strategy.services.component_inspector import get_component_abilities
+from game.strategy.services.component_abilities import get_component_abilities
 from game.strategy.services.modifier_resolver import resolve_size_multiplier
 # PROJ-412 Phase 2.1: imported at module top to avoid the per-call import
 # lookup inside `_get_harvest_booster_mult` (called once per harvester per

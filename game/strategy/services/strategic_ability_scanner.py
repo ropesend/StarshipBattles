@@ -11,7 +11,7 @@ import logging
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from game.core.patterns.layer_iterator import iter_keyed_components
-from game.strategy.services.component_inspector import extract_abilities_from_component
+from game.strategy.services.component_abilities import extract_abilities_from_component
 
 if TYPE_CHECKING:
     from game.strategy.data.planet import Planet
@@ -401,7 +401,7 @@ def _extract_ability(
 ) -> Optional[Dict[str, Any]]:
     """Extract a specific ability's data from a component entry.
 
-    Delegates to `component_inspector.extract_abilities_from_component`, which
+    Delegates to `component_abilities.extract_abilities_from_component`, which
     is the single source of truth for ability extraction and accepts either a
     `GameRegistries` (with `.components` attr) or a plain components dict as
     `registries`. Previously the scanner had its own registry walker that

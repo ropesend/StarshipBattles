@@ -106,12 +106,15 @@ class StrategicKind(Enum):
 
 @dataclass(frozen=True)
 class EffectFacet:
-    """Strategic-effect aggregation facet (legacy ``EffectAbilityMetadata`` shape).
+    """Strategic-effect aggregation facet.
 
-    The shim module ``effect_ability_metadata.py`` derives its public
-    ``EffectAbilityMetadata`` records from these facets so its public
-    helper API (``find_metadata``, ``is_known_effect_ability``,
-    ``all_owner_aware_scopes``) remains unchanged.
+    Carries the per-ability metadata used by the strategic-effects
+    pipeline: display name, kind (rate/multiplier), grouping field,
+    owner-aware scope set, and the primary/fallback value fields.
+    Read via ``get_ability_metadata(name).effect``. PROJ-454 Phase 1
+    retired the prior ``effect_ability_metadata.py`` shim that
+    projected this facet into a flat ``EffectAbilityMetadata``
+    dataclass — callers now navigate the facet directly.
     """
     display_name: str | None
     kind: Literal["rate", "multiplier"]

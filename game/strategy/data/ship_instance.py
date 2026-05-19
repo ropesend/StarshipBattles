@@ -17,7 +17,7 @@ Delegates:
 - ShipInstanceSerializer: serialization (to_dict, from_dict, clone)
 - ShipStatsCache: stats calculation + cache rule (PROJ-425 Phase 1)
 - ShipInstanceFactory: construction path (PROJ-425 Phase 3)
-- component_inspector: per-instance layer views (PROJ-425 Phase 2)
+- component_layers: per-instance layer views (PROJ-425 Phase 2; PROJ-454 retired the component_inspector shim)
 """
 import logging
 from dataclasses import dataclass, field
@@ -629,10 +629,11 @@ class ShipInstance:
     def get_damaged_component_count(self) -> int:
         """Get count of damaged component instances.
 
-        Delegates to `component_inspector.count_damaged_components`
-        (PROJ-425 Phase 2).
+        Delegates to ``component_layers.count_damaged_components``
+        (PROJ-425 Phase 2; PROJ-454 Phase 2 retired the
+        ``component_inspector`` shim).
         """
-        from game.strategy.services.component_inspector import count_damaged_components
+        from game.strategy.services.component_layers import count_damaged_components
         return count_damaged_components(self)
 
     def get_components_by_layer(self) -> Dict[str, List[Dict[str, Any]]]:
@@ -648,19 +649,21 @@ class ShipInstance:
     def iter_all_components_by_layer(self) -> Dict[str, List[ComponentInstanceView]]:
         """Return every component on this ship grouped by layer.
 
-        Delegates to `component_inspector.iter_components_by_layer`
-        (PROJ-425 Phase 2). See that function for behavior.
+        Delegates to ``component_layers.iter_components_by_layer``
+        (PROJ-425 Phase 2; PROJ-454 Phase 2 retired the
+        ``component_inspector`` shim). See that function for behavior.
         """
-        from game.strategy.services.component_inspector import iter_components_by_layer
+        from game.strategy.services.component_layers import iter_components_by_layer
         return iter_components_by_layer(self)
 
     def get_damaged_components_by_layer(self) -> Dict[str, List[Tuple[str, int]]]:
         """Get damaged component instances grouped by layer.
 
-        Delegates to `component_inspector.damaged_components_by_layer`
-        (PROJ-425 Phase 2).
+        Delegates to ``component_layers.damaged_components_by_layer``
+        (PROJ-425 Phase 2; PROJ-454 Phase 2 retired the
+        ``component_inspector`` shim).
         """
-        from game.strategy.services.component_inspector import damaged_components_by_layer
+        from game.strategy.services.component_layers import damaged_components_by_layer
         return damaged_components_by_layer(self)
 
     # --- Bridge Methods (PROJ-425 Phase 5e: thin shims) ---

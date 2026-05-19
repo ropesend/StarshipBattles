@@ -1,7 +1,7 @@
-"""Tests for layer-inspection helpers on ``component_inspector`` (PROJ-425 Phase 2).
+"""Tests for layer-inspection helpers on ``component_layers`` (PROJ-425 Phase 2).
 
 Phase 2 of TD-06 moves the per-instance layer-view helpers off
-``ShipInstance`` into the existing ``component_inspector`` module:
+``ShipInstance`` into the existing ``component_layers`` module:
 
 - ``iter_components_by_layer(ship)`` -> Dict[layer, List[ComponentInstanceView]]
 - ``damaged_components_by_layer(ship)`` -> Dict[layer, List[(key, current_hp)]]
@@ -9,7 +9,7 @@ Phase 2 of TD-06 moves the per-instance layer-view helpers off
 """
 from game.core.component_state import ComponentState, component_state_key
 from game.strategy.data.ship_instance import ShipInstance
-from game.strategy.services import component_inspector
+from game.strategy.services import component_layers
 
 
 def _make_design():
@@ -57,7 +57,7 @@ class TestIterComponentsByLayer:
             }
         )
 
-        result = component_inspector.iter_components_by_layer(ship)
+        result = component_layers.iter_components_by_layer(ship)
 
         assert "HULL" not in result
         assert set(result.keys()) == {"CORE", "INNER"}
@@ -91,7 +91,7 @@ class TestIterComponentsByLayer:
             },
         )
 
-        result = component_inspector.iter_components_by_layer(ship)
+        result = component_layers.iter_components_by_layer(ship)
 
         assert result == {"CORE": []}
 
@@ -106,7 +106,7 @@ class TestDamagedComponentsByLayer:
             }
         )
 
-        result = component_inspector.damaged_components_by_layer(ship)
+        result = component_layers.damaged_components_by_layer(ship)
 
         assert "CORE" not in result
         assert "INNER" in result
@@ -121,7 +121,7 @@ class TestDamagedComponentsByLayer:
                 component_state_key("bridge", 0): _cs("bridge", 0, 100, 100),
             }
         )
-        assert component_inspector.damaged_components_by_layer(ship) == {}
+        assert component_layers.damaged_components_by_layer(ship) == {}
 
 
 class TestCountDamagedComponents:
@@ -133,7 +133,7 @@ class TestCountDamagedComponents:
                 component_state_key("laser_cannon", 1): _cs("laser_cannon", 1, 10, 80),
             }
         )
-        assert component_inspector.count_damaged_components(ship) == 2
+        assert component_layers.count_damaged_components(ship) == 2
 
     def test_zero_when_none_damaged(self):
         ship = _make_ship(
@@ -141,4 +141,4 @@ class TestCountDamagedComponents:
                 component_state_key("bridge", 0): _cs("bridge", 0, 100, 100),
             }
         )
-        assert component_inspector.count_damaged_components(ship) == 0
+        assert component_layers.count_damaged_components(ship) == 0

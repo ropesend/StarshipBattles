@@ -412,7 +412,7 @@ def test_ability_toggle_issues_order_for_first_operational_facility_component(
         lambda design_data: iter([("CORE:0", "CORE", {"id": "shield"})]),
     )
     monkeypatch.setattr(
-        "game.strategy.services.component_inspector.extract_abilities_from_component",
+        "game.strategy.services.component_abilities.extract_abilities_from_component",
         lambda comp, registry: {"PlanetaryShield": {"activation_time": 1}},
     )
     monkeypatch.setattr(
@@ -455,7 +455,7 @@ def test_ability_toggle_skips_missing_toggleable_ability(
         lambda design_data: iter([("CORE:0", "CORE", {"id": "shield"})]),
     )
     monkeypatch.setattr(
-        "game.strategy.services.component_inspector.extract_abilities_from_component",
+        "game.strategy.services.component_abilities.extract_abilities_from_component",
         lambda comp, registry: {"PlanetaryShield": True},
     )
 

@@ -308,7 +308,7 @@ class PlanetActionEngine(IPlanetActionEngine):
             return comp_key, comp_id
 
         # Fall back: find first component with the ability and build key
-        from game.strategy.services.component_inspector import extract_abilities_from_component
+        from game.strategy.services.component_abilities import extract_abilities_from_component
         for key, layer_name, comp in iter_keyed_components(facility.design_data):
             abilities = extract_abilities_from_component(comp, self._registries)
             if ability_name in abilities:
@@ -322,7 +322,7 @@ class PlanetActionEngine(IPlanetActionEngine):
         component_registry: Optional[Dict[str, Any]] = None,
     ) -> float:
         """Get energy_drain_rate from the component's ability data."""
-        from game.strategy.services.component_inspector import iter_facility_ability_entries
+        from game.strategy.services.component_abilities import iter_facility_ability_entries
         for comp, entry in iter_facility_ability_entries(
             facility, ability_name, self._registries
         ):
@@ -336,7 +336,7 @@ class PlanetActionEngine(IPlanetActionEngine):
         component_registry: Optional[Dict[str, Any]] = None,
     ) -> int:
         """Get deactivation_time from the component's ability data."""
-        from game.strategy.services.component_inspector import iter_facility_ability_entries
+        from game.strategy.services.component_abilities import iter_facility_ability_entries
         for comp, entry in iter_facility_ability_entries(
             facility, ability_name, self._registries
         ):
@@ -385,7 +385,7 @@ class PlanetActionEngine(IPlanetActionEngine):
 
     def _find_ability_component_id(self, facility, ability_name: str) -> Optional[str]:
         """Find the component ID that provides a specific ability in a facility."""
-        from game.strategy.services.component_inspector import iter_facility_ability_entries
+        from game.strategy.services.component_abilities import iter_facility_ability_entries
         for comp, _entry in iter_facility_ability_entries(
             facility, ability_name, self._registries
         ):

@@ -1,16 +1,19 @@
-"""AST static-guard regression for the `OrderProcessor` facade (PROJ-368 Phase 5).
+"""AST static-guard regression for the `OrderProcessor` facade.
 
-The hard gates landed in Phase 4 at:
+PROJ-368 Phase 5 established this file as a structural complement to the
+Phase-4 hard gates. PROJ-454 Phase 3 deleted the three legacy facade
+methods (`process_join_fleet` / `process_colonize` / `process_transfer`)
+and their typed result dataclasses; the remaining facade surface is the
+handler-registry construction (`__init__`), the public
+``get_handler(order_type)`` accessor, ``process_instant_orders``, and
+``execute_action_order``. The cap below reflects that slimmer surface.
+
+Companion hard gates (still active):
 - `tests/unit/strategy/engine/test_order_processor_no_legacy_helpers.py`
   (LOC < 200, no legacy private helpers, no `if order.type ==
   OrderType.X` ladders)
 - `tests/unit/strategy/engine/order_handlers/test_handler_registry_completeness.py`
   (every OrderType handled by OrderProcessor has a registered handler)
-
-This file adds Phase-5-style structural checks that complement those
-gates: OrderType reference count cap on the facade, and a re-import
-of the Phase 4 gates so the per-handler test suite proves them
-together.
 """
 from __future__ import annotations
 
@@ -27,19 +30,18 @@ ORDER_PROCESSOR = (
 
 
 def test_order_processor_minimal_order_type_references():
-    """Cap OrderType references on the facade.
+    """Cap OrderType references on the facade post-PROJ-454 Phase 3.
 
-    The slim facade still references `OrderType` for two reasons:
-    1. The `process_transfer` shim validates that an order is a
-       transfer family member before delegating (`order.type not in
-       (OrderType.TRANSFER, OrderType.LOAD_POPULATION,
-       OrderType.UNLOAD_POPULATION)`) -- 3 references.
-    2. `process_join_fleet` and `process_colonize` use
-       `OrderType.JOIN_FLEET` / `OrderType.COLONIZE` for the registry
-       lookup -- 2 references.
+    After Phase 3 deleted the three legacy facade shims, the only
+    remaining ``OrderType.X`` literal in ``order_processor.py`` is the
+    ``process_instant_orders`` registry lookup, which fetches the
+    JOIN_FLEET handler unconditionally to drive the BUG-122 three-phase
+    pipeline. ``execute_action_order`` uses ``order.type`` (an instance
+    attribute access on a runtime Order, NOT an ``OrderType.X`` literal)
+    so it does NOT count toward this cap.
 
-    Total: <= 6 references. Any more means a new branching ladder
-    has been introduced; the registry is the right place for that.
+    Total: <= 2 references. Any more means a new branching ladder has
+    been introduced; the registry is the right place for that.
     """
     tree = ast.parse(ORDER_PROCESSOR.read_text(encoding="utf-8"))
     refs = [
@@ -48,11 +50,10 @@ def test_order_processor_minimal_order_type_references():
         and isinstance(node.value, ast.Name)
         and node.value.id == "OrderType"
     ]
-    assert len(refs) <= 6, (
+    assert len(refs) <= 2, (
         f"OrderProcessor references OrderType {len(refs)} times; "
-        "facade target is <= 6 (3 in process_transfer shim + 1 each in "
-        "process_join_fleet / process_colonize / execute_action_order's "
-        "registry lookup)."
+        "post-PROJ-454 cap is <= 2 (only process_instant_orders' "
+        "registry lookup for JOIN_FLEET is permitted)."
     )
 
 

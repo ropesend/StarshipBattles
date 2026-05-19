@@ -283,10 +283,8 @@ class TestColonizeWithMatchingPod:
 
         # Execute colonization with component registry
         processor = OrderProcessor()
-        result = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=component_registry
-        )
+        result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=component_registry)
 
         # Assert: Colonization succeeded
         assert result.colonized is True
@@ -377,20 +375,16 @@ class TestChainColonization:
         processor = OrderProcessor()
 
         # Process first colonization
-        result1 = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=component_registry
-        )
+        result1 = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=component_registry)
         assert result1.colonized is True
         assert continental1.owner_id == 1
         # Phase 2: Ships stay, pods consumed from cargo
         assert len(fleet.ships) == 2
 
         # Process second colonization
-        result2 = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=component_registry
-        )
+        result2 = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=component_registry)
         assert result2.colonized is True
         assert continental2.owner_id == 1
         assert len(fleet.ships) == 2  # Both ships stay
@@ -470,10 +464,8 @@ class TestMixedFleetColonization:
         processor = OrderProcessor()
 
         # Process ice colonization
-        result1 = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=component_registry
-        )
+        result1 = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=component_registry)
         assert result1.colonized is True
         assert ice_planet.owner_id == 1
         # Phase 2: Both ships stay
@@ -481,10 +473,8 @@ class TestMixedFleetColonization:
         assert continental_colony_ship in fleet.ships
 
         # Process continental colonization
-        result2 = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=component_registry
-        )
+        result2 = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=component_registry)
         assert result2.colonized is True
         assert continental_planet.owner_id == 1
         # Both ships stay
@@ -517,10 +507,8 @@ class TestFleetRemovalBehavior:
         empire.fleets.append(fleet)
 
         processor = OrderProcessor()
-        result = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=component_registry
-        )
+        result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=component_registry)
 
         assert result.colonized is True
         assert ice_planet.owner_id == 1
@@ -547,10 +535,8 @@ class TestFleetRemovalBehavior:
         empire.fleets.append(fleet)
 
         processor = OrderProcessor()
-        result = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=component_registry
-        )
+        result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=component_registry)
 
         assert result.colonized is True
         assert ice_planet.owner_id == 1

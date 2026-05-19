@@ -17,7 +17,21 @@ from game.strategy.data.component_activation_state import (
     ActivationPhase,
     ComponentActivationState,
 )
-from game.strategy.services.effect_ability_metadata import find_metadata
+from game.strategy.services.ability_metadata import (
+    EffectFacet,
+    get_ability_metadata,
+)
+
+
+def _effect_facet(ability_name: str) -> EffectFacet | None:
+    """Return the strategic-effect aggregation facet for ``ability_name``.
+
+    Returns ``None`` when the ability is unknown OR when it has no
+    effect-aggregation facet (e.g. a CommandSpec-parity entry with no
+    multiplier/rate semantics).
+    """
+    meta = get_ability_metadata(ability_name)
+    return meta.effect if meta is not None else None
 
 
 def _ability_kind(ability_name: str) -> str:
@@ -26,8 +40,8 @@ def _ability_kind(ability_name: str) -> str:
     Falls back to 'multiplier' for unknown ability names (matches the
     legacy `_RATE_ABILITIES` membership-check behavior).
     """
-    m = find_metadata(ability_name)
-    return m.kind if m is not None else 'multiplier'
+    facet = _effect_facet(ability_name)
+    return facet.kind if facet is not None else 'multiplier'
 
 
 # ---------------------------------------------------------------------------
@@ -64,15 +78,15 @@ def _is_activatable(ability_data: dict) -> bool:
 def make_group_key(ability_name: str, ability_data) -> str:
     """Group key for an ability instance.
 
-    Driven by `EffectAbilityMetadata.grouping_key_field` from the registry.
-    When set (e.g. 'resource_type' for ResourceHarvestBooster, 'damage_type'
+    Driven by `EffectFacet.grouping_key_field` from the registry. When
+    set (e.g. 'resource_type' for ResourceHarvestBooster, 'damage_type'
     for EnvironmentalDamage), the key is `f"{ability_name}:{value}"`. When
     absent (or the ability is unknown), the key is the ability_name alone.
 
     Public since FEAT-16 — also consumed by the Planet List effects filter
     and per-effect column generators.
     """
-    metadata = find_metadata(ability_name)
+    metadata = _effect_facet(ability_name)
     if metadata is None or metadata.grouping_key_field is None:
         return ability_name
     if not isinstance(ability_data, dict):
@@ -94,15 +108,15 @@ def make_group_key(ability_name: str, ability_data) -> str:
 def make_display_name(ability_name: str, ability_data) -> str:
     """Human-readable label for an ability instance.
 
-    Driven by `EffectAbilityMetadata.display_name`. When the registry entry
-    has an explicit display_name, it is returned verbatim. When display_name
-    is None, the label is derived from the `grouping_key_field` value in
+    Driven by `EffectFacet.display_name`. When the registry entry has an
+    explicit display_name, it is returned verbatim. When display_name is
+    None, the label is derived from the `grouping_key_field` value in
     `ability_data` ("Metals Harvest Boost", "Plasma Damage").
 
     Public since FEAT-16 — used as Planet List per-effect column titles and
     Effects filter chip labels.
     """
-    metadata = find_metadata(ability_name)
+    metadata = _effect_facet(ability_name)
     if metadata is None:
         return ability_name
     if metadata.display_name is not None:
@@ -135,7 +149,7 @@ def format_intrinsic_ability_magnitude(ability_name: str, ability_data) -> str:
     if not isinstance(ability_data, dict):
         return ""
 
-    metadata = find_metadata(ability_name)
+    metadata = _effect_facet(ability_name)
     if metadata is None:
         # Unknown ability — render nothing rather than fabricating "x..."
         # for arbitrary input.

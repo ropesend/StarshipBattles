@@ -420,8 +420,9 @@ class BaseCommandHandler:
         """Build COLONIZE order target — Planet or dict with amounts.
 
         If population_amount or cargo_amounts are specified on the command,
-        wraps the planet in a dict so process_colonize() can extract the amounts.
-        Otherwise returns the Planet directly for backward compatibility.
+        wraps the planet in a dict so the colonize handler can extract the
+        amounts. Otherwise returns the Planet directly for backward
+        compatibility.
         """
         if cmd.population_amount is not None or cmd.cargo_amounts is not None:
             return {

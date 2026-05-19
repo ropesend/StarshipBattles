@@ -1,9 +1,12 @@
 """
-Unit tests for process_colonize() execution-time validation.
+Unit tests for COLONIZE handler execution-time validation.
 
-PROJ-140 Phase 1: Tests for bugs #1 and #2:
-- Bug 1: process_colonize() doesn't pass component_registry to validator
-- Bug 2: process_colonize() mutates state before confirming colony ship exists
+PROJ-140 Phase 1 originally tested two bugs in the legacy
+``OrderProcessor.process_colonize`` shim (PROJ-454 Phase 3 deleted
+that shim; coverage now drives the canonical
+``ColonizeHandler.execute_action_order`` directly):
+- Bug 1: validator was not receiving ``component_registry``
+- Bug 2: state mutated before the colony ship was confirmed present
 
 These tests verify:
 - Wrong pod type fails colonization (planet stays unowned)
@@ -173,7 +176,7 @@ def galaxy_with_ice_planet():
 # =============================================================================
 
 class TestProcessColonizeValidation:
-    """Tests for process_colonize() execution-time validation (PROJ-140 Bug 1+2)."""
+    """Tests for ColonizeHandler execution-time validation (PROJ-140 Bug 1+2)."""
 
     def test_process_colonize_universal_drop_pod_succeeds(
         self, galaxy_with_ice_planet, component_registry
@@ -198,10 +201,8 @@ class TestProcessColonizeValidation:
 
         # Execute colonization
         processor = OrderProcessor()
-        result = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=component_registry
-        )
+        result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=component_registry)
 
         # Phase 3: Drop pods are universal
         assert result.colonized is True
@@ -231,10 +232,8 @@ class TestProcessColonizeValidation:
 
         # Execute colonization WITH component registry
         processor = OrderProcessor()
-        result = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=component_registry
-        )
+        result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=component_registry)
 
         # Assert: Colonization succeeded
         assert result.colonized is True
@@ -268,10 +267,8 @@ class TestProcessColonizeValidation:
 
         # Execute colonization
         processor = OrderProcessor()
-        result = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=component_registry
-        )
+        result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=component_registry)
 
         # Assert: Colonization failed, no ships removed
         assert result.colonized is False
@@ -304,10 +301,8 @@ class TestProcessColonizeValidation:
 
         # Execute colonization
         processor = OrderProcessor()
-        result = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=component_registry
-        )
+        result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=component_registry)
 
         # Assert: Order was popped
         assert len(fleet.orders) == 0
@@ -317,7 +312,7 @@ class TestProcessColonizeValidation:
 # =============================================================================
 
 class TestProcessColonizeAnyPlanet:
-    """Tests for process_colonize() 'Any Planet' selection with pod matching."""
+    """Tests for ColonizeHandler 'Any Planet' selection with pod matching."""
 
     @pytest.fixture
     def component_registry(self):
@@ -383,10 +378,8 @@ class TestProcessColonizeAnyPlanet:
 
         # Execute colonization
         processor = OrderProcessor()
-        result = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=component_registry
-        )
+        result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=component_registry)
 
         # Assert: First unowned planet colonized (pods are universal)
         assert result.colonized is True
@@ -417,10 +410,8 @@ class TestProcessColonizeAnyPlanet:
 
         # Execute colonization
         processor = OrderProcessor()
-        result = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=component_registry
-        )
+        result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=component_registry)
 
         # Assert: Colonization failed
         assert result.colonized is False
