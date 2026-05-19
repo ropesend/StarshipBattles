@@ -79,9 +79,20 @@ class _StubPlanet:
         self.location = location
         self.global_hex = location
         self.name = name
-        self.staging_yard: list = []
+        self._staging_yard: list = []
         self.max_staging_mass: float = 0.0
         self.orders: list = []
+
+    @property
+    def staging_yard(self) -> list:
+        """PROJ-455: backed by ``_staging_yard`` to honour the
+        :class:`PlanetStagingYardIssuerAdapter` write contract at
+        ``issuer_adapter.py:335`` (``self._planet._staging_yard = remaining``).
+        Real :class:`Planet` exposes the same underscore-backed property pair;
+        the precedent stub in ``test_fms_planet_lay_mines.py`` skips this
+        because its assertions never observe the post-pop yard state.
+        """
+        return self._staging_yard
 
     def get_current_order(self):
         return self.orders[0] if self.orders else None
@@ -102,11 +113,11 @@ class _StubPlanet:
         else:
             item_mass = float(getattr(item, "mass", 0.0))
         if self.max_staging_mass > 0 and (
-            sum(_item_mass(i) for i in self.staging_yard) + item_mass
+            sum(_item_mass(i) for i in self._staging_yard) + item_mass
             > self.max_staging_mass
         ):
             return False
-        self.staging_yard.append(item)
+        self._staging_yard.append(item)
         return True
 
 
@@ -292,7 +303,8 @@ def test_lay_mines_e2e_smoke(engine_with_fixed_resolver) -> None:
     Drives the full engine entry point (not the
     ``_execute_planet_action`` shortcut the precedent uses) and asserts
     on the returned ``ActionTickResult`` list plus post-tick planet
-    state.
+    state. Retained alongside the Phase-2 parametrised test as a
+    fast-path debug aid — see decisions.md.
     """
     engine, _processor = engine_with_fixed_resolver
 
@@ -317,4 +329,211 @@ def test_lay_mines_e2e_smoke(engine_with_fixed_resolver) -> None:
     assert planet.get_current_order() is None, (
         "Planet order queue should advance after the engine-mediated "
         "LAY_MINES dispatch."
+    )
+
+
+# ---------------------------------------------------------------------------
+# Phase 2 — Parametrised end-to-end coverage (completion branch + in-progress)
+# ---------------------------------------------------------------------------
+
+
+def _assert_post_dispatch_state(planet, empire, order_type: OrderType) -> None:
+    """Per-order-type observable post-condition checks for the
+    completion-branch parametrised test.
+
+    Conservative shape: launch / lay orders must empty the staging yard
+    and produce exactly one deployed group; recovery orders must empty
+    the deployed group(s) of their ships and place the recovered ship
+    into the staging yard. Whether the empty group is removed from
+    ``empire.deployed_groups`` is handler-policy-defined; the assertions
+    only require the ships count = 0 on any remaining groups.
+    """
+    if order_type is OrderType.LAY_MINES:
+        mine_groups = [
+            g for g in empire.deployed_groups
+            if g.__class__.__name__ == "MineGroup"
+        ]
+        assert len(mine_groups) == 1, (
+            "LAY_MINES should produce exactly one MineGroup; "
+            f"got {len(mine_groups)}."
+        )
+        assert len(planet.staging_yard) == 0, (
+            "Mine should have moved out of the staging yard."
+        )
+    elif order_type in (OrderType.LAUNCH_FIGHTERS, OrderType.LAUNCH_SATELLITES):
+        assert len(planet.staging_yard) == 0, (
+            f"{order_type.name} should have emptied the staging yard."
+        )
+        assert len(empire.deployed_groups) == 1, (
+            f"{order_type.name} should produce exactly one deployed group; "
+            f"got {len(empire.deployed_groups)}."
+        )
+    elif order_type in (OrderType.RECOVER_FIGHTERS, OrderType.RECOVER_SATELLITES):
+        for group in empire.deployed_groups:
+            assert len(group.ships) == 0, (
+                f"{order_type.name} should empty the deployed group's "
+                f"ships; got {len(group.ships)} remaining."
+            )
+        assert len(planet.staging_yard) >= 1, (
+            f"{order_type.name} should have placed the recovered ship "
+            f"into the staging yard."
+        )
+    else:
+        pytest.fail(
+            f"Unhandled order_type in _assert_post_dispatch_state: "
+            f"{order_type!r}"
+        )
+
+
+@pytest.mark.parametrize(
+    "order_type",
+    [
+        OrderType.LAY_MINES,
+        OrderType.LAUNCH_FIGHTERS,
+        OrderType.LAUNCH_SATELLITES,
+        OrderType.RECOVER_FIGHTERS,
+        OrderType.RECOVER_SATELLITES,
+    ],
+)
+def test_process_planet_action_tick_end_to_end(
+    engine_with_fixed_resolver, order_type: OrderType
+) -> None:
+    """Every planet-FMS order type dispatches cleanly through the full
+    engine entry point ``ActionExecutionEngine.process_action_ticks``.
+
+    This is the engine-mediated counterpart of
+    ``tests/integration/test_fms_planet_lay_mines.py`` (which drives
+    ``_execute_planet_action`` directly). PROJ-455 closes the
+    ActionExecutionEngine half of DI-2026-05-18-001 by exercising
+    ``_process_planet_action_tick``'s order-progression and
+    action-time-resolution logic that the precedent bypassed.
+    """
+    engine, _processor = engine_with_fixed_resolver
+
+    hex_c = HexCoord(0, 0)
+    planet = _StubPlanet(planet_id=42, owner_id=7, location=hex_c)
+    empire = _build_empire(planet)
+
+    _SCENARIO_BUILDERS[order_type](planet, empire)
+    assert planet.get_current_order() is not None
+    assert planet.get_current_order().type is order_type
+
+    results = engine.process_action_ticks(
+        empires=[empire],
+        galaxy=None,
+        tick=1,
+        component_registry=None,
+    )
+
+    assert len(results) == 1, (
+        f"Expected exactly one ActionTickResult for the planet's "
+        f"{order_type.name} order; got {len(results)}."
+    )
+    result = results[0]
+    assert result.order_type is order_type
+    assert result.action_completed is True, (
+        f"With _FixedActionTimeResolver(1), tick 1 should complete the "
+        f"{order_type.name} action; got action_completed={result.action_completed}."
+    )
+    assert result.fleet_consumed is False, (
+        "Planets are never consumed by an action; only fleet-issuer "
+        "paths set fleet_consumed=True."
+    )
+
+    assert planet.get_current_order() is None, (
+        f"Planet order queue should advance after the engine-mediated "
+        f"{order_type.name} dispatch — handler may have raised before "
+        f"reaching pop_order(), or returned without popping."
+    )
+
+    _assert_post_dispatch_state(planet, empire, order_type)
+
+
+@pytest.mark.parametrize(
+    "order_type",
+    [
+        OrderType.LAY_MINES,
+        OrderType.LAUNCH_FIGHTERS,
+        OrderType.LAUNCH_SATELLITES,
+        OrderType.RECOVER_FIGHTERS,
+        OrderType.RECOVER_SATELLITES,
+    ],
+)
+def test_process_planet_action_tick_in_progress_branch(
+    order_type: OrderType,
+) -> None:
+    """One tick with action_time=3 must NOT complete the action.
+
+    Exercises the in-progress return path at
+    ``game/strategy/engine/action_execution_engine.py:290-297``: the
+    order remains queued, ``execution_progress`` increments to 1,
+    ``action_completed`` is False, and the handler is NOT invoked.
+
+    Uses a dedicated `ActionExecutionEngine` constructed inline (with
+    `_FixedActionTimeResolver(3)`) rather than the
+    ``engine_with_fixed_resolver`` fixture which is wired for
+    ``action_time=1`` completion-branch coverage.
+    """
+    processor = OrderProcessor()
+    engine = ActionExecutionEngine(
+        order_processor=processor,
+        action_time_resolver=_FixedActionTimeResolver(action_time=3),
+    )
+    hex_c = HexCoord(0, 0)
+    planet = _StubPlanet(planet_id=42, owner_id=7, location=hex_c)
+    empire = _build_empire(planet)
+
+    _SCENARIO_BUILDERS[order_type](planet, empire)
+    assert planet.get_current_order() is not None
+    current_order = planet.get_current_order()
+    assert current_order.type is order_type
+
+    results = engine.process_action_ticks(
+        empires=[empire],
+        galaxy=None,
+        tick=1,
+        component_registry=None,
+    )
+
+    assert len(results) == 1
+    result = results[0]
+    assert result.order_type is order_type
+    assert result.action_completed is False, (
+        f"With _FixedActionTimeResolver(3) and one tick, {order_type.name} "
+        f"should NOT complete; got action_completed={result.action_completed}."
+    )
+    assert result.execution_progress == 1, (
+        f"After one tick the order's execution_progress should be 1; "
+        f"got {result.execution_progress}."
+    )
+    assert result.action_time == 3
+    assert result.fleet_consumed is False
+
+    assert planet.get_current_order() is current_order, (
+        f"{order_type.name} in-progress: order must remain queued; "
+        f"the handler should NOT have been dispatched on this tick."
+    )
+    assert current_order.execution_progress == 1
+
+
+def test_planet_fms_e2e_parametrise_matches_registry_view() -> None:
+    """Sanity guard: the parametrise list used by the e2e tests above
+    must match the live planet-FMS registry view. If a sixth handler is
+    added but the parametrise list isn't extended, this test surfaces
+    the drift before the next CI run sees an under-covered handler.
+    """
+    from game.strategy.engine.commands.order_metadata_view import order_metadata
+
+    parametrised = frozenset({
+        OrderType.LAY_MINES,
+        OrderType.LAUNCH_FIGHTERS,
+        OrderType.LAUNCH_SATELLITES,
+        OrderType.RECOVER_FIGHTERS,
+        OrderType.RECOVER_SATELLITES,
+    })
+    assert parametrised == order_metadata.planet_fms_action_order_types, (
+        "planet_fms_action_order_types drift: the parametrise list in "
+        "test_process_planet_action_tick_end_to_end / "
+        "test_process_planet_action_tick_in_progress_branch must be "
+        "updated to keep coverage exhaustive."
     )
