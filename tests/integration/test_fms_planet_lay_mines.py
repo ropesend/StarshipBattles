@@ -31,6 +31,7 @@ from types import SimpleNamespace
 import pytest
 
 from game.core.hex_math import HexCoord
+from game.strategy.data.carried_vehicle import CarriedVehicle
 from game.strategy.data.deployed_group import FighterWing, SatelliteConstellation
 from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.ship_instance import ShipInstance
@@ -72,10 +73,17 @@ class _StubPlanet:
         self.orders.append(order)
 
     def add_to_staging_yard(self, item) -> bool:
-        item_mass = float(item.get("mass", 0.0)) if isinstance(item, dict) else 0.0
+        # PROJ-450 Phase 4: production substrate is typed. Mass access
+        # uses attribute lookup for CarriedVehicle/DropPod, with a dict
+        # fallback for any legacy callers.
+        if isinstance(item, (CarriedVehicle,)):
+            item_mass = float(item.mass)
+        elif isinstance(item, dict):
+            item_mass = float(item.get("mass", 0.0))
+        else:
+            item_mass = float(getattr(item, "mass", 0.0))
         if self.max_staging_mass > 0 and (
-            sum(float(i.get("mass", 0.0)) for i in self.staging_yard if isinstance(i, dict))
-            + item_mass
+            sum(_item_mass(i) for i in self.staging_yard) + item_mass
             > self.max_staging_mass
         ):
             return False
@@ -83,34 +91,42 @@ class _StubPlanet:
         return True
 
 
-def _mine_dict(design_id: str = "mine_alpha") -> dict:
-    return {
-        "design_id": design_id,
-        "design_data": {"name": design_id},
-        "vehicle_type": "mine",
-        "mass": 5.0,
-        "current_hp": 30,
-    }
+def _item_mass(item) -> float:
+    if isinstance(item, CarriedVehicle):
+        return float(item.mass)
+    if isinstance(item, dict):
+        return float(item.get("mass", 0.0))
+    return float(getattr(item, "mass", 0.0))
 
 
-def _fighter_dict(design_id: str = "fighter_alpha") -> dict:
-    return {
-        "design_id": design_id,
-        "design_data": {"name": design_id, "vehicle_class": "Fighter (Small)"},
-        "vehicle_type": "fighter",
-        "mass": 20.0,
-        "current_hp": 80,
-    }
+def _mine_typed(design_id: str = "mine_alpha") -> CarriedVehicle:
+    return CarriedVehicle(
+        design_id=design_id,
+        design_data={"name": design_id},
+        vehicle_type="mine",
+        mass=5.0,
+        current_hp=30,
+    )
 
 
-def _satellite_dict(design_id: str = "sat_alpha") -> dict:
-    return {
-        "design_id": design_id,
-        "design_data": {"name": design_id, "vehicle_class": "Satellite (Small)"},
-        "vehicle_type": "satellite",
-        "mass": 15.0,
-        "current_hp": 60,
-    }
+def _fighter_typed(design_id: str = "fighter_alpha") -> CarriedVehicle:
+    return CarriedVehicle(
+        design_id=design_id,
+        design_data={"name": design_id, "vehicle_class": "Fighter (Small)"},
+        vehicle_type="fighter",
+        mass=20.0,
+        current_hp=80,
+    )
+
+
+def _satellite_typed(design_id: str = "sat_alpha") -> CarriedVehicle:
+    return CarriedVehicle(
+        design_id=design_id,
+        design_data={"name": design_id, "vehicle_class": "Satellite (Small)"},
+        vehicle_type="satellite",
+        mass=15.0,
+        current_hp=60,
+    )
 
 
 def _fighter_ship(instance_id: str, owner_id: int) -> ShipInstance:
@@ -136,7 +152,7 @@ def _satellite_ship(instance_id: str, owner_id: int) -> ShipInstance:
 
 
 def _build_lay_mines_scenario(planet: _StubPlanet, empire: SimpleNamespace) -> None:
-    planet.staging_yard.append(_mine_dict())
+    planet.add_to_staging_yard(_mine_typed())
     planet.add_order(
         Order(
             OrderType.LAY_MINES,
@@ -152,7 +168,7 @@ def _build_lay_mines_scenario(planet: _StubPlanet, empire: SimpleNamespace) -> N
 def _build_launch_fighters_scenario(
     planet: _StubPlanet, empire: SimpleNamespace
 ) -> None:
-    planet.staging_yard.append(_fighter_dict())
+    planet.add_to_staging_yard(_fighter_typed())
     planet.add_order(
         Order(
             OrderType.LAUNCH_FIGHTERS,
@@ -168,7 +184,7 @@ def _build_launch_fighters_scenario(
 def _build_launch_satellites_scenario(
     planet: _StubPlanet, empire: SimpleNamespace
 ) -> None:
-    planet.staging_yard.append(_satellite_dict())
+    planet.add_to_staging_yard(_satellite_typed())
     planet.add_order(
         Order(
             OrderType.LAUNCH_SATELLITES,
