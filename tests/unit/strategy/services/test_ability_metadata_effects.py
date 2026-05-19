@@ -1,13 +1,22 @@
-"""Tests for EffectAbilityMetadata registry (PROJ-362 Phase 2)."""
+"""Tests for the effect-aggregation facet of the unified ability registry.
+
+Originally `test_effect_ability_metadata.py` (PROJ-362 Phase 2). PROJ-454
+Phase 1 retired the `effect_ability_metadata.py` shim; these
+behaviour pins were rewritten to read directly through the canonical
+`ability_metadata` API (`get_ability_metadata(name).effect`) and the
+file was renamed to match its target module.
+"""
 import pytest
 
-from game.strategy.services.effect_ability_metadata import (
-    EFFECT_ABILITY_METADATA,
-    EffectAbilityMetadata,
-    all_owner_aware_scopes,
-    find_metadata,
-    is_known_effect_ability,
+from game.strategy.services.ability_metadata import (
+    EffectFacet,
+    get_ability_metadata,
 )
+
+
+def _effect_facet(name: str) -> EffectFacet | None:
+    meta = get_ability_metadata(name)
+    return meta.effect if meta is not None else None
 
 
 # Legacy ability set previously hardcoded in
@@ -41,17 +50,20 @@ LEGACY_OWNER_AWARE_SCOPES = frozenset({
 LEGACY_RATE_ABILITIES = frozenset({'EnvironmentalDamage', 'FuelDrain'})
 
 
-class TestRegistryContract:
-    """The registry must cover every ability name the legacy code recognized."""
+class TestEffectFacetCoverage:
+    """Every legacy effect ability must surface an EffectFacet."""
 
     @pytest.mark.parametrize("ability_name", LEGACY_ABILITY_NAMES)
-    def test_metadata_for_each_legacy_ability_name(self, ability_name):
-        m = find_metadata(ability_name)
-        assert m is not None, f"no EffectAbilityMetadata entry for '{ability_name}'"
-        assert m.ability_name == ability_name
+    def test_each_legacy_ability_has_effect_facet(self, ability_name):
+        facet = _effect_facet(ability_name)
+        assert facet is not None, (
+            f"no EffectFacet on AbilityMetadata for '{ability_name}'"
+        )
 
-    def test_registry_covers_exactly_the_legacy_set(self):
-        registered = {m.ability_name for m in EFFECT_ABILITY_METADATA}
+    def test_registry_covers_exactly_the_legacy_effect_set(self):
+        """The set of names carrying an EffectFacet equals the legacy set."""
+        from game.strategy.services.ability_metadata import _ENTRIES
+        registered = {m.name for m in _ENTRIES if m.effect is not None}
         assert registered == set(LEGACY_ABILITY_NAMES)
 
 
@@ -59,20 +71,20 @@ class TestKindAssignment:
 
     @pytest.mark.parametrize("ability_name", sorted(LEGACY_RATE_ABILITIES))
     def test_legacy_rate_abilities_have_kind_rate(self, ability_name):
-        m = find_metadata(ability_name)
-        assert m is not None
-        assert m.kind == 'rate'
-        assert m.value_field_primary == 'rate'
+        facet = _effect_facet(ability_name)
+        assert facet is not None
+        assert facet.kind == 'rate'
+        assert facet.value_field_primary == 'rate'
 
     @pytest.mark.parametrize(
         "ability_name",
         sorted(n for n in LEGACY_ABILITY_NAMES if n not in LEGACY_RATE_ABILITIES),
     )
     def test_non_rate_abilities_have_kind_multiplier(self, ability_name):
-        m = find_metadata(ability_name)
-        assert m is not None
-        assert m.kind == 'multiplier'
-        assert m.value_field_primary == 'multiplier'
+        facet = _effect_facet(ability_name)
+        assert facet is not None
+        assert facet.kind == 'multiplier'
+        assert facet.value_field_primary == 'multiplier'
 
 
 class TestGroupingKeyField:
@@ -83,9 +95,9 @@ class TestGroupingKeyField:
         ('EnvironmentalDamage', 'damage_type'),
     ])
     def test_per_field_grouping_set(self, ability_name, expected_field):
-        m = find_metadata(ability_name)
-        assert m is not None
-        assert m.grouping_key_field == expected_field
+        facet = _effect_facet(ability_name)
+        assert facet is not None
+        assert facet.grouping_key_field == expected_field
 
     @pytest.mark.parametrize("ability_name", [
         'GeologicStabilizer', 'StellarStabilizer', 'WarpFieldStabilizer',
@@ -93,9 +105,9 @@ class TestGroupingKeyField:
         'ThrustModifier', 'StrategicSpeedModifier', 'FuelDrain',
     ])
     def test_plain_grouping_uses_ability_name(self, ability_name):
-        m = find_metadata(ability_name)
-        assert m is not None
-        assert m.grouping_key_field is None
+        facet = _effect_facet(ability_name)
+        assert facet is not None
+        assert facet.grouping_key_field is None
 
 
 class TestDisplayName:
@@ -113,18 +125,18 @@ class TestDisplayName:
         ('FuelDrain', 'Fuel Drain'),
     ])
     def test_explicit_display_names_match_legacy_labels(self, ability_name, expected_label):
-        m = find_metadata(ability_name)
-        assert m is not None
-        assert m.display_name == expected_label
+        facet = _effect_facet(ability_name)
+        assert facet is not None
+        assert facet.display_name == expected_label
 
     @pytest.mark.parametrize("ability_name", [
         'ResourceHarvestBooster', 'EnvironmentalDamage',
     ])
     def test_derived_display_names_are_none(self, ability_name):
         """Display name derived from grouping_key_field at render time."""
-        m = find_metadata(ability_name)
-        assert m is not None
-        assert m.display_name is None
+        facet = _effect_facet(ability_name)
+        assert facet is not None
+        assert facet.display_name is None
 
 
 class TestActivatable:
@@ -133,42 +145,40 @@ class TestActivatable:
         'GeologicStabilizer', 'StellarStabilizer', 'WarpFieldStabilizer',
     ])
     def test_stabilizers_are_activatable(self, ability_name):
-        m = find_metadata(ability_name)
-        assert m is not None
-        assert m.is_activatable is True
+        facet = _effect_facet(ability_name)
+        assert facet is not None
+        assert facet.is_activatable_hint is True
 
 
 class TestOwnerAwareScopes:
 
-    def test_every_entry_has_full_owner_aware_scope_set(self):
-        for m in EFFECT_ABILITY_METADATA:
-            assert m.owner_aware_scopes == LEGACY_OWNER_AWARE_SCOPES
-
-    def test_all_owner_aware_scopes_returns_legacy_set(self):
-        assert all_owner_aware_scopes() == LEGACY_OWNER_AWARE_SCOPES
+    def test_every_effect_facet_has_full_owner_aware_scope_set(self):
+        for name in LEGACY_ABILITY_NAMES:
+            facet = _effect_facet(name)
+            assert facet is not None
+            assert facet.owner_aware_scopes == LEGACY_OWNER_AWARE_SCOPES
 
 
 class TestLookupHelpers:
 
-    def test_find_metadata_returns_none_for_unknown(self):
-        assert find_metadata('NotARealAbility') is None
+    def test_get_ability_metadata_returns_none_for_unknown(self):
+        assert get_ability_metadata('NotARealAbility') is None
 
-    def test_is_known_effect_ability_true_for_registered(self):
-        assert is_known_effect_ability('GeologicStabilizer') is True
-
-    def test_is_known_effect_ability_false_for_unknown(self):
-        assert is_known_effect_ability('NotARealAbility') is False
+    def test_unknown_ability_has_no_effect_facet(self):
+        assert _effect_facet('NotARealAbility') is None
 
 
 class TestImmutability:
 
-    def test_metadata_entries_are_frozen(self):
-        m = find_metadata('GeologicStabilizer')
-        assert m is not None
+    def test_effect_facets_are_frozen(self):
+        facet = _effect_facet('GeologicStabilizer')
+        assert facet is not None
         with pytest.raises(Exception):
-            m.kind = 'rate'  # type: ignore[misc]
+            facet.kind = 'rate'  # type: ignore[misc]
 
     def test_value_fallback_is_improvement_rate(self):
         """Legacy schemas used `improvement_rate` instead of `multiplier`/`rate`."""
-        for m in EFFECT_ABILITY_METADATA:
-            assert m.value_field_fallback == 'improvement_rate'
+        for name in LEGACY_ABILITY_NAMES:
+            facet = _effect_facet(name)
+            assert facet is not None
+            assert facet.value_field_fallback == 'improvement_rate'

@@ -15,17 +15,26 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. F-B-004 — Retire `effect_ability_metadata.py` (131 LOC, 2 callers) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. F-B-004 — Retire `effect_ability_metadata.py` (131 LOC, 2 callers) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. F-B-005 — Retire `component_inspector.py` (~68 caller sites — 52 imports + 16 patch targets — across ~31 files; sized up from `~45` after codex audit 2026-05-19) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. F-B-017 — Unwind `OrderProcessor.process_*` facade reshape; delete legacy typed result dataclasses (68 sites / 12 files; sized up from `~15 / 7` after codex audit 2026-05-19) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. F-B-018 — Remove "legacy field" framing on `OrderExecutionResult` (fields become live unified surface post-Phase-3 facade unwind; delete specific fields ONLY if Phase 4 audit shows they're dead) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-19
-**Active Phase:** Planning
-**Last Action:** Cross-group collision resolution applied 2026-05-19; Group B is ready for execution. Serial order confirmed: PROJ-453 → PROJ-454 → PROJ-456 → PROJ-457. PROJ-454 is the SECOND project in Group B's series; PROJ-453 must complete first (the soft `order_processor.py` ordering preference is now operative as a hard gate within Group B). Coordinator confirmed Group A's serial was re-ordered to put PROJ-450 LAST, which resolves the `test_order_processor_transfer.py` overlap (PROJ-454 lands first; PROJ-450 rebases). Prior fixes retained: Quick Status Phase 4 reframed to "Remove legacy framing"; `~45 sites` → `~68 sites`; pre-delete `rg` check for `test_component_inspector_surface.py`; TDD-exception rationale in decisions.md for retirement-style Phases 1-3; Phase 3 caller inventory at 68 strict calls / 12 test files; Phase 2 sizing at 68 sites (52 imports + 16 patch targets) / ~31 files.
-**Next Action:** Run agent starts PROJ-454 Phase 1 after PROJ-453 is Complete.
-**Blockers:** PROJ-453 must complete first (Group B serial order; hard gate per coordinator 2026-05-19).
+**Last Updated:** 2026-05-17
+**Active Phase:** Phase 2 (F-B-005 component_inspector retirement, ~68 sites)
+**Last Action:** Phase 1 complete. Retired `effect_ability_metadata.py` shim (131 LOC) and its tests; ported the 57 valuable behaviour pins to `tests/unit/strategy/services/test_ability_metadata_effects.py`. The plan's "drop-in import path swap" assumption was wrong (canonical `ability_metadata.py` exposes a different API surface) — the 2 callers were rewritten to navigate `get_ability_metadata(name).effect: EffectFacet`. Documented the deviation in decisions.md. Sharded 23366 / 23366 green.
+**Next Action:** Phase 2 Task 2.1 — caller-discovery sweep for `component_inspector`.
+**Blockers:** None.
+
+## Checkpoint Log
+
+### 2026-05-17 — project-454-start
+- **Done so far**: PROJ-453 closed and merged (`82b751fe0`). Group B serial gate cleared for PROJ-454.
+- **Key decisions**: Following Phase 1 → 2 → 3 → 4 ordering strictly (Phase 1 deletes a 131-LOC shim, Phase 2 is the 68-site `component_inspector` sweep, Phase 3 is the 68-site facade unwind, Phase 4 reframes `OrderExecutionResult` legacy fields).
+- **Open threads**: None.
+- **Next action**: Phase 1 Task 1.1.
+- **Cross-group state observed**: origin/main = `82b751fe0`. Group A pushed updates (`d531b430a` on group-a); Group C published `origin/group-c`.
 
 ## Overview
 

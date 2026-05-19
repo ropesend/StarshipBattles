@@ -39,10 +39,7 @@ from game.strategy.services.ability_iterator import (
     iter_ability_sources_at_hex,
     iter_ability_sources_in_system,
 )
-from game.strategy.services.effect_ability_metadata import (
-    find_metadata,
-    is_known_effect_ability,
-)
+from game.strategy.services.ability_metadata import get_ability_metadata
 from game.strategy.services.effect_ability_display import (
     _format_status,
     _is_activatable,
@@ -68,7 +65,6 @@ __all__ = [
     'make_group_key',
     'make_display_name',
     'format_intrinsic_ability_magnitude',
-    'is_known_effect_ability',
 ]
 
 
@@ -244,7 +240,8 @@ def _collect_providers(
             continue
 
         for ability_name, ability_data in abilities.items():
-            metadata = find_metadata(ability_name)
+            _meta = get_ability_metadata(ability_name)
+            metadata = _meta.effect if _meta is not None else None
             if metadata is None:
                 continue
             entries = ability_data if isinstance(ability_data, list) else [ability_data]
