@@ -24,9 +24,9 @@
 
 ## Current State
 **Last Updated:** 2026-05-19
-**Active Phase:** All phases complete; awaiting end-of-project codex audit
-**Last Action:** Phase 3 + Phase 5 complete. Phase 3: test_lab/screen.py 744 → 416 LOC; extracted ~325 LOC into `test_lab/screen_actions.TestLabScreenActions` covering battle execution helpers, battle launch (`_switch_to_battle`), run callbacks, and result viewers (JSON popups + clipboard copy + battle state viewer + custom seed prompt); migrated 3 test fixtures + 12 reach-through sites. Phase 5: documented the 9 remaining over-ceiling UI files as a "next-touch" rule in decisions.md (no CLAUDE.md/AGENTS.md cross-reference per Codex r4 framing — rule is file-specific). Sharded 23377/23377 green.
-**Next Action:** Dispatch PROJ-457 end-of-project codex audit per protocol §10.
+**Active Phase:** Archived — merged to main
+**Last Action:** End-of-project §3 merge complete. Rebased group-b on post-Group-A/C main (39 commits across PROJ-449/450/451/452/455/459/461); resolved trivial test_baseline.json conflicts per §6.1 on all 5 commits (take origin/main; sharded regenerates). Merged group-b to main with `--no-ff` at SHA `c02ad0a16`. Pushed group-b atop merge. PROJ-457 closes Group B.
+**Next Action:** None — project archived. Group B end-of-group report (PART 7) to follow.
 **Blockers:** PROJ-456 must complete first (Group B serial order; hard gate per coordinator 2026-05-19) — Phase 0 explicitly re-measures the 12 over-ceiling files after PROJ-456's shim retirement.
 
 ## Overview
