@@ -44,6 +44,7 @@ def _make_window(events, *, resolver, launch_cb):
         manager,
         events,
         window_manager=MagicMock(),
+        empire_name="Test Empire",
         replay_resolver=resolver,
         launch_replay_callback=launch_cb,
     )
@@ -163,6 +164,7 @@ def test_replay_button_routes_through_scene_callback_end_to_end(pygame_init) -> 
         manager,
         [_combat_event("uuid-e2e")],
         window_manager=wm,
+        empire_name="Test Empire",
         replay_resolver=resolver,
         launch_replay_callback=wm._event_log._on_launch_replay,
     )

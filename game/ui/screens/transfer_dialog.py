@@ -55,35 +55,6 @@ class TransferDialog(StrategyModalWindow):
     is delegated to a swap-able ``ui_builder``.
     """
 
-    # Sentinels — re-exported on the class for back-compat with
-    # callers that read ``TransferDialog.MAX_LOAD`` directly. The
-    # canonical home is ``TransferViewModel``.
-    MAX_LOAD = TransferViewModel.MAX_LOAD
-    MAX_DROP = TransferViewModel.MAX_DROP
-
-    # Layout constants kept on the class for back-compat with any
-    # caller reading them; renderer owns the real values.
-    ROW_HEIGHT = TransferGridRenderer.ROW_HEIGHT
-    NAME_X = TransferGridRenderer.NAME_X
-    NAME_W = TransferGridRenderer.NAME_W
-    SOURCE_AMT_X = TransferGridRenderer.SOURCE_AMT_X
-    SOURCE_AMT_W = TransferGridRenderer.SOURCE_AMT_W
-    MAX_LOAD_X = TransferGridRenderer.MAX_LOAD_X
-    MAX_LOAD_W = TransferGridRenderer.MAX_LOAD_W
-    LOAD_ARROWS_X = TransferGridRenderer.LOAD_ARROWS_X
-    ARROW_W = TransferGridRenderer.ARROW_W
-    ARROW_GAP = TransferGridRenderer.ARROW_GAP
-    ARROW_COUNT = TransferGridRenderer.ARROW_COUNT
-    PENDING_X = TransferGridRenderer.PENDING_X
-    PENDING_W = TransferGridRenderer.PENDING_W
-    ZERO_BTN_X = TransferGridRenderer.ZERO_BTN_X
-    ZERO_BTN_W = TransferGridRenderer.ZERO_BTN_W
-    DROP_ARROWS_X = TransferGridRenderer.DROP_ARROWS_X
-    MAX_DROP_X = TransferGridRenderer.MAX_DROP_X
-    MAX_DROP_W = TransferGridRenderer.MAX_DROP_W
-    TARGET_AMT_X = TransferGridRenderer.TARGET_AMT_X
-    TARGET_AMT_W = TransferGridRenderer.TARGET_AMT_W
-
     def __init__(
         self,
         relative_rect,
@@ -182,68 +153,6 @@ class TransferDialog(StrategyModalWindow):
         self._grid_widgets: List[Any] = []
 
     # ------------------------------------------------------------------
-    # Back-compat property shims for legacy attribute names. Existing
-    # tests and any external callers reach into these directly; the
-    # canonical state lives on ``view_model``.
-    # ------------------------------------------------------------------
-
-    @property
-    def available_sources(self) -> List[dict]:
-        return self.view_model.available_sources
-
-    @available_sources.setter
-    def available_sources(self, value: List[dict]) -> None:
-        self.view_model.available_sources = value
-
-    @property
-    def available_targets(self) -> List[dict]:
-        return self.view_model.available_targets
-
-    @available_targets.setter
-    def available_targets(self, value: List[dict]) -> None:
-        self.view_model.available_targets = value
-
-    @property
-    def pending_transfers(self) -> Dict[str, Any]:
-        return self.view_model.pending_transfers
-
-    @pending_transfers.setter
-    def pending_transfers(self, value: Dict[str, Any]) -> None:
-        self.view_model.pending_transfers = value
-
-    @property
-    def _row_data(self) -> List[dict]:
-        return self.view_model.row_data
-
-    @_row_data.setter
-    def _row_data(self, value: List[dict]) -> None:
-        self.view_model.row_data = value
-
-    @property
-    def _filter_empty(self) -> bool:
-        return self.view_model.filter_empty
-
-    @_filter_empty.setter
-    def _filter_empty(self, value: bool) -> None:
-        self.view_model.filter_empty = value
-
-    @property
-    def _current_source(self) -> Optional[dict]:
-        return self.view_model.current_source
-
-    @_current_source.setter
-    def _current_source(self, value: Optional[dict]) -> None:
-        self.view_model.current_source = value
-
-    @property
-    def _current_target(self) -> Optional[dict]:
-        return self.view_model.current_target
-
-    @_current_target.setter
-    def _current_target(self, value: Optional[dict]) -> None:
-        self.view_model.current_target = value
-
-    # ------------------------------------------------------------------
     # Population
     # ------------------------------------------------------------------
 
@@ -272,25 +181,11 @@ class TransferDialog(StrategyModalWindow):
             self._on_source_changed(self.drop_source.selected_option)
 
     # ------------------------------------------------------------------
-    # Pure helpers (kept as public method shims for back-compat with
-    # tests that exercise them directly).
-    # ------------------------------------------------------------------
-
-    def _extract_dropdown_value(self, value: Any) -> Any:
-        return TransferGridRenderer.extract_dropdown_value(value)
-
-    def _format_pending(self, amount: Any) -> str:
-        return self.view_model.format_pending(amount)
-
-    def _discover_pod_designs(self) -> List[str]:
-        return self._controller.discover_pod_designs(self.scene)
-
-    # ------------------------------------------------------------------
     # Event handlers
     # ------------------------------------------------------------------
 
     def _on_source_changed(self, label) -> None:
-        label = self._extract_dropdown_value(label)
+        label = TransferGridRenderer.extract_dropdown_value(label)
         source = self.view_model.select_source(label)
         if source is None:
             return
@@ -301,13 +196,13 @@ class TransferDialog(StrategyModalWindow):
                 self, self.drop_target, target_labels,
                 target_labels[0] if target_labels else "",
             )
-            target_label = self._extract_dropdown_value(self.drop_target.selected_option)
+            target_label = TransferGridRenderer.extract_dropdown_value(self.drop_target.selected_option)
             self.view_model.select_target(target_label)
 
         self._reset_and_build_grid()
 
     def _on_target_changed(self, label) -> None:
-        label = self._extract_dropdown_value(label)
+        label = TransferGridRenderer.extract_dropdown_value(label)
         self.view_model.select_target(label)
         self._reset_and_build_grid()
 
@@ -409,7 +304,7 @@ class TransferDialog(StrategyModalWindow):
         # distinguishes the cases.
         try:
             result = self._controller.confirm_pending()
-        except Exception:
+        except Exception:  # Intentional broad catch: dialog-level catastrophic failure must not leak; kill modal then re-raise.
             # Catastrophic dispatch failure — close the modal so it can't
             # leak; let the exception propagate to the caller.
             self.kill()

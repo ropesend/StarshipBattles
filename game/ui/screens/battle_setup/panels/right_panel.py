@@ -22,7 +22,7 @@ def build(screen, x: int, width: int, height: int) -> None:
     y += 35
 
     screen._design_buttons = []
-    for i, design in enumerate(screen.available_designs):
+    for i, design in enumerate(screen.view_model.available_designs):
         name = design.get('name', '?')
         ship_class = design.get('ship_class', '')
         btn = UIButton(

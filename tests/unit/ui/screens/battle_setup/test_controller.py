@@ -65,62 +65,62 @@ class TestLifecycle:
     def test_start_not_preserve_resets_and_creates_default_fleets(self):
         controller, state, view_model = _make_controller(on_change=MagicMock())
         # Prep: put some cruft on state; start should clear it
-        state.side_0.create_fleet("Old Fleet")
+        state.sides[0].create_fleet("Old Fleet")
 
         with patch.object(controller, "scan_designs"):
             controller.start(preserve_teams=False)
 
         # Default fleets created on both sides
-        assert len(state.side_0.fleets) == 1
-        assert len(state.side_1.fleets) == 1
-        assert state.side_0.fleets[0]._battle_setup_name == "Fleet Alpha"
-        assert state.side_1.fleets[0]._battle_setup_name == "Fleet Beta"
+        assert len(state.sides[0].fleets) == 1
+        assert len(state.sides[1].fleets) == 1
+        assert state.sides[0].fleets[0]._battle_setup_name == "Fleet Alpha"
+        assert state.sides[1].fleets[0]._battle_setup_name == "Fleet Beta"
         # Selection reset
         assert view_model.active_side == 0
         assert view_model.active_fleet_index == 0
 
     def test_start_preserve_teams_does_not_clear(self):
         controller, state, _ = _make_controller(on_change=MagicMock())
-        fleet = state.side_0.create_fleet("Existing")
+        fleet = state.sides[0].create_fleet("Existing")
 
         with patch.object(controller, "scan_designs"):
             controller.start(preserve_teams=True)
 
         # Existing fleet still there
-        assert fleet in state.side_0.fleets
+        assert fleet in state.sides[0].fleets
 
 
 class TestFleetCRUD:
     def test_add_fleet_creates_on_active_side(self):
         controller, state, view_model = _make_controller(on_change=MagicMock())
         view_model.active_side = 0
-        assert len(state.side_0.fleets) == 0
+        assert len(state.sides[0].fleets) == 0
 
         controller.add_fleet()
 
-        assert len(state.side_0.fleets) == 1
+        assert len(state.sides[0].fleets) == 1
 
     def test_remove_fleet_pops_active_fleet(self):
         controller, state, view_model = _make_controller(on_change=MagicMock())
-        state.side_0.create_fleet("A")
-        state.side_0.create_fleet("B")
+        state.sides[0].create_fleet("A")
+        state.sides[0].create_fleet("B")
         view_model.active_side = 0
         view_model.active_fleet_index = 1
 
         controller.remove_fleet()
 
-        assert len(state.side_0.fleets) == 1
-        assert state.side_0.fleets[0]._battle_setup_name == "A"
+        assert len(state.sides[0].fleets) == 1
+        assert state.sides[0].fleets[0]._battle_setup_name == "A"
 
     def test_remove_fleet_does_not_drop_below_one(self):
         controller, state, view_model = _make_controller(on_change=MagicMock())
-        state.side_0.create_fleet("A")
+        state.sides[0].create_fleet("A")
         view_model.active_side = 0
 
         controller.remove_fleet()
 
         # Must keep at least one fleet
-        assert len(state.side_0.fleets) == 1
+        assert len(state.sides[0].fleets) == 1
 
 
 class TestRegistryLookup:
@@ -160,7 +160,7 @@ class TestRegistryLookup:
 class TestShipCRUD:
     def test_add_ship_from_design_uses_active_fleet_and_registries(self):
         controller, state, view_model = _make_controller(on_change=MagicMock())
-        fleet = state.side_0.create_fleet("A")
+        fleet = state.sides[0].create_fleet("A")
         view_model.available_designs = [{"name": "Escort", "vehicle_type": "Ship"}]
         registries = MagicMock(name="registries")
         ship = _make_ship_mock()
@@ -185,7 +185,7 @@ class TestShipCRUD:
 
     def test_add_ship_from_design_assigns_to_selected_task_force(self):
         controller, state, view_model = _make_controller(on_change=MagicMock())
-        fleet = state.side_0.create_fleet("A")
+        fleet = state.sides[0].create_fleet("A")
         controller.add_task_force()
         view_model.selected_tf_index = 0
         view_model.available_designs = [{"name": "Escort", "vehicle_type": "Ship"}]
@@ -205,7 +205,7 @@ class TestShipCRUD:
 
     def test_add_ship_from_design_assigns_to_selected_squadron(self):
         controller, state, view_model = _make_controller(on_change=MagicMock())
-        fleet = state.side_0.create_fleet("A")
+        fleet = state.sides[0].create_fleet("A")
         controller.add_squadron()
         view_model.selected_tf_index = 0
         view_model.selected_sq_index = 0
@@ -226,7 +226,7 @@ class TestShipCRUD:
 
     def test_add_ship_from_design_out_of_range_is_noop(self):
         controller, state, view_model = _make_controller(on_change=MagicMock())
-        state.side_0.create_fleet("A")
+        state.sides[0].create_fleet("A")
         view_model.available_designs = []
 
         controller.add_ship_from_design(0)
@@ -235,7 +235,7 @@ class TestShipCRUD:
 
     def test_remove_ship_removes_indexed_ship_and_fires_on_change(self):
         controller, state, view_model = _make_controller(on_change=MagicMock())
-        fleet = state.side_0.create_fleet("A")
+        fleet = state.sides[0].create_fleet("A")
         ship_a = _make_ship_mock()
         ship_b = _make_ship_mock()
         fleet.add_ship(ship_a)
@@ -248,7 +248,7 @@ class TestShipCRUD:
 
     def test_remove_ship_clears_task_force_and_squadron_assignments(self):
         controller, state, view_model = _make_controller(on_change=MagicMock())
-        fleet = state.side_0.create_fleet("A")
+        fleet = state.sides[0].create_fleet("A")
         controller.add_squadron()
         ship = _make_ship_mock()
         fleet.add_ship(ship)
@@ -265,7 +265,7 @@ class TestShipCRUD:
 
     def test_remove_ship_out_of_range_is_noop(self):
         controller, state, view_model = _make_controller(on_change=MagicMock())
-        fleet = state.side_0.create_fleet("A")
+        fleet = state.sides[0].create_fleet("A")
         ship = _make_ship_mock()
         fleet.add_ship(ship)
 
@@ -427,17 +427,17 @@ class TestEndConditionToggles:
 class TestComplexToggle:
     def test_toggle_complex_flips_state_field(self):
         controller, state, _ = _make_controller(on_change=MagicMock())
-        assert state.side_0.system_complex_toggles.get("qs_system_shield_booster_complex") is None
+        assert state.sides[0].system_complex_toggles.get("qs_system_shield_booster_complex") is None
 
         controller.toggle_complex(0, "system", "qs_system_shield_booster_complex")
 
-        assert state.side_0.system_complex_toggles["qs_system_shield_booster_complex"] is True
+        assert state.sides[0].system_complex_toggles["qs_system_shield_booster_complex"] is True
 
     def test_toggle_complex_twice_returns_to_off(self):
         controller, state, _ = _make_controller(on_change=MagicMock())
         controller.toggle_complex(0, "sector", "qs_sector_damage_booster_complex")
         controller.toggle_complex(0, "sector", "qs_sector_damage_booster_complex")
-        assert state.side_0.sector_complex_toggles["qs_sector_damage_booster_complex"] is False
+        assert state.sides[0].sector_complex_toggles["qs_sector_damage_booster_complex"] is False
 
     def test_get_complex_toggle_default_false(self):
         controller, _, _ = _make_controller()
@@ -447,7 +447,7 @@ class TestComplexToggle:
 class TestTaskForceCRUD:
     def test_add_task_force_creates_one(self):
         controller, state, view_model = _make_controller(on_change=MagicMock())
-        fleet = state.side_0.create_fleet("F")
+        fleet = state.sides[0].create_fleet("F")
         view_model.active_side = 0
         view_model.active_fleet_index = 0
 
@@ -458,7 +458,7 @@ class TestTaskForceCRUD:
 
     def test_delete_task_force_removes_from_fleet(self):
         controller, state, view_model = _make_controller(on_change=MagicMock())
-        fleet = state.side_0.create_fleet("F")
+        fleet = state.sides[0].create_fleet("F")
         view_model.active_side = 0
         view_model.active_fleet_index = 0
         controller.add_task_force()
@@ -473,7 +473,7 @@ class TestTaskForceCRUD:
 class TestSquadronCRUD:
     def test_add_squadron_creates_default_tf_if_absent(self):
         controller, state, view_model = _make_controller(on_change=MagicMock())
-        fleet = state.side_0.create_fleet("F")
+        fleet = state.sides[0].create_fleet("F")
         view_model.active_side = 0
         view_model.active_fleet_index = 0
         assert len(fleet.task_forces) == 0
@@ -485,7 +485,7 @@ class TestSquadronCRUD:
 
     def test_delete_squadron_removes_from_tf(self):
         controller, state, view_model = _make_controller(on_change=MagicMock())
-        fleet = state.side_0.create_fleet("F")
+        fleet = state.sides[0].create_fleet("F")
         view_model.active_side = 0
         view_model.active_fleet_index = 0
         controller.add_squadron()  # creates TF + SQ
@@ -580,10 +580,10 @@ class TestStartBattle:
         controller, state, _ = _make_controller(scene_callback=callback, on_change=MagicMock())
 
         # Need ships on both sides for the guard to pass.
-        state.side_0.create_fleet("A")
-        state.side_0.fleets[0].add_ship(_make_ship_mock())
-        state.side_1.create_fleet("B")
-        state.side_1.fleets[0].add_ship(_make_ship_mock())
+        state.sides[0].create_fleet("A")
+        state.sides[0].fleets[0].add_ship(_make_ship_mock())
+        state.sides[1].create_fleet("B")
+        state.sides[1].fleets[0].add_ship(_make_ship_mock())
 
         with patch(
             "game.ui.screens.battle_setup.spec_compiler.build_manual_battle_spec"
@@ -597,10 +597,10 @@ class TestStartBattle:
     def test_headless_fires_start_headless_action(self):
         callback = MagicMock()
         controller, state, _ = _make_controller(scene_callback=callback, on_change=MagicMock())
-        state.side_0.create_fleet("A")
-        state.side_0.fleets[0].add_ship(_make_ship_mock())
-        state.side_1.create_fleet("B")
-        state.side_1.fleets[0].add_ship(_make_ship_mock())
+        state.sides[0].create_fleet("A")
+        state.sides[0].fleets[0].add_ship(_make_ship_mock())
+        state.sides[1].create_fleet("B")
+        state.sides[1].fleets[0].add_ship(_make_ship_mock())
 
         with patch(
             "game.ui.screens.battle_setup.spec_compiler.build_manual_battle_spec",

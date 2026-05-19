@@ -461,13 +461,3 @@ class OrdersWindow(StrategyModalWindow):
                     return True
         return False
 
-    # ------------------------------------------------------------------
-    # Backwards-compat shim
-    # ------------------------------------------------------------------
-
-    def _get_order_description(self, order) -> str:
-        """PROJ-328: Pre-refactor public-ish API. Tests / callers that
-        used to call ``screen._get_order_description(order)`` get the
-        same answer; the implementation now lives on ``OrderDescriber``.
-        """
-        return self._order_describer.describe(order, self.entity)

@@ -274,16 +274,6 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
     def current_step(self, value: int) -> None:
         self._view_model.current_step = value
 
-    @property
-    def _description_controller(self):
-        # Tests + legacy code read `screen._description_controller`.
-        return self._controller.description_controller
-
-    @_description_controller.setter
-    def _description_controller(self, value) -> None:
-        # Used by the descriptions-tab factory + tests' bypass-init helpers.
-        self._controller.attach_description_controller(value)
-
     # ------------------------------------------------------------------
     # UI construction
     # ------------------------------------------------------------------

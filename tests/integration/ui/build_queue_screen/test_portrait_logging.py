@@ -131,8 +131,8 @@ class TestBuildQueuePortraitLogging:
         from game.ui.screens.build_queue_screen import BuildQueueScreen
         bq_screen = BuildQueueScreen(
             manager,
-            planet,
-            on_close,
+            initial_yard=planet,
+            on_close_callback=on_close,
             design_catalog=mock_design_catalog,
             design_loader=mock_design_loader,
             hex_coord=hex_coord,
@@ -201,8 +201,8 @@ class TestBuildQueuePortraitLogging:
         from game.ui.screens.build_queue_screen import BuildQueueScreen
         bq_screen = BuildQueueScreen(
             manager,
-            planet,
-            lambda: None,
+            initial_yard=planet,
+            on_close_callback=lambda: None,
             design_catalog=mock_design_catalog,
             design_loader=mock_design_loader,
             hex_coord=hex_coord,

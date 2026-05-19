@@ -149,10 +149,10 @@ class BattleSetupState:
     """Complete state for a fleet-based battle setup.
 
     PROJ-275 Phase 4+5: migrated from fixed `side_0` / `side_1` attributes
-    to a dynamic `sides: List[BattleSetupSide]` (min 2, max 8). The
-    `side_0` / `side_1` properties remain as backwards-compat shims that
-    read/write `sides[0]` / `sides[1]` — some callers use those names and
-    will be migrated incrementally.
+    to a dynamic `sides: List[BattleSetupSide]` (min 2, max 8). PROJ-456
+    Phase 3 retired the `side_0` / `side_1` backwards-compat property
+    shims; callers now access `state.sides[i]` (literal index) or
+    `state.get_side(team_id)` (team-id semantics).
 
     Holds N sides (team 0..N-1), each with fleets and complex
     selections. Provides methods for adding ships, add/remove sides,
@@ -168,28 +168,6 @@ class BattleSetupState:
         self.sides: List[BattleSetupSide] = [
             BattleSetupSide(team_id=i) for i in range(side_count)
         ]
-
-    # --- Backcompat shims for side_0 / side_1 --------------------------------
-    # Existing callers (battle_setup_screen.py, some tests) reference
-    # `state.side_0` / `state.side_1` directly. The properties route to
-    # `sides[0]` / `sides[1]`. Writing `state.side_0 = ...` updates the
-    # same slot — preserves legacy behavior for tests that assign.
-
-    @property
-    def side_0(self) -> BattleSetupSide:
-        return self.sides[0]
-
-    @side_0.setter
-    def side_0(self, value: BattleSetupSide) -> None:
-        self.sides[0] = value
-
-    @property
-    def side_1(self) -> BattleSetupSide:
-        return self.sides[1]
-
-    @side_1.setter
-    def side_1(self, value: BattleSetupSide) -> None:
-        self.sides[1] = value
 
     # --- N-side API ----------------------------------------------------------
 

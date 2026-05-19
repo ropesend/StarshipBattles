@@ -50,6 +50,7 @@ from game.ui.screens.transfer_dialog import (
     ARROW_INCREMENTS_LOAD,
     TransferDialog,
 )
+from game.ui.screens.transfer_view_model import TransferViewModel
 
 
 # PROJ-436 Phase 7: the deleted ``RESOURCE_TYPES`` hardcoded list is
@@ -135,13 +136,13 @@ class TestPendingTransferMath:
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
         dialog._pending_labels["metals"] = MagicMock()
         dialog._on_arrow_click("metals", 1000)
-        assert dialog.pending_transfers["metals"] == 1000
+        assert dialog.view_model.pending_transfers["metals"] == 1000
 
     def test_arrow_click_negative_delta_sets_drop(self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
         dialog._pending_labels["fuel"] = MagicMock()
         dialog._on_arrow_click("fuel", -10)
-        assert dialog.pending_transfers["fuel"] == -10
+        assert dialog.view_model.pending_transfers["fuel"] == -10
 
     def test_arrow_click_accumulates_deltas(self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
@@ -149,69 +150,69 @@ class TestPendingTransferMath:
         dialog._on_arrow_click("metals", 100)
         dialog._on_arrow_click("metals", 1000)
         dialog._on_arrow_click("metals", 1)
-        assert dialog.pending_transfers["metals"] == 1101
+        assert dialog.view_model.pending_transfers["metals"] == 1101
 
     def test_arrow_click_resets_max_load_sentinel_to_zero_first(
             self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
         dialog._pending_labels["metals"] = MagicMock()
-        dialog.pending_transfers["metals"] = TransferDialog.MAX_LOAD
+        dialog.view_model.pending_transfers["metals"] = TransferViewModel.MAX_LOAD
         dialog._on_arrow_click("metals", 50)
         # Was Max; reset to 0 then add 50.
-        assert dialog.pending_transfers["metals"] == 50
+        assert dialog.view_model.pending_transfers["metals"] == 50
 
     def test_arrow_click_resets_max_drop_sentinel_to_zero_first(
             self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
         dialog._pending_labels["metals"] = MagicMock()
-        dialog.pending_transfers["metals"] = TransferDialog.MAX_DROP
+        dialog.view_model.pending_transfers["metals"] = TransferViewModel.MAX_DROP
         dialog._on_arrow_click("metals", -50)
-        assert dialog.pending_transfers["metals"] == -50
+        assert dialog.view_model.pending_transfers["metals"] == -50
 
     def test_max_click_load_sets_max_load_sentinel(self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
         dialog._pending_labels["organics"] = MagicMock()
         dialog._on_max_click("organics", "load")
-        assert dialog.pending_transfers["organics"] == TransferDialog.MAX_LOAD
+        assert dialog.view_model.pending_transfers["organics"] == TransferViewModel.MAX_LOAD
 
     def test_max_click_drop_sets_max_drop_sentinel(self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
         dialog._pending_labels["organics"] = MagicMock()
         dialog._on_max_click("organics", "drop")
-        assert dialog.pending_transfers["organics"] == TransferDialog.MAX_DROP
+        assert dialog.view_model.pending_transfers["organics"] == TransferViewModel.MAX_DROP
 
     def test_format_pending_zero_returns_zero_string(self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        assert dialog._format_pending(0) == "0"
+        assert dialog.view_model.format_pending(0) == "0"
 
     def test_format_pending_positive_says_load(self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        assert dialog._format_pending(123) == "Load 123"
+        assert dialog.view_model.format_pending(123) == "Load 123"
 
     def test_format_pending_negative_says_drop_with_abs(
             self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        assert dialog._format_pending(-456) == "Drop 456"
+        assert dialog.view_model.format_pending(-456) == "Drop 456"
 
     def test_format_pending_max_load_returns_load_max(
             self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        assert dialog._format_pending(TransferDialog.MAX_LOAD) == "Load Max"
+        assert dialog.view_model.format_pending(TransferViewModel.MAX_LOAD) == "Load Max"
 
     def test_format_pending_max_drop_returns_drop_max(
             self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        assert dialog._format_pending(TransferDialog.MAX_DROP) == "Drop Max"
+        assert dialog.view_model.format_pending(TransferViewModel.MAX_DROP) == "Drop Max"
 
     def test_clear_all_zeros_existing_keys(self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
         dialog._pending_labels["metals"] = MagicMock()
         dialog._pending_labels["fuel"] = MagicMock()
-        dialog.pending_transfers["metals"] = 100
-        dialog.pending_transfers["fuel"] = TransferDialog.MAX_LOAD
+        dialog.view_model.pending_transfers["metals"] = 100
+        dialog.view_model.pending_transfers["fuel"] = TransferViewModel.MAX_LOAD
         dialog._on_clear_all()
-        assert dialog.pending_transfers["metals"] == 0
-        assert dialog.pending_transfers["fuel"] == 0
+        assert dialog.view_model.pending_transfers["metals"] == 0
+        assert dialog.view_model.pending_transfers["fuel"] == 0
 
     def test_arrow_increments_constants_are_5_each(self):
         # Pin: 5 gradations per direction. Refactor must preserve.
@@ -252,18 +253,18 @@ class TestSourceChange:
             mock_manager, mock_scene, mock_fleet, fleets=[f1, f2],
         )
         dialog._on_source_changed("Fleet 1")
-        target_labels = [t["label"] for t in dialog.available_targets]
+        target_labels = [t["label"] for t in dialog.view_model.available_targets]
         assert "Fleet 1" not in target_labels
         assert "Fleet 2" in target_labels
-        assert dialog._current_source["label"] == "Fleet 1"
+        assert dialog.view_model.current_source["label"] == "Fleet 1"
 
     def test_on_source_changed_unknown_label_is_noop(
             self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        before = dialog._current_source
+        before = dialog.view_model.current_source
         dialog._on_source_changed("Nonexistent Label")
         # _current_source not changed when label not found.
-        assert dialog._current_source is before
+        assert dialog.view_model.current_source is before
 
 
 # ---------------------------------------------------------------------------
@@ -286,27 +287,27 @@ class TestSourceChange:
 class TestConfirmCommandEmission:
     def test_confirm_aborts_when_no_source(self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        dialog._current_source = None
-        dialog._current_target = {"type": "fleet", "id": 2, "label": "x"}
-        dialog.pending_transfers = {"metals": 100}
+        dialog.view_model.current_source = None
+        dialog.view_model.current_target = {"type": "fleet", "id": 2, "label": "x"}
+        dialog.view_model.pending_transfers = {"metals": 100}
         with patch.object(dialog, "kill"):
             dialog._on_confirm()
         mock_scene._facade.handle_command.assert_not_called()
 
     def test_confirm_aborts_when_no_target(self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        dialog._current_source = {"type": "fleet", "id": 1, "label": "x"}
-        dialog._current_target = None
-        dialog.pending_transfers = {"metals": 100}
+        dialog.view_model.current_source = {"type": "fleet", "id": 1, "label": "x"}
+        dialog.view_model.current_target = None
+        dialog.view_model.pending_transfers = {"metals": 100}
         with patch.object(dialog, "kill"):
             dialog._on_confirm()
         mock_scene._facade.handle_command.assert_not_called()
 
     def test_confirm_skips_zero_pending(self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        dialog._current_source = {"type": "fleet", "id": 1, "label": "F1"}
-        dialog._current_target = {"type": "colony", "id": 10, "label": "Alpha"}
-        dialog.pending_transfers = {"metals": 0, "fuel": 0}
+        dialog.view_model.current_source = {"type": "fleet", "id": 1, "label": "F1"}
+        dialog.view_model.current_target = {"type": "colony", "id": 10, "label": "Alpha"}
+        dialog.view_model.pending_transfers = {"metals": 0, "fuel": 0}
         mock_scene._facade.handle_command.return_value = MagicMock(is_valid=True)
         with patch.object(dialog, "kill"):
             dialog._on_confirm()
@@ -314,9 +315,9 @@ class TestConfirmCommandEmission:
 
     def test_confirm_aborts_when_both_non_fleet(self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        dialog._current_source = {"type": "colony", "id": 10, "label": "Alpha"}
-        dialog._current_target = {"type": "planet", "id": 11, "label": "Beta"}
-        dialog.pending_transfers = {"metals": 100}
+        dialog.view_model.current_source = {"type": "colony", "id": 10, "label": "Alpha"}
+        dialog.view_model.current_target = {"type": "planet", "id": 11, "label": "Beta"}
+        dialog.view_model.pending_transfers = {"metals": 100}
         mock_scene._facade.handle_command.return_value = MagicMock(is_valid=True)
         with patch.object(dialog, "kill"):
             dialog._on_confirm()
@@ -326,9 +327,9 @@ class TestConfirmCommandEmission:
             self, mock_manager, mock_scene, mock_fleet):
         # Fleet → colony, positive amount = load (target → fleet).
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        dialog._current_source = {"type": "fleet", "id": 1, "label": "F1"}
-        dialog._current_target = {"type": "colony", "id": 10, "label": "Alpha"}
-        dialog.pending_transfers = {"metals": 50}
+        dialog.view_model.current_source = {"type": "fleet", "id": 1, "label": "F1"}
+        dialog.view_model.current_target = {"type": "colony", "id": 10, "label": "Alpha"}
+        dialog.view_model.pending_transfers = {"metals": 50}
         mock_scene._facade.handle_command.return_value = MagicMock(is_valid=True)
         with patch.object(dialog, "kill"):
             dialog._on_confirm()
@@ -346,9 +347,9 @@ class TestConfirmCommandEmission:
     def test_confirm_fleet_to_colony_drop_direction(
             self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        dialog._current_source = {"type": "fleet", "id": 1, "label": "F1"}
-        dialog._current_target = {"type": "colony", "id": 10, "label": "Alpha"}
-        dialog.pending_transfers = {"fuel": -100}
+        dialog.view_model.current_source = {"type": "fleet", "id": 1, "label": "F1"}
+        dialog.view_model.current_target = {"type": "colony", "id": 10, "label": "Alpha"}
+        dialog.view_model.pending_transfers = {"fuel": -100}
         mock_scene._facade.handle_command.return_value = MagicMock(is_valid=True)
         with patch.object(dialog, "kill"):
             dialog._on_confirm()
@@ -362,9 +363,9 @@ class TestConfirmCommandEmission:
         # the user's perspective (load into fleet) but command direction
         # is "unload" because the colony is the planet side.
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        dialog._current_source = {"type": "colony", "id": 10, "label": "Alpha"}
-        dialog._current_target = {"type": "fleet", "id": 1, "label": "F1"}
-        dialog.pending_transfers = {"metals": 50}
+        dialog.view_model.current_source = {"type": "colony", "id": 10, "label": "Alpha"}
+        dialog.view_model.current_target = {"type": "fleet", "id": 1, "label": "F1"}
+        dialog.view_model.pending_transfers = {"metals": 50}
         mock_scene._facade.handle_command.return_value = MagicMock(is_valid=True)
         with patch.object(dialog, "kill"):
             dialog._on_confirm()
@@ -377,9 +378,9 @@ class TestConfirmCommandEmission:
     def test_confirm_fleet_to_fleet_uses_target_fleet_id(
             self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        dialog._current_source = {"type": "fleet", "id": 1, "label": "F1"}
-        dialog._current_target = {"type": "fleet", "id": 2, "label": "F2"}
-        dialog.pending_transfers = {"passengers": -20}
+        dialog.view_model.current_source = {"type": "fleet", "id": 1, "label": "F1"}
+        dialog.view_model.current_target = {"type": "fleet", "id": 2, "label": "F2"}
+        dialog.view_model.pending_transfers = {"passengers": -20}
         mock_scene._facade.handle_command.return_value = MagicMock(is_valid=True)
         with patch.object(dialog, "kill"):
             dialog._on_confirm()
@@ -395,9 +396,9 @@ class TestConfirmCommandEmission:
         # MAX_LOAD/MAX_DROP signal "transfer all"; engine convention is
         # amount=0 means all-available.
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        dialog._current_source = {"type": "fleet", "id": 1, "label": "F1"}
-        dialog._current_target = {"type": "colony", "id": 10, "label": "Alpha"}
-        dialog.pending_transfers = {"metals": TransferDialog.MAX_LOAD}
+        dialog.view_model.current_source = {"type": "fleet", "id": 1, "label": "F1"}
+        dialog.view_model.current_target = {"type": "colony", "id": 10, "label": "Alpha"}
+        dialog.view_model.pending_transfers = {"metals": TransferViewModel.MAX_LOAD}
         mock_scene._facade.handle_command.return_value = MagicMock(is_valid=True)
         with patch.object(dialog, "kill"):
             dialog._on_confirm()
@@ -408,9 +409,9 @@ class TestConfirmCommandEmission:
     def test_confirm_max_drop_sentinel_translates_to_amount_zero_unload(
             self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        dialog._current_source = {"type": "fleet", "id": 1, "label": "F1"}
-        dialog._current_target = {"type": "colony", "id": 10, "label": "Alpha"}
-        dialog.pending_transfers = {"metals": TransferDialog.MAX_DROP}
+        dialog.view_model.current_source = {"type": "fleet", "id": 1, "label": "F1"}
+        dialog.view_model.current_target = {"type": "colony", "id": 10, "label": "Alpha"}
+        dialog.view_model.pending_transfers = {"metals": TransferViewModel.MAX_DROP}
         mock_scene._facade.handle_command.return_value = MagicMock(is_valid=True)
         with patch.object(dialog, "kill"):
             dialog._on_confirm()
@@ -420,9 +421,9 @@ class TestConfirmCommandEmission:
 
     def test_confirm_passengers_no_species(self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        dialog._current_source = {"type": "fleet", "id": 1, "label": "F1"}
-        dialog._current_target = {"type": "colony", "id": 10, "label": "Alpha"}
-        dialog.pending_transfers = {"passengers": 10}
+        dialog.view_model.current_source = {"type": "fleet", "id": 1, "label": "F1"}
+        dialog.view_model.current_target = {"type": "colony", "id": 10, "label": "Alpha"}
+        dialog.view_model.pending_transfers = {"passengers": 10}
         mock_scene._facade.handle_command.return_value = MagicMock(is_valid=True)
         with patch.object(dialog, "kill"):
             dialog._on_confirm()
@@ -432,9 +433,9 @@ class TestConfirmCommandEmission:
 
     def test_confirm_passengers_with_species(self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        dialog._current_source = {"type": "fleet", "id": 1, "label": "F1"}
-        dialog._current_target = {"type": "colony", "id": 10, "label": "Alpha"}
-        dialog.pending_transfers = {"passengers_humans": 10}
+        dialog.view_model.current_source = {"type": "fleet", "id": 1, "label": "F1"}
+        dialog.view_model.current_target = {"type": "colony", "id": 10, "label": "Alpha"}
+        dialog.view_model.pending_transfers = {"passengers_humans": 10}
         mock_scene._facade.handle_command.return_value = MagicMock(is_valid=True)
         with patch.object(dialog, "kill"):
             dialog._on_confirm()
@@ -444,9 +445,9 @@ class TestConfirmCommandEmission:
 
     def test_confirm_drop_pod_parses_pod_name(self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        dialog._current_source = {"type": "fleet", "id": 1, "label": "F1"}
-        dialog._current_target = {"type": "colony", "id": 10, "label": "Alpha"}
-        dialog.pending_transfers = {"drop_pod:MarinePod": -2}
+        dialog.view_model.current_source = {"type": "fleet", "id": 1, "label": "F1"}
+        dialog.view_model.current_target = {"type": "colony", "id": 10, "label": "Alpha"}
+        dialog.view_model.pending_transfers = {"drop_pod:MarinePod": -2}
         mock_scene._facade.handle_command.return_value = MagicMock(is_valid=True)
         with patch.object(dialog, "kill"):
             dialog._on_confirm()
@@ -459,9 +460,9 @@ class TestConfirmCommandEmission:
     def test_confirm_emits_one_command_per_nonzero_pending(
             self, mock_manager, mock_scene, mock_fleet):
         dialog = _make_dialog(mock_manager, mock_scene, mock_fleet)
-        dialog._current_source = {"type": "fleet", "id": 1, "label": "F1"}
-        dialog._current_target = {"type": "colony", "id": 10, "label": "Alpha"}
-        dialog.pending_transfers = {
+        dialog.view_model.current_source = {"type": "fleet", "id": 1, "label": "F1"}
+        dialog.view_model.current_target = {"type": "colony", "id": 10, "label": "Alpha"}
+        dialog.view_model.pending_transfers = {
             "metals": 100, "fuel": -50, "energy": 0, "ammo": 25,
         }
         mock_scene._facade.handle_command.return_value = MagicMock(is_valid=True)
@@ -583,7 +584,7 @@ class TestTwoStageConstruction:
         assert dialog.grid_container is not None
         # populate_initial_data ran → row_data has the canonical
         # 8 resource rows.
-        resource_keys = [r["cargo_key"] for r in dialog._row_data
+        resource_keys = [r["cargo_key"] for r in dialog.view_model.row_data
                          if r["cargo_key"] in _CANONICAL_RESOURCE_IDS]
         assert len(resource_keys) == 8
 
@@ -614,7 +615,7 @@ class TestTwoStageConstruction:
 
         dialog._on_arrow_click("metals", 100)
         dialog._on_arrow_click("metals", 1000)
-        assert dialog.pending_transfers["metals"] == 1100
+        assert dialog.view_model.pending_transfers["metals"] == 1100
         # Label.set_text was called twice (once per arrow click).
         assert dialog._pending_labels["metals"].set_text.call_count == 2
 

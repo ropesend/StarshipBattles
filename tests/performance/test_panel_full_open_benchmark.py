@@ -129,6 +129,7 @@ def _build_event_log_window(ui_manager):
     window = EventLogWindow(
         rect, ui_manager, [],
         window_manager=None,
+        empire_name="Test Empire",
     )
     return window
 

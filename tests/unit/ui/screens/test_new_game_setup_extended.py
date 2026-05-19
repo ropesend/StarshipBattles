@@ -80,7 +80,7 @@ class TestUpdateEmpireVisibility:
     def test_shows_correct_count_for_2_players(self):
         """With player_count=2, first 2 empire rows visible, last 2 hidden."""
         screen = _make_screen()
-        screen.player_count = 2
+        screen._view_model.player_count = 2
 
         screen._update_empire_visibility()
 
@@ -94,7 +94,7 @@ class TestUpdateEmpireVisibility:
     def test_shows_all_4_for_4_players(self):
         """With player_count=4, all 4 rows visible."""
         screen = _make_screen()
-        screen.player_count = 4
+        screen._view_model.player_count = 4
 
         screen._update_empire_visibility()
 
@@ -104,27 +104,27 @@ class TestUpdateEmpireVisibility:
     def test_clears_race_for_hidden_players(self):
         """Hidden players have their race selection cleared."""
         screen = _make_screen()
-        screen.player_count = 4
-        screen.player_races[2] = _make_race_config()
-        screen.player_races[3] = _make_race_config()
+        screen._view_model.player_count = 4
+        screen._view_model.player_races[2] = _make_race_config()
+        screen._view_model.player_races[3] = _make_race_config()
 
         # Reduce to 2 players.
-        screen.player_count = 2
+        screen._view_model.player_count = 2
         screen._update_empire_visibility()
 
-        assert screen.player_races[2] is None
-        assert screen.player_races[3] is None
+        assert screen._view_model.player_races[2] is None
+        assert screen._view_model.player_races[3] is None
 
     def test_does_not_clear_visible_player_races(self):
         """Visible players keep their race selection."""
         screen = _make_screen()
         race = _make_race_config()
-        screen.player_races[0] = race
-        screen.player_count = 2
+        screen._view_model.player_races[0] = race
+        screen._view_model.player_count = 2
 
         screen._update_empire_visibility()
 
-        assert screen.player_races[0] is race
+        assert screen._view_model.player_races[0] is race
 
 
 # =============================================================================
@@ -139,7 +139,7 @@ class TestUpdateRaceDisplay:
         """With a race selected, preview shows faction name."""
         screen = _make_screen()
         race = _make_race_config(faction_name="United Federation")
-        screen.player_races[0] = race
+        screen._view_model.player_races[0] = race
 
         screen._update_race_display(0)
 
@@ -150,7 +150,7 @@ class TestUpdateRaceDisplay:
     def test_without_race_shows_not_selected(self):
         """Without a race, preview shows 'not selected' message."""
         screen = _make_screen()
-        screen.player_races[0] = None
+        screen._view_model.player_races[0] = None
 
         screen._update_race_display(0)
 
@@ -177,9 +177,9 @@ class TestRaceCallbacks:
 
         screen._on_race_selected(1, race)
 
-        assert screen.player_races[1] is race
-        assert screen.active_race_modal is None
-        assert screen.race_modal_player_index == -1
+        assert screen._view_model.player_races[1] is race
+        assert screen._view_model.active_race_modal is None
+        assert screen._view_model.race_modal_player_index == -1
 
     def test_on_race_created_sets_player_race(self):
         """_on_race_created sets the race for the correct player."""
@@ -188,21 +188,21 @@ class TestRaceCallbacks:
 
         screen._on_race_created(0, race)
 
-        assert screen.player_races[0] is race
-        assert screen.active_race_modal is None
+        assert screen._view_model.player_races[0] is race
+        assert screen._view_model.active_race_modal is None
 
     def test_on_race_dialog_cancelled_clears_modal(self):
         """_on_race_dialog_cancelled clears modal state without changing race."""
         screen = _make_screen()
-        screen.active_race_modal = MagicMock()
-        screen.race_modal_player_index = 2
-        original_race = screen.player_races[2]
+        screen._view_model.active_race_modal = MagicMock()
+        screen._view_model.race_modal_player_index = 2
+        original_race = screen._view_model.player_races[2]
 
         screen._on_race_dialog_cancelled()
 
-        assert screen.active_race_modal is None
-        assert screen.race_modal_player_index == -1
-        assert screen.player_races[2] is original_race  # Unchanged.
+        assert screen._view_model.active_race_modal is None
+        assert screen._view_model.race_modal_player_index == -1
+        assert screen._view_model.player_races[2] is original_race  # Unchanged.
 
 
 # =============================================================================
@@ -227,7 +227,7 @@ class TestOnStartClicked:
         """Valid configuration calls on_start_callback with GameConfig."""
         screen = _make_screen()
         screen.save_name_input.get_text.return_value = "ValidSave"
-        screen.player_count = 1
+        screen._view_model.player_count = 1
         screen.empire_name_inputs[0].get_text.return_value = "Empire One"
 
         with patch('game.ui.screens.new_game_setup_controller.NewGameSetupController.validate_save_name', return_value=(True, "")):
@@ -239,9 +239,9 @@ class TestOnStartClicked:
         """When race is selected, uses race name as empire name."""
         screen = _make_screen()
         screen.save_name_input.get_text.return_value = "TestGame"
-        screen.player_count = 1
+        screen._view_model.player_count = 1
         race = _make_race_config(name="Klingon Empire")
-        screen.player_races[0] = race
+        screen._view_model.player_races[0] = race
 
         with patch('game.ui.screens.new_game_setup_controller.NewGameSetupController.validate_save_name', return_value=(True, "")):
             screen._on_start_clicked()
@@ -296,7 +296,7 @@ class TestBug115CancelAfterModalLeak:
 
         # Stale reference simulating post-[X]-close on the wizard.
         stale_modal = MagicMock()
-        screen.active_race_modal = stale_modal
+        screen._view_model.active_race_modal = stale_modal
 
         with patch.object(
             type(screen).__mro__[1], 'process_event', return_value=False
@@ -313,7 +313,7 @@ class TestBug115CancelAfterModalLeak:
         """Parent btn_start dispatch is also unblocked once the guard
         is gone (sanity check that we didn't only special-case Cancel)."""
         screen = _make_screen()
-        screen.active_race_modal = MagicMock()
+        screen._view_model.active_race_modal = MagicMock()
 
         with patch.object(
             type(screen).__mro__[1], 'process_event', return_value=False

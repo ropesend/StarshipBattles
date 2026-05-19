@@ -125,7 +125,6 @@ class StrategyBuildQueueManager:
             # empire's ``empire_theme_id`` instead.
             self._screen.build_queue_screen = BuildQueueScreen(
                 self._screen.ui.manager,
-                build_context=None,
                 on_close_callback=self._on_build_queue_close,
                 portrait_surface=portrait_surface,
                 design_catalog=design_catalog,

@@ -246,7 +246,6 @@ def test_init_with_no_yard_constructs_ui_shell_only(
 
     screen = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -279,7 +278,6 @@ def test_open_for_yard_populates_state_for_planet(
 
     screen = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -321,7 +319,6 @@ def test_open_for_yard_initial_yard_kwarg_matches_post_open_state(
 
     eager = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -335,7 +332,6 @@ def test_open_for_yard_initial_yard_kwarg_matches_post_open_state(
 
     lazy = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -373,7 +369,6 @@ def test_open_for_yard_planet_to_fleet_rebuilds_panels(
 
     screen = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -412,7 +407,6 @@ def test_open_for_yard_planet_to_planet_does_not_rebuild_panels(
 
     screen = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -462,7 +456,6 @@ def test_obs2_open_for_yard_planet_to_planet_refreshes_planet_report(
 
     screen = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -505,7 +498,6 @@ def test_obs2_open_for_yard_fleet_to_planet_rebuilds_panels(
 
     screen = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -545,7 +537,6 @@ def test_obs2_open_for_yard_planet_to_fleet_round_trip_back_to_planet(
 
     screen = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -599,7 +590,6 @@ def test_obs_p2_design_catalog_open_for_yard_rebinds_controller_design_catalog(
 
     screen = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -674,7 +664,6 @@ def test_hide_makes_panels_invisible_but_alive(
 
     screen = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -700,7 +689,6 @@ def test_show_after_hide_makes_panels_visible(
 
     screen = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -727,7 +715,6 @@ def test_is_visible_reflects_panel_visibility(
 
     shell = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -758,7 +745,6 @@ def test_hide_kills_planet_selection_window_if_open(
 
     screen = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -797,7 +783,6 @@ def test_request_close_hides_and_invokes_on_close(
     on_close = MagicMock()
     screen = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=on_close,
@@ -915,7 +900,6 @@ def test_PROJ410_task_1_2_yard_switch_invalidates_widget_caches(
 
     screen = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -955,7 +939,6 @@ def test_PROJ410_task_1_3_close_and_reopen_invalidates_cache(
 
     screen = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -1003,7 +986,6 @@ def test_PROJ410_task_1_5_ship_yard_to_planetary_yard_invalidates(
 
     screen = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -1074,7 +1056,6 @@ def test_PROJ410_task_1_7_yard_selector_renders_for_second_empire(
 
     screen = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -1154,7 +1135,6 @@ def test_PROJ410_task_1_9_zero_source_yard_clears_controller_queue_refs(
 
     screen = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -1198,7 +1178,6 @@ def test_request_close_can_be_re_opened(
 
     screen = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -1263,7 +1242,6 @@ def test_issue17_open_for_yard_invokes_update_queue_header(
 
     screen = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session_with_planet,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -1319,7 +1297,6 @@ def test_issue17_reopen_after_yard_switch_clears_stale_label_text(
 
     screen = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -1446,7 +1423,6 @@ def test_issue17_show_reasserts_row_visibility_after_panel_show(
 
     screen = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),
@@ -1525,7 +1501,6 @@ def test_issue17_show_reasserts_child_widget_visibility_after_panel_show(
 
     screen = BuildQueueScreen(
         ui_manager,
-        build_context=None,
         facade=session,
         theme_id_supplier=lambda: "Federation",
         on_close_callback=MagicMock(),

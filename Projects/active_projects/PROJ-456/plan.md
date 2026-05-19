@@ -15,18 +15,35 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Smallest-shim cluster: `draw_grid` + broad-catch marker + 3 single-method shims | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. `build_context` legacy-kwarg sweep | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. BattleSetupState `side_0` / `side_1` cluster (2 production + 5 test files) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. `transfer_dialog` cluster + characterization sweep (drops file under 500-LOC ceiling) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Big-three shim clusters: StrategyRenderer, NewGameSetupScreen, BattleSetupScreen | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 1. Smallest-shim cluster: `draw_grid` + broad-catch marker + 3 single-method shims | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. `build_context` legacy-kwarg sweep | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. BattleSetupState `side_0` / `side_1` cluster (2 production + 5 test files) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. `transfer_dialog` cluster + characterization sweep (drops file under 500-LOC ceiling) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Big-three shim clusters: StrategyRenderer, NewGameSetupScreen, BattleSetupScreen | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Codex-audit polish (4 stale docstring sweeps) | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-19
-**Active Phase:** Planning
-**Last Action:** Cross-group collision resolution applied 2026-05-19; Group B is ready for execution. Serial order confirmed: PROJ-453 → PROJ-454 → PROJ-456 → PROJ-457. PROJ-456 is the THIRD project in Group B's series; PROJ-454 must complete first. Coordinator confirmed Group A's serial was re-ordered to put PROJ-450 LAST, which resolves the `test_transfer_dialog_characterization.py` HARD collision (PROJ-456 lands first; PROJ-450 Phase 3 rebases onto the new view-model attribute names). G3-B fix applied: F-C-015 and DI-2026-05-18-004 ownership corrected from PROJ-453 to **PROJ-452** (catalog-driven resource surfaces) in plan.md + findings. Prior fixes retained: `transfer_dialog.py` LOC reframed 523 → 448 (already under ceiling); F-C-001 sweep count 77 → 81; Phase 4 DI log update step keyed on `file:` to disambiguate from the already-resolved CommandRegistry DI-2026-05-18-002 entry; F-C-006 scope limited to BuildQueueScreen-only callers; PowerShell-safe shell commands.
-**Next Action:** Run agent starts PROJ-456 Phase 1 after PROJ-454 is Complete.
-**Blockers:** PROJ-454 must complete first (Group B serial order).
+**Active Phase:** Project complete; ready for end-of-project merge to main
+**Last Action:** Phase 6 closed 4 stale docstrings codex flagged (new_game_setup_screen, battle_setup/screen, battle_setup_state, strategy_render/grid) — all module/class docstrings claimed deleted shims were still preserved. Trivial polish; skipped re-audit per PART 3 Step D. 13 of 14 findings closed; F-C-012 remains partially-closed by the documented Option B decision (production None-path preserved). Sharded 23362/23362 green.
+**Next Action:** Merge group-b through PROJ-456 to main per protocol §3.
+**Blockers:** None.
+
+## Checkpoint Log
+
+### 2026-05-17 — phase-3-complete-checkpoint
+- **Done so far**: PROJ-456 Phases 1-3 closed in series. Phase 1: 5 small UI shim retirements. Phase 2: BuildQueueScreen `build_context` legacy kwarg retired across 7 test files (scope expanded from the plan's documented 1+1 because the original audit's `rg` filter missed positional-yard callers in 6 integration-test files; migration sweep also converted 11 subsequent positional args to kwargs). Phase 3: BattleSetupState side_0/side_1 — 84 refs swept (sized up from plan's 81).
+- **Key decisions**: (1) F-C-012 deviation — Option B half-measure instead of full Option A required-str (production controller legitimately passes None). (2) F-C-007 simpler than expected — the shim was already orphaned (no test callers reached through it). (3) Phase 2 expanded scope: caught the positional-arg blast radius that the original audit missed.
+- **Open threads**: Phase 4 (transfer_dialog cluster) and Phase 5 (StrategyRenderer + NewGameSetupScreen + BattleSetupScreen big-three) still pending.
+- **Next action**: Phase 4 Task 4.1 — transfer_dialog F-C-003 method shims + F-C-011 sentinels + F-C-029 characterization sweep.
+- **Cross-group state observed**: origin/main = `ab2da0669` (still — no PROJ-456 merges have landed yet; that happens at project-end). origin/group-a at `f4503847a`, origin/group-c at `067b27a06`.
+
+### 2026-05-17 — project-456-start
+- **Done so far**: PROJ-454 closed and merged at `ab2da0669`. Group B series progressing on schedule.
+- **Key decisions**: Phase ordering is smallest-first per Codex r4 review-burden risk.
+- **Open threads**: None.
+- **Next action**: Phase 1 Task 1.1.
+- **Cross-group state observed**: origin/main at `ab2da0669` (post-PROJ-454 merge). origin/group-a at `f4503847a`. origin/group-c at `067b27a06`. No `_doc_consolidation/` files on origin/main yet.
 
 ## Overview
 Retire 9 UI back-compat property/method shim clusters that survived prior MVVM splits (PROJ-275, PROJ-309, PROJ-329A, PROJ-374, PROJ-376, PROJ-392, PROJ-437, etc.). The same recipe applies per cluster: find test/peer reads of the shim → migrate those callers to the canonical source (controller / view-model / renderer / layer-object) → delete the shim block. Phase 4 also retires `transfer_dialog.py`'s sentinel/layout-constant class re-exports and the 6 dialog-level property shims; the file's LOC drops further from its current 448 (already under the 500-LOC ceiling at HEAD per 2026-05-19 re-measurement — DI-2026-05-18-002's original LOC-overflow framing is stale; closure is now justified by retiring the shim cluster, not by enforcing the ceiling). Also: a one-line broad-catch marker fix on `transfer_dialog._on_confirm` and a sweep of the dual-name `build_context` / `initial_yard` kwargs on `BuildQueueScreen`.
@@ -168,6 +185,14 @@ The three highest-volume shim clusters. Land in any order — write scopes are d
 - **F-C-009** — 11 BattleSetupScreen VM + controller property shims. ~37 references across `tests/unit/ui/screens/test_battle_setup_state.py` (7) + 4 production panel files (`right_panel.py:1`, `left_panel.py:11`, `center_panel.py:14`, `screen.py:2`). The panels read `screen.active_side`, `screen.active_fleet_index`, etc. extensively — those are the bulk of the migration work. Replace each `screen.<name>` read with `screen.view_model.<name>` (or `screen.controller.<name>` for the end-condition cluster). Delete property block at lines 93-205.
 
 **Checkpoint:** sharded suite green; 3 finding entries close; PROJ-456 complete.
+
+### Phase 6: Codex-audit polish (4 stale docstring sweeps) [Trivial]
+Added after the PROJ-456 end-of-project codex audit flagged 4 module/class docstrings that still described the deleted property shims as live. All edits are docstring-only; no behaviour changes. Per protocol PART 3 Step D, no re-audit dispatched (trivial polish).
+
+- **Task 6.1** — `game/ui/screens/new_game_setup_screen.py:34-37`: refresh "keeps property shims" docstring to describe `_view_model` as the canonical state owner.
+- **Task 6.2** — `game/ui/screens/battle_setup/screen.py:8-9`: refresh "Backward-compat property shims" docstring to describe panels reading via `screen.view_model.<X>` / `screen.state.<X>` / `screen.controller.<X>`.
+- **Task 6.3** — `game/ui/screens/battle_setup_state.py:151-155`: refresh "`side_0` / `side_1` properties remain" class docstring to describe `state.sides[i]` / `state.get_side(team_id)` as canonical access patterns.
+- **Task 6.4** — `game/ui/screens/strategy_render/grid.py:4-6`: refresh "`draw_grid` is preserved for back-compat" module docstring to describe `GridLayer.draw` as the only render path.
 
 ## Dependencies & Sibling Projects
 

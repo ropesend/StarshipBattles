@@ -50,7 +50,6 @@ class BuildQueueScreen:
     def __init__(
         self,
         manager: pygame_gui.UIManager,
-        build_context=None,  # Planet, Fleet, or BuildContext (legacy positional yard)
         on_close_callback: Optional[Callable] = None,
         portrait_surface: Optional[pygame.Surface] = None,
         design_catalog: 'DesignCatalog' = None,
@@ -76,18 +75,16 @@ class BuildQueueScreen:
         outside the facade.
 
         PROJ-376 Phase 1: Split into "UI shell" (always runs) + "yard population"
-        (only when ``initial_yard`` is provided, or legacy ``build_context`` is
-        non-None). When neither is provided, the screen constructs in shell-only
-        mode — no panels, controller, or drag handler — and waits for
-        ``open_for_yard()`` to populate the panel tree on first open.
+        (only when ``initial_yard`` is provided). When ``initial_yard is None``
+        the screen constructs in shell-only mode — no panels, controller, or
+        drag handler — and waits for ``open_for_yard()`` to populate the
+        panel tree on first open.
 
-        ``initial_yard`` (keyword-only) is the new explicit kwarg. The legacy
-        ``build_context`` positional/keyword arg is preserved for back-compat:
-        when ``initial_yard is None`` and ``build_context is not None``,
-        ``build_context`` is treated as the initial yard.
+        PROJ-456 Phase 2: the legacy ``build_context`` positional/keyword
+        constructor arg was retired; ``initial_yard`` (keyword-only) is the
+        canonical entry point for an eager-population first yard.
         """
-        # PROJ-376: Resolve the effective initial yard from new + legacy kwargs.
-        effective_initial_yard = initial_yard if initial_yard is not None else build_context
+        effective_initial_yard = initial_yard
 
         # Validate required parameters (relaxed when no yard is provided).
         self._validate_params(hex_coord, galaxy, empire, effective_initial_yard)

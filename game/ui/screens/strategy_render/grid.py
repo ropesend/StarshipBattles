@@ -2,8 +2,9 @@
 
 PROJ-309 sub-phase 3.2: extracted from the renderer.
 PROJ-374: introduced ``GridLayer`` with a quantized property-keyed surface
-cache. ``draw_grid`` is preserved for back-compat; new callers should use
-``GridLayer.draw``.
+cache. PROJ-456 Phase 1 retired the legacy module-level ``draw_grid``
+free function; production renders go through ``GridLayer.draw`` and tests
+do the same.
 """
 from __future__ import annotations
 
@@ -99,15 +100,6 @@ def _render_grid_to_surface(r: Any, target_surface: Any) -> None:
 
         if len(snake_points) > 1:
             pygame.draw.lines(target_surface, grid_color, False, snake_points, 1)
-
-
-def draw_grid(r: Any, screen: Any) -> None:
-    """Draw the hex grid directly onto ``screen``.
-
-    Uncached fast path retained for back-compat with existing direct callers
-    (e.g. tests). Production rendering goes through ``GridLayer.draw``.
-    """
-    _render_grid_to_surface(r, screen)
 
 
 class GridLayer:

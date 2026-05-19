@@ -125,7 +125,7 @@ def test_battle_setup_shield_suppressor_targets_opponent_team(
     # Toggle the shield suppressor on side 0 — its ShieldModifier is
     # scoped `enemy_system`, so it should target team 1.
     state = BattleSetupState()
-    state.side_0.system_complexes.append({
+    state.sides[0].system_complexes.append({
         "design_id": "qs_system_shield_suppressor_complex",
         "display_name": "System Shield Suppressor",
     })
@@ -184,7 +184,7 @@ def test_battle_setup_shield_booster_targets_owner_team(
     )
 
     state = BattleSetupState()
-    state.side_0.system_complexes.append({
+    state.sides[0].system_complexes.append({
         "design_id": "qs_system_shield_booster_complex",
         "display_name": "System Shield Booster",
     })
@@ -244,7 +244,7 @@ def test_two_same_group_shield_boosters_max_not_sum(
     # Two copies of the SAME complex on side 0 → two entries, same
     # stack_group → MAX, not SUM.
     for _ in range(2):
-        state.side_0.system_complexes.append({
+        state.sides[0].system_complexes.append({
             "design_id": "qs_system_shield_booster_complex",
             "display_name": "System Shield Booster",
         })
@@ -290,7 +290,7 @@ def test_battle_setup_shield_projector_gives_flat_bonus_to_owner(
     )
 
     state = BattleSetupState()
-    state.side_0.system_complexes.append({
+    state.sides[0].system_complexes.append({
         "design_id": "qs_system_shield_projector_complex",
         "display_name": "System Shield Projector",
     })

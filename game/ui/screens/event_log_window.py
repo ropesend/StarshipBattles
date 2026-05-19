@@ -110,10 +110,13 @@ class EventLogWindow(StrategyModalWindow):
         on_close_callback: Called when the window is closed (registrar slot cleanup).
         on_navigate_callback: Called with [q, r] hex coords when user
             double-clicks an event row that has location data.
-        empire_name: BUG-123 — when set, the window title becomes
-            ``"Event Log — <empire_name> Empire"``. None falls back to
-            the plain ``"Event Log"`` title (back-compat for callers
-            that don't supply it, including tests).
+        empire_name: BUG-123 — the window title becomes
+            ``"Event Log — <empire_name> Empire"``. The production
+            controller threads the active empire's name through
+            (`event_log_window_ctrl.open_all`). ``None`` falls back
+            to the plain ``"Event Log"`` title; this path only fires
+            in production when the upstream empire has no `.name`
+            attribute. Tests must pass an explicit string.
     """
 
     # Issue #28: opts into per-player UI view-state container.

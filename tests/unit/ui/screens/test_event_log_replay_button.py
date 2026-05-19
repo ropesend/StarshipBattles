@@ -216,6 +216,7 @@ def _make_event_log_window(events, *, resolver=None, launch_cb=None):
         manager,
         events,
         window_manager=MagicMock(),
+        empire_name="Test Empire",
         replay_resolver=resolver,
         launch_replay_callback=launch_cb,
     )

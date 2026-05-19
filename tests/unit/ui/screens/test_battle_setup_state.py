@@ -107,15 +107,15 @@ class TestBattleSetupState:
         from game.ui.screens.battle_setup_state import BattleSetupState
 
         state = BattleSetupState()
-        assert state.side_0.team_id == 0
-        assert state.side_1.team_id == 1
+        assert state.sides[0].team_id == 0
+        assert state.sides[1].team_id == 1
 
     def test_add_ship_from_design(self):
         """add_ship_from_design creates a ShipInstance and adds it to a fleet."""
         from game.ui.screens.battle_setup_state import BattleSetupState
 
         state = BattleSetupState()
-        fleet = state.side_0.create_fleet("Test Fleet")
+        fleet = state.sides[0].create_fleet("Test Fleet")
 
         design_data = {
             "name": "Test Ship",
@@ -132,27 +132,27 @@ class TestBattleSetupState:
         from game.ui.screens.battle_setup_state import BattleSetupState
 
         state = BattleSetupState()
-        state.side_0.create_fleet("Alpha")
-        state.side_1.create_fleet("Beta")
+        state.sides[0].create_fleet("Alpha")
+        state.sides[1].create_fleet("Beta")
 
         data = state.to_dict()
         restored = BattleSetupState.from_dict(data)
 
-        assert len(restored.side_0.fleets) == 1
-        assert len(restored.side_1.fleets) == 1
-        assert restored.side_0.fleets[0].id is not None
+        assert len(restored.sides[0].fleets) == 1
+        assert len(restored.sides[1].fleets) == 1
+        assert restored.sides[0].fleets[0].id is not None
 
     def test_clear_resets_state(self):
         """clear() removes all fleets and complexes."""
         from game.ui.screens.battle_setup_state import BattleSetupState
 
         state = BattleSetupState()
-        state.side_0.create_fleet("Alpha")
-        state.side_1.create_fleet("Beta")
+        state.sides[0].create_fleet("Alpha")
+        state.sides[1].create_fleet("Beta")
 
         state.clear()
-        assert len(state.side_0.fleets) == 0
-        assert len(state.side_1.fleets) == 0
+        assert len(state.sides[0].fleets) == 0
+        assert len(state.sides[1].fleets) == 0
 
 
 class TestBattleSetupSideComplexToggles:
@@ -297,7 +297,7 @@ class TestScreenDelegatesViewStateToViewModel:
 
     Guard that property shims route to `self.view_model.*` — if the shim
     is accidentally removed, these tests catch the silent divergence
-    between `screen.active_side` and `screen.view_model.active_side`.
+    between `screen.view_model.active_side` and `screen.view_model.active_side`.
     """
 
     def test_active_side_shim_routes_to_view_model(self):
@@ -307,9 +307,9 @@ class TestScreenDelegatesViewStateToViewModel:
         screen = object.__new__(FleetBattleSetupScreen)
         screen.view_model = BattleSetupViewModel()
 
-        screen.active_side = 3
+        screen.view_model.active_side = 3
         assert screen.view_model.active_side == 3
-        assert screen.active_side == 3  # read-through
+        assert screen.view_model.active_side == 3  # read-through
 
     def test_selection_shims_route_to_view_model(self):
         from game.ui.screens.battle_setup.screen import FleetBattleSetupScreen
@@ -318,9 +318,9 @@ class TestScreenDelegatesViewStateToViewModel:
         screen = object.__new__(FleetBattleSetupScreen)
         screen.view_model = BattleSetupViewModel()
 
-        screen.selected_tf_index = 2
-        screen.selected_sq_index = 1
-        screen.selected_ship_index = 5
+        screen.view_model.selected_tf_index = 2
+        screen.view_model.selected_sq_index = 1
+        screen.view_model.selected_ship_index = 5
 
         assert screen.view_model.selected_tf_index == 2
         assert screen.view_model.selected_sq_index == 1
@@ -334,5 +334,5 @@ class TestScreenDelegatesViewStateToViewModel:
         screen.view_model = BattleSetupViewModel()
 
         designs = [{"name": "Fighter"}]
-        screen.available_designs = designs
+        screen.view_model.available_designs = designs
         assert screen.view_model.available_designs is designs

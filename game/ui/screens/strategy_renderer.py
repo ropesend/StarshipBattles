@@ -104,31 +104,6 @@ class StrategyRenderer:
         # Grid layer (owns its property-keyed surface cache, PROJ-374)
         self._grid = GridLayer()
 
-    # -- Back-compat shims for tests that read these as instance attributes --
-    @property
-    def _bg_image(self) -> Any:
-        return self._background._bg_image
-
-    @property
-    def _bg_scaled(self) -> Any:
-        return self._background._bg_scaled
-
-    @property
-    def _bg_scaled_size(self) -> Any:
-        return self._background._bg_scaled_size
-
-    @property
-    def _bg_brightness(self) -> Any:
-        return self._background._bg_brightness
-
-    @property
-    def _hex_outline_cache(self) -> Any:
-        return self._hex_outlines._hex_outline_cache
-
-    @property
-    def _hex_outline_cache_turn(self) -> Any:
-        return self._hex_outlines._hex_outline_cache_turn
-
     def update(self, dt: float) -> None:
         """Update animation state.
 

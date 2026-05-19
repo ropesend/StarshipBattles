@@ -72,7 +72,7 @@ class TestTransferDialog:
 
         # Assert
         # 2 fleets + 1 colonized planet + 1 uncolonized planet = 4 sources
-        assert len(dialog.available_sources) == 4
+        assert len(dialog.view_model.available_sources) == 4
         options = self._get_options(dialog.drop_source)
         assert "Fleet 1" in options
         assert "Fleet 2" in options
@@ -129,7 +129,7 @@ class TestTransferDialog:
         dialog = TransferDialog(rect, mock_manager, mock_fleet, (0, 0), mock_scene, window_manager=None)
 
         # Assert - should have 8 resource rows
-        resource_keys = [r['cargo_key'] for r in dialog._row_data
+        resource_keys = [r['cargo_key'] for r in dialog.view_model.row_data
                          if not r['cargo_key'].startswith('passengers')]
         assert len(resource_keys) == 8
         assert "metals" in resource_keys
@@ -161,9 +161,9 @@ class TestTransferDialog:
         dialog = TransferDialog(rect, mock_manager, mock_fleet, (0, 0), mock_scene, window_manager=None)
 
         # Set up pending transfers manually
-        dialog._current_source = {'type': 'fleet', 'id': 1, 'label': 'Fleet 1'}
-        dialog._current_target = {'type': 'colony', 'id': 10, 'label': 'Colony: Alpha'}
-        dialog.pending_transfers = {"metals": 50, "fuel": -100}  # Load 50 metals, drop 100 fuel
+        dialog.view_model.current_source = {'type': 'fleet', 'id': 1, 'label': 'Fleet 1'}
+        dialog.view_model.current_target = {'type': 'colony', 'id': 10, 'label': 'Colony: Alpha'}
+        dialog.view_model.pending_transfers = {"metals": 50, "fuel": -100}  # Load 50 metals, drop 100 fuel
 
         # Act
         dialog._on_confirm()

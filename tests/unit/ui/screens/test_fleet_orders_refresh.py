@@ -2,7 +2,7 @@ import pytest
 import pygame
 import pygame_gui
 from unittest.mock import MagicMock
-from game.ui.screens.orders_window import OrdersWindow
+from game.ui.screens.orders_window import OrderDescriber, OrdersWindow
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
@@ -31,19 +31,19 @@ def test_order_descriptions(manager, fleet, window_manager):
     
     # Test TRANSFER load
     order_load = Order(OrderType.TRANSFER, target={'direction': 'load', 'cargo_type': 'passengers', 'amount': 10})
-    assert window._get_order_description(order_load) == "load cargo"
+    assert OrderDescriber().describe(order_load, fleet) == "load cargo"
     
     # Test TRANSFER unload
     order_unload = Order(OrderType.TRANSFER, target={'direction': 'unload', 'cargo_type': 'passengers', 'amount': 10})
-    assert window._get_order_description(order_unload) == "drop cargo"
+    assert OrderDescriber().describe(order_unload, fleet) == "drop cargo"
     
     # Test LOAD_POPULATION
     order_pop_load = Order(OrderType.LOAD_POPULATION, target={'direction': 'load', 'cargo_type': 'passengers', 'amount': 10})
-    assert window._get_order_description(order_pop_load) == "load cargo"
+    assert OrderDescriber().describe(order_pop_load, fleet) == "load cargo"
     
     # Test UNLOAD_POPULATION
     order_pop_unload = Order(OrderType.UNLOAD_POPULATION, target={'direction': 'unload', 'cargo_type': 'passengers', 'amount': 10})
-    assert window._get_order_description(order_pop_unload) == "drop cargo"
+    assert OrderDescriber().describe(order_pop_unload, fleet) == "drop cargo"
 
 def test_auto_refresh(manager, fleet, window_manager):
     window = OrdersWindow(pygame.Rect(0, 0, 400, 500), manager, fleet, window_manager=window_manager)

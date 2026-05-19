@@ -97,8 +97,8 @@ class BattleSetupController:
         """
         if not preserve_teams:
             self._state.clear()
-            self._state.side_0.create_fleet("Fleet Alpha")
-            self._state.side_1.create_fleet("Fleet Beta")
+            self._state.sides[0].create_fleet("Fleet Alpha")
+            self._state.sides[1].create_fleet("Fleet Beta")
             self._view_model.active_side = 0
             self._view_model.active_fleet_index = 0
 
@@ -471,7 +471,7 @@ class BattleSetupController:
         def _total_ships(side) -> int:
             return sum(len(fleet.ships) for fleet in side.fleets)
 
-        if _total_ships(self._state.side_0) == 0 or _total_ships(self._state.side_1) == 0:
+        if _total_ships(self._state.sides[0]) == 0 or _total_ships(self._state.sides[1]) == 0:
             logger.warning("Cannot start battle: both sides need ships")
             return
 

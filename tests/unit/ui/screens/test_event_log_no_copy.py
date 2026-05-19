@@ -26,6 +26,7 @@ def test_window_holds_reference_to_events_list_not_copy() -> None:
             MagicMock(name="manager"),
             events_input,
             window_manager=None,
+            empire_name="Test Empire",
         )
     assert window.all_events is events_input, (
         "PROJ-411 Task 1.9: EventLogWindow should hold a reference to the "
