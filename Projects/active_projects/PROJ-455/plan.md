@@ -15,16 +15,15 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. End-to-end fixture construction (planet + facility + FMS bay + queued order + deployed groups) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. End-to-end fixture construction (planet + facility + FMS bay + queued order + deployed groups) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. `test_process_planet_action_tick_end_to_end` parametrised across 5 FMS order types | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Mark DI-2026-05-18-001 ActionExecutionEngine half `resolved` in log.jsonl | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-19
-**Active Phase:** Planning
-**Last Action:** Group 3 pre-execution review fixes applied (codex + subagent reviews; see consult artifacts at `AgentCoordination/Scratchpad/Consult/20260519T024637Z_group3-pre-execution-review/` and `.agent_reports/group3_pre_execution_review/`). Phase 2 now includes Task 2.4 (in-progress branch coverage parametrised across the 5 FMS order types; Option A chosen over Option B; rationale in `decisions.md`); Phase Completion Checklist updated to require BOTH branches of `_process_planet_action_tick` covered. Earlier 2026-05-19 codex Bucket-B fix retained: Phase 1 Task 1.5 "synthetic RED via resolver-injection removal" is weaker than true fail-first TDD but acceptable for a test-only coverage project; rationale already documented in `decisions.md`.
-**Next Action:** Run agent picks up PROJ-455 Phase 1 after PROJ-452 completes (PROJ-455 is **position 2 of 4** in Group C's serial order `452 → 455 → 458 → 460` — see Group C execution context in the Dependencies & Sibling Projects section and `Projects/active_projects/GroupC_execution_prompt.txt`).
-**Blockers:** Serial gate: PROJ-452 must complete first within Group C. No external blockers.
+**Active Phase:** Phase 2 (next)
+**Last Action:** Phase 1 (end-to-end fixture construction + LAY_MINES smoke) complete on `group-c`. New test file `tests/integration/test_process_planet_action_tick_end_to_end.py` (~280 LOC) lands the `_FixedActionTimeResolver(action_time=1)` test double, the `engine_with_fixed_resolver` fixture (sibling to the precedent's `engine_and_processor` per Task 1.4's "add a sibling" option), the duplicated `_StubPlanet` (post-PROJ-450 typed-substrate shape) + item factories + scenario builders + `_SCENARIO_BUILDERS` dict from `tests/integration/test_fms_planet_lay_mines.py`, plus `_build_empire` helper, plus the `test_lay_mines_e2e_smoke` driving the full `engine.process_action_ticks(...)` chain end-to-end. Test green; precedent file still green (6 tests). Phase 1 sharded gate running.
+**Next Action:** Confirm Phase 1 sharded green, commit + push, then start Phase 2 (parametrise across all 5 `order_metadata.planet_fms_action_order_types`, add the registry-view-drift guard).
 **2026-05-19 cross-group resolution (final):** Bookkeeping fix G3-C applied — Scope section's "In" block tightened so `tests/integration/test_fms_planet_lay_mines.py` is now an explicit **READ-ONLY precedent** (the file belongs to PROJ-450 in Group A's staging-yard substrate migration). The earlier loose plan-text mentioning an optional `_planet_fms_fixtures.py` extraction is now CLOSED; copy needed scaffolding into the new test file rather than refactoring the precedent file. Group C execution-context block added to Dependencies.
 
 ## Overview
