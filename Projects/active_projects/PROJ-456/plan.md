@@ -18,17 +18,24 @@
 | 1. Smallest-shim cluster: `draw_grid` + broad-catch marker + 3 single-method shims | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. `build_context` legacy-kwarg sweep | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. BattleSetupState `side_0` / `side_1` cluster (2 production + 5 test files) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. `transfer_dialog` cluster + characterization sweep (drops file under 500-LOC ceiling) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. `transfer_dialog` cluster + characterization sweep (drops file under 500-LOC ceiling) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Big-three shim clusters: StrategyRenderer, NewGameSetupScreen, BattleSetupScreen | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 4 (transfer_dialog cluster + characterization sweep)
-**Last Action:** Phase 3 complete. F-C-001 closed: migrated 84 `.side_0`/`.side_1` references (sized up from 81 in plan; live counts: controller.py 4, test_battle_setup_state 12, test_controller 37, test_spec_compiler 22, test_spec_compiler_formation 5, test_suppressor_effects 4) to `.sides[0]`/`.sides[1]`. Deleted the property+setter block + comment header at `battle_setup_state.py:172-192`. Sharded 23362/23362 green.
-**Next Action:** Phase 4 Task 4.1 — transfer_dialog shim cluster (F-C-003 + F-C-011 + F-C-029).
+**Active Phase:** Phase 5 (big-three shim clusters)
+**Last Action:** Phase 4 complete. transfer_dialog four-pronged cleanup: F-C-003 (3 method shims deleted + 3 internal `self._extract_dropdown_value` calls migrated to `TransferGridRenderer.extract_dropdown_value`), F-C-011 (2 sentinels + 18 layout-constant re-exports deleted; 9 test refs migrated to `TransferViewModel.MAX_LOAD/MAX_DROP`), F-C-029 (69 characterization-test references swept across 3 test files; 6 dialog-level property shims deleted). DI-2026-05-18-002 (transfer_dialog) marked resolved in log.jsonl. transfer_dialog.py LOC: 448 → 418. Sharded 23362/23362 green.
+**Next Action:** Phase 5 — F-C-004 (StrategyRenderer cache-attr shims) + F-C-008 (NewGameSetupScreen VM shims) + F-C-009 (BattleSetupScreen VM+controller shims).
 **Blockers:** None.
 
 ## Checkpoint Log
+
+### 2026-05-17 — phase-3-complete-checkpoint
+- **Done so far**: PROJ-456 Phases 1-3 closed in series. Phase 1: 5 small UI shim retirements. Phase 2: BuildQueueScreen `build_context` legacy kwarg retired across 7 test files (scope expanded from the plan's documented 1+1 because the original audit's `rg` filter missed positional-yard callers in 6 integration-test files; migration sweep also converted 11 subsequent positional args to kwargs). Phase 3: BattleSetupState side_0/side_1 — 84 refs swept (sized up from plan's 81).
+- **Key decisions**: (1) F-C-012 deviation — Option B half-measure instead of full Option A required-str (production controller legitimately passes None). (2) F-C-007 simpler than expected — the shim was already orphaned (no test callers reached through it). (3) Phase 2 expanded scope: caught the positional-arg blast radius that the original audit missed.
+- **Open threads**: Phase 4 (transfer_dialog cluster) and Phase 5 (StrategyRenderer + NewGameSetupScreen + BattleSetupScreen big-three) still pending.
+- **Next action**: Phase 4 Task 4.1 — transfer_dialog F-C-003 method shims + F-C-011 sentinels + F-C-029 characterization sweep.
+- **Cross-group state observed**: origin/main = `ab2da0669` (still — no PROJ-456 merges have landed yet; that happens at project-end). origin/group-a at `f4503847a`, origin/group-c at `067b27a06`.
 
 ### 2026-05-17 — project-456-start
 - **Done so far**: PROJ-454 closed and merged at `ab2da0669`. Group B series progressing on schedule.

@@ -71,9 +71,9 @@ class TestTransferDialogEnhanced:
         dialog = TransferDialog(rect, mock_manager, mock_fleet, (0, 0), mock_scene, window_manager=None)
 
         # Set up: source=Fleet 1, target=Fleet 2, pending drop of 20 passengers
-        dialog._current_source = {'type': 'fleet', 'id': 1, 'label': 'Fleet 1'}
-        dialog._current_target = {'type': 'fleet', 'id': 2, 'label': 'Fleet 2'}
-        dialog.pending_transfers = {"passengers": -20}  # Drop 20 passengers
+        dialog.view_model.current_source = {'type': 'fleet', 'id': 1, 'label': 'Fleet 1'}
+        dialog.view_model.current_target = {'type': 'fleet', 'id': 2, 'label': 'Fleet 2'}
+        dialog.view_model.pending_transfers = {"passengers": -20}  # Drop 20 passengers
 
         # Act
         dialog._on_confirm()
