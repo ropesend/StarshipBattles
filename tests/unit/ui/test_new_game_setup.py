@@ -418,7 +418,7 @@ class TestSetupRacePassesLoadedData:
         loaded_race = RaceConfig(race_id="loaded_species", name="Loaded Species")
 
         screen = self._make_screen()
-        screen.player_races[0] = loaded_race
+        screen._view_model.player_races[0] = loaded_race
 
         with patch('game.ui.screens.race_setup.screen.RaceSetupScreen') as MockRaceSetup:
             screen._on_setup_race_clicked(0)

@@ -43,7 +43,7 @@ def build(screen, width: int, height: int) -> None:
     side_options = [f"Side {i}" for i in range(num_sides)]
     # Clamp active_side into range — defensive against stale view_model state
     # after a remove_side that didn't reconcile.
-    active_side_display = max(0, min(screen.active_side, num_sides - 1))
+    active_side_display = max(0, min(screen.view_model.active_side, num_sides - 1))
     screen._side_dropdown = UIDropDownMenu(
         side_options,
         f"Side {active_side_display}",
@@ -76,14 +76,14 @@ def build(screen, width: int, height: int) -> None:
             manager=screen._ui_manager, container=panel)
     y += 25
 
-    side = screen.state.get_side(screen.active_side)
+    side = screen.state.get_side(screen.view_model.active_side)
     screen._fleet_buttons = []
     for i, fleet in enumerate(side.fleets):
         name = getattr(fleet, '_battle_setup_name', f"Fleet {fleet.id}")
         ship_count = len(fleet.ships)
         btn = UIButton(
             pygame.Rect(10, y, width - 20, 28),
-            f"{'> ' if i == screen.active_fleet_index else '  '}{name} ({ship_count} ships)",
+            f"{'> ' if i == screen.view_model.active_fleet_index else '  '}{name} ({ship_count} ships)",
             manager=screen._ui_manager, container=panel
         )
         btn._fleet_index = i
@@ -110,14 +110,14 @@ def build(screen, width: int, height: int) -> None:
 
     screen._system_complex_btns = []
     for design_id, display_name in _SYSTEM_SCOPE_COMPLEXES:
-        is_on = screen._get_toggle(screen.active_side, "system", design_id)
+        is_on = screen._get_toggle(screen.view_model.active_side, "system", design_id)
         icon = "[X]" if is_on else "[  ]"
         btn = UIButton(
             pygame.Rect(10, y, width - 20, 24),
             f"{icon} {display_name}",
             manager=screen._ui_manager, container=panel
         )
-        btn._complex_key = (screen.active_side, "system", design_id)
+        btn._complex_key = (screen.view_model.active_side, "system", design_id)
         btn._complex_design_id = design_id
         screen._system_complex_btns.append(btn)
         y += 26
@@ -130,14 +130,14 @@ def build(screen, width: int, height: int) -> None:
 
     screen._sector_complex_btns = []
     for design_id, display_name in _SECTOR_SCOPE_COMPLEXES:
-        is_on = screen._get_toggle(screen.active_side, "sector", design_id)
+        is_on = screen._get_toggle(screen.view_model.active_side, "sector", design_id)
         icon = "[X]" if is_on else "[  ]"
         btn = UIButton(
             pygame.Rect(10, y, width - 20, 24),
             f"{icon} {display_name}",
             manager=screen._ui_manager, container=panel
         )
-        btn._complex_key = (screen.active_side, "sector", design_id)
+        btn._complex_key = (screen.view_model.active_side, "sector", design_id)
         btn._complex_design_id = design_id
         screen._sector_complex_btns.append(btn)
         y += 26
@@ -155,27 +155,27 @@ def build(screen, width: int, height: int) -> None:
         pygame.Rect(70, y, width - 80, 24),
         manager=screen._ui_manager, container=panel
     )
-    screen._tick_limit_entry.set_text(str(screen.tick_limit))
+    screen._tick_limit_entry.set_text(str(screen.controller.tick_limit))
     y += 28
 
     # End mode toggles
     screen._end_destroyed_btn = UIButton(
         pygame.Rect(10, y, width - 20, 24),
-        f"{'[X]' if screen.end_all_destroyed else '[  ]'} All Destroyed",
+        f"{'[X]' if screen.controller.end_all_destroyed else '[  ]'} All Destroyed",
         manager=screen._ui_manager, container=panel
     )
     y += 26
 
     screen._end_derelict_btn = UIButton(
         pygame.Rect(10, y, width - 20, 24),
-        f"{'[X]' if screen.end_all_derelict else '[  ]'} All Derelict/Destroyed",
+        f"{'[X]' if screen.controller.end_all_derelict else '[  ]'} All Derelict/Destroyed",
         manager=screen._ui_manager, container=panel
     )
     y += 26
 
     screen._end_mass_btn = UIButton(
         pygame.Rect(10, y, width - 20, 24),
-        f"{'[X]' if screen.end_mass_ratio else '[  ]'} Mass Ratio < {screen.mass_ratio_threshold:.0%}",
+        f"{'[X]' if screen.controller.end_mass_ratio else '[  ]'} Mass Ratio < {screen.controller.mass_ratio_threshold:.0%}",
         manager=screen._ui_manager, container=panel
     )
     y += 26

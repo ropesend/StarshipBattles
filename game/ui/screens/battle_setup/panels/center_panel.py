@@ -25,10 +25,10 @@ def build(screen, x: int, width: int, height: int) -> None:
     )
     y = 10
 
-    side = screen.state.get_side(screen.active_side)
+    side = screen.state.get_side(screen.view_model.active_side)
     fleet = (
-        side.fleets[screen.active_fleet_index]
-        if screen.active_fleet_index < len(side.fleets) else None
+        side.fleets[screen.view_model.active_fleet_index]
+        if screen.view_model.active_fleet_index < len(side.fleets) else None
     )
 
     fleet_name = getattr(fleet, '_battle_setup_name', "No Fleet") if fleet else "No Fleet"
@@ -59,10 +59,10 @@ def build(screen, x: int, width: int, height: int) -> None:
 
     # Target indicator — where new ships will go
     target_desc = "Unassigned (fleet level)"
-    if screen.selected_tf_index is not None and screen.selected_tf_index < len(fleet.task_forces):
-        tf = fleet.task_forces[screen.selected_tf_index]
-        if screen.selected_sq_index is not None and screen.selected_sq_index < len(tf.squadrons):
-            sq = tf.squadrons[screen.selected_sq_index]
+    if screen.view_model.selected_tf_index is not None and screen.view_model.selected_tf_index < len(fleet.task_forces):
+        tf = fleet.task_forces[screen.view_model.selected_tf_index]
+        if screen.view_model.selected_sq_index is not None and screen.view_model.selected_sq_index < len(tf.squadrons):
+            sq = tf.squadrons[screen.view_model.selected_sq_index]
             target_desc = f"SQ: {sq.name} in TF: {tf.name}"
         else:
             target_desc = f"TF: {tf.name} (lone ship)"
@@ -82,7 +82,7 @@ def build(screen, x: int, width: int, height: int) -> None:
     for ti, tf in enumerate(fleet.task_forces):
         # Task force header — highlight if selected
         is_tf_selected = (
-            screen.selected_tf_index == ti and screen.selected_sq_index is None
+            screen.view_model.selected_tf_index == ti and screen.view_model.selected_sq_index is None
         )
         marker = ">> " if is_tf_selected else "   "
         tf_label = f"{marker}TF: {tf.name} ({len(tf.all_ships)} ships)"
@@ -111,7 +111,7 @@ def build(screen, x: int, width: int, height: int) -> None:
         # Show squadrons within TF
         for si, sq in enumerate(tf.squadrons):
             is_sq_selected = (
-                screen.selected_tf_index == ti and screen.selected_sq_index == si
+                screen.view_model.selected_tf_index == ti and screen.view_model.selected_sq_index == si
             )
             sq_marker = ">>" if is_sq_selected else "  "
             sq_label = f"{sq_marker} SQ: {sq.name} ({len(sq.all_ships)} ships)"
@@ -170,7 +170,7 @@ def build(screen, x: int, width: int, height: int) -> None:
     screen._ship_buttons = []
     for i, ship in enumerate(fleet.ships):
         hull = ship.design_data.get('ship_class', '?')
-        is_selected = (screen.selected_ship_index == i)
+        is_selected = (screen.view_model.selected_ship_index == i)
         marker = "> " if is_selected else "  "
         btn = UIButton(
             pygame.Rect(10, y, width - 80, 26),
@@ -244,10 +244,10 @@ def _build_policy_controls(screen, panel, y: int, width: int, fleet) -> int:
     selected_node = None
     label = ""
 
-    if screen.selected_tf_index is not None and screen.selected_tf_index < len(fleet.task_forces):
-        tf = fleet.task_forces[screen.selected_tf_index]
-        if screen.selected_sq_index is not None and screen.selected_sq_index < len(tf.squadrons):
-            selected_node = tf.squadrons[screen.selected_sq_index]
+    if screen.view_model.selected_tf_index is not None and screen.view_model.selected_tf_index < len(fleet.task_forces):
+        tf = fleet.task_forces[screen.view_model.selected_tf_index]
+        if screen.view_model.selected_sq_index is not None and screen.view_model.selected_sq_index < len(tf.squadrons):
+            selected_node = tf.squadrons[screen.view_model.selected_sq_index]
             label = f"Squadron: {selected_node.name}"
         else:
             selected_node = tf

@@ -19,13 +19,13 @@
 | 2. `build_context` legacy-kwarg sweep | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. BattleSetupState `side_0` / `side_1` cluster (2 production + 5 test files) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. `transfer_dialog` cluster + characterization sweep (drops file under 500-LOC ceiling) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Big-three shim clusters: StrategyRenderer, NewGameSetupScreen, BattleSetupScreen | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Big-three shim clusters: StrategyRenderer, NewGameSetupScreen, BattleSetupScreen | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 5 (big-three shim clusters)
-**Last Action:** Phase 4 complete. transfer_dialog four-pronged cleanup: F-C-003 (3 method shims deleted + 3 internal `self._extract_dropdown_value` calls migrated to `TransferGridRenderer.extract_dropdown_value`), F-C-011 (2 sentinels + 18 layout-constant re-exports deleted; 9 test refs migrated to `TransferViewModel.MAX_LOAD/MAX_DROP`), F-C-029 (69 characterization-test references swept across 3 test files; 6 dialog-level property shims deleted). DI-2026-05-18-002 (transfer_dialog) marked resolved in log.jsonl. transfer_dialog.py LOC: 448 → 418. Sharded 23362/23362 green.
-**Next Action:** Phase 5 — F-C-004 (StrategyRenderer cache-attr shims) + F-C-008 (NewGameSetupScreen VM shims) + F-C-009 (BattleSetupScreen VM+controller shims).
+**Active Phase:** All phases complete; awaiting end-of-project codex audit
+**Last Action:** Phase 5 complete. F-C-004 (StrategyRenderer: deleted 6 cache-attr property shims at lines 107-130; zero test/production callers reach through them), F-C-008 (NewGameSetupScreen: 30 `screen.<vm_attr>` refs swept across 2 test files; deleted 6 VM property shims), F-C-009 (BattleSetupScreen: 40 refs swept across 4 files — 3 panels + 1 test file — to `screen.view_model.<X>` (6 VM shims) and `screen.controller.<X>` (5 controller shims); deleted the 11-shim block at battle_setup/screen.py:93-185). Sharded 23362/23362 green. All 14 owned PROJ-456 findings resolved.
+**Next Action:** Dispatch PROJ-456 end-of-project codex audit per protocol §10.
 **Blockers:** None.
 
 ## Checkpoint Log

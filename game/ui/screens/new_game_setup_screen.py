@@ -269,58 +269,6 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         self.empire_inputs_start_y: int = 0
 
     # ------------------------------------------------------------------
-    # Backwards-compat property shims — view-model state
-    # ------------------------------------------------------------------
-
-    @property
-    def player_count(self) -> int:
-        return self._view_model.player_count
-
-    @player_count.setter
-    def player_count(self, value: int) -> None:
-        self._view_model.player_count = value
-
-    @property
-    def galaxy_type(self) -> str:
-        return self._view_model.galaxy_type
-
-    @galaxy_type.setter
-    def galaxy_type(self, value: str) -> None:
-        self._view_model.galaxy_type = value
-
-    @property
-    def system_count(self) -> int:
-        return self._view_model.system_count
-
-    @system_count.setter
-    def system_count(self, value: int) -> None:
-        self._view_model.system_count = value
-
-    @property
-    def player_races(self) -> List[Optional["RaceConfig"]]:
-        return self._view_model.player_races
-
-    @player_races.setter
-    def player_races(self, value: List[Optional["RaceConfig"]]) -> None:
-        self._view_model.player_races = value
-
-    @property
-    def active_race_modal(self) -> object | None:
-        return self._view_model.active_race_modal
-
-    @active_race_modal.setter
-    def active_race_modal(self, value: object | None) -> None:
-        self._view_model.active_race_modal = value
-
-    @property
-    def race_modal_player_index(self) -> int:
-        return self._view_model.race_modal_player_index
-
-    @race_modal_player_index.setter
-    def race_modal_player_index(self, value: int) -> None:
-        self._view_model.race_modal_player_index = value
-
-    # ------------------------------------------------------------------
     # UI construction — invoked by ``NewGameSetupUiBuilder.build``.
     # ------------------------------------------------------------------
 

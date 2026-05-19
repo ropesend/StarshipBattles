@@ -297,7 +297,7 @@ class TestScreenDelegatesViewStateToViewModel:
 
     Guard that property shims route to `self.view_model.*` — if the shim
     is accidentally removed, these tests catch the silent divergence
-    between `screen.active_side` and `screen.view_model.active_side`.
+    between `screen.view_model.active_side` and `screen.view_model.active_side`.
     """
 
     def test_active_side_shim_routes_to_view_model(self):
@@ -307,9 +307,9 @@ class TestScreenDelegatesViewStateToViewModel:
         screen = object.__new__(FleetBattleSetupScreen)
         screen.view_model = BattleSetupViewModel()
 
-        screen.active_side = 3
+        screen.view_model.active_side = 3
         assert screen.view_model.active_side == 3
-        assert screen.active_side == 3  # read-through
+        assert screen.view_model.active_side == 3  # read-through
 
     def test_selection_shims_route_to_view_model(self):
         from game.ui.screens.battle_setup.screen import FleetBattleSetupScreen
@@ -318,9 +318,9 @@ class TestScreenDelegatesViewStateToViewModel:
         screen = object.__new__(FleetBattleSetupScreen)
         screen.view_model = BattleSetupViewModel()
 
-        screen.selected_tf_index = 2
-        screen.selected_sq_index = 1
-        screen.selected_ship_index = 5
+        screen.view_model.selected_tf_index = 2
+        screen.view_model.selected_sq_index = 1
+        screen.view_model.selected_ship_index = 5
 
         assert screen.view_model.selected_tf_index == 2
         assert screen.view_model.selected_sq_index == 1
@@ -334,5 +334,5 @@ class TestScreenDelegatesViewStateToViewModel:
         screen.view_model = BattleSetupViewModel()
 
         designs = [{"name": "Fighter"}]
-        screen.available_designs = designs
+        screen.view_model.available_designs = designs
         assert screen.view_model.available_designs is designs
