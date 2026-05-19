@@ -355,22 +355,16 @@ class TransferValidator:
         still on the legacy dict substrate (its migration is a later
         phase); we only avoid the runtime discriminator in this file.
         """
-        from game.strategy.data.carried_vehicle import (
-            CarriedVehicle,
-            VALID_VEHICLE_TYPES,
-        )
+        from game.strategy.data.carried_vehicle import CarriedVehicle
 
         staging = getattr(planet, "staging_yard", [])
-        if not isinstance(staging, list):
-            staging = []
         candidate: Any = None
+        # PROJ-450 Phase 3: substrate is typed
+        # ``List[CarriedVehicle | DropPod]``. DropPod entries are skipped
+        # — only CarriedVehicle satisfies the vehicle-load branch.
         for item in staging:
             if isinstance(item, CarriedVehicle):
                 cv = item
-            elif isinstance(item, dict) and str(
-                item.get("vehicle_type", "")
-            ).lower() in VALID_VEHICLE_TYPES:
-                cv = CarriedVehicle.from_dict(item)
             else:
                 continue
             if design_id and cv.design_id != design_id:
@@ -390,7 +384,7 @@ class TransferValidator:
             try:
                 if mgr.can_accept_vehicle(candidate):
                     return ValidationResult.success()
-            except Exception as exc:  # Intentional: capability probe; missing registry => no capacity.
+            except Exception as exc:  # Intentional broad catch: capability probe; missing registry => no capacity.
                 _ = exc
                 continue
         return ValidationResult.error(
@@ -420,7 +414,7 @@ class TransferValidator:
                 continue
             try:
                 carried = cargo_mgr.get_carried_vehicles()
-            except Exception as exc:  # Intentional: facade probe; treat missing accessor as empty.
+            except Exception as exc:  # Intentional broad catch: facade probe; treat missing accessor as empty.
                 _ = exc
                 continue
             for cv in carried:

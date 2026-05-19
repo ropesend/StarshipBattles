@@ -914,7 +914,12 @@ class TestFormatPlanetInfo:
 
     def test_staging_yard_renders_inline_after_complexes_before_energy(self, mock_planet):
         """Staging yard block sits between the Complexes block and the
-        Energy block in the rendered HTML, matching the complexes rhythm."""
+        Energy block in the rendered HTML, matching the complexes rhythm.
+
+        PROJ-450 Phase 3: migrated to typed ``CarriedVehicle`` fixtures.
+        """
+        from game.strategy.data.carried_vehicle import CarriedVehicle
+
         mock_planet.owner_id = 1
         mock_planet.populations = []
         mock_planet.max_population = 0
@@ -926,9 +931,24 @@ class TestFormatPlanetInfo:
         mock_planet.facilities = [facility]
 
         mock_planet.staging_yard = [
-            {"name": "Mk1 Mine", "vehicle_type": "mine", "mass": 5.0},
-            {"name": "Mk1 Mine", "vehicle_type": "mine", "mass": 5.0},
-            {"name": "Mk1 Mine", "vehicle_type": "mine", "mass": 5.0},
+            CarriedVehicle(
+                design_id="mk1_mine",
+                design_data={"name": "Mk1 Mine"},
+                vehicle_type="mine",
+                mass=5.0,
+            ),
+            CarriedVehicle(
+                design_id="mk1_mine",
+                design_data={"name": "Mk1 Mine"},
+                vehicle_type="mine",
+                mass=5.0,
+            ),
+            CarriedVehicle(
+                design_id="mk1_mine",
+                design_data={"name": "Mk1 Mine"},
+                vehicle_type="mine",
+                mass=5.0,
+            ),
         ]
         mock_planet.energy_capacity = 100
         mock_planet.energy = 50
@@ -942,7 +962,13 @@ class TestFormatPlanetInfo:
         assert " - Mk1 Mine x3 (Staged)" in result
 
     def test_staging_yard_groups_by_name_with_count_suffix(self, mock_planet):
-        """Multi-instance groups get an `xN` suffix; singletons do not."""
+        """Multi-instance groups get an `xN` suffix; singletons do not.
+
+        PROJ-450 Phase 3: deliberately retained as a dict-tolerance test
+        — the UI reader's ``isinstance(item, dict)`` branch preserves
+        backward compatibility for mock-fixture callers that inject raw
+        dicts.
+        """
         mock_planet.owner_id = 1
         mock_planet.populations = []
         mock_planet.max_population = 0
@@ -1007,6 +1033,63 @@ class TestFormatPlanetInfo:
 
         assert " - Real (Staged)" in result
         assert "not a dict" not in result
+
+    # ---------------------------------------------------------------------
+    # PROJ-450 Phase 3: typed staging-yard substrate. The UI reader must
+    # accept typed ``CarriedVehicle`` / ``DropPod`` entries (the Phase-3
+    # property hands out typed objects, not dicts).
+    # ---------------------------------------------------------------------
+
+    def test_staging_yard_renders_typed_carried_vehicle(self, mock_planet):
+        """Typed CarriedVehicle entries render the same inline rhythm as
+        the dict shape: ` - Mk1 Mine x2 (Staged)`."""
+        from game.strategy.data.carried_vehicle import CarriedVehicle
+
+        mock_planet.owner_id = 1
+        mock_planet.populations = []
+        mock_planet.max_population = 0
+        mock_planet.facilities = []
+        mock_planet.staging_yard = [
+            CarriedVehicle(
+                design_id="mk1_mine",
+                design_data={"name": "Mk1 Mine"},
+                vehicle_type="mine",
+                mass=5.0,
+            ),
+            CarriedVehicle(
+                design_id="mk1_mine",
+                design_data={"name": "Mk1 Mine"},
+                vehicle_type="mine",
+                mass=5.0,
+            ),
+        ]
+
+        result = format_planet_info(mock_planet)
+
+        assert "Staged Units:" in result
+        assert " - Mk1 Mine x2 (Staged)" in result
+
+    def test_staging_yard_renders_typed_drop_pod(self, mock_planet):
+        """Typed DropPod entries pull their display name from payload."""
+        from game.strategy.data.bay_inventory import DropPod
+
+        mock_planet.owner_id = 1
+        mock_planet.populations = []
+        mock_planet.max_population = 0
+        mock_planet.facilities = []
+        mock_planet.staging_yard = [
+            DropPod(
+                design_id="colony_pod",
+                design_data={},
+                mass=500.0,
+                payload={"name": "Colony Pod", "vehicle_type": "drop_pod"},
+            ),
+        ]
+
+        result = format_planet_info(mock_planet)
+
+        assert "Staged Units:" in result
+        assert " - Colony Pod (Staged)" in result
 
 
 # =============================================================================

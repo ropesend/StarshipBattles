@@ -111,13 +111,33 @@ class PlanetInfo:
             for p in planet.populations
         )
 
-        # Aggregate staging yard items by name
+        # Aggregate staging yard items by name.
+        # PROJ-450 Phase 3: substrate is typed
+        # ``tuple[CarriedVehicle | DropPod, ...]``. Read via attribute
+        # access; keep a dict fallback for non-Planet stubs (e.g.
+        # ``SimpleNamespace`` test fixtures).
+        from game.strategy.data.bay_inventory import DropPod
+        from game.strategy.data.carried_vehicle import CarriedVehicle
+
         staging_counts: dict = {}
         staging_yard = getattr(planet, 'staging_yard', None)
-        for item in (staging_yard if isinstance(staging_yard, list) else []):
-            name = item.get('name', 'Unknown')
-            vtype = item.get('vehicle_type', 'unknown')
-            mass = item.get('mass', 0.0)
+        items_iter = staging_yard if isinstance(staging_yard, (list, tuple)) else []
+        for item in items_iter:
+            if isinstance(item, CarriedVehicle):
+                design_data = item.design_data or {}
+                name = design_data.get('name', item.design_id) or 'Unknown'
+                vtype = item.vehicle_type
+                mass = float(item.mass)
+            elif isinstance(item, DropPod):
+                name = item.payload.get('name', 'Unknown')
+                vtype = item.payload.get('vehicle_type', 'drop_pod')
+                mass = float(item.mass)
+            elif isinstance(item, dict):
+                name = item.get('name', 'Unknown')
+                vtype = item.get('vehicle_type', 'unknown')
+                mass = item.get('mass', 0.0)
+            else:
+                continue
             key = (name, vtype, mass)
             staging_counts[key] = staging_counts.get(key, 0) + 1
         staging_summary = tuple(

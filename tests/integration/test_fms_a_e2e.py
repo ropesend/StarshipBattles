@@ -335,11 +335,10 @@ class TestTransferHandlerVehicleE2E:
         # Round-trip: mine entry now lives in the planet staging yard.
         assert len(planet.staging_yard) == 1
         from game.strategy.data.carried_vehicle import CarriedVehicle as CV
-        # PROJ-431 Phase 1f: from_any deleted; the staging-yard entry is
-        # a dict produced by ``CarriedVehicle.to_dict()`` so use the
-        # typed deserialiser directly.
+        # PROJ-450 Phase 3: the staging yard is typed
+        # ``tuple[CarriedVehicle | DropPod, ...]``; the entry is a
+        # ``CarriedVehicle`` directly — no dict round-trip required.
         yard_item = planet.staging_yard[0]
-        assert isinstance(yard_item, dict)
-        restored = CV.from_dict(yard_item)
-        assert restored.design_id == "qs_mine_small"
-        assert restored.current_hp == 3
+        assert isinstance(yard_item, CV)
+        assert yard_item.design_id == "qs_mine_small"
+        assert yard_item.current_hp == 3

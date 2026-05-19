@@ -327,36 +327,17 @@ class Planet:
         return self._max_stockpile
 
     @property
-    def staging_yard(self) -> List[Dict[str, Any]]:
-        """TEMPORARY dict-projection bridge (Phase 2 → Phase 3).
+    def staging_yard(self) -> "tuple[CarriedVehicle | DropPod, ...]":
+        """Typed read-only view of the staging-yard substrate.
 
-        PROJ-450 Phase 2: internal ``_staging_yard`` is now typed
-        (``List[CarriedVehicle | DropPod]``). This property returns a
-        fresh list of dict views so the UI reader at
-        ``game/ui/screens/strategy_detail_fmt.py:285-297`` and the
-        existing peek sites in ``transfer_branches.py`` still work
-        during the one-phase migration window. **Phase 3 deletes this
-        property** and migrates the UI reader to typed attribute
-        access.
-
-        In-place mutation through this projection (``.clear()``,
-        ``.append()``) silently no-ops against ``_staging_yard``;
-        callers must route writes through ``add_to_staging_yard`` /
-        ``remove_from_staging_yard`` / ``IPlanetMutator``.
-
-        Defensive against substrate dict-leak: if a caller has bypassed
-        the mutators and assigned dicts to ``_staging_yard`` directly
-        (test fixtures, in-place rewrites), pass those through
-        unchanged so the bridge remains stable while the dict-leak is
-        chased down.
+        PROJ-450 Phase 3 (Option A): replaces the Phase-2 dict-projection
+        bridge with a permanent typed read-only tuple. External readers
+        (UI / facade / DTO) iterate over this property; mutations MUST
+        route through ``add_to_staging_yard`` / ``pop_staging_yard_typed``
+        / ``remove_from_staging_yard``. There is no setter — assigning to
+        ``planet.staging_yard`` raises ``AttributeError``.
         """
-        result: list[dict[str, Any]] = []
-        for item in self._staging_yard:
-            if isinstance(item, dict):
-                result.append(item)
-            else:
-                result.append(item.to_dict())
-        return result
+        return tuple(self._staging_yard)
 
     # --- IStockpileHolder protocol (PROJ-372) ---
 

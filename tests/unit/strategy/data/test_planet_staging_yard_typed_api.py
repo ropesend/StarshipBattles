@@ -38,9 +38,9 @@ def _empty_planet():
 def test_add_to_staging_yard_accepts_typed_carried_vehicle():
     """Passing a typed CarriedVehicle lands in the staging yard.
 
-    The substrate is still dict-shaped in Phase 1, so the assert
-    projects through the dict view rather than expecting the typed
-    instance to round-trip identity.
+    PROJ-450 Phase 3: the public ``staging_yard`` property is a typed
+    read-only tuple of ``CarriedVehicle | DropPod``; readers use
+    attribute access (no dict subscripting).
     """
     planet = _empty_planet()
     cv = CarriedVehicle(
@@ -53,11 +53,10 @@ def test_add_to_staging_yard_accepts_typed_carried_vehicle():
     assert planet.add_to_staging_yard(cv) is True
     assert len(planet.staging_yard) == 1
     stored = planet.staging_yard[0]
-    # Substrate stays dict-shaped in Phase 1 — Phase 2 widens it.
-    assert isinstance(stored, dict)
-    assert stored["design_id"] == "fighter_alpha"
-    assert stored["vehicle_type"] == "fighter"
-    assert stored["mass"] == 20.0
+    assert isinstance(stored, CarriedVehicle)
+    assert stored.design_id == "fighter_alpha"
+    assert stored.vehicle_type == "fighter"
+    assert stored.mass == 20.0
 
 
 def test_add_to_staging_yard_accepts_typed_drop_pod():
@@ -72,13 +71,17 @@ def test_add_to_staging_yard_accepts_typed_drop_pod():
     assert planet.add_to_staging_yard(pod) is True
     assert len(planet.staging_yard) == 1
     stored = planet.staging_yard[0]
-    assert isinstance(stored, dict)
-    assert stored["design_id"] == "drop_pod_basic"
-    assert stored["mass"] == 100.0
+    assert isinstance(stored, DropPod)
+    assert stored.design_id == "drop_pod_basic"
+    assert stored.mass == 100.0
 
 
 def test_add_to_staging_yard_accepts_dict_backward_compat():
-    """Legacy dict callers (rollback paths, save-load) still work."""
+    """Legacy dict callers (rollback paths, save-load) still work.
+
+    PROJ-450 Phase 3: dict input is promoted to a typed entry on the way
+    in; the public property hands back the typed object.
+    """
     planet = _empty_planet()
     legacy = {
         "design_id": "drop_pod_basic",
@@ -87,7 +90,9 @@ def test_add_to_staging_yard_accepts_dict_backward_compat():
     }
     assert planet.add_to_staging_yard(legacy) is True
     assert len(planet.staging_yard) == 1
-    assert planet.staging_yard[0]["design_id"] == "drop_pod_basic"
+    stored = planet.staging_yard[0]
+    assert isinstance(stored, (CarriedVehicle, DropPod))
+    assert stored.design_id == "drop_pod_basic"
 
 
 # ---------------------------------------------------------------------------
