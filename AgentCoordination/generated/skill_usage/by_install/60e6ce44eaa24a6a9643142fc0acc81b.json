@@ -11,10 +11,10 @@
     },
     "codex-starship-consult-respond": {
       "agents": {
-        "codex": 3
+        "codex": 8
       },
-      "count": 3,
-      "last_used": "2026-05-18T18:15:23Z"
+      "count": 8,
+      "last_used": "2026-05-19T02:46:51Z"
     }
   }
 }

@@ -4,10 +4,18 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-447 | Post-refactor residue: Simulation + AI + Research + LowLevelEngine + Docs (Bucket D supplemental) | Planning | 2026-05-18 | 2026-05-18 |
-| PROJ-446 | Post-refactor residue: UI + Core + Tests layer (Bucket C) | Planning | 2026-05-18 | 2026-05-18 |
-| PROJ-445 | Post-refactor residue: Engine + Services layer (Bucket B) | Planning | 2026-05-18 | 2026-05-18 |
-| PROJ-444 | Post-refactor residue: Data + Facade layer (Bucket A) | Planning | 2026-05-18 | 2026-05-18 |
+| PROJ-460 | Simulation clean-cut LOC extractions (battle_state_serde + battle_controller spec-in + replay_serialization split) | Planning | 2026-05-18 | 2026-05-18 |
+| PROJ-459 | Strategy data LOC extractions (fleet_serde + planet_gen split) | Planning | 2026-05-18 | 2026-05-18 |
+| PROJ-458 | UIWindow retrofit completion (SettingsWindow + 4 PlanetTargetEditors) | Planning | 2026-05-18 | 2026-05-18 |
+| PROJ-457 | UI structural debt extractions (build_queue_screen + planet_list_window + test_lab + game/core/exceptions split) | Planning | 2026-05-18 | 2026-05-18 |
+| PROJ-456 | UI back-compat shim retirement sweep (9 shim clusters + transfer_dialog characterization) | Planning | 2026-05-18 | 2026-05-18 |
+| PROJ-455 | Planet-FMS engine-mediated behavioral coverage (DI-001 ActionExecutionEngine half) | Planning | 2026-05-18 | 2026-05-18 |
+| PROJ-454 | Engine + services obsolete-surface retirement (effect_ability_metadata + component_inspector + OrderProcessor facade unwinding) | Planning | 2026-05-18 | 2026-05-18 |
+| PROJ-453 | Engine + services surface polish (annotations + dead skips + stale docstrings) | Planning | 2026-05-18 | 2026-05-18 |
+| PROJ-452 | Catalog-driven resource surfaces (DI-003/004/005 + LABEL_ABBREV) | Planning | 2026-05-18 | 2026-05-18 |
+| PROJ-451 | Production resource-consumption semantics (DI-006 + DI-007 engine half) | Planning | 2026-05-18 | 2026-05-18 |
+| PROJ-450 | Typed staging-yard substrate completion | Planning | 2026-05-18 | 2026-05-18 |
+| PROJ-449 | Strategy entity wrapper retirement (Planet + ShipInstance legacy-kwarg + property shim cluster) | Planning | 2026-05-18 | 2026-05-18 |
 | PROJ-443 | Pytest norecursedirs Fix and Hidden-Test Triage | Planning | 2026-05-17 | 2026-05-17 |
 | PROJ-442 | Seam Retirement and Residue Burn-down | Planning | 2026-05-17 | 2026-05-17 |
 | PROJ-441 | Ambient Defaults Containment | Planning | 2026-05-17 | 2026-05-17 |
@@ -21,6 +29,10 @@
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-447 | Post-refactor residue: Sim+AI+Research+LowLevelEngine+Docs (Bucket D) — Stages 1+2 complete; Stage 3+ replanned as PROJ-449..460 | Archived | 2026-05-18 | 2026-05-19 |
+| PROJ-446 | Post-refactor residue: UI+Core+Tests (Bucket C) — Stages 1+2 complete; Stage 3+ replanned as PROJ-449..460 | Archived | 2026-05-18 | 2026-05-19 |
+| PROJ-445 | Post-refactor residue: Engine+Services (Bucket B) — Stages 1+2 complete; Stage 3+ replanned as PROJ-449..460 | Archived | 2026-05-18 | 2026-05-19 |
+| PROJ-444 | Post-refactor residue: Data+Facade (Bucket A) — Stages 1+2 complete; Stage 3+ replanned as PROJ-449..460 | Archived | 2026-05-18 | 2026-05-19 |
 | PROJ-435 | Migrate UI _ACTIVATABLE_ABILITIES to AbilityMetadataRegistry | Archived | 2026-05-17 | 2026-05-17 |
 | PROJ-434 | Complete DesignLibrary deletion (PROJ-427 phase 6 follow-up) | Archived | 2026-05-17 | 2026-05-17 |
 | PROJ-433 | Strategy tech-debt follow-up: component_inspector split (PROJ-425 consult) | Archived | 2026-05-17 | 2026-05-17 |

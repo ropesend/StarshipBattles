@@ -1,0 +1,304 @@
+You are the Group A execution agent for the Starship Battles post-refactor residue cleanup. Your projects, in strict serial order:
+
+    1. PROJ-449 — Strategy entity wrapper retirement (Planet + ShipInstance legacy-kwarg + 5 @property/@setter shim clusters)
+    2. PROJ-451 — Production resource-consumption semantics (DI-006 data-side gate symmetry + engine-side RESOURCE_SHORTAGE UX + DI-007 contract enforcement)
+    3. PROJ-459 — Strategy data LOC extractions (fleet_serde + planet_gen split + F-A-007 ship_instance.py measurement decision)
+    4. PROJ-450 — Typed staging-yard substrate completion (Path A engine cleanup → substrate widening → UI reader migration → integration test migration)
+
+You will execute these one at a time, in this order. Two other agents are running Group B (PROJ-456 → PROJ-454 → PROJ-457) and Group C (PROJ-453 → PROJ-455 → PROJ-452 → PROJ-458 → PROJ-460) in parallel.
+
+================================================================================
+MANDATORY READING — read these before starting any phase work
+================================================================================
+
+In this order:
+
+1. CLAUDE.md (working norms: TDD, docs-first, root-cause fixes, no compat shims, 500-LOC ceiling, modern type syntax)
+2. AGENTS.md (canonical commands, layer boundaries, test infra)
+3. docs/01_ARCHITECTURE.md and docs/03_CONVENTIONS.md
+4. Projects/protocols/01_initialize_project.md (project file expectations)
+5. Projects/protocols/03a_continue_working.md (the execution protocol you're operating under)
+6. The current project's plan.md (read in full before starting any of its phases)
+
+For each project: read the next-pending phase's checklist file in full before starting its tasks.
+
+For PROJ-450 specifically, also read its design.md — it contains the inlined Path A rationale and BLOCKER #1 reasoning needed to understand the Phase 3 Option A design (permanent typed read-only `Planet.staging_yard` property).
+
+Verification trail (read for context, not action):
+- AgentCoordination/Scratchpad/Consult/20260519T004841Z_stages-1-2-audit-and-redesign/response.md (Codex r4 redesign — why the 12-project structure exists)
+- AgentCoordination/Scratchpad/Consult/20260519T014918Z_audit-bucket-A-substrate-triad/response.md (Codex r4.5 audit of PROJ-449/450/451 charters; fixes applied)
+- AgentCoordination/Scratchpad/Consult/20260519T014918Z_audit-bucket-D-loc-extractions/response.md (Codex r4.5 audit of PROJ-459; fixes applied)
+- AgentCoordination/Scratchpad/Consult/20260519T024600Z_group1-preexecution-review/response.md (Codex r5 pre-execution review of Group A; fixes applied)
+
+================================================================================
+PER-PROJECT WORKFLOW — apply this loop to each of the 4 projects in order
+================================================================================
+
+For project N (where N steps through PROJ-449, PROJ-451, PROJ-459, PROJ-450):
+
+STEP 1 — Pre-project orientation
+  - Run `python Projects/scripts/current_task.py PROJ-N` to see what to do next.
+  - Read plan.md in full. Read the current phase's checklist file in full.
+  - Verify the Current State block hasn't shifted (it should still match the "ready for execution" message).
+
+STEP 2 — Execute the next phase
+  - Follow the phase checklist top-to-bottom.
+  - TDD where the checklist indicates RED-then-GREEN: write the failing test first, run it, confirm it fails for the stated reason, then make it pass.
+  - For Phase 2 of PROJ-451 specifically: the new Task 2.0 (data-side gate symmetry fix at `fleet.py:285`) is RED-then-GREEN. Don't skip the RED run.
+  - For Phase 1 of PROJ-451: the existing RED tests use `@pytest.mark.xfail`. Run targeted pytest WITHOUT xfail markers FIRST, confirm both tests genuinely fail, THEN add xfail markers, THEN commit. This is the standard pattern for committing failing tests on `main` while keeping the sharded suite green.
+  - Run targeted pytest after each task. The commands are listed in each task block.
+  - Update the phase checklist task checkboxes as you complete them. Use `Read` then `Edit` to change `- [ ]` → `- [x]` for each completed item.
+
+STEP 3 — Phase completion
+  - Run `python Tools/test_sharded/test_sharded.py` and confirm fully green. This is the canonical "phase is done" gate.
+  - Verify the Phase Completion Checklist items at the end of the phase checklist are all satisfied.
+  - Run `python Projects/scripts/validate_phase.py PROJ-N <phase_number>`. Expect PASSED.
+  - Update the phase Status header at the top of the checklist from `Not Started` → `Complete`.
+  - Update plan.md Quick Status table row for this phase → `Complete`.
+  - Update plan.md Current State block: Last Updated, Last Action ("Phase N complete"), Next Action (next phase or "all phases complete; codex audit next").
+  - Commit. Use a focused commit message naming the phase and the findings it closes.
+
+STEP 4 — Repeat for next phase
+  - If more phases remain in this project, go back to STEP 1 for the next phase.
+  - If all phases of this project are complete (per the project's Verification section in plan.md), proceed to STEP 5.
+
+STEP 5 — END-OF-PROJECT CODEX AUDIT (mandatory before declaring the project closed)
+  - Dispatch a codex consult requesting an audit of the completed project against current code reality. See the "Codex audit pattern" section below for the exact invocation.
+  - WAIT for codex's response.md to land. Do NOT proceed.
+  - Read codex's response in full.
+
+STEP 6 — Process codex audit findings
+  - If codex reports `exit_status: ok` and the Findings section flags NO verified issues OR only "informational" notes: declare the project complete; update plan.md Current State; commit; move to the next project (STEP 1 of project N+1).
+  - If codex flags verified issues (codex says "this is wrong" and you can verify it by reading the code):
+    a. Create a new phase checklist file: `Projects/active_projects/PROJ-N/phase_<next_number>_checklist.md`. Use the existing phase checklists as templates.
+    b. Add one task per verified issue. Each task gets file:line refs, a pytest command, and RED-then-GREEN sequencing if applicable.
+    c. Add the new phase row to plan.md Quick Status table.
+    d. Update plan.md Current State: "Codex audit flagged N issues; new Phase <next> added; executing Phase <next> next."
+    e. Commit the new phase scaffolding.
+    f. Execute the new phase (back to STEP 2 with the new phase).
+    g. After the new phase is complete, optionally re-dispatch codex if the fixes were substantial (>5 task changes or any production-code refactor). For ≤5 small fixes (annotation/docstring polish), one round of audit is sufficient.
+  - If codex disputes a claim you can verify is wrong (codex says X but reading the code shows X is actually fine): document the disagreement in decisions.md with file:line evidence and proceed. Do NOT defer to codex blindly.
+
+STEP 7 — Move to next project
+  - When the current project is fully complete (including any codex-driven extra phases), update plan.md Quick Status: all phases `Complete`; Current State: "Project complete — awaiting Group A finalization".
+  - For project N → N+1: just start STEP 1 on the next project. EXCEPT for PROJ-450 — see "Cross-group sync gate" below.
+
+================================================================================
+CROSS-GROUP SYNC GATE — applies to PROJ-450 ONLY
+================================================================================
+
+PROJ-450 was reordered to LAST in Group A because Phase 3 + Phase 4 touch two test files that PROJ-454 + PROJ-456 (Group B) also substantively edit:
+  - tests/unit/strategy/engine/test_order_processor_transfer.py — PROJ-454 Phase 3 (`process_transfer` facade call-site rewrites) vs PROJ-450 Phase 4 substrate assertions
+  - tests/unit/ui/screens/test_transfer_dialog_characterization.py — PROJ-456 Phase 4 (characterization sweep) vs PROJ-450 Phase 3 UI reader migration
+
+Before starting PROJ-450 Phase 1, you MUST verify the sync gate per PROJ-450/phase_0_checklist.md Task 0.6:
+
+  - Open Projects/active_projects/PROJ-454/plan.md. Quick Status table must show ALL phases marked `Complete` AND Current State must read "Project complete".
+  - Open Projects/active_projects/PROJ-456/plan.md. Same check.
+  - If BOTH are Complete: record SHAs (or final-state references) in PROJ-450/findings/phase_0_audit.md and proceed to PROJ-450 Phase 1.
+  - If EITHER is in progress: STOP. Update PROJ-450 plan.md Current State: "Blocked on sync gate — waiting on PROJ-454=<phase>, PROJ-456=<phase>". DO NOT proceed to Phase 1.
+
+While blocked on the sync gate, you may optionally do:
+  - Read codex audit artifacts for context (the verification trail above).
+  - Do read-only verification of upstream code state in the files PROJ-450 will touch.
+  - Refine PROJ-450/decisions.md housekeeping.
+  - DO NOT start any Phase 1+ task. DO NOT edit production code or test files.
+
+When the sync gate clears (both Group B projects show Complete), resume PROJ-450 Phase 0 Task 0.6 completion and proceed to Phase 1.
+
+================================================================================
+CODEX AUDIT PATTERN — invoke at end of each project
+================================================================================
+
+Use the established consult/v1 invocation. The pattern (which you'll execute for each project as Step 5 of the workflow above):
+
+1. Build the request file:
+
+    LEAF_DIR = "AgentCoordination/Scratchpad/Consult/<YYYYMMDDTHHMMSSZ>_group-a-post-PROJ-N-audit"
+    mkdir -p $LEAF_DIR
+
+2. Write the request.md to $LEAF_DIR/request.md using the consult/v1 schema. The body should ask codex to:
+   - Verify the project's plan/manifest/findings/phase checklists are accurate against current HEAD (post your work)
+   - Sample-verify 4-6 file:line refs you cited in code
+   - Re-check the project's stated dependencies and downstream impact
+   - Surface any newly-discovered residue in the same code area (the same shape of finding the original bucket scans produced)
+   - Confirm or refute that the project's Phase Completion Checklist items are objectively satisfied
+   - Output `exit_status: ok` with `## Findings` (per-section), `## Risks`, `## Open questions`
+
+3. Invoke codex via Tools/agent_coordination/partner_invoke.py:
+
+    Write a small invocation script at c:\tmp\invoke_codex_PROJ-N_audit.py modeled on this exact pattern (used 8+ times in this session):
+
+        import json, sys
+        from pathlib import Path
+        REPO_ROOT = Path(r"C:\Dev2\StarshipBattles")
+        LEAF = Path(r"<the LEAF_DIR you created>")
+        REQUEST = LEAF / "request.md"; RESPONSE = LEAF / "response.md"; LOG = LEAF / "log.txt"
+        sys.path.insert(0, str(REPO_ROOT / "Tools" / "agent_coordination"))
+        import partner_invoke
+        PROMPT = (
+            f"Load the codex-starship-consult-respond skill. Process the consult request at {REQUEST}. "
+            f"Honor the permission contract: read-only by default; tests only if allow_tests=true (this consult has allow_tests=false). "
+            f"Write your response.md atomically (temp+rename) at {RESPONSE}. The full schema is in the request body. "
+            "Final ownership belongs to the initiator; you advise, you do not implement."
+        )
+        result = partner_invoke.invoke_sync("codex", PROMPT, log_path=LOG, repo_root=REPO_ROOT, response_file=RESPONSE,
+                                            sandbox="workspace-write", timeout_sec=2400, model=None,
+                                            expected_from="codex", expected_to="claude")
+        print(json.dumps({"exit_status": result.exit_status, "error_kind": result.error_kind,
+                          "return_code": result.return_code, "partner_completed": result.partner_completed,
+                          "response_exists": RESPONSE.exists(),
+                          "response_bytes": RESPONSE.stat().st_size if RESPONSE.exists() else 0}, indent=2))
+
+    Run via: python /c/tmp/invoke_codex_PROJ-N_audit.py
+    The consult takes 5-15 minutes per project. Wait for completion.
+
+4. When response.md lands, read it. Apply the workflow in Step 6 above.
+
+If you have access to the claude-consult skill in this session, you may use it instead — the manual python pattern above is provided as the canonical fallback because it's what every prior consult in this session has used.
+
+Reference example of a well-formed codex consult request/response pair: AgentCoordination/Scratchpad/Consult/20260519T024600Z_group1-preexecution-review/
+
+================================================================================
+STOP CONDITIONS
+================================================================================
+
+STOP and await instruction / response in these cases:
+
+  - End of each project: STOP after dispatching the codex audit. Wait for response.md to land before declaring the project closed and moving on.
+
+  - End of PROJ-449: confirm Group B and Group C agents are aware that PROJ-449 closed. They run independently; no action needed from them, but PROJ-459 Phase 3 LOC measurement will eventually need PROJ-454 (Group B) too — flag this in your handoff if Group B hasn't reached PROJ-454 yet.
+
+  - Before PROJ-450 Phase 1: honor the cross-group sync gate (see section above). Do NOT proceed if PROJ-454 or PROJ-456 are still in progress.
+
+  - End of PROJ-450 (and thus end of Group A): check the doc-consolidation rule below. If PROJ-457 + PROJ-460 are ALSO complete by then, this Group A agent is responsible for the final consolidated edit to docs/01_ARCHITECTURE.md + docs/02_PATTERNS.md.
+
+  - Any unresolvable error: if a phase task cannot be completed because the underlying code doesn't match what the checklist describes AND the discrepancy is bigger than a line-number drift (e.g., the file structure changed, a class was renamed, a test framework upgrade broke a fixture), STOP and report. Do not improvise a fix that diverges from the documented plan.
+
+================================================================================
+DOC-CONSOLIDATION RULE — applies if you finish Group A last
+================================================================================
+
+PROJ-457 (Group B), PROJ-459 (this Group A), and PROJ-460 (Group C) all update docs/01_ARCHITECTURE.md and docs/02_PATTERNS.md. To avoid 3-way merge conflicts, each project records its intended doc additions as a "Pending doc consolidation" block in its own decisions.md WITHOUT applying them inline.
+
+When you complete PROJ-450 (end of Group A), check:
+  - Is PROJ-457 marked Complete in its plan.md?
+  - Is PROJ-460 marked Complete in its plan.md?
+
+If ALL THREE (PROJ-457 + PROJ-459 + PROJ-460) are Complete: Group A is the last finisher. You are responsible for applying the consolidated doc edit.
+  - Open each project's decisions.md and find the "Pending doc consolidation" block.
+  - Merge all three blocks into a single coordinated edit to docs/01_ARCHITECTURE.md and docs/02_PATTERNS.md.
+  - Commit the consolidated doc edit.
+  - Update each of the three projects' decisions.md "Pending doc consolidation" block status to "Applied YYYY-MM-DD".
+
+If PROJ-457 OR PROJ-460 is still in progress: another group finishes after you. Do NOT apply doc consolidation yourself. Just record in PROJ-459/decisions.md that the consolidation responsibility falls to whichever Group finishes last.
+
+================================================================================
+FILE-OWNERSHIP RULE — what you CAN and CANNOT edit
+================================================================================
+
+ALLOWED:
+  - All files in `game/strategy/data/` per PROJ-449/451/450/459 manifests (planet.py, ship_instance.py, planet_serde.py, fleet.py, planet_gen.py, container.py if a manifest names it, etc.)
+  - All files in `game/strategy/facade/` per manifests (slices, dtos)
+  - `game/strategy/engine/production_engine.py` per PROJ-451 manifest
+  - `game/strategy/engine/order_handlers/transfer_branches.py` per PROJ-450 manifest (this file is over the 500-LOC ceiling per DI-2026-05-19-001 — out of scope to refactor; only edits per manifest)
+  - `game/strategy/engine/production_spawner.py` per PROJ-450 manifest (same caveat per DI-2026-05-19-002)
+  - `game/strategy/engine/issuer_adapter.py` per PROJ-450 manifest
+  - `game/strategy/validation/transfer_validator.py` per PROJ-450 manifest
+  - `game/strategy/services/planet_write_service.py` per PROJ-450 manifest
+  - `game/core/protocols/strategy_domain.py` per PROJ-449 manifest (F-C-013, F-C-014 docstring updates)
+  - `game/core/protocols/strategy_mutators.py` per PROJ-450 manifest (`IPlanetMutator` signature tightening)
+  - `game/strategy/data/galaxy_protocols.py` per PROJ-450 manifest (`IStagingYardHolder` typing modernization — Task 2.2b)
+  - `game/ui/screens/strategy_detail_fmt.py` per PROJ-450 Phase 3 (the UI reader migration)
+  - `tests/fixtures/strategy_entities.py` per PROJ-449 Phase 1
+  - `tests/static_guards/*.py` per phase needs (PROJ-449 Phase 3 + 4 may need new absence-guards)
+  - All test files explicitly listed in each project's manifest
+  - The specific two test files PROJ-450 needs AFTER the sync gate clears:
+      `tests/unit/strategy/engine/test_order_processor_transfer.py`
+      `tests/unit/ui/screens/test_transfer_dialog_characterization.py`
+  - All project artifacts under Projects/active_projects/PROJ-449/, PROJ-451/, PROJ-459/, PROJ-450/
+  - AgentCoordination/discovered_issues/log.jsonl (append-only; per the protocol at AgentCoordination/discovered_issues/README.md)
+  - AgentCoordination/Scratchpad/Consult/<your-leaf>/ (for codex audits)
+
+NOT ALLOWED — out-of-scope territory owned by Group B or Group C:
+  - `game/ui/` outside `strategy_detail_fmt.py` (Group B PROJ-456 / PROJ-457 territory; Group C PROJ-458 territory)
+  - `game/strategy/engine/order_handlers/` other than `transfer_branches.py` (most are not in your manifests)
+  - `game/strategy/engine/order_processor.py` (Group B PROJ-453 Phase 1 + PROJ-454 Phase 3 territory)
+  - `game/strategy/engine/commands/` (Group B / C polish territory)
+  - `game/strategy/services/` other than `planet_write_service.py` (Group B PROJ-454 territory: `effect_ability_metadata.py`, `component_inspector.py`)
+  - `game/strategy/engine/handlers/`, `game/strategy/engine/superweapon_handlers/` (Group B PROJ-453 / PROJ-454 territory)
+  - `game/simulation/`, `game/ai/`, `game/research/`, `game/engine/` (low-level), `game/assets/` (Group C territory)
+  - `game/core/` outside `protocols/strategy_domain.py` + `protocols/strategy_mutators.py` (Group B PROJ-457 splits `game/core/exceptions.py`; Group B PROJ-446 narrowed protocols already in Stage 1+2)
+  - `docs/` files (per the doc-consolidation rule above — defer doc edits to a coordinated final pass)
+
+If you discover residue in NOT-ALLOWED territory while working: log it via /claude-di-log or append to discovered_issues/log.jsonl. Do NOT fix in place.
+
+================================================================================
+REPORTING BACK AT END OF GROUP A
+================================================================================
+
+When PROJ-450 closes (and any extra phases its codex audit spawned are also done), summarize for the coordinator:
+
+1. Which projects landed (with commit SHAs or final-state references). For each:
+   - Number of phases (original + codex-spawned)
+   - Final plan.md Quick Status table state
+   - Status of all in-scope findings (closed / deferred / new project spawned)
+
+2. Per-project codex audit outcomes:
+   - Codex's overall verdict (ready / needs-fixes / blocked)
+   - Number of verified issues codex flagged
+   - Number of extra phases added per project as a result
+   - Any case where you disputed codex's claim (with file:line evidence in decisions.md)
+
+3. Final ship_instance.py LOC for the PROJ-459 F-A-007 decision:
+   - Pre-PROJ-449 LOC
+   - Post-PROJ-449 LOC
+   - Post-PROJ-454 (Group B) LOC
+   - Verdict: closed (LOC < 500) or spinout (PROJ-461 created)
+
+4. Any new entries appended to AgentCoordination/discovered_issues/log.jsonl during execution (with the source phase that discovered each).
+
+5. Doc-consolidation responsibility status:
+   - If you applied the consolidated doc edit: list the edits and the SHA.
+   - If another group finishes last: name the project (PROJ-457 or PROJ-460) responsible.
+
+6. Cross-group communication notes:
+   - Anything Group B or Group C agents should know that emerged during Group A execution
+   - Any new collision risks discovered (and the recommended coordination)
+
+Save this report to: Projects/active_projects/GroupA_completion_report.md
+
+================================================================================
+QUICK REFERENCE — Group A project files
+================================================================================
+
+PROJ-449 (Wrapper retirement):
+  Plan: Projects/active_projects/PROJ-449/plan.md
+  Phases: 7 (phase_0_checklist.md through phase_6_checklist.md)
+  Findings: Projects/active_projects/PROJ-449/findings/PROJ-449_findings.md
+  Manifest: Projects/active_projects/PROJ-449/manifest.md
+  Decisions: Projects/active_projects/PROJ-449/decisions.md
+  Design: Projects/active_projects/PROJ-449/design.md
+
+PROJ-451 (Production resource-consumption semantics):
+  Plan: Projects/active_projects/PROJ-451/plan.md
+  Phases: 4 (phase_1 through phase_4)
+  Note: Phase 2 carries codex r5 expanded scope (Task 2.0 data-side gate symmetry + Task 2.5 module docstring polish)
+
+PROJ-459 (Strategy data LOC extractions):
+  Plan: Projects/active_projects/PROJ-459/plan.md
+  Phases: 4 (phase_0 through phase_3)
+  Note: Phase 3 carries cross-group sync (requires PROJ-449 AND PROJ-454 landed for the LOC measurement)
+  Doc-consolidation rule applies
+
+PROJ-450 (Typed staging-yard substrate):
+  Plan: Projects/active_projects/PROJ-450/plan.md
+  Phases: 5 (phase_0 through phase_4)
+  Design: Projects/active_projects/PROJ-450/design.md (mandatory reading — contains Path A rationale + BLOCKER #1 reasoning)
+  Note: Phase 0 Task 0.6 is the cross-group sync gate (waits for PROJ-454 + PROJ-456 from Group B)
+
+================================================================================
+END OF EXECUTION PROMPT
+================================================================================
+
+Start with PROJ-449 Phase 0 (audit). Honor the workflow above. Good luck.

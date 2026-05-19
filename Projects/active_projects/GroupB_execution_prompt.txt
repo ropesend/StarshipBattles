@@ -1,0 +1,493 @@
+═══════════════════════════════════════════════════════════════════════════════
+GROUP B EXECUTION AGENT — STARSHIP BATTLES POST-REFACTOR RESIDUE BURN-DOWN
+═══════════════════════════════════════════════════════════════════════════════
+
+You are the Group B execution agent. Your projects, in this serial order:
+
+    PROJ-453  →  PROJ-454  →  PROJ-456  →  PROJ-457
+
+This order is coordinator-confirmed (2026-05-19). Do not reorder.
+
+This is real work, not planning. You will edit production code, write tests,
+run the sharded suite, and ship completed projects.
+
+═══════════════════════════════════════════════════════════════════════════════
+PART 1 — WHY THESE PROJECTS, IN THIS ORDER
+═══════════════════════════════════════════════════════════════════════════════
+
+## Group B = engine retirement + UI cluster
+
+- **PROJ-453** — engine + services surface polish (10 small polish findings)
+- **PROJ-454** — engine + services obsolete-surface retirement (effect_ability_metadata
+  + component_inspector retirement + PROJ-368 facade unwinding)
+- **PROJ-456** — UI back-compat shim retirement sweep (9 shim clusters +
+  transfer_dialog characterization sweep + build_context kwarg sweep +
+  broad-catch marker)
+- **PROJ-457** — UI structural debt extractions (build_queue_screen /
+  planet_list_window / test_lab / game/core/exceptions.py)
+
+## Why serial, not parallel
+
+The four projects share files. Going serial inside Group B eliminates
+intra-group rebase noise:
+
+- PROJ-453 and PROJ-454 both touch `game/strategy/engine/order_processor.py`
+  (PROJ-453 annotates `__init__`; PROJ-454 deletes `process_*` facade methods —
+  line-disjoint within the file). PROJ-453 first means the annotations land
+  before the deletions.
+- PROJ-456 and PROJ-457 both target UI screens. PROJ-456's shim retirement
+  drops UI LOC; PROJ-457's Phase 0 re-measures before deciding which files
+  still need extraction. Order is hard: PROJ-456 must complete before
+  PROJ-457 starts.
+
+## Cross-group context
+
+Group A is running PROJ-449 → PROJ-451 → PROJ-459 → PROJ-450 (with PROJ-450 LAST).
+Group C is running its own series of independent projects.
+
+Critical cross-group dependencies (don't fight these — the coordinator has
+already resolved them):
+
+- Group A's PROJ-450 runs LAST in its series. This was done specifically so
+  Group B's PROJ-456 (and PROJ-454) finish first, and PROJ-450's Phase 3+4
+  rebase trivially onto your Group B diffs.
+- After Group B's PROJ-454 is Complete: Group A's PROJ-450 Phase 4 unblocks.
+  PROJ-450 reads PROJ-454's plan.md to confirm Status: Complete.
+- After Group B's PROJ-456 is Complete: Group A's PROJ-450 Phase 3 unblocks.
+- Group A and Group C also touch `docs/01_ARCHITECTURE.md` and
+  `docs/02_PATTERNS.md`. See PART 6 (doc consolidation responsibility) for
+  how that's handled.
+
+═══════════════════════════════════════════════════════════════════════════════
+PART 2 — MANDATORY READING (BEFORE PROJ-453 PHASE 1)
+═══════════════════════════════════════════════════════════════════════════════
+
+Read these once, in this order:
+
+1.  `CLAUDE.md` — Working norms (TDD strict; docs-first; root-cause fixes;
+    no compat shims; 500-LOC ceiling; broad-catch intentional-reason
+    markers; modern type syntax `int | None`).
+2.  `AGENTS.md` — Coding conventions + repo invariants.
+3.  `docs/01_ARCHITECTURE.md` — Layer boundaries + module-level patterns.
+4.  `docs/02_PATTERNS.md` — Especially §33 (UIWindow bypass-init) and §36
+    (re-export shim) — both relevant to your projects.
+5.  `docs/03_CONVENTIONS.md` — Naming, type-annotation, fail-hard rules.
+6.  `Projects/protocols/01_initialize_project.md` — Project file structure.
+
+Then, for context on how Group B got here:
+
+7.  `AgentCoordination/Scratchpad/Consult/20260519T004841Z_stages-1-2-audit-and-redesign/response.md`
+    — Codex r4 redesign that scoped your 4 projects (jobs 5, 6, 8, 9).
+8.  `AgentCoordination/Scratchpad/Consult/20260519T014918Z_audit-bucket-B-engine-services/response.md`
+    — Codex's first audit of PROJ-453 + PROJ-454.
+9.  `AgentCoordination/Scratchpad/Consult/20260519T014918Z_audit-bucket-C-ui-cluster/response.md`
+    — Codex's first audit of PROJ-456 + PROJ-457.
+10. `AgentCoordination/Scratchpad/Consult/20260519T024545Z_group2-pre-execution-review/response.md`
+    — Codex's Group 2 pre-execution review (the last codex pass before you
+    pick up).
+11. `.agent_reports/group2_review/subagent_review.md` — independent
+    subagent's pre-execution review (cross-group collision audit).
+12. `AgentCoordination/discovered_issues/log.jsonl` — current DI log state.
+
+Total reading: ~30-45 minutes of LLM time. Do NOT skip.
+
+═══════════════════════════════════════════════════════════════════════════════
+PART 3 — PER-PROJECT EXECUTION LOOP
+═══════════════════════════════════════════════════════════════════════════════
+
+For each project, in order (453, 454, 456, 457):
+
+## Step A: Re-read the project's state
+
+`python Projects/scripts/current_task.py PROJ-XXX` — confirms current phase
+and next action.
+
+Read:
+- `Projects/active_projects/PROJ-XXX/plan.md` (Quick Status, Current State,
+  Dependencies & Sibling Projects)
+- The next-pending phase checklist (the row with Status: Not Started)
+- `Projects/active_projects/PROJ-XXX/findings/PROJ-XXX_findings.md`
+- `Projects/active_projects/PROJ-XXX/manifest.md`
+- `Projects/active_projects/PROJ-XXX/decisions.md`
+
+## Step B: Execute the phase
+
+a. Open `phase_N_checklist.md`
+b. Update Status from "Not Started" to "In Progress"
+c. Update plan.md Current State:
+   - Active Phase: Phase N
+   - Last Action: brief description
+   - Next Action: first unchecked task in phase_N
+d. Work through tasks IN ORDER (some have intra-phase dependencies)
+e. For each task:
+   - Read its file:line references
+   - Follow its TDD subtasks (RED → GREEN where applicable; some Phase 1-3
+     of PROJ-454 are characterization-style retirements, not strict
+     RED→GREEN — see PROJ-454 decisions.md for the documented TDD exception)
+   - Run the targeted pytest command listed in the task
+   - Check the box only after the task is verifiably complete
+   - Update plan.md Current State whenever you stop
+f. After all tasks in the phase are checked:
+   - Run the full sharded suite:
+     `python Tools/test_sharded/test_sharded.py`
+   - MUST be green before marking the phase complete
+   - Run: `python Projects/scripts/validate_phase.py PROJ-XXX N`
+   - MUST report PASSED before marking the phase complete
+   - Update Status at top of phase_N_checklist.md to "Complete"
+   - Update plan.md phase table: row N → Complete
+   - Update plan.md Current State: Active Phase = N+1; Next Action =
+     first task in phase_{N+1}
+g. Commit your work (one phase = one commit, ideally). Commit message
+   format:
+       PROJ-XXX Phase N: <short description>
+
+## Step C: End-of-project codex audit
+
+When ALL phases of a project are marked Complete, BEFORE moving to the next
+project, dispatch a codex audit consult. The audit verifies the project's
+closed findings actually closed in code and surfaces any side-effects or
+regressions.
+
+Pattern:
+
+1. Compute a UTC timestamp: `(Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ')`
+
+2. Create the consult leaf:
+       Projects-relative path:
+       `AgentCoordination/Scratchpad/Consult/<TIMESTAMP>_proj-XXX-end-of-project-audit/`
+       Create the directory.
+
+3. Write `request.md` in that leaf. Use the consult/v1 schema. Reference
+   shape from the bucket-B audit:
+       `AgentCoordination/Scratchpad/Consult/20260519T014918Z_audit-bucket-B-engine-services/request.md`
+   Required frontmatter:
+       ```yaml
+       ---
+       protocol: consult/v1
+       from: claude
+       to: codex
+       mode: planning
+       allow_tests: false
+       created_at_utc: <ISO 8601 UTC>
+       repo_root: C:\Dev2\StarshipBattles
+       consult_leaf: <absolute path to the leaf>
+       complete: true
+       ---
+       ```
+
+   Body should include:
+   - `## Question` — explicit ask: "Audit PROJ-XXX end-of-project state.
+     Read the project's plan.md + decisions.md + final phase_*_checklist.md
+     + the actual diff (run `git log --oneline --grep='PROJ-XXX'` to find
+     commits, then `git diff <first>^..<last>` for the range). Verify each
+     closed finding actually closed in code. Flag any verified issues,
+     regressions, cross-group collisions that materialized during
+     execution, or new residue surfaced during the work."
+   - `## Repo state` — output of `git status --short` and current branch
+   - `## Constraints` — paste the canonical consult prompt block from
+     `AgentCoordination/protocols/consult_prompt_block.md` verbatim (read
+     the file and inline its contents).
+   - `## Specific asks` — same schema-instruction block as the bucket
+     audits (codex must write response.md atomically; provide per-finding
+     verdicts: closed / partially-closed / not-closed; aim for ≤2000
+     words).
+
+4. Invoke codex via `Tools/agent_coordination/partner_invoke.py`. Pattern
+   (run via Bash with run_in_background=true):
+       ```python
+       import json, sys
+       from pathlib import Path
+       REPO_ROOT = Path(r"C:\Dev2\StarshipBattles")
+       LEAF = Path(r"<consult leaf absolute path>")
+       REQUEST = LEAF / "request.md"
+       RESPONSE = LEAF / "response.md"
+       LOG = LEAF / "log.txt"
+       sys.path.insert(0, str(REPO_ROOT / "Tools" / "agent_coordination"))
+       import partner_invoke
+       PROMPT = (
+           f"Load the codex-starship-consult-respond skill. Process the "
+           f"consult request at {REQUEST}. Honor the permission contract: "
+           f"read-only by default; tests only if allow_tests=true (this "
+           f"consult has allow_tests=false). Write your response.md "
+           f"atomically (temp+rename) at {RESPONSE}. The full schema is in "
+           f"the request body. Final ownership belongs to the initiator; "
+           f"you advise, you do not implement."
+       )
+       result = partner_invoke.invoke_sync(
+           "codex", PROMPT, log_path=LOG, repo_root=REPO_ROOT,
+           response_file=RESPONSE, sandbox="workspace-write",
+           timeout_sec=2400, model=None,
+           expected_from="codex", expected_to="claude")
+       print(json.dumps({
+           "exit_status": result.exit_status,
+           "error_kind": result.error_kind,
+           "return_code": result.return_code,
+           "partner_completed": result.partner_completed,
+           "response_exists": RESPONSE.exists(),
+           "response_bytes": RESPONSE.stat().st_size if RESPONSE.exists() else 0,
+       }, indent=2))
+       ```
+
+5. Wait for the response.md to land. Read it carefully.
+
+## Step D: Apply verified post-audit issues as NEW PHASES
+
+CRITICAL RULE: Codex's verified issues do NOT spawn new projects. They are
+added as NEW PHASES to the EXISTING project that codex audited.
+
+Workflow for each verified issue:
+
+a. Determine severity + scope. If codex flagged something as `not-closed`
+   or surfaced new residue, decide whether the fix is in-scope.
+b. Update `Projects/active_projects/PROJ-XXX/plan.md`:
+   - Add the new phase to the Quick Status table
+   - Move "Verification" from the final row to AFTER the new phase
+c. Create `phase_<N+1>_checklist.md` with concrete tasks
+d. Update `manifest.md` if new files will be touched
+e. Update `decisions.md` with the codex-audit-driven phase addition
+f. Execute the new phase per Step B
+g. If the new phase is substantive (>~20 LOC of code change), re-dispatch a
+   codex audit. If trivial polish, skip the re-audit.
+
+Repeat Step D until codex's audit returns "no verified issues" OR until
+remaining issues are explicitly out of scope per the project charter.
+
+## Step E: Mark project Complete
+
+Only after Steps A-D are done for all phases including post-audit phases:
+
+a. Update plan.md Quick Status: all phases Complete
+b. Update plan.md Current State: "Project complete — awaiting verification"
+c. Update `Projects/projects_index.md`:
+   - Move PROJ-XXX from Active Projects to Archived Projects
+   - Mark Status: Archived; Completed: <today's date>
+d. Update `AgentCoordination/discovered_issues/log.jsonl`:
+   - Mark the project's closed findings as `resolved`
+e. Move on to the next project in serial order
+
+═══════════════════════════════════════════════════════════════════════════════
+PART 4 — STOP CONDITIONS
+═══════════════════════════════════════════════════════════════════════════════
+
+STOP at these specific milestones. Do not silently continue past them.
+
+1. **End of each project** (i.e. after the final phase passes
+   validate_phase but BEFORE you mark the project Complete): dispatch the
+   codex audit (PART 3 Step C). Wait for the response. Do not start
+   end-of-project tasks until you have read codex's verdict.
+
+2. **After PROJ-454 completes**: this is a key signal for Group A's
+   PROJ-450 sync gate. Make sure:
+   - `Projects/active_projects/PROJ-454/plan.md` Quick Status shows all
+     phases as Complete
+   - Current State block reads "Project complete — awaiting verification"
+   - PROJ-454 is moved to Archived Projects in `projects_index.md`
+   Group A's PROJ-450 Phase 4 reads PROJ-454's plan.md to detect this; if
+   the state is ambiguous, PROJ-450 will block.
+
+3. **After PROJ-456 completes**: similarly a Group A sync signal — PROJ-450
+   Phase 3 depends on it. Same disambiguation rules:
+   - plan.md Quick Status: all phases Complete
+   - Current State: unambiguous "complete"
+   - projects_index.md: moved to Archived
+
+4. **End of Group B** (after PROJ-457 closes): produce the report (PART 7).
+
+═══════════════════════════════════════════════════════════════════════════════
+PART 5 — FILE-OWNERSHIP RULES
+═══════════════════════════════════════════════════════════════════════════════
+
+Group B's run agent edits only Group B's project files + the production
+files those projects scope. Do not touch other groups' territory.
+
+## You MAY edit
+
+- **PROJ-453**: `game/strategy/engine/`, `game/strategy/services/` (polish
+  items only — return annotations, dead `pytest.skip` guards, stale
+  docstrings, narrow `# type: ignore` drops)
+- **PROJ-454**:
+  - `game/strategy/engine/` (services + facade)
+  - `game/strategy/services/effect_ability_metadata.py` (delete)
+  - `game/strategy/services/component_inspector.py` (delete)
+  - `game/strategy/data/ship_instance.py` — **lines 635/654/663 ONLY**
+    (component_inspector import migration; these are function-scoped
+    `from ... import` statements, not module-level)
+  - `game/ui/` UI callers of component_inspector — **IMPORT STATEMENT
+    ONLY**, no UI behavior changes
+  - The 68 test files in tests/ scoped in PROJ-454's manifest
+- **PROJ-456**: `game/ui/`, plus tests scoped in PROJ-456's manifest
+- **PROJ-457**: `game/ui/`, `game/core/exceptions.py` + the new
+  `exceptions_*.py` domain submodules, plus tests scoped in PROJ-457's
+  manifest
+
+## You MUST NOT edit
+
+- `game/strategy/data/` outside of `ship_instance.py:635/654/663` (those
+  three lines are the only PROJ-454 touch; everything else in data/ is
+  PROJ-449 / PROJ-450 / PROJ-451 territory)
+- `game/strategy/data/planet.py` staging_yard substrate (PROJ-450 territory)
+- `game/strategy/data/fleet.py` (PROJ-449 / PROJ-451 territory)
+- `game/core/protocols/` (read-only — PROJ-449's territory)
+- `game/simulation/` (Group C territory)
+- `game/ai/`, `game/research/`, `game/engine/` (low-level), `game/assets/`
+  (Group C territory)
+- `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md` — see PART 6
+
+If a code change you need crosses into other groups' territory, STOP and
+surface to the coordinator. Do not work around it.
+
+═══════════════════════════════════════════════════════════════════════════════
+PART 6 — DOC CONSOLIDATION RESPONSIBILITY
+═══════════════════════════════════════════════════════════════════════════════
+
+`docs/01_ARCHITECTURE.md` and `docs/02_PATTERNS.md` are touched by 3 projects:
+
+- **PROJ-457** (yours, Group B)
+- **PROJ-459** (Group A)
+- **PROJ-460** (Group C)
+
+To avoid 3-way merge conflicts, the coordinator's resolution is:
+
+1. During PROJ-457's normal execution, you do NOT edit
+   `docs/01_ARCHITECTURE.md` or `docs/02_PATTERNS.md`. Instead, you record
+   the intended doc additions in `Projects/active_projects/PROJ-457/decisions.md`
+   as a structured "Pending doc consolidation" block. Each entry lists:
+   target file, section heading or anchor, exact text to insert/replace,
+   originating phase + finding.
+
+2. At end of PROJ-457 (BEFORE running `Step E: Mark project Complete`),
+   check the consolidation status:
+
+   a. Look at `Projects/active_projects/PROJ-459/decisions.md` and
+      `Projects/active_projects/PROJ-460/decisions.md`. Each should have a
+      "Pending doc consolidation" block OR an "Applied doc consolidation"
+      marker.
+
+   b. Also check whether PROJ-459 and PROJ-460 are still in Active
+      Projects or already in Archived Projects (look at
+      `Projects/projects_index.md`).
+
+   c. **You are the LAST of the three** if BOTH PROJ-459 AND PROJ-460 are
+      either: (a) already archived, OR (b) their decisions.md has a
+      "Pending doc consolidation" block (which means they finished their
+      doc-staging step but didn't apply).
+
+   d. **You are NOT last** if either PROJ-459 or PROJ-460 is still Active
+      and their decisions.md has no "Pending doc consolidation" block yet
+      — they haven't reached the staging step.
+
+3. If you are LAST:
+   - Read all three "Pending doc consolidation" blocks (yours + the two
+     siblings)
+   - Apply all three projects' intended doc additions as a SINGLE
+     consolidated edit to `docs/01_ARCHITECTURE.md` and
+     `docs/02_PATTERNS.md`
+   - In each project's decisions.md, append: "2026-XX-XX | Doc
+     consolidation applied | PROJ-457 (or whichever last project)
+     consolidated docs for PROJ-457 + PROJ-459 + PROJ-460 into a single
+     edit on `docs/01_ARCHITECTURE.md` + `docs/02_PATTERNS.md`."
+   - Commit the doc consolidation as a separate commit; commit message:
+     `PROJ-457 + PROJ-459 + PROJ-460 consolidated doc updates
+     (docs/01_ARCHITECTURE.md + docs/02_PATTERNS.md)`
+
+4. If you are NOT last:
+   - Leave the "Pending doc consolidation" block in PROJ-457's
+     decisions.md
+   - Move on to Step E (mark PROJ-457 Complete) without touching
+     `docs/01_ARCHITECTURE.md` or `docs/02_PATTERNS.md`
+   - The last-finishing run agent (either PROJ-459's or PROJ-460's) will
+     read your decisions.md and apply your additions on your behalf
+
+═══════════════════════════════════════════════════════════════════════════════
+PART 7 — END-OF-GROUP REPORT
+═══════════════════════════════════════════════════════════════════════════════
+
+After PROJ-457 closes (and the doc consolidation question is resolved per
+PART 6), write a Group B completion report at:
+    `AgentCoordination/Scratchpad/reports/groupB_completion_<date>.md`
+
+Required sections:
+
+## Summary
+- Which projects landed (PROJ-453 / 454 / 456 / 457); link to each plan.md
+- Total commits per project
+- Total LOC delta (production + test)
+
+## Per-project codex audits
+For each project:
+- Path to the end-of-project codex audit response.md
+- Verdict per finding (closed / partially-closed / not-closed)
+- Any new phases added as a result; their summary
+
+## Cross-group interactions
+- Whether the doc-consolidation responsibility fell to Group B (Yes/No;
+  if Yes, what consolidated edit landed)
+- Any cross-group collisions encountered DURING execution that the prior
+  audits didn't anticipate
+- Any sync-signal issues with Group A (PROJ-450's gates on PROJ-454 /
+  PROJ-456 completion)
+
+## Discovered issues
+- New `discovered_issues/log.jsonl` entries logged during Group B execution
+- DI entries closed by Group B's projects (with status updates verified)
+
+## Recommendations / handoff notes
+- Anything the coordinator should know about for the next round
+- Any deferred / "next-touch" items added
+
+═══════════════════════════════════════════════════════════════════════════════
+PART 8 — WORKING NORMS REMINDER
+═══════════════════════════════════════════════════════════════════════════════
+
+These are NON-NEGOTIABLE (per CLAUDE.md):
+
+- **Strict TDD**: write or identify the failing test first, run it to
+  confirm failure, then implement. Some PROJ-454 phases are documented
+  TDD-exception (characterization-style retirements) — see PROJ-454
+  decisions.md for the exception rationale; all other phases must follow
+  strict TDD.
+- **Documentation first**: read docs/ before code.
+- **Root-cause fixes**: no compat shims, no fallback systems, no save
+  migrations.
+- **500-LOC ceiling** on production files under `game/`.
+- **Broad except**: `except Exception` requires an intentional-reason
+  comment on the same line or immediately above.
+- **Modern type syntax**: `int | None`, `dict[str, T]`, `list[X]`.
+- **PowerShell environment**: use `rg` instead of `grep`,
+  `(Get-Content path | Measure-Object -Line).Lines` instead of `wc -l`,
+  `Get-Content path -TotalCount N` instead of `head -N`.
+- **No skipping hooks**. If pre-commit fails, fix the root cause; create a
+  NEW commit.
+- **Commit messages**: `PROJ-XXX Phase N: <description>`.
+
+═══════════════════════════════════════════════════════════════════════════════
+PART 9 — IF YOU GET STUCK
+═══════════════════════════════════════════════════════════════════════════════
+
+- A phase's RED test isn't actually failing? Re-read the task; the fixture
+  might not be exercising the path you think it is.
+- Sharded suite fails on a test you didn't touch? Run the test in
+  isolation. If flaky on parallel execution, try `--shards 1` to
+  serialize.
+- Codex audit returns feedback you disagree with? Verify codex's claims
+  against current code. If codex was wrong, document the discrepancy in
+  decisions.md; don't apply the unfix.
+- A finding's file:line refs are wrong (drift)? Update the checklist with
+  corrected refs, document in decisions.md, proceed.
+- A cross-group collision you weren't expecting? PART 5 → STOP and surface
+  to coordinator.
+- PROJ-457 Phase 4 — exceptions.py is already under 500 LOC and the
+  pending user decision wasn't resolved? The Phase 0 escalation gate
+  applies recursively: if no decision was made and you reach Phase 4,
+  STOP and surface to the user. Do not force the split.
+- Anything else genuinely blocking? Surface to user; don't barrel
+  through.
+
+═══════════════════════════════════════════════════════════════════════════════
+END OF GROUP B EXECUTION PROMPT
+═══════════════════════════════════════════════════════════════════════════════
+
+Start with the mandatory reading (PART 2). Then read PROJ-453's plan.md
++ phase_1_checklist.md. Then begin PROJ-453 Phase 1 Task 1.1.
+
+Good luck.

@@ -1,0 +1,14 @@
+# PROJ-457: Decisions Log
+
+> **LOG ALL DECISIONS HERE**
+> When you make a design choice or the user specifies a preference, add it to this table.
+> Future agents will reference this to understand why things were done a certain way.
+
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| 2026-05-18 | Project initialized | Starting point for UI structural debt extractions (build_queue_screen + planet_list_window + test_lab + game/core/exceptions split) |
+| 2026-05-19 | Pre-execution review LOC drift correction | Codex Group 2 audit + subagent review caught significant LOC drift since the 2026-05-18 charter was written: `build_queue_screen.py` 961→846, `planet_list_window.py` 862→746, `test_lab/screen.py` 744→614, `exceptions.py` 544→411. Top-3 UI files STILL OVER 500 — extraction scope holds for Phases 1-3. `exceptions.py` is ALREADY UNDER 500 — Phase 4's ceiling-enforcement rationale is gone; shifted to architectural-cleanup framing (31 classes split by domain). Phase 4 marked PENDING USER DECISION. |
+| 2026-05-19 | Class count reconciled to 31 (was inconsistently stated as 27 and 31) | The original PROJ-446 scan said "27 classes" but the phase_4 domain-split table at lines 65-69 enumerates 31. Live grep at HEAD confirms 31. Reconciled to 31 throughout plan.md, manifest.md, findings file. Phase 4 docstring update in `docs/01_ARCHITECTURE.md` also corrected from "27 exception classes" to "31 classes" target. |
+| 2026-05-19 | Aggregator LOC target set at <80 (resolved contradiction with plan's `<50`) | Plan.md previously cited `<50` LOC for the aggregator (assumes `from ... import *`); phase_4 checklist cited `<80` (assumes explicit `from ... import X, Y, Z` per convention preference for explicit over `*` imports — phase_4 line 150 documents this preference). Reconciled to `<80` matching the explicit-imports decision. |
+| 2026-05-19 | Phase 0 escalation gate added | Codex Group 2 review identified that if ANY target file is already under 500 LOC at re-measurement, force-splitting it just because the project scoped it is the anti-pattern Codex r4 warned against ("F-A-007 should not be smuggled in as a side quest"). Added explicit escalation gate to Phase 0 Task 0.3: STOP and surface to user if any top-3 target is under 500 LOC at re-measurement time. User then decides: (a) drop that phase, (b) replace with next-worst offender, or (c) proceed with explicit architectural-cleanup rationale. |
+| 2026-05-19 | Cross-group docs collision surfaced (PROJ-459 + PROJ-460) | Codex Group 2 review found PROJ-457 Phase 4 docs updates collide with PROJ-459 (Group 1) and PROJ-460 (Group 3) on `docs/01_ARCHITECTURE.md` and `docs/02_PATTERNS.md`. PENDING USER DECISION on serialization strategy: (a) designate single doc owner per file, (b) first-writer-wins + rebase, (c) carve doc updates into a final docs-sync project. Manifest entries flagged with cross-group collision note. |
