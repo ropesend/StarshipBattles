@@ -17,14 +17,14 @@
 |-------|--------|-----------|
 | 1. Container.remove non-negative guard (DI-005) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. FleetInfo.from_fleet catalog-driven (DI-003) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. stat_rows_dynamic LABEL_ABBREV retirement (DI-004 + F-C-015) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. stat_rows_dynamic LABEL_ABBREV retirement (DI-004 + F-C-015) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Sweep — catalog-vs-hardcode residue in stat_rows_dynamic + adjacent UI surfaces | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-18
-**Active Phase:** Phase 3 (next)
-**Last Action:** Phase 2 (DI-003) complete on `group-c`. Module-level `ResourceCatalog` import added to `fleet_dto.py`; both hardcoded 8-tuples at `:230-239` replaced with `ResourceCatalog.from_json().all_ids()` iteration. Two new tests in `test_fleet_dto.py` (covers_full_catalog characterization + surfaces_new_resource RED-side regression catcher via monkeypatch). All 27 tests in file green. DI-2026-05-18-003 marked `resolved` in `log.jsonl`. Phase 2 sharded suite running (end-of-phase gate).
-**Next Action:** Confirm Phase 2 sharded green, commit + push, then begin Phase 3 (DI-004 + F-C-015 — drop `LABEL_ABBREV` dicts at `stat_rows_dynamic.py:178-181, 251-254`; introduce a single `_label_for(resource_id)` helper backed by `ResourceCatalog.from_json().get(rid).name`).
+**Active Phase:** Phase 4 (next)
+**Last Action:** Phase 3 (DI-004 + F-C-015) complete on `group-c`. Module-level `_label_for(resource_id)` helper added above `get_construction_rows`; both `LABEL_ABBREV` dicts (at `:178-181` and `:251-254`) deleted; the three call sites (`:189`, `:262`, `:272`) now route through `_label_for(res)` → `ResourceCatalog.from_json().get(rid).name` with defensive fallback. Three RED-then-GREEN tests in `test_stat_rows_dynamic.py` (`TestCatalogDrivenLabels`). All 134 tests in `tests/unit/ui/screens/builder/` green. DI-2026-05-18-004 marked `resolved` in `log.jsonl`; F-C-015 closure recorded in `decisions.md`. User-visible change: the radioactives row label is now `Radioactives` (canonical) instead of the legacy `Radact` abbreviation. `rg -n LABEL_ABBREV game/ui/screens/builder/stat_rows_dynamic.py` returns zero matches. Phase 3 sharded suite running.
+**Next Action:** Confirm Phase 3 sharded green, commit + push, then begin Phase 4 (audit sweep — confirm `stat_rows_dynamic.py` post-Phase-3 has no other hardcoded resource constants; audit `empire_treasury_panel.py`, `build_queue_helpers.py`, and any UI files surfaced by the backstop grep). Note: a pre-Phase-4 subagent already flagged `game/ui/screens/build_queue_helpers.py:20-35` (`RESOURCE_ABBREVS` dict) as a candidate — verify and decide in Phase 4.
 **Blockers:** None.
 **2026-05-19 cross-group resolution (final):** No edits required to PROJ-452 beyond adding the Group C execution-context block to Dependencies. PROJ-452 is the most parallel-safe project in Group C (no shared write surfaces with Groups A/B).
 
@@ -155,8 +155,8 @@ No hard predecessor. All four phases are mechanically independent and can land i
 - [ ] All four phase checklists complete
 - [x] DI-005 marked `resolved` in `AgentCoordination/discovered_issues/log.jsonl` (Phase 1)
 - [x] DI-003 marked `resolved` in `AgentCoordination/discovered_issues/log.jsonl` (Phase 2)
-- [ ] DI-004 marked `resolved` in `AgentCoordination/discovered_issues/log.jsonl`
-- [ ] F-C-015 closed in this project's findings file
+- [x] DI-004 marked `resolved` in `AgentCoordination/discovered_issues/log.jsonl` (Phase 3)
+- [x] F-C-015 closed in `decisions.md` (Phase 3)
 - [ ] `pytest tests/unit/strategy/data/test_container.py tests/unit/strategy/facade/test_fleet_dto.py tests/unit/ui/screens/builder/ -q` green
 - [ ] Full sharded suite green (`python Tools/test_sharded/test_sharded.py`)
 - [ ] Sweep phase produced either fixes or an audit report in `decisions.md`
@@ -171,3 +171,10 @@ No hard predecessor. All four phases are mechanically independent and can land i
 - **Open threads**: Post-edit sharded suite running (end-of-Phase-1 gate); awaiting green confirmation before committing.
 - **Next action**: Commit Phase 1 on `group-c` with message `PROJ-452 Phase 1: Container.remove non-negative guard (DI-005)`, push, then start Phase 2 (DI-003 — `fleet_dto.py:230-239` catalog iteration). Read `phase_2_checklist.md` in full first.
 - **Cross-group state observed**: `origin/group-a` exists (Group A in flight); no `origin/group-b` yet. No PROJ-449..460 entries on `origin/main` beyond the baseline plans.
+
+### 2026-05-18T00:00:00Z — phases-1-2-3-complete + phase-4-pending
+- **Done so far**: Phases 1 (DI-005), 2 (DI-003), 3 (DI-004 + F-C-015) all complete and pushed to `origin/group-c`. Plus one auxiliary commit on `group-c` extending `Tools/lint_test_files_allowlist.txt` with 3 entries (`tests/static_guards/test_no_activatable_abilities_constant.py`, `test_no_commands_specs_module.py`, `test_no_hidden_test_files.py`) — pre-existing drift on main that was blocking the pre-commit hook. Cumulative sharded: 23373/23373 after Phase 2; Phase 3 sharded gate currently running.
+- **Key decisions**: (1) Auxiliary allowlist fix committed separately from Phase 1, not bundled, so the Group C log shows the scope cleanly. (2) Phase 2: module-level `ResourceCatalog` import in fleet_dto.py (necessary for the test's monkeypatch target to be valid). (3) Phase 3: adopt catalog `name` (`Radioactives`) over legacy `Radact` per F-C-015's directive. (4) Subagent pre-audit for Phase 4 flagged `game/ui/screens/build_queue_helpers.py:20-35` (`RESOURCE_ABBREVS` dict) as a same-anti-pattern candidate — verify in Phase 4.
+- **Open threads**: Phase 3 sharded suite running (end-of-Phase-3 gate). Phase 4 audit pending. Codex end-of-project audit pending. Doc-consolidation check pending until PROJ-460. The pre-commit-hook drift fix on `group-c` will only reach Groups A/B after end-of-project merge to `main`; until then both other groups will hit the same hook failure and need to do their own fix.
+- **Next action**: Confirm Phase 3 sharded green → commit + push Phase 3 → start Phase 4 audit (verify `stat_rows_dynamic.py` clean post-Phase-3; audit `empire_treasury_panel.py` + `build_queue_helpers.py`; decide whether the `RESOURCE_ABBREVS` candidate is in scope for Phase 4 or a separate finding).
+- **Cross-group state observed**: `origin/group-a` exists but has the same commits as `origin/main` (no Group A phase work pushed yet). No `origin/group-b`. `origin/main` unchanged since pre-flight fetch.

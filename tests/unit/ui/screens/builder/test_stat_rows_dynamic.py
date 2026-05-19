@@ -4,6 +4,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from game.core.constants import LayerType
+from game.core.resources import ResourceCatalog
 from game.simulation.components.abilities.resources import ResourceConsumption
 from game.ui.screens.builder import stat_rows_dynamic
 
@@ -291,3 +292,56 @@ def test_planetary_defense_rows_pick_up_gravity_modifier_and_radiation_shield() 
 
     assert "defense_gravitymodifier" in row_ids
     assert "defense_radiationshield" in row_ids
+
+
+# ---------------------------------------------------------------------------
+# PROJ-452 Phase 3 — LABEL_ABBREV retirement (DI-2026-05-18-004 + F-C-015)
+# ---------------------------------------------------------------------------
+
+
+class TestCatalogDrivenLabels:
+    """The legacy LABEL_ABBREV dicts abbreviated `radioactives` as `Radact`;
+    the catalog name is `Radioactives`. These tests lock in the catalog-name
+    contract and serve as the regression catcher if a future change re-adds
+    a hardcoded label map.
+    """
+
+    def test_construction_rows_use_catalog_display_names(self) -> None:
+        canonical = ResourceCatalog.from_json().get("radioactives").name
+        assert canonical != "Radact", (
+            "Test premise broken: catalog name equals the legacy abbreviation."
+        )
+
+        ship = SimpleNamespace(construction_cost={"radioactives": 50})
+        rows = stat_rows_dynamic.get_construction_rows(ship)
+
+        radio_row = next(r for r in rows if r.key == "cost_radioactives")
+        assert radio_row.label == canonical
+
+    def test_strategic_harvester_row_labels_use_catalog_names(self) -> None:
+        canonical = ResourceCatalog.from_json().get("radioactives").name
+        assert canonical != "Radact"
+
+        ship = FakeShip(
+            components=[FakeComponent(
+                {"ResourceHarvester": ResourceHarvesterAbility("radioactives", 2.5)}
+            )]
+        )
+        rows = stat_rows_dynamic.get_strategic_rows(ship)
+
+        radio_row = next(r for r in rows if r.key == "harvest_radioactives")
+        assert radio_row.label == f"Harv {canonical}"
+
+    def test_strategic_storage_row_labels_use_catalog_names(self) -> None:
+        canonical = ResourceCatalog.from_json().get("radioactives").name
+        assert canonical != "Radact"
+
+        ship = FakeShip(
+            components=[FakeComponent(
+                {"LocalStorage": LocalStorageAbility("radioactives", 1000.0)}
+            )]
+        )
+        rows = stat_rows_dynamic.get_strategic_rows(ship)
+
+        radio_row = next(r for r in rows if r.key == "storage_radioactives")
+        assert radio_row.label == f"Stor {canonical}"
