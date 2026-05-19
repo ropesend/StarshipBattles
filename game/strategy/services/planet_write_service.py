@@ -94,7 +94,7 @@ class PlanetWriteService:
         planet.stockpile[resource_id] = amount
 
     def set_max_stockpile(self, planet: "Planet", new_max: dict) -> None:
-        planet.max_stockpile = dict(new_max)
+        planet._max_stockpile = dict(new_max)
 
     # --- Staging yard ---
     def add_staging_item(self, planet: "Planet", item: Any) -> None:

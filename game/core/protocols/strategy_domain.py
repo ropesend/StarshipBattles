@@ -206,29 +206,18 @@ class IShipInstance(Protocol):
 
     @property
     def cargo_contents(self) -> Mapping[str, int]:
-        """Cargo contents (cargo_type -> current amount).
+        """Cargo contents (cargo_type -> current amount), read-only view.
 
-        PROJ-436 Phase 3f: the ``cargo_contents`` dataclass field on
-        ``ShipInstance`` was deleted; the public name survives as a
-        backward-compatible dict view over the renamed private dict.
-        A concrete-class setter still exists (and is exercised by the
-        legacy-kwarg constructor wrapper at
-        ``ship_instance.py``), so this property is **not** read-only
-        in absolute terms.
+        PROJ-449 Phase 5 (F-C-014 closure): the concrete-class
+        ``@cargo_contents.setter`` was retired in Phase 4 alongside the
+        legacy-kwarg constructor wrapper, so this property is now
+        read-only end-to-end. The protocol annotation has been
+        ``Mapping[str, int]`` since PROJ-446 Phase 2.
 
-        PROJ-446 Phase 2 (F-C-014): the protocol annotation is narrowed
-        from ``Dict[str, int]`` to ``Mapping[str, int]`` so a caller
-        that narrows to ``IShipInstance`` sees a read-only view. The
-        concrete-class setter retirement is sequenced into PROJ-444
-        Phase 3 (wrapper retirement); the docstring caveat above stays
-        until that lands, then PROJ-444 Phase 3 drops it.
-
-        Production code should **prefer** the cargo manager API for
-        writes (``ship._cargo_mgr.set_cargo`` / ``get_all_cargo`` /
-        ``total_cargo_units`` / ``has_cargo``, the manager surface
-        landed in Phase 3b) over mutating the returned dict in place.
-        The protocol declares the public read surface; concrete-class
-        write paths are left to the implementer.
+        Writers must route through the cargo manager API on the
+        concrete class: ``ship._cargo_mgr.set_cargo`` /
+        ``add_to_cargo`` / ``remove_from_cargo`` / ``get_all_cargo`` /
+        ``total_cargo_units`` / ``has_cargo``.
         """
         ...
 

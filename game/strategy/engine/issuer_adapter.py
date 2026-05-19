@@ -332,7 +332,7 @@ class PlanetStagingYardIssuerAdapter:
                 popped.append(item)
             else:
                 remaining.append(item)
-        self._planet.staging_yard = remaining
+        self._planet._staging_yard = remaining
         return popped
 
     def count_carried(

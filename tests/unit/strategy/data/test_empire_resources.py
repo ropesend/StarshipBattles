@@ -30,7 +30,7 @@ def _seed_colony(empire: Empire, stockpile: dict, *, name: str = "Colony") -> No
         has_facilities=False,
         has_population=False,
         name=name,
-        stockpile=dict(stockpile),
+        _stockpile=dict(stockpile),
     )
     empire.colonies.append(colony)
 
@@ -165,12 +165,12 @@ class TestResourcePoolPureAggregation:
         empire = Empire(empire_id=1, name="Test", color=(255, 0, 0))
         colony1 = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 100.0, "organics": 50.0},
+            _stockpile={"metals": 100.0, "organics": 50.0},
         )
         colony2 = create_test_planet(
             has_facilities=False, has_population=False,
             name="Colony2",
-            stockpile={"metals": 200.0, "fuel": 30.0},
+            _stockpile={"metals": 200.0, "fuel": 30.0},
         )
         empire.colonies = [colony1, colony2]
 

@@ -426,7 +426,7 @@ def ship_factory(fresh_registries):
             ship._cached_stats = expected
             # Re-initialize consumable_levels from the expected storage
             storage = expected.get('resource_storage', {})
-            ship.consumable_levels = {name: float(val) for name, val in storage.items()}
+            ship._consumable_levels = {name: float(val) for name, val in storage.items()}
         return ship
 
     return _create_ship

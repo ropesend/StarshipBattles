@@ -39,7 +39,7 @@ def _make_empire(resources=None, storage=None, empire_id=0):
         reserve = create_test_planet(
             has_facilities=False, has_population=False,
             name="_starting_reserve",
-            stockpile=dict(resources),
+            _stockpile=dict(resources),
         )
         empire.colonies.append(reserve)
     if storage:
@@ -136,7 +136,7 @@ class TestCustomResourceHarvesting:
             has_facilities=False,
             has_population=False,
             deposits={"dilithium": {"quantity": 50000, "quality": 0.8}},
-            max_stockpile={"dilithium": 100000.0},
+            _max_stockpile={"dilithium": 100000.0},
         )
         planet.facilities = [harvester]
 

@@ -205,7 +205,7 @@ def test_planet_adapter_location_owner_label():
 
 def test_planet_adapter_pop_carried_from_staging_yard():
     p = _make_planet()
-    p.staging_yard = [_mine_dict(), _mine_dict("mine_b"), _fighter_dict()]
+    p._staging_yard = [_mine_dict(), _mine_dict("mine_b"), _fighter_dict()]
     a = PlanetStagingYardIssuerAdapter(p)
 
     popped = a.pop_carried("mine", None, count=None)
@@ -216,7 +216,7 @@ def test_planet_adapter_pop_carried_from_staging_yard():
 
 def test_planet_adapter_pop_carried_specific_design():
     p = _make_planet()
-    p.staging_yard = [_mine_dict("mine_a"), _mine_dict("mine_b"), _mine_dict("mine_a")]
+    p._staging_yard = [_mine_dict("mine_a"), _mine_dict("mine_b"), _mine_dict("mine_a")]
     a = PlanetStagingYardIssuerAdapter(p)
 
     popped = a.pop_carried("mine", "mine_a", count=1)
@@ -227,7 +227,7 @@ def test_planet_adapter_pop_carried_specific_design():
 
 def test_planet_adapter_count_carried():
     p = _make_planet()
-    p.staging_yard = [_mine_dict(), _mine_dict("mine_b"), _fighter_dict()]
+    p._staging_yard = [_mine_dict(), _mine_dict("mine_b"), _fighter_dict()]
     a = PlanetStagingYardIssuerAdapter(p)
     assert a.count_carried("mine", None) == 2
     assert a.count_carried("fighter", None) == 1
@@ -266,7 +266,7 @@ def test_planet_adapter_append_recovered_via_to_dict():
 
 def test_planet_adapter_append_recovered_respects_cap():
     p = _make_planet(max_staging=5.0)
-    p.staging_yard = [_mine_dict(mass=5.0)]
+    p._staging_yard = [_mine_dict(mass=5.0)]
     a = PlanetStagingYardIssuerAdapter(p)
     cv = CarriedVehicle(
         design_id="scout_fighter",

@@ -15,21 +15,45 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Pre-flight audit (rg counts, PROJ-443 Phase 5b carry-over verification) | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. Migrate `tests/fixtures/strategy_entities.py` (4 sites) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Sweep direct call sites in tests + rewrite `planet_from_dict_kwargs` | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Delete `_planet_init_with_legacy_kwargs` + 3 Planet @property/@setter pairs | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Delete `_ship_instance_init_with_legacy_kwargs` + 2 ShipInstance @property/@setter pairs | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Drop `IShipInstance.cargo_contents` caveat + tighten `IFacility.consumable_levels` | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Profile `Empire.resource_pool`; add cached aggregation only if hot | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 0. Pre-flight audit (rg counts, PROJ-443 Phase 5b carry-over verification) | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
+| 1. Migrate `tests/fixtures/strategy_entities.py` (4 sites; +3-line scope creep in `test_roundtrip_ships.py`) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Sweep direct call sites in tests + rewrite `planet_from_dict_kwargs` | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Delete `_planet_init_with_legacy_kwargs` + 3 Planet @setters (kept read-only @property getters; +setter-call sweep across 19 files) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Delete `_ship_instance_init_with_legacy_kwargs` + 2 ShipInstance @setters (kept read-only getters) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Drop `IShipInstance.cargo_contents` caveat + tighten `IFacility.consumable_levels` | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Profile `Empire.resource_pool`; add cached aggregation only if hot | Complete (gate not triggered) | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-19
-**Active Phase:** Planning
-**Last Action:** Group A cross-group collision resolution applied (serial reorder to `449 → 451 → 459 → 450`; PROJ-450 sync gate added; PROJ-459 doc-consolidation rule added; PROJ-459 Phase 3 LOC measurement gated on PROJ-454 too). Codex Bucket A audit fixes verified landed. Group A is ready for execution.
-**Next Action:** Run agent picks up PROJ-449 Phase 0 first (lead project in Group A serial order).
-**Blockers:** None. PROJ-449 is the lead project in Group A; no upstream gates.
-**Context for Next Agent:** This is the lead project in Group A (`PROJ-449 → PROJ-451 → PROJ-459 → PROJ-450`). PROJ-449 owns the wrapper-retirement job end-to-end across data/facade/test layers. PROJ-450 (staging-yard substrate widening) depends on Phase 3 of this project. PROJ-459 (strategy data LOC extractions) depends on this project's completion. PROJ-451 (production resource-consumption semantics) is independent but runs second in the serial order for orderly throughput.
+**Last Updated:** 2026-05-18
+**Active Phase:** All phases complete; codex audit next
+**Last Action:** Phase 6 profile complete. Synthetic workload at 10/50/200 colonies; gate (>5% of frame budget) NOT triggered for realistic UI scenarios. F-A-011 closed without code change. decisions.md row 2026-05-18 documents profile output. Phase 5 complete. `IShipInstance.cargo_contents` docstring rewritten — dropped "not read-only in absolute terms" caveat and stale PROJ-444 cross-reference (which never existed by that name; the project is PROJ-449). `IFacility.consumable_levels` docstring verified clean (no PROJ-444 cross-references; F-C-013 framing preserved per design). Closes F-C-014. Sharded 23375/23375 GREEN. Phase 4 complete with the same scope adjustment as Phase 3. Deleted `_ship_instance_init_with_legacy_kwargs` and the 2 @setter components (`consumable_levels`, `cargo_contents`); kept the @property getters as read-only views. Production setter site at `ship_consumable_manager.py:152` migrated. 7 real-ship test setter migrations across 5 files. ~20 MagicMock setattr sites confirmed out-of-scope. New static guard pins wrapper absence + setter absence. ship_instance.py post-Phase-4 LOC = 783 (F-A-007 trigger condition still active per Codex r4; out of scope here; will be decided by PROJ-459 Phase 3). Sharded 23375/23375 GREEN. Phase 3 complete with scope adjustment. Deleted `_planet_init_with_legacy_kwargs` wrapper and the 3 `@setter` blocks for `stockpile`/`max_stockpile`/`staging_yard`. **Kept the 3 read-only `@property` getters** as views over the private fields after Phase 0 audit was found to have under-counted read sites (16 production + 50+ test reads were not in the original sweep set). Migration sweep across 19 files (2 production: `planet_write_service.py`, `issuer_adapter.py`; 17 tests) covered ~45 attribute-setter writes + 9 ctor-kwarg leftovers + 2 mock-fixture refactors (subagent execution). Updated `planet_serde.planet_to_dict` to read private fields directly. New static guard at `tests/static_guards/test_no_planet_legacy_kwarg_wrapper.py` pins wrapper absence + setter absence. Sharded suite 23372/23372 GREEN. decisions.md 2026-05-18 row "Phase 3 scope adjustment" documents the rationale. PROJ-450 unblocked.
+
+**Next Action:** Dispatch end-of-project codex audit per protocol §10. Audit leaf: `Projects/active_projects/PROJ-449/consults/<UTC-ts>_end-of-project-audit/`. After response lands, optionally execute audit-driven extra phases, then merge to main per protocol §3.
+**Blockers:** None.
+**Context for Next Agent:** All six phases closed. Findings status: F-A-002 closed (Phase 3), F-A-003 closed (Phase 4), F-A-004 closed (Phase 3, setter cluster), F-A-005 closed (Phase 4, setter cluster), F-A-011 closed without code change (Phase 6, no hot signal), F-C-014 closed (Phase 5). F-A-012 deferred (PlanetaryFacility public field — separate project). F-A-007 deferred (ship_instance.py = 783 LOC; PROJ-459 Phase 3 decides spin-out after measuring post-PROJ-454 state). Sharded baseline 23375/23375 GREEN.
+
+## Checkpoint Log
+
+### 2026-05-18 — project-449-start + phase-0-complete
+- **Done so far**: Group A session-start (branched `group-a` from `main`; pre-flight §14 verified; baseline sharded 23368/23368 green). PROJ-449 Phase 0 audit complete.
+- **Key decisions**: F-A-012 deferral keeps PlanetaryFacility `consumable_levels=` kwarg out of scope. MagicMock factories (`make_cargo_mock_ship`, `_make_cargo_ship`, etc.) excluded — they never reach real `ShipInstance.__init__`. Attribute-setter sites (e.g., `create_mock_ship_instance` in `turn_engine/conftest.py:58`) are in scope because Phase 4 deletes the @setter property shim.
+- **Open threads**: None.
+- **Next action**: Phase 1 — `tests/fixtures/strategy_entities.py` lines 318/320/425 → private kwargs.
+- **Cross-group state observed**: No `group-b` or `group-c` branches present on origin at branch creation; Group A is first to start.
+
+### 2026-05-18 — phase-6-complete + project-449-end
+- **Done so far**: All 6 phases complete. Phases 4-5 followed Phase-3 shape (delete wrapper + setters; keep read-only getters; add static guards). Phase 6 profile gate not triggered.
+- **Key decisions**: Phase 6 caching deferred indefinitely (no hot signal at realistic UI workload). ship_instance.py LOC 783 — F-A-007 trigger active but deferred to PROJ-459 Phase 3 decision per Codex r4. F-A-012 (PlanetaryFacility) deferred to a future project.
+- **Open threads**: End-of-project codex audit pending per protocol §10.
+- **Next action**: Dispatch codex audit; on response, run any audit-driven extra phases; merge group-a to main per protocol §3.
+- **Cross-group state observed**: `git fetch origin` after Phase 5 push showed no `group-b` or `group-c` branches yet. Group A is still ahead of B and C.
+
+### 2026-05-18 — phase-3-complete
+- **Done so far**: Phases 1, 2, 3 complete. Phase 1 (Phase-1 + 3-line scope-creep) migrated `strategy_entities.py` and `test_roundtrip_ships.py`. Phase 2 swept 17 test files (~59 kwarg renames) + rewrote `planet_from_dict_kwargs`. Phase 3 deleted wrapper + 3 setters; kept read-only getters; swept 19 files (~45 attribute-setter migrations + 9 ctor-kwarg leftovers + 2 mock-fixture refactors); added static guard.
+- **Key decisions**: Phase 3 scope adjustment — keep read-only @property getters (audit under-counted read sites). PROJ-450 will refine `staging_yard` getter type. F-A-002 fully closed; F-A-004's setter cluster closed; getter cluster kept as stable read surface.
+- **Open threads**: Phase 4 audit must include attribute-read sites for ShipInstance, not just ctor kwargs (same lesson learned).
+- **Next action**: Phase 4 — delete ShipInstance wrapper + 2 setters; keep getters as read-only views over `_consumable_levels` / `_cargo_contents`.
+- **Cross-group state observed**: `git fetch origin` after Phase 3 commit (about to push); no `group-b` or `group-c` branches present yet.
 
 ## Overview
 Retire the two legacy-kwarg constructor wrappers (`_planet_init_with_legacy_kwargs` and `_ship_instance_init_with_legacy_kwargs`) and the five matching `@property`/`@setter` clusters they exist to support. Migrate `tests/fixtures/strategy_entities.py` (the largest fixture site), `planet_serde.py:160-162` (the load-bearing serializer site), and sweep every direct call site in tests. Complete F-C-014 by dropping the "not read-only in absolute terms" caveat from `IShipInstance.cargo_contents` once the concrete-class setters are gone. Profile `Empire.resource_pool` against a late-game save and add cached aggregation only if a real perf signal emerges.

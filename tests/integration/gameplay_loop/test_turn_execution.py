@@ -210,13 +210,13 @@ class TestMultipleTurns:
         colony.facilities.append(yard)
 
         # Give colony local stockpile for tick-based production
-        colony.stockpile = {
+        colony._stockpile = {
             "metals": 100000.0,
             "organics": 100000.0,
             "radioactives": 100000.0,
             "Energy": 100000.0
         }
-        colony.max_stockpile = {
+        colony._max_stockpile = {
             "metals": 200000.0,
             "organics": 200000.0,
             "radioactives": 200000.0,

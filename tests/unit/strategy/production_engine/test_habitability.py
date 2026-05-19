@@ -67,8 +67,8 @@ def _planet(*, populations=None, stockpile=None, name: str = "Earth") -> Planet:
         deposits={},
         populations=populations or [],
         facilities=[_planetary_yard()],
-        stockpile=dict(stockpile) if stockpile else {},
-        max_stockpile={"metals": 1e9, "organics": 1e9},
+        _stockpile=dict(stockpile) if stockpile else {},
+        _max_stockpile={"metals": 1e9, "organics": 1e9},
     )
     # Wire the dict methods production_engine expects on a "colony" — Planet
     # already exposes has_stockpile / consume_from_stockpile from its API.

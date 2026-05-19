@@ -230,7 +230,7 @@ class TestHarvestingIntegration:
             resources={"metals": {"quantity": 5000, "quality": 1.0}},
             facilities=[storage, harvester],
         )
-        planet.stockpile = {"metals": 950.0}
+        planet._stockpile = {"metals": 950.0}
 
         empire = Empire(0, "Test Empire", (255, 255, 255))
         empire.add_colony(planet)

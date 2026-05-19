@@ -88,8 +88,8 @@ def _planet(
         deposits={"metals": {"quantity": 1e8, "quality": 1.0}},
         populations=populations,
         facilities=facilities,
-        stockpile={},
-        max_stockpile={"metals": 1e9},
+        _stockpile={},
+        _max_stockpile={"metals": 1e9},
     )
 
 
@@ -151,7 +151,7 @@ def _production_engine_and_planet(race_registry, planet_populations, stockpile_m
     engine.set_current_turn(1)
 
     planet = _ideal_planet(planet_populations)
-    planet.stockpile = {"metals": stockpile_metals}
+    planet._stockpile = {"metals": stockpile_metals}
     planet.construction_queue = [{
         "design_id": "Complex",
         "type": "complex",
@@ -311,7 +311,7 @@ class TestCacheStable:
         # Planet A: booster 1.5x passed via production_rate, no habitability.
         engine_a = ProductionEngine(registries=_registries())
         planet_a = _ideal_planet([SpeciesPopulation(race_id="human", count=1000, happiness=0.5)])
-        planet_a.stockpile = {"metals": 1e6}
+        planet_a._stockpile = {"metals": 1e6}
         planet_a.construction_queue = [{
             "design_id": "T", "type": "complex", "turns_remaining": 10,
             "total_cost": {"metals": 100.0}, "resources_consumed": {},
@@ -321,7 +321,7 @@ class TestCacheStable:
         engine_b = ProductionEngine(registries=_registries(), race_registry=race_registry)
         engine_b.set_current_turn(1)
         planet_b = _ideal_planet([SpeciesPopulation(race_id="human", count=1000, happiness=0.5)])
-        planet_b.stockpile = {"metals": 1e6}
+        planet_b._stockpile = {"metals": 1e6}
         planet_b.construction_queue = [{
             "design_id": "T", "type": "complex", "turns_remaining": 10,
             "total_cost": {"metals": 100.0}, "resources_consumed": {},

@@ -111,9 +111,9 @@ def _build_decorated_planet(name: str, location: HexCoord) -> Planet:
         "metals": {"surface": 100.0, "shallow": 50.0, "deep": 25.0},
         "organics": {"surface": 60.0, "shallow": 30.0, "deep": 0.0},
     }
-    planet.stockpile = {"metals": 250.0, "organics": 75.0}
-    planet.max_stockpile = {"metals": 1000.0, "organics": 500.0}
-    planet.staging_yard = [
+    planet._stockpile = {"metals": 250.0, "organics": 75.0}
+    planet._max_stockpile = {"metals": 1000.0, "organics": 500.0}
+    planet._staging_yard = [
         {"design_id": "test_ship", "ready_at_turn": 5, "mass": 100.0},
     ]
     planet.max_staging_mass = 500.0

@@ -119,13 +119,13 @@ def empire_with_colony(test_savegame_dir):
     planet.owner_id = empire.id
     planet.id = 100
     # Give planet local stockpile for production
-    planet.stockpile = {
+    planet._stockpile = {
         "metals": 100000.0,
         "organics": 100000.0,
         "radioactives": 100000.0,
         "Energy": 100000.0
     }
-    planet.max_stockpile = {
+    planet._max_stockpile = {
         "metals": 200000.0,
         "organics": 200000.0,
         "radioactives": 200000.0,

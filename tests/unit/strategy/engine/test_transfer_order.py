@@ -155,7 +155,7 @@ class TestOrderProcessorTransfer:
         )
         # Set cached stats so get_cargo_capacity works
         ship._cached_stats = {"cargo_storage": {"passengers": capacity}}
-        ship.cargo_contents = {"passengers": current} if current > 0 else {}
+        ship._cargo_contents = {"passengers": current} if current > 0 else {}
         return ship
 
     def make_fleet_with_cargo_ship(self, capacity=100, current=0):
@@ -458,7 +458,7 @@ class TestTransferCommandDispatch:
             design_data={"meta": {"vehicle_type": "ship"}, "layers": {}}
         )
         ship._cached_stats = {"cargo_storage": {"passengers": 100}}
-        ship.cargo_contents = {}
+        ship._cargo_contents = {}
         fleet.ships.append(ship)
 
         # Create planet at same location

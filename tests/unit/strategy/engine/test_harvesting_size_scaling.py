@@ -24,18 +24,48 @@ class MockFacility:
 
 @dataclass
 class MockColony:
-    """Minimal colony (planet) for harvesting tests."""
+    """Minimal colony (planet) for harvesting tests.
+
+    PROJ-449 Phase 3: mirror Planet's ``_stockpile`` / ``_max_stockpile``
+    private fields so the production ``PlanetWriteService.set_max_stockpile``
+    write path (which targets the underscore name) and the engine read
+    path (the public name) reference the same backing dict.
+    """
     name: str = "Test Colony"
     deposits: Dict[str, dict] = field(default_factory=dict)
-    stockpile: Dict[str, float] = field(default_factory=dict)
-    max_stockpile: Dict[str, float] = field(default_factory=dict)
+    _stockpile: Dict[str, float] = field(default_factory=dict)
+    _max_stockpile: Dict[str, float] = field(default_factory=dict)
     max_staging_mass: float = 0.0
     facilities: list = field(default_factory=list)
 
+    def __init__(
+        self,
+        name: str = "Test Colony",
+        deposits: Dict[str, dict] | None = None,
+        stockpile: Dict[str, float] | None = None,
+        max_stockpile: Dict[str, float] | None = None,
+        max_staging_mass: float = 0.0,
+        facilities: list | None = None,
+    ):
+        self.name = name
+        self.deposits = deposits if deposits is not None else {}
+        self._stockpile = stockpile if stockpile is not None else {}
+        self._max_stockpile = max_stockpile if max_stockpile is not None else {}
+        self.max_staging_mass = max_staging_mass
+        self.facilities = facilities if facilities is not None else []
+
+    @property
+    def stockpile(self) -> Dict[str, float]:
+        return self._stockpile
+
+    @property
+    def max_stockpile(self) -> Dict[str, float]:
+        return self._max_stockpile
+
     def add_to_stockpile(self, resource: str, amount: float):
-        current = self.stockpile.get(resource, 0.0)
-        max_val = self.max_stockpile.get(resource, float('inf'))
-        self.stockpile[resource] = min(current + amount, max_val)
+        current = self._stockpile.get(resource, 0.0)
+        max_val = self._max_stockpile.get(resource, float('inf'))
+        self._stockpile[resource] = min(current + amount, max_val)
 
 
 @dataclass

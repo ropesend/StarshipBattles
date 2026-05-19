@@ -234,7 +234,7 @@ class TestAdditionalCoverage:
             name='Test Ship',
             owner_id=0,
             design_data=design_data,
-            consumable_levels={'fuel': 5000, 'energy': 2000}
+            _consumable_levels={'fuel': 5000, 'energy': 2000}
         )
 
         ship._resource_mgr.consume_resource('fuel', 1000)
@@ -295,7 +295,7 @@ class TestAdditionalCoverage:
             name='Test Ship',
             owner_id=0,
             design_data=design_data,
-            consumable_levels={'fuel': 5000, 'energy': 2000}
+            _consumable_levels={'fuel': 5000, 'energy': 2000}
         )
 
         ship._resource_mgr.consume_resource('fuel', 1000)

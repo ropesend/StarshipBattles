@@ -15,8 +15,9 @@ import pytest
 from unittest.mock import MagicMock
 
 from game.strategy.data.empire import Empire
-from game.strategy.data.planet import Planet
+from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.planetary_facility import PlanetaryFacility
+from game.core.hex_math import HexCoord
 
 
 # ===========================================================================
@@ -44,30 +45,33 @@ def _make_empire(colonies=None, resource_pool=None, max_storage=None, empire_id=
 
 def _make_planet(resources=None, facilities=None, name="Test Planet",
                   stockpile=None, max_stockpile=None):
-    """Create a minimal Planet-like object for harvesting tests.
+    """Create a real Planet for harvesting tests.
 
-    Includes stockpile and add_to_stockpile() to support local stockpile
-    harvesting (resources deposited to colony, not empire).
+    PROJ-449 Phase 3: switched from ``MagicMock(spec=Planet)`` to a real
+    Planet so the production ``set_max_stockpile`` write path (which
+    targets the ``_max_stockpile`` private field) and the ``max_stockpile``
+    property getter both reference the same backing dict.
     """
-    planet = MagicMock(spec=Planet)
-    planet.name = name
-    planet.deposits = resources or {}
-    planet.facilities = facilities or []
-    planet.stockpile = stockpile or {}
-    planet.max_stockpile = max_stockpile or {}
-
-    # Wire add_to_stockpile to mirror real Planet behavior
-    def add_to_stockpile(resource_type, amount):
-        current = planet.stockpile.get(resource_type, 0.0)
-        max_cap = planet.max_stockpile.get(resource_type, float('inf'))
-        new_total = current + amount
-        if new_total > max_cap:
-            planet.stockpile[resource_type] = max_cap
-            return new_total - max_cap
-        planet.stockpile[resource_type] = new_total
-        return 0.0
-
-    planet.add_to_stockpile = add_to_stockpile
+    planet = Planet(
+        name=name,
+        location=HexCoord(0, 0),
+        orbit_distance=1,
+        mass=5.97e24,
+        radius=6.371e6,
+        surface_area=5.1e14,
+        density=5510.0,
+        surface_gravity=9.8,
+        surface_pressure=101325.0,
+        surface_temperature=288.0,
+        surface_water=0.7,
+        tectonic_activity=0.5,
+        magnetic_field=1.0,
+        planet_type=PlanetType.CONTINENTAL,
+        deposits=resources or {},
+        facilities=facilities or [],
+        _stockpile=dict(stockpile) if stockpile else {},
+        _max_stockpile=dict(max_stockpile) if max_stockpile else {},
+    )
     return planet
 
 

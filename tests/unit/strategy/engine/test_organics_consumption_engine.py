@@ -62,7 +62,7 @@ def _colony(
         magnetic_field=1.0,
         planet_type=PlanetType.CONTINENTAL,
         populations=populations,
-        stockpile=stockpile,
+        _stockpile=stockpile,
     )
 
 
@@ -112,7 +112,7 @@ def three_resource_engine():
 class TestOrganicsConsumptionFullSupply:
     def test_full_supply_ratio_is_one_and_stockpile_drained_by_need(self, default_engine):
         """1000 stockpile, 100 pop, allocation 1.0, food_per_pop 0.001
-        -> needed=0.1, supplied=0.1, ratio=1.0, stockpile=999.9."""
+        -> needed=0.1, supplied=0.1, ratio=1.0, _stockpile=999.9."""
         pop = SpeciesPopulation(race_id="human", count=100, happiness=0.5)
         colony = _colony(populations=[pop], stockpile={"organics": 1000.0})
         empire = _Empire([colony])
@@ -126,7 +126,7 @@ class TestOrganicsConsumptionFullSupply:
 
 class TestOrganicsConsumptionPartialSupply:
     def test_half_supply_ratio_is_half_and_stockpile_fully_drained(self, default_engine):
-        """0.05 stockpile, 100 pop -> needed=0.1, supplied=0.05, ratio=0.5, stockpile=0."""
+        """0.05 stockpile, 100 pop -> needed=0.1, supplied=0.05, ratio=0.5, _stockpile=0."""
         pop = SpeciesPopulation(race_id="human", count=100, happiness=0.5)
         colony = _colony(populations=[pop], stockpile={"organics": 0.05})
         empire = _Empire([colony])

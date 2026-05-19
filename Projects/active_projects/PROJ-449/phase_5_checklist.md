@@ -5,7 +5,7 @@
 > 2. Sharded suite green (`python Tools/test_sharded/test_sharded.py`)
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Depends on:** phase_4 (concrete-class setter deletion)
 **Objective:** Drop the F-C-014 "not read-only in absolute terms" caveat in `IShipInstance.cargo_contents` docstring (now actually read-only — Phase 4 deleted the setter). Tidy the parallel `IFacility.consumable_levels` docstring to remove any "until PROJ-444 lands" cross-references that no longer apply.
 
@@ -21,9 +21,9 @@
 **File:** `game/core/protocols/strategy_domain.py`
 **Tests:** `pytest tests/static_guards/test_no_legacy_protocol_names.py tests/unit/core/protocols/ -n 4 -q`
 
-- [ ] At lines 208-233, locate the existing docstring (post-PROJ-446 Phase 2 narrowed it to `Mapping[str, int]`)
-- [ ] Delete lines 213-224 (the "PROJ-436 Phase 3f:" block + "PROJ-446 Phase 2 (F-C-014):" block describing the "not read-only in absolute terms" caveat and the **stale "PROJ-444 Phase 3" cross-reference** — codex r5 NEW-1 verified this stale project ID is in the live docstring; the current retirement project is PROJ-449 itself)
-- [ ] Replace with a tight current-behavior docstring:
+- [x] At lines 208-233, locate the existing docstring (post-PROJ-446 Phase 2 narrowed it to `Mapping[str, int]`)
+- [x] Delete lines 213-224 (the "PROJ-436 Phase 3f:" block + "PROJ-446 Phase 2 (F-C-014):" block describing the "not read-only in absolute terms" caveat and the **stale "PROJ-444 Phase 3" cross-reference** — codex r5 NEW-1 verified this stale project ID is in the live docstring; the current retirement project is PROJ-449 itself)
+- [x] Replace with a tight current-behavior docstring:
   ```python
       @property
       def cargo_contents(self) -> Mapping[str, int]:
@@ -38,8 +38,8 @@
           """
           ...
   ```
-- [ ] Run focused tests; verify `test_no_legacy_protocol_names.py` still pins what it should pin (the absence of legacy *names*, not the caveat text)
-- [ ] Run any test in `tests/unit/core/protocols/` if present
+- [x] Run focused tests; verify `test_no_legacy_protocol_names.py` still pins what it should pin (the absence of legacy *names*, not the caveat text)
+- [x] Run any test in `tests/unit/core/protocols/` if present
 
 **Notes:** The annotation `Mapping[str, int]` is already in place from PROJ-446 Phase 2; this task is pure docstring cleanup.
 
@@ -47,28 +47,28 @@
 **File:** `game/core/protocols/strategy_domain.py`
 **Tests:** `pytest tests/static_guards/test_no_legacy_protocol_names.py -q`
 
-- [ ] At lines 146-166, locate the existing F-C-013 docstring
-- [ ] Confirm: the "kept as `dict[str, float]` rather than `Mapping[str, float]`" framing is a deliberate-design choice (PROJ-436 Phase 0 D1). DO NOT change the annotation.
-- [ ] Drop any reference to "PROJ-444 wrapper retirement" if present (the cross-reference was implicit; verify by reading the current docstring)
-- [ ] Confirm the static-guard test `test_ifacility_still_declares_consumable_levels` still passes (it pins the *presence* of the writable annotation by deliberate choice)
+- [x] At lines 146-166, locate the existing F-C-013 docstring
+- [x] Confirm: the "kept as `dict[str, float]` rather than `Mapping[str, float]`" framing is a deliberate-design choice (PROJ-436 Phase 0 D1). DO NOT change the annotation.
+- [x] Drop any reference to "PROJ-444 wrapper retirement" if present (the cross-reference was implicit; verify by reading the current docstring)
+- [x] Confirm the static-guard test `test_ifacility_still_declares_consumable_levels` still passes (it pins the *presence* of the writable annotation by deliberate choice)
 
 **Notes:** This task is mostly verification, not edit. The F-C-013 finding categorized the writable dict as "tech debt that's deliberately preserved." PROJ-449 doesn't change that classification — it only ensures the docstring doesn't mention now-deleted wrappers.
 
 ### Task 5.3: Run focused + sharded suite [Medium]
 **Tests:** focused, then `python Tools/test_sharded/test_sharded.py`
 
-- [ ] Focused: `pytest tests/static_guards/test_no_legacy_protocol_names.py tests/unit/strategy/ship_instance/ -n 4 -q`
-- [ ] Sharded suite green
-- [ ] Commit message: `PROJ-449 Phase 5: drop IShipInstance.cargo_contents 'not read-only' caveat (closes F-C-014)`
+- [x] Focused: `pytest tests/static_guards/test_no_legacy_protocol_names.py tests/unit/strategy/ship_instance/ -n 4 -q`
+- [x] Sharded suite green
+- [x] Commit message: `PROJ-449 Phase 5: drop IShipInstance.cargo_contents 'not read-only' caveat (closes F-C-014)`
 
 ---
 
 ## Phase Completion Checklist
-- [ ] `IShipInstance.cargo_contents` docstring rewritten — no "not read-only in absolute terms" caveat, no "until PROJ-444" reference
-- [ ] `IFacility.consumable_levels` docstring verified clean (no PROJ-444 cross-references)
-- [ ] Focused + sharded suites green
-- [ ] F-C-014 closed (completes the protocol-side half that PROJ-446 Phase 2 started)
-- [ ] Plan.md Quick Status → Complete; Current State updated
+- [x] `IShipInstance.cargo_contents` docstring rewritten — no "not read-only in absolute terms" caveat, no "until PROJ-444" reference
+- [x] `IFacility.consumable_levels` docstring verified clean (no PROJ-444 cross-references)
+- [x] Focused + sharded suites green
+- [x] F-C-014 closed (completes the protocol-side half that PROJ-446 Phase 2 started)
+- [x] Plan.md Quick Status → Complete; Current State updated
 
 ## Notes / Risks / Coordination Touchpoints
 - **Phase 4 is the precondition.** This phase only makes sense after the concrete-class setter is gone; running it before Phase 4 would create a lying protocol docstring.

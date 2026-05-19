@@ -110,7 +110,7 @@ class TestPlanetFractionalCostStillExact:
     def test_fractional_planet_consume_records_exact_amount(self, engine):
         planet: Planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 1.0},
+            _stockpile={"metals": 1.0},
         )
         item: dict = {"resources_consumed": {"metals": 0.0}}
 
@@ -145,7 +145,7 @@ class TestWholeNumberAccountingUnchanged:
     def test_whole_number_planet_consume_records_requested_amount(self, engine):
         planet: Planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 100.0},
+            _stockpile={"metals": 100.0},
         )
         item: dict = {"resources_consumed": {}}
         engine._apply_resource_consumption(

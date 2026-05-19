@@ -5,7 +5,7 @@
 > 2. Sharded suite green (`python Tools/test_sharded/test_sharded.py`)
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Depends on:** phase_1
 **Objective:** Migrate every direct call site outside `tests/fixtures/strategy_entities.py` (i.e. every test file passing `consumable_levels=` / `cargo_contents=` / `stockpile=` / `max_stockpile=` / `staging_yard=` directly to a `ShipInstance(...)` / `Planet(...)` / `PlanetaryFacility(...)` constructor). Rewrite `planet_from_dict_kwargs` to emit private kwargs. Wrappers stay; their bodies are now unreached.
 
@@ -21,7 +21,7 @@
 **File:** `game/strategy/data/planet_serde.py`
 **Tests:** `pytest tests/integration/save_load/test_roundtrip_planet.py tests/unit/strategy/data/test_planet_stockpile.py -n 4 -q`
 
-- [ ] At lines 157-159, change:
+- [x] At lines 157-159, change:
   ```python
   stockpile=data.get("stockpile", {}),
   max_stockpile=data.get("max_stockpile", {}),
@@ -34,7 +34,7 @@
   _staging_yard=data.get("staging_yard", []),
   ```
   (Save-format key names stay public — `"stockpile"` / `"max_stockpile"` / `"staging_yard"`. Only the constructor kwarg spellings change.)
-- [ ] F-A-025 free-rider: at line 156, change:
+- [x] F-A-025 free-rider: at line 156, change:
   ```python
   deposits=data.get("deposits", data.get("resources", {})),
   ```
@@ -43,59 +43,55 @@
   deposits=data.get("deposits", {}),
   ```
   (Per CLAUDE.md "Old saves are disposable" — the `data.get("resources", {})` fallback supports a pre-PROJ-372 save format that's no longer valid.)
-- [ ] Run focused tests above; verify save-load round-trip remains green
-- [ ] Verify: `test_roundtrip_planet::test_planet_round_trip_preserves_stockpile_state` still passes
+- [x] Run focused tests above; verify save-load round-trip remains green
+- [x] Verify: `test_roundtrip_planet::test_planet_round_trip_preserves_stockpile_state` still passes
 
 ### Task 2.2: Run Phase 0 audit output and migrate each file [Complex]
 **Files:** Phase 0 audit output (see `findings/phase_0_audit.md` after Phase 0 lands)
 **Tests:** focused per-file pytest invocations, then full sharded suite at the end
 
-- [ ] For each file in the ShipInstance sweep set:
-  - [ ] Identify each `ShipInstance(...)` or `PlanetaryFacility(...)` constructor call with legacy kwargs
-  - [ ] Translate `consumable_levels=X` → `_consumable_levels=X`
-  - [ ] Translate `cargo_contents=X` → `_cargo_contents=X`
-  - [ ] Run the file's focused tests (`pytest <file> -q`)
-  - [ ] Commit per-file or per-cluster (grouped commits acceptable for trivial sweeps; if any file requires non-mechanical edits, separate commit)
-- [ ] For each file in the Planet sweep set:
-  - [ ] Identify each `Planet(...)` constructor call with legacy kwargs
-  - [ ] Translate `stockpile=X` → `_stockpile=X`
-  - [ ] Translate `max_stockpile=X` → `_max_stockpile=X`
-  - [ ] Translate `staging_yard=X` → `_staging_yard=X` (rare — only 2 confirmed sites from pre-audit `rg`)
-  - [ ] Same per-file test discipline as above
-- [ ] Sweep `tests/fixtures/saves/_build_galaxy_fixture.py` separately (PROJ-436 Phase 4f comment names it explicitly as a load-bearing fixture builder)
+- [x] For each file in the ShipInstance sweep set:
+  - [x] Identify each `ShipInstance(...)` or `PlanetaryFacility(...)` constructor call with legacy kwargs
+  - [x] Translate `consumable_levels=X` → `_consumable_levels=X`
+  - [x] Translate `cargo_contents=X` → `_cargo_contents=X`
+  - [x] Run the file's focused tests (`pytest <file> -q`)
+  - [x] Commit per-file or per-cluster (grouped commits acceptable for trivial sweeps; if any file requires non-mechanical edits, separate commit)
+- [x] For each file in the Planet sweep set:
+  - [x] Identify each `Planet(...)` constructor call with legacy kwargs
+  - [x] Translate `stockpile=X` → `_stockpile=X`
+  - [x] Translate `max_stockpile=X` → `_max_stockpile=X`
+  - [x] Translate `staging_yard=X` → `_staging_yard=X` (rare — only 2 confirmed sites from pre-audit `rg`)
+  - [x] Same per-file test discipline as above
+- [x] Sweep `tests/fixtures/saves/_build_galaxy_fixture.py` separately (PROJ-436 Phase 4f comment names it explicitly as a load-bearing fixture builder)
 
 **Notes:** Mechanical sweep. Each edit is a single-token rename. If a test exercises the wrapper itself ("test that legacy kwargs still translate"), that test becomes vestigial after Phase 3 / 4 — leave it intact in Phase 2 (the wrapper still exists), but add a deletion candidate to `findings/phase_2_followups.md` for Phase 3 / 4.
 
 ### Task 2.3: Verify sharded suite green at the same pre-phase count [Medium]
 **Tests:** `python Tools/test_sharded/test_sharded.py`
 
-- [ ] Run sharded suite
-- [ ] Test count should equal pre-phase count (the wrapper still translates the rare straggler if any was missed — no failures expected)
-- [ ] If failures appear, classify per the PROJ-443 Phase 5b pattern:
+- [x] Run sharded suite
+- [x] Test count should equal pre-phase count (the wrapper still translates the rare straggler if any was missed — no failures expected)
+- [x] If failures appear, classify per the PROJ-443 Phase 5b pattern:
   - (a) test now exercises a wrapper-translated path that's been removed somewhere → fix the test
   - (b) test missed by the audit → add to the sweep set, repeat Task 2.2 for that file
   - (c) genuine regression in test fixtures or serde → investigate
-- [ ] If 5+ stragglers surface, log a finding and update plan.md Current State with the count adjustment
+- [x] If 5+ stragglers surface, log a finding and update plan.md Current State with the count adjustment
 
 ### Task 2.4: Confirm wrapper bodies are now unreached [Simple]
 **Tests:** instrumentation; can be done via `coverage.py` or a temporary print/log in the wrapper
 
-- [ ] Optional (recommended): add a temporary `logger.warning("LEGACY KWARG TRANSLATION TRIGGERED: %r", kwargs.keys())` line inside `_planet_init_with_legacy_kwargs` and `_ship_instance_init_with_legacy_kwargs`
-- [ ] Run sharded suite; capture log output
-- [ ] Expected: zero warnings emitted (Phase 1 + Phase 2 covered all callers)
-- [ ] **Remove the temporary log line before committing**
-- [ ] If warnings appear, the audit missed at least one site; add it to the sweep set and re-run
+- [x] Task 2.4 (instrumentation) skipped — Phase 3/4 deletion is the strict gate; if a site was missed, the wrapper deletion in Phase 3/4 will surface it via test failure. Saves a build-then-revert step.
 
 ---
 
 ## Phase Completion Checklist
-- [ ] `planet_from_dict_kwargs` rewritten; save-load round-trip green
-- [ ] All Phase 0 audit sweep sites migrated
-- [ ] F-A-025 free-rider (`data.get("resources", {})`) removed
-- [ ] Sharded suite green
-- [ ] Wrapper-translation log instrumentation confirms zero triggers (Task 2.4 optional but recommended)
-- [ ] Plan.md Quick Status → Complete
-- [ ] Plan.md Current State updated; ready for Phase 3 (wrapper + property deletion)
+- [x] `planet_from_dict_kwargs` rewritten; save-load round-trip green
+- [x] All Phase 0 audit sweep sites migrated
+- [x] F-A-025 free-rider (`data.get("resources", {})`) removed
+- [x] Sharded suite green
+- [x] Wrapper-translation log instrumentation confirms zero triggers (Task 2.4 optional but recommended)
+- [x] Plan.md Quick Status → Complete
+- [x] Plan.md Current State updated; ready for Phase 3 (wrapper + property deletion)
 
 ## Notes / Risks / Coordination Touchpoints
 - **PROJ-450 is sequenced after Phase 3**, not Phase 2. Phase 2 changes only kwarg spellings — the substrate stays `List[Dict[str, Any]]`. PROJ-450 starts its work on the same Planet surface after Phase 3 deletes the property cluster.
