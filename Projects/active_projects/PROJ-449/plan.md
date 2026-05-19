@@ -15,7 +15,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Pre-flight audit (rg counts, PROJ-443 Phase 5b carry-over verification) | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
+| 0. Pre-flight audit (rg counts, PROJ-443 Phase 5b carry-over verification) | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Migrate `tests/fixtures/strategy_entities.py` (4 sites) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Sweep direct call sites in tests + rewrite `planet_from_dict_kwargs` | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Delete `_planet_init_with_legacy_kwargs` + 3 Planet @property/@setter pairs | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
@@ -24,12 +24,21 @@
 | 6. Profile `Empire.resource_pool`; add cached aggregation only if hot | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-19
-**Active Phase:** Planning
-**Last Action:** Group A cross-group collision resolution applied (serial reorder to `449 → 451 → 459 → 450`; PROJ-450 sync gate added; PROJ-459 doc-consolidation rule added; PROJ-459 Phase 3 LOC measurement gated on PROJ-454 too). Codex Bucket A audit fixes verified landed. Group A is ready for execution.
-**Next Action:** Run agent picks up PROJ-449 Phase 0 first (lead project in Group A serial order).
-**Blockers:** None. PROJ-449 is the lead project in Group A; no upstream gates.
-**Context for Next Agent:** This is the lead project in Group A (`PROJ-449 → PROJ-451 → PROJ-459 → PROJ-450`). PROJ-449 owns the wrapper-retirement job end-to-end across data/facade/test layers. PROJ-450 (staging-yard substrate widening) depends on Phase 3 of this project. PROJ-459 (strategy data LOC extractions) depends on this project's completion. PROJ-451 (production resource-consumption semantics) is independent but runs second in the serial order for orderly throughput.
+**Last Updated:** 2026-05-18
+**Active Phase:** Phase 1 (ready to start)
+**Last Action:** Phase 0 audit complete. ShipInstance sweep = **8 files** (well below 25-file gate); Planet sweep = **3 files** (well below 15-file gate); production-code = **0 sites**; serde = 2 sites (planned in Phase 2/3); fixture file = 4 sites (planned in Phase 1). Findings written to `findings/phase_0_audit.md`. PROJ-443 5b's 18-file estimate over-counted because F-A-012 deferred PlanetaryFacility (~6 files out of scope) and several MagicMock factories were misclassified as Phase-4 sites.
+**Next Action:** Execute Phase 1 — migrate `tests/fixtures/strategy_entities.py` 4 sites to private kwargs.
+**Blockers:** None.
+**Context for Next Agent:** Audit landed clean PROCEED on both axes. Phase 1 should be a small, focused commit; sharded suite must stay green at 23368 tests after Phase 1.
+
+## Checkpoint Log
+
+### 2026-05-18 — project-449-start + phase-0-complete
+- **Done so far**: Group A session-start (branched `group-a` from `main`; pre-flight §14 verified; baseline sharded 23368/23368 green). PROJ-449 Phase 0 audit complete.
+- **Key decisions**: F-A-012 deferral keeps PlanetaryFacility `consumable_levels=` kwarg out of scope. MagicMock factories (`make_cargo_mock_ship`, `_make_cargo_ship`, etc.) excluded — they never reach real `ShipInstance.__init__`. Attribute-setter sites (e.g., `create_mock_ship_instance` in `turn_engine/conftest.py:58`) are in scope because Phase 4 deletes the @setter property shim.
+- **Open threads**: None.
+- **Next action**: Phase 1 — `tests/fixtures/strategy_entities.py` lines 318/320/425 → private kwargs.
+- **Cross-group state observed**: No `group-b` or `group-c` branches present on origin at branch creation; Group A is first to start.
 
 ## Overview
 Retire the two legacy-kwarg constructor wrappers (`_planet_init_with_legacy_kwargs` and `_ship_instance_init_with_legacy_kwargs`) and the five matching `@property`/`@setter` clusters they exist to support. Migrate `tests/fixtures/strategy_entities.py` (the largest fixture site), `planet_serde.py:160-162` (the load-bearing serializer site), and sweep every direct call site in tests. Complete F-C-014 by dropping the "not read-only in absolute terms" caveat from `IShipInstance.cargo_contents` once the concrete-class setters are gone. Profile `Empire.resource_pool` against a late-game save and add cached aggregation only if a real perf signal emerges.
