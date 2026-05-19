@@ -1,6 +1,6 @@
 # Known Issues - Compact Agent Reference
 
-> Last verified: 2026-05-07
+> **Last verified:** 2026-05-19 - SettingsWindow added to the two-stage retrofit list and the stale `tests/fixtures/README.md` warning paragraph removed (PROJ-458 Phase 1 / F-C-016 closure).
 > Basis: `docs/known-issues.md`, `AgentCoordination/Scratchpad/reports/known-issues_ALT_compact.md`, and spot-checks of current source paths referenced below. Historical project paths under `Projects/active_projects/PROJ-327` and `Projects/active_projects/PROJ-329A` have moved to archives; treat archived project files as provenance, not current work queues.
 
 This file keeps only current cautions, live contracts, useful workarounds, and stale-reference corrections. It intentionally omits release-note archaeology from PROJ-321..329.

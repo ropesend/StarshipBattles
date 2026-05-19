@@ -20,12 +20,13 @@
 | 3. GravityTargetEditor (220 LOC) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. WaterTargetEditor (227 LOC) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. RadiationShieldEditor (231 LOC) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. docs/known-issues.md verification-stamp bump (codex-audit driven) | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-19
-**Active Phase:** End-of-project codex audit (pending)
-**Last Action:** All five phases complete on `group-c`. Pattern #33 two-stage `UIWindow` bypass-init retrofit applied to: SettingsWindow (Phase 1, 109 LOC); AtmosphereTargetEditor (Phase 2, 273 LOC); GravityTargetEditor (Phase 3, 220 LOC); WaterTargetEditor (Phase 4, 227 LOC); RadiationShieldEditor (Phase 5, 231 LOC). Each retrofit adds a `{Editor}UiBuilder` Protocol + `Default{Editor}UiBuilder` (thin wrapper around the editor's existing `_build_ui()` method) and restructures `__init__` to Stage 1 (pure-Python state + `ui_builder` seam) / bypass guard / Stage 2 (`super().__init__` + `self._ui_builder.build(self)`). Public positional/keyword-able signatures preserved; kw-only `ui_builder` parameter added. Five new test files in `tests/unit/ui/screens/` total 30 characterization tests (10 + 5 + 5 + 5 + 5). F-C-016 closure (Phase 1): `docs/known-issues.md:37` stale warning paragraph deleted; `SettingsWindow` added to the "already on two-stage recipe" list. Combined Phase 2-5 sharded ran with 1 flake (`test_reset_button_resets_settings_to_defaults` — passed in isolation per §13); retry running.
-**Next Action:** Confirm sharded retry green; commit Phases 2-5 individually; dispatch the end-of-project codex audit per Group C prompt Step 4.
+**Active Phase:** Project complete — merging to main
+**Last Action:** End-of-project codex audit landed (`consults/20260519T145550Z_end-of-project-audit/response.md`) with verdict "Extra phases needed... once that doc-freshness issue is fixed, I do not see a remaining production blocker in PROJ-458." Codex flagged one verified issue: `docs/known-issues.md` Phase 1 substantive edit left the `> Last verified: 2026-05-07` stamp unchanged, violating `docs/03_CONVENTIONS.md:502-513`. Phase 6 applied: stamp bumped to `2026-05-19` with the canonical convention format (`> **Last verified:** YYYY-MM-DD - <one-sentence summary>`). All 5 Phase 1-5 retrofits + the 6 candidate verifications codex performed all PASS. Combined sharded across all 6 phases: 23463/23463 on retry (1 flake on `test_reset_button_resets_settings_to_defaults` in the first run, passed in isolation per §13).
+**Next Action:** End-of-project merge to `main` per protocol §3.
 **2026-05-19 cross-group resolution (final):** No edits required to PROJ-458 beyond the Group C execution-context block. Zero file overlap with Group A or Group B verified.
 
 ## Overview
