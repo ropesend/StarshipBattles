@@ -32,9 +32,11 @@ PROJ-328 Phase B: Real MVVM split.
   explicitly out of scope here.
 
 The screen itself composes the three delegates, forwards events to
-the controller, owns the widget refs populated by ``_create_ui()``,
-and keeps property shims so existing tests / callers that read
-``screen.player_count``, ``screen.player_races``, etc. keep working.
+the controller, and owns the widget refs populated by
+``_create_ui()``. Selection state lives on ``_view_model``; callers
+read it via ``screen._view_model.player_count`` / ``.player_races``
+etc. PROJ-456 Phase 5 retired the property shims that previously
+exposed those names on the screen directly.
 
 Two-stage ``__init__`` per PROJ-325 PoC + PROJ-328 Phase A:
 

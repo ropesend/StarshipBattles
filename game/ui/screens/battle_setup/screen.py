@@ -5,8 +5,11 @@ only:
   - IScene protocol implementation (handle_event / update / draw / handle_resize)
   - Delegate wiring (state, view_model, renderer, input_handler, controller)
   - Lifecycle delegation to the controller
-  - Backward-compat property shims so the renderer's panel builders can
-    keep reading `screen.active_side` / `screen.tick_limit` / etc.
+
+Panel builders read selection state via ``screen.view_model.<X>`` /
+``screen.state.<X>`` / ``screen.controller.<X>`` directly; the legacy
+``screen.active_side`` / ``screen.tick_limit`` etc. property shims were
+retired in PROJ-456 Phase 5.
 
 All mutations, event dispatch, pygame_gui construction, TF/SQ CRUD, save/
 load, and battle launch live on dedicated delegates in this package.

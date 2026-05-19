@@ -2,8 +2,9 @@
 
 PROJ-309 sub-phase 3.2: extracted from the renderer.
 PROJ-374: introduced ``GridLayer`` with a quantized property-keyed surface
-cache. ``draw_grid`` is preserved for back-compat; new callers should use
-``GridLayer.draw``.
+cache. PROJ-456 Phase 1 retired the legacy module-level ``draw_grid``
+free function; production renders go through ``GridLayer.draw`` and tests
+do the same.
 """
 from __future__ import annotations
 

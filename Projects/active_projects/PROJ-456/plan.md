@@ -20,12 +20,13 @@
 | 3. BattleSetupState `side_0` / `side_1` cluster (2 production + 5 test files) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. `transfer_dialog` cluster + characterization sweep (drops file under 500-LOC ceiling) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Big-three shim clusters: StrategyRenderer, NewGameSetupScreen, BattleSetupScreen | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Codex-audit polish (4 stale docstring sweeps) | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-17
-**Active Phase:** All phases complete; awaiting end-of-project codex audit
-**Last Action:** Phase 5 complete. F-C-004 (StrategyRenderer: deleted 6 cache-attr property shims at lines 107-130; zero test/production callers reach through them), F-C-008 (NewGameSetupScreen: 30 `screen.<vm_attr>` refs swept across 2 test files; deleted 6 VM property shims), F-C-009 (BattleSetupScreen: 40 refs swept across 4 files — 3 panels + 1 test file — to `screen.view_model.<X>` (6 VM shims) and `screen.controller.<X>` (5 controller shims); deleted the 11-shim block at battle_setup/screen.py:93-185). Sharded 23362/23362 green. All 14 owned PROJ-456 findings resolved.
-**Next Action:** Dispatch PROJ-456 end-of-project codex audit per protocol §10.
+**Last Updated:** 2026-05-19
+**Active Phase:** Project complete; ready for end-of-project merge to main
+**Last Action:** Phase 6 closed 4 stale docstrings codex flagged (new_game_setup_screen, battle_setup/screen, battle_setup_state, strategy_render/grid) — all module/class docstrings claimed deleted shims were still preserved. Trivial polish; skipped re-audit per PART 3 Step D. 13 of 14 findings closed; F-C-012 remains partially-closed by the documented Option B decision (production None-path preserved). Sharded 23362/23362 green.
+**Next Action:** Merge group-b through PROJ-456 to main per protocol §3.
 **Blockers:** None.
 
 ## Checkpoint Log
@@ -184,6 +185,14 @@ The three highest-volume shim clusters. Land in any order — write scopes are d
 - **F-C-009** — 11 BattleSetupScreen VM + controller property shims. ~37 references across `tests/unit/ui/screens/test_battle_setup_state.py` (7) + 4 production panel files (`right_panel.py:1`, `left_panel.py:11`, `center_panel.py:14`, `screen.py:2`). The panels read `screen.active_side`, `screen.active_fleet_index`, etc. extensively — those are the bulk of the migration work. Replace each `screen.<name>` read with `screen.view_model.<name>` (or `screen.controller.<name>` for the end-condition cluster). Delete property block at lines 93-205.
 
 **Checkpoint:** sharded suite green; 3 finding entries close; PROJ-456 complete.
+
+### Phase 6: Codex-audit polish (4 stale docstring sweeps) [Trivial]
+Added after the PROJ-456 end-of-project codex audit flagged 4 module/class docstrings that still described the deleted property shims as live. All edits are docstring-only; no behaviour changes. Per protocol PART 3 Step D, no re-audit dispatched (trivial polish).
+
+- **Task 6.1** — `game/ui/screens/new_game_setup_screen.py:34-37`: refresh "keeps property shims" docstring to describe `_view_model` as the canonical state owner.
+- **Task 6.2** — `game/ui/screens/battle_setup/screen.py:8-9`: refresh "Backward-compat property shims" docstring to describe panels reading via `screen.view_model.<X>` / `screen.state.<X>` / `screen.controller.<X>`.
+- **Task 6.3** — `game/ui/screens/battle_setup_state.py:151-155`: refresh "`side_0` / `side_1` properties remain" class docstring to describe `state.sides[i]` / `state.get_side(team_id)` as canonical access patterns.
+- **Task 6.4** — `game/ui/screens/strategy_render/grid.py:4-6`: refresh "`draw_grid` is preserved for back-compat" module docstring to describe `GridLayer.draw` as the only render path.
 
 ## Dependencies & Sibling Projects
 
