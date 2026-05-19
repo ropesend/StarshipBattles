@@ -9,7 +9,8 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| (TBD — scope phase before any code phases) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Scope audit — TD-06 shim caller inventory | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2+. Per-cluster migration sweeps (sequence defined by Phase 1) | Not Started | TBD per Phase 1 verdict |
 
 ## Current State
 **Last Updated:** 2026-05-19

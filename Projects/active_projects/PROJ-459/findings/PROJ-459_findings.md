@@ -48,7 +48,7 @@ This project carries three findings:
 
 ### Closure record — 2026-05-19 Phase 1 execution
 - `game/strategy/data/fleet_serde.py` created (168 LOC). Public surface: `fleet_to_dict`, `fleet_from_dict_kwargs`, `_deserialize_fleet_ships`, `_deserialize_fleet_orders`. Mirrors `planet_serde.py` (219 LOC).
-- `Fleet.to_dict` / `Fleet.from_dict` reduced to 1-line / facade-shaped bodies. `Fleet.resolve_order_references` stays a method on `Fleet` (already a thin delegate to `OrderSerializer`; moving it adds no value — see decisions.md row 2026-05-19).
+- `Fleet.to_dict` reduced to a 1-line facade calling `fleet_to_dict(self)`. `Fleet.from_dict` is a **thin facade** that calls `Fleet(**fleet_from_dict_kwargs(data, registries))` then performs the unavoidable post-construction hydration of `ships` / `task_forces` / `fleet_policy` / `path` / `construction_queue` / `orders` (none of which `Fleet.__init__` accepts as kwargs — see decisions.md row 2026-05-19 "fleet_from_dict_kwargs returns only Fleet.__init__ kwargs"). `Fleet.resolve_order_references` stays a method on `Fleet` (already a thin delegate to `OrderSerializer`; moving it adds no value — see decisions.md row 2026-05-19).
 - fleet.py LOC: 693 → 632 (−61). Still above 500-LOC ceiling; the next mechanical extraction target (order-queue management, ~120 LOC) is the natural next-touch.
 - Save-format byte-identical, confirmed by new characterization test at `tests/integration/save_load/test_fleet_serde_roundtrip.py` (3 tests).
 - Targeted regression: 35 tests pass (`test_fleet_serde_roundtrip.py` + `test_roundtrip_fleet.py` + `test_serialization.py`). Broader `tests/integration/save_load/` + `tests/unit/strategy/fleet/`: 388 pass.
