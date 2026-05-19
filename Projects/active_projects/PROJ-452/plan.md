@@ -16,15 +16,15 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Container.remove non-negative guard (DI-005) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. FleetInfo.from_fleet catalog-driven (DI-003) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. FleetInfo.from_fleet catalog-driven (DI-003) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. stat_rows_dynamic LABEL_ABBREV retirement (DI-004 + F-C-015) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Sweep — catalog-vs-hardcode residue in stat_rows_dynamic + adjacent UI surfaces | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-18
-**Active Phase:** Phase 2 (next)
-**Last Action:** Phase 1 (DI-005) complete on `group-c`. Mirrored Container.add non-negative guards onto Container.remove at `container.py:227-228` (resource) and `:248-249` (population). Three RED-then-GREEN tests landed in `tests/unit/strategy/data/test_container.py` (`test_remove_rejects_negative_resource_quantity`, `test_remove_does_not_grow_storage_on_negative_quantity`, `test_remove_rejects_negative_population_quantity`). All 35 tests in file green. DI-2026-05-18-005 marked `resolved` in `log.jsonl`. Baseline pre-edit sharded suite: 23368/23368 green; post-edit sharded suite running (end-of-phase gate). Branch `group-c` pushed to origin (new branch).
-**Next Action:** Confirm post-edit sharded suite green, commit Phase 1, then begin Phase 2 (DI-003 — FleetInfo.from_fleet catalog iteration at `game/strategy/facade/dto/fleet_dto.py:230-239`). Read `phase_2_checklist.md` in full first.
+**Active Phase:** Phase 3 (next)
+**Last Action:** Phase 2 (DI-003) complete on `group-c`. Module-level `ResourceCatalog` import added to `fleet_dto.py`; both hardcoded 8-tuples at `:230-239` replaced with `ResourceCatalog.from_json().all_ids()` iteration. Two new tests in `test_fleet_dto.py` (covers_full_catalog characterization + surfaces_new_resource RED-side regression catcher via monkeypatch). All 27 tests in file green. DI-2026-05-18-003 marked `resolved` in `log.jsonl`. Phase 2 sharded suite running (end-of-phase gate).
+**Next Action:** Confirm Phase 2 sharded green, commit + push, then begin Phase 3 (DI-004 + F-C-015 — drop `LABEL_ABBREV` dicts at `stat_rows_dynamic.py:178-181, 251-254`; introduce a single `_label_for(resource_id)` helper backed by `ResourceCatalog.from_json().get(rid).name`).
 **Blockers:** None.
 **2026-05-19 cross-group resolution (final):** No edits required to PROJ-452 beyond adding the Group C execution-context block to Dependencies. PROJ-452 is the most parallel-safe project in Group C (no shared write surfaces with Groups A/B).
 
@@ -154,7 +154,8 @@ No hard predecessor. All four phases are mechanically independent and can land i
 
 - [ ] All four phase checklists complete
 - [x] DI-005 marked `resolved` in `AgentCoordination/discovered_issues/log.jsonl` (Phase 1)
-- [ ] DI-003, DI-004 marked `resolved` in `AgentCoordination/discovered_issues/log.jsonl`
+- [x] DI-003 marked `resolved` in `AgentCoordination/discovered_issues/log.jsonl` (Phase 2)
+- [ ] DI-004 marked `resolved` in `AgentCoordination/discovered_issues/log.jsonl`
 - [ ] F-C-015 closed in this project's findings file
 - [ ] `pytest tests/unit/strategy/data/test_container.py tests/unit/strategy/facade/test_fleet_dto.py tests/unit/ui/screens/builder/ -q` green
 - [ ] Full sharded suite green (`python Tools/test_sharded/test_sharded.py`)

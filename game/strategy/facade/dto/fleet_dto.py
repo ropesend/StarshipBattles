@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from typing import Tuple, Optional
 
 from game.core.hex_math import HexCoord
+from game.core.resources import ResourceCatalog
 
 _LOG = logging.getLogger(__name__)
 
@@ -229,13 +230,11 @@ class FleetInfo:
             capabilities=capabilities,
             cargo_resources=tuple(
                 (res, fleet.resources.get_fleet_cargo_current(res))
-                for res in ("metals", "organics", "vapors", "radioactives", "exotics",
-                            "fuel", "energy", "ammo")
+                for res in ResourceCatalog.from_json().all_ids()
             ),
             cargo_capacities=tuple(
                 (res, fleet.resources.get_fleet_cargo_capacity(res))
-                for res in ("metals", "organics", "vapors", "radioactives", "exotics",
-                            "fuel", "energy", "ammo")
+                for res in ResourceCatalog.from_json().all_ids()
             ),
             carried_items_summary=cls._aggregate_carried_items(fleet),
             carried_vehicles_by_type=cls._aggregate_carried_vehicles_by_type(fleet),
