@@ -18,13 +18,13 @@
 | 1. Container.remove non-negative guard (DI-005) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. FleetInfo.from_fleet catalog-driven (DI-003) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. stat_rows_dynamic LABEL_ABBREV retirement (DI-004 + F-C-015) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Sweep — catalog-vs-hardcode residue in stat_rows_dynamic + adjacent UI surfaces | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Sweep — catalog-vs-hardcode residue in stat_rows_dynamic + adjacent UI surfaces | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-18
-**Active Phase:** Phase 4 (next)
-**Last Action:** Phase 3 (DI-004 + F-C-015) complete on `group-c`. Module-level `_label_for(resource_id)` helper added above `get_construction_rows`; both `LABEL_ABBREV` dicts (at `:178-181` and `:251-254`) deleted; the three call sites (`:189`, `:262`, `:272`) now route through `_label_for(res)` → `ResourceCatalog.from_json().get(rid).name` with defensive fallback. Three RED-then-GREEN tests in `test_stat_rows_dynamic.py` (`TestCatalogDrivenLabels`). All 134 tests in `tests/unit/ui/screens/builder/` green. DI-2026-05-18-004 marked `resolved` in `log.jsonl`; F-C-015 closure recorded in `decisions.md`. User-visible change: the radioactives row label is now `Radioactives` (canonical) instead of the legacy `Radact` abbreviation. `rg -n LABEL_ABBREV game/ui/screens/builder/stat_rows_dynamic.py` returns zero matches. Phase 3 sharded suite running.
-**Next Action:** Confirm Phase 3 sharded green, commit + push, then begin Phase 4 (audit sweep — confirm `stat_rows_dynamic.py` post-Phase-3 has no other hardcoded resource constants; audit `empire_treasury_panel.py`, `build_queue_helpers.py`, and any UI files surfaced by the backstop grep). Note: a pre-Phase-4 subagent already flagged `game/ui/screens/build_queue_helpers.py:20-35` (`RESOURCE_ABBREVS` dict) as a candidate — verify and decide in Phase 4.
+**Active Phase:** End-of-project codex audit (pending)
+**Last Action:** Phase 4 (sweep audit) complete on `group-c`. Audit-only outcome — zero production changes. Audited surfaces: `stat_rows_dynamic.py` (post-Phase-3), `empire_treasury_panel.py`, `build_queue_helpers.py`, plus backstop grep across `game/ui/` and `game/strategy/`. Two candidate hardcoded lists identified (`stat_rows_dynamic.py:72` `resource_order` and `build_queue_helpers.py:20-35` `RESOURCE_ABBREVS` / `RESOURCE_ABBREVS_SHORT`) but BOTH classified as different from the DI-003/004 silent-loss anti-pattern: they are curated lists with non-silent fallbacks (alphabetical sort / `res[:3]`). Per-finding rationale recorded in `decisions.md`. PROJ-452 production scope is closed: all four phases complete; DI-003, DI-004, DI-005 marked `resolved` in `log.jsonl`; F-C-015 closure recorded in `decisions.md`.
+**Next Action:** Run Phase 4 sharded gate (no production changes since Phase 3, but the protocol still requires sharded green at phase end). Commit + push Phase 4. Then dispatch the end-of-project codex audit per protocol §10 / Group C prompt Step 4.
 **Blockers:** None.
 **2026-05-19 cross-group resolution (final):** No edits required to PROJ-452 beyond adding the Group C execution-context block to Dependencies. PROJ-452 is the most parallel-safe project in Group C (no shared write surfaces with Groups A/B).
 
