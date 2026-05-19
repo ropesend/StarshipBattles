@@ -15,6 +15,24 @@ from .stat_getters import (
 )
 
 
+def _label_for(resource_id: str) -> str:
+    """Canonical display label for a resource id via ResourceCatalog.
+
+    Falls back to the raw id if the catalog can't resolve the name —
+    a defensive guard against partial-hydration test contexts that the
+    retired hardcoded abbreviation map implicitly tolerated via its
+    dict-get default.
+    """
+    from game.core.resources import ResourceCatalog
+    try:
+        definition = ResourceCatalog.from_json().get(resource_id)
+        if definition is not None:
+            return definition.name
+    except Exception:  # Intentional broad catch: catalog may be unavailable in some test fixtures.
+        pass
+    return resource_id
+
+
 def _get_constant_consumption(ship, res_name) -> Any:
     """Get constant consumption rate for a resource (excludes activation-based)."""
     from game.simulation.components.abilities.resources import ResourceConsumption
@@ -175,10 +193,6 @@ def get_construction_rows(ship) -> Any:
     from game.core.resources import ResourceCatalog
 
     PLANET_RESOURCE_NAMES = [d.id for d in ResourceCatalog.from_json().by_display_group("planetary")]
-    LABEL_ABBREV = {
-        "metals": "Metals", "organics": "Organics", "vapors": "Vapors",
-        "radioactives": "Radact", "exotics": "Exotics",
-    }
 
     rows = []
     for res in PLANET_RESOURCE_NAMES:
@@ -186,7 +200,7 @@ def get_construction_rows(ship) -> Any:
             return ship.construction_cost.get(r, 0)
 
         rows.append(StatDefinition(
-            id=f"cost_{res.lower()}", label=LABEL_ABBREV.get(res, res),
+            id=f"cost_{res.lower()}", label=_label_for(res),
             getter=res_getter, formatter="{:.0f}", unit=""
         ))
     return rows
@@ -248,18 +262,13 @@ def get_strategic_rows(ship) -> Any:
     info = _get_strategic_abilities(ship)
     rows = []
 
-    LABEL_ABBREV = {
-        "metals": "Metals", "organics": "Organics", "vapors": "Vapors",
-        "radioactives": "Radact", "exotics": "Exotics",
-    }
-
     if info['harvesters']:
         for res, rate in sorted(info['harvesters'].items()):
             def rate_getter(ship, r=res) -> Any:
                 data = _get_strategic_abilities(ship)
                 return data['harvesters'].get(r, 0.0)
             rows.append(StatDefinition(
-                id=f"harvest_{res}", label=f"Harv {LABEL_ABBREV.get(res, res)}",
+                id=f"harvest_{res}", label=f"Harv {_label_for(res)}",
                 getter=rate_getter, formatter="{:.1f}", unit="/turn"
             ))
 
@@ -269,7 +278,7 @@ def get_strategic_rows(ship) -> Any:
                 data = _get_strategic_abilities(ship)
                 return data['storage'].get(r, 0.0)
             rows.append(StatDefinition(
-                id=f"storage_{res}", label=f"Stor {LABEL_ABBREV.get(res, res)}",
+                id=f"storage_{res}", label=f"Stor {_label_for(res)}",
                 getter=cap_getter, formatter="{:,.0f}", unit=""
             ))
 

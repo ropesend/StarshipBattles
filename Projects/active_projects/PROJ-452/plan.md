@@ -15,17 +15,18 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Container.remove non-negative guard (DI-005) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. FleetInfo.from_fleet catalog-driven (DI-003) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. stat_rows_dynamic LABEL_ABBREV retirement (DI-004 + F-C-015) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Sweep — catalog-vs-hardcode residue in stat_rows_dynamic + adjacent UI surfaces | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 1. Container.remove non-negative guard (DI-005) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. FleetInfo.from_fleet catalog-driven (DI-003) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. stat_rows_dynamic LABEL_ABBREV retirement (DI-004 + F-C-015) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Sweep — catalog-vs-hardcode residue in stat_rows_dynamic + adjacent UI surfaces | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. plan.md bookkeeping reconciliation (codex-audit driven extra phase) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-19
-**Active Phase:** Planning
-**Last Action:** Group 3 pre-execution review fixes applied (codex + subagent reviews; see consult artifacts at `AgentCoordination/Scratchpad/Consult/20260519T024637Z_group3-pre-execution-review/` and `.agent_reports/group3_pre_execution_review/`). Mechanically swept 10 Unix-style shell snippets in plan.md (1), phase_2_checklist.md (1), phase_3_checklist.md (2), phase_4_checklist.md (4), manifest.md (1), and findings/PROJ-452_findings.md (1) — all `git grep -nE …` / `grep -n …` forms rewritten to `rg -n …` so they execute on this Windows PowerShell checkout. Narrative references to "the backstop grep" and "visible from `git grep`" left as-is (not runnable commands). Earlier 2026-05-19 codex Bucket-B fixes retained: (1) corrected test path from `tests/unit/strategy/facade/dto/test_fleet_dto.py` to the live `tests/unit/strategy/facade/test_fleet_dto.py` in plan.md, manifest.md, and phase_2_checklist.md; (2) expanded Phase 2 Task 2.1's "fresh_registries / extra catalog id" fixture guidance to require a `ResourceCatalog.from_json` monkeypatch (or `Paths.RESOURCES_FILE` override), because `FleetInfo.from_fleet` reads `ResourceCatalog.from_json()` directly which loads JSON from disk (`game/core/resources.py:85-107`) — a plain in-memory registry fixture is insufficient.
-**Next Action:** Run agent picks up PROJ-452 Phase 1 first (PROJ-452 is **position 1 of 4** in Group C's serial order `452 → 455 → 458 → 460` — see Group C execution context in the Dependencies & Sibling Projects section and `Projects/active_projects/GroupC_execution_prompt.txt`).
-**Blockers:** None. Group C is ready for execution; coordinator confirmed no hard cross-group blockers with Group A (PROJ-449/451/450/459) or Group B (PROJ-456/454/457).
+**Active Phase:** Project complete — merging to main
+**Last Action:** Phase 5 (codex-audit driven plan.md reconciliation) complete on `group-c`. The end-of-project codex audit landed at `consults/20260519T133252Z_end-of-project-audit/response.md` with verdict "production code changes are mergeable" — codex flagged one verified issue (this plan.md was stale relative to the post-Phase-4 / post-audit evidence) and rejected four candidate findings as false positives (order-sensitivity regression in Phase 2, silent-loss anti-pattern equivalence on the Phase 4 candidates, `_label_for` row-loss risk, hidden production drift outside the documented scope). Phase 5 reconciles the Current State block + the top-level Verification checklist; zero production code changes; no re-audit required (Phase 5 is 0 LOC of production change per Group C prompt Step 4).
+**Next Action:** End-of-project merge to `main` per protocol §3: `git fetch origin && git checkout main && git pull --ff-only origin main && git checkout group-c && git rebase main && git push --force-with-lease origin group-c && git checkout main && git merge --no-ff group-c -m "Merge group-c through PROJ-452 (end of project)" && git push origin main && git checkout group-c && git rebase main && git push --force-with-lease origin group-c`.
+**Blockers:** None.
 **2026-05-19 cross-group resolution (final):** No edits required to PROJ-452 beyond adding the Group C execution-context block to Dependencies. PROJ-452 is the most parallel-safe project in Group C (no shared write surfaces with Groups A/B).
 
 ## Overview
@@ -120,6 +121,11 @@ Now that Phase 3 has touched `stat_rows_dynamic.py`, sweep the rest of the file 
 
 This is an audit-then-decide phase. If no hardcoded constants survive after Phase 3, Phase 4 closes with the audit report committed to `decisions.md` and no production touch.
 
+### Phase 5: plan.md bookkeeping reconciliation — codex-audit driven [Trivial]
+
+**Status:** Complete
+**Objective:** Reconcile this `plan.md` with the already-complete project-artifact evidence. The end-of-project codex audit (consult at `consults/20260519T133252Z_end-of-project-audit/response.md`) flagged that the Current State block + the top-level Verification checklist were stale relative to the post-Phase-4 state. Zero production code, zero test changes; pure bookkeeping. Per Group C prompt Step 4: "Repeat the codex audit if the new phases are non-trivial (>30 LOC of production change)." Phase 5 is 0 LOC of production change — no re-audit. See `phase_5_checklist.md` for details.
+
 ## Related Documents
 
 - [design.md](design.md) — architecture rationale + parallelism contract with PROJ-453/454/455
@@ -152,11 +158,36 @@ No hard predecessor. All four phases are mechanically independent and can land i
 
 ## Verification
 
-- [ ] All four phase checklists complete
-- [ ] DI-003, DI-004, DI-005 marked `resolved` in `AgentCoordination/discovered_issues/log.jsonl`
-- [ ] F-C-015 closed in this project's findings file
-- [ ] `pytest tests/unit/strategy/data/test_container.py tests/unit/strategy/facade/test_fleet_dto.py tests/unit/ui/screens/builder/ -q` green
-- [ ] Full sharded suite green (`python Tools/test_sharded/test_sharded.py`)
-- [ ] Sweep phase produced either fixes or an audit report in `decisions.md`
-- [ ] Audit passed (Codex end-of-project consult per the standing workflow)
+- [x] All five phase checklists complete (Phases 1-4 + audit-driven Phase 5)
+- [x] DI-005 marked `resolved` in `AgentCoordination/discovered_issues/log.jsonl` (Phase 1)
+- [x] DI-003 marked `resolved` in `AgentCoordination/discovered_issues/log.jsonl` (Phase 2)
+- [x] DI-004 marked `resolved` in `AgentCoordination/discovered_issues/log.jsonl` (Phase 3)
+- [x] F-C-015 closed in `decisions.md` (Phase 3)
+- [x] `pytest tests/unit/strategy/data/test_container.py tests/unit/strategy/facade/test_fleet_dto.py tests/unit/ui/screens/builder/ -q` green (verified at Phase 1/2/3 commit time)
+- [x] Full sharded suite green (`python Tools/test_sharded/test_sharded.py`) — 23376/23376 recorded in `AgentCoordination/generated/test_baseline.json`
+- [x] Sweep phase produced either fixes or an audit report in `decisions.md` (Phase 4 audit closure recorded)
+- [x] Audit passed (Codex end-of-project consult per the standing workflow) — `consults/20260519T133252Z_end-of-project-audit/response.md` verdict "mergeable"
 - [ ] User verified
+
+## Checkpoint Log
+
+### 2026-05-18T00:00:00Z — project-452-start + phase-1-complete (group-c first runner)
+- **Done so far**: Group C session bootstrapped. `group-c` branch cut from `origin/main` and pushed (first runner; no prior group-c on origin). Baseline sharded suite verified green pre-edit (23368/23368). PROJ-452 Phase 1 complete: Container.remove non-negative guards mirror-landed at container.py:227-228 (resource) and :248-249 (population); 3 RED-then-GREEN tests in test_container.py; DI-005 marked resolved in log.jsonl.
+- **Key decisions**: Stayed strictly within Phase 1 file ownership (container.py + test_container.py only); no incidental edits. Used `pytest.raises(ValueError, match="non-negative")` for the rejection tests so the test asserts the canonical wording is preserved across the future, not just any ValueError. Added a separate `test_remove_does_not_grow_storage_on_negative_quantity` to defend against the future regression where the guard is dropped but the underlying subtract-a-negative-number bug returns silently.
+- **Open threads**: Post-edit sharded suite running (end-of-Phase-1 gate); awaiting green confirmation before committing.
+- **Next action**: Commit Phase 1 on `group-c` with message `PROJ-452 Phase 1: Container.remove non-negative guard (DI-005)`, push, then start Phase 2 (DI-003 — `fleet_dto.py:230-239` catalog iteration). Read `phase_2_checklist.md` in full first.
+- **Cross-group state observed**: `origin/group-a` exists (Group A in flight); no `origin/group-b` yet. No PROJ-449..460 entries on `origin/main` beyond the baseline plans.
+
+### 2026-05-18T00:00:00Z — phases-1-2-3-complete + phase-4-pending
+- **Done so far**: Phases 1 (DI-005), 2 (DI-003), 3 (DI-004 + F-C-015) all complete and pushed to `origin/group-c`. Plus one auxiliary commit on `group-c` extending `Tools/lint_test_files_allowlist.txt` with 3 entries (`tests/static_guards/test_no_activatable_abilities_constant.py`, `test_no_commands_specs_module.py`, `test_no_hidden_test_files.py`) — pre-existing drift on main that was blocking the pre-commit hook. Cumulative sharded: 23373/23373 after Phase 2; Phase 3 sharded gate currently running.
+- **Key decisions**: (1) Auxiliary allowlist fix committed separately from Phase 1, not bundled, so the Group C log shows the scope cleanly. (2) Phase 2: module-level `ResourceCatalog` import in fleet_dto.py (necessary for the test's monkeypatch target to be valid). (3) Phase 3: adopt catalog `name` (`Radioactives`) over legacy `Radact` per F-C-015's directive. (4) Subagent pre-audit for Phase 4 flagged `game/ui/screens/build_queue_helpers.py:20-35` (`RESOURCE_ABBREVS` dict) as a same-anti-pattern candidate — verify in Phase 4.
+- **Open threads**: Phase 3 sharded suite running (end-of-Phase-3 gate). Phase 4 audit pending. Codex end-of-project audit pending. Doc-consolidation check pending until PROJ-460. The pre-commit-hook drift fix on `group-c` will only reach Groups A/B after end-of-project merge to `main`; until then both other groups will hit the same hook failure and need to do their own fix.
+- **Next action**: Confirm Phase 3 sharded green → commit + push Phase 3 → start Phase 4 audit (verify `stat_rows_dynamic.py` clean post-Phase-3; audit `empire_treasury_panel.py` + `build_queue_helpers.py`; decide whether the `RESOURCE_ABBREVS` candidate is in scope for Phase 4 or a separate finding).
+- **Cross-group state observed**: `origin/group-a` exists but has the same commits as `origin/main` (no Group A phase work pushed yet). No `origin/group-b`. `origin/main` unchanged since pre-flight fetch.
+
+### 2026-05-19T13:40:00Z — project-452-end (post codex audit + post audit-driven Phase 5)
+- **Done so far**: All five phases on `origin/group-c` (Phases 1-4 production + audit; Phase 5 is the codex-audit-driven plan.md bookkeeping reconciliation). End-of-project codex audit dispatched + landed at `Projects/active_projects/PROJ-452/consults/20260519T133252Z_end-of-project-audit/response.md` — verdict "mergeable" with one verified bookkeeping issue (this plan.md was stale) addressed by Phase 5.
+- **Key decisions**: (1) Created Phase 5 per Group C prompt Step 4 directive even though it's a doc-only 0-LOC fix; the protocol asks "create a NEW PHASE in the same project addressing it" for any verified issue. (2) Did NOT re-dispatch a codex audit on Phase 5 — Group C prompt: "Repeat the codex audit if the new phases are non-trivial (>30 LOC of production change)." Phase 5 is 0 LOC. (3) Trusted codex's false-positive rejections (order-sensitivity OK because catalog preserves JSON order which already matches the legacy 8-tuple; the Phase 4 candidates have non-silent fallbacks; `_label_for` only changes label text, never affects row generation; auxiliary allowlist commit is non-production and documented in this plan.md).
+- **Open threads**: End-of-project merge to `main` (protocol §3) is the only remaining step. Then advance to PROJ-455.
+- **Next action**: Execute the §3 merge sequence (fetch, pull main, checkout group-c, rebase, push --force-with-lease, checkout main, merge --no-ff group-c, push main, checkout group-c, rebase, push). Then update PROJ-452 Current State to "merged to main at <SHA>". Then start PROJ-455 Phase 1 (test-only project; 200-300 LOC of new tests in `tests/integration/test_process_planet_action_tick_end_to_end.py`; no production changes).
+- **Cross-group state observed**: `origin/group-a` and `origin/group-c` both diverge from `origin/main`. Group A still has no phase work on origin/group-a (last fetch). No `origin/group-b`. `origin/main` unchanged since pre-flight fetch.

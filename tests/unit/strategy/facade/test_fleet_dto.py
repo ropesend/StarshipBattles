@@ -571,6 +571,42 @@ class TestFleetInfoFactory:
         assert info.orders[0].target_hex is None
 
 
+class TestFleetInfoCargoCatalog:
+    """PROJ-452 Phase 2 (DI-2026-05-18-003): cargo_resources / cargo_capacities are catalog-driven."""
+
+    def test_cargo_resources_covers_full_catalog(self):
+        from game.core.resources import ResourceCatalog
+        from game.strategy.facade.dto.fleet_dto import FleetInfo
+
+        fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0), speed=5.0)
+        info = FleetInfo.from_fleet(fleet)
+
+        expected_ids = set(ResourceCatalog.from_json().all_ids())
+        assert len(info.cargo_resources) == len(expected_ids)
+        assert {rid for rid, _ in info.cargo_resources} == expected_ids
+        assert len(info.cargo_capacities) == len(expected_ids)
+        assert {rid for rid, _ in info.cargo_capacities} == expected_ids
+
+    def test_cargo_resources_surfaces_new_resource(self, monkeypatch):
+        """Regression catcher for DI-003: a 9th catalog id must surface without code change."""
+        from game.core.resources import ResourceCatalog, ResourceDefinition
+        from game.strategy.facade.dto.fleet_dto import FleetInfo
+
+        baseline_defs = {d.id: d for d in ResourceCatalog.from_json().all_definitions()}
+        baseline_defs["plasma"] = ResourceDefinition(id="plasma", name="Plasma")
+        extended = ResourceCatalog(baseline_defs)
+        monkeypatch.setattr(
+            "game.strategy.facade.dto.fleet_dto.ResourceCatalog.from_json",
+            classmethod(lambda cls, *a, **kw: extended),
+        )
+
+        fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0), speed=5.0)
+        info = FleetInfo.from_fleet(fleet)
+
+        assert "plasma" in {rid for rid, _ in info.cargo_resources}
+        assert "plasma" in {rid for rid, _ in info.cargo_capacities}
+
+
 class TestFleetInfoCarriedItems:
     """Tests for carried item aggregation helper."""
 

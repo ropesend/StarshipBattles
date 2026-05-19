@@ -54,6 +54,9 @@ tests/unit/simulation/mocks/**/*.py
 # filesystem rather than importing it.
 tests/regression/test_services_layer_rule.py
 tests/static_guards/test_facade_bypass_guard.py
+tests/static_guards/test_no_activatable_abilities_constant.py
+tests/static_guards/test_no_commands_specs_module.py
+tests/static_guards/test_no_hidden_test_files.py
 tests/unit/quality/test_no_unseeded_random.py
 tests/unit/simulation/entities/stat_contributors/test_typed_contributor_migration.py
 tests/unit/simulation/replay/test_replay_verifier_imports.py
@@ -67,6 +70,8 @@ tests/unit/strategy/data/test_mutator_boundary_ast_guard.py
 tests/unit/strategy/data/test_mutator_boundary_ast_guard_self_test.py
 tests/unit/strategy/data/test_no_method_body_over_5_loc.py
 tests/unit/strategy/data/test_pathfinding_shim_scope.py
+tests/unit/strategy/data/test_fleet_consume_cargo_symmetry.py
+tests/unit/strategy/data/test_production_resource_source_ratchet.py
 tests/unit/strategy/engine/order_handlers/test_order_processor_facade.py
 tests/unit/strategy/engine/test_no_specs_tuple_literal.py
 tests/unit/strategy/engine/test_order_processor_no_legacy_helpers.py
