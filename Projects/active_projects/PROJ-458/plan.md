@@ -15,7 +15,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. SettingsWindow (109 LOC, smallest) — characterization tests + two-stage retrofit + F-C-016 docs touch | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. SettingsWindow (109 LOC, smallest) — characterization tests + two-stage retrofit + F-C-016 docs touch | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. AtmosphereTargetEditor (273 LOC, largest of the 4 planet-target editors) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. GravityTargetEditor (220 LOC) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. WaterTargetEditor (227 LOC) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
