@@ -19,12 +19,13 @@
 | 2. F-B-005 — Retire `component_inspector.py` (~68 caller sites — 52 imports + 16 patch targets — across ~31 files; sized up from `~45` after codex audit 2026-05-19) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. F-B-017 — Unwind `OrderProcessor.process_*` facade reshape; delete legacy typed result dataclasses (68 sites / 12 files; sized up from `~15 / 7` after codex audit 2026-05-19) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. F-B-018 — Remove "legacy field" framing on `OrderExecutionResult` (fields become live unified surface post-Phase-3 facade unwind; delete specific fields ONLY if Phase 4 audit shows they're dead) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Codex-audit polish (3 doc/comment residues + 5 test-narration docstrings) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** All phases complete; awaiting end-of-project codex audit
-**Last Action:** Phase 4 complete. Refreshed `OrderExecutionResult` docstring + dropped the 5 inline `# X legacy field` comments. Per Codex r4 redesign, kept all 5 fields flat (every field has live producers + consumers post-Phase-3; per-handler subclasses would complicate caller ergonomics). Also refreshed one stale docstring reference in `handlers/base.py:423`. Sharded first run had 2 errors (no detail captured); per protocol §13 the retry ran clean (23363/23363) — flagging as a flake. Phase 4 is documentation/comment-only edits; no behaviour changes that could have caused real regressions.
-**Next Action:** Dispatch PROJ-454 end-of-project codex audit per protocol §10.
+**Active Phase:** All phases complete; ready for end-of-project merge to main
+**Last Action:** Phase 5 closed the three doc/comment residues + five test-narration sites surfaced by the end-of-project codex audit (response.md verified all 4 findings closed). All Phase 5 edits are comment/docstring-only, no behaviour changes. Per protocol PART 3 Step D, skipping the re-audit (trivial polish).
+**Next Action:** Merge group-b through PROJ-454 to main per protocol §3.
 **Blockers:** None.
 
 ## Checkpoint Log

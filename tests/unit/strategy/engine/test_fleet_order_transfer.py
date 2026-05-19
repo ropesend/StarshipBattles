@@ -88,7 +88,7 @@ def processor():
 # =============================================================================
 
 class TestProcessTransfer:
-    """Tests for process_transfer() method."""
+    """Tests for the TRANSFER handler's execute_action_order path."""
 
     def test_transfer_no_order_returns_failure(self, processor, mock_fleet, mock_empire, mock_galaxy):
         """Returns failure when no TRANSFER order exists."""

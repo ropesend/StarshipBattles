@@ -80,10 +80,12 @@ _SECTOR_SCOPES = frozenset({
 })
 
 
-# PROJ-362: ability metadata (display name, kind, grouping, owner-aware
-# scopes, value field selection) lives in `effect_ability_metadata.
-# EFFECT_ABILITY_METADATA`. Adding a new strategic effect is a single-entry
-# edit there — no changes needed here.
+# Ability metadata (display name, kind, grouping, owner-aware scopes,
+# value field selection) lives on the unified ``AbilityMetadataRegistry``
+# in ``game.strategy.services.ability_metadata`` — read via
+# ``get_ability_metadata(name).effect: EffectFacet``. Adding a new
+# strategic effect is a single-entry edit to ``_ENTRIES`` there — no
+# changes needed in this collector.
 
 
 # ---------------------------------------------------------------------------

@@ -475,7 +475,7 @@ class TestColonyFoundedEvent:
         }
 
     def test_process_colonize_emits_colony_founded_event(self):
-        """process_colonize() emits colony_founded on success."""
+        """ColonizeHandler.execute_action_order emits colony_founded on success."""
         from game.strategy.engine.order_processor import OrderProcessor
 
         calls, fake, bus = _capture_log_event_calls()
