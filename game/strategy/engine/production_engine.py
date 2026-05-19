@@ -13,7 +13,12 @@ Responsibilities:
 - Process construction queues for fleets with space yards
 - Spawn completed ships as new fleets (planet) or add to fleet (fleet yards)
 - Spawn completed complexes as planetary facilities
-- Per-tick resource consumption from empire pool during construction
+- Per-tick resource consumption: construction reads inputs and writes
+  outputs through ``IProductionResourceSource`` (Protocol below); the
+  concrete implementers are :class:`game.strategy.data.planet.Planet`
+  and :class:`game.strategy.data.fleet.Fleet`. The pre-PROJ-436
+  "empire pool" framing is retired — the engine never reads or
+  writes an empire-level resource pool directly.
 """
 
 import logging
@@ -674,16 +679,97 @@ class ProductionEngine(IProductionEngine):
             colony_or_fleet: Build location implementing
                 :class:`IProductionResourceSource`.
         """
+        zero_consume_resources: List[str] = []
         for res, amount in cost_this_step.items():
             if amount > 0:
                 before = colony_or_fleet.production_get_resource(res)
-                colony_or_fleet.production_consume_resource(res, amount)
+                consume_succeeded = colony_or_fleet.production_consume_resource(res, amount)
+                # DI-2026-05-18-007 closure (PROJ-451 Phase 3 option B):
+                # the IProductionResourceSource contract MUSTs that
+                # ``production_consume_resource`` returns True whenever
+                # ``production_has_resources`` returned True for the same
+                # ``(resource_type, amount)`` in the same engine tick.
+                # A False return is a programmer error in the implementer;
+                # surface it loudly rather than silently burning tick
+                # capacity. Per CLAUDE.md "Capability validation is hard,
+                # not soft."
+                assert consume_succeeded, (
+                    f"Contract breach: production_consume_resource("
+                    f"{res!r}, {amount}) returned False on "
+                    f"{type(colony_or_fleet).__name__} but "
+                    f"production_has_resources passed earlier in this tick."
+                )
                 after = colony_or_fleet.production_get_resource(res)
                 actually_consumed = before - after
                 item['resources_consumed'][res] = (
                     item.get('resources_consumed', {}).get(res, 0.0)
                     + actually_consumed
                 )
+                if actually_consumed == 0:
+                    zero_consume_resources.append(res)
+
+        # DI-2026-05-18-006 closure (PROJ-451 Phase 2 Task 2.1):
+        # affordability passed (or the queue would not have reached
+        # consumption) but the source charged 0 — the typical case is
+        # a fractional per-step cost rounding to 0 against an integer-
+        # typed cargo store. Emit RESOURCE_SHORTAGE so the player sees
+        # the stall signal. Respect ``item['_shortage_logged']`` to
+        # avoid duplicate emits within a single turn (mirrors the
+        # affordability-side guard at ``_process_queue_tick_dynamic``).
+        if zero_consume_resources and not item.get('_shortage_logged'):
+            self._log_zero_consume_shortage(
+                empire, item, cost_this_step, colony_or_fleet,
+                zero_consume_resources,
+            )
+            item['_shortage_logged'] = True
+
+    def _log_zero_consume_shortage(
+        self,
+        empire: 'Empire',
+        item: Dict,
+        cost_this_step: Dict[str, float],
+        colony_or_fleet: Any,
+        zero_consume_resources: List[str],
+    ) -> None:
+        """Emit RESOURCE_SHORTAGE for the rounded-to-zero stall path.
+
+        Sibling to :meth:`_log_resource_shortage` (the affordability-
+        failure emit). The bottleneck resource is the first one whose
+        ``production_consume_resource`` produced no charge despite a
+        positive requested amount. The cause field
+        ``"rounded_to_zero"`` distinguishes this from a normal
+        shortage so downstream UI can present a "fractional cost too
+        small for integer cargo" hint instead of a generic
+        "insufficient X" message.
+        """
+        if not self._event_bus:
+            return
+        limiting_resource = zero_consume_resources[0]
+        design_id = item.get('design_id', 'unknown')
+        vehicle_type = item.get('type', 'ship')
+
+        location_hex = None
+        if hasattr(colony_or_fleet, 'location'):
+            loc = colony_or_fleet.location
+            if loc is not None and hasattr(loc, 'q') and hasattr(loc, 'r'):
+                location_hex = [loc.q, loc.r]
+
+        self._event_bus.log_event(
+            EventType.RESOURCE_SHORTAGE,
+            category=EventCategory.PRODUCTION,
+            empire_id=empire.id,
+            message=(
+                f"Production stalled: fractional {limiting_resource} "
+                f"cost rounds to zero against integer cargo for {design_id}"
+            ),
+            design_id=design_id,
+            vehicle_type=vehicle_type,
+            limiting_resource=limiting_resource,
+            available=colony_or_fleet.production_get_resource(limiting_resource),
+            needed=cost_this_step.get(limiting_resource, 0.0),
+            cause="rounded_to_zero",
+            location_hex=location_hex,
+        )
 
     def _check_item_completion(self, item: Dict) -> bool:
         """Check if an item has been fully produced.

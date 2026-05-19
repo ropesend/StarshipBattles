@@ -6,7 +6,7 @@
 > 3. Sharded suite green
 > 4. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Depends on:** phase_3 (engine-side bool-return handling decision made)
 **Objective:** Add a parametrized ratchet test that, for every concrete `IProductionResourceSource` implementer (Planet, Fleet, future implementers), asserts the affordability/consumption symmetry contract: `has_resources(costs)==True → consume(resource, amount)==True` for each `(resource, amount)` in `costs`. The ratchet acts as defense-in-depth against future implementers breaking the contract.
 
@@ -21,21 +21,21 @@
 ### Task 4.1: Identify concrete implementers [Simple]
 **Tools:** `Grep`
 
-- [ ] Run:
+- [x] Run:
   ```bash
   rg "def production_consume_resource" game/
   ```
-- [ ] Expected matches:
+- [x] Expected matches:
   - `game/strategy/data/planet.py:307` — `Planet.production_consume_resource` (Phase 0 verified)
   - `game/strategy/data/fleet.py` — `Fleet.production_consume_resource` (verify via direct read; the Fleet implementation likely sits near `consume_cargo_resource` at lines 271-300)
-- [ ] List any other implementers found
-- [ ] If a new implementer is found that doesn't already pass the ratchet semantics, log a finding for follow-up
+- [x] List any other implementers found
+- [x] If a new implementer is found that doesn't already pass the ratchet semantics, log a finding for follow-up
 
 ### Task 4.2: Create the ratchet test file [Medium]
 **File:** `tests/unit/strategy/data/test_production_resource_source_ratchet.py` (new)
 **Tests:** `pytest tests/unit/strategy/data/test_production_resource_source_ratchet.py -v`
 
-- [ ] Create the test file:
+- [x] Create the test file:
   ```python
   """PROJ-451 Phase 4 ratchet: stocked IProductionResourceSource
   implementers must satisfy the affordability/consumption symmetry
@@ -119,7 +119,7 @@
                       f"but consume({resource_type!r}, {amount}) returned False"
                   )
   ```
-- [ ] Run; verify both parametrized tests pass for Planet and Fleet
+- [x] Run; verify both parametrized tests pass for Planet and Fleet
 
 **Notes**: The fixture `create_test_planet` / `create_test_fleet` come from `tests/fixtures/strategy_entities.py`. After PROJ-449 Phase 1, those fixtures use the post-rename private kwargs. If PROJ-451 lands before PROJ-449 Phase 1, the legacy kwargs are still in place — Phase 4 doesn't need to wait for PROJ-449.
 
@@ -127,7 +127,7 @@
 **File:** `tests/unit/strategy/data/test_production_resource_source_ratchet.py` (extend)
 **Tests:** `pytest tests/unit/strategy/data/test_production_resource_source_ratchet.py -v`
 
-- [ ] Add test that exercises the specific DI-006 case explicitly:
+- [x] Add test that exercises the specific DI-006 case explicitly:
   ```python
   def test_fleet_fractional_cost_rounds_to_zero_symmetry(stocked_fleet):
       """PROJ-444 Phase 2 closed the data-layer half: Fleet.has_cargo_resources
@@ -146,24 +146,24 @@
       assert stocked_fleet.production_has_resources({"metals": 0.1}) is True  # 0 ≤ 0
       assert stocked_fleet.production_consume_resource("metals", 0.1) is True
   ```
-- [ ] This test pins the exact invariant the engine relies on. If a future change accidentally breaks the symmetry (e.g. `has_cargo_resources` un-rounds), the test fires immediately.
+- [x] This test pins the exact invariant the engine relies on. If a future change accidentally breaks the symmetry (e.g. `has_cargo_resources` un-rounds), the test fires immediately.
 
 ### Task 4.4: Sharded suite + commit [Medium]
 **Tests:** `python Tools/test_sharded/test_sharded.py`
 
-- [ ] Sharded suite green
-- [ ] Commit message: `PROJ-451 Phase 4: stocked-fleet ratchet for IProductionResourceSource (closes F-B-019; defense-in-depth for affordability/consumption contract)`
+- [x] Sharded suite green
+- [x] Commit message: `PROJ-451 Phase 4: stocked-fleet ratchet for IProductionResourceSource (closes F-B-019; defense-in-depth for affordability/consumption contract)`
 
 ---
 
 ## Phase Completion Checklist
-- [ ] `tests/unit/strategy/data/test_production_resource_source_ratchet.py` exists
-- [ ] Ratchet test passes for Planet (float stockpile)
-- [ ] Ratchet test passes for Fleet (integer cargo store with int(round(...)) rounding)
-- [ ] Edge-case rounds-to-zero symmetry test passes
-- [ ] Sharded suite green
-- [ ] F-B-019 closed
-- [ ] Plan.md Quick Status → Complete; project ready for end-of-project Codex consult
+- [x] `tests/unit/strategy/data/test_production_resource_source_ratchet.py` exists
+- [x] Ratchet test passes for Planet (float stockpile)
+- [x] Ratchet test passes for Fleet (integer cargo store with int(round(...)) rounding)
+- [x] Edge-case rounds-to-zero symmetry test passes
+- [x] Sharded suite green
+- [x] F-B-019 closed
+- [x] Plan.md Quick Status → Complete; project ready for end-of-project Codex consult
 
 ## Notes / Risks / Coordination Touchpoints
 - **Defense-in-depth.** Phase 3 added the engine-side enforcement (assertion in option b OR bool capture in option a). Phase 4 adds the implementer-side ratchet. Both layers together make the contract bulletproof.

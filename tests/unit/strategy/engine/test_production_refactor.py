@@ -364,6 +364,22 @@ class TestResourceShortageEventLogging:
         # PROJ-436 Phase 8: unified IProductionResourceSource protocol.
         colony.production_has_resources.return_value = False
         colony.production_get_resource.side_effect = lambda res: colony.stockpile.get(res, 0.0)
+
+        # PROJ-451 Phase 2: ``_apply_resource_consumption`` reads
+        # ``production_get_resource`` before+after consume to compute
+        # the actually-consumed diff (PROJ-436 Phase 12 truth-up). If
+        # the mock's consume side-effect did not mutate ``stockpile``
+        # the diff would always be 0 and the new zero-consume shortage
+        # path would fire spuriously. Mutate the dict the same way a
+        # real Planet's ``consume_from_stockpile`` does.
+        def _consume(res: str, amount: float) -> bool:
+            cur = colony.stockpile.get(res, 0.0)
+            if cur < amount:
+                return False
+            colony.stockpile[res] = cur - amount
+            return True
+
+        colony.production_consume_resource.side_effect = _consume
         return colony
 
     def test_shortage_event_logged_on_affordability_failure(self, engine, empire, colony, captured_events):

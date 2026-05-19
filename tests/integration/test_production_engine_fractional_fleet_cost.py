@@ -38,6 +38,7 @@ from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.planet import Planet
 from game.strategy.engine.production_engine import ProductionEngine
+from game.strategy.events.event_types import EventType
 from tests.fixtures.strategy_entities import (
     create_test_fleet,
     create_test_planet,
@@ -200,3 +201,80 @@ class TestFleetFractionalCostQueueLoopStallContract:
         assert fleet.get_cargo_resource("metals") == 1.0
         assert item["resources_consumed"]["metals"] == 0.0
         assert len(queue) == 1  # item still in queue, not completed
+
+
+class TestFractionalCostRoundedToZeroEmitsResourceShortage:
+    """PROJ-451 Phase 1 RED: DI-2026-05-18-006 engine-side UX gap.
+
+    When Fleet construction has a fractional per-step cost that rounds
+    to 0 against the integer cargo store, the affordability check
+    passes vacuously (``Fleet.has_cargo_resources`` rounds the request
+    to ``int(round(0.1)) == 0`` and ``cargo >= 0``), the engine
+    records ``actually_consumed == 0`` per Phase 12 truth-up, and the
+    queue stalls. The player should see a clear shortage signal
+    (RESOURCE_SHORTAGE event); pre-fix, no event is emitted.
+
+    Pinning the post-fix contract: when ``_apply_resource_consumption``
+    sees ``amount > 0`` requested but ``actually_consumed == 0``, the
+    engine must route to the shortage-emit path.
+    """
+
+    def test_engine_level_zero_consume_emits_resource_shortage(self, engine):
+        fleet: Fleet = create_test_fleet(num_ships=1)
+        fleet.ships[0]._cargo_mgr.set_cargo("metals", 1)
+
+        item: dict = {
+            "design_id": "fractional-ship",
+            "type": "ship",
+            "resources_consumed": {"metals": 0.0},
+        }
+
+        engine._apply_resource_consumption(
+            _empire(), item, {"metals": 0.1}, fleet,
+        )
+
+        # Currently FAILS: no shortage event is logged in
+        # ``_apply_resource_consumption`` when actually_consumed == 0
+        # despite the requested ``amount > 0``.
+        assert any(
+            call.args and call.args[0] == EventType.RESOURCE_SHORTAGE
+            for call in engine._event_bus.log_event.call_args_list
+        ), (
+            "engine._event_bus.log_event(RESOURCE_SHORTAGE, ...) was not invoked; "
+            "the rounded-to-zero fleet build stall must emit a shortage event."
+        )
+
+
+class TestQueueLoopRoundedToZeroEmitsResourceShortage:
+    """PROJ-451 Phase 1 RED: same UX gap, exercised through
+    ``_process_queue_tick_dynamic`` rather than the engine-call-level
+    primitive. The queue stalls AND a shortage event must surface.
+    """
+
+    def test_fractional_per_step_cost_against_int_cargo_emits_resource_shortage(
+        self, engine,
+    ):
+        fleet: Fleet = create_test_fleet(num_ships=1)
+        fleet.ships[0]._cargo_mgr.set_cargo("metals", 1)
+
+        item = {
+            "design_id": "fractional-ship",
+            "type": "ship",
+            "total_cost": {"metals": 100.0},
+            "resources_consumed": {"metals": 0.0},
+        }
+        queue = [item]
+        rates = {"metals": 10.0}  # 10 / 100 ticks = 0.1 per tick
+
+        engine._process_queue_tick_dynamic(
+            queue, _empire(), 1, MagicMock(),
+            rates, fleet, is_complex_only=False,
+        )
+
+        assert any(
+            call.args and call.args[0] == EventType.RESOURCE_SHORTAGE
+            for call in engine._event_bus.log_event.call_args_list
+        ), (
+            "RESOURCE_SHORTAGE event missing after rounded-to-zero per-step "
+            "cost stall; player has no shortage indicator."
+        )

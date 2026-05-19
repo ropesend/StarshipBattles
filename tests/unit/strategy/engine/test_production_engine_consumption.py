@@ -29,6 +29,7 @@ from game.strategy.engine.production_engine import (
     COMPLETION_EPSILON,
     ProductionEngine,
 )
+from game.strategy.events.event_types import EventType
 
 
 @pytest.fixture
@@ -162,6 +163,86 @@ def test_apply_resource_consumption_raises_when_not_production_resource_source(e
 
     with pytest.raises(AttributeError, match="production_get_resource"):
         engine._apply_resource_consumption(empire, item, {"metals": 7.0}, bare)
+
+
+def test_apply_resource_consumption_emits_shortage_on_zero_consume(fresh_registries, empire):
+    """PROJ-451 Phase 1 RED: DI-2026-05-18-006 unit-test analog.
+
+    When ``production_get_resource`` reports a constant before/after
+    value (so ``actually_consumed == 0``) despite a positive
+    requested amount, the engine must emit a ``RESOURCE_SHORTAGE``
+    event so the player sees a clear shortage indicator. Pre-fix,
+    ``_apply_resource_consumption`` silently records 0 progress and
+    returns, leaving the queue stalled without UX feedback.
+
+    Scope (per Phase 1 docstring + decisions.md): exercises the
+    zero-consume / no-diff path only (``production_consume_resource``
+    returns True). The contract-breach path where
+    ``production_consume_resource`` returns False after affordability
+    passed is deferred to Phase 3 (DI-007 bool-return-handling decision).
+    """
+    event_bus = MagicMock()
+    engine_with_bus = ProductionEngine(
+        registries=fresh_registries, event_bus=event_bus,
+    )
+    mock_source = MagicMock(spec=Fleet)
+    # Constant before/after — actually_consumed == 0.
+    mock_source.production_get_resource.return_value = 1.0
+    mock_source.production_consume_resource.return_value = True
+    mock_source.location = None
+
+    item = {
+        "design_id": "fractional-x",
+        "type": "ship",
+        "resources_consumed": {"metals": 0.0},
+    }
+
+    engine_with_bus._apply_resource_consumption(
+        empire, item, {"metals": 0.1}, mock_source,
+    )
+
+    shortage_calls = [
+        call for call in event_bus.log_event.call_args_list
+        if call.args and call.args[0] == EventType.RESOURCE_SHORTAGE
+    ]
+    assert shortage_calls, (
+        "Engine recorded actually_consumed == 0 against a non-zero "
+        "requested amount but did not emit RESOURCE_SHORTAGE."
+    )
+
+
+def test_apply_resource_consumption_raises_on_contract_breach(fresh_registries, empire):
+    """PROJ-451 Phase 3 (option B, DI-2026-05-18-007 closure):
+
+    When ``production_consume_resource`` returns False after
+    affordability passed, ``_apply_resource_consumption`` raises
+    ``AssertionError`` rather than silently burning ``tick_capacity``.
+    Failure is a programmer error in the implementer (the Protocol
+    contract MUSTs consume succeeds when has-resources returned True
+    in the same tick), not a runtime degradation mode.
+    """
+    event_bus = MagicMock()
+    engine_with_bus = ProductionEngine(
+        registries=fresh_registries, event_bus=event_bus,
+    )
+    mock_source = MagicMock(spec=Fleet)
+    # Source consents to affordability + reports resources, but consume
+    # returns False — synthesises a broken implementer.
+    mock_source.production_has_resources.return_value = True
+    mock_source.production_get_resource.return_value = 1.0
+    mock_source.production_consume_resource.return_value = False
+    mock_source.location = None
+
+    item = {
+        "design_id": "broken-impl",
+        "type": "ship",
+        "resources_consumed": {"metals": 0.0},
+    }
+
+    with pytest.raises(AssertionError, match="Contract breach"):
+        engine_with_bus._apply_resource_consumption(
+            empire, item, {"metals": 0.1}, mock_source,
+        )
 
 
 def test_apply_resource_consumption_skips_zero_amount_resources(engine, empire):

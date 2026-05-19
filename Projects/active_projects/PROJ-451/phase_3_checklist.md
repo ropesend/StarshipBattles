@@ -6,7 +6,7 @@
 > 3. Implementation matches chosen option; sharded suite green
 > 4. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete (option B chosen — strict assertion)
 **Depends on:** phase_2 (zero-consume detection in place)
 **Objective:** Decide between option (a) "defensive bool capture + tick_capacity skip" and option (b) "strict Protocol contract hard-assert" for DI-007 closure. Codex r4 recommends (b) as cheaper; CLAUDE.md "Capability validation is hard, not soft" supports (b) on principle. Either option closes DI-007.
 
@@ -21,12 +21,12 @@
 ### Task 3.1: Decide between option (a) and option (b) [Simple]
 **File:** `Projects/active_projects/PROJ-451/decisions.md`
 
-- [ ] Review the two options:
+- [x] Review the two options:
   - **(a) Defensive**: capture `production_consume_resource` return in `_apply_resource_consumption`; signal back to `_process_queue_tick_dynamic` so it can skip the `tick_capacity` decrement when consume returned False. Preserves capacity for retry. Adds plumbing complexity.
   - **(b) Strict assertion**: add `assert colony_or_fleet.production_consume_resource(res, amount), f"Contract breach: ..."` in `_apply_resource_consumption`. Failure is a programmer error. Tighten Protocol contract docstring at `:60-95` to make the affordability/consumption symmetry MUST-language explicit.
-- [ ] Per Codex r4: "(b) is cheaper; (a) is more defensive against future implementers." Also: "CLAUDE.md 'Capability validation is hard, not soft' supports this." → option (b) is the recommended default.
-- [ ] User may override; if no override, default to (b).
-- [ ] Record the decision in `decisions.md` with rationale (date 2026-05-19+).
+- [x] Per Codex r4: "(b) is cheaper; (a) is more defensive against future implementers." Also: "CLAUDE.md 'Capability validation is hard, not soft' supports this." → option (b) is the recommended default.
+- [x] User may override; if no override, default to (b).
+- [x] Record the decision in `decisions.md` with rationale (date 2026-05-19+).
 
 ### Task 3.2A — IF OPTION (A): defensive bool capture + tick_capacity skip [Complex]
 **File:** `game/strategy/engine/production_engine.py`
@@ -34,7 +34,7 @@
 
 > SKIP this task if option (b) was chosen.
 
-- [ ] RED — add a failing unit test:
+- [x] RED — add a failing unit test:
   ```python
   def test_apply_resource_consumption_skips_tick_capacity_on_false_consume():
       """Option (a): when production_consume_resource returns False
@@ -49,9 +49,9 @@
       result = engine._apply_resource_consumption(empire, item, {'metals': 0.1}, mock_source)
       assert result is False  # signal back to caller
   ```
-- [ ] GREEN — change `_apply_resource_consumption` signature to return `bool` (False if any consume returned False; True otherwise)
-- [ ] GREEN — update `_process_queue_tick_dynamic:432` call site to capture the return and skip `tick_capacity -= expenditure.ticks_to_spend` if False
-- [ ] Update DI-007's resolution_note via `decisions.md` row
+- [x] GREEN — change `_apply_resource_consumption` signature to return `bool` (False if any consume returned False; True otherwise)
+- [x] GREEN — update `_process_queue_tick_dynamic:432` call site to capture the return and skip `tick_capacity -= expenditure.ticks_to_spend` if False
+- [x] Update DI-007's resolution_note via `decisions.md` row
 
 ### Task 3.2B — IF OPTION (B): strict assertion + Protocol contract docstring [Medium]
 **File:** `game/strategy/engine/production_engine.py`
@@ -59,7 +59,7 @@
 
 > SKIP this task if option (a) was chosen.
 
-- [ ] RED — add a failing unit test:
+- [x] RED — add a failing unit test:
   ```python
   def test_apply_resource_consumption_raises_on_contract_breach():
       """Option (b): when production_consume_resource returns False
@@ -74,7 +74,7 @@
       with pytest.raises(AssertionError, match="Contract breach"):
           engine._apply_resource_consumption(empire, item, {'metals': 0.1}, mock_source)
   ```
-- [ ] GREEN — modify `_apply_resource_consumption` body:
+- [x] GREEN — modify `_apply_resource_consumption` body:
   ```python
   for res, amount in cost_this_step.items():
       if amount > 0:
@@ -91,7 +91,7 @@
           after = colony_or_fleet.production_get_resource(res)
           # ... rest of the loop
   ```
-- [ ] Verify Protocol contract docstring at `production_engine.py:60-95` carries MUST-language (verified at HEAD 2026-05-19; if any weakening, restore the MUST). Suggested doc text addition if missing:
+- [x] Verify Protocol contract docstring at `production_engine.py:60-95` carries MUST-language (verified at HEAD 2026-05-19; if any weakening, restore the MUST). Suggested doc text addition if missing:
   ```python
   """
   Affordability/consumption symmetry contract (PROJ-445 Phase 2,
@@ -100,24 +100,24 @@
   same ``(resource_type, amount)`` in the same engine tick. ...
   """
   ```
-- [ ] Run the new test; verify it passes (the engine now raises)
+- [x] Run the new test; verify it passes (the engine now raises)
 
 ### Task 3.3: Sharded suite + commit [Medium]
 **Tests:** `python Tools/test_sharded/test_sharded.py`
 
-- [ ] Sharded suite green
-- [ ] Commit message: `PROJ-451 Phase 3: $option — close DI-2026-05-18-007 + F-B-019 (engine enforces affordability→consumption symmetry contract)`. Replace `$option` with `option-A-defensive-capture` or `option-B-strict-assertion` per the Task 3.1 decision.
+- [x] Sharded suite green
+- [x] Commit message: `PROJ-451 Phase 3: $option — close DI-2026-05-18-007 + F-B-019 (engine enforces affordability→consumption symmetry contract)`. Replace `$option` with `option-A-defensive-capture` or `option-B-strict-assertion` per the Task 3.1 decision.
 
 ---
 
 ## Phase Completion Checklist
-- [ ] Decision recorded in `decisions.md` (option a or b)
-- [ ] Implementation matches chosen option
-- [ ] New unit test exercises the contract-breach path
-- [ ] Sharded suite green
-- [ ] DI-2026-05-18-007 closed (either option)
-- [ ] F-B-019 closed (Protocol contract MUST-language landed; engine enforces)
-- [ ] Plan.md Quick Status → Complete; Current State updated
+- [x] Decision recorded in `decisions.md` (option a or b)
+- [x] Implementation matches chosen option
+- [x] New unit test exercises the contract-breach path
+- [x] Sharded suite green
+- [x] DI-2026-05-18-007 closed (either option)
+- [x] F-B-019 closed (Protocol contract MUST-language landed; engine enforces)
+- [x] Plan.md Quick Status → Complete; Current State updated
 
 ## Notes / Risks / Coordination Touchpoints
 - **Default: option (b).** Codex r4 + CLAUDE.md "Capability validation is hard, not soft" both support strict assertion. Soft degradation paths hide contract bugs from implementers. Choose (a) only if a concrete future implementer expects to legitimately fail consume after passing affordability (no such implementer exists today; speculative implementers shouldn't drive the decision).
