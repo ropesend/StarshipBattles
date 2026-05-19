@@ -17,14 +17,16 @@
 |-------|--------|-----------|
 | 0. Re-measure target files after PROJ-449 + PROJ-451 ship | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. F-A-008 — extract `Fleet.to_dict` / `Fleet.from_dict` into `fleet_serde.py` | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. F-A-009 — split `planet_gen.py` by sub-concern (or document deferral) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. F-A-009 — split `planet_gen.py` by sub-concern (or document deferral) | Complete (split) | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. F-A-007 measurement decision — `ship_instance.py` close-or-spinout | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-19
-**Active Phase:** Phase 2 (ready)
-**Last Action:** Phase 1 complete on branch `group-a`. Created `game/strategy/data/fleet_serde.py` (168 LOC) mirroring `planet_serde.py` (219 LOC). Public surface: `fleet_to_dict`, `fleet_from_dict_kwargs`, `_deserialize_fleet_ships`, `_deserialize_fleet_orders`. `Fleet.to_dict` / `Fleet.from_dict` reduced to facade shape; `Fleet.resolve_order_references` stays on Fleet (mirrors planet_serde precedent — see decisions.md). fleet.py 693 → 632 LOC (−61); under target of ~545 but the irreducible post-construction hydration (task_forces / fleet_policy / path / construction_queue) must stay on Fleet per the `__init__` constraint. New characterization test `tests/integration/save_load/test_fleet_serde_roundtrip.py` (3 tests) locks byte-identical save shape. Targeted gate: 35 pass; broader save_load + fleet: 388 pass; full sharded: **23397/23397 passed, 0 failures**. F-A-008 closed. Doc edits staged to `Projects/active_projects/_doc_consolidation/PROJ-459_pending.md` per cross-group consolidation rule. Changes uncommitted, staged for main agent.
-**Next Action:** Execute Phase 2 — split `planet_gen.py` by sub-concern (or document deferral with concrete next-touch criterion).
+**Active Phase:** Phase 3 (ready)
+**Last Action:** Phase 2 complete on branch `group-a`. Extracted `_generate_surface_flags`, `_determine_type`, `_generate_resources` from `PlanetGenerator` into new module `game/strategy/data/planet_gen_surface.py` (236 LOC). All three were pure functions (no `self` references in their bodies). `_get_planetary_ids` cached helper moved with `_generate_resources`. `planet_gen.py` 610 → 427 LOC (−183, **under the 500 ceiling**). 27 test call-site migrations across `test_planet_gen.py` + `test_planet_classification_logic.py` to call the module functions directly. One downstream fix in `tests/integration/strategy/test_planet_physics.py` re-pointed leaky re-exports at canonical sources. Sharded 23397/23397 GREEN. F-A-009 closed via split.
+
+Phase 1 complete on branch `group-a`. Created `game/strategy/data/fleet_serde.py` (168 LOC) mirroring `planet_serde.py` (219 LOC). Public surface: `fleet_to_dict`, `fleet_from_dict_kwargs`, `_deserialize_fleet_ships`, `_deserialize_fleet_orders`. `Fleet.to_dict` / `Fleet.from_dict` reduced to facade shape; `Fleet.resolve_order_references` stays on Fleet (mirrors planet_serde precedent — see decisions.md). fleet.py 693 → 632 LOC (−61); under target of ~545 but the irreducible post-construction hydration (task_forces / fleet_policy / path / construction_queue) must stay on Fleet per the `__init__` constraint. New characterization test `tests/integration/save_load/test_fleet_serde_roundtrip.py` (3 tests) locks byte-identical save shape. Targeted gate: 35 pass; broader save_load + fleet: 388 pass; full sharded: **23397/23397 passed, 0 failures**. F-A-008 closed. Doc edits staged to `Projects/active_projects/_doc_consolidation/PROJ-459_pending.md` per cross-group consolidation rule. Changes uncommitted, staged for main agent.
+**Next Action:** Execute Phase 3 — record the ship_instance.py SPINOUT verdict (789 LOC > 500). Scaffold PROJ-461 per the provisional Phase 0 finding.
 **Blockers:** None.
 
 ## Overview

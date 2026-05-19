@@ -2,6 +2,7 @@
 import pytest
 from game.strategy.data.planet import PlanetType
 from game.strategy.data.planet_gen import PlanetGenerator
+from game.strategy.data.planet_gen_surface import determine_planet_type
 from game.strategy.generation.planet_image_registry import PlanetImageRegistry
 
 
@@ -100,7 +101,7 @@ class TestPlanetClassificationLogic:
     ])
     def test_classification_logic(self, expected_type, mass, temp, pressure, water, atmosphere, activity):
         """Verify _determine_type classifies correctly based on physical params."""
-        p_type = self.gen._determine_type(
+        p_type = determine_planet_type(
             mass=mass, 
             temp=temp, 
             pressure=pressure, 
@@ -115,11 +116,11 @@ class TestPlanetClassificationLogic:
         """Test specific edge case boundaries."""
         # Borderline Earth/Arid
         # Temp 280 (Good), Water 0.19 (Low) -> Arid
-        p_type = self.gen._determine_type(6e24, 280, 100000, 0.19, {})
+        p_type = determine_planet_type(6e24, 280, 100000, 0.19, {})
         assert p_type == PlanetType.ARID
         
         # Temp 280 (Good), Water 0.20 (Border) -> Continental (fallback) or Arid?
         # Logic: if water < 0.2 -> Arid. If >= 0.2 and <= 0.85 -> Continental check (255<=T<=330, P>5000)
-        p_type = self.gen._determine_type(6e24, 280, 100000, 0.20, {})
+        p_type = determine_planet_type(6e24, 280, 100000, 0.20, {})
         assert p_type == PlanetType.CONTINENTAL
 

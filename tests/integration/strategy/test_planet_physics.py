@@ -1,11 +1,11 @@
 import pytest
 import math
-from game.strategy.data.planet_gen import (
-    PlanetGenerator, MASS_EARTH, MASS_JUPITER,
-    calculate_radius_density_from_mass, calculate_escape_velocity,
-    generate_atmosphere
+from game.strategy.data.planet_gen import PlanetGenerator
+from game.strategy.data.planet_physics import (
+    MASS_MOON, MASS_EARTH, MASS_JUPITER,
+    calculate_radius_density_from_mass,
 )
-from game.strategy.data.planet_physics import MASS_MOON
+from game.strategy.data.planet_atmosphere import generate_atmosphere
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.generation.planet_image_registry import PlanetImageRegistry
 
