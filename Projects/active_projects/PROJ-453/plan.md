@@ -15,14 +15,23 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Mechanical polish sweep (10 findings, all <30 LOC each) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Mechanical polish sweep (10 findings, all <30 LOC each) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-19
-**Active Phase:** Planning
-**Last Action:** Cross-group collision resolution applied 2026-05-19; Group B is ready for execution. Serial order confirmed: PROJ-453 → PROJ-454 → PROJ-456 → PROJ-457. PROJ-453 is the first project in Group B's series; no upstream gate. Prior fixes retained: (a) Group 3 pre-execution review (`AgentCoordination/Scratchpad/Consult/20260519T024637Z_group3-pre-execution-review/`) — F-B-011 findings file synced to 6 mutator accessors; 4 Unix-style shell snippets in `phase_1_checklist.md` mechanically swept to `rg -n …`; (b) codex Bucket-B audit fixes — F-B-016 file path corrected `data/` → `services/`; four non-existent test paths replaced with actual paths in phase_1_checklist.md; F-B-011 scope expanded from 4 to 6 accessors (added `environmental_hazard_engine.py:65` and `superweapon_order_processor.py:70`).
-**Next Action:** Run agent picks up PROJ-453 Phase 1 first (Group B's entry point).
+**Last Updated:** 2026-05-17
+**Active Phase:** Phase 1 complete; awaiting end-of-project codex audit
+**Last Action:** Phase 1 complete: 10 mechanical polish findings closed (annotations + dead skip guards + stale docstrings). Sharded suite 23368 passed / 0 failed. `validate_phase.py PROJ-453 1` returned PASSED.
+**Next Action:** Dispatch end-of-project codex audit per group execution protocol §10, then merge to main per §3.
 **Blockers:** None.
+
+## Checkpoint Log
+
+### 2026-05-17 — project-453-start
+- **Done so far**: Group B session-start (§2): branched group-b off main, pushed to origin. §14 pre-flight green (baseline 23368 passed). Mandatory reading complete (CLAUDE.md / AGENTS.md / docs/01-03 / project init protocol / Patterns #33 #36). DI log reviewed (12 entries; most resolved by archived PROJ-444/445/438).
+- **Key decisions**: Following Group B serial order PROJ-453 → 454 → 456 → 457 as coordinator-confirmed. Sharded-suite baseline checkpoint recorded under `AgentCoordination/generated/test_baseline/by_install/`.
+- **Open threads**: None — Phase 1 is 10 independent mechanical polish items.
+- **Next action**: Phase 1 Task 1.1 (`game/strategy/engine/superweapon_order_processor.py:340`).
+- **Cross-group state observed**: origin/main = local main at session start; only `origin/group-a` published (no group-c yet). No `_doc_consolidation/` files present yet on origin/main.
 
 ## Overview
 

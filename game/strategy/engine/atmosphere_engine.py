@@ -10,7 +10,7 @@ Atmosphere mass formula: mass_kg = pressure_Pa * surface_area_m2 / gravity_ms2
 from __future__ import annotations
 
 import logging
-from typing import Dict, List, TYPE_CHECKING
+from typing import Any, Dict, List, TYPE_CHECKING
 
 from game.strategy.services.component_inspector import iter_facility_ability_entries
 
@@ -27,7 +27,7 @@ class AtmosphereEngine:
         self._registries = registries
         self._planet_mutator = planet_mutator
 
-    def _get_planet_mutator(self):
+    def _get_planet_mutator(self) -> Any:
         if self._planet_mutator is None:
             from game.strategy.services.planet_write_service import (
                 PlanetWriteService,

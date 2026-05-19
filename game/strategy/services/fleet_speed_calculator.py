@@ -171,9 +171,8 @@ class FleetSpeedCalculator:
         The fleet base speed is calculated normally (slowest ship), then the
         provided multiplier is applied BEFORE the final floor/clamp.
 
-        PROJ-300 Phase 7: simplified from the legacy
-        calculate_fleet_speed_with_environment(EnvironmentalEffects). Callers
-        compute the multiplier from sector effects via aggregate_value_or.
+        Callers compute the multiplier from sector effects via
+        ``aggregate_value_or`` and pass the resulting scalar in directly.
 
         Args:
             fleet: The Fleet to calculate speed for.

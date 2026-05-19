@@ -12,7 +12,7 @@ Radiation: When ACTIVE, sets radiation_shielding to radiation_shielding_target.
     Reverts to 0.0 when INACTIVE or facility destroyed.
 """
 import logging
-from typing import List, TYPE_CHECKING
+from typing import Any, List, TYPE_CHECKING
 
 from game.strategy.data.component_activation_state import (
     ComponentActivationState, ActivationPhase,
@@ -31,7 +31,7 @@ class PlanetModifierEffectEngine:
         self._registries = registries
         self._planet_mutator = planet_mutator
 
-    def _get_planet_mutator(self):
+    def _get_planet_mutator(self) -> Any:
         if self._planet_mutator is None:
             from game.strategy.services.planet_write_service import (
                 PlanetWriteService,

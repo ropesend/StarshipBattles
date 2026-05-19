@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 import logging
 
+from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import OrderType
 
@@ -28,6 +29,7 @@ from game.strategy.services.galaxy_pathfinding_service import GalaxyPathfindingS
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
+    from game.strategy.data.star_system import StarSystem
 
 
 @dataclass
@@ -53,7 +55,12 @@ class SuperweaponOrderProcessor:
     PROJ-368 Phase 2; it is no longer routed through this processor.
     """
 
-    def __init__(self, event_bus=None, empire_mutator=None, nav_service=None):
+    def __init__(
+        self,
+        event_bus: Optional[Any] = None,
+        empire_mutator: Optional[Any] = None,
+        nav_service: Optional[Any] = None,
+    ) -> None:
         """Initialize the superweapon order processor.
 
         Args:
@@ -67,7 +74,7 @@ class SuperweaponOrderProcessor:
         self._empire_mutator = empire_mutator
         self._nav_service = nav_service
 
-    def _get_empire_mutator(self):
+    def _get_empire_mutator(self) -> Any:
         if self._empire_mutator is None:
             from game.strategy.services.empire_write_service import (
                 EmpireWriteService,
@@ -337,7 +344,7 @@ class SuperweaponOrderProcessor:
         )
 
     @staticmethod
-    def _get_system_at_hex(galaxy, location):  # type: ignore[no-untyped-def]
+    def _get_system_at_hex(galaxy: Any, location: HexCoord) -> Optional["StarSystem"]:
         """Resolve the star system at ``location`` (or None).
 
         Thin pass-through to ``GalaxyPathfindingService.get_system_at_hex``

@@ -98,7 +98,7 @@ class ProductionSpawner:
         """Return the ``DesignCatalog`` for ``empire`` or ``None`` if missing."""
         return self._design_catalogs_by_empire.get(empire.id)
 
-    def _get_planet_mutator(self):
+    def _get_planet_mutator(self) -> Any:
         # PROJ-382 Phase 3: kept as a thin accessor; the lazy-fallback
         # has been collapsed into eager construction-time defaulting
         # above, so this just returns the field.
