@@ -19,12 +19,13 @@
 | 2. FleetInfo.from_fleet catalog-driven (DI-003) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. stat_rows_dynamic LABEL_ABBREV retirement (DI-004 + F-C-015) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Sweep — catalog-vs-hardcode residue in stat_rows_dynamic + adjacent UI surfaces | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. plan.md bookkeeping reconciliation (codex-audit driven extra phase) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-18
-**Active Phase:** End-of-project codex audit (pending)
-**Last Action:** Phase 4 (sweep audit) complete on `group-c`. Audit-only outcome — zero production changes. Audited surfaces: `stat_rows_dynamic.py` (post-Phase-3), `empire_treasury_panel.py`, `build_queue_helpers.py`, plus backstop grep across `game/ui/` and `game/strategy/`. Two candidate hardcoded lists identified (`stat_rows_dynamic.py:72` `resource_order` and `build_queue_helpers.py:20-35` `RESOURCE_ABBREVS` / `RESOURCE_ABBREVS_SHORT`) but BOTH classified as different from the DI-003/004 silent-loss anti-pattern: they are curated lists with non-silent fallbacks (alphabetical sort / `res[:3]`). Per-finding rationale recorded in `decisions.md`. PROJ-452 production scope is closed: all four phases complete; DI-003, DI-004, DI-005 marked `resolved` in `log.jsonl`; F-C-015 closure recorded in `decisions.md`.
-**Next Action:** Run Phase 4 sharded gate (no production changes since Phase 3, but the protocol still requires sharded green at phase end). Commit + push Phase 4. Then dispatch the end-of-project codex audit per protocol §10 / Group C prompt Step 4.
+**Last Updated:** 2026-05-19
+**Active Phase:** Project complete — merging to main
+**Last Action:** Phase 5 (codex-audit driven plan.md reconciliation) complete on `group-c`. The end-of-project codex audit landed at `consults/20260519T133252Z_end-of-project-audit/response.md` with verdict "production code changes are mergeable" — codex flagged one verified issue (this plan.md was stale relative to the post-Phase-4 / post-audit evidence) and rejected four candidate findings as false positives (order-sensitivity regression in Phase 2, silent-loss anti-pattern equivalence on the Phase 4 candidates, `_label_for` row-loss risk, hidden production drift outside the documented scope). Phase 5 reconciles the Current State block + the top-level Verification checklist; zero production code changes; no re-audit required (Phase 5 is 0 LOC of production change per Group C prompt Step 4).
+**Next Action:** End-of-project merge to `main` per protocol §3: `git fetch origin && git checkout main && git pull --ff-only origin main && git checkout group-c && git rebase main && git push --force-with-lease origin group-c && git checkout main && git merge --no-ff group-c -m "Merge group-c through PROJ-452 (end of project)" && git push origin main && git checkout group-c && git rebase main && git push --force-with-lease origin group-c`.
 **Blockers:** None.
 **2026-05-19 cross-group resolution (final):** No edits required to PROJ-452 beyond adding the Group C execution-context block to Dependencies. PROJ-452 is the most parallel-safe project in Group C (no shared write surfaces with Groups A/B).
 
@@ -120,6 +121,11 @@ Now that Phase 3 has touched `stat_rows_dynamic.py`, sweep the rest of the file 
 
 This is an audit-then-decide phase. If no hardcoded constants survive after Phase 3, Phase 4 closes with the audit report committed to `decisions.md` and no production touch.
 
+### Phase 5: plan.md bookkeeping reconciliation — codex-audit driven [Trivial]
+
+**Status:** Complete
+**Objective:** Reconcile this `plan.md` with the already-complete project-artifact evidence. The end-of-project codex audit (consult at `consults/20260519T133252Z_end-of-project-audit/response.md`) flagged that the Current State block + the top-level Verification checklist were stale relative to the post-Phase-4 state. Zero production code, zero test changes; pure bookkeeping. Per Group C prompt Step 4: "Repeat the codex audit if the new phases are non-trivial (>30 LOC of production change)." Phase 5 is 0 LOC of production change — no re-audit. See `phase_5_checklist.md` for details.
+
 ## Related Documents
 
 - [design.md](design.md) — architecture rationale + parallelism contract with PROJ-453/454/455
@@ -152,15 +158,15 @@ No hard predecessor. All four phases are mechanically independent and can land i
 
 ## Verification
 
-- [ ] All four phase checklists complete
+- [x] All five phase checklists complete (Phases 1-4 + audit-driven Phase 5)
 - [x] DI-005 marked `resolved` in `AgentCoordination/discovered_issues/log.jsonl` (Phase 1)
 - [x] DI-003 marked `resolved` in `AgentCoordination/discovered_issues/log.jsonl` (Phase 2)
 - [x] DI-004 marked `resolved` in `AgentCoordination/discovered_issues/log.jsonl` (Phase 3)
 - [x] F-C-015 closed in `decisions.md` (Phase 3)
-- [ ] `pytest tests/unit/strategy/data/test_container.py tests/unit/strategy/facade/test_fleet_dto.py tests/unit/ui/screens/builder/ -q` green
-- [ ] Full sharded suite green (`python Tools/test_sharded/test_sharded.py`)
-- [ ] Sweep phase produced either fixes or an audit report in `decisions.md`
-- [ ] Audit passed (Codex end-of-project consult per the standing workflow)
+- [x] `pytest tests/unit/strategy/data/test_container.py tests/unit/strategy/facade/test_fleet_dto.py tests/unit/ui/screens/builder/ -q` green (verified at Phase 1/2/3 commit time)
+- [x] Full sharded suite green (`python Tools/test_sharded/test_sharded.py`) — 23376/23376 recorded in `AgentCoordination/generated/test_baseline.json`
+- [x] Sweep phase produced either fixes or an audit report in `decisions.md` (Phase 4 audit closure recorded)
+- [x] Audit passed (Codex end-of-project consult per the standing workflow) — `consults/20260519T133252Z_end-of-project-audit/response.md` verdict "mergeable"
 - [ ] User verified
 
 ## Checkpoint Log
@@ -178,3 +184,10 @@ No hard predecessor. All four phases are mechanically independent and can land i
 - **Open threads**: Phase 3 sharded suite running (end-of-Phase-3 gate). Phase 4 audit pending. Codex end-of-project audit pending. Doc-consolidation check pending until PROJ-460. The pre-commit-hook drift fix on `group-c` will only reach Groups A/B after end-of-project merge to `main`; until then both other groups will hit the same hook failure and need to do their own fix.
 - **Next action**: Confirm Phase 3 sharded green → commit + push Phase 3 → start Phase 4 audit (verify `stat_rows_dynamic.py` clean post-Phase-3; audit `empire_treasury_panel.py` + `build_queue_helpers.py`; decide whether the `RESOURCE_ABBREVS` candidate is in scope for Phase 4 or a separate finding).
 - **Cross-group state observed**: `origin/group-a` exists but has the same commits as `origin/main` (no Group A phase work pushed yet). No `origin/group-b`. `origin/main` unchanged since pre-flight fetch.
+
+### 2026-05-19T13:40:00Z — project-452-end (post codex audit + post audit-driven Phase 5)
+- **Done so far**: All five phases on `origin/group-c` (Phases 1-4 production + audit; Phase 5 is the codex-audit-driven plan.md bookkeeping reconciliation). End-of-project codex audit dispatched + landed at `Projects/active_projects/PROJ-452/consults/20260519T133252Z_end-of-project-audit/response.md` — verdict "mergeable" with one verified bookkeeping issue (this plan.md was stale) addressed by Phase 5.
+- **Key decisions**: (1) Created Phase 5 per Group C prompt Step 4 directive even though it's a doc-only 0-LOC fix; the protocol asks "create a NEW PHASE in the same project addressing it" for any verified issue. (2) Did NOT re-dispatch a codex audit on Phase 5 — Group C prompt: "Repeat the codex audit if the new phases are non-trivial (>30 LOC of production change)." Phase 5 is 0 LOC. (3) Trusted codex's false-positive rejections (order-sensitivity OK because catalog preserves JSON order which already matches the legacy 8-tuple; the Phase 4 candidates have non-silent fallbacks; `_label_for` only changes label text, never affects row generation; auxiliary allowlist commit is non-production and documented in this plan.md).
+- **Open threads**: End-of-project merge to `main` (protocol §3) is the only remaining step. Then advance to PROJ-455.
+- **Next action**: Execute the §3 merge sequence (fetch, pull main, checkout group-c, rebase, push --force-with-lease, checkout main, merge --no-ff group-c, push main, checkout group-c, rebase, push). Then update PROJ-452 Current State to "merged to main at <SHA>". Then start PROJ-455 Phase 1 (test-only project; 200-300 LOC of new tests in `tests/integration/test_process_planet_action_tick_end_to_end.py`; no production changes).
+- **Cross-group state observed**: `origin/group-a` and `origin/group-c` both diverge from `origin/main`. Group A still has no phase work on origin/group-a (last fetch). No `origin/group-b`. `origin/main` unchanged since pre-flight fetch.
