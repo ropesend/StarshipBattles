@@ -21,9 +21,9 @@
 
 ## Current State
 **Last Updated:** 2026-05-19
-**Active Phase:** End-of-project codex audit (pending)
-**Last Action:** Phase 3 complete on `group-c` — DI-2026-05-18-001 ActionExecutionEngine half (`log.jsonl` line 1) updated with `status: resolved` + resolution_note pointing at `tests/integration/test_process_planet_action_tick_end_to_end.py`. JSON parses end-to-end (11 valid lines). Triage script shows no issues for DI-001 (the drift it reports is on DI-005 / DI-007 / DI-019-* entries, unrelated to PROJ-455's update). All three project phases complete (Phase 1 smoke, Phase 2 parametrised + guard + in-progress, Phase 3 DI log update). Sharded gate still running from Phase 2.
-**Next Action:** Confirm Phase 2 sharded green, commit Phase 2 + Phase 3 together (or as separate commits per per-phase contract), push, then dispatch the end-of-project codex audit per protocol §10 / Group C prompt Step 4.
+**Active Phase:** Project complete — merging to main
+**Last Action:** End-of-project codex audit landed at `consults/20260519T141330Z_end-of-project-audit/response.md` — verdict "Ready to merge" with one non-blocking branch-hygiene caveat (3 PROJ-452 closure files riding along on `group-c`, classified by codex as "scope noise, not a production-code regression"). All 4 candidate findings rejected as false positives with file:line evidence (phase closure incomplete; production code changed; coverage incomplete; assertion inconsistency; DI update mistargeted). No verified production issues. No extra phase needed. PROJ-455 production scope is closed; Phases 1-3 all on `origin/group-c`, sharded 23433/23433.
+**Next Action:** End-of-project merge to `main` per protocol §3.
 **2026-05-19 cross-group resolution (final):** Bookkeeping fix G3-C applied — Scope section's "In" block tightened so `tests/integration/test_fms_planet_lay_mines.py` is now an explicit **READ-ONLY precedent** (the file belongs to PROJ-450 in Group A's staging-yard substrate migration). The earlier loose plan-text mentioning an optional `_planet_fms_fixtures.py` extraction is now CLOSED; copy needed scaffolding into the new test file rather than refactoring the precedent file. Group C execution-context block added to Dependencies.
 
 ## Overview
