@@ -16,17 +16,16 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. SettingsWindow (109 LOC, smallest) — characterization tests + two-stage retrofit + F-C-016 docs touch | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. AtmosphereTargetEditor (273 LOC, largest of the 4 planet-target editors) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. GravityTargetEditor (220 LOC) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. WaterTargetEditor (227 LOC) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. RadiationShieldEditor (231 LOC) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 2. AtmosphereTargetEditor (273 LOC, largest of the 4 planet-target editors) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. GravityTargetEditor (220 LOC) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. WaterTargetEditor (227 LOC) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. RadiationShieldEditor (231 LOC) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-19
-**Active Phase:** Planning
-**Last Action:** Group 3 pre-execution review fixes applied (codex + subagent reviews; see consult artifacts at `AgentCoordination/Scratchpad/Consult/20260519T024637Z_group3-pre-execution-review/` and `.agent_reports/group3_pre_execution_review/`). One fix: rewrote `phase_1_checklist.md:11` objective line to drop the misleading "F-C-016 README docs touch" framing — now states "F-C-016 closure limited to `docs/known-issues.md:37` stale warning; `tests/fixtures/README.md` is already current — see Task 1.4." This removes the risk that a skimming agent reopens the already-resolved README half. Earlier 2026-05-19 codex r5 audit fixes retained: (1) F-C-016 scope narrowed to `docs/known-issues.md:37` only — `tests/fixtures/README.md:22, 310-336` is already updated at HEAD; (2) Phase 1 Task 1.2 vs Task 1.3 inconsistency resolved by ADDING kw-only `ui_builder` parameter; (3) Phase 2 pytest node selector corrected to `::TestWindowManagerSignature::test_strategy_only_windows_require_explicit_window_manager`. Existing pre-flight findings unchanged: 1 owned (F-C-017) + F-C-016 carried; all 5 target windows confirmed unretrofitted at HEAD 2026-05-19.
-**Next Action:** Run agent picks up PROJ-458 Phase 1 after PROJ-452 + PROJ-455 complete (PROJ-458 is **position 3 of 4** in Group C's serial order `452 → 455 → 458 → 460` — see Group C execution context in the Dependencies & Sibling Projects section and `Projects/active_projects/GroupC_execution_prompt.txt`).
-**Blockers:** Serial gate: PROJ-452 + PROJ-455 must complete first within Group C. No external blockers — PROJ-458 is parallel-safe with PROJ-457 (Group B) and PROJ-456 (Group B); Codex r4 confirmed, 2026-05-19 verification re-confirmed disjoint write scopes (PROJ-458 touches 5 files in `game/ui/screens/`; PROJ-457 touches different 3 UI files + `game/core/exceptions.py`).
+**Active Phase:** End-of-project codex audit (pending)
+**Last Action:** All five phases complete on `group-c`. Pattern #33 two-stage `UIWindow` bypass-init retrofit applied to: SettingsWindow (Phase 1, 109 LOC); AtmosphereTargetEditor (Phase 2, 273 LOC); GravityTargetEditor (Phase 3, 220 LOC); WaterTargetEditor (Phase 4, 227 LOC); RadiationShieldEditor (Phase 5, 231 LOC). Each retrofit adds a `{Editor}UiBuilder` Protocol + `Default{Editor}UiBuilder` (thin wrapper around the editor's existing `_build_ui()` method) and restructures `__init__` to Stage 1 (pure-Python state + `ui_builder` seam) / bypass guard / Stage 2 (`super().__init__` + `self._ui_builder.build(self)`). Public positional/keyword-able signatures preserved; kw-only `ui_builder` parameter added. Five new test files in `tests/unit/ui/screens/` total 30 characterization tests (10 + 5 + 5 + 5 + 5). F-C-016 closure (Phase 1): `docs/known-issues.md:37` stale warning paragraph deleted; `SettingsWindow` added to the "already on two-stage recipe" list. Combined Phase 2-5 sharded ran with 1 flake (`test_reset_button_resets_settings_to_defaults` — passed in isolation per §13); retry running.
+**Next Action:** Confirm sharded retry green; commit Phases 2-5 individually; dispatch the end-of-project codex audit per Group C prompt Step 4.
 **2026-05-19 cross-group resolution (final):** No edits required to PROJ-458 beyond the Group C execution-context block. Zero file overlap with Group A or Group B verified.
 
 ## Overview
