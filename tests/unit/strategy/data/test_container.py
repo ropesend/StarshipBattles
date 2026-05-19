@@ -129,6 +129,19 @@ class TestResourceSlice:
         c = Container(capacity_mass=100.0, policy=_any_policy())
         assert c.get_resource("organics") == 0.0
 
+    def test_remove_rejects_negative_resource_quantity(self):
+        c = Container(capacity_mass=100.0, policy=_any_policy())
+        c.add(_metals(), 500.0)
+        with pytest.raises(ValueError, match="non-negative"):
+            c.remove(_metals(), -3.0)
+
+    def test_remove_does_not_grow_storage_on_negative_quantity(self):
+        c = Container(capacity_mass=100.0, policy=_any_policy())
+        c.add(_metals(), 500.0)
+        with pytest.raises(ValueError):
+            c.remove(_metals(), -3.0)
+        assert c.get_resource("metals") == pytest.approx(500.0)
+
 
 # ---------------------------------------------------------------------------
 # Items slice
@@ -218,6 +231,12 @@ class TestPopulationSlice:
         result = c.remove(_human(), 200)
         assert result is RemoveResult.NOT_ENOUGH
         assert c.get_population("human") == 100
+
+    def test_remove_rejects_negative_population_quantity(self):
+        c = Container(capacity_mass=100.0, policy=_any_policy())
+        c.add(_human(), 100)
+        with pytest.raises(ValueError, match="non-negative"):
+            c.remove(_human(), -2)
 
 
 # ---------------------------------------------------------------------------

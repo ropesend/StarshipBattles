@@ -224,6 +224,8 @@ class Container:
 
     def remove(self, containable: Containable, quantity: float | int) -> RemoveResult:
         if isinstance(containable, ResourceContainable):
+            if quantity < 0:
+                raise ValueError("resource quantity must be non-negative")
             current = self._resources.get(containable.resource_id, 0.0)
             if quantity > current + 1e-9:
                 return RemoveResult.NOT_ENOUGH
@@ -243,6 +245,8 @@ class Container:
             return RemoveResult.NOT_ENOUGH
 
         if isinstance(containable, PopulationContainable):
+            if quantity < 0:
+                raise ValueError("population quantity must be non-negative")
             current = self._population.get(containable.species_id, 0)
             if quantity > current:
                 return RemoveResult.NOT_ENOUGH

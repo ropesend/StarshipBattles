@@ -15,17 +15,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Container.remove non-negative guard (DI-005) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Container.remove non-negative guard (DI-005) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. FleetInfo.from_fleet catalog-driven (DI-003) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. stat_rows_dynamic LABEL_ABBREV retirement (DI-004 + F-C-015) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Sweep — catalog-vs-hardcode residue in stat_rows_dynamic + adjacent UI surfaces | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-19
-**Active Phase:** Planning
-**Last Action:** Group 3 pre-execution review fixes applied (codex + subagent reviews; see consult artifacts at `AgentCoordination/Scratchpad/Consult/20260519T024637Z_group3-pre-execution-review/` and `.agent_reports/group3_pre_execution_review/`). Mechanically swept 10 Unix-style shell snippets in plan.md (1), phase_2_checklist.md (1), phase_3_checklist.md (2), phase_4_checklist.md (4), manifest.md (1), and findings/PROJ-452_findings.md (1) — all `git grep -nE …` / `grep -n …` forms rewritten to `rg -n …` so they execute on this Windows PowerShell checkout. Narrative references to "the backstop grep" and "visible from `git grep`" left as-is (not runnable commands). Earlier 2026-05-19 codex Bucket-B fixes retained: (1) corrected test path from `tests/unit/strategy/facade/dto/test_fleet_dto.py` to the live `tests/unit/strategy/facade/test_fleet_dto.py` in plan.md, manifest.md, and phase_2_checklist.md; (2) expanded Phase 2 Task 2.1's "fresh_registries / extra catalog id" fixture guidance to require a `ResourceCatalog.from_json` monkeypatch (or `Paths.RESOURCES_FILE` override), because `FleetInfo.from_fleet` reads `ResourceCatalog.from_json()` directly which loads JSON from disk (`game/core/resources.py:85-107`) — a plain in-memory registry fixture is insufficient.
-**Next Action:** Run agent picks up PROJ-452 Phase 1 first (PROJ-452 is **position 1 of 4** in Group C's serial order `452 → 455 → 458 → 460` — see Group C execution context in the Dependencies & Sibling Projects section and `Projects/active_projects/GroupC_execution_prompt.txt`).
-**Blockers:** None. Group C is ready for execution; coordinator confirmed no hard cross-group blockers with Group A (PROJ-449/451/450/459) or Group B (PROJ-456/454/457).
+**Last Updated:** 2026-05-18
+**Active Phase:** Phase 2 (next)
+**Last Action:** Phase 1 (DI-005) complete on `group-c`. Mirrored Container.add non-negative guards onto Container.remove at `container.py:227-228` (resource) and `:248-249` (population). Three RED-then-GREEN tests landed in `tests/unit/strategy/data/test_container.py` (`test_remove_rejects_negative_resource_quantity`, `test_remove_does_not_grow_storage_on_negative_quantity`, `test_remove_rejects_negative_population_quantity`). All 35 tests in file green. DI-2026-05-18-005 marked `resolved` in `log.jsonl`. Baseline pre-edit sharded suite: 23368/23368 green; post-edit sharded suite running (end-of-phase gate). Branch `group-c` pushed to origin (new branch).
+**Next Action:** Confirm post-edit sharded suite green, commit Phase 1, then begin Phase 2 (DI-003 — FleetInfo.from_fleet catalog iteration at `game/strategy/facade/dto/fleet_dto.py:230-239`). Read `phase_2_checklist.md` in full first.
+**Blockers:** None.
 **2026-05-19 cross-group resolution (final):** No edits required to PROJ-452 beyond adding the Group C execution-context block to Dependencies. PROJ-452 is the most parallel-safe project in Group C (no shared write surfaces with Groups A/B).
 
 ## Overview
@@ -153,10 +153,20 @@ No hard predecessor. All four phases are mechanically independent and can land i
 ## Verification
 
 - [ ] All four phase checklists complete
-- [ ] DI-003, DI-004, DI-005 marked `resolved` in `AgentCoordination/discovered_issues/log.jsonl`
+- [x] DI-005 marked `resolved` in `AgentCoordination/discovered_issues/log.jsonl` (Phase 1)
+- [ ] DI-003, DI-004 marked `resolved` in `AgentCoordination/discovered_issues/log.jsonl`
 - [ ] F-C-015 closed in this project's findings file
 - [ ] `pytest tests/unit/strategy/data/test_container.py tests/unit/strategy/facade/test_fleet_dto.py tests/unit/ui/screens/builder/ -q` green
 - [ ] Full sharded suite green (`python Tools/test_sharded/test_sharded.py`)
 - [ ] Sweep phase produced either fixes or an audit report in `decisions.md`
 - [ ] Audit passed (Codex end-of-project consult per the standing workflow)
 - [ ] User verified
+
+## Checkpoint Log
+
+### 2026-05-18T00:00:00Z — project-452-start + phase-1-complete (group-c first runner)
+- **Done so far**: Group C session bootstrapped. `group-c` branch cut from `origin/main` and pushed (first runner; no prior group-c on origin). Baseline sharded suite verified green pre-edit (23368/23368). PROJ-452 Phase 1 complete: Container.remove non-negative guards mirror-landed at container.py:227-228 (resource) and :248-249 (population); 3 RED-then-GREEN tests in test_container.py; DI-005 marked resolved in log.jsonl.
+- **Key decisions**: Stayed strictly within Phase 1 file ownership (container.py + test_container.py only); no incidental edits. Used `pytest.raises(ValueError, match="non-negative")` for the rejection tests so the test asserts the canonical wording is preserved across the future, not just any ValueError. Added a separate `test_remove_does_not_grow_storage_on_negative_quantity` to defend against the future regression where the guard is dropped but the underlying subtract-a-negative-number bug returns silently.
+- **Open threads**: Post-edit sharded suite running (end-of-Phase-1 gate); awaiting green confirmation before committing.
+- **Next action**: Commit Phase 1 on `group-c` with message `PROJ-452 Phase 1: Container.remove non-negative guard (DI-005)`, push, then start Phase 2 (DI-003 — `fleet_dto.py:230-239` catalog iteration). Read `phase_2_checklist.md` in full first.
+- **Cross-group state observed**: `origin/group-a` exists (Group A in flight); no `origin/group-b` yet. No PROJ-449..460 entries on `origin/main` beyond the baseline plans.
