@@ -55,7 +55,7 @@ def test_battle_setup_wires_formation_resolver(session_registries, ship_factory)
     """Three assault_ship ships on side 0 should produce a WEDGE
     (non-degenerate positions — xs not all 0)."""
     state = BattleSetupState()
-    fleet = state.side_0.create_fleet(name="Alpha")
+    fleet = state.sides[0].create_fleet(name="Alpha")
     for _ in range(3):
         fleet.add_ship(ship_factory(_design("assault_ship"), owner_id=0))
 
@@ -69,7 +69,7 @@ def test_battle_setup_wires_formation_resolver(session_registries, ship_factory)
 def test_battle_setup_defender_fleet_line_abreast(session_registries, ship_factory):
     """Defender-archetype fleet → LINE_ABREAST (single x column, distinct ys)."""
     state = BattleSetupState()
-    fleet = state.side_0.create_fleet(name="Alpha")
+    fleet = state.sides[0].create_fleet(name="Alpha")
     for _ in range(3):
         fleet.add_ship(ship_factory(_design("line_combatant"), owner_id=0))
 
@@ -88,9 +88,9 @@ def test_battle_setup_sides_have_opposing_entry_vectors(
     ships don't start overlapping. Phase 4 MVP: side 0 faces east
     (facing=0), side 1 faces west (facing=180)."""
     state = BattleSetupState()
-    fleet_a = state.side_0.create_fleet(name="A")
+    fleet_a = state.sides[0].create_fleet(name="A")
     fleet_a.add_ship(ship_factory(_design("line_combatant"), owner_id=0))
-    fleet_b = state.side_1.create_fleet(name="B")
+    fleet_b = state.sides[1].create_fleet(name="B")
     fleet_b.add_ship(ship_factory(_design("line_combatant"), owner_id=1))
 
     spec = build_manual_battle_spec(state, session_registries)
@@ -101,7 +101,7 @@ def test_battle_setup_ship_angles_match_entry_facing(
     session_registries, ship_factory
 ):
     state = BattleSetupState()
-    fleet = state.side_0.create_fleet(name="A")
+    fleet = state.sides[0].create_fleet(name="A")
     for _ in range(2):
         fleet.add_ship(ship_factory(_design("fleet_escort"), owner_id=0))
     spec = build_manual_battle_spec(state, session_registries)

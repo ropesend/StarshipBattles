@@ -169,28 +169,6 @@ class BattleSetupState:
             BattleSetupSide(team_id=i) for i in range(side_count)
         ]
 
-    # --- Backcompat shims for side_0 / side_1 --------------------------------
-    # Existing callers (battle_setup_screen.py, some tests) reference
-    # `state.side_0` / `state.side_1` directly. The properties route to
-    # `sides[0]` / `sides[1]`. Writing `state.side_0 = ...` updates the
-    # same slot — preserves legacy behavior for tests that assign.
-
-    @property
-    def side_0(self) -> BattleSetupSide:
-        return self.sides[0]
-
-    @side_0.setter
-    def side_0(self, value: BattleSetupSide) -> None:
-        self.sides[0] = value
-
-    @property
-    def side_1(self) -> BattleSetupSide:
-        return self.sides[1]
-
-    @side_1.setter
-    def side_1(self, value: BattleSetupSide) -> None:
-        self.sides[1] = value
-
     # --- N-side API ----------------------------------------------------------
 
     def get_side(self, team_id: int) -> BattleSetupSide:

@@ -17,15 +17,15 @@
 |-------|--------|-----------|
 | 1. Smallest-shim cluster: `draw_grid` + broad-catch marker + 3 single-method shims | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. `build_context` legacy-kwarg sweep | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. BattleSetupState `side_0` / `side_1` cluster (2 production + 5 test files) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. BattleSetupState `side_0` / `side_1` cluster (2 production + 5 test files) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. `transfer_dialog` cluster + characterization sweep (drops file under 500-LOC ceiling) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Big-three shim clusters: StrategyRenderer, NewGameSetupScreen, BattleSetupScreen | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 3 (BattleSetupState side_0/side_1 cluster)
-**Last Action:** Phase 2 complete. Retired the `BuildQueueScreen.__init__(build_context=...)` legacy kwarg. Migration scope ended up larger than the original checklist (1 production + 26 test files vs 1 + 1 documented): 25 sites in `test_build_queue_screen_lifecycle.py` (deleted `build_context=None,` lines — every call had it explicitly), 1 site in `strategy_build_queue_manager.py` (production), plus 11 sites across 6 integration-test files that passed the yard POSITIONALLY (not as a kwarg) — these would have broken silently because removing the `build_context` param shifts positional arg binding. The integration-test sweep (test_basics, test_portrait_logging, test_queue_selector ×3, test_build_queue_drag_drop, test_build_queue_formatting, conftest) migrated `BuildQueueScreen(manager, planet, ...)` to `BuildQueueScreen(manager, initial_yard=planet, ...)` and converted subsequent positional args (`on_close`, `lambda: None`) to kwargs. Deleted the legacy param from the constructor signature and the resolution line. Sharded 23362/23362 green.
-**Next Action:** Phase 3 Task 3.1 — sweep `BattleSetupState.side_0`/`side_1` (81 refs).
+**Active Phase:** Phase 4 (transfer_dialog cluster + characterization sweep)
+**Last Action:** Phase 3 complete. F-C-001 closed: migrated 84 `.side_0`/`.side_1` references (sized up from 81 in plan; live counts: controller.py 4, test_battle_setup_state 12, test_controller 37, test_spec_compiler 22, test_spec_compiler_formation 5, test_suppressor_effects 4) to `.sides[0]`/`.sides[1]`. Deleted the property+setter block + comment header at `battle_setup_state.py:172-192`. Sharded 23362/23362 green.
+**Next Action:** Phase 4 Task 4.1 — transfer_dialog shim cluster (F-C-003 + F-C-011 + F-C-029).
 **Blockers:** None.
 
 ## Checkpoint Log

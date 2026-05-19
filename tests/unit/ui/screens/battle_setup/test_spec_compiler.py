@@ -2,7 +2,7 @@
 
 Covers:
 - `build_manual_battle_spec(ui_state, registries)` returns a `BattleSpec`
-- Ships from `ui_state.side_0.fleets` flow into `spec.teams[0]`
+- Ships from `ui_state.sides[0].fleets` flow into `spec.teams[0]`
   (and side_1 → team[1])
 - Modifier toggles from UI (system_complexes / sector_complexes) flow
   into `ModifierStack.per_team` (do NOT mutate ships)
@@ -57,11 +57,11 @@ def _minimal_design_data(name: str) -> dict:
 def ui_state_with_ships(session_registries, ship_factory) -> BattleSetupState:
     state = BattleSetupState()
 
-    fleet_a = state.side_0.create_fleet(name="Side 0 Fleet A")
+    fleet_a = state.sides[0].create_fleet(name="Side 0 Fleet A")
     fleet_a.add_ship(ship_factory(_minimal_design_data("SideZeroShipA1"), owner_id=0))
     fleet_a.add_ship(ship_factory(_minimal_design_data("SideZeroShipA2"), owner_id=0))
 
-    fleet_b = state.side_1.create_fleet(name="Side 1 Fleet B")
+    fleet_b = state.sides[1].create_fleet(name="Side 1 Fleet B")
     fleet_b.add_ship(ship_factory(_minimal_design_data("SideOneShipB1"), owner_id=1))
 
     return state
@@ -110,7 +110,7 @@ def test_compiler_preserves_instance_ids_from_ship_instances(
                     spec_ids.append(s.instance_id)
 
     ui_ids = []
-    for side in (ui_state_with_ships.side_0, ui_state_with_ships.side_1):
+    for side in (ui_state_with_ships.sides[0], ui_state_with_ships.sides[1]):
         for fleet in side.fleets:
             for ship in fleet.ships:
                 ui_ids.append(ship.instance_id)
@@ -141,7 +141,7 @@ def test_compiler_system_complex_toggle_flows_into_modifier_stack(
     """PROJ-271 Phase 2.4: a real complex (qs_system_shield_booster_complex)
     emits a real stat_key (shield_capacity_mult) on the owner team,
     not a placeholder."""
-    ui_state_with_ships.side_0.system_complexes.append(
+    ui_state_with_ships.sides[0].system_complexes.append(
         {"design_id": "qs_system_shield_booster_complex", "display_name": "System Shield Booster"}
     )
     spec = build_manual_battle_spec(ui_state_with_ships, session_registries)
@@ -156,7 +156,7 @@ def test_compiler_sector_complex_toggle_flows_into_modifier_stack(
 ):
     """PROJ-271 Phase 2.4: a real complex on side 1 emits an entry with a
     real stat_key. Damage booster is allied_* scope → routed to owner."""
-    ui_state_with_ships.side_1.sector_complexes.append(
+    ui_state_with_ships.sides[1].sector_complexes.append(
         {"design_id": "qs_sector_damage_booster_complex", "display_name": "Sector Damage Booster"}
     )
     spec = build_manual_battle_spec(ui_state_with_ships, session_registries)
@@ -174,7 +174,7 @@ def test_compiler_shield_projector_complex_emits_shield_bonus_add(
     ui_state_with_ships, session_registries
 ):
     """ShieldProjection ability on a complex → `shield_bonus_add` stat_key."""
-    ui_state_with_ships.side_0.sector_complexes.append(
+    ui_state_with_ships.sides[0].sector_complexes.append(
         {"design_id": "qs_sector_shield_projector_complex", "display_name": "Sector Shield Projector"}
     )
     spec = build_manual_battle_spec(ui_state_with_ships, session_registries)
@@ -192,7 +192,7 @@ def test_compiler_shield_booster_complex_emits_shield_capacity_mult(
     ui_state_with_ships, session_registries
 ):
     """ShieldModifier ability (multiplier > 1) → `shield_capacity_mult` stat_key, owner team."""
-    ui_state_with_ships.side_0.system_complexes.append(
+    ui_state_with_ships.sides[0].system_complexes.append(
         {"design_id": "qs_system_shield_booster_complex", "display_name": "System Shield Booster"}
     )
     spec = build_manual_battle_spec(ui_state_with_ships, session_registries)
@@ -210,7 +210,7 @@ def test_compiler_damage_booster_complex_emits_damage_mult(
     ui_state_with_ships, session_registries
 ):
     """DamageModifier ability (multiplier > 1) → `damage_mult` stat_key, owner team."""
-    ui_state_with_ships.side_0.system_complexes.append(
+    ui_state_with_ships.sides[0].system_complexes.append(
         {"design_id": "qs_system_damage_booster_complex", "display_name": "System Damage Booster"}
     )
     spec = build_manual_battle_spec(ui_state_with_ships, session_registries)
@@ -225,7 +225,7 @@ def test_compiler_shield_suppressor_routes_to_opponent_team(
 ):
     """Shield Suppressor on side 0 (scope `enemy_*`) → entry routed to
     per_team[1] (opponent), NOT per_team[0]."""
-    ui_state_with_ships.side_0.system_complexes.append(
+    ui_state_with_ships.sides[0].system_complexes.append(
         {"design_id": "qs_system_shield_suppressor_complex", "display_name": "System Shield Suppressor"}
     )
     spec = build_manual_battle_spec(ui_state_with_ships, session_registries)
@@ -256,7 +256,7 @@ def test_compiler_damage_suppressor_routes_to_opponent_team(
     ui_state_with_ships, session_registries
 ):
     """Damage Suppressor on side 0 → damage_mult < 1 on opponent team."""
-    ui_state_with_ships.side_0.sector_complexes.append(
+    ui_state_with_ships.sides[0].sector_complexes.append(
         {"design_id": "qs_sector_damage_suppressor_complex", "display_name": "Sector Damage Suppressor"}
     )
     spec = build_manual_battle_spec(ui_state_with_ships, session_registries)
@@ -277,10 +277,10 @@ def test_compiler_emits_no_placeholder_for_real_complex(
     """PROJ-271 Phase 2.5: no entry emitted for a real complex should have
     `stat_key="placeholder"`."""
     for side, design_id in [
-        (ui_state_with_ships.side_0.system_complexes, "qs_system_shield_booster_complex"),
-        (ui_state_with_ships.side_0.sector_complexes, "qs_sector_shield_projector_complex"),
-        (ui_state_with_ships.side_1.system_complexes, "qs_system_damage_suppressor_complex"),
-        (ui_state_with_ships.side_1.sector_complexes, "qs_sector_shield_suppressor_complex"),
+        (ui_state_with_ships.sides[0].system_complexes, "qs_system_shield_booster_complex"),
+        (ui_state_with_ships.sides[0].sector_complexes, "qs_sector_shield_projector_complex"),
+        (ui_state_with_ships.sides[1].system_complexes, "qs_system_damage_suppressor_complex"),
+        (ui_state_with_ships.sides[1].sector_complexes, "qs_sector_shield_suppressor_complex"),
     ]:
         side.append({"design_id": design_id, "display_name": design_id})
     spec = build_manual_battle_spec(ui_state_with_ships, session_registries)
@@ -297,7 +297,7 @@ def test_compiler_emits_no_placeholder_for_real_complex(
 def test_compiler_does_not_mutate_ships(ui_state_with_ships, session_registries):
     # Capture ship attributes before compilation.
     snapshots = []
-    for side in (ui_state_with_ships.side_0, ui_state_with_ships.side_1):
+    for side in (ui_state_with_ships.sides[0], ui_state_with_ships.sides[1]):
         for fleet in side.fleets:
             for ship in fleet.ships:
                 snapshots.append(
@@ -310,10 +310,10 @@ def test_compiler_does_not_mutate_ships(ui_state_with_ships, session_registries)
                 )
 
     # Add some modifiers — these should NOT cause ship mutation.
-    ui_state_with_ships.side_0.system_complexes.append(
+    ui_state_with_ships.sides[0].system_complexes.append(
         {"design_id": "shield_booster", "display_name": "Shield Booster"}
     )
-    ui_state_with_ships.side_1.sector_complexes.append(
+    ui_state_with_ships.sides[1].sector_complexes.append(
         {"design_id": "damage_booster", "display_name": "Damage Booster"}
     )
 
@@ -321,7 +321,7 @@ def test_compiler_does_not_mutate_ships(ui_state_with_ships, session_registries)
 
     # Re-check every attribute.
     after = []
-    for side in (ui_state_with_ships.side_0, ui_state_with_ships.side_1):
+    for side in (ui_state_with_ships.sides[0], ui_state_with_ships.sides[1]):
         for fleet in side.fleets:
             for ship in fleet.ships:
                 after.append(

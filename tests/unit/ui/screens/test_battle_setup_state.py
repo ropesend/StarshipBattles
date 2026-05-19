@@ -107,15 +107,15 @@ class TestBattleSetupState:
         from game.ui.screens.battle_setup_state import BattleSetupState
 
         state = BattleSetupState()
-        assert state.side_0.team_id == 0
-        assert state.side_1.team_id == 1
+        assert state.sides[0].team_id == 0
+        assert state.sides[1].team_id == 1
 
     def test_add_ship_from_design(self):
         """add_ship_from_design creates a ShipInstance and adds it to a fleet."""
         from game.ui.screens.battle_setup_state import BattleSetupState
 
         state = BattleSetupState()
-        fleet = state.side_0.create_fleet("Test Fleet")
+        fleet = state.sides[0].create_fleet("Test Fleet")
 
         design_data = {
             "name": "Test Ship",
@@ -132,27 +132,27 @@ class TestBattleSetupState:
         from game.ui.screens.battle_setup_state import BattleSetupState
 
         state = BattleSetupState()
-        state.side_0.create_fleet("Alpha")
-        state.side_1.create_fleet("Beta")
+        state.sides[0].create_fleet("Alpha")
+        state.sides[1].create_fleet("Beta")
 
         data = state.to_dict()
         restored = BattleSetupState.from_dict(data)
 
-        assert len(restored.side_0.fleets) == 1
-        assert len(restored.side_1.fleets) == 1
-        assert restored.side_0.fleets[0].id is not None
+        assert len(restored.sides[0].fleets) == 1
+        assert len(restored.sides[1].fleets) == 1
+        assert restored.sides[0].fleets[0].id is not None
 
     def test_clear_resets_state(self):
         """clear() removes all fleets and complexes."""
         from game.ui.screens.battle_setup_state import BattleSetupState
 
         state = BattleSetupState()
-        state.side_0.create_fleet("Alpha")
-        state.side_1.create_fleet("Beta")
+        state.sides[0].create_fleet("Alpha")
+        state.sides[1].create_fleet("Beta")
 
         state.clear()
-        assert len(state.side_0.fleets) == 0
-        assert len(state.side_1.fleets) == 0
+        assert len(state.sides[0].fleets) == 0
+        assert len(state.sides[1].fleets) == 0
 
 
 class TestBattleSetupSideComplexToggles:
