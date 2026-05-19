@@ -70,25 +70,41 @@ class TestShipInstanceCategoricalShape:
 
 
 class TestShipInstanceLegacyShimDocumentation:
-    """Pin that the post-Phase-9 / PROJ-436 / PROJ-425 retained shims
-    remain explicitly documented (not accidentally retained)."""
+    """Pin that the post-PROJ-449 Phase 4 read-only property docstrings
+    remain explicitly documented (not accidentally retained).
 
-    def test_consumable_levels_property_is_backcompat_shim(self) -> None:
+    PROJ-449 Phase 4 retired the matching ``@setter`` shims, so the
+    properties are now permanent read-only views over the private
+    ``_consumable_levels`` / ``_cargo_contents`` fields rather than
+    backward-compat shims. The static guard at
+    ``tests/static_guards/test_no_ship_instance_legacy_kwarg_wrapper.py``
+    pins the no-setter invariant; this test pins the docstring contract.
+    """
+
+    def test_consumable_levels_property_is_read_only_view(self) -> None:
         prop = ShipInstance.__dict__.get("consumable_levels")
         assert isinstance(prop, property)
+        assert prop.fset is None, (
+            "consumable_levels must be read-only after PROJ-449 Phase 4 "
+            "(no @setter)."
+        )
         doc = prop.__doc__ or ""
-        assert "deletion shim" in doc.lower() or "backward-compat" in doc.lower(), (
-            "consumable_levels property must remain explicitly marked as a "
-            "backward-compat shim (PROJ-436 Phase 3f rationale)."
+        assert "read-only" in doc.lower(), (
+            "consumable_levels property docstring must declare it as a "
+            "read-only view (PROJ-449 Phase 4 contract)."
         )
 
-    def test_cargo_contents_property_is_backcompat_shim(self) -> None:
+    def test_cargo_contents_property_is_read_only_view(self) -> None:
         prop = ShipInstance.__dict__.get("cargo_contents")
         assert isinstance(prop, property)
+        assert prop.fset is None, (
+            "cargo_contents must be read-only after PROJ-449 Phase 4 "
+            "(no @setter)."
+        )
         doc = prop.__doc__ or ""
-        assert "deletion shim" in doc.lower() or "backward-compat" in doc.lower(), (
-            "cargo_contents property must remain explicitly marked as a "
-            "backward-compat shim (PROJ-436 Phase 3f rationale)."
+        assert "read-only" in doc.lower(), (
+            "cargo_contents property docstring must declare it as a "
+            "read-only view (PROJ-449 Phase 4 contract)."
         )
 
     def test_class_docstring_documents_categories(self) -> None:

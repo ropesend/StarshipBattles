@@ -184,7 +184,7 @@ class TestToShip:
         mock_sim_ship.layers = {}
         mock_serializer_cls.from_dict.return_value = mock_sim_ship
         ship.current_hp = None
-        ship.consumable_levels = {'fuel': 50.0}
+        ship._consumable_levels = {'fuel': 50.0}
 
         bridge.to_ship((0, 0), team_id=0, registries=MagicMock())
 

@@ -219,47 +219,33 @@ class ShipInstance:
         self._bridge = ShipInstanceBridge(self)
 
     # ------------------------------------------------------------------
-    # PROJ-436 Phase 3f legacy-shim properties for ``consumable_levels``
-    # and ``cargo_contents``.
+    # PROJ-449 Phase 4: read-only views over private consumable / cargo
+    # storage. The matching @setter shims were retired together with
+    # the legacy-kwarg constructor wrapper. See PROJ-449 decisions.md
+    # row 2026-05-18 "Phase 3+4 scope adjustment".
     # ------------------------------------------------------------------
-    #
-    # The dataclass fields of the same name were deleted in Phase 3f.
-    # Production code routes through the stable manager APIs
-    # (``self._resource_mgr.set_level`` / ``get_all_levels`` /
-    # ``get_current_resource`` / ``replace_levels`` and
-    # ``self._cargo_mgr.set_cargo`` / ``get_all_cargo`` /
-    # ``total_cargo_units`` / ``has_cargo``). These properties expose
-    # the underlying private dicts directly so test infrastructure that
-    # still does ``ship.consumable_levels[k] = v`` / ``ship.cargo_contents[k] = v``
-    # /``ship.consumable_levels = {...}`` keeps working without a
-    # per-test migration.
 
     @property
     def consumable_levels(self) -> Dict[str, float]:
-        """Backward-compatible dict view over private consumable storage.
+        """Read-only view over private consumable storage.
 
-        Phase 3f deletion shim. The dataclass field is gone; the AST
-        guard at ``tests/static_guards/test_no_legacy_storage_fields.py``
-        pins the absence. Manager methods read / write the same
-        private dict, so changes via either API are visible everywhere.
+        Writes must route through ``_resource_mgr.set_level`` /
+        ``replace_levels`` / ``deplete``.
         """
         return self._consumable_levels
 
-    @consumable_levels.setter
-    def consumable_levels(self, value: Dict[str, float]) -> None:
-        self._consumable_levels = dict(value) if value is not None else {}
-
     @property
     def cargo_contents(self) -> Dict[str, int]:
-        """Backward-compatible dict view over private cargo storage.
+        """Read-only view over private cargo storage.
 
-        Phase 3f deletion shim. See ``consumable_levels`` property.
+        PROJ-446 Phase 2 narrowed the protocol annotation to
+        ``Mapping[str, int]``. Phase 5 of PROJ-449 will drop the
+        "not read-only in absolute terms" caveat from the protocol
+        docstring now that the concrete-class @setter is gone.
+        Writes must route through ``_cargo_mgr.set_cargo`` /
+        ``add_to_cargo`` / ``remove_from_cargo``.
         """
         return self._cargo_contents
-
-    @cargo_contents.setter
-    def cargo_contents(self, value: Dict[str, int]) -> None:
-        self._cargo_contents = dict(value) if value is not None else {}
 
     def set_registries(self, registries: 'GameRegistries') -> None:
         """
@@ -786,54 +772,12 @@ class ShipInstance:
         return f"ShipInstance({self.name}, {hp_status}, {status})"
 
 
-# ---------------------------------------------------------------------------
-# PROJ-436 Phase 3f: legacy-kwarg constructor wrapper.
-# ---------------------------------------------------------------------------
-# The dataclass field rename (``consumable_levels`` ->
-# ``_consumable_levels``, ``cargo_contents`` -> ``_cargo_contents``)
-# would break ~18 test files that pass the legacy kwarg names into
-# ``ShipInstance(...)``. Rather than sweep those mechanically, we
-# wrap the dataclass-generated ``__init__`` with a translator that
-# accepts both spellings. Production code never hits the translation
-# branch (the serializer / clone paths use the new private names).
-#
-# PROJ-443 Phase 5b retained-with-rationale: an initial sweep attempt
-# found the real test-side footprint is 18 files (the original PROJ-436
-# audit estimated ~7). The wrapper is small (~20 LOC), production
-# carries no runtime cost (kwargs are not the production path), and
-# the cleanup value does not justify the change to 18 test files. See
-# `Projects/active_projects/PROJ-443/decisions.md` 2026-05-17 row
-# "Phase 5b implementation: retained wrapper after audit found 18
-# files (not ~7)".
-
-_dataclass_init = ShipInstance.__init__
-
-
-def _ship_instance_init_with_legacy_kwargs(self, *args, **kwargs):  # noqa: D401
-    """Translate legacy ``consumable_levels`` / ``cargo_contents`` kwargs.
-
-    PROJ-436 Phase 3f compat shim. Production callers pass the new
-    private-field names (``_consumable_levels`` / ``_cargo_contents``);
-    only legacy test fixtures hit the translation branch.
-    """
-    if 'consumable_levels' in kwargs:
-        if '_consumable_levels' in kwargs:
-            raise TypeError(
-                "ShipInstance.__init__ received both 'consumable_levels' "
-                "and '_consumable_levels'; pass only one."
-            )
-        kwargs['_consumable_levels'] = kwargs.pop('consumable_levels')
-    if 'cargo_contents' in kwargs:
-        if '_cargo_contents' in kwargs:
-            raise TypeError(
-                "ShipInstance.__init__ received both 'cargo_contents' "
-                "and '_cargo_contents'; pass only one."
-            )
-        kwargs['_cargo_contents'] = kwargs.pop('cargo_contents')
-    _dataclass_init(self, *args, **kwargs)
-
-
-ShipInstance.__init__ = _ship_instance_init_with_legacy_kwargs
+# PROJ-449 Phase 4: legacy-kwarg constructor wrapper retired. The
+# ``ShipInstance.__init__`` is the unmodified dataclass-generated
+# ``__init__`` accepting only private (underscore-prefixed) field
+# names. See ``tests/static_guards/test_no_ship_instance_legacy_kwarg_wrapper.py``
+# for the deletion guard. See PROJ-449 decisions.md row 2026-05-18
+# "Phase 3+4 scope adjustment".
 
 
 # PROJ-436 Phase 9: ``_items_to_bay_inventory`` / ``_bay_inventory_to_items``

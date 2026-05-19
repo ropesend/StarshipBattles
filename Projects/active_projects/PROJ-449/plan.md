@@ -19,18 +19,18 @@
 | 1. Migrate `tests/fixtures/strategy_entities.py` (4 sites; +3-line scope creep in `test_roundtrip_ships.py`) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Sweep direct call sites in tests + rewrite `planet_from_dict_kwargs` | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Delete `_planet_init_with_legacy_kwargs` + 3 Planet @setters (kept read-only @property getters; +setter-call sweep across 19 files) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Delete `_ship_instance_init_with_legacy_kwargs` + 2 ShipInstance @property/@setter pairs | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Delete `_ship_instance_init_with_legacy_kwargs` + 2 ShipInstance @setters (kept read-only getters) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Drop `IShipInstance.cargo_contents` caveat + tighten `IFacility.consumable_levels` | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Profile `Empire.resource_pool`; add cached aggregation only if hot | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-18
-**Active Phase:** Phase 4 (ready to start)
-**Last Action:** Phase 3 complete with scope adjustment. Deleted `_planet_init_with_legacy_kwargs` wrapper and the 3 `@setter` blocks for `stockpile`/`max_stockpile`/`staging_yard`. **Kept the 3 read-only `@property` getters** as views over the private fields after Phase 0 audit was found to have under-counted read sites (16 production + 50+ test reads were not in the original sweep set). Migration sweep across 19 files (2 production: `planet_write_service.py`, `issuer_adapter.py`; 17 tests) covered ~45 attribute-setter writes + 9 ctor-kwarg leftovers + 2 mock-fixture refactors (subagent execution). Updated `planet_serde.planet_to_dict` to read private fields directly. New static guard at `tests/static_guards/test_no_planet_legacy_kwarg_wrapper.py` pins wrapper absence + setter absence. Sharded suite 23372/23372 GREEN. decisions.md 2026-05-18 row "Phase 3 scope adjustment" documents the rationale. PROJ-450 unblocked.
+**Active Phase:** Phase 5 (ready to start)
+**Last Action:** Phase 4 complete with the same scope adjustment as Phase 3. Deleted `_ship_instance_init_with_legacy_kwargs` and the 2 @setter components (`consumable_levels`, `cargo_contents`); kept the @property getters as read-only views. Production setter site at `ship_consumable_manager.py:152` migrated. 7 real-ship test setter migrations across 5 files. ~20 MagicMock setattr sites confirmed out-of-scope. New static guard pins wrapper absence + setter absence. ship_instance.py post-Phase-4 LOC = 783 (F-A-007 trigger condition still active per Codex r4; out of scope here; will be decided by PROJ-459 Phase 3). Sharded 23375/23375 GREEN. Phase 3 complete with scope adjustment. Deleted `_planet_init_with_legacy_kwargs` wrapper and the 3 `@setter` blocks for `stockpile`/`max_stockpile`/`staging_yard`. **Kept the 3 read-only `@property` getters** as views over the private fields after Phase 0 audit was found to have under-counted read sites (16 production + 50+ test reads were not in the original sweep set). Migration sweep across 19 files (2 production: `planet_write_service.py`, `issuer_adapter.py`; 17 tests) covered ~45 attribute-setter writes + 9 ctor-kwarg leftovers + 2 mock-fixture refactors (subagent execution). Updated `planet_serde.planet_to_dict` to read private fields directly. New static guard at `tests/static_guards/test_no_planet_legacy_kwarg_wrapper.py` pins wrapper absence + setter absence. Sharded suite 23372/23372 GREEN. decisions.md 2026-05-18 row "Phase 3 scope adjustment" documents the rationale. PROJ-450 unblocked.
 
-**Next Action:** Execute Phase 4 — delete `_ship_instance_init_with_legacy_kwargs` + 2 ShipInstance @property/@setter pairs. Expect a similar scope adjustment if production/test attribute-read sites are uncovered.
+**Next Action:** Execute Phase 5 — drop the "not read-only in absolute terms" caveat from `IShipInstance.cargo_contents` and tighten `IFacility.consumable_levels` docstring per F-C-013 / F-C-014.
 **Blockers:** None.
-**Context for Next Agent:** Phase 3 closed F-A-002 (wrapper gone) and substantially closed F-A-004 (setters gone; read-only getters survive). The audit-of-record for Phase 4 must include attribute-read sites on `ShipInstance.consumable_levels` / `.cargo_contents`, not just constructor kwargs.
+**Context for Next Agent:** F-A-002/003/004/005 closed; F-A-012 deferred (PlanetaryFacility public field); F-A-007 trigger remains active (ship_instance.py = 783 LOC; deferred to PROJ-459 Phase 3 decision).
 
 ## Checkpoint Log
 

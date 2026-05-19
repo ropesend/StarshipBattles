@@ -5,7 +5,7 @@
 > 2. Sharded suite green (`python Tools/test_sharded/test_sharded.py`)
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete (with scope adjustment matching Phase 3)
 **Depends on:** phase_3
 **Objective:** Delete the ShipInstance legacy-kwarg wrapper and the 2 `@property`/`@setter` blocks. The Phase 2 audit + sweep covered the test footprint; this phase is a pure dead-code deletion.
 
@@ -21,11 +21,11 @@
 **File:** `tests/static_guards/test_no_ship_instance_legacy_kwarg_wrapper.py` (new)
 **Tests:** `pytest tests/static_guards/test_no_ship_instance_legacy_kwarg_wrapper.py -q`
 
-- [ ] Create a new static-guard test asserting:
+- [x] Create a new static-guard test asserting:
   - `not hasattr(ship_instance_module, "_ship_instance_init_with_legacy_kwargs")`
   - `not hasattr(ShipInstance, "consumable_levels")` (the @property goes away — only `_consumable_levels` field remains)
   - `not hasattr(ShipInstance, "cargo_contents")`
-- [ ] Run the test; expect 3 assertion failures (RED)
+- [x] Run the test; expect 3 assertion failures (RED)
 
 **Notes:** Mirror the Phase 3.1 sibling guard for Planet.
 
@@ -33,18 +33,18 @@
 **File:** `game/strategy/data/ship_instance.py`
 **Tests:** `pytest tests/unit/strategy/ship_instance/ -n 4 -q` then sharded
 
-- [ ] Delete lines 786-833 (the Phase-3f comment block + `_dataclass_init = ShipInstance.__init__` + `_ship_instance_init_with_legacy_kwargs` function + the assignment `ShipInstance.__init__ = _ship_instance_init_with_legacy_kwargs`)
-- [ ] Run focused unit tests: `pytest tests/unit/strategy/ship_instance/ tests/unit/strategy/data/test_ship_instance_container_views.py -n 4 -q`. Expect them to pass.
-- [ ] If any test fails: same recovery as Phase 3 Task 3.2 — most likely a missed call site
-- [ ] Verify Task 4.1's guard now has 2 RED assertions remaining (the property assertions)
+- [x] Delete lines 786-833 (the Phase-3f comment block + `_dataclass_init = ShipInstance.__init__` + `_ship_instance_init_with_legacy_kwargs` function + the assignment `ShipInstance.__init__ = _ship_instance_init_with_legacy_kwargs`)
+- [x] Run focused unit tests: `pytest tests/unit/strategy/ship_instance/ tests/unit/strategy/data/test_ship_instance_container_views.py -n 4 -q`. Expect them to pass.
+- [x] If any test fails: same recovery as Phase 3 Task 3.2 — most likely a missed call site
+- [x] Verify Task 4.1's guard now has 2 RED assertions remaining (the property assertions)
 
 ### Task 4.3: GREEN — delete the 2 @property/@setter blocks [Medium]
 **File:** `game/strategy/data/ship_instance.py`
 **Tests:** `pytest tests/unit/strategy/ship_instance/ tests/unit/strategy/data/test_ship_instance_container_views.py -n 4 -q` then sharded
 
-- [ ] Delete the comment block + 2 property/setter pairs at lines 224-262 (`# These properties expose the underlying...` through the `cargo_contents` setter)
-- [ ] Run focused unit tests. Expect them to pass.
-- [ ] If any test fails on `ship.consumable_levels` / `ship.cargo_contents` attribute access:
+- [x] Delete the comment block + 2 property/setter pairs at lines 224-262 (`# These properties expose the underlying...` through the `cargo_contents` setter)
+- [x] Run focused unit tests. Expect them to pass.
+- [x] If any test fails on `ship.consumable_levels` / `ship.cargo_contents` attribute access:
   - Migrate the read to `ship._consumable_levels` / `ship._cargo_contents` OR (better) to the cargo manager API (`ship._cargo_mgr.set_cargo(...)`, `get_all_cargo()`, `total_cargo_units()`, `has_cargo()`)
   - Capture the rewrite pattern in `decisions.md` so PROJ-451's audit (if relevant) doesn't surface the same path again
 
@@ -53,36 +53,36 @@
 ### Task 4.4: Confirm Task 4.1 guard is fully GREEN [Simple]
 **Tests:** `pytest tests/static_guards/test_no_ship_instance_legacy_kwarg_wrapper.py -q`
 
-- [ ] Static guard green
-- [ ] Commit Tasks 4.1-4.4 as a single phase commit (or 2-3 commits)
-- [ ] Commit message: `PROJ-449 Phase 4: delete ShipInstance legacy-kwarg wrapper + 2 property/setter pairs (closes F-A-003 + F-A-005; supersedes PROJ-443 Phase 5b deferred)`
+- [x] Static guard green
+- [x] Commit Tasks 4.1-4.4 as a single phase commit (or 2-3 commits)
+- [x] Commit message: `PROJ-449 Phase 4: delete ShipInstance legacy-kwarg wrapper + 2 property/setter pairs (closes F-A-003 + F-A-005; supersedes PROJ-443 Phase 5b deferred)`
 
 ### Task 4.5: Measure `ship_instance.py` LOC + record decision [Simple]
 **File:** `Projects/active_projects/PROJ-449/decisions.md`
 **Measurement command (PowerShell):** `(Get-Content game/strategy/data/ship_instance.py | Measure-Object -Line).Lines`
 
-- [ ] After Tasks 4.2 + 4.3 land, measure ship_instance.py LOC using the PowerShell command above
-- [ ] Expected drop: ~50 LOC (wrapper block ~30 LOC + property cluster ~25 LOC)
-- [ ] Pre-phase LOC was 839; expected post-phase ~789
-- [ ] Add a decisions.md row: "Phase 4 closed — ship_instance.py at NNN LOC. Codex r4 follow-up trigger condition (job 11 of redesign) ACTIVE if NNN > 750; NOT triggered if NNN ≤ 750."
-- [ ] Either way, F-A-007 (the 839→500 LOC reduction) stays out of PROJ-449 scope per Codex r4: "F-A-007 should not be smuggled in as a side quest; if it still sits at 839 LOC after job 1, spin it as its own next-touch project."
+- [x] After Tasks 4.2 + 4.3 land, measure ship_instance.py LOC using the PowerShell command above
+- [x] Expected drop: ~50 LOC (wrapper block ~30 LOC + property cluster ~25 LOC)
+- [x] Pre-phase LOC was 839; expected post-phase ~789
+- [x] Add a decisions.md row: "Phase 4 closed — ship_instance.py at NNN LOC. Codex r4 follow-up trigger condition (job 11 of redesign) ACTIVE if NNN > 750; NOT triggered if NNN ≤ 750."
+- [x] Either way, F-A-007 (the 839→500 LOC reduction) stays out of PROJ-449 scope per Codex r4: "F-A-007 should not be smuggled in as a side quest; if it still sits at 839 LOC after job 1, spin it as its own next-touch project."
 
 ### Task 4.6: Run full sharded suite [Medium]
 **Tests:** `python Tools/test_sharded/test_sharded.py`
 
-- [ ] Sharded suite green at the same pre-phase count
-- [ ] Mark phase complete
+- [x] Sharded suite green at the same pre-phase count
+- [x] Mark phase complete
 
 ---
 
 ## Phase Completion Checklist
-- [ ] Static guard `test_no_ship_instance_legacy_kwarg_wrapper.py` exists and is green
-- [ ] `_ship_instance_init_with_legacy_kwargs` deleted from `ship_instance.py`
-- [ ] 2 @property/@setter blocks deleted from `ship_instance.py`
-- [ ] `ship_instance.py` LOC measured + decision row in `decisions.md`
-- [ ] Sharded suite green
-- [ ] PROJ-443 Phase 5b deferred deletion is now closed (note in `decisions.md`)
-- [ ] Plan.md Quick Status → Complete; Current State updated
+- [x] Static guard `test_no_ship_instance_legacy_kwarg_wrapper.py` exists and is green
+- [x] `_ship_instance_init_with_legacy_kwargs` deleted from `ship_instance.py`
+- [x] 2 @property/@setter blocks deleted from `ship_instance.py`
+- [x] `ship_instance.py` LOC measured + decision row in `decisions.md`
+- [x] Sharded suite green
+- [x] PROJ-443 Phase 5b deferred deletion is now closed (note in `decisions.md`)
+- [x] Plan.md Quick Status → Complete; Current State updated
 
 ## Notes / Risks / Coordination Touchpoints
 - **PROJ-443 Phase 5b reversed.** The wrapper retention rationale (2026-05-17 row) was sized for ~18 files. PROJ-449 Phase 0 verified the current count; Phase 2 swept; Phase 4 deletes. Add a decisions.md row referencing the PROJ-443 supersession.

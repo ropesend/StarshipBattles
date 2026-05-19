@@ -162,7 +162,7 @@ class TestShipFuelPersistence:
             owner_id=0,
             design_data={"name": "Destroyer", "layers": {}},
         )
-        ship.consumable_levels = {"fuel": 250.0}
+        ship._consumable_levels = {"fuel": 250.0}
 
         data = ship.to_dict()
         restored = ShipInstance.from_dict(data)
@@ -195,7 +195,7 @@ class TestShipFuelPersistence:
             owner_id=0,
             design_data={"name": "Cruiser", "layers": {}},
         )
-        ship.consumable_levels = {"fuel": 100.0, "energy": 75.5}
+        ship._consumable_levels = {"fuel": 100.0, "energy": 75.5}
 
         data = ship.to_dict()
         restored = ShipInstance.from_dict(data)

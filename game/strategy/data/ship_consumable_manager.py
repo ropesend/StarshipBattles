@@ -149,7 +149,7 @@ class ShipConsumableManager:
         replace levels wholesale with the post-battle snapshot from the
         simulation ship. The provided dict is copied to avoid aliasing.
         """
-        self._ship.consumable_levels = {
+        self._ship._consumable_levels = {
             k: float(v) for k, v in levels.items()
         }
 

@@ -60,10 +60,12 @@ class TestShipConsumableManagerSetLevel:
             ShipConsumableManager,
         )
         ship = self._make_ship()
-        ship.consumable_levels = {'fuel': 100.0, 'energy': 200.0}
+        # PROJ-449 Phase 4: ``replace_levels`` writes to the private
+        # ``_consumable_levels`` substrate (the public @setter is gone).
+        ship._consumable_levels = {'fuel': 100.0, 'energy': 200.0}
         manager = ShipConsumableManager(ship)
         manager.replace_levels({'fuel': 500.0, 'ammo': 25.0})
-        assert ship.consumable_levels == {'fuel': 500.0, 'ammo': 25.0}
+        assert ship._consumable_levels == {'fuel': 500.0, 'ammo': 25.0}
 
     def test_get_all_levels_returns_copy(self) -> None:
         from game.strategy.data.ship_consumable_manager import (
