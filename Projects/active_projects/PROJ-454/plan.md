@@ -18,13 +18,13 @@
 | 1. F-B-004 — Retire `effect_ability_metadata.py` (131 LOC, 2 callers) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. F-B-005 — Retire `component_inspector.py` (~68 caller sites — 52 imports + 16 patch targets — across ~31 files; sized up from `~45` after codex audit 2026-05-19) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. F-B-017 — Unwind `OrderProcessor.process_*` facade reshape; delete legacy typed result dataclasses (68 sites / 12 files; sized up from `~15 / 7` after codex audit 2026-05-19) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. F-B-018 — Remove "legacy field" framing on `OrderExecutionResult` (fields become live unified surface post-Phase-3 facade unwind; delete specific fields ONLY if Phase 4 audit shows they're dead) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. F-B-018 — Remove "legacy field" framing on `OrderExecutionResult` (fields become live unified surface post-Phase-3 facade unwind; delete specific fields ONLY if Phase 4 audit shows they're dead) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 4 (F-B-018 OrderExecutionResult legacy-field framing)
-**Last Action:** Phase 3 complete. Migrated 69 call sites across 12 test files (count was 68 in the codex re-audit; actual HEAD count was 69 — test_transfer_order.py had 8 not 7) from `processor.process_join_fleet/colonize/transfer(...)` to `processor.get_handler(OrderType.X).execute_action_order(...)`. Migration done via a one-shot Python script (with one minor bug — duplicated `component_registry=` prefix when the original call had already passed it as a kwarg; fixed post-hoc with a regex sweep across 5 files / 31 sites). Deleted 3 legacy facade methods (`process_join_fleet`, `process_colonize`, `process_transfer`), 3 result dataclasses (`JoinFleetResult`, `ColonizeResult`, `TransferResult`), and refreshed the module docstring. Dropped `ColonizeResult`/`TransferResult` imports from 2 test files. Refreshed `test_order_processor_facade.py` to tighten the OrderType-reference cap from ≤6 to ≤2 (only `process_instant_orders` remains as a `OrderType.X` reference site). Sharded 23363/23363 green.
-**Next Action:** Phase 4 Task 4.1 — audit `OrderExecutionResult` legacy-field framing.
+**Active Phase:** All phases complete; awaiting end-of-project codex audit
+**Last Action:** Phase 4 complete. Refreshed `OrderExecutionResult` docstring + dropped the 5 inline `# X legacy field` comments. Per Codex r4 redesign, kept all 5 fields flat (every field has live producers + consumers post-Phase-3; per-handler subclasses would complicate caller ergonomics). Also refreshed one stale docstring reference in `handlers/base.py:423`. Sharded first run had 2 errors (no detail captured); per protocol §13 the retry ran clean (23363/23363) — flagging as a flake. Phase 4 is documentation/comment-only edits; no behaviour changes that could have caused real regressions.
+**Next Action:** Dispatch PROJ-454 end-of-project codex audit per protocol §10.
 **Blockers:** None.
 
 ## Checkpoint Log
