@@ -33,6 +33,7 @@ import threading
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
 
@@ -431,7 +432,7 @@ class ReplayStore:
         return deleted
 
     @staticmethod
-    def _iter_replay_files(rd: Path):
+    def _iter_replay_files(rd: Path) -> Iterator[Path]:
         """Yield only true replay-record files, excluding sidecars.
 
         Sidecars are named ``replay_<id>.verification.json`` and so

@@ -518,7 +518,7 @@ class TurnEngine:
         return self._water_engine
 
     @property
-    def planet_modifier_effect_engine(self):
+    def planet_modifier_effect_engine(self) -> "PlanetModifierEffectEngine":
         """Lazy-construct + cache the PlanetModifierEffectEngine.
 
         PROJ-428 Phase 1 (TD-04): the planet-modifier engine moved off

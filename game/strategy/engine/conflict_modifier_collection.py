@@ -24,10 +24,9 @@ def lookup_environmental_effects(
 ) -> Optional[Any]:
     """PROJ-189: Query environmental effects at the combat location.
 
-    PROJ-300: returns the new sector-effects list shape from the unified
-    collector. The spec compiler accepts either the legacy
-    EnvironmentalEffects object (effective during AreaEffectManager
-    deprecation) or this new list. Phase 7 deletes the legacy path.
+    Returns the sector-effects list produced by
+    :func:`collect_sector_effects` for the system containing ``location``,
+    or ``None`` when the galaxy is unwired or no system contains the hex.
     """
     if engine._galaxy is None:
         return None

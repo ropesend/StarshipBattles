@@ -91,7 +91,9 @@ def count_matching_yard(
     return n
 
 
-def resolve_requested(count, count_available: int):
+def resolve_requested(
+    count: Optional[int], count_available: int
+) -> int | ValidationResult:
     """Resolve the requested count.
 
     Returns either an ``int`` (resolved count) or a ``ValidationResult``

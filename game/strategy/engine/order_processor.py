@@ -61,7 +61,7 @@ class TransferResult:
 class OrderProcessor(IOrderProcessor):
     """Facade dispatching every order through the order-handler registry."""
 
-    def __init__(self, event_bus=None):
+    def __init__(self, event_bus: Optional[Any] = None) -> None:
         """Initialize the order processor.
 
         Args:

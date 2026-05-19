@@ -193,7 +193,7 @@ class HarvestingEngine(IHarvestingEngine):
             'booster_misses_dirty': 0,
         }
 
-    def _get_planet_mutator(self):
+    def _get_planet_mutator(self) -> Any:
         """Lazy-default the planet mutator (PROJ-370)."""
         if self._planet_mutator is None:
             from game.strategy.services.planet_write_service import (
@@ -202,7 +202,7 @@ class HarvestingEngine(IHarvestingEngine):
             self._planet_mutator = PlanetWriteService()
         return self._planet_mutator
 
-    def _get_empire_mutator(self):
+    def _get_empire_mutator(self) -> Any:
         """Lazy-default the empire mutator (PROJ-370)."""
         if self._empire_mutator is None:
             from game.strategy.services.empire_write_service import (

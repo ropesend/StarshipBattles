@@ -77,7 +77,7 @@ class IProductionResourceSource(Protocol):
         commit.
 
         PROJ-436 Phase 12 (Option C): integer-typed sources (e.g.
-        ``Fleet`` over its `_cargo_contents` substrate) MAY round the
+        ``Fleet`` over its typed cargo manager ``ShipCargoManager``) MAY round the
         requested ``amount`` before consumption — `Fleet.consume_cargo_resource`
         calls ``int(round(amount))`` against the integer cargo store —
         so the actually-charged amount can be less than (or zero for
