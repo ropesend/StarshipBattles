@@ -8,7 +8,6 @@
 | PROJ-460 | Simulation clean-cut LOC extractions (battle_state_serde + battle_controller spec-in + replay_serialization split) | Planning | 2026-05-18 | 2026-05-18 |
 | PROJ-459 | Strategy data LOC extractions (fleet_serde + planet_gen split) | Planning | 2026-05-18 | 2026-05-18 |
 | PROJ-458 | UIWindow retrofit completion (SettingsWindow + 4 PlanetTargetEditors) | Planning | 2026-05-18 | 2026-05-18 |
-| PROJ-457 | UI structural debt extractions (build_queue_screen + planet_list_window + test_lab + game/core/exceptions split) | Planning | 2026-05-18 | 2026-05-18 |
 | PROJ-455 | Planet-FMS engine-mediated behavioral coverage (DI-001 ActionExecutionEngine half) | Planning | 2026-05-18 | 2026-05-18 |
 | PROJ-452 | Catalog-driven resource surfaces (DI-003/004/005 + LABEL_ABBREV) | Planning | 2026-05-18 | 2026-05-18 |
 | PROJ-451 | Production resource-consumption semantics (DI-006 + DI-007 engine half) | Planning | 2026-05-18 | 2026-05-18 |
@@ -27,6 +26,7 @@
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-457 | UI structural debt extractions (build_queue_screen + planet_list_window + test_lab; F-C-028 dropped per user 2026-05-19) | Archived | 2026-05-18 | 2026-05-19 |
 | PROJ-456 | UI back-compat shim retirement sweep (9 shim clusters + transfer_dialog characterization) | Archived | 2026-05-18 | 2026-05-19 |
 | PROJ-454 | Engine + services obsolete-surface retirement (effect_ability_metadata + component_inspector + OrderProcessor facade unwinding) | Archived | 2026-05-18 | 2026-05-17 |
 | PROJ-453 | Engine + services surface polish (annotations + dead skips + stale docstrings) | Archived | 2026-05-18 | 2026-05-17 |

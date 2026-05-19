@@ -92,6 +92,7 @@ class TestVisualRunFlow:
         """
         from game.ui.screens.test_lab import TestLabScreen
         from game.ui.screens.test_lab.test_executor import TestLabExecutor
+        from game.ui.screens.test_lab.screen_actions import TestLabScreenActions
         registry, _, _ = mock_registry
 
         with patch.object(TestLabScreen, '__init__', lambda self, *a, **kw: None):
@@ -100,6 +101,8 @@ class TestVisualRunFlow:
             screen.scene_callback = Mock()
             screen.registry = registry
             screen.controller = mock_controller
+            # PROJ-457 Phase 3: actions extracted to TestLabScreenActions.
+            screen._actions = TestLabScreenActions(screen)
 
             # Create executor with proper callbacks
             screen._executor = TestLabExecutor(
@@ -110,7 +113,7 @@ class TestVisualRunFlow:
                 draw_and_flip=lambda: None,
                 get_engine=lambda: mock_battle_scene.engine,
                 ensure_engine=lambda: None,
-                switch_to_battle=lambda scenario: screen._switch_to_battle(scenario),
+                switch_to_battle=lambda scenario: screen._actions._switch_to_battle(scenario),
                 output_log=mock_controller.output_log,
             )
             return screen
@@ -121,7 +124,7 @@ class TestVisualRunFlow:
 
         with patch('game.ui.screens.test_lab.test_executor.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
-            screen._on_run()
+            screen._actions._on_run()
 
         # start_battle should have been called exactly once
         mock_battle_scene.start_battle.assert_called_once()
@@ -138,7 +141,7 @@ class TestVisualRunFlow:
 
         with patch('game.ui.screens.test_lab.test_executor.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
-            screen._on_run()
+            screen._actions._on_run()
 
         controller = mock_battle_scene.start_battle.call_args[0][0]
         assert controller.config.return_destination == ReturnDestination.TEST_LAB
@@ -149,7 +152,7 @@ class TestVisualRunFlow:
 
         with patch('game.ui.screens.test_lab.test_executor.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
-            screen._on_run()
+            screen._actions._on_run()
 
         controller = mock_battle_scene.start_battle.call_args[0][0]
         assert controller.config.start_paused is True
@@ -161,7 +164,7 @@ class TestVisualRunFlow:
 
         with patch('game.ui.screens.test_lab.test_executor.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
-            screen._on_run()
+            screen._actions._on_run()
 
         # Verify scene_callback was called to request battle transition
         screen.scene_callback.assert_called_once_with("start_test_battle", scenario=mock_scenario)
@@ -175,7 +178,7 @@ class TestVisualRunFlow:
 
         with patch('game.ui.screens.test_lab.test_executor.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
-            screen._on_run()
+            screen._actions._on_run()
 
         assert mock_scenario.to_spec.call_count == 1
         assert mock_scenario.wire_ships.call_count == 1
@@ -188,7 +191,7 @@ class TestVisualRunFlow:
 
         with patch('game.ui.screens.test_lab.test_executor.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
-            screen._on_run()
+            screen._actions._on_run()
 
         # Verify scenario reference is stored in the controller config
         controller = mock_battle_scene.start_battle.call_args[0][0]
@@ -203,7 +206,7 @@ class TestVisualRunFlow:
 
         with patch('game.ui.screens.test_lab.test_executor.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
-            screen._on_run()
+            screen._actions._on_run()
 
         # Camera fitting is now handled inside start_battle, so just verify start_battle was called
         mock_battle_scene.start_battle.assert_called_once()
@@ -256,11 +259,14 @@ class TestSceneTransitionCallbacks:
     def _create_screen_with_real_switch(self, mock_battle_scene, scene_callback):
         """Create a TestLabScreen with the real _switch_to_battle method."""
         from game.ui.screens.test_lab.screen import TestLabScreen
+        from game.ui.screens.test_lab.screen_actions import TestLabScreenActions
 
         with patch.object(TestLabScreen, '__init__', lambda self, *a, **kw: None):
             screen = TestLabScreen.__new__(TestLabScreen)
             screen.battle_scene = mock_battle_scene
             screen.scene_callback = scene_callback
+            # PROJ-457 Phase 3: _switch_to_battle moved to TestLabScreenActions.
+            screen._actions = TestLabScreenActions(screen)
             return screen
 
     def test_switch_to_battle_calls_scene_callback(self, mock_battle_scene):
@@ -269,7 +275,7 @@ class TestSceneTransitionCallbacks:
         screen = self._create_screen_with_real_switch(mock_battle_scene, callback)
 
         scenario = _mock_scenario_for_switch_to_battle()
-        screen._switch_to_battle(scenario)
+        screen._actions._switch_to_battle(scenario)
 
         callback.assert_called_once_with("start_test_battle", scenario=scenario)
 
@@ -279,7 +285,7 @@ class TestSceneTransitionCallbacks:
         screen = self._create_screen_with_real_switch(mock_battle_scene, callback)
 
         scenario = _mock_scenario_for_switch_to_battle()
-        screen._switch_to_battle(scenario)
+        screen._actions._switch_to_battle(scenario)
 
         mock_battle_scene.start_battle.assert_called_once()
 
@@ -296,7 +302,7 @@ class TestSceneTransitionCallbacks:
         screen = self._create_screen_with_real_switch(mock_battle_scene, callback)
 
         scenario = _mock_scenario_for_switch_to_battle()
-        screen._switch_to_battle(scenario)
+        screen._actions._switch_to_battle(scenario)
 
         controller = mock_battle_scene.start_battle.call_args[0][0]
         assert controller.config.start_paused is True

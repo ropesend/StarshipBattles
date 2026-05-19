@@ -41,6 +41,7 @@ def _make_planet_list_window():
     """
     from game.ui.screens.planet_list_window import PlanetListWindow
     from game.ui.screens.planet_list_controller import PlanetListController
+    from game.ui.screens.planet_list_event_router import PlanetListEventRouter
 
     window = PlanetListWindow.__new__(PlanetListWindow)
     window.ui_manager = MagicMock()
@@ -59,7 +60,9 @@ def _make_planet_list_window():
     # Empire reference used by the detail panel.
     window.empire = MagicMock()
     window.empire.id = 1
-    window._detail_panel_geometry = MagicMock(return_value=(10, 10, 400))
+    # PROJ-457 Phase 2: event dispatch + selection live on PlanetListEventRouter.
+    window._event_router = PlanetListEventRouter(window)
+    window._event_router._detail_panel_geometry = MagicMock(return_value=(10, 10, 400))
     return window
 
 
@@ -83,15 +86,15 @@ class TestViewThreading:
         planet = _make_planet_mock(planet_id=42, owner_id=1)
 
         with patch(
-            "game.ui.screens.planet_list_window.PlanetReportPanel"
+            "game.ui.screens.planet_list_event_router.PlanetReportPanel"
         ) as mock_panel_cls, patch(
-            "game.ui.screens.planet_list_window.compute_planet_production",
+            "game.ui.screens.planet_list_event_router.compute_planet_production",
             return_value={},
         ), patch(
-            "game.ui.screens.planet_list_window.UIButton"
+            "game.ui.screens.planet_list_event_router.UIButton"
         ):
             mock_panel_cls.return_value.get_height_required.return_value = 100
-            window._on_planet_selected(planet)
+            window._event_router._on_planet_selected(planet)
 
         mock_panel_cls.assert_called_once()
         kwargs = mock_panel_cls.call_args.kwargs
@@ -108,15 +111,15 @@ class TestViewThreading:
         planet = _make_planet_mock(planet_id=7, owner_id=None)
 
         with patch(
-            "game.ui.screens.planet_list_window.PlanetReportPanel"
+            "game.ui.screens.planet_list_event_router.PlanetReportPanel"
         ) as mock_panel_cls, patch(
-            "game.ui.screens.planet_list_window.compute_planet_production",
+            "game.ui.screens.planet_list_event_router.compute_planet_production",
             return_value={},
         ), patch(
-            "game.ui.screens.planet_list_window.UIButton"
+            "game.ui.screens.planet_list_event_router.UIButton"
         ):
             mock_panel_cls.return_value.get_height_required.return_value = 100
-            window._on_planet_selected(planet)
+            window._event_router._on_planet_selected(planet)
 
         mock_panel_cls.assert_called_once()
         kwargs = mock_panel_cls.call_args.kwargs
@@ -134,15 +137,15 @@ class TestViewThreading:
         planet = _make_planet_mock(planet_id=99, owner_id=1)
 
         with patch(
-            "game.ui.screens.planet_list_window.PlanetReportPanel"
+            "game.ui.screens.planet_list_event_router.PlanetReportPanel"
         ) as mock_panel_cls, patch(
-            "game.ui.screens.planet_list_window.compute_planet_production",
+            "game.ui.screens.planet_list_event_router.compute_planet_production",
             return_value={},
         ), patch(
-            "game.ui.screens.planet_list_window.UIButton"
+            "game.ui.screens.planet_list_event_router.UIButton"
         ):
             mock_panel_cls.return_value.get_height_required.return_value = 100
-            window._on_planet_selected(planet)
+            window._event_router._on_planet_selected(planet)
 
         mock_panel_cls.assert_called_once()
         kwargs = mock_panel_cls.call_args.kwargs

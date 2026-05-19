@@ -40,6 +40,7 @@ def test_render_progress_does_not_require_game_screen_attribute(
     on either old or new code, so it pins the access pattern rather than
     the constructor signature.
     """
+    from game.ui.screens.test_lab.screen_actions import TestLabScreenActions
     screen = TestLabScreen.__new__(TestLabScreen)
     # Stub `self.game` to a ScreenRouter-shaped object: has battle_scene,
     # has NO `screen` attribute. This is the exact production shape that
@@ -51,10 +52,12 @@ def test_render_progress_does_not_require_game_screen_attribute(
     # Pre-refactor stores `battle_scene` only via `self.game`; post-refactor
     # adds `self.battle_scene`. Set both so the test runs on either side.
     screen.battle_scene = screen.game.battle_scene
+    # PROJ-457 Phase 3: actions extracted to TestLabScreenActions.
+    screen._actions = TestLabScreenActions(screen)
 
     with patch("pygame.display.get_surface", return_value=mock_display_surface):
         # Must not raise AttributeError on `self.game.screen` lookup.
-        screen._render_progress("title", "subtitle", "detail")
+        screen._actions._render_progress("title", "subtitle", "detail")
 
 
 def test_constructor_signature_drops_game_handle() -> None:

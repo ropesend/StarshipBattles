@@ -135,6 +135,7 @@ class TestShowShipsJson:
     def mock_test_lab_screen(self):
         """Create a minimal TestLabScreen for testing."""
         from game.ui.screens.test_lab import TestLabScreen
+        from game.ui.screens.test_lab.screen_actions import TestLabScreenActions
         from game.ui.screens.test_lab.viewmodel import TestLabViewModel
 
         with patch.object(TestLabScreen, '__init__', lambda self, game, w, h: None):
@@ -144,6 +145,8 @@ class TestShowShipsJson:
             # PROJ-172: json_popup is now a property delegating to viewmodel
             screen._viewmodel = Mock(spec=TestLabViewModel)
             screen._viewmodel.json_popup = None
+            # PROJ-457 Phase 3: _show_ships_json moved to TestLabScreenActions.
+            screen._actions = TestLabScreenActions(screen)
             return screen
 
     def test_show_ships_json_uses_correct_path(self, mock_test_lab_screen):
@@ -161,11 +164,11 @@ class TestShowShipsJson:
             loaded_paths.append(path)
             return {'name': 'Test Ship'}
 
-        with patch('game.ui.screens.test_lab.screen.load_json', side_effect=track_load_json):
-            with patch('game.ui.screens.test_lab.screen.JSONPopup'):
-                with patch('game.ui.screens.test_lab.screen.WIDTH', 1920):
-                    with patch('game.ui.screens.test_lab.screen.HEIGHT', 1080):
-                        mock_test_lab_screen._show_ships_json('TEST-001')
+        with patch('game.ui.screens.test_lab.screen_actions.load_json', side_effect=track_load_json):
+            with patch('game.ui.screens.test_lab.screen_actions.JSONPopup'):
+                with patch('game.ui.screens.test_lab.screen_actions.WIDTH', 1920):
+                    with patch('game.ui.screens.test_lab.screen_actions.HEIGHT', 1080):
+                        mock_test_lab_screen._actions._show_ships_json('TEST-001')
 
         assert len(loaded_paths) == 1
         loaded_path = loaded_paths[0]
@@ -184,6 +187,7 @@ class TestShowComponentsJson:
     def mock_test_lab_screen(self):
         """Create a minimal TestLabScreen for testing."""
         from game.ui.screens.test_lab import TestLabScreen
+        from game.ui.screens.test_lab.screen_actions import TestLabScreenActions
         from game.ui.screens.test_lab.viewmodel import TestLabViewModel
 
         with patch.object(TestLabScreen, '__init__', lambda self, game, w, h: None):
@@ -192,6 +196,8 @@ class TestShowComponentsJson:
             # PROJ-172: json_popup is now a property delegating to viewmodel
             screen._viewmodel = Mock(spec=TestLabViewModel)
             screen._viewmodel.json_popup = None
+            # PROJ-457 Phase 3: _show_components_json moved to TestLabScreenActions.
+            screen._actions = TestLabScreenActions(screen)
             return screen
 
     def test_show_components_json_uses_correct_path(self, mock_test_lab_screen):
@@ -202,11 +208,11 @@ class TestShowComponentsJson:
             loaded_paths.append(path)
             return {'components': []}
 
-        with patch('game.ui.screens.test_lab.screen.load_json', side_effect=track_load_json):
-            with patch('game.ui.screens.test_lab.screen.JSONPopup'):
-                with patch('game.ui.screens.test_lab.screen.WIDTH', 1920):
-                    with patch('game.ui.screens.test_lab.screen.HEIGHT', 1080):
-                        mock_test_lab_screen._show_components_json()
+        with patch('game.ui.screens.test_lab.screen_actions.load_json', side_effect=track_load_json):
+            with patch('game.ui.screens.test_lab.screen_actions.JSONPopup'):
+                with patch('game.ui.screens.test_lab.screen_actions.WIDTH', 1920):
+                    with patch('game.ui.screens.test_lab.screen_actions.HEIGHT', 1080):
+                        mock_test_lab_screen._actions._show_components_json()
 
         assert len(loaded_paths) == 1
         loaded_path = loaded_paths[0]

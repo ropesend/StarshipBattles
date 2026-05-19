@@ -15,18 +15,18 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Re-measure LOC of all 12 F-C-027 files after PROJ-456 ships (rescope) | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. Extract one responsibility from `build_queue_screen.py` (961 → under 500) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Same recipe for `planet_list_window.py` (746 at HEAD; was 862 in original scan) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Same recipe for `test_lab/screen.py` (614 at HEAD; was 744 in original scan) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. F-C-028 — Split `game/core/exceptions.py` (411 LOC at HEAD; **PENDING USER DECISION** on scope — file is already UNDER 500 ceiling, rationale shifted from "ceiling enforcement" to "architectural cleanup of 31 classes split by domain") | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Document remaining over-ceiling files as "next-touch" rule in decisions.md | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 0. Re-measure LOC of all 12 F-C-027 files after PROJ-456 ships (rescope) | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
+| 1. Extract one responsibility from `build_queue_screen.py` (958 → under 500) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Same recipe for `planet_list_window.py` (862 → under 500) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Same recipe for `test_lab/screen.py` (744 → under 500) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. F-C-028 — Split `game/core/exceptions.py` | Dropped (user decision 2026-05-19) | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Document remaining over-ceiling files as "next-touch" rule in decisions.md | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-19
-**Active Phase:** Planning
-**Last Action:** Cross-group collision resolution applied 2026-05-19; Group B is ready for execution. Serial order confirmed: PROJ-453 → PROJ-454 → PROJ-456 → PROJ-457. PROJ-457 is the LAST project in Group B's series; PROJ-456 must be unambiguously Complete first. **Doc consolidation rule added** to plan.md to handle the 3-way `docs/01_ARCHITECTURE.md` + `docs/02_PATTERNS.md` collision with PROJ-459 (Group A) + PROJ-460 (Group C): each project records intended doc additions in decisions.md as a "Pending doc consolidation" block; whichever project finishes LAST applies all three projects' doc additions as a single consolidated edit. PROJ-457's phase checklists must NOT Edit docs/01_ARCHITECTURE.md or docs/02_PATTERNS.md during normal execution. Prior fixes retained: LOC drift across all targets corrected (exceptions.py 411 / build_queue_screen 846 / planet_list_window 746 / test_lab/screen 614); class count reconciled to 31; aggregator LOC target reconciled to <80 (explicit per-name imports per convention); Phase 0 escalation gate (STOP and surface to user if any target file is already under 500 LOC at re-measurement); Phase 4 fail-first TDD ordering; decisions.md in Phase 0 manifest.
-**Next Action:** Run agent starts PROJ-457 Phase 0 after PROJ-456 is Complete. (User decision on Phase 4 scope — keep with architectural rationale / drop / defer — can be deferred until Phase 0 re-measurement actually shows the state; the Phase 0 escalation gate handles it.)
+**Active Phase:** All phases complete; awaiting end-of-project codex audit
+**Last Action:** Phase 3 + Phase 5 complete. Phase 3: test_lab/screen.py 744 → 416 LOC; extracted ~325 LOC into `test_lab/screen_actions.TestLabScreenActions` covering battle execution helpers, battle launch (`_switch_to_battle`), run callbacks, and result viewers (JSON popups + clipboard copy + battle state viewer + custom seed prompt); migrated 3 test fixtures + 12 reach-through sites. Phase 5: documented the 9 remaining over-ceiling UI files as a "next-touch" rule in decisions.md (no CLAUDE.md/AGENTS.md cross-reference per Codex r4 framing — rule is file-specific). Sharded 23377/23377 green.
+**Next Action:** Dispatch PROJ-457 end-of-project codex audit per protocol §10.
 **Blockers:** PROJ-456 must complete first (Group B serial order; hard gate per coordinator 2026-05-19) — Phase 0 explicitly re-measures the 12 over-ceiling files after PROJ-456's shim retirement.
 
 ## Overview

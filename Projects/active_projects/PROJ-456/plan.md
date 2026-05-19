@@ -24,12 +24,19 @@
 
 ## Current State
 **Last Updated:** 2026-05-19
-**Active Phase:** Project complete; ready for end-of-project merge to main
-**Last Action:** Phase 6 closed 4 stale docstrings codex flagged (new_game_setup_screen, battle_setup/screen, battle_setup_state, strategy_render/grid) — all module/class docstrings claimed deleted shims were still preserved. Trivial polish; skipped re-audit per PART 3 Step D. 13 of 14 findings closed; F-C-012 remains partially-closed by the documented Option B decision (production None-path preserved). Sharded 23362/23362 green.
-**Next Action:** Merge group-b through PROJ-456 to main per protocol §3.
+**Active Phase:** Project complete; merged to main at 244c1fa16
+**Last Action:** End-of-project merge to main executed per protocol §3. Rebase onto post-PROJ-449 main hit one trivial conflict on `AgentCoordination/generated/test_baseline.json` (resolved per §6.1 by taking main's version; sharded regenerated to 23369/23369 post-rebase confirming clean PROJ-449 × PROJ-456 integration). Merge commit on main: `244c1fa16`. This merge is the critical sync signal for Group A's PROJ-450 Phase 3 gate.
+**Next Action:** Group B run-agent proceeds to PROJ-457.
 **Blockers:** None.
 
 ## Checkpoint Log
+
+### 2026-05-19 — project-456-end + project-457-start
+- **Done so far**: PROJ-456 fully closed and merged to main at `244c1fa16`. All 6 phases (5 implementation + 1 audit polish) done. End-of-project codex audit verified 13 of 14 findings closed; F-C-012 partially-closed per documented Option B. Rebase onto post-PROJ-449 main hit one trivial test_baseline.json conflict resolved per §6.1; the PROJ-449 × PROJ-456 integration is clean (sharded 23369/23369 post-rebase).
+- **Key decisions**: Phase 1 — F-C-007 was already orphaned, simpler than expected. Phase 2 — scope expanded (positional-arg callers missed by original audit). Phase 4 — F-C-011 sentinels migrated to `TransferViewModel.MAX_LOAD/MAX_DROP`. F-C-012 deviation Option B accepted by codex.
+- **Open threads**: PROJ-457 (UI structural debt) remains. PROJ-457 Phase 0 re-measures LOC after PROJ-456's shim retirement.
+- **Next action**: PROJ-457 Phase 0 — LOC re-measurement.
+- **Cross-group state observed**: origin/main = `244c1fa16` (post-PROJ-456 merge; this unblocks Group A's PROJ-450 Phase 3 gate). Group A merged PROJ-449 onto main while I was working (saw it during the rebase: 10 commits including ship_instance.py + planet.py changes; integration was clean). origin/group-a force-pushed to `abb2676f3`.
 
 ### 2026-05-17 — phase-3-complete-checkpoint
 - **Done so far**: PROJ-456 Phases 1-3 closed in series. Phase 1: 5 small UI shim retirements. Phase 2: BuildQueueScreen `build_context` legacy kwarg retired across 7 test files (scope expanded from the plan's documented 1+1 because the original audit's `rg` filter missed positional-yard callers in 6 integration-test files; migration sweep also converted 11 subsequent positional args to kwargs). Phase 3: BattleSetupState side_0/side_1 — 84 refs swept (sized up from plan's 81).
