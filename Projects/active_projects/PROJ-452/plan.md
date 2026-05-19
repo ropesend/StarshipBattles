@@ -23,9 +23,9 @@
 
 ## Current State
 **Last Updated:** 2026-05-19
-**Active Phase:** Project complete — merging to main
-**Last Action:** Phase 5 (codex-audit driven plan.md reconciliation) complete on `group-c`. The end-of-project codex audit landed at `consults/20260519T133252Z_end-of-project-audit/response.md` with verdict "production code changes are mergeable" — codex flagged one verified issue (this plan.md was stale relative to the post-Phase-4 / post-audit evidence) and rejected four candidate findings as false positives (order-sensitivity regression in Phase 2, silent-loss anti-pattern equivalence on the Phase 4 candidates, `_label_for` row-loss risk, hidden production drift outside the documented scope). Phase 5 reconciles the Current State block + the top-level Verification checklist; zero production code changes; no re-audit required (Phase 5 is 0 LOC of production change per Group C prompt Step 4).
-**Next Action:** End-of-project merge to `main` per protocol §3: `git fetch origin && git checkout main && git pull --ff-only origin main && git checkout group-c && git rebase main && git push --force-with-lease origin group-c && git checkout main && git merge --no-ff group-c -m "Merge group-c through PROJ-452 (end of project)" && git push origin main && git checkout group-c && git rebase main && git push --force-with-lease origin group-c`.
+**Active Phase:** Project complete; merged to main at 9b7e3f1a0
+**Last Action:** PROJ-452 closed: merged `group-c` into `main` at SHA `9b7e3f1a0` (merge commit "Merge group-c through PROJ-452 (end of project)"). Rebase of `group-c` onto `main` produced trivial conflicts on the auto-generated baseline (resolved by taking HEAD then regenerating to 23421 passed = main's 23413 + the 8 new PROJ-452 tests) and on `log.jsonl` (resolved per protocol §6.1 by keeping all unique IDs and preferring the `resolved`-status variant from each side). Also landed one secondary chore commit: `Tools/lint_test_files_allowlist.txt` extended with 2 PROJ-451 ratchet test entries that Group A had committed without allowlist drift.
+**Next Action:** Advance to PROJ-455 (position 2 of 4 in Group C's serial order).
 **Blockers:** None.
 **2026-05-19 cross-group resolution (final):** No edits required to PROJ-452 beyond adding the Group C execution-context block to Dependencies. PROJ-452 is the most parallel-safe project in Group C (no shared write surfaces with Groups A/B).
 
