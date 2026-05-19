@@ -15,16 +15,15 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. End-to-end fixture construction (planet + facility + FMS bay + queued order + deployed groups) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. `test_process_planet_action_tick_end_to_end` parametrised across 5 FMS order types | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Mark DI-2026-05-18-001 ActionExecutionEngine half `resolved` in log.jsonl | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. End-to-end fixture construction (planet + facility + FMS bay + queued order + deployed groups) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. `test_process_planet_action_tick_end_to_end` parametrised across 5 FMS order types | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Mark DI-2026-05-18-001 ActionExecutionEngine half `resolved` in log.jsonl | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-19
-**Active Phase:** Planning
-**Last Action:** Group 3 pre-execution review fixes applied (codex + subagent reviews; see consult artifacts at `AgentCoordination/Scratchpad/Consult/20260519T024637Z_group3-pre-execution-review/` and `.agent_reports/group3_pre_execution_review/`). Phase 2 now includes Task 2.4 (in-progress branch coverage parametrised across the 5 FMS order types; Option A chosen over Option B; rationale in `decisions.md`); Phase Completion Checklist updated to require BOTH branches of `_process_planet_action_tick` covered. Earlier 2026-05-19 codex Bucket-B fix retained: Phase 1 Task 1.5 "synthetic RED via resolver-injection removal" is weaker than true fail-first TDD but acceptable for a test-only coverage project; rationale already documented in `decisions.md`.
-**Next Action:** Run agent picks up PROJ-455 Phase 1 after PROJ-452 completes (PROJ-455 is **position 2 of 4** in Group C's serial order `452 → 455 → 458 → 460` — see Group C execution context in the Dependencies & Sibling Projects section and `Projects/active_projects/GroupC_execution_prompt.txt`).
-**Blockers:** Serial gate: PROJ-452 must complete first within Group C. No external blockers.
+**Active Phase:** Project complete — merging to main
+**Last Action:** End-of-project codex audit landed at `consults/20260519T141330Z_end-of-project-audit/response.md` — verdict "Ready to merge" with one non-blocking branch-hygiene caveat (3 PROJ-452 closure files riding along on `group-c`, classified by codex as "scope noise, not a production-code regression"). All 4 candidate findings rejected as false positives with file:line evidence (phase closure incomplete; production code changed; coverage incomplete; assertion inconsistency; DI update mistargeted). No verified production issues. No extra phase needed. PROJ-455 production scope is closed; Phases 1-3 all on `origin/group-c`, sharded 23433/23433.
+**Next Action:** End-of-project merge to `main` per protocol §3.
 **2026-05-19 cross-group resolution (final):** Bookkeeping fix G3-C applied — Scope section's "In" block tightened so `tests/integration/test_fms_planet_lay_mines.py` is now an explicit **READ-ONLY precedent** (the file belongs to PROJ-450 in Group A's staging-yard substrate migration). The earlier loose plan-text mentioning an optional `_planet_fms_fixtures.py` extraction is now CLOSED; copy needed scaffolding into the new test file rather than refactoring the precedent file. Group C execution-context block added to Dependencies.
 
 ## Overview
