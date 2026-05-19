@@ -4,15 +4,40 @@ You are the Group C execution agent. Your projects, in this serial order:
 
   PROJ-452 → PROJ-455 → PROJ-458 → PROJ-460
 
-You execute one project to full completion (all phases + codex audit + any audit-driven extra phases) before advancing to the next. Groups A (PROJ-449/451/450/459) and B (PROJ-456/454/457) are running in parallel branches managed by other agents. Coordinator confirmed no hard cross-group blockers for Group C.
+You execute one project to full completion (all phases + codex audit + any audit-driven extra phases + merge to `main`) before advancing to the next. Groups A (PROJ-449/451/459/450) and B (PROJ-453/454/456/457) are running in parallel branches on **separate machines** managed by other agents. Coordinator confirmed no hard cross-group blockers for Group C (other than the doc-consolidation rendezvous at the very end).
+
+================================================================================
+## PART 0 — MANDATORY: read the group execution protocol first
+================================================================================
+
+Before anything else, read:
+
+    AgentCoordination/protocols/group_execution_protocol.md
+
+This is the cross-group git, waiting, conflict, path-discovery, codex-consult, and doc-consolidation protocol. **You operate under this protocol; if anything in this prompt and the protocol conflict, the protocol wins.** Read in full.
+
+Key points (the protocol has the full version):
+
+- You work on branch `group-c`, branched from `origin/main`.
+- Phase commits land on `group-c`; you push after every phase.
+- End of each project: rebase `group-c` on `main`, merge to `main`, push `main` (§3).
+- All paths are runtime-discovered (no hardcoded `c:\Dev2\StarshipBattles` etc.).
+- Codex consults land in `Projects/active_projects/PROJ-XXX/consults/<ts>_.../` (tracked per project).
+- Blocked on cross-group dependency? Poll `origin/main` every 30 minutes via `ScheduleWakeup`; STOP at 8 hours (§7).
+- Conflicts during rebase/merge: trivial direct; non-trivial via a general-purpose subagent (§6).
+
+**Context preservation — this is a long run**:
+- §13: sharded-suite RED → isolate failing tests; if all pass alone it's a flake → retry sharded once → proceed. STOP only on second consecutive RED.
+- §14: at every fresh session, run the pre-flight verification (REPO_ROOT, branch, baseline sharded green, push auth, gh auth) BEFORE phase work.
+- §15: **use subagents aggressively** for multi-file searches, LOC inventories (PROJ-460's 13-file simulation measurement is a prime subagent candidate), long codex-audit response reading, cross-group artifact investigation, and non-trivial merge conflicts. Write a Checkpoint Log entry in plan.md every 3 phases and at every project boundary — hedge against context decay.
 
 ================================================================================
 ## Repo + environment context
 ================================================================================
 
-- Repo root: `c:\Dev2\StarshipBattles`
+- Repo root: **runtime-discovered** via `git rev-parse --show-toplevel` (per protocol §8). Do not assume a specific path.
 - Shell: PowerShell (Windows). All shell snippets in your project checklists have already been swept to PS-safe forms (`rg`, `Get-Content | Measure-Object`, `Get-Content -TotalCount`). If you find any stragglers, swap them inline.
-- Branch: main (per user's standing no-worktrees preference; serial execution in main checkout)
+- Branch: `group-c` (per protocol §1)
 - Python baseline: 3.13+; pygame; pytest
 - Test infrastructure:
   - Sharded suite: `python Tools/test_sharded/test_sharded.py`
@@ -22,6 +47,8 @@ You execute one project to full completion (all phases + codex audit + any audit
 ================================================================================
 ## Mandatory reading before you start any project
 ================================================================================
+
+(PART 0's protocol already read.)
 
 1. `CLAUDE.md` and `AGENTS.md` — working norms (TDD, docs-first, root-cause fixes, no compat shims, saves disposable, 500-LOC ceiling, modern type syntax, intentional-reason markers on broad excepts)
 2. `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`, `docs/03_CONVENTIONS.md`
@@ -39,6 +66,7 @@ You execute one project to full completion (all phases + codex audit + any audit
 ### Step 1 — Pre-project orientation
 
 - Run `python Projects/scripts/current_task.py PROJ-XXX` to see the live current state.
+- `git fetch origin main` — keep your view of cross-group state current.
 - Read the plan.md "Current State" block + "Group C execution context" block in Dependencies.
 - Confirm the serial gate (predecessor project is complete OR you are PROJ-452 starting the chain).
 - Read the next-pending phase checklist in full.
@@ -55,8 +83,8 @@ For each phase from first to last:
   - **PROJ-458** — RED-then-GREEN per window. Each phase: new dedicated characterization tests against the bypass-init shell first (RED), then apply the two-stage retrofit (GREEN).
   - **PROJ-460** — Characterization-first refactor. Each phase has the round-trip test landing GREEN against current code (it's a structural extraction, not a behavior change); the gate is "post-extraction round-trip still GREEN".
 - Run targeted pytest after each task (the checklist tells you which file).
-- At the end of each phase: run `python Tools/test_sharded/test_sharded.py` (full sharded suite).
-- **PROJ-460 Phase 1 and Phase 3 extra gate**: ALSO run `pytest tests/integration/replay/ tests/integration/save_load/ -v`. These are the critical regression gates for replay/serde work; do not declare the phase complete without them green.
+- At the end of each phase: run `python Tools/test_sharded/test_sharded.py` (full sharded suite). If RED, apply the flake-retry protocol per §13 (isolate failing tests; if all pass alone, retry sharded once; STOP only on second consecutive RED). Note any flake retry in the commit message.
+- **PROJ-460 Phase 1, Phase 2, and Phase 3 extra gate**: ALSO run `pytest tests/integration/replay/ tests/integration/save_load/ -v`. These are the critical automated regression gates for replay/serde + battle-controller spec-in work; do not declare these phases complete without them green. (This replaces the prior manual UI smoke test gate on Phase 2 — automated coverage is now the contract.) The flake-retry protocol also applies to these targeted suites.
 - Mark task checkboxes `[x]` as you go.
 - Update plan.md "Current State" block whenever you pause (Last Updated date; Active Phase; Last Action; Next Action; Blockers).
 
@@ -66,51 +94,64 @@ For each phase:
 - All task checkboxes in `phase_N_checklist.md` are `[x]`
 - Targeted tests green
 - Sharded suite green
-- Replay/save-load suite green (PROJ-460 Phase 1 + Phase 3 only)
+- Replay/save-load suite green (PROJ-460 Phase 1, 2, 3)
 - `python Projects/scripts/validate_phase.py PROJ-XXX N` reports PASSED
 - Update `phase_N_checklist.md` Status: → `Complete`
 - Update `plan.md` Quick Status table row N → `Complete`
 - Update `plan.md` Current State → next phase OR project-complete
+- **Commit + push on `group-c`**: `PROJ-XXX Phase N: <description>` then `git push origin group-c`
+- **Checkpoint summary** (per protocol §15.2): if you have just completed your 3rd phase since the last checkpoint, OR if this is a project boundary (start or end), append a Checkpoint Log entry in plan.md (create the `## Checkpoint Log` section on first write). Target ≤200 words: Done so far / Key decisions / Open threads / Next action / Cross-group state observed at last `git fetch origin main`. Commit + push with the next phase commit.
 
-### Step 4 — Special STOP conditions
+### Step 4 — End-of-project codex audit (MANDATORY after every project)
 
-- **PROJ-460 Phase 2 manual UI smoke test**: After Phase 2 (battle_controller.py spec-in extraction) lands, the change is battle-screen-adjacent and the automated test suite cannot fully cover the visual-mode regression. STOP, surface to the user with: "PROJ-460 Phase 2 complete; manual UI smoke test required before proceeding. Please launch the game and confirm a battle starts/runs/ends normally in visual mode. Reply with PASS or FAIL." Do NOT proceed to Phase 3 until the user confirms PASS.
+After ALL phases of a project are complete:
 
-### Step 5 — End-of-project codex audit (MANDATORY after every project)
+1. Dispatch a codex consult auditing the just-completed project. Consult location (per protocol §10) is **under the audited project**:
 
-After ALL phases of a project are complete (including any STOP-confirmation):
+   `Projects/active_projects/PROJ-XXX/consults/<UTC-ts>_end-of-project-audit/`
 
-1. Dispatch a codex consult auditing the just-completed project. Use `Tools/agent_coordination/partner_invoke.py` via the standing pattern. See templates from the prior per-bucket audits:
-   - Bucket B audit (covers PROJ-452 + PROJ-455 originally): `AgentCoordination/Scratchpad/Consult/20260519T014918Z_audit-bucket-B-engine-services/response.md` + its `request.md`
-   - Bucket C audit (covers PROJ-458 originally): `AgentCoordination/Scratchpad/Consult/20260519T014918Z_audit-bucket-C-ui-cluster/response.md` + its `request.md`
-   - Bucket D audit (covers PROJ-460 originally): `AgentCoordination/Scratchpad/Consult/20260519T014918Z_audit-bucket-D-loc-extractions/response.md` + its `request.md`
+   This is tracked per-project (visible cross-machine after push), not the old gitignored Scratchpad location. Reference templates from the prior per-bucket audits (older artifacts may live under `AgentCoordination/Scratchpad/Consult/` and may not be present on your local checkout):
+   - Bucket B audit (covered PROJ-452 + PROJ-455 originally): `20260519T014918Z_audit-bucket-B-engine-services/`
+   - Bucket C audit (covered PROJ-458 originally): `20260519T014918Z_audit-bucket-C-ui-cluster/`
+   - Bucket D audit (covered PROJ-460 originally): `20260519T014918Z_audit-bucket-D-loc-extractions/`
 
 2. Audit consult brief (per project):
    - Scope: just the one project that just completed
    - allow_tests: false
    - Ask codex to verify: (a) all phase checklists actually closed correctly, (b) the production code changes match what the plan documented, (c) no behavior regressions visible in the diff, (d) no new discovered_issues that should be logged, (e) the project's verification checklist gates are all met.
-   - Output: per-project response.md in a new consult leaf under `AgentCoordination/Scratchpad/Consult/<UTC-ts>_PROJ-XXX-end-of-project-audit/`.
+   - Output: per-project response.md in the new consult leaf.
 
-3. Read codex's response.md.
+3. Invocation: use the reference pattern in protocol §10.1 — discover `REPO_ROOT` at runtime, invoke `partner_invoke.py` from `<REPO_ROOT>/Tools/agent_coordination/`. Do NOT hardcode any checkout path.
 
-4. **If codex flags VERIFIED issues** (test the claim — read the file/line codex cites before treating it as real):
+4. Read codex's response.md. **If the response is long (>300 lines)**: per protocol §15.1, spawn a `general-purpose` subagent with the response.md path. Brief: "Summarize codex's response in ≤300 words; list verified issues, false positives, and out-of-scope items separately. Each verified issue: file:line + one-sentence rationale." Read the subagent's summary in main context, then use Read selectively on the response for the items you act on. Commit the consult leaf on `group-c` and push.
+
+5. **If codex flags VERIFIED issues** (test the claim — read the file/line codex cites before treating it as real):
    - For each verified issue, create a NEW PHASE in the same project addressing it.
    - Phase numbering: continue from the last phase (e.g., if Phase 5 was the original last, new audit-driven phases start at Phase 6).
    - Update the plan.md Quick Status table to add the new phases.
    - Update Current State to point at the new phase.
-   - Execute the new phase using the same workflow above.
+   - Execute the new phase using the same workflow above (commit + push per phase).
    - Repeat the codex audit if the new phases are non-trivial (>30 LOC of production change).
 
-5. **If codex's findings are over-stated or wrong** (you verified, found the claim doesn't hold): document the false-positive in `decisions.md` with evidence and move on. Do not create a phase for it.
+6. **If codex's findings are over-stated or wrong** (you verified, found the claim doesn't hold): document the false-positive in `decisions.md` with evidence and move on. Do not create a phase for it.
 
-6. **If codex's findings are truly new but out-of-scope** (legitimate issue but outside this project's job): log via `/claude-di-log` so it lands in `AgentCoordination/discovered_issues/log.jsonl`, then move on.
+7. **If codex's findings are truly new but out-of-scope** (legitimate issue but outside this project's job): log via `/claude-di-log` so it lands in `AgentCoordination/discovered_issues/log.jsonl`, then move on.
 
-7. Only after all codex-verified issues are addressed AND the new phases close green should you mark the project complete and advance to the next.
+8. Only after all codex-verified issues are addressed AND the new phases close green should you proceed to Step 5 (end-of-project merge).
+
+### Step 5 — End-of-project merge to `main` (per protocol §3)
+
+After the project is complete and codex audit is satisfied:
+
+- Update plan.md Quick Status (all rows Complete) + Current State ("Project complete — merging to main").
+- Commit + push these final updates on `group-c`.
+- Execute the protocol §3 end-of-project merge sequence: rebase `group-c` on latest `main`, push with `--force-with-lease`, fast-forward `main`, `git merge --no-ff group-c -m "Merge group-c through PROJ-XXX (end of project)"`, push `main`, switch back to `group-c`, rebase atop the merge, push.
+- If `git rebase main` produces conflicts: per protocol §6 — trivial conflicts resolve directly; non-trivial conflicts go through a general-purpose subagent.
+- Update plan.md Current State after the merge lands: "Project complete; merged to main at <SHA>". Push.
 
 ### Step 6 — Advance to next project
 
-After the project is complete:
-- Update plan.md Quick Status (all rows Complete) + Current State ("Project complete; awaiting verification" — or similar).
+After the merge to `main` lands:
 - Advance to the next project in Group C's serial order.
 - Repeat from Step 1.
 
@@ -118,28 +159,17 @@ After the project is complete:
 ## Codex audit invocation pattern (concrete)
 ================================================================================
 
-You can either reuse `c:\tmp\codex_audit_dispatcher.py`-style scripts as templates, or invoke `partner_invoke.py` directly. Recommended pattern:
+The full reference invocation lives in protocol §10.1. Key points:
 
-```powershell
-# 1. Create the consult leaf
-$ts = (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ')
-$leaf = "C:\Dev2\StarshipBattles\AgentCoordination\Scratchpad\Consult\${ts}_PROJ-XXX-end-of-project-audit"
-New-Item -ItemType Directory -Force -Path $leaf | Out-Null
-
-# 2. Write request.md (use the per-bucket audit templates as a starting point; replace bucket-wide scope with single-project scope)
-# 3. Invoke codex via partner_invoke (see existing /c/tmp/invoke_codex_audit_*.py for invocation shape)
-```
-
-Reference scripts in `/c/tmp/` from prior audits:
-- `c:\tmp\invoke_codex_audit_B.py` (audited PROJ-452/453/454/455 — adapt for single-project end-of-project audits)
-- `c:\tmp\invoke_codex_audit_C.py` (audited PROJ-456/457/458)
-- `c:\tmp\invoke_codex_audit_D.py` (audited PROJ-459/460)
-
-Critical invocation params:
+- Compute the consult leaf path at runtime under the audited project:
+  `<REPO_ROOT>/Projects/active_projects/PROJ-XXX/consults/<UTC-ts>_end-of-project-audit/`
+- `REPO_ROOT` from `git rev-parse --show-toplevel` (never hardcoded).
 - `sandbox`: `workspace-write` (codex needs write access to its own consult leaf for `response.md`)
 - `expected_from`: `codex`, `expected_to`: `claude`
 - `allow_tests`: `false` (audit is read-only inspection)
 - `timeout_sec`: 2400 (40 min) — single-project audits usually finish faster
+- The request.md must inline the canonical consult prompt block from `AgentCoordination/protocols/consult_prompt_block.md`.
+- After the consult lands, commit the leaf (request.md, response.md, log.txt) on `group-c` and push.
 
 ================================================================================
 ## File-ownership rules (HARD)
@@ -181,6 +211,10 @@ You may edit ONLY these files. Anything else is owned by Group A, Group B, or ou
 - `game/simulation/replay/__init__.py` (Phase 3 — re-exports + Task 3.7b docstring refresh)
 - Test files: `tests/integration/replay/`, `tests/integration/save_load/`, and any unit tests under `tests/unit/simulation/`
 
+### Project artifacts you may edit
+- `Projects/active_projects/PROJ-452/`, `PROJ-455/`, `PROJ-458/`, `PROJ-460/` — including their new `consults/` subdirectories (per protocol §10)
+- `Projects/active_projects/_doc_consolidation/PROJ-460_pending.md` (your staged doc edits; per protocol §9)
+
 ### DO NOT TOUCH (other groups' or out-of-scope)
 - `game/strategy/engine/` (PROJ-449/450/451/454/455 territory — Group A or Group B)
 - `game/strategy/data/` outside `container.py` (PROJ-449/451/450/459 territory — Group A)
@@ -191,6 +225,7 @@ You may edit ONLY these files. Anything else is owned by Group A, Group B, or ou
 - `game/simulation/` outside PROJ-460's 3 target files (the 10 next-touch files are explicitly OUT per Phase 4 discipline rule)
 - `tests/fixtures/strategy_entities.py` (PROJ-449 STRUCTURAL JOINT work — Group A)
 - Group A's archived projects (`PROJ-444..447`, coordinator dir)
+- `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md` — deferred per protocol §9. PROJ-460's intended doc additions stage to `Projects/active_projects/_doc_consolidation/PROJ-460_pending.md`.
 
 If you find code residue in non-Group-C territory while doing your work, **log it via `/claude-di-log`** — do NOT fix in place.
 
@@ -198,30 +233,56 @@ If you find code residue in non-Group-C territory while doing your work, **log i
 ## Doc consolidation responsibility (PROJ-460 final step)
 ================================================================================
 
-PROJ-457 (Group B), PROJ-459 (Group A), and PROJ-460 (Group C) all touch `docs/01_ARCHITECTURE.md` and `docs/02_PATTERNS.md` to describe their LOC extractions. To avoid 3-way merge conflicts:
+PROJ-457 (Group B), PROJ-459 (Group A), and PROJ-460 (Group C) all touch `docs/01_ARCHITECTURE.md` and `docs/02_PATTERNS.md` to describe their LOC extractions. To avoid 3-way merge conflicts across machines, edits are **staged**, not applied inline, per protocol §9.
 
-1. **Per-phase doc work is deferred.** Whenever a PROJ-460 phase would normally edit those two docs, instead record the intended addition in `Projects/active_projects/PROJ-460/decisions.md` under a `Pending doc consolidation` section. Format as a copy-paste-ready diff or unified-list per the rule in PROJ-460/plan.md "Doc consolidation rule" section.
+### During PROJ-460 execution
 
-2. **End-of-project responsibility check.** When ALL of PROJ-460's phases are complete (plus codex audit + any extra phases), before declaring the project closed:
-   - Read `Projects/active_projects/PROJ-457/plan.md` Current State — is PROJ-457 closed?
-   - Read `Projects/active_projects/PROJ-459/plan.md` Current State — is PROJ-459 closed?
-   - **If BOTH closed**: PROJ-460 is the LAST runner. You are responsible for applying the consolidated doc edit. Read PROJ-457/decisions.md and PROJ-459/decisions.md `Pending doc consolidation` blocks, merge with PROJ-460's own block, and apply as a single edit to `docs/01_ARCHITECTURE.md` + `docs/02_PATTERNS.md`. Run a docs-only sharded smoke (`pytest tests/` for any docs link/anchor tests if they exist) and commit.
-   - **If either is open**: You are NOT the LAST runner. Leave your `Pending doc consolidation` block intact in decisions.md, declare PROJ-460 complete, and exit. The LAST runner across the 3 projects will pick up the consolidated edit.
+Whenever a PROJ-460 phase would normally edit those two docs, instead write the intended edit to:
 
-3. If you ARE the LAST runner, the consolidated doc edit happens as a NEW PHASE on PROJ-460 (call it Phase 5 — Doc consolidation), with its own completion gate (docs read coherently; any docs link/anchor tests green).
+    `Projects/active_projects/_doc_consolidation/PROJ-460_pending.md`
+
+Format per protocol §9.1 (target file, anchor, operation type, source phase + finding, the actual diff). Commit + push.
+
+### End-of-project responsibility check
+
+When ALL of PROJ-460's phases are complete (plus codex audit + any extra phases), before Step 5's merge to `main`:
+
+```bash
+git fetch origin main
+git ls-tree --name-only origin/main Projects/active_projects/_doc_consolidation/
+```
+
+Look for all three pending files on `origin/main`:
+- `PROJ-457_pending.md`
+- `PROJ-459_pending.md`
+- `PROJ-460_pending.md`
+
+**If ALL THREE are present**: PROJ-460 is the LAST runner. Add an extra phase to PROJ-460 — "Phase <N+1>: Doc consolidation" — with these tasks:
+  1. Read all three pending files (yours + the two siblings) from `origin/main`.
+  2. Merge into a single coordinated edit to `docs/01_ARCHITECTURE.md` + `docs/02_PATTERNS.md`.
+  3. Delete all three `PROJ-<N>_pending.md` files via `git rm`.
+  4. Commit: `PROJ-457 + PROJ-459 + PROJ-460 consolidated doc updates`.
+  5. Push `group-c`.
+Then proceed with the Step 5 end-of-project merge.
+
+**If only one or two of the three are present**: you are NOT last. Leave your `PROJ-460_pending.md` in place. Close PROJ-460 per Step 5 without touching the doc files. The last finisher will apply your staged edits.
+
+Race-condition handling (per protocol §9.3): if two groups both think they're last, the second one's rebase will conflict on the doc files. On detecting that, re-fetch `origin/main`, confirm docs are already consolidated, drop your extra phase, and proceed normally.
 
 ================================================================================
 ## Reporting back to the coordinator (end of Group C)
 ================================================================================
 
-After PROJ-460 closes (including any audit-driven extra phases AND the doc-consolidation responsibility check), produce a single end-of-Group-C report covering:
+After PROJ-460 closes (including any audit-driven extra phases AND the doc-consolidation responsibility check AND the end-of-project merge to `main`), produce a single end-of-Group-C report covering:
 
-- **Per-project status**: which 4 projects landed, with paths to the final plan.md + decisions.md per project
-- **Codex audits per project**: number of audit-verified issues, number of extra phases added, paths to consult response files
-- **PROJ-460 Phase 2 manual UI smoke result**: PASS or FAIL (from the user)
+- **Per-project status**: which 4 projects landed, with paths to the final plan.md + decisions.md per project, plus end-of-project merge SHAs on `main`
+- **Codex audits per project**: number of audit-verified issues, number of extra phases added, paths to consult response files (under `Projects/active_projects/PROJ-XXX/consults/...`)
+- **PROJ-460 Phase 1/2/3 automated gate results**: replay + save_load test suite outcomes
 - **Final simulation LOC numbers**: re-measure the 13 simulation files at the very end and update PROJ-460/decisions.md's next-touch ledger with current LOC numbers
 - **Doc consolidation responsibility**: whether PROJ-460 was the LAST runner and applied the consolidated edit, OR was not the LAST and left its pending block intact
 - **Any new discovered_issues logged**: summary of `/claude-di-log` entries you created
+- **Sync-gate timeouts**: any 8-hour blocked timeouts hit (paths to status notes under `AgentCoordination/Scratchpad/blocked/`)
+- **Non-trivial rebase conflicts**: any conflicts that required the protocol §6.2 subagent path, with summary of resolution
 - **Total wall-clock**: rough estimate
 
 Save the report at `AgentCoordination/Scratchpad/reports/group_c_completion_report_<UTC-ts>.md` and reply with the path.
@@ -233,24 +294,27 @@ Save the report at `AgentCoordination/Scratchpad/reports/group_c_completion_repo
 STOP and surface to the user (or coordinator) if:
 - A phase's sharded suite reveals a regression you cannot trace to your own changes
 - A codex audit flags more than ~5 verified critical issues on a single project (suggests the project's plan is materially wrong, not just incrementally improvable)
-- A file you need to edit is locked by another agent (file modification timestamp shows recent activity from another branch)
 - A project's serial predecessor (within Group C) shows incomplete status when you try to advance
-- You hit a real cross-group conflict that the coordinator's resolution didn't anticipate
-- PROJ-460 Phase 2 manual UI smoke gate (mandatory user confirmation point)
-- Doc consolidation: ambiguous "last runner" status (both other projects show partial/in-progress states)
+- You hit a real cross-group conflict that the coordinator's resolution didn't anticipate AND the protocol §6.2 subagent path can't resolve it
+- 8-hour blocked timeout per protocol §7 (~16 wake-ups without unblocking on a cross-group sync)
+- Doc consolidation: ambiguous "last runner" status that survives a re-fetch of `origin/main` (both other projects show partial/in-progress states for an extended period — fall back to protocol §7 waiting)
+
+(There is no manual UI-smoke STOP. The replay + save_load automated suite is the contract for battle-screen regressions on PROJ-460.)
 
 ================================================================================
 ## Cheat sheet
 ================================================================================
 
+- Branch: `group-c`, branched from `origin/main` per protocol §1
 - Serial order: 452 → 455 → 458 → 460
-- Pre-each: read plan.md + manifest.md + next phase checklist
-- Per-phase: TDD/characterization per project's documented pattern; targeted tests; sharded at end
-- Per-phase extras: PROJ-460 Phase 1 + 3 add replay/save-load suite
-- Per-project end: codex audit → verified issues become extra phases → repeat audit if non-trivial → mark complete
+- Pre-each: `git fetch origin main`; read plan.md + manifest.md + next phase checklist
+- Per-phase: TDD/characterization per project's documented pattern; targeted tests; sharded at end; commit + push on `group-c`
+- Per-phase extras: PROJ-460 Phase 1, 2, 3 add replay/save-load suite
+- Per-project end: codex audit → verified issues become extra phases → repeat audit if non-trivial → merge to `main` per protocol §3
 - Per-project end transitions: update plan.md Current State + Quick Status; advance to next
-- STOP at PROJ-460 Phase 2 for manual UI smoke
-- STOP at PROJ-460 end for doc-consolidation responsibility check
+- STOP at PROJ-460 end for doc-consolidation responsibility check (per protocol §9.2)
+- Blocked on cross-group: protocol §7 waiting (poll every 30 min; STOP at 8 hours)
+- Conflicts during rebase/merge: protocol §6 (subagent for non-trivial)
 - Final: end-of-Group-C report to coordinator
 
-Now begin with PROJ-452. Run `python Projects/scripts/current_task.py PROJ-452` to see the live state, read `Projects/active_projects/PROJ-452/plan.md`, then read `phase_1_checklist.md`. Execute.
+Now begin with PART 0 (read `AgentCoordination/protocols/group_execution_protocol.md`), then the session-start git workflow (protocol §2), then run `python Projects/scripts/current_task.py PROJ-452` to see the live state, read `Projects/active_projects/PROJ-452/plan.md`, then read `phase_1_checklist.md`. Execute.
