@@ -16,14 +16,14 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. End-to-end fixture construction (planet + facility + FMS bay + queued order + deployed groups) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. `test_process_planet_action_tick_end_to_end` parametrised across 5 FMS order types | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Mark DI-2026-05-18-001 ActionExecutionEngine half `resolved` in log.jsonl | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 2. `test_process_planet_action_tick_end_to_end` parametrised across 5 FMS order types | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Mark DI-2026-05-18-001 ActionExecutionEngine half `resolved` in log.jsonl | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-19
-**Active Phase:** Phase 2 (next)
-**Last Action:** Phase 1 (end-to-end fixture construction + LAY_MINES smoke) complete on `group-c`. New test file `tests/integration/test_process_planet_action_tick_end_to_end.py` (~280 LOC) lands the `_FixedActionTimeResolver(action_time=1)` test double, the `engine_with_fixed_resolver` fixture (sibling to the precedent's `engine_and_processor` per Task 1.4's "add a sibling" option), the duplicated `_StubPlanet` (post-PROJ-450 typed-substrate shape) + item factories + scenario builders + `_SCENARIO_BUILDERS` dict from `tests/integration/test_fms_planet_lay_mines.py`, plus `_build_empire` helper, plus the `test_lay_mines_e2e_smoke` driving the full `engine.process_action_ticks(...)` chain end-to-end. Test green; precedent file still green (6 tests). Phase 1 sharded gate running.
-**Next Action:** Confirm Phase 1 sharded green, commit + push, then start Phase 2 (parametrise across all 5 `order_metadata.planet_fms_action_order_types`, add the registry-view-drift guard).
+**Active Phase:** End-of-project codex audit (pending)
+**Last Action:** Phase 3 complete on `group-c` — DI-2026-05-18-001 ActionExecutionEngine half (`log.jsonl` line 1) updated with `status: resolved` + resolution_note pointing at `tests/integration/test_process_planet_action_tick_end_to_end.py`. JSON parses end-to-end (11 valid lines). Triage script shows no issues for DI-001 (the drift it reports is on DI-005 / DI-007 / DI-019-* entries, unrelated to PROJ-455's update). All three project phases complete (Phase 1 smoke, Phase 2 parametrised + guard + in-progress, Phase 3 DI log update). Sharded gate still running from Phase 2.
+**Next Action:** Confirm Phase 2 sharded green, commit Phase 2 + Phase 3 together (or as separate commits per per-phase contract), push, then dispatch the end-of-project codex audit per protocol §10 / Group C prompt Step 4.
 **2026-05-19 cross-group resolution (final):** Bookkeeping fix G3-C applied — Scope section's "In" block tightened so `tests/integration/test_fms_planet_lay_mines.py` is now an explicit **READ-ONLY precedent** (the file belongs to PROJ-450 in Group A's staging-yard substrate migration). The earlier loose plan-text mentioning an optional `_planet_fms_fixtures.py` extraction is now CLOSED; copy needed scaffolding into the new test file rather than refactoring the precedent file. Group C execution-context block added to Dependencies.
 
 ## Overview
