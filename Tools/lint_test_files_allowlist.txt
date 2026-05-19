@@ -70,6 +70,8 @@ tests/unit/strategy/data/test_mutator_boundary_ast_guard.py
 tests/unit/strategy/data/test_mutator_boundary_ast_guard_self_test.py
 tests/unit/strategy/data/test_no_method_body_over_5_loc.py
 tests/unit/strategy/data/test_pathfinding_shim_scope.py
+tests/unit/strategy/data/test_fleet_consume_cargo_symmetry.py
+tests/unit/strategy/data/test_production_resource_source_ratchet.py
 tests/unit/strategy/engine/order_handlers/test_order_processor_facade.py
 tests/unit/strategy/engine/test_no_specs_tuple_literal.py
 tests/unit/strategy/engine/test_order_processor_no_legacy_helpers.py
