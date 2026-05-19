@@ -210,56 +210,46 @@ class Planet:
         """BuildContext protocol: returns 'planet'."""
         return "planet"
 
-    # --- PROJ-436 Phase 4f legacy-shim properties ---
+    # --- Read-only attribute views over private storage ---
     #
-    # The dataclass fields of the same name were deleted in Phase 4f.
-    # Production writers route through ``IPlanetMutator`` and / or the
-    # Planet stockpile / staging-yard helper methods below — both write
-    # to the private dicts / list. These properties expose the
-    # underlying mutable storage directly so test infrastructure that
-    # does ``planet.stockpile[k] = v`` / ``planet.staging_yard.append(item)``
-    # / ``planet.stockpile = {...}`` keeps working without a per-test
-    # migration.
+    # PROJ-449 Phase 3 deleted the @property/@setter shim cluster's
+    # **setters** (which allowed `planet.stockpile = {...}` rebinding)
+    # and the legacy-kwarg constructor wrapper. The getters survive as
+    # read-only attribute views over the private fields so existing
+    # readers in production and tests (`planet.stockpile.get(k)`,
+    # `len(planet.staging_yard)`, etc.) keep working without a
+    # cross-cutting sweep. Mutation must route through the stockpile /
+    # staging-yard helper methods or `IPlanetMutator`. PROJ-450 widens
+    # the `staging_yard` view to a typed `List[CarriedVehicle |
+    # DropPod]` return signature.
 
     @property
     def stockpile(self) -> Dict[str, float]:
-        """Backward-compatible dict view over private stockpile storage.
+        """Read-only view over private stockpile storage.
 
-        Phase 4f deletion shim. The dataclass field is gone; the AST
-        guard at ``tests/static_guards/test_no_legacy_storage_fields.py``
-        pins the absence. ``add_to_stockpile`` / ``consume_from_stockpile``
-        / ``IPlanetMutator.set_stockpile_amount`` write the same
-        underlying dict.
+        Writes must route through ``add_to_stockpile`` /
+        ``consume_from_stockpile`` / ``IPlanetMutator.set_stockpile_amount``.
         """
         return self._stockpile
 
-    @stockpile.setter
-    def stockpile(self, value: Dict[str, float]) -> None:
-        self._stockpile = dict(value) if value is not None else {}
-
     @property
     def max_stockpile(self) -> Dict[str, float]:
-        """Backward-compatible dict view over private max-stockpile storage.
+        """Read-only view over private max-stockpile storage.
 
-        Phase 4f deletion shim. See ``stockpile`` property.
+        Writes must route through ``IPlanetMutator.set_max_stockpile``.
         """
         return self._max_stockpile
 
-    @max_stockpile.setter
-    def max_stockpile(self, value: Dict[str, float]) -> None:
-        self._max_stockpile = dict(value) if value is not None else {}
-
     @property
     def staging_yard(self) -> List[Dict[str, Any]]:
-        """Backward-compatible list view over private staging-yard storage.
+        """Read-only view over private staging-yard storage.
 
-        Phase 4f deletion shim. See ``stockpile`` property.
+        Writes must route through ``add_to_staging_yard`` /
+        ``remove_from_staging_yard`` / ``IPlanetMutator``.
+
+        PROJ-450 widens the return type to a typed substrate.
         """
         return self._staging_yard
-
-    @staging_yard.setter
-    def staging_yard(self, value: List[Dict[str, Any]]) -> None:
-        self._staging_yard = list(value) if value is not None else []
 
     # --- IStockpileHolder protocol (PROJ-372) ---
 
@@ -376,45 +366,3 @@ class Planet:
         delegating to ``planet_serde.planet_from_dict_kwargs``."""
         from game.strategy.data.planet_serde import planet_from_dict_kwargs
         return cls(**planet_from_dict_kwargs(data))
-
-
-# ---------------------------------------------------------------------------
-# PROJ-436 Phase 4f: legacy-kwarg constructor wrapper.
-# ---------------------------------------------------------------------------
-# The dataclass field rename (``stockpile`` -> ``_stockpile``,
-# ``max_stockpile`` -> ``_max_stockpile``, ``staging_yard`` ->
-# ``_staging_yard``) would break the planet serializer + every test
-# fixture / builder that passes the legacy kwarg names into
-# ``Planet(...)``. Rather than sweep those mechanically (planet_serde
-# itself, ``_build_galaxy_fixture`` and ~15 other test files), wrap
-# the dataclass-generated ``__init__`` with a translator that accepts
-# both spellings. Production callers can freely use either name.
-#
-# Mirrors the PROJ-436 Phase 3f wrapper on ``ShipInstance``.
-
-_dataclass_init = Planet.__init__
-
-
-def _planet_init_with_legacy_kwargs(self, *args, **kwargs):  # noqa: D401
-    """Translate legacy ``stockpile`` / ``max_stockpile`` / ``staging_yard`` kwargs.
-
-    PROJ-436 Phase 4f compat shim. Accepts both the public name and
-    the private-field spelling; raises ``TypeError`` if both are
-    supplied for the same slot.
-    """
-    for public, private in (
-        ("stockpile", "_stockpile"),
-        ("max_stockpile", "_max_stockpile"),
-        ("staging_yard", "_staging_yard"),
-    ):
-        if public in kwargs:
-            if private in kwargs:
-                raise TypeError(
-                    f"Planet.__init__ received both {public!r} and "
-                    f"{private!r}; pass only one."
-                )
-            kwargs[private] = kwargs.pop(public)
-    _dataclass_init(self, *args, **kwargs)
-
-
-Planet.__init__ = _planet_init_with_legacy_kwargs

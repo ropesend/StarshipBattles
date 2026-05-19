@@ -47,9 +47,9 @@ def planet_to_dict(planet: "Planet") -> Dict[str, Any]:
         "construction_queue": planet.construction_queue.copy(),
         "construction_queue_paused": planet.construction_queue_paused,
         "deposits": {k: v.copy() for k, v in planet.deposits.items()},
-        "stockpile": dict(planet.stockpile),
-        "max_stockpile": dict(planet.max_stockpile),
-        "staging_yard": list(planet.staging_yard),
+        "stockpile": dict(planet._stockpile),
+        "max_stockpile": dict(planet._max_stockpile),
+        "staging_yard": list(planet._staging_yard),
         "max_staging_mass": planet.max_staging_mass,
         "facilities": [f.to_dict() for f in planet.facilities],
         "populations": [

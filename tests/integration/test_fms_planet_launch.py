@@ -66,9 +66,20 @@ class _StubPlanet:
         self.location = location
         self.global_hex = location
         self.name = name
-        self.staging_yard: list[dict] = []
+        # PROJ-449 Phase 3: mirror Planet's ``_staging_yard`` private field —
+        # ``PlanetStagingYardIssuerAdapter`` writes to the underscore name,
+        # so expose ``staging_yard`` as a property aliasing the same list.
+        self._staging_yard: list[dict] = []
         self.max_staging_mass: float = 0.0
         self.orders: list = []
+
+    @property
+    def staging_yard(self) -> list[dict]:
+        return self._staging_yard
+
+    @staging_yard.setter
+    def staging_yard(self, value: list[dict]) -> None:
+        self._staging_yard = value
 
     # IOrderable surface used by order handlers
     def get_current_order(self):

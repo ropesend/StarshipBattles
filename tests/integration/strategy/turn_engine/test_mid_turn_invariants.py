@@ -457,8 +457,8 @@ def test_D_rollback_and_retry_does_not_serve_stale_cache(fresh_registries) -> No
     # (turn 7 is retried with bigger storage now in place).
     new_storage = _make_storage_facility("metals", capacity=500.0, instance_id="s_big")
     planet.facilities = [harvester, new_storage]
-    planet.stockpile = {"metals": 0.0}
-    planet.max_stockpile = {}
+    planet._stockpile = {"metals": 0.0}
+    planet._max_stockpile = {}
 
     # PROJ-412 Phase 5: TurnEngine's rollback path calls
     # `engine.invalidate_turn_caches()` after `snapshot.restore(session)`.

@@ -157,7 +157,7 @@ class TestProjectorMatchesEngineDrain:
         # Planet-context construction drains from the colony's local
         # stockpile (see ProductionEngine._check_affordability). Seed it
         # with plenty of metals so affordability never blocks the tick.
-        planet.stockpile = {"metals": 10_000_000.0}
+        planet._stockpile = {"metals": 10_000_000.0}
 
         empire = Empire(empire_id=0, name="Test", color=(255, 0, 0))
         empire.colonies = [planet]
@@ -215,7 +215,7 @@ class TestProjectorMatchesEngineDrain:
         planet = _make_planet_with_yard()
         planet.construction_queue = []
 
-        planet.stockpile = {"metals": 1_000_000.0}
+        planet._stockpile = {"metals": 1_000_000.0}
 
         empire = Empire(empire_id=0, name="Test", color=(255, 0, 0))
         empire.colonies = [planet]
@@ -265,7 +265,7 @@ class TestProjectorMatchesEngineDrain:
             "resources_consumed": {},
         }]
 
-        planet.stockpile = {"metals": 10_000_000.0}
+        planet._stockpile = {"metals": 10_000_000.0}
 
         empire = Empire(empire_id=0, name="Test", color=(255, 0, 0))
         empire.colonies = [planet]

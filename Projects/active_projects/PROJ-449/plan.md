@@ -18,18 +18,19 @@
 | 0. Pre-flight audit (rg counts, PROJ-443 Phase 5b carry-over verification) | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Migrate `tests/fixtures/strategy_entities.py` (4 sites; +3-line scope creep in `test_roundtrip_ships.py`) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Sweep direct call sites in tests + rewrite `planet_from_dict_kwargs` | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Delete `_planet_init_with_legacy_kwargs` + 3 Planet @property/@setter pairs | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Delete `_planet_init_with_legacy_kwargs` + 3 Planet @setters (kept read-only @property getters; +setter-call sweep across 19 files) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Delete `_ship_instance_init_with_legacy_kwargs` + 2 ShipInstance @property/@setter pairs | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Drop `IShipInstance.cargo_contents` caveat + tighten `IFacility.consumable_levels` | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Profile `Empire.resource_pool`; add cached aggregation only if hot | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-18
-**Active Phase:** Phase 3 (ready to start)
-**Last Action:** Phase 2 complete. `planet_serde.planet_from_dict_kwargs` rewritten to emit private kwargs (`_stockpile=`, `_max_stockpile=`, `_staging_yard=`); F-A-025 legacy `data.get("resources", {})` fallback was already gone (verified — no edit needed). 17 test files swept with ~59 kwarg renames total via subagent. ShipInstance side: 7 files (test_ship_instance_container_views, test_capacity_levels, test_convenience_methods, test_serialization, test_ship_instance_bridge, test_ship_instance_serializer, turn_engine/conftest). Planet side: 10 files (test_save_round_trip_phase2, _build_galaxy_fixture, test_resource_transfer, test_empire_resource_aggregation, test_production_engine_fractional_fleet_cost, test_production_engine_container_unified, test_economy_e2e, test_custom_resource_lifecycle, test_empire_resources, test_planet_stockpile, test_tick_consumption). Sharded suite 23368/23368 GREEN. Task 2.4 instrumentation skipped — Phase 3/4 deletion is the strict gate.
-**Next Action:** Execute Phase 3 — delete `_planet_init_with_legacy_kwargs` + 3 Planet @property/@setter pairs; rewrite `planet_to_dict` to read from private fields directly.
+**Active Phase:** Phase 4 (ready to start)
+**Last Action:** Phase 3 complete with scope adjustment. Deleted `_planet_init_with_legacy_kwargs` wrapper and the 3 `@setter` blocks for `stockpile`/`max_stockpile`/`staging_yard`. **Kept the 3 read-only `@property` getters** as views over the private fields after Phase 0 audit was found to have under-counted read sites (16 production + 50+ test reads were not in the original sweep set). Migration sweep across 19 files (2 production: `planet_write_service.py`, `issuer_adapter.py`; 17 tests) covered ~45 attribute-setter writes + 9 ctor-kwarg leftovers + 2 mock-fixture refactors (subagent execution). Updated `planet_serde.planet_to_dict` to read private fields directly. New static guard at `tests/static_guards/test_no_planet_legacy_kwarg_wrapper.py` pins wrapper absence + setter absence. Sharded suite 23372/23372 GREEN. decisions.md 2026-05-18 row "Phase 3 scope adjustment" documents the rationale. PROJ-450 unblocked.
+
+**Next Action:** Execute Phase 4 — delete `_ship_instance_init_with_legacy_kwargs` + 2 ShipInstance @property/@setter pairs. Expect a similar scope adjustment if production/test attribute-read sites are uncovered.
 **Blockers:** None.
-**Context for Next Agent:** Audit landed clean PROCEED on both axes. Phase 1 should be a small, focused commit; sharded suite must stay green at 23368 tests after Phase 1.
+**Context for Next Agent:** Phase 3 closed F-A-002 (wrapper gone) and substantially closed F-A-004 (setters gone; read-only getters survive). The audit-of-record for Phase 4 must include attribute-read sites on `ShipInstance.consumable_levels` / `.cargo_contents`, not just constructor kwargs.
 
 ## Checkpoint Log
 
@@ -39,6 +40,13 @@
 - **Open threads**: None.
 - **Next action**: Phase 1 — `tests/fixtures/strategy_entities.py` lines 318/320/425 → private kwargs.
 - **Cross-group state observed**: No `group-b` or `group-c` branches present on origin at branch creation; Group A is first to start.
+
+### 2026-05-18 — phase-3-complete
+- **Done so far**: Phases 1, 2, 3 complete. Phase 1 (Phase-1 + 3-line scope-creep) migrated `strategy_entities.py` and `test_roundtrip_ships.py`. Phase 2 swept 17 test files (~59 kwarg renames) + rewrote `planet_from_dict_kwargs`. Phase 3 deleted wrapper + 3 setters; kept read-only getters; swept 19 files (~45 attribute-setter migrations + 9 ctor-kwarg leftovers + 2 mock-fixture refactors); added static guard.
+- **Key decisions**: Phase 3 scope adjustment — keep read-only @property getters (audit under-counted read sites). PROJ-450 will refine `staging_yard` getter type. F-A-002 fully closed; F-A-004's setter cluster closed; getter cluster kept as stable read surface.
+- **Open threads**: Phase 4 audit must include attribute-read sites for ShipInstance, not just ctor kwargs (same lesson learned).
+- **Next action**: Phase 4 — delete ShipInstance wrapper + 2 setters; keep getters as read-only views over `_consumable_levels` / `_cargo_contents`.
+- **Cross-group state observed**: `git fetch origin` after Phase 3 commit (about to push); no `group-b` or `group-c` branches present yet.
 
 ## Overview
 Retire the two legacy-kwarg constructor wrappers (`_planet_init_with_legacy_kwargs` and `_ship_instance_init_with_legacy_kwargs`) and the five matching `@property`/`@setter` clusters they exist to support. Migrate `tests/fixtures/strategy_entities.py` (the largest fixture site), `planet_serde.py:160-162` (the load-bearing serializer site), and sweep every direct call site in tests. Complete F-C-014 by dropping the "not read-only in absolute terms" caveat from `IShipInstance.cargo_contents` once the concrete-class setters are gone. Profile `Empire.resource_pool` against a late-game save and add cached aggregation only if a real perf signal emerges.

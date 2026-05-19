@@ -91,8 +91,8 @@ def _earth_like(
         deposits={"metals": {"quantity": 1_000_000.0, "quality": 1.0}},
         populations=populations or [],
         facilities=facilities or [_harvester_facility()],
-        stockpile=stockpile or {},
-        max_stockpile=max_stockpile or {"metals": 1e9},
+        _stockpile=stockpile or {},
+        _max_stockpile=max_stockpile or {"metals": 1e9},
     )
 
 

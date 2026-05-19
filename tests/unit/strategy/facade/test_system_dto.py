@@ -400,8 +400,8 @@ class TestPlanetInfoFactory:
         planet_b = Planet(name="B", **common_kwargs)
 
         # Different insertion-order stockpile dicts but identical content.
-        planet_a.stockpile = {"organics": 5.0, "metals": 10.0}
-        planet_b.stockpile = {"metals": 10.0, "organics": 5.0}
+        planet_a._stockpile = {"organics": 5.0, "metals": 10.0}
+        planet_b._stockpile = {"metals": 10.0, "organics": 5.0}
 
         info_a = PlanetInfo.from_planet(planet_a)
         info_b = PlanetInfo.from_planet(planet_b)

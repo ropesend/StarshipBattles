@@ -57,7 +57,7 @@ def _colony_with_populations(populations):
         mass=5.97e24, radius=6.371e6, surface_area=5.1e14, density=5515.0,
         surface_gravity=9.81, surface_pressure=101325.0, surface_temperature=288.0,
         surface_water=0.71, tectonic_activity=0.3, magnetic_field=1.0,
-        planet_type=PlanetType.CONTINENTAL, populations=populations, stockpile={},
+        planet_type=PlanetType.CONTINENTAL, populations=populations, _stockpile={},
         owner_id=1,
     )
 

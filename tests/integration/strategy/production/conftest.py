@@ -75,13 +75,13 @@ def production_setup(fresh_registries):
 
     # Give planet starting stockpile for tick-based production
     # (production engine draws from planet.stockpile, not empire.resource_pool)
-    planet.stockpile = {
+    planet._stockpile = {
         "metals": 100000.0,
         "organics": 100000.0,
         "radioactives": 100000.0,
         "Energy": 100000.0,
     }
-    planet.max_stockpile = {
+    planet._max_stockpile = {
         "metals": 1000000.0,
         "organics": 1000000.0,
         "radioactives": 1000000.0,

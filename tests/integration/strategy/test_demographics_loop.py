@@ -66,7 +66,7 @@ def _earth_like(
         atmosphere={"N2": 78000, "O2": 21000},
         planet_type=PlanetType.CONTINENTAL,
         populations=populations,
-        stockpile=stockpile or {},
+        _stockpile=stockpile or {},
         species_configs=species_configs or {},
     )
 

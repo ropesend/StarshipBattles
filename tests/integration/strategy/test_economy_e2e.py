@@ -320,7 +320,7 @@ class TestEconomyE2E:
             facilities=[storage],
         )
         # Give planet stockpile for construction to draw from
-        planet.stockpile = {"metals": 1000.0}
+        planet._stockpile = {"metals": 1000.0}
         # Queue item: 150 Metals total. At 20/tick rate, completes in 7.5 ticks.
         planet.construction_queue = [{
             "design_id": "test_complex",
@@ -356,7 +356,7 @@ class TestEconomyE2E:
 
         # Item needs 300 Metals. At 20/tick, needs 15 ticks if resources available.
         # Stockpile has 30 Metals. Tick 1: 20 consumed (10 left). Tick 2: can't afford 20, pauses.
-        planet.stockpile = {"metals": 30.0}
+        planet._stockpile = {"metals": 30.0}
         planet.construction_queue = [{
             "design_id": "test_complex",
             "type": "complex",
@@ -388,7 +388,7 @@ class TestEconomyE2E:
             resources={"metals": {"quantity": 5000, "quality": 1.0}},
             facilities=[storage, harvester],
         )
-        planet.stockpile = {"metals": 900.0}
+        planet._stockpile = {"metals": 900.0}
 
         empire = _make_empire(resources={"metals": 900.0})
         empire.add_colony(planet)
@@ -442,7 +442,7 @@ class TestEconomyE2E:
         planet = _make_planet(facilities=[storage_m, storage_o])
 
         # Give planet stockpile for construction
-        planet.stockpile = {"metals": 1000.0, "organics": 500.0}
+        planet._stockpile = {"metals": 1000.0, "organics": 500.0}
 
         # Costs 100 Metals + 60 Organics. Completes in 5 ticks at 20/tick rate.
         planet.construction_queue = [{
@@ -479,7 +479,7 @@ class TestEconomyE2E:
         planet = _make_planet(facilities=[storage_m, storage_o])
 
         # Give planet stockpile: plenty of Metals but only 20 Organics
-        planet.stockpile = {"metals": 1000.0, "organics": 20.0}
+        planet._stockpile = {"metals": 1000.0, "organics": 20.0}
 
         # Costs 200 Metals + 200 Organics. At 20/tick each, needs 10 ticks.
         planet.construction_queue = [{
