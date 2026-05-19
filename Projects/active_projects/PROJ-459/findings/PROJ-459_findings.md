@@ -43,10 +43,19 @@ This project carries three findings:
 - **Effort (original)**: small
 
 ### Status as of 2026-05-19
-- **Disposition in this project: Phase 1 closes this finding.**
+- **Disposition in this project: CLOSED via Phase 1 extraction.**
 - Re-measurement confirms fleet.py is now 686 LOC (up slightly from the original 677 — small drift). `Fleet.to_dict` is at fleet.py:520; `Fleet.from_dict` is at fleet.py:558; `resolve_order_references` is at fleet.py:657. All three are at the locations the original finding identified.
 - Phase 1 mirrors the planet_serde extraction exactly. Save-format byte-identity is the regression gate; targeted save-load tests are the TDD entry point.
 - Note: Fleet's from_dict requires the `registries` parameter (unlike Planet's), because ship deserialization needs it. The fleet_serde split must thread the registry through. Verified by Read of fleet.py:558-655 on 2026-05-19.
+
+### Closure record — 2026-05-19 Phase 1 execution
+- `game/strategy/data/fleet_serde.py` created (168 LOC). Public surface: `fleet_to_dict`, `fleet_from_dict_kwargs`, `_deserialize_fleet_ships`, `_deserialize_fleet_orders`. Mirrors `planet_serde.py` (219 LOC).
+- `Fleet.to_dict` / `Fleet.from_dict` reduced to 1-line / facade-shaped bodies. `Fleet.resolve_order_references` stays a method on `Fleet` (already a thin delegate to `OrderSerializer`; moving it adds no value — see decisions.md row 2026-05-19).
+- fleet.py LOC: 693 → 632 (−61). Still above 500-LOC ceiling; the next mechanical extraction target (order-queue management, ~120 LOC) is the natural next-touch.
+- Save-format byte-identical, confirmed by new characterization test at `tests/integration/save_load/test_fleet_serde_roundtrip.py` (3 tests).
+- Targeted regression: 35 tests pass (`test_fleet_serde_roundtrip.py` + `test_roundtrip_fleet.py` + `test_serialization.py`). Broader `tests/integration/save_load/` + `tests/unit/strategy/fleet/`: 388 pass.
+- Full sharded suite: 23397/23397 passed, 0 failures.
+- F-A-008 marked **closed**.
 
 ---
 
