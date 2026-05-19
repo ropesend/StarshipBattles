@@ -6,29 +6,30 @@ Provides comprehensive planet management with filtering, sorting, and presets.
 PROJ-188 Phase 3: Migrated to VirtualTable + PlanetDataSource + SingleSelect.
 PROJ-329C Phase 3: two-stage construction with ``ui_builder`` test seam
 + ``PlanetListController`` for facade-coupled queries.
+PROJ-457 Phase 2: helpers + production builder extracted to
+``planet_list_helpers``; event dispatch + selection coordination
+extracted to ``planet_list_event_router.PlanetListEventRouter``.
 """
 from __future__ import annotations
 
-from functools import lru_cache
 from typing import Any, Optional, TYPE_CHECKING
 import pygame
-from game.core.profiling import profile_action
-from game.core.resources import ResourceCatalog
-from pygame_gui.elements import UIPanel, UIButton
 
+from game.core.profiling import profile_action
 from game.ui.screens.planet_list_controller import PlanetListController
 from game.ui.screens.strategy_modal_window import StrategyModalWindow
 from game.ui.screens.data_list_window_mixin import DataListWindowMixin
+from game.ui.screens.planet_list_event_router import PlanetListEventRouter
+from game.ui.screens.planet_list_helpers import (
+    PlanetListUiBuilder,
+    _format_population,
+    _get_planetary_ids,
+    build_effect_columns,
+)
 
 if TYPE_CHECKING:
     from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
-
-@lru_cache(maxsize=1)
-def _get_planetary_ids() -> tuple[str, ...]:
-    """PROJ-397 F-07: lazy-load planetary resource IDs (was module-level)."""
-    return tuple(d.id for d in ResourceCatalog.from_json().by_display_group("planetary"))
-from pygame_gui import UI_TEXT_ENTRY_FINISHED, UI_BUTTON_PRESSED
 
 from game.ui.config import UIConfig
 import logging
@@ -39,186 +40,10 @@ from game.ui.screens.planet_list_filters import (
     compute_planet_ranges, get_system_name, get_owner_name, get_mass_earth, get_resource_str,
     compute_planet_effect_keys,
 )
-from game.strategy.services.system_effects_collector import (
-    make_display_name as _effect_display_name,
-    format_intrinsic_ability_magnitude,
-)
 from game.ui.screens.planet_list_presets import PresetManager, capture_planet_list_state, apply_planet_list_state
 from game.ui.filters.filter_state import FilterState
 from game.ui.screens.planet_list_filter_manager import PlanetListFilterManager
-from game.ui.screens.planet_list_sidebar import build_sidebar
-from game.ui.components.table import VirtualTable, TableColumnManager, SingleSelect
-from game.ui.screens.planet_data_source import PlanetDataSource
-from game.ui.panels.planet_report_panel import PlanetReportPanel
-from game.strategy.services.planet_economy_projector import compute_planet_production
-from game.ui.panels.planet_report_panel import format_compact_number
-
-
-def _format_population(planet) -> str:
-    """Format total planet population for the list column."""
-    pops = getattr(planet, 'populations', [])
-    if not pops:
-        return "—"
-    total = sum(getattr(p, 'count', 0) for p in pops)
-    return format_compact_number(total) if total > 0 else "—"
-
-
-def _render_effect_cell(planet, group_key: str) -> str:
-    """Render a planet's magnitude for one effect group-key, or '—' if absent.
-
-    FEAT-16: used as the `func` for per-effect columns. Discriminates by
-    damage_type for EnvironmentalDamage so a thermal-damage planet renders
-    blank in the :radiation column and vice versa.
-    """
-    abilities = getattr(planet, 'intrinsic_abilities', None) or {}
-    if ':' in group_key:
-        ability_name, _discriminator = group_key.split(':', 1)
-    else:
-        ability_name = group_key
-    data = abilities.get(ability_name)
-    if data is None:
-        return "—"
-    # Confirm the planet's instance matches the same group-key (so a
-    # radiation-damage planet doesn't render in the thermal-damage column).
-    from game.strategy.services.system_effects_collector import make_group_key
-    if make_group_key(ability_name, data) != group_key:
-        return "—"
-    rendered = format_intrinsic_ability_magnitude(ability_name, data)
-    return rendered if rendered else "—"
-
-
-@profile_action("Panel: PlanetRegistry.build_effect_columns")
-def build_effect_columns(effect_keys: list[str]) -> list[dict]:
-    """Build per-effect column definitions for the Planet List (FEAT-16).
-
-    Args:
-        effect_keys: Sorted group-keys produced by `compute_planet_effect_keys`.
-
-    Returns:
-        List of column dicts (id='effect_<group_key>', title=display name,
-        func=cell renderer, visible=False). One column per key. When the
-        list is empty (no planet has any effect) the result is empty.
-    """
-    columns: list[dict] = []
-    for group_key in effect_keys:
-        if ':' in group_key:
-            ability_name, discriminator = group_key.split(':', 1)
-            data = {'damage_type': discriminator, 'resource_type': discriminator}
-        else:
-            ability_name = group_key
-            data = {}
-        title = _effect_display_name(ability_name, data)
-        columns.append({
-            'id': f'effect_{group_key}',
-            'width': 130,
-            'title': title,
-            'func': lambda p, gk=group_key: _render_effect_cell(p, gk),
-            'visible': False,
-        })
-    return columns
-
-
-class PlanetListUiBuilder:
-    """Production widget builder for ``PlanetListWindow``.
-
-    Builds the column list (default + per-resource + per-effect),
-    sidebar widgets via ``build_sidebar``, the main panel + virtual
-    table, the navigate button, and runs the initial ``refresh_list()``.
-
-    The builder reads cheap-state attrs the screen pre-populated in
-    Stage 1 (``galaxy``, ``empire``, ``all_planets``, ``preset_manager``,
-    ``_filter_mgr``, ``_planet_ranges``, ``sidebar_width``,
-    ``header_height``, ``row_height``, ``detail_panel_width``,
-    ``panel_margin``, ``columns``, ``_effect_keys``) and writes the
-    widget references the rest of the class operates on (sidebar
-    references, ``main_panel``, ``column_manager``, ``data_source``,
-    ``selection``, ``virtual_table``, ``btn_navigate``).
-    """
-
-    def build(self, screen: "PlanetListWindow") -> None:
-        rect = screen.rect
-        manager = screen.ui_manager
-
-        # --- Sidebar ---
-        screen.sidebar_panel = UIPanel(
-            relative_rect=pygame.Rect(0, 0, screen.sidebar_width, rect.height - 50),
-            manager=manager,
-            container=screen,
-            anchors={'left': 'left', 'top': 'top', 'bottom': 'bottom'}
-        )
-
-        sidebar_widgets = build_sidebar(
-            manager=manager,
-            sidebar_panel=screen.sidebar_panel,
-            sidebar_width=screen.sidebar_width,
-            rect_height=rect.height,
-            planet_ranges=screen._planet_ranges,
-            columns=screen.columns,
-            preset_manager=screen.preset_manager,
-            effect_keys=screen._effect_keys,
-        )
-        screen.sidebar_scroller = sidebar_widgets['sidebar_scroller']
-        screen.txt_name_filter = sidebar_widgets['txt_name_filter']
-        screen.btn_all_types = sidebar_widgets['btn_all_types']
-        screen.btn_none_types = sidebar_widgets['btn_none_types']
-        screen.btn_all_owners = sidebar_widgets['btn_all_owners']
-        screen.btn_none_owners = sidebar_widgets['btn_none_owners']
-        screen.btn_all_effects = sidebar_widgets['btn_all_effects']
-        screen.btn_none_effects = sidebar_widgets['btn_none_effects']
-        screen.btn_apply = sidebar_widgets['btn_apply']
-        screen.btn_save_preset = sidebar_widgets['btn_save_preset']
-        screen.txt_preset_name = sidebar_widgets['txt_preset_name']
-        screen.dd_presets = sidebar_widgets['dd_presets']
-        screen.ui_filters = sidebar_widgets['ui_filters']
-
-        # --- Main content area ---
-        main_w = (
-            rect.width - screen.sidebar_width - screen.detail_panel_width
-            - screen.panel_margin - 10
-        )
-        screen.main_panel = UIPanel(
-            relative_rect=pygame.Rect(
-                screen.sidebar_width, 0, main_w, rect.height - 90
-            ),
-            manager=manager, container=screen,
-            anchors={'left': 'left', 'right': 'right',
-                     'top': 'top', 'bottom': 'bottom'},
-        )
-
-        # PROJ-188: virtual table infrastructure
-        screen.column_manager = TableColumnManager(screen.columns)
-        # BUG-23: default sort by owner ascending
-        screen.column_manager.sort_column_id = 'owner'
-        screen.column_manager.sort_descending = False
-
-        screen.data_source = PlanetDataSource(
-            screen.columns, screen.galaxy, screen.empire
-        )
-        screen.selection = SingleSelect()
-
-        screen.virtual_table = VirtualTable(
-            panel=screen.main_panel,
-            manager=manager,
-            data_source=screen.data_source,
-            column_manager=screen.column_manager,
-            selection_strategy=screen.selection,
-            row_height=screen.row_height,
-            header_height=screen.header_height,
-        )
-
-        # Navigate button (bottom of main area)
-        nav_y = rect.height - 80
-        screen.btn_navigate = UIButton(
-            relative_rect=pygame.Rect(
-                screen.sidebar_width + 10, nav_y, 180, 30
-            ),
-            text="Navigate to Planet",
-            manager=manager,
-            container=screen,
-        )
-
-        # Initial population
-        screen.refresh_list()
+from game.ui.components.table import TableColumnManager
 
 
 class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
@@ -347,6 +172,12 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
             on_navigate_callback=on_navigate_callback,
         )
 
+        # PROJ-457 Phase 2: event dispatch + selection coordination
+        # extracted to PlanetListEventRouter. Instantiated here so the
+        # router is ready when Stage 3 builder finishes (and for tests
+        # that exercise event handling via the router directly).
+        self._event_router = PlanetListEventRouter(self)
+
         # ---- Stage 2: shell ----
         super().__init__(
             rect, manager,
@@ -454,163 +285,10 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
         self.virtual_table.update_scroll_bar()
         self.virtual_table.force_update()
         self.virtual_table.update_visible_rows()
-
-    def process_event(self, event) -> bool:
-        handled = super().process_event(event)
-
-        # Handle all button presses in event-driven path (not polled per-frame)
-        if event.type == UI_BUTTON_PRESSED:
-            if event.ui_element == self.btn_build_queue:
-                if self.selected_planet:
-                    logger.info(
-                        f"Build Queue button clicked for planet: "
-                        f"{self.selected_planet.name}"
-                    )
-                return True
-            if event.ui_element == self.btn_navigate:
-                self._navigate_to_selected()
-                return True
-            if event.ui_element == self.btn_apply:
-                self.refresh_list()
-                return True
-            if event.ui_element == self.btn_all_types:
-                self._set_all_filters(self.filter_types, 'types', True)
-                return True
-            if event.ui_element == self.btn_none_types:
-                self._set_all_filters(self.filter_types, 'types', False)
-                return True
-            if event.ui_element == self.btn_all_owners:
-                self._set_all_filters(self.filter_owner, 'owners', True)
-                return True
-            if event.ui_element == self.btn_none_owners:
-                self._set_all_filters(self.filter_owner, 'owners', False)
-                return True
-            # FEAT-25: Effects All/None batch buttons → FilterState.YES / IGNORE
-            if self.btn_all_effects is not None and event.ui_element == self.btn_all_effects:
-                self._set_all_effects(FilterState.YES)
-                return True
-            if self.btn_none_effects is not None and event.ui_element == self.btn_none_effects:
-                self._set_all_effects(FilterState.IGNORE)
-                return True
-            if event.ui_element == self.btn_save_preset:
-                self._save_preset()
-                return True
-            # Check type toggle buttons
-            for key, btn in self.ui_filters.get('types', {}).items():
-                if event.ui_element == btn:
-                    self._toggle_filter(self.filter_types, key, btn)
-                    return True
-            # Check owner toggle buttons
-            for key, btn in self.ui_filters.get('owners', {}).items():
-                if event.ui_element == btn:
-                    self._toggle_filter(self.filter_owner, key, btn)
-                    return True
-            # FEAT-25: Effects tri-state radios
-            for key, widget in self.ui_filters.get('effects', {}).items():
-                new_state = widget.check_pressed(event.ui_element)
-                if new_state is not None:
-                    widget.set_state(new_state)
-                    self.filter_effects[key] = new_state
-                    self.refresh_list()
-                    return True
-            # Check column toggle buttons
-            for col_id, btn in self.ui_filters.get('columns', {}).items():
-                if event.ui_element == btn:
-                    self._toggle_column(btn)
-                    return True
-
-        # Handle planet row clicks
-        if event.type == pygame.MOUSEBUTTONUP and event.button == 1:  # Left click
-            mouse_pos = event.pos
-            clicked_index = self.virtual_table.handle_click(mouse_pos)
-
-            if clicked_index >= 0:
-                planet = self.data_source.get_planet_at_index(clicked_index)
-                if planet and planet != self.selected_planet:
-                    logger.debug(f"Selecting planet: {planet.name}")
-                    self._on_planet_selected(planet)
-                return True  # Consume the event
-
-        if event.type == UI_TEXT_ENTRY_FINISHED:
-            # Check if it matches any of our range text boxes
-            for key in ['gravity', 'temp', 'mass']:
-                f = self.ui_filters[key]
-                val = 0.0
-                target_slider = None
-
-                if event.ui_element == f['min_txt']:
-                    target_slider = f['min']
-                elif event.ui_element == f['max_txt']:
-                    target_slider = f['max']
-
-                if target_slider:
-                    try:
-                        val = float(event.text)
-                        # Clamp to limits
-                        limits = f['limits']
-                        val = max(limits[0], min(limits[1], val))
-                        target_slider.set_current_value(val)
-                        self.refresh_list()
-                    except ValueError:
-                        pass  # Ignore invalid
-
-        # Wheel handling — use VirtualTable's scrollbar
-        if event.type == pygame.MOUSEWHEEL:
-            m_pos = pygame.mouse.get_pos()
-            if self.virtual_table._list_view_panel.get_abs_rect().collidepoint(m_pos):
-                total_h = len(self.filtered_planets) * self.row_height
-                if total_h > 0:
-                    scroll_bar = self.virtual_table.scroll_bar
-                    row_percent = self.row_height / total_h
-                    current_pct = scroll_bar.start_percentage
-                    new_pct = current_pct - (event.y * row_percent)
-                    new_pct = max(0.0, min(1.0 - scroll_bar.visible_percentage, new_pct))
-                    scroll_bar.set_scroll_from_start_percentage(new_pct)
-                    self.virtual_table.update_visible_rows()
-                return True  # Consume event
-
-        return handled
-
     def update(self, time_delta) -> None:
         super().update(time_delta)
         # PROJ-375 Task 3.2: shared scroll/slider/header/preset polling.
         self._run_update_template(['gravity', 'temp', 'mass'])
-
-    # -----------------------------------------------------------------------
-    # Event-driven button handlers (called from process_event, not polled)
-    # -----------------------------------------------------------------------
-
-    def _set_all_filters(self, filter_dict, ui_key, enabled) -> None:
-        """Set all filters in a category to enabled/disabled."""
-        for key, btn in self.ui_filters.get(ui_key, {}).items():
-            filter_dict[key] = enabled
-            label = getattr(btn, '_display_label', key)
-            if enabled:
-                btn.select()
-                btn.set_text(f"[{label}]")
-            else:
-                btn.unselect()
-                btn.set_text(f"{label}")
-        self.refresh_list()
-
-    def _set_all_effects(self, state: FilterState) -> None:
-        """Set every Effects filter row to the same FilterState (FEAT-25)."""
-        for key, widget in self.ui_filters.get('effects', {}).items():
-            self.filter_effects[key] = state
-            widget.set_state(state)
-        self.refresh_list()
-
-    def _toggle_filter(self, filter_dict, key, btn) -> None:
-        """Toggle a single filter in a category."""
-        state = not filter_dict[key]
-        filter_dict[key] = state
-        btn.select() if state else btn.unselect()
-        label = getattr(btn, '_display_label', key)
-        btn.set_text(f"[{label}]" if state else f"{label}")
-        self.refresh_list()
-
-    # `_toggle_column` and `_save_preset` provided by DataListWindowMixin.
-
     def _capture_current_state(self) -> Any:
         """Serialize current filters and column config."""
         return capture_planet_list_state(
@@ -633,108 +311,21 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
         self.virtual_table.rebuild_headers()
         self.virtual_table.rebuild_row_pool()
         self.refresh_list()
+    def process_event(self, event) -> bool:
+        """Delegate event dispatch to PlanetListEventRouter (PROJ-457 Phase 2)."""
+        return self._event_router.process_event(event)
 
-    def _navigate_to_selected(self) -> None:
-        """Navigate camera to the selected planet's system.
-
-        PROJ-348 T5.3: route navigation through `controller.navigate_to`
-        rather than calling `self.on_navigate_callback` directly. The
-        controller owns the navigate-dispatch boundary; the window stays
-        focused on widget concerns.
-        """
-        if not self.selected_planet:
-            return
-        loc = getattr(
-            self.selected_planet, '_cached_system_global_location', None
-        )
-        if loc and self.controller is not None:
-            self.controller.navigate_to(loc)
-
-    def _on_planet_selected(self, planet) -> None:
-        """Handle planet selection - create/update detail panel."""
-        # Kill old panel if exists
-        if self.planet_detail_panel:
-            self.planet_detail_panel.kill()
-            self.planet_detail_panel = None
-
-        # Kill old button if exists
-        if self.btn_build_queue:
-            self.btn_build_queue.kill()
-            self.btn_build_queue = None
-
-        if planet is None:
-            self.selected_planet = None
-            return
-
-        # Get portrait surface (use asset_resolver if available)
-        portrait_surface = None
-        if self.asset_resolver:
-            portrait_surface = self.asset_resolver(planet)
-
-        # Calculate panel position and dynamic height (right side of window)
-        panel_x, panel_y, panel_height = self._detail_panel_geometry()
-
-        # PROJ-292 H1: resolve the per-species demographic view for
-        # colonized planets (delegates to controller, which gates on
-        # owner_id + facade presence). Uncolonized planets and legacy
-        # callers without a facade fall through to the pre-PROJ-289
-        # rendering with view=None.
-        view = self._resolve_demographic_view(planet)
-
-        # Create planet report panel
-        self.planet_detail_panel = PlanetReportPanel(
-            manager=self.ui_manager,
-            rect=pygame.Rect(panel_x, panel_y, self.detail_panel_width, panel_height),
-            planet=planet,
-            container=self,  # Window is the container
-            portrait_surface=portrait_surface,
-            show_complexes=False,  # Match strategy UI - no separate complexes column
-            production_rates=compute_planet_production(planet, self._registries),
-            empire=self.empire,  # PROJ-290
-            race_registry=self._race_registry,  # PROJ-290
-            view=view,  # PROJ-292 H1
-        )
-
-        # Add Build Queue button if player owns planet
-        if planet.owner_id == self.empire.id:
-            required_height = self.planet_detail_panel.get_height_required()
-            btn_y = panel_y + min(panel_height, required_height) + 10
-            self.btn_build_queue = UIButton(
-                relative_rect=pygame.Rect(panel_x, btn_y, 200, 30),
-                text="Open Build Yard",
-                manager=self.ui_manager,
-                container=self,
-                object_id="#build_queue_btn_planet_list",
-            )
-
-        # Update selection tracking
-        self.selected_planet = planet
-
-    def _resolve_demographic_view(self, planet) -> Optional[Any]:
-        """PROJ-292 H1: resolve per-species view for colonized planets.
-
-        PROJ-348 T5.4: the legacy ``__new__``-bypass fallback was deleted.
-        Bypass-init tests must wire a real ``PlanetListController`` (see
-        ``tests/unit/ui/screens/test_planet_list_window.py:_make_planet_list_window``).
-        """
-        return self.controller.resolve_demographic_view(planet)
-
-    def _detail_panel_geometry(self) -> tuple:
-        """Calculate detail panel position and size relative to window."""
-        window_width = self.rect.width
-        window_height = self.rect.height
-        panel_x = window_width - self.detail_panel_width - 10
-        panel_y = 60  # Below window title bar
-        # Dynamic height: fill available space minus margins
-        panel_height = max(450, window_height - panel_y - 80)
-        return panel_x, panel_y, panel_height
+    def _super_process_event(self, event) -> bool:
+        """Internal hook used by PlanetListEventRouter to call the base-class
+        ``process_event`` without re-entering this class's override."""
+        return super().process_event(event)
 
     def set_dimensions(self, dimensions, clamp_to_container=False) -> None:
         """Handle window resize - reposition detail panel."""
         super().set_dimensions(dimensions, clamp_to_container)
         # Recreate the detail panel at new position if one is showing
         if self.selected_planet is not None:
-            self._on_planet_selected(self.selected_planet)
+            self._event_router._on_planet_selected(self.selected_planet)
 
     # ---- PROJ-411 Task 2.1: Window reuse (Track A) ----
     #

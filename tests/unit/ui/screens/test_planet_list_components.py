@@ -692,12 +692,16 @@ class TestDetailPanelGeometry:
     """Tests for _detail_panel_geometry and dynamic panel sizing."""
 
     def _make_window_stub(self, width=1600, height=900):
-        """Create a minimal stub with the attributes _detail_panel_geometry needs."""
-        from game.ui.screens.planet_list_window import PlanetListWindow
+        """Create a minimal stub + event-router wrapping it. PROJ-457 Phase 2
+        moved `_detail_panel_geometry` from PlanetListWindow to
+        PlanetListEventRouter; the stub exposes the same callable shape by
+        attaching the router-bound method."""
+        from game.ui.screens.planet_list_event_router import PlanetListEventRouter
         stub = Mock()
         stub.rect = pygame.Rect(0, 0, width, height)
         stub.detail_panel_width = 580
-        stub._detail_panel_geometry = PlanetListWindow._detail_panel_geometry.__get__(stub)
+        router = PlanetListEventRouter(stub)
+        stub._detail_panel_geometry = router._detail_panel_geometry
         return stub
 
     def test_panel_x_is_right_aligned(self):

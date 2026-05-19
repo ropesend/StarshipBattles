@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Depends on:** Phase 0 (LOC re-measured); Phase 1 not a hard prerequisite — write scopes are disjoint.
 **Review Mode:** standard
 **Objective:** Drop `game/ui/screens/planet_list_window.py` from 862 LOC (or post-PROJ-456 re-measured value) to under the 500-LOC ceiling. Same recipe as Phase 1.
@@ -27,52 +27,52 @@
 **File:** `game/ui/screens/planet_list_window.py`
 **Tests:** none — read-only audit.
 
-- [ ] Read `planet_list_window.py` end-to-end.
-- [ ] Identify cohesive responsibility clusters: formatting helpers, sidebar build, preset lifecycle, filter-state hookup, etc.
-- [ ] List each candidate with estimated LOC out and API surface in.
-- [ ] Pick the best ratio. Record in `decisions.md`.
+- [x] Read `planet_list_window.py` end-to-end.
+- [x] Identify cohesive responsibility clusters: formatting helpers, sidebar build, preset lifecycle, filter-state hookup, etc.
+- [x] List each candidate with estimated LOC out and API surface in.
+- [x] Pick the best ratio. Record in `decisions.md`.
 
 ### Task 2.2: Create the sibling module [Medium]
 **File:** `game/ui/screens/planet_list_<responsibility>.py` (new)
 **Tests:** `tests/unit/ui/screens/test_planet_list_<responsibility>.py` (new)
 
-- [ ] Create the new sibling module per the Phase 1 recipe.
-- [ ] Move the chosen cluster.
-- [ ] Expose a narrow API.
+- [x] Create the new sibling module per the Phase 1 recipe.
+- [x] Move the chosen cluster.
+- [x] Expose a narrow API.
 
 ### Task 2.3: Rewire `planet_list_window.py` [Medium]
 **File:** `game/ui/screens/planet_list_window.py`
 **Tests:** `pytest tests/unit/ui/screens/test_planet_list_window*.py tests/unit/ui/screens/planet_list/ -q`
 
-- [ ] Import the new module's API.
-- [ ] Replace calls to old methods with new API calls.
-- [ ] Delete the old methods + state fields.
-- [ ] Run targeted tests.
+- [x] Import the new module's API.
+- [x] Replace calls to old methods with new API calls.
+- [x] Delete the old methods + state fields.
+- [x] Run targeted tests.
 
 ### Task 2.4: Migrate test reads to the new module's API [Medium]
 **Files:** existing planet-list test files + new dedicated test file for the extracted module.
 
-- [ ] For each test that was reading the extracted internals, migrate to the new API.
-- [ ] Add new behavior-locking tests for the extracted module.
-- [ ] Run each test file individually.
+- [x] For each test that was reading the extracted internals, migrate to the new API.
+- [x] Add new behavior-locking tests for the extracted module.
+- [x] Run each test file individually.
 
 ### Task 2.5: Verify LOC + sharded green [Simple]
 
-- [ ] (PowerShell-safe) `(Get-Content game/ui/screens/planet_list_window.py | Measure-Object -Line).Lines` returns < 500.
-- [ ] (PowerShell-safe) `(Get-Content game/ui/screens/planet_list_<responsibility>.py | Measure-Object -Line).Lines` returns < 500.
-- [ ] Run sharded suite green.
-- [ ] Run targeted tests.
+- [x] (PowerShell-safe) `(Get-Content game/ui/screens/planet_list_window.py | Measure-Object -Line).Lines` returns < 500.
+- [x] (PowerShell-safe) `(Get-Content game/ui/screens/planet_list_<responsibility>.py | Measure-Object -Line).Lines` returns < 500.
+- [x] Run sharded suite green.
+- [x] Run targeted tests.
 
 ---
 
 ## Phase Completion Checklist
 
 When all 5 tasks are checked off:
-- [ ] F-C-027 status updated in `findings/PROJ-457_findings.md` — `planet_list_window.py` row flipped to `Status: resolved`.
-- [ ] Run `python Tools/test_sharded/test_sharded.py` — full sharded suite green.
-- [ ] Run `python Projects/scripts/validate_phase.py PROJ-457 2` — PASSED.
-- [ ] Update status at top of this file to `Complete`.
-- [ ] Update plan.md phase table row to `Complete`.
-- [ ] Update plan.md Current State to point to Phase 3.
-- [ ] Commit message: `PROJ-457 Phase 2: extract <responsibility> from planet_list_window.py (862 -> <FINAL> LOC; F-C-027 partial close)`.
-- [ ] No new entries in `AgentCoordination/discovered_issues/log.jsonl` unless they are genuine out-of-scope discoveries.
+- [x] F-C-027 status updated in `findings/PROJ-457_findings.md` — `planet_list_window.py` row flipped to `Status: resolved`.
+- [x] Run `python Tools/test_sharded/test_sharded.py` — full sharded suite green.
+- [x] Run `python Projects/scripts/validate_phase.py PROJ-457 2` — PASSED.
+- [x] Update status at top of this file to `Complete`.
+- [x] Update plan.md phase table row to `Complete`.
+- [x] Update plan.md Current State to point to Phase 3.
+- [x] Commit message: `PROJ-457 Phase 2: extract <responsibility> from planet_list_window.py (862 -> <FINAL> LOC; F-C-027 partial close)`.
+- [x] No new entries in `AgentCoordination/discovered_issues/log.jsonl` unless they are genuine out-of-scope discoveries.
