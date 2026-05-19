@@ -116,12 +116,15 @@ class ShipInstance:
           ``get_all_resource_costs_per_turn``, ``get_warp_resource_costs``,
           ``resupply``
         - **Write-service shims**: ``set_component_enabled``, ``repair``
-        - **Backward-compat property shims**: ``consumable_levels`` /
-          ``cargo_contents`` (post-Phase-3f read view); ``carried_items``
-          removed in PROJ-436 Phase 9
-        - **Legacy-kwargs constructor wrapper**:
-          ``_ship_instance_init_with_legacy_kwargs`` at module scope —
-          retained per PROJ-443 Phase 5b after 18-file audit
+        - **Read-only property views** (PROJ-449 Phase 4): the
+          ``consumable_levels`` / ``cargo_contents`` ``@property``
+          getters survive as read-only views over the private fields.
+          The matching ``@setter`` halves and the
+          ``_ship_instance_init_with_legacy_kwargs`` constructor wrapper
+          have been deleted. The deletion guard at
+          ``tests/static_guards/test_no_ship_instance_legacy_kwarg_wrapper.py``
+          pins the absence. ``carried_items`` was removed in PROJ-436
+          Phase 9.
     """
 
     instance_id: str  # Unique across game
@@ -239,9 +242,9 @@ class ShipInstance:
         """Read-only view over private cargo storage.
 
         PROJ-446 Phase 2 narrowed the protocol annotation to
-        ``Mapping[str, int]``. Phase 5 of PROJ-449 will drop the
+        ``Mapping[str, int]``; PROJ-449 Phase 5 dropped the
         "not read-only in absolute terms" caveat from the protocol
-        docstring now that the concrete-class @setter is gone.
+        docstring at ``game/core/protocols/strategy_domain.py``.
         Writes must route through ``_cargo_mgr.set_cargo`` /
         ``add_to_cargo`` / ``remove_from_cargo``.
         """
