@@ -324,7 +324,7 @@ def test_reorder_queue(build_queue_screen):
         {"design_id": "item_A", "type": "complex", "turns_remaining": 5},
         {"design_id": "item_B", "type": "complex", "turns_remaining": 5}
     ])
-    build_queue_screen._refresh_queue_display()
+    build_queue_screen._input_router._refresh_queue_display()
     # CRITICAL: Update manager to calculate rects for new panels
     build_queue_screen.manager.update(0.1)
     
@@ -376,7 +376,7 @@ def test_remove_from_queue(build_queue_screen):
     build_queue_screen.build_context.construction_queue.extend([
         {"design_id": "to_remove", "type": "complex", "turns_remaining": 5}
     ])
-    build_queue_screen._refresh_queue_display()
+    build_queue_screen._input_router._refresh_queue_display()
     build_queue_screen.manager.update(0.1)
 
     # PROJ-221: Use VirtualTable row pool to find queue item row positions

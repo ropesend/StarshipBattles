@@ -231,7 +231,7 @@ def test_queue_display_updates(build_queue_screen):
     })
 
     # Refresh display
-    build_queue_screen._refresh_queue_display()
+    build_queue_screen._input_router._refresh_queue_display()
 
     # PROJ-221: VirtualTable manages queue display - verify data source has correct count
     assert build_queue_screen.panels.data_source.get_row_count() == 1
@@ -244,7 +244,7 @@ def test_close_callback_fires(build_queue_screen):
     (hide + on_close). The close-button / Esc handler routes through it.
     """
     # Close the screen via the public close path.
-    build_queue_screen._request_close()
+    build_queue_screen._input_router._request_close()
 
     # Verify callback was called
     build_queue_screen.on_close.assert_called_once()

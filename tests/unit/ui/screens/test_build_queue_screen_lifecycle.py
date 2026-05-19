@@ -796,7 +796,7 @@ def test_request_close_hides_and_invokes_on_close(
 
     assert screen.is_visible() is True
 
-    screen._request_close()
+    screen._input_router._request_close()
 
     on_close.assert_called_once()
     assert not screen.is_visible()
@@ -805,11 +805,16 @@ def test_request_close_hides_and_invokes_on_close(
 
 
 def test_close_method_is_removed():
-    """PROJ-376 Phase 2: ``_close()`` was replaced by ``_request_close()``."""
+    """PROJ-376 Phase 2: ``_close()`` was replaced by ``_request_close()``.
+
+    PROJ-457 Phase 1: ``_request_close`` was relocated from the screen to
+    ``BuildQueueInputRouter``; the screen no longer carries either name.
+    """
     from game.ui.screens.build_queue_screen import BuildQueueScreen
+    from game.ui.screens.build_queue_input_router import BuildQueueInputRouter
 
     assert not hasattr(BuildQueueScreen, '_close')
-    assert hasattr(BuildQueueScreen, '_request_close')
+    assert hasattr(BuildQueueInputRouter, '_request_close')
 
 
 # =========================================================================
@@ -917,7 +922,7 @@ def test_PROJ410_task_1_2_yard_switch_invalidates_widget_caches(
     # Trigger a refresh that pushes new data via the renderer's B-hook.
     # _refresh_queue_display routes through refresh_queue_display(), which
     # is where the invalidation must happen.
-    screen._refresh_queue_display()
+    screen._input_router._refresh_queue_display()
 
     assert spy.call_count >= 1, (
         "PROJ-410 Phase 3 Task 3.1: BuildQueueRenderer.refresh_queue_display() "
@@ -955,7 +960,7 @@ def test_PROJ410_task_1_3_close_and_reopen_invalidates_cache(
     panels_id_before = id(screen.panels)
 
     # Close (panels survive).
-    screen._request_close()
+    screen._input_router._request_close()
     assert not screen.is_visible()
 
     # Reopen on the same yard.
@@ -1008,7 +1013,7 @@ def test_PROJ410_task_1_5_ship_yard_to_planetary_yard_invalidates(
     spy = _spy_invalidate(vt)
 
     # Simulate a yard-context refresh (mutated queue content).
-    screen._refresh_queue_display()
+    screen._input_router._refresh_queue_display()
 
     assert spy.call_count >= 1, (
         "PROJ-410: every queue-display refresh must invalidate widget caches; "
@@ -1070,7 +1075,7 @@ def test_PROJ410_task_1_7_yard_selector_renders_for_second_empire(
     assert e1_source_count >= 1
 
     # Close (panels survive — production reuse).
-    screen._request_close()
+    screen._input_router._request_close()
 
     # Phase 4 Task 4.2 wired the manager to rebind these refs before
     # every open_for_yard(). At the screen level we exercise the same
@@ -1190,7 +1195,7 @@ def test_request_close_can_be_re_opened(
     )
     panels_id = id(screen.panels)
 
-    screen._request_close()
+    screen._input_router._request_close()
     assert not screen.is_visible()
 
     # Re-open at a different planet — same context type, panels reused.
@@ -1258,7 +1263,7 @@ def test_issue17_open_for_yard_invokes_update_queue_header(
     spy = MagicMock(side_effect=original)
     screen.renderer.update_queue_header = spy
 
-    screen._request_close()
+    screen._input_router._request_close()
     screen.open_for_yard(planet_a, hex_coord=hex_a)
 
     assert spy.call_count >= 1, (
@@ -1312,14 +1317,14 @@ def test_issue17_reopen_after_yard_switch_clears_stale_label_text(
     # picking the second source if available, and refresh so the row
     # pool's label widgets carry real text.
     if len(screen.queue_sources) >= 2:
-        screen._on_queue_selection_changed(screen.queue_sources[1], {1})
-    target_queue = screen._get_active_queue()
+        screen._input_router._on_queue_selection_changed(screen.queue_sources[1], {1})
+    target_queue = screen._input_router._get_active_queue()
     target_queue.extend([
         {"design_id": f"qs_organics_complex", "name": "QS Organics Complex",
          "type": "complex", "turns_remaining": 4.0, "remaining_cost": {}}
         for _ in range(3)
     ])
-    screen._refresh_queue_display()
+    screen._input_router._refresh_queue_display()
 
     # Sanity: pool's first row(s) should carry the queue item's design id
     # in some label cell (the item-name column renders "<id> (<category>)").
@@ -1336,7 +1341,7 @@ def test_issue17_reopen_after_yard_switch_clears_stale_label_text(
     )
 
     # Close — panels survive (PROJ-376). Widget text content remains.
-    screen._request_close()
+    screen._input_router._request_close()
 
     # Empty the underlying queue (simulating the user opening a different
     # source whose queue is empty) then re-open on the same planet.
@@ -1435,7 +1440,7 @@ def test_issue17_show_reasserts_row_visibility_after_panel_show(
     )
 
     # Empty queue (default state — planet has yards but no items queued).
-    assert screen._get_active_queue() == [], (
+    assert screen._input_router._get_active_queue() == [], (
         "test setup: expected empty queue on a brand-new planet"
     )
 
@@ -1448,7 +1453,7 @@ def test_issue17_show_reasserts_row_visibility_after_panel_show(
     # refresh + show, mirroring open_for_yard()'s flow.
     screen.hide()
     screen.panels.virtual_table.invalidate_widget_caches()
-    screen._refresh_queue_display()
+    screen._input_router._refresh_queue_display()
     screen.show()
 
     # After show(): every pool row whose data_idx >= row_count (== 0)
@@ -1517,7 +1522,7 @@ def test_issue17_show_reasserts_child_widget_visibility_after_panel_show(
     assert row_count == 0
 
     # Close, invalidate, refresh, reopen — exercising the full reopen path.
-    screen._request_close()
+    screen._input_router._request_close()
     screen.open_for_yard(planet, hex_coord=hex_a)
 
     visible_child_widgets = []

@@ -376,7 +376,7 @@ def test_multi_select_sets_active_to_none(ui_manager):
         context_type="planet"
     )
     bq.queue_sources.append(second_source)
-    bq._refresh_queue_selector()
+    bq._input_router._refresh_queue_selector()
 
     # Select both queues
     bq._queue_selector.selected_indices = {0}
@@ -448,7 +448,7 @@ def test_queue_display_shows_active_source_items(ui_manager):
     bq.active_queue_source.construction_queue.append({
         "design_id": "test_item", "type": "complex", "turns_remaining": 3
     })
-    bq._refresh_queue_display()
+    bq._input_router._refresh_queue_display()
 
     # PROJ-221: VirtualTable manages queue display - verify data source has correct count
     assert bq.panels.data_source.get_row_count() == 1
