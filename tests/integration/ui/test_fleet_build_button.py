@@ -221,8 +221,9 @@ class TestFleetOrdersWindowBuildDisplay:
         # Create window (PROJ-313: window_manager=None for non-strategy-screen test)
         window = OrdersWindow(rect, ui_manager, fleet, window_manager=None)
 
-        # Get order description
-        desc = window._get_order_description(fleet.orders[0])
+        # Get order description via the canonical OrderDescriber path.
+        from game.ui.screens.orders_window import OrderDescriber
+        desc = OrderDescriber().describe(fleet.orders[0], fleet)
 
         # Assert
         assert "BUILDING" in desc

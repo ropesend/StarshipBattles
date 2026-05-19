@@ -41,6 +41,7 @@ def event_log_window():
         window = EventLogWindow(
             rect, manager, events,
             window_manager=window_manager,
+            empire_name="Test Empire",
         )
         window.is_blocking = True
         window.data_source = MagicMock(name="data_source")

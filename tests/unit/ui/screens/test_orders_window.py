@@ -179,15 +179,6 @@ class TestOrdersWindowConstruction:
         assert isinstance(desc, OrderRowDescription)
         assert desc.text == "MOVE (1, 2)"
 
-    def test_get_order_description_shim_delegates_to_describer(self):
-        """Backwards-compat shim for callers that used to read
-        screen._get_order_description directly."""
-        entity = _make_entity()
-        window = _make_window(entity)
-        order = Order(OrderType.MOVE, target=HexCoord(7, 8))
-        assert window._get_order_description(order) == "MOVE (7, 8)"
-
-
 # ---------------------------------------------------------------------------
 # Clear-confirmation dialog positioning (issue #30).
 # ---------------------------------------------------------------------------

@@ -101,15 +101,6 @@ def _render_grid_to_surface(r: Any, target_surface: Any) -> None:
             pygame.draw.lines(target_surface, grid_color, False, snake_points, 1)
 
 
-def draw_grid(r: Any, screen: Any) -> None:
-    """Draw the hex grid directly onto ``screen``.
-
-    Uncached fast path retained for back-compat with existing direct callers
-    (e.g. tests). Production rendering goes through ``GridLayer.draw``.
-    """
-    _render_grid_to_surface(r, screen)
-
-
 class GridLayer:
     """Property-keyed surface cache for the strategy hex grid.
 

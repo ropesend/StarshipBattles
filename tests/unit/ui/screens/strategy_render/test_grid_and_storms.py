@@ -8,7 +8,7 @@ import pygame
 
 from game.core.hex_math import HexCoord
 from game.ui.colors import COLORS
-from game.ui.screens.strategy_render.grid import draw_grid
+from game.ui.screens.strategy_render.grid import GridLayer
 from game.ui.screens.strategy_render.storms import draw_storms
 from game.ui.screens.strategy_render.storms import draw_storms_low_detail
 
@@ -50,7 +50,7 @@ def test_grid_culls_large_viewport_before_drawing() -> None:
         patch("game.ui.screens.strategy_render.grid.pygame.draw.line") as draw_line,
         patch("game.ui.screens.strategy_render.grid.pygame.draw.lines") as draw_lines,
     ):
-        draw_grid(renderer, screen)
+        GridLayer().draw(renderer, screen)
 
     draw_line.assert_not_called()
     draw_lines.assert_not_called()
@@ -68,7 +68,7 @@ def test_grid_draws_visible_snake_lines_and_top_edges() -> None:
         patch("game.ui.screens.strategy_render.grid.pygame.draw.line") as draw_line,
         patch("game.ui.screens.strategy_render.grid.pygame.draw.lines") as draw_lines,
     ):
-        draw_grid(renderer, screen)
+        GridLayer().draw(renderer, screen)
 
     assert draw_line.call_count > 0
     assert draw_lines.call_count > 0

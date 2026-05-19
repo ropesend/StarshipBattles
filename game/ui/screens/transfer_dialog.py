@@ -409,7 +409,7 @@ class TransferDialog(StrategyModalWindow):
         # distinguishes the cases.
         try:
             result = self._controller.confirm_pending()
-        except Exception:
+        except Exception:  # Intentional broad catch: dialog-level catastrophic failure must not leak; kill modal then re-raise.
             # Catastrophic dispatch failure — close the modal so it can't
             # leak; let the exception propagate to the caller.
             self.kill()

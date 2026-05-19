@@ -15,18 +15,27 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Smallest-shim cluster: `draw_grid` + broad-catch marker + 3 single-method shims | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Smallest-shim cluster: `draw_grid` + broad-catch marker + 3 single-method shims | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. `build_context` legacy-kwarg sweep | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. BattleSetupState `side_0` / `side_1` cluster (2 production + 5 test files) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. `transfer_dialog` cluster + characterization sweep (drops file under 500-LOC ceiling) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Big-three shim clusters: StrategyRenderer, NewGameSetupScreen, BattleSetupScreen | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-19
-**Active Phase:** Planning
-**Last Action:** Cross-group collision resolution applied 2026-05-19; Group B is ready for execution. Serial order confirmed: PROJ-453 → PROJ-454 → PROJ-456 → PROJ-457. PROJ-456 is the THIRD project in Group B's series; PROJ-454 must complete first. Coordinator confirmed Group A's serial was re-ordered to put PROJ-450 LAST, which resolves the `test_transfer_dialog_characterization.py` HARD collision (PROJ-456 lands first; PROJ-450 Phase 3 rebases onto the new view-model attribute names). G3-B fix applied: F-C-015 and DI-2026-05-18-004 ownership corrected from PROJ-453 to **PROJ-452** (catalog-driven resource surfaces) in plan.md + findings. Prior fixes retained: `transfer_dialog.py` LOC reframed 523 → 448 (already under ceiling); F-C-001 sweep count 77 → 81; Phase 4 DI log update step keyed on `file:` to disambiguate from the already-resolved CommandRegistry DI-2026-05-18-002 entry; F-C-006 scope limited to BuildQueueScreen-only callers; PowerShell-safe shell commands.
-**Next Action:** Run agent starts PROJ-456 Phase 1 after PROJ-454 is Complete.
-**Blockers:** PROJ-454 must complete first (Group B serial order).
+**Last Updated:** 2026-05-17
+**Active Phase:** Phase 2 (build_context legacy-kwarg sweep)
+**Last Action:** Phase 1 complete. F-C-002 broad-catch marker added; F-C-005 `draw_grid` free function deleted (test migrated to `GridLayer().draw(...)`); F-C-007 `_description_controller` property+setter deleted (already orphaned — no test callers); F-C-010 `_get_order_description` shim deleted (3 test files migrated + 1 shim-delegation test deleted); F-C-012 EventLogWindow `empire_name=None` partial-close per Option B (docstring updated + 10 test sites pass explicit `empire_name="Test Empire"`; production None-path kept intact because controller's `getattr(empire, "name", None)` can legitimately yield None). Sharded 23362/23362 green.
+**Next Action:** Phase 2 Task 2.1 — caller sweep for `BuildQueueScreen(..., build_context=...)`.
+**Blockers:** None.
+
+## Checkpoint Log
+
+### 2026-05-17 — project-456-start
+- **Done so far**: PROJ-454 closed and merged at `ab2da0669`. Group B series progressing on schedule.
+- **Key decisions**: Phase ordering is smallest-first per Codex r4 review-burden risk.
+- **Open threads**: None.
+- **Next action**: Phase 1 Task 1.1.
+- **Cross-group state observed**: origin/main at `ab2da0669` (post-PROJ-454 merge). origin/group-a at `f4503847a`. origin/group-c at `067b27a06`. No `_doc_consolidation/` files on origin/main yet.
 
 ## Overview
 Retire 9 UI back-compat property/method shim clusters that survived prior MVVM splits (PROJ-275, PROJ-309, PROJ-329A, PROJ-374, PROJ-376, PROJ-392, PROJ-437, etc.). The same recipe applies per cluster: find test/peer reads of the shim → migrate those callers to the canonical source (controller / view-model / renderer / layer-object) → delete the shim block. Phase 4 also retires `transfer_dialog.py`'s sentinel/layout-constant class re-exports and the 6 dialog-level property shims; the file's LOC drops further from its current 448 (already under the 500-LOC ceiling at HEAD per 2026-05-19 re-measurement — DI-2026-05-18-002's original LOC-overflow framing is stale; closure is now justified by retiring the shim cluster, not by enforcing the ceiling). Also: a one-line broad-catch marker fix on `transfer_dialog._on_confirm` and a sweep of the dual-name `build_context` / `initial_yard` kwargs on `BuildQueueScreen`.

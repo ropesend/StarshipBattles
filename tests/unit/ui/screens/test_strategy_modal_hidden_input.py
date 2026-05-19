@@ -67,7 +67,7 @@ def test_hide_removes_window_from_pygame_gui_window_stack():
     with bypass_init(EventLogWindow):
         rect = pygame.Rect(0, 0, 100, 100)
         manager = MagicMock()
-        win = EventLogWindow(rect, manager, [], window_manager=MagicMock())
+        win = EventLogWindow(rect, manager, [], window_manager=MagicMock(), empire_name="Test Empire")
     win.window_stack = MagicMock(name="window_stack")
     win.is_blocking = True
     with patch("pygame_gui.elements.ui_window.UIWindow.hide"):
@@ -86,7 +86,7 @@ def test_show_re_adds_window_to_pygame_gui_window_stack():
     with bypass_init(EventLogWindow):
         rect = pygame.Rect(0, 0, 100, 100)
         manager = MagicMock()
-        win = EventLogWindow(rect, manager, [], window_manager=MagicMock())
+        win = EventLogWindow(rect, manager, [], window_manager=MagicMock(), empire_name="Test Empire")
     win.window_stack = MagicMock(name="window_stack")
     with patch("pygame_gui.elements.ui_window.UIWindow.show"):
         win.show()
