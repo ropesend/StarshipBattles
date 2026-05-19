@@ -20,6 +20,8 @@ from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
     from game.core.hex_math import HexCoord
+    from game.strategy.data.bay_inventory import DropPod
+    from game.strategy.data.carried_vehicle import CarriedVehicle
     from game.strategy.data.empire import Empire
     from game.strategy.data.fleet import Fleet
     from game.strategy.data.order_types import Order
@@ -102,8 +104,14 @@ class IPlanetMutator(Protocol):
     def set_max_stockpile(self, planet: "Planet", new_max: dict) -> None: ...
 
     # Staging yard
-    def add_staging_item(self, planet: "Planet", item: Any) -> None: ...
-    def pop_staging_item(self, planet: "Planet", index: int = 0) -> Any: ...
+    # PROJ-450 Phase 3: substrate widened to typed
+    # ``List[CarriedVehicle | DropPod]``; signatures tightened.
+    def add_staging_item(
+        self, planet: "Planet", item: "CarriedVehicle | DropPod"
+    ) -> None: ...
+    def pop_staging_item(
+        self, planet: "Planet", index: int = 0
+    ) -> "CarriedVehicle | DropPod | None": ...
 
     # Construction queue
     def append_construction_item(self, planet: "Planet", item: Any) -> None: ...

@@ -22,6 +22,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from game.strategy.data.bay_inventory import DropPod
+    from game.strategy.data.carried_vehicle import CarriedVehicle
     from game.strategy.data.order_types import Order
     from game.strategy.data.planet import Planet
 
@@ -97,12 +99,24 @@ class PlanetWriteService:
         planet._max_stockpile = dict(new_max)
 
     # --- Staging yard ---
-    def add_staging_item(self, planet: "Planet", item: Any) -> None:
+    def add_staging_item(
+        self,
+        planet: "Planet",
+        item: "CarriedVehicle | DropPod",
+    ) -> None:
         # Delegate to existing public API (enforces capacity).
+        # PROJ-450 Phase 3: signature tightened — substrate is typed,
+        # so callers must hand in typed entries.
         planet.add_to_staging_yard(item)
 
-    def pop_staging_item(self, planet: "Planet", index: int = 0) -> Any:
-        return planet.remove_from_staging_yard(index)
+    def pop_staging_item(
+        self,
+        planet: "Planet",
+        index: int = 0,
+    ) -> "CarriedVehicle | DropPod | None":
+        # PROJ-450 Phase 3: route through ``pop_staging_yard_typed`` so
+        # the return is always a typed entry (or None on out-of-range).
+        return planet.pop_staging_yard_typed(index)
 
     # --- Construction queue ---
     def append_construction_item(self, planet: "Planet", item: Any) -> None:

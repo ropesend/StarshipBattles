@@ -11,6 +11,8 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from game.core.hex_math import HexCoord
+from game.strategy.data.bay_inventory import DropPod
+from game.strategy.data.carried_vehicle import CarriedVehicle
 from game.strategy.data.deployed_group import FighterWing, SatelliteConstellation
 from game.strategy.data.ship_instance import ShipInstance
 from game.strategy.engine.issuer_adapter import PlanetStagingYardIssuerAdapter
@@ -49,14 +51,26 @@ class _StubPlanet:
     def add_order(self, order) -> None:
         self.orders.append(order)
 
-    def add_to_staging_yard(self, item: dict) -> bool:
-        item_mass = item.get("mass", 0.0)
+    def add_to_staging_yard(self, item) -> bool:
+        # PROJ-450 Phase 1: mirror Planet.add_to_staging_yard's typed
+        # normalisation — accept dict / CarriedVehicle / DropPod and
+        # store as a dict on the legacy substrate.
+        if isinstance(item, DropPod):
+            item_dict = dict(item.payload)
+            item_dict["design_id"] = item.design_id
+            item_dict["design_data"] = item.design_data
+            item_dict["mass"] = float(item.mass)
+        elif isinstance(item, CarriedVehicle):
+            item_dict = item.to_dict()
+        else:
+            item_dict = item
+        item_mass = item_dict.get("mass", 0.0)
         if self.max_staging_mass > 0 and (
             sum(i.get("mass", 0.0) for i in self.staging_yard) + item_mass
             > self.max_staging_mass
         ):
             return False
-        self.staging_yard.append(item)
+        self.staging_yard.append(item_dict)
         return True
 
 

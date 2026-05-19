@@ -279,16 +279,35 @@ def format_planet_info(
         # rather than in a separate side column. Mirrors the complexes
         # rhythm: `- Mk1 Mine x3 (Staged)`. Empty / missing staging yard
         # produces no header — the inline rhythm doesn't need a placeholder
-        # to fill column space the way the old side column did. Defensive
-        # `isinstance(..., list)` check so legacy planet mocks (Mock()
-        # auto-creating attrs) and DTO fallbacks don't crash the renderer.
+        # to fill column space the way the old side column did.
+        #
+        # PROJ-450 Phase 3: ``Planet.staging_yard`` is now a typed
+        # read-only ``tuple[CarriedVehicle | DropPod, ...]`` (Task 3.4).
+        # The reader uses a truthy check (NOT ``isinstance(..., list)``)
+        # so the tuple return doesn't silently no-op. The ``dict``
+        # branch is retained for backward compatibility with mock
+        # fixtures that inject raw dicts (Mock() auto-attributes etc).
+        from game.strategy.data.carried_vehicle import CarriedVehicle
+        from game.strategy.data.bay_inventory import DropPod
         staging_yard = getattr(planet, "staging_yard", None)
-        if isinstance(staging_yard, list) and staging_yard:
+        if isinstance(staging_yard, (list, tuple)) and staging_yard:
             group_counts: dict[tuple, int] = {}
             for item in staging_yard:
-                if not isinstance(item, dict):
+                if isinstance(item, CarriedVehicle):
+                    design_data = item.design_data or {}
+                    name = design_data.get("name", item.design_id)
+                    vtype = item.vehicle_type
+                elif isinstance(item, DropPod):
+                    name = item.payload.get("name", "Unknown")
+                    vtype = item.payload.get("vehicle_type", "drop_pod")
+                elif isinstance(item, dict):
+                    # Tolerance for legacy mocks (PROJ-450 Phase 3
+                    # retained behaviour).
+                    name = item.get("name", "Unknown")
+                    vtype = item.get("vehicle_type", "unknown")
+                else:
                     continue
-                key = (item.get("name", "Unknown"), item.get("vehicle_type", "unknown"))
+                key = (name, vtype)
                 group_counts[key] = group_counts.get(key, 0) + 1
             if group_counts:
                 text += "<br><b>Staged Units:</b><br>"

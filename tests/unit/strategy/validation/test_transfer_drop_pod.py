@@ -143,3 +143,63 @@ class TestDropPodTransferValidation:
             skip_location_check=True
         )
         assert result.is_valid
+
+
+class TestDropPodTransferAgainstRealPlanet:
+    """PROJ-450 codex-audit regression: TransferValidator must accept
+    the tuple returned by the real Planet.staging_yard property, not
+    just the list returned by MagicMock fixtures.
+
+    Pre-fix: ``_validate_load`` did ``if not isinstance(staging, list):
+    staging = []``. The real ``Planet.staging_yard`` is a typed
+    read-only tuple (PROJ-450 Phase 3), so the isinstance check rejected
+    it and planets with pods validated as empty.
+    """
+
+    def test_drop_pod_load_accepts_tuple_from_real_planet(self):
+        """A real Planet has staging_yard as a tuple, not a list. Validator
+        must accept it and detect the pod inside."""
+        from game.core.hex_math import HexCoord
+        from game.strategy.data.bay_inventory import DropPod
+        from game.strategy.data.planet import Planet, PlanetType
+
+        real_planet = Planet(
+            name="RealPlanet",
+            location=HexCoord(0, 0),
+            orbit_distance=3,
+            mass=5.97e24,
+            radius=6.371e6,
+            surface_area=5.1e14,
+            density=5514.0,
+            surface_gravity=9.81,
+            surface_pressure=101325.0,
+            surface_temperature=288.0,
+            surface_water=0.71,
+            tectonic_activity=0.6,
+            magnetic_field=1.0,
+            planet_type=PlanetType.CONTINENTAL,
+            owner_id=0,
+        )
+        real_planet.add_to_staging_yard(
+            DropPod(
+                design_id="colony_pod",
+                design_data={},
+                mass=500.0,
+                payload={"name": "Colony Pod", "vehicle_type": "drop_pod"},
+            )
+        )
+        # Sanity: the property really does return a tuple.
+        assert isinstance(real_planet.staging_yard, tuple)
+        assert len(real_planet.staging_yard) == 1
+
+        fleet = _make_fleet(pod_capacity=2000.0)
+        galaxy = _make_galaxy(fleet, real_planet)
+
+        result = TransferValidator.validate(
+            galaxy, fleet, real_planet, "drop_pod", "load", 1,
+            species_id="Colony Pod", skip_location_check=True,
+        )
+        assert result.is_valid, (
+            f"Validator must accept the tuple from real Planet.staging_yard; "
+            f"got: {result.message}"
+        )

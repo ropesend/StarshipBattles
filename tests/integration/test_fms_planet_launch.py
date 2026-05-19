@@ -11,6 +11,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from game.core.hex_math import HexCoord
+from game.strategy.data.carried_vehicle import CarriedVehicle
 from game.strategy.engine.issuer_adapter import PlanetStagingYardIssuerAdapter
 from game.strategy.engine.order_handlers.launch_fighters import (
     LaunchFightersOrderHandler,
@@ -25,34 +26,38 @@ from game.strategy.engine.order_handlers.launch_satellites import (
 # ---------------------------------------------------------------------------
 
 
-def _fighter_dict(design_id: str = "fighter_alpha", hp: int = 80, mass: float = 20.0) -> dict:
-    return {
-        "design_id": design_id,
-        "design_data": {
+def _fighter_typed(
+    design_id: str = "fighter_alpha", hp: int = 80, mass: float = 20.0
+) -> CarriedVehicle:
+    return CarriedVehicle(
+        design_id=design_id,
+        design_data={
             "name": design_id,
             "ship_class": "Fighter (Small)",
             "vehicle_class": "Fighter (Small)",
             "vehicle_type": "Fighter",
         },
-        "vehicle_type": "fighter",
-        "mass": mass,
-        "current_hp": hp,
-    }
+        vehicle_type="fighter",
+        mass=mass,
+        current_hp=hp,
+    )
 
 
-def _satellite_dict(design_id: str = "sat_alpha", hp: int = 60, mass: float = 15.0) -> dict:
-    return {
-        "design_id": design_id,
-        "design_data": {
+def _satellite_typed(
+    design_id: str = "sat_alpha", hp: int = 60, mass: float = 15.0
+) -> CarriedVehicle:
+    return CarriedVehicle(
+        design_id=design_id,
+        design_data={
             "name": design_id,
             "ship_class": "Satellite (Small)",
             "vehicle_class": "Satellite (Small)",
             "vehicle_type": "Satellite",
         },
-        "vehicle_type": "satellite",
-        "mass": mass,
-        "current_hp": hp,
-    }
+        vehicle_type="satellite",
+        mass=mass,
+        current_hp=hp,
+    )
 
 
 class _StubPlanet:
@@ -93,15 +98,31 @@ class _StubPlanet:
     def add_order(self, order) -> None:
         self.orders.append(order)
 
-    def add_to_staging_yard(self, item: dict) -> bool:
-        item_mass = item.get("mass", 0.0)
+    def add_to_staging_yard(self, item) -> bool:
+        # PROJ-450 Phase 4: production substrate is typed. Mass access
+        # uses attribute lookup for CarriedVehicle/DropPod, with a dict
+        # fallback for any legacy callers.
+        if isinstance(item, CarriedVehicle):
+            item_mass = float(item.mass)
+        elif isinstance(item, dict):
+            item_mass = float(item.get("mass", 0.0))
+        else:
+            item_mass = float(getattr(item, "mass", 0.0))
         if self.max_staging_mass > 0 and (
-            sum(i.get("mass", 0.0) for i in self.staging_yard) + item_mass
+            sum(_item_mass(i) for i in self.staging_yard) + item_mass
             > self.max_staging_mass
         ):
             return False
         self.staging_yard.append(item)
         return True
+
+
+def _item_mass(item) -> float:
+    if isinstance(item, CarriedVehicle):
+        return float(item.mass)
+    if isinstance(item, dict):
+        return float(item.get("mass", 0.0))
+    return float(getattr(item, "mass", 0.0))
 
 
 def _empire_with(planet: _StubPlanet) -> SimpleNamespace:
@@ -129,7 +150,8 @@ def test_planet_issued_launch_fighters_creates_fighter_group() -> None:
 
     hex_c = HexCoord(2, 3)
     planet = _StubPlanet(planet_id=7, owner_id=42, location=hex_c)
-    planet.staging_yard.extend(_fighter_dict(hp=80 - i * 5) for i in range(3))
+    for i in range(3):
+        planet.add_to_staging_yard(_fighter_typed(hp=80 - i * 5))
     empire = _empire_with(planet)
     galaxy = SimpleNamespace(current_turn=1)
 
@@ -165,7 +187,8 @@ def test_planet_issued_launch_satellites_creates_satellite_group() -> None:
 
     hex_c = HexCoord(1, 1)
     planet = _StubPlanet(planet_id=8, owner_id=12, location=hex_c)
-    planet.staging_yard.extend(_satellite_dict() for _ in range(2))
+    for _ in range(2):
+        planet.add_to_staging_yard(_satellite_typed())
     empire = _empire_with(planet)
     galaxy = SimpleNamespace(current_turn=1)
 
@@ -200,7 +223,8 @@ def test_planet_launch_rejects_when_staging_yard_insufficient() -> None:
 
     hex_c = HexCoord(0, 0)
     planet = _StubPlanet(planet_id=9, owner_id=3, location=hex_c)
-    planet.staging_yard.extend(_fighter_dict() for _ in range(2))
+    for _ in range(2):
+        planet.add_to_staging_yard(_fighter_typed())
     empire = _empire_with(planet)
     galaxy = SimpleNamespace(current_turn=1)
 

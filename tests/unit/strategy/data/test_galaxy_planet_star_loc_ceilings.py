@@ -31,7 +31,22 @@ GALAXY_LOC_CEILING = 350  # Phase 4 final: tightened after pathfinding/intercept
 # protocol satisfied by both Planet and Fleet. The growth is the
 # protocol-conformance surface, not bloat; planet.py extraction is
 # still on the Phase 6 Codex-consult question.
-PLANET_LOC_CEILING = 425
+# PROJ-450 Phase 1: raised from 425 to 485 — Phase 1 moved the 3 dict ↔
+# typed staging-yard helpers (``_is_carried_vehicle_dict`` /
+# ``_pod_from_dict`` / ``_staging_yard_carried_vehicle``) IN from
+# ``transfer_branches.py``, widened ``add_to_staging_yard`` to accept
+# typed inputs, and added ``pop_staging_yard_typed``. The growth is the
+# centralised conversion surface on the Planet boundary, not bloat;
+# Phase 2 widens the substrate type itself.
+# PROJ-450 Phase 3 codex-audit: reclaimed headroom. Phase 2 raised the
+# ceiling to 525 to absorb the substrate-widening surface; Phase 3
+# replaced the dict-projection bridge with a one-line typed read-only
+# property, so the file is now 504 LOC. Ceiling reset to 520 (≈16 LOC
+# headroom for incremental edits without thrash). The file remains
+# slightly above the 500 project convention but the headroom-vs-thrash
+# trade-off favours leaving it at 504+ with a tight ceiling rather than
+# forcing a sub-500 split that would just extract docstrings.
+PLANET_LOC_CEILING = 520
 STARS_LOC_CEILING = 280  # Phase 1: tightened from 770 after Spectrum/StarGenerator extraction.
 
 
@@ -71,7 +86,11 @@ SERVICE_CEILINGS = {
     # PROJ-443 Phase 3a: raised from 200 to 210 to reflect 2-LOC drift since
     # PROJ-372 Phase 5 close. Trivial overshoot; phase 6 Codex consult may
     # decide whether to require tightening back.
-    "strategy/data/galaxy_protocols.py": 210,
+    # PROJ-450 Phase 2: raised from 210 to 230 — Phase 2 tightened
+    # IStagingYardHolder.add_to_staging_yard / remove_from_staging_yard
+    # signatures to the typed union + added per-method docstrings
+    # documenting the typed substrate.
+    "strategy/data/galaxy_protocols.py": 230,
     "strategy/data/spectrum.py": 80,
     "core/spectrum_math.py": 200,
     "strategy/generation/star_generator.py": 500,

@@ -5,7 +5,7 @@
 > 2. Sharded suite green
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Depends on:** phase_3 (typed substrate + typed write services + UI reader migration complete)
 **Objective:** Migrate the 10 direct `planet.staging_yard.append(dict_literal)` / `.extend(...)` / `.clear()` mutations in the 4 integration test files at the `tests/integration/` root. Either construct typed instances directly or replace direct list mutation with `planet.add_to_staging_yard(typed_instance)` calls.
 
@@ -21,8 +21,8 @@
 **File:** `tests/integration/test_fms_planet_recovery.py`
 **Tests:** `pytest tests/integration/test_fms_planet_recovery.py -q`
 
-- [ ] Locate the `.append(item)` at line 59. Identify what dict shape is being constructed (e.g. `{"name": ..., "vehicle_type": "fighter", "design_id": ..., "mass": ...}`)
-- [ ] Replace with typed construction:
+- [x] Locate the `.append(item)` at line 59. Identify what dict shape is being constructed (e.g. `{"name": ..., "vehicle_type": "fighter", "design_id": ..., "mass": ...}`)
+- [x] Replace with typed construction:
   ```python
   # OLD:
   planet.staging_yard.append({
@@ -39,7 +39,7 @@
       mass=10.0,
   ))
   ```
-- [ ] Run focused test; verify green
+- [x] Run focused test; verify green
 
 **Why use `add_to_staging_yard` instead of direct list mutation?** It exercises the public API and the `max_staging_mass` invariant — closer to how production code paths behave.
 
@@ -47,8 +47,8 @@
 **File:** `tests/integration/test_fms_planet_lay_mines.py`
 **Tests:** `pytest tests/integration/test_fms_planet_lay_mines.py -q`
 
-- [ ] Locate each of the 4 mutation sites at lines 82, 139, 155, 171
-- [ ] Migrate each — typical shape:
+- [x] Locate each of the 4 mutation sites at lines 82, 139, 155, 171
+- [x] Migrate each — typical shape:
   ```python
   # OLD:
   planet.staging_yard.append(_mine_dict())
@@ -60,15 +60,15 @@
       mass=5.0,
   ))
   ```
-- [ ] If `_mine_dict()` is a helper used in multiple places, refactor it to `_mine_typed() -> CarriedVehicle` and update all callers
-- [ ] Run focused test
+- [x] If `_mine_dict()` is a helper used in multiple places, refactor it to `_mine_typed() -> CarriedVehicle` and update all callers
+- [x] Run focused test
 
 ### Task 4.3: Migrate `test_fms_planet_launch.py:92, 121, 157, 192` [Medium]
 **File:** `tests/integration/test_fms_planet_launch.py`
 **Tests:** `pytest tests/integration/test_fms_planet_launch.py -q`
 
-- [ ] Locate each of the 4 mutation sites
-- [ ] Migrate `.append`/`.extend` calls; typical pattern (per Stage 3 preflight):
+- [x] Locate each of the 4 mutation sites
+- [x] Migrate `.append`/`.extend` calls; typical pattern (per Stage 3 preflight):
   ```python
   # OLD:
   planet.staging_yard.extend(_fighter_dict(hp=80 - i * 5) for i in range(3))
@@ -81,31 +81,31 @@
           mass=10.0,
       ))
   ```
-- [ ] Run focused test
+- [x] Run focused test
 
 ### Task 4.4: Migrate `test_fms_a_e2e.py:305` [Simple]
 **File:** `tests/integration/test_fms_a_e2e.py`
 **Tests:** `pytest tests/integration/test_fms_a_e2e.py -q`
 
-- [ ] The mutation at line 305 is `.clear()` (per Stage 3 preflight §1.2 table). `.clear()` works on both dict-typed and object-typed lists — it just empties the list. Verify the call site still does what the test intends.
-- [ ] If the test asserts post-clear behavior (e.g. "after clear, planet has empty staging yard"), the assertion may still work; verify by running the focused test
-- [ ] Per Stage 3 preflight, this is the most innocuous of the 10 sites
+- [x] The mutation at line 305 is `.clear()` (per Stage 3 preflight §1.2 table). `.clear()` works on both dict-typed and object-typed lists — it just empties the list. Verify the call site still does what the test intends.
+- [x] If the test asserts post-clear behavior (e.g. "after clear, planet has empty staging yard"), the assertion may still work; verify by running the focused test
+- [x] Per Stage 3 preflight, this is the most innocuous of the 10 sites
 
 ### Task 4.5: Run all integration tests + commit [Medium]
 **Tests:** `pytest tests/integration/test_fms_planet_*.py tests/integration/test_fms_a_e2e.py -n 4 -q`
 
-- [ ] All 4 integration test files green
-- [ ] Sharded suite green
-- [ ] Commit message: `PROJ-450 Phase 4: migrate 10 direct staging-yard mutations in integration tests to typed inputs via public API`
+- [x] All 4 integration test files green
+- [x] Sharded suite green
+- [x] Commit message: `PROJ-450 Phase 4: migrate 10 direct staging-yard mutations in integration tests to typed inputs via public API`
 
 ---
 
 ## Phase Completion Checklist
-- [ ] All 10 direct `.append`/`.extend`/`.clear()` sites migrated
-- [ ] Helper functions (`_mine_dict`, `_fighter_dict`, etc.) refactored to typed equivalents where appropriate
-- [ ] All 4 integration test files green via direct invocation
-- [ ] Sharded suite green
-- [ ] Plan.md Quick Status → Complete; Current State updated
+- [x] All 10 direct `.append`/`.extend`/`.clear()` sites migrated
+- [x] Helper functions (`_mine_dict`, `_fighter_dict`, etc.) refactored to typed equivalents where appropriate
+- [x] All 4 integration test files green via direct invocation
+- [x] Sharded suite green
+- [x] Plan.md Quick Status → Complete; Current State updated
 
 ## Notes / Risks / Coordination Touchpoints
 - **`tests/integration/test_fms_*` was unowned in PROJ-444..447.** Codex r4 redesign explicitly assigns this cluster to PROJ-450. The Stage 3 preflight §2.2 documented why: it sits between bucket-A (data/facade), bucket-B (engine), and bucket-C (UI).

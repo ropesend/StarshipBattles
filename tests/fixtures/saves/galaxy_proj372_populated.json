@@ -1169,9 +1169,12 @@
             },
             "staging_yard": [
               {
+                "design_data": {},
                 "design_id": "test_ship",
                 "mass": 100.0,
-                "ready_at_turn": 5
+                "payload": {
+                  "ready_at_turn": 5
+                }
               }
             ],
             "stockpile": {

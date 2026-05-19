@@ -360,7 +360,9 @@ class PlanetStagingYardIssuerAdapter:
         return appended
 
     def append_recovered(self, vehicle: CarriedVehicle) -> bool:
-        return bool(self._planet.add_to_staging_yard(vehicle.to_dict()))
+        # PROJ-450 Phase 1: pass the typed CarriedVehicle directly;
+        # Planet normalises to dict internally.
+        return bool(self._planet.add_to_staging_yard(vehicle))
 
 
 __all__ = [

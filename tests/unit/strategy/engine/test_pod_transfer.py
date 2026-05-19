@@ -46,12 +46,35 @@ def _make_planet(staging_items=None):
         return None
     planet.remove_from_staging_yard = remove_from_staging_yard
 
+    # PROJ-450 Phase 1: ``_dispatch_drop_pod_load`` pops via the typed
+    # API now; mirror the Planet behaviour by popping the raw dict and
+    # promoting it to a DropPod.
+    def pop_staging_yard_typed(index):
+        raw = remove_from_staging_yard(index)
+        if raw is None:
+            return None
+        return _pod_dict_to_typed(raw)
+    planet.pop_staging_yard_typed = pop_staging_yard_typed
+
     def add_to_staging_yard(item):
-        mass = item.get('mass', 0.0)
+        # PROJ-450 Phase 1: accepts dict or typed DropPod / CarriedVehicle.
+        # The Planet normalises typed inputs to the legacy dict substrate;
+        # the mock mirrors that flattening here so existing dict assertions
+        # in tests keep working.
+        if isinstance(item, DropPod):
+            item_dict = dict(item.payload)
+            item_dict["design_id"] = item.design_id
+            item_dict["design_data"] = item.design_data
+            item_dict["mass"] = float(item.mass)
+        elif hasattr(item, "to_dict") and not isinstance(item, dict):
+            item_dict = item.to_dict()
+        else:
+            item_dict = item
+        mass = item_dict.get('mass', 0.0)
         current = sum(i.get('mass', 0.0) for i in planet.staging_yard)
         if planet.max_staging_mass > 0 and current + mass > planet.max_staging_mass:
             return False
-        planet.staging_yard.append(item)
+        planet.staging_yard.append(item_dict)
         return True
     planet.add_to_staging_yard = add_to_staging_yard
 

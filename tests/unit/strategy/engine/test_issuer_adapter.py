@@ -261,7 +261,10 @@ def test_planet_adapter_append_recovered_via_to_dict():
     )
     assert a.append_recovered(cv) is True
     assert len(p.staging_yard) == 1
-    assert p.staging_yard[0]["design_id"] == "scout_fighter"
+    # PROJ-450 Phase 3: staging_yard hands out typed entries directly.
+    stored = p.staging_yard[0]
+    assert isinstance(stored, CarriedVehicle)
+    assert stored.design_id == "scout_fighter"
 
 
 def test_planet_adapter_append_recovered_respects_cap():

@@ -401,9 +401,10 @@ def test_spawn_to_staging_yard_uses_design_data_from_item_when_present():
         spawner._spawn_to_staging_yard(planet, "pod", item, _empire())
 
     mock_load.assert_not_called()
-    # Inline name flowed through to staging item
+    # PROJ-450 Phase 2: drop_pod routes through typed DropPod; the
+    # inline ``name`` lands in :attr:`DropPod.payload`.
     staged = planet.add_to_staging_yard.call_args[0][0]
-    assert staged["name"] == "InlinePod"
+    assert staged.payload["name"] == "InlinePod"
 
 
 def test_spawn_to_staging_yard_reaches_into_simulation_for_mass_calculation():
@@ -431,9 +432,9 @@ def test_spawn_to_staging_yard_reaches_into_simulation_for_mass_calculation():
     # — design_data dict + registries instance — so a future signature
     # change registers as a test failure.
     mock_calc.assert_called_once_with({"name": "TestPod"}, spawner._registries)
-    # The mass landed on the staging item.
+    # PROJ-450 Phase 2: the mass landed on the typed staging entry.
     staged = planet.add_to_staging_yard.call_args[0][0]
-    assert staged["mass"] == 4200.0
+    assert staged.mass == 4200.0
 
 
 def test_production_spawner_requires_registries():

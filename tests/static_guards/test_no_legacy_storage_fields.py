@@ -139,6 +139,73 @@ def test_planet_has_no_staging_yard_dataclass_field() -> None:
     )
 
 
+def test_planet_staging_yard_substrate_is_typed_not_dict() -> None:
+    """``Planet._staging_yard`` MUST hold typed ``CarriedVehicle | DropPod``
+    entries only; dict entries are forbidden.
+
+    PROJ-450 Phase 5 type-pin guard. The substrate was widened from
+    ``List[Dict[str, Any]]`` to ``List[CarriedVehicle | DropPod]``.
+    The ``add_to_staging_yard`` method normalises dict inputs to
+    typed before appending, so any future regression that re-introduces
+    a raw dict (via ``planet._staging_yard.append(legacy_dict)`` or
+    similar back-door) is caught here.
+
+    The public ``Planet.staging_yard`` property returns
+    ``tuple[CarriedVehicle | DropPod, ...]``; this guard pins the
+    underlying storage shape.
+    """
+    from game.core.hex_math import HexCoord
+    from game.strategy.data.bay_inventory import DropPod
+    from game.strategy.data.carried_vehicle import CarriedVehicle
+    from game.strategy.data.planet import Planet, PlanetType
+
+    planet = Planet(
+        name="GuardPlanet",
+        location=HexCoord(0, 0),
+        orbit_distance=3,
+        mass=5.97e24,
+        radius=6.371e6,
+        surface_area=5.1e14,
+        density=5514.0,
+        surface_gravity=9.81,
+        surface_pressure=101325.0,
+        surface_temperature=288.0,
+        surface_water=0.71,
+        tectonic_activity=0.6,
+        magnetic_field=1.0,
+        planet_type=PlanetType.CONTINENTAL,
+        owner_id=0,
+    )
+
+    # Add via the public API — dicts and typed inputs both accepted.
+    planet.add_to_staging_yard(
+        CarriedVehicle(
+            design_id="guard_cv",
+            vehicle_type="mine",
+            design_data={"name": "Guard CV"},
+            mass=1.0,
+        )
+    )
+    planet.add_to_staging_yard(
+        {
+            "design_id": "guard_pod",
+            "design_data": {},
+            "mass": 2.0,
+            "payload": {"name": "Guard Pod"},
+        }
+    )
+
+    # The substrate MUST hold typed entries regardless of input shape.
+    types = [type(item).__name__ for item in planet._staging_yard]
+    assert all(
+        isinstance(item, (CarriedVehicle, DropPod))
+        for item in planet._staging_yard
+    ), (
+        f"Planet._staging_yard must hold CarriedVehicle | DropPod "
+        f"entries only (PROJ-450 Phase 5 type-pin guard). Got: {types}"
+    )
+
+
 def _fresh_empire() -> Empire:
     """Construct an Empire with no callers — used by the Phase 5 guard."""
     return Empire(empire_id=1, name="Guard", color=(0, 0, 0))

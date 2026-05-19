@@ -192,16 +192,38 @@ def _planet_stockpile_snapshot(planet: "Planet") -> ContainerSnapshotInfo:
 
 
 def _planet_staging_yard_snapshot(planet: "Planet") -> ContainerSnapshotInfo:
-    items_raw = getattr(planet, "staging_yard", None) or []
+    # PROJ-450 Phase 3: substrate is typed
+    # ``tuple[CarriedVehicle | DropPod, ...]``. Use attribute access for
+    # typed entries; keep a dict fallback for fixtures that inject
+    # ``SimpleNamespace(staging_yard=[{...}, ...])`` raw dicts.
+    from game.strategy.data.bay_inventory import DropPod
+    from game.strategy.data.carried_vehicle import CarriedVehicle
+
+    items_raw = getattr(planet, "staging_yard", None) or ()
     capacity_mass = float(getattr(planet, "max_staging_mass", 0.0) or 0.0)
     if capacity_mass <= 0.0:
         capacity_mass = float("inf")
 
     container = Container(capacity_mass=float("inf"), policy=_ITEM_POLICY)
     for idx, item in enumerate(items_raw):
-        design_id = item.get("design_id") or item.get("name", "unknown")
-        instance_id = item.get("instance_id") or f"staging-{idx}"
-        mass = float(item.get("mass", 0.0))
+        if isinstance(item, CarriedVehicle):
+            design_id = item.design_id or (
+                item.design_data.get("name", "unknown")
+                if item.design_data else "unknown"
+            )
+            instance_id = f"staging-{idx}"
+            mass = float(item.mass)
+        elif isinstance(item, DropPod):
+            design_id = item.design_id or item.payload.get("name", "unknown")
+            instance_id = item.payload.get("instance_id") or f"staging-{idx}"
+            mass = float(item.mass)
+        elif isinstance(item, dict):
+            # Backward-compat: SimpleNamespace fixtures still injecting dicts.
+            design_id = item.get("design_id") or item.get("name", "unknown")
+            instance_id = item.get("instance_id") or f"staging-{idx}"
+            mass = float(item.get("mass", 0.0))
+        else:
+            continue
         container.add(
             ItemContainable(ItemRef(
                 design_id=design_id,

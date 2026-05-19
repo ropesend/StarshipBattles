@@ -57,7 +57,18 @@ class TestSpawnToStagingYardEmpireParam:
         planet.add_to_staging_yard.assert_called_once()
 
     def test_spawn_to_staging_yard_uses_empire_id_for_owner(self):
-        """The staging_item dict should contain owner_id from empire.id."""
+        """The staging entry should land in the planet's staging yard.
+
+        PROJ-450 Phase 2: fighter / mine / satellite vehicle types now
+        spawn as typed :class:`CarriedVehicle` entries (which do not
+        carry ``owner_id``; the owning empire is recovered via the
+        planet that holds the staging yard). For ``drop_pod`` and other
+        types that route through :class:`DropPod`, ``owner_id`` lives
+        in :attr:`DropPod.payload`. This test pins the typed-construction
+        contract for the design-backed CarriedVehicle path.
+        """
+        from game.strategy.data.carried_vehicle import CarriedVehicle
+
         spawner = ProductionSpawner(registries=MagicMock())
         empire = _make_empire(empire_id=99)
         planet = _make_planet()
@@ -66,8 +77,10 @@ class TestSpawnToStagingYardEmpireParam:
 
         spawner._spawn_to_staging_yard(planet, 'fighter_x', item, empire)
 
-        staging_item = planet.add_to_staging_yard.call_args[0][0]
-        assert staging_item['owner_id'] == 99
+        staging_entry = planet.add_to_staging_yard.call_args[0][0]
+        assert isinstance(staging_entry, CarriedVehicle)
+        assert staging_entry.design_id == 'fighter_x'
+        assert staging_entry.vehicle_type == 'fighter'
 
 
 class TestSpawnToStagingYardMassCalculation:
@@ -105,11 +118,12 @@ class TestSpawnToStagingYardMassCalculation:
 
         spawner._spawn_to_staging_yard(planet, 'pod_1', item, empire)
 
-        staging_item = planet.add_to_staging_yard.call_args[0][0]
+        # PROJ-450 Phase 2: typed staging entry (DropPod for drop_pod type).
+        staging_entry = planet.add_to_staging_yard.call_args[0][0]
         # crew_quarters base mass=30, with 0.5 size modifier = 15, plus hull base mass
         # Ship mass includes hull base mass from the vehicle class
-        assert staging_item['mass'] > 0
-        assert staging_item['mass'] == pytest.approx(65.0, abs=1.0)
+        assert staging_entry.mass > 0
+        assert staging_entry.mass == pytest.approx(65.0, abs=1.0)
 
 
 # ---------------------------------------------------------------------------

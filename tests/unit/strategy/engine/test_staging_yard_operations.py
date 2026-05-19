@@ -68,6 +68,15 @@ def _make_planet_with_yard(pods=None):
     planet.remove_from_staging_yard = MagicMock(
         side_effect=lambda i: planet.staging_yard.pop(i) if 0 <= i < len(planet.staging_yard) else None
     )
+
+    # PROJ-450 Phase 1: ``_dispatch_drop_pod_load`` pops via the typed
+    # API. Mirror the Planet behaviour: pop the raw dict and promote.
+    def _pop_typed(i):
+        if not (0 <= i < len(planet.staging_yard)):
+            return None
+        return _pod_dict_to_typed(planet.staging_yard.pop(i))
+    planet.pop_staging_yard_typed = MagicMock(side_effect=_pop_typed)
+
     planet.add_to_staging_yard = MagicMock(return_value=True)
     return planet
 
@@ -189,12 +198,15 @@ class TestUnloadPodToStagingYard:
         result = processor._dispatch_drop_pod_unload(fleet, planet)
 
         assert result == 1
-        # PROJ-431 Phase 1d: pod is flattened back to dict at the
-        # staging-yard boundary so identity is not preserved.
+        # PROJ-450 Phase 1: handler hands the typed ``DropPod`` to the
+        # planet directly; the dict ↔ typed normalisation lives inside
+        # ``Planet.add_to_staging_yard``. Surface the pod identity via
+        # the typed fields.
         assert planet.add_to_staging_yard.call_count == 1
         delivered = planet.add_to_staging_yard.call_args.args[0]
-        assert delivered["name"] == pod["name"]
-        assert delivered["design_id"] == pod["design_id"]
+        assert isinstance(delivered, DropPod)
+        assert delivered.design_id == pod["design_id"]
+        assert delivered.payload["name"] == pod["name"]
         assert len(ship.bay_inventory.pods) == 0
 
     def test_filters_by_pod_name(self, processor):

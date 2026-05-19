@@ -22,6 +22,70 @@ if _TC:
 # line 187, constructor call at line 190.
 from game.strategy.data.colony_species_config import ColonySpeciesConfig
 
+# PROJ-450 Phase 1: dict ↔ typed staging-yard helpers were lifted from
+# ``game/strategy/engine/order_handlers/transfer_branches.py`` into this
+# module so the conversion lives on the Planet boundary. The substrate
+# stays ``List[Dict[str, Any]]`` for Phase 1; Phase 2 widens the type.
+from game.strategy.data.bay_inventory import DropPod
+from game.strategy.data.carried_vehicle import CarriedVehicle, VALID_VEHICLE_TYPES
+
+
+def _is_carried_vehicle_dict(item: Any) -> bool:
+    """Return True iff ``item`` is a staging-yard dict shaped like a
+    :class:`CarriedVehicle` (mine/fighter/satellite). PROJ-431 Phase 1d:
+    explicit dict-shape probe that replaces the legacy runtime
+    ``CarriedVehicle.from_any()`` discriminator at the staging-yard
+    boundary, which still holds dicts.
+    """
+    if isinstance(item, CarriedVehicle):
+        return True
+    if not isinstance(item, dict):
+        return False
+    return str(item.get("vehicle_type", "")).lower() in VALID_VEHICLE_TYPES
+
+
+def _pod_from_dict(item: Any) -> DropPod:
+    """Promote a drop-pod-shaped dict to a typed :class:`DropPod`.
+
+    Two shapes are supported:
+
+    * Save-shape (Phase 2+): ``{design_id, design_data, mass,
+      payload: {...}}`` — matches :meth:`DropPod.to_dict`. The
+      ``payload`` value is used as-is.
+    * Legacy flat shape (pre-Phase-2 staging-yard substrate, fixtures,
+      direct dict callers): any other keys (``name``, ``vehicle_type``,
+      ``owner_id`` etc.) land in :attr:`DropPod.payload`.
+    """
+    if isinstance(item, DropPod):
+        return item
+    if not isinstance(item, dict):
+        return DropPod(design_id="", design_data={}, mass=0.0, payload={})
+    if "payload" in item and isinstance(item["payload"], dict):
+        return DropPod.from_dict(item)
+    return DropPod(
+        design_id=str(item.get("design_id", "")),
+        design_data=dict(item.get("design_data", {})),
+        mass=float(item.get("mass", 0.0)),
+        payload={
+            k: v for k, v in item.items()
+            if k not in {"design_id", "design_data", "mass"}
+        },
+    )
+
+
+def _staging_yard_carried_vehicle(item: Any) -> Optional[CarriedVehicle]:
+    """Promote a staging-yard dict to a typed :class:`CarriedVehicle`
+    when it is shaped like one. Returns ``None`` for drop-pod-shaped
+    entries (which lack a recognised ``vehicle_type``).
+    """
+    if isinstance(item, CarriedVehicle):
+        return item
+    if not isinstance(item, dict):
+        return None
+    if str(item.get("vehicle_type", "")).lower() not in VALID_VEHICLE_TYPES:
+        return None
+    return CarriedVehicle.from_dict(item)
+
 class PlanetType(Enum):
     """
     Broad classification of planetary bodies.
@@ -95,7 +159,10 @@ class Planet:
     # is the longer-arc goal addressed by Phases 5-9.
     _stockpile: Dict[str, float] = field(default_factory=dict)
     _max_stockpile: Dict[str, float] = field(default_factory=dict)
-    _staging_yard: List[Dict[str, Any]] = field(default_factory=list)
+    # PROJ-450 Phase 2: substrate widened from ``List[Dict[str, Any]]``
+    # to ``List[CarriedVehicle | DropPod]``. Save shape on disk stays
+    # dict-shaped via per-entry ``.to_dict()`` in ``planet_to_dict``.
+    _staging_yard: "List[CarriedVehicle | DropPod]" = field(default_factory=list)
     max_staging_mass: float = 0.0
     facilities: List['PlanetaryFacility'] = field(default_factory=list)
     populations: List['SpeciesPopulation'] = field(default_factory=list)
@@ -128,6 +195,25 @@ class Planet:
     _cached_multiplier_turn: int = field(
         default=-1, init=False, repr=False, compare=False,
     )
+
+    def __post_init__(self) -> None:
+        # PROJ-450 Phase 2: when the dataclass is constructed with a
+        # raw dict list (e.g. via ``Planet.from_dict`` -> serde, or via
+        # direct kwarg construction in tests), promote each entry to
+        # the typed substrate so the invariant
+        # ``_staging_yard: List[CarriedVehicle | DropPod]`` holds.
+        if self._staging_yard:
+            normalised: list[CarriedVehicle | DropPod] = []
+            for item in self._staging_yard:
+                if isinstance(item, (CarriedVehicle, DropPod)):
+                    normalised.append(item)
+                    continue
+                cv = _staging_yard_carried_vehicle(item)
+                if cv is not None:
+                    normalised.append(cv)
+                    continue
+                normalised.append(_pod_from_dict(item))
+            self._staging_yard = normalised
 
     def __eq__(self, other):
         if not isinstance(other, Planet):
@@ -241,15 +327,17 @@ class Planet:
         return self._max_stockpile
 
     @property
-    def staging_yard(self) -> List[Dict[str, Any]]:
-        """Read-only view over private staging-yard storage.
+    def staging_yard(self) -> "tuple[CarriedVehicle | DropPod, ...]":
+        """Typed read-only view of the staging-yard substrate.
 
-        Writes must route through ``add_to_staging_yard`` /
-        ``remove_from_staging_yard`` / ``IPlanetMutator``.
-
-        PROJ-450 widens the return type to a typed substrate.
+        PROJ-450 Phase 3 (Option A): replaces the Phase-2 dict-projection
+        bridge with a permanent typed read-only tuple. External readers
+        (UI / facade / DTO) iterate over this property; mutations MUST
+        route through ``add_to_staging_yard`` / ``pop_staging_yard_typed``
+        / ``remove_from_staging_yard``. There is no setter — assigning to
+        ``planet.staging_yard`` raises ``AttributeError``.
         """
-        return self._staging_yard
+        return tuple(self._staging_yard)
 
     # --- IStockpileHolder protocol (PROJ-372) ---
 
@@ -300,22 +388,70 @@ class Planet:
     # --- IStagingYardHolder protocol (PROJ-372) ---
 
     def get_staging_mass(self) -> float:
-        """Total mass of items currently in the staging yard."""
-        return sum(item.get('mass', 0.0) for item in self._staging_yard)
+        """Total mass of items currently in the staging yard.
 
-    def add_to_staging_yard(self, item: Dict[str, Any]) -> bool:
-        """Add an item; return False on insufficient capacity."""
-        item_mass = item.get('mass', 0.0)
+        PROJ-450 Phase 2: substrate holds typed entries; mass attribute
+        access replaces the prior ``.get('mass', 0.0)`` dict-shape read.
+        Defensive ``getattr`` keeps the helper resilient to a dict
+        slipping in via direct ``_staging_yard`` assignment.
+        """
+        return sum(
+            (item.get('mass', 0.0) if isinstance(item, dict)
+             else getattr(item, 'mass', 0.0))
+            for item in self._staging_yard
+        )
+
+    def add_to_staging_yard(
+        self, item: "Dict[str, Any] | CarriedVehicle | DropPod"
+    ) -> bool:
+        """Add an item; return False on insufficient capacity.
+
+        PROJ-450 Phase 2: substrate is typed
+        ``List[CarriedVehicle | DropPod]``. Dict inputs (save-load,
+        rollback paths) are promoted to typed entries BEFORE append.
+        Typed inputs land directly.
+        """
+        if isinstance(item, dict):
+            cv = _staging_yard_carried_vehicle(item)
+            typed_item: "CarriedVehicle | DropPod" = (
+                cv if cv is not None else _pod_from_dict(item)
+            )
+        else:
+            typed_item = item
+        item_mass = getattr(typed_item, 'mass', 0.0)
         if self.max_staging_mass > 0 and self.get_staging_mass() + item_mass > self.max_staging_mass:
             return False
-        self._staging_yard.append(item)
+        self._staging_yard.append(typed_item)
         return True
 
-    def remove_from_staging_yard(self, index: int) -> Optional[Dict[str, Any]]:
-        """Remove and return the item at `index`, or None if out of range."""
+    def remove_from_staging_yard(
+        self, index: int
+    ) -> "CarriedVehicle | DropPod | None":
+        """Remove and return the item at ``index``, or None if out of range.
+
+        PROJ-450 Phase 2: returns the typed entry directly. The
+        substrate is now typed, so no dict promotion is required.
+        """
         if 0 <= index < len(self._staging_yard):
             return self._staging_yard.pop(index)
         return None
+
+    def pop_staging_yard_typed(
+        self, index: int
+    ) -> "CarriedVehicle | DropPod | None":
+        """Pop and return the item at ``index`` as a typed
+        :class:`CarriedVehicle` or :class:`DropPod`.
+
+        PROJ-450 Phase 2: the substrate is typed, so this is a thin
+        alias over :meth:`remove_from_staging_yard`. Defensive: if a
+        dict slipped into the substrate via direct assignment, promote
+        on the way out via the same helpers ``__post_init__`` uses.
+        """
+        raw = self.remove_from_staging_yard(index)
+        if raw is None or isinstance(raw, (CarriedVehicle, DropPod)):
+            return raw
+        cv = _staging_yard_carried_vehicle(raw)
+        return cv if cv is not None else _pod_from_dict(raw)
 
     def can_build_type(self, vehicle_type: str) -> bool:
         """Check if this planet can build the given vehicle type.

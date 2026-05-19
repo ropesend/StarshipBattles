@@ -227,13 +227,10 @@ class TestPlanetStagingYardRoundtrip:
         )
         ok = planet.add_to_staging_yard(cv.to_dict())
         assert ok
-        # Round-trip through Planet.staging_yard -> CarriedVehicle.
-        # PROJ-431 Phase 1f: from_any deleted; the planet staging yard
-        # remains on the legacy dict shape, so callers reconstruct typed
-        # entries via an explicit shape probe + from_dict.
+        # PROJ-450 Phase 3: dict input is promoted to a typed
+        # ``CarriedVehicle`` on the way in; the public ``staging_yard``
+        # property hands out the typed entry directly.
         item = planet.staging_yard[0]
-        assert isinstance(item, dict)
-        assert item.get("vehicle_type") == "mine"
-        cv2 = CarriedVehicle.from_dict(item)
-        assert cv2.vehicle_type == "mine"
-        assert cv2.current_hp == 4
+        assert isinstance(item, CarriedVehicle)
+        assert item.vehicle_type == "mine"
+        assert item.current_hp == 4

@@ -24,67 +24,23 @@ Branch numbering matches the docstring header in `transfer.py`:
 """
 from __future__ import annotations
 
-from typing import Any, List, Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
 import logging
 
 from game.strategy.data.bay_inventory import BayInventory, DropPod
-from game.strategy.data.carried_vehicle import CarriedVehicle, VALID_VEHICLE_TYPES
+from game.strategy.data.carried_vehicle import CarriedVehicle
 from game.strategy.data.fleet import Fleet
+# PROJ-450 Phase 1: the dict ↔ typed staging-yard helpers moved into
+# ``game/strategy/data/planet.py`` (private module-level). The peek
+# probe is the only one needed here — the dict→DropPod / dict→CV
+# promotions now live behind ``planet.pop_staging_yard_typed``.
+from game.strategy.data.planet import _is_carried_vehicle_dict
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
     from game.strategy.data.planet import Planet
-
-
-def _is_carried_vehicle_dict(item: Any) -> bool:
-    """Return True iff ``item`` is a staging-yard dict shaped like a
-    :class:`CarriedVehicle` (mine/fighter/satellite). PROJ-431 Phase 1d:
-    explicit dict-shape probe that replaces the legacy runtime
-    ``CarriedVehicle.from_any()`` discriminator at the staging-yard
-    boundary, which still holds dicts.
-    """
-    if isinstance(item, CarriedVehicle):
-        return True
-    if not isinstance(item, dict):
-        return False
-    return str(item.get("vehicle_type", "")).lower() in VALID_VEHICLE_TYPES
-
-
-def _pod_from_dict(item: Any) -> DropPod:
-    """Promote a legacy drop-pod-shaped dict to a typed
-    :class:`DropPod`. Mirrors the shape ``ShipInstance.bay_inventory``
-    uses when projecting the legacy ``carried_items`` substrate.
-    Extra dict keys land in :attr:`DropPod.payload`.
-    """
-    if isinstance(item, DropPod):
-        return item
-    if not isinstance(item, dict):
-        return DropPod(design_id="", design_data={}, mass=0.0, payload={})
-    return DropPod(
-        design_id=str(item.get("design_id", "")),
-        design_data=dict(item.get("design_data", {})),
-        mass=float(item.get("mass", 0.0)),
-        payload={
-            k: v for k, v in item.items()
-            if k not in {"design_id", "design_data", "mass"}
-        },
-    )
-
-
-def _staging_yard_carried_vehicle(item: Any) -> Optional[CarriedVehicle]:
-    """Promote a staging-yard dict to a typed :class:`CarriedVehicle`
-    when it is shaped like one. Returns ``None`` for drop-pod-shaped
-    entries (which lack a recognised ``vehicle_type``).
-    """
-    if isinstance(item, CarriedVehicle):
-        return item
-    if not isinstance(item, dict):
-        return None
-    if str(item.get("vehicle_type", "")).lower() not in VALID_VEHICLE_TYPES:
-        return None
-    return CarriedVehicle.from_dict(item)
 
 
 class _TransferDispatchMixin:
@@ -236,12 +192,16 @@ class _TransferDispatchMixin:
                     f"  No ship can carry pod '{item.get('name')}' (mass={pod_mass})"
                 )
                 continue  # No ship has capacity
-            removed = planet.remove_from_staging_yard(i)
-            if removed:
+            # PROJ-450 Phase 1: pop via the typed API; the dict ↔ DropPod
+            # promotion lives inside Planet. The peek+filter above already
+            # rejected CarriedVehicle-shaped entries, so the typed return
+            # is a DropPod here.
+            typed = planet.pop_staging_yard_typed(i)
+            if isinstance(typed, DropPod):
                 # PROJ-431 Phase 1d: typed write-through.
                 current_bay = target_ship.bay_inventory
                 new_pods = list(current_bay.pods)
-                new_pods.append(_pod_from_dict(removed))
+                new_pods.append(typed)
                 target_ship.set_bay_inventory(
                     BayInventory(bay=list(current_bay.bay), pods=new_pods)
                 )
@@ -345,22 +305,36 @@ class _TransferDispatchMixin:
             if loaded >= to_load:
                 break
             item = planet.staging_yard[i]
-            cv = _staging_yard_carried_vehicle(item)
-            if cv is None:
+            # Peek-filter before popping: skip drop-pod-shaped entries
+            # and design_id mismatches without disturbing the substrate.
+            if not _is_carried_vehicle_dict(item):
                 continue
-            if design_id and cv.design_id != design_id:
+            peeked_design_id = (
+                item.design_id if isinstance(item, CarriedVehicle)
+                else str(item.get("design_id", ""))
+            )
+            if design_id and peeked_design_id != design_id:
                 continue
             target_ship = None
             for ship in fleet.ships:
-                if ship._cargo_mgr.can_accept_vehicle(cv):
+                # We need a typed CV for the capacity check; promote the
+                # peeked dict without mutating the substrate.
+                preview_cv = (
+                    item if isinstance(item, CarriedVehicle)
+                    else CarriedVehicle.from_dict(item)
+                )
+                if ship._cargo_mgr.can_accept_vehicle(preview_cv):
                     target_ship = ship
                     break
             if target_ship is None:
                 continue
-            removed = planet.remove_from_staging_yard(i)
-            if removed and target_ship._cargo_mgr.load_vehicle(cv):
+            # PROJ-450 Phase 1: pop via the typed API; the dict ↔ typed
+            # promotion lives inside Planet. The peek above guaranteed
+            # CV shape, so the typed return is a CarriedVehicle here.
+            typed = planet.pop_staging_yard_typed(i)
+            if isinstance(typed, CarriedVehicle) and target_ship._cargo_mgr.load_vehicle(typed):
                 loaded += 1
-            elif removed:
+            elif typed is not None:
                 # Restore: load failed unexpectedly. Route through the
                 # capacity-checked API rather than the raw list to keep
                 # the ``max_staging_mass`` invariant consistent with
@@ -370,12 +344,12 @@ class _TransferDispatchMixin:
                 # would only happen if something else mutated the yard
                 # concurrently, in which case dropping the item is
                 # safer than violating the invariant.
-                if not planet.add_to_staging_yard(removed):
+                if not planet.add_to_staging_yard(typed):
                     logger.warning(
                         "_dispatch_carried_vehicle_load: rollback of %r dropped "
                         "(planet %s staging_yard capacity insufficient even though "
                         "the item was just removed — concurrent mutation suspected)",
-                        removed, getattr(planet, "name", "?"),
+                        typed, getattr(planet, "name", "?"),
                     )
         return loaded
 
@@ -409,7 +383,9 @@ class _TransferDispatchMixin:
                 if design_id and cv.design_id != design_id:
                     continue
                 # add_to_staging_yard returns False if planet capacity exceeded.
-                if planet.add_to_staging_yard(cv.to_dict()):
+                # PROJ-450 Phase 1: pass the typed CarriedVehicle directly;
+                # Planet normalises to dict internally.
+                if planet.add_to_staging_yard(cv):
                     ship._cargo_mgr.unload_vehicle(idx)
                     unloaded += 1
         return unloaded
@@ -426,9 +402,11 @@ class _TransferDispatchMixin:
         PROJ-431 Phase 1d: pods read from ``ship.bay_inventory.pods``
         (typed slot — exclusively drop pods by construction) and the
         consumed pod is removed by rebuilding the bay inventory and
-        writing back via ``ship.set_bay_inventory(...)``. The planet
-        staging yard still consumes legacy dict shape, so the typed
-        ``DropPod`` is flattened to a dict at the boundary.
+        writing back via ``ship.set_bay_inventory(...)``.
+
+        PROJ-450 Phase 1: the typed ``DropPod`` is handed to
+        ``planet.add_to_staging_yard`` directly; the dict-shape
+        normalisation lives inside ``Planet`` now.
         """
         unloaded = 0
         # Count drop-pod entries via the typed slot; CarriedVehicle
@@ -451,13 +429,7 @@ class _TransferDispatchMixin:
                 if pod_name and pod.payload.get("name") != pod_name:
                     kept_pods.append(pod)
                     continue
-                # Flatten the typed pod back to the dict shape the
-                # planet's staging yard still expects.
-                pod_dict = dict(pod.payload)
-                pod_dict["design_id"] = pod.design_id
-                pod_dict["design_data"] = pod.design_data
-                pod_dict["mass"] = pod.mass
-                if planet.add_to_staging_yard(pod_dict):
+                if planet.add_to_staging_yard(pod):
                     unloaded += 1
                     # pod consumed -- do not append to kept_pods
                 else:
