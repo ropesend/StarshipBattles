@@ -40,7 +40,7 @@ def _colony(stockpile: dict, *, name: str = "Colony") -> object:
         has_facilities=False,
         has_population=False,
         name=name,
-        stockpile=dict(stockpile),
+        _stockpile=dict(stockpile),
     )
 
 

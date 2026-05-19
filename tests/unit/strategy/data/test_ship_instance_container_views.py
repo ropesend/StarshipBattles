@@ -27,8 +27,8 @@ def _ship(
         design_id="qs_light_combat_escort",
         owner_id=1,
         name="USS Test",
-        cargo_contents=dict(cargo_contents or {}),
-        consumable_levels=dict(consumable_levels or {}),
+        _cargo_contents=dict(cargo_contents or {}),
+        _consumable_levels=dict(consumable_levels or {}),
     )
 
 

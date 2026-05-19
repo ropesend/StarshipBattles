@@ -28,7 +28,7 @@ class TestPlanetStockpileFields:
         planet = create_test_planet(
             has_facilities=False,
             has_population=False,
-            stockpile={"metals": 500.0, "fuel": 100.0},
+            _stockpile={"metals": 500.0, "fuel": 100.0},
         )
         assert planet.stockpile == {"metals": 500.0, "fuel": 100.0}
 
@@ -37,7 +37,7 @@ class TestPlanetStockpileFields:
         planet = create_test_planet(
             has_facilities=False,
             has_population=False,
-            max_stockpile={"metals": 10000.0},
+            _max_stockpile={"metals": 10000.0},
         )
         assert planet.max_stockpile == {"metals": 10000.0}
 
@@ -57,7 +57,7 @@ class TestAddToStockpile:
         """Adding to existing stockpile accumulates."""
         planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 200.0},
+            _stockpile={"metals": 200.0},
         )
         overflow = planet.add_to_stockpile("metals", 300.0)
 
@@ -68,8 +68,8 @@ class TestAddToStockpile:
         """Adding beyond capacity caps at max and returns overflow."""
         planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 800.0},
-            max_stockpile={"metals": 1000.0},
+            _stockpile={"metals": 800.0},
+            _max_stockpile={"metals": 1000.0},
         )
         overflow = planet.add_to_stockpile("metals", 300.0)
 
@@ -101,7 +101,7 @@ class TestConsumeFromStockpile:
         """Consuming available resources returns True and deducts."""
         planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 500.0},
+            _stockpile={"metals": 500.0},
         )
         result = planet.consume_from_stockpile("metals", 200.0)
 
@@ -112,7 +112,7 @@ class TestConsumeFromStockpile:
         """Consuming more than available returns False with no deduction."""
         planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 100.0},
+            _stockpile={"metals": 100.0},
         )
         result = planet.consume_from_stockpile("metals", 200.0)
 
@@ -130,7 +130,7 @@ class TestConsumeFromStockpile:
         """Consuming exactly available amount succeeds."""
         planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 100.0},
+            _stockpile={"metals": 100.0},
         )
         result = planet.consume_from_stockpile("metals", 100.0)
 
@@ -145,7 +145,7 @@ class TestHasStockpile:
         """Returns True when all costs are available."""
         planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 500.0, "organics": 200.0},
+            _stockpile={"metals": 500.0, "organics": 200.0},
         )
         assert planet.has_stockpile({"metals": 100.0, "organics": 50.0}) is True
 
@@ -153,7 +153,7 @@ class TestHasStockpile:
         """Returns False when any cost exceeds available."""
         planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 50.0, "organics": 200.0},
+            _stockpile={"metals": 50.0, "organics": 200.0},
         )
         assert planet.has_stockpile({"metals": 100.0, "organics": 50.0}) is False
 
@@ -161,7 +161,7 @@ class TestHasStockpile:
         """Returns False when a required resource is not in stockpile."""
         planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 500.0},
+            _stockpile={"metals": 500.0},
         )
         assert planet.has_stockpile({"metals": 100.0, "exotics": 10.0}) is False
 
@@ -174,7 +174,7 @@ class TestHasStockpile:
         """get_stockpile() returns amount for a specific resource."""
         planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 250.0},
+            _stockpile={"metals": 250.0},
         )
         assert planet.get_stockpile("metals") == 250.0
         assert planet.get_stockpile("organics") == 0.0
@@ -187,8 +187,8 @@ class TestStockpileSerialization:
         """Stockpile is included in serialized dict."""
         planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 123.0, "fuel": 45.0},
-            max_stockpile={"metals": 5000.0, "fuel": 1000.0},
+            _stockpile={"metals": 123.0, "fuel": 45.0},
+            _max_stockpile={"metals": 5000.0, "fuel": 1000.0},
         )
         data = planet.to_dict()
 
@@ -199,8 +199,8 @@ class TestStockpileSerialization:
         """Stockpile survives to_dict → from_dict cycle."""
         planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 500.0, "organics": 200.0},
-            max_stockpile={"metals": 10000.0, "organics": 5000.0},
+            _stockpile={"metals": 500.0, "organics": 200.0},
+            _max_stockpile={"metals": 10000.0, "organics": 5000.0},
         )
         data = planet.to_dict()
         restored = Planet.from_dict(data)

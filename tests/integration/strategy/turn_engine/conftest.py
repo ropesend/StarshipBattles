@@ -55,7 +55,7 @@ def create_mock_ship_instance(
         is_derelict=is_derelict,
     )
     if consumable_levels:
-        ship.consumable_levels = consumable_levels.copy()
+        ship._consumable_levels = consumable_levels.copy()
     if component_toggles:
         ship.component_toggles = component_toggles.copy()
     if design_data:

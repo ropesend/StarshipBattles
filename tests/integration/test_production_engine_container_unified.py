@@ -60,7 +60,7 @@ class TestProductionResourceSourceProtocolOnPlanet:
         planet: Planet = create_test_planet(
             has_facilities=False,
             has_population=False,
-            stockpile={"metals": 100.0, "fuel": 20.0},
+            _stockpile={"metals": 100.0, "fuel": 20.0},
         )
         costs = {"metals": 50.0, "fuel": 10.0}
         assert planet.production_has_resources(costs) is True
@@ -69,28 +69,28 @@ class TestProductionResourceSourceProtocolOnPlanet:
     def test_planet_production_has_resources_false_when_short(self):
         planet: Planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 10.0},
+            _stockpile={"metals": 10.0},
         )
         assert planet.production_has_resources({"metals": 50.0}) is False
 
     def test_planet_production_get_resource_matches_get_stockpile(self):
         planet: Planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 42.0},
+            _stockpile={"metals": 42.0},
         )
         assert planet.production_get_resource("metals") == 42.0
         assert planet.production_get_resource("metals") == planet.get_stockpile("metals")
 
     def test_planet_production_get_resource_zero_when_absent(self):
         planet: Planet = create_test_planet(
-            has_facilities=False, has_population=False, stockpile={},
+            has_facilities=False, has_population=False, _stockpile={},
         )
         assert planet.production_get_resource("metals") == 0.0
 
     def test_planet_production_consume_resource_mutates_stockpile(self):
         planet: Planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 100.0},
+            _stockpile={"metals": 100.0},
         )
         ok = planet.production_consume_resource("metals", 30.0)
         assert ok is True
@@ -99,7 +99,7 @@ class TestProductionResourceSourceProtocolOnPlanet:
     def test_planet_production_consume_resource_all_or_nothing(self):
         planet: Planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 10.0},
+            _stockpile={"metals": 10.0},
         )
         ok = planet.production_consume_resource("metals", 50.0)
         assert ok is False
@@ -155,7 +155,7 @@ class TestProductionEngineUsesUnifiedProtocolForPlanet:
     def test_check_affordability_planet(self, engine):
         planet: Planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 100.0},
+            _stockpile={"metals": 100.0},
         )
         assert engine._check_affordability(_empire(), {"metals": 50.0}, planet) is True
         assert engine._check_affordability(_empire(), {"metals": 200.0}, planet) is False
@@ -163,7 +163,7 @@ class TestProductionEngineUsesUnifiedProtocolForPlanet:
     def test_apply_resource_consumption_planet(self, engine):
         planet: Planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 100.0},
+            _stockpile={"metals": 100.0},
         )
         item = {"resources_consumed": {}}
         engine._apply_resource_consumption(
@@ -199,7 +199,7 @@ class TestProductionResourceSourceProtocolConformance:
 
     def test_planet_satisfies_protocol(self):
         planet: Planet = create_test_planet(
-            has_facilities=False, has_population=False, stockpile={},
+            has_facilities=False, has_population=False, _stockpile={},
         )
         assert isinstance(planet, IProductionResourceSource)
 

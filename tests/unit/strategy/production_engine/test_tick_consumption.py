@@ -29,7 +29,7 @@ def _make_empire(resources: dict = None) -> Empire:
         reserve = create_test_planet(
             has_facilities=False, has_population=False,
             name="_starting_reserve",
-            stockpile=dict(resources),
+            _stockpile=dict(resources),
         )
         empire.colonies.append(reserve)
     return empire

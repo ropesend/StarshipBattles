@@ -76,7 +76,7 @@ def _make_empire(resources=None, max_storage=None, empire_id=0):
         reserve = create_test_planet(
             has_facilities=False, has_population=False,
             name="_starting_reserve",
-            stockpile=dict(resources),
+            _stockpile=dict(resources),
         )
         empire.colonies.append(reserve)
     if max_storage:

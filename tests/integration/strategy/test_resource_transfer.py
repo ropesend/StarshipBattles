@@ -104,7 +104,7 @@ class TestResourceLoadFromPlanet:
         """Loading metals transfers from planet.stockpile to fleet cargo."""
         planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 500.0},
+            _stockpile={"metals": 500.0},
         )
 
         ship = _make_cargo_ship(cargo_capacity={"metals": 1000})
@@ -125,7 +125,7 @@ class TestResourceLoadFromPlanet:
         """Loading is capped by planet's available stockpile."""
         planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 50.0},
+            _stockpile={"metals": 50.0},
         )
 
         ship = _make_cargo_ship(cargo_capacity={"metals": 1000})
@@ -144,7 +144,7 @@ class TestResourceLoadFromPlanet:
         """Loading is capped by fleet's available cargo space."""
         planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 1000.0},
+            _stockpile={"metals": 1000.0},
         )
 
         ship = _make_cargo_ship(cargo_capacity={"metals": 100})
@@ -166,8 +166,8 @@ class TestResourceUnloadToPlanet:
         """Unloading metals transfers from fleet cargo to planet.stockpile."""
         planet = create_test_planet(
             has_facilities=False, has_population=False,
-            stockpile={"metals": 100.0},
-            max_stockpile={"metals": 10000.0},
+            _stockpile={"metals": 100.0},
+            _max_stockpile={"metals": 10000.0},
         )
 
         ship = _make_cargo_ship(
@@ -190,7 +190,7 @@ class TestResourceUnloadToPlanet:
         """Amount 0 unloads all available cargo."""
         planet = create_test_planet(
             has_facilities=False, has_population=False,
-            max_stockpile={"fuel": 10000.0},
+            _max_stockpile={"fuel": 10000.0},
         )
 
         ship = _make_cargo_ship(

@@ -17,7 +17,7 @@
 |-------|--------|-----------|
 | 0. Pre-flight audit (rg counts, PROJ-443 Phase 5b carry-over verification) | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Migrate `tests/fixtures/strategy_entities.py` (4 sites; +3-line scope creep in `test_roundtrip_ships.py`) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Sweep direct call sites in tests + rewrite `planet_from_dict_kwargs` | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Sweep direct call sites in tests + rewrite `planet_from_dict_kwargs` | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Delete `_planet_init_with_legacy_kwargs` + 3 Planet @property/@setter pairs | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Delete `_ship_instance_init_with_legacy_kwargs` + 2 ShipInstance @property/@setter pairs | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Drop `IShipInstance.cargo_contents` caveat + tighten `IFacility.consumable_levels` | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -25,9 +25,9 @@
 
 ## Current State
 **Last Updated:** 2026-05-18
-**Active Phase:** Phase 2 (ready to start)
-**Last Action:** Phase 1 complete. `tests/fixtures/strategy_entities.py` lines 318, 320, 425 migrated to private kwargs (line 140 stays public per F-A-012 deferral). Scope crept by 3 lines into `test_roundtrip_ships.py:46/56/62` because the wrapper raises TypeError on duplicate public+private kwargs; decisions.md captures the rationale. Sharded suite 23368/23368 GREEN.
-**Next Action:** Execute Phase 2 — sweep all direct call sites in tests + rewrite `planet_from_dict_kwargs`. Phase 2 sweep set shrinks by 1 file (the 3 Phase-1 absorbed lines).
+**Active Phase:** Phase 3 (ready to start)
+**Last Action:** Phase 2 complete. `planet_serde.planet_from_dict_kwargs` rewritten to emit private kwargs (`_stockpile=`, `_max_stockpile=`, `_staging_yard=`); F-A-025 legacy `data.get("resources", {})` fallback was already gone (verified — no edit needed). 17 test files swept with ~59 kwarg renames total via subagent. ShipInstance side: 7 files (test_ship_instance_container_views, test_capacity_levels, test_convenience_methods, test_serialization, test_ship_instance_bridge, test_ship_instance_serializer, turn_engine/conftest). Planet side: 10 files (test_save_round_trip_phase2, _build_galaxy_fixture, test_resource_transfer, test_empire_resource_aggregation, test_production_engine_fractional_fleet_cost, test_production_engine_container_unified, test_economy_e2e, test_custom_resource_lifecycle, test_empire_resources, test_planet_stockpile, test_tick_consumption). Sharded suite 23368/23368 GREEN. Task 2.4 instrumentation skipped — Phase 3/4 deletion is the strict gate.
+**Next Action:** Execute Phase 3 — delete `_planet_init_with_legacy_kwargs` + 3 Planet @property/@setter pairs; rewrite `planet_to_dict` to read from private fields directly.
 **Blockers:** None.
 **Context for Next Agent:** Audit landed clean PROCEED on both axes. Phase 1 should be a small, focused commit; sharded suite must stay green at 23368 tests after Phase 1.
 

@@ -70,7 +70,7 @@ class TestGetCurrentResource:
             name='Test Ship',
             owner_id=0,
             design_data=design_data,
-            consumable_levels={'fuel': 5000}  # Explicitly stored at full
+            _consumable_levels={'fuel': 5000}  # Explicitly stored at full
         )
 
         assert ship._resource_mgr.get_current_resource('fuel') == 5000
@@ -105,7 +105,7 @@ class TestGetCurrentResource:
             name='Test Ship',
             owner_id=0,
             design_data=design_data,
-            consumable_levels={'fuel': 2500, 'energy': 1000, 'ammo': 500}
+            _consumable_levels={'fuel': 2500, 'energy': 1000, 'ammo': 500}
         )
 
         assert ship._resource_mgr.get_current_resource('fuel') == 2500
@@ -146,7 +146,7 @@ class TestConsumeResource:
             name='Test Ship',
             owner_id=0,
             design_data=design_data,
-            consumable_levels={'fuel': 5000}  # Start at full
+            _consumable_levels={'fuel': 5000}  # Start at full
         )
 
         result = ship._resource_mgr.consume_resource('fuel', 1000)
@@ -206,7 +206,7 @@ class TestConsumeResource:
             name='Test Ship',
             owner_id=0,
             design_data=design_data,
-            consumable_levels={'fuel': 5000}
+            _consumable_levels={'fuel': 5000}
         )
 
         result = ship._resource_mgr.consume_resource('fuel', 0)
@@ -228,7 +228,7 @@ class TestConsumeResource:
             name='Test Ship',
             owner_id=0,
             design_data=design_data,
-            consumable_levels={'fuel': 5000, 'energy': 2000}
+            _consumable_levels={'fuel': 5000, 'energy': 2000}
         )
 
         ship._resource_mgr.consume_resource('fuel', 1000)
@@ -251,7 +251,7 @@ class TestConsumeResource:
             name='Test Ship',
             owner_id=0,
             design_data=design_data,
-            consumable_levels={'glag': 100}
+            _consumable_levels={'glag': 100}
         )
 
         result = ship._resource_mgr.consume_resource('glag', 25)
@@ -273,7 +273,7 @@ class TestConsumeResource:
             name='Test Ship',
             owner_id=0,
             design_data=design_data,
-            consumable_levels={'fuel': 5000}
+            _consumable_levels={'fuel': 5000}
         )
 
         # Start at full

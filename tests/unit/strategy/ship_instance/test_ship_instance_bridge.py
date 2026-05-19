@@ -24,7 +24,7 @@ def ship():
                 max_hp=100.0,
             ),
         },
-        consumable_levels={'fuel': 75.0},
+        _consumable_levels={'fuel': 75.0},
     )
     return s
 
