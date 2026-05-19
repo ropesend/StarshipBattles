@@ -315,9 +315,9 @@ def create_test_ship_instance(
                 component_id="laser_1", instance_index=0, current_hp=5.0,
             ),
         },
-        consumable_levels={"fuel": 80.0, "energy": 50.0},
+        _consumable_levels={"fuel": 80.0, "energy": 50.0},
         component_toggles={"shield_1": True, "cloak_1": False},
-        cargo_contents={"minerals": 10},
+        _cargo_contents={"minerals": 10},
         is_alive=True,
         is_derelict=False,
         experience=3,
@@ -422,7 +422,7 @@ def create_test_empire(
             has_facilities=False,
             has_population=False,
             name="_starting_reserve",
-            stockpile=dict(seed_pool),
+            _stockpile=dict(seed_pool),
         )
         empire.colonies.append(reserve)
     empire.max_storage = overrides.pop("max_storage", {"fuel": 1000.0, "minerals": 1000.0, "energy": 1000.0})

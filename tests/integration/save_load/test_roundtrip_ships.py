@@ -43,7 +43,7 @@ class TestShipInstanceRoundTrip:
         assert restored.design_data == si.design_data
 
     def test_consumable_levels(self):
-        si = create_test_ship_instance(consumable_levels={"fuel": 80.0, "energy": 50.0, "ammo": 30.0})
+        si = create_test_ship_instance(_consumable_levels={"fuel": 80.0, "energy": 50.0, "ammo": 30.0})
         restored = assert_round_trip_fidelity(si, ShipInstance)
         assert restored.consumable_levels == si.consumable_levels
 
@@ -53,13 +53,13 @@ class TestShipInstanceRoundTrip:
         assert restored.component_toggles == si.component_toggles
 
     def test_cargo_contents_populated(self):
-        si = create_test_ship_instance(cargo_contents={"minerals": 10, "fuel_pods": 5})
+        si = create_test_ship_instance(_cargo_contents={"minerals": 10, "fuel_pods": 5})
         restored = assert_round_trip_fidelity(si, ShipInstance)
         assert restored.cargo_contents == si.cargo_contents
 
     def test_cargo_contents_empty_omitted(self):
         """Empty cargo is omitted from serialization."""
-        si = create_test_ship_instance(cargo_contents={})
+        si = create_test_ship_instance(_cargo_contents={})
         d = si.to_dict()
         # Empty cargo may or may not be in dict — from_dict handles both
         restored = ShipInstance.from_dict(d)

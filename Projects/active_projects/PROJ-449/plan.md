@@ -16,7 +16,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 0. Pre-flight audit (rg counts, PROJ-443 Phase 5b carry-over verification) | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. Migrate `tests/fixtures/strategy_entities.py` (4 sites) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Migrate `tests/fixtures/strategy_entities.py` (4 sites; +3-line scope creep in `test_roundtrip_ships.py`) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Sweep direct call sites in tests + rewrite `planet_from_dict_kwargs` | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Delete `_planet_init_with_legacy_kwargs` + 3 Planet @property/@setter pairs | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Delete `_ship_instance_init_with_legacy_kwargs` + 2 ShipInstance @property/@setter pairs | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -25,9 +25,9 @@
 
 ## Current State
 **Last Updated:** 2026-05-18
-**Active Phase:** Phase 1 (ready to start)
-**Last Action:** Phase 0 audit complete. ShipInstance sweep = **8 files** (well below 25-file gate); Planet sweep = **3 files** (well below 15-file gate); production-code = **0 sites**; serde = 2 sites (planned in Phase 2/3); fixture file = 4 sites (planned in Phase 1). Findings written to `findings/phase_0_audit.md`. PROJ-443 5b's 18-file estimate over-counted because F-A-012 deferred PlanetaryFacility (~6 files out of scope) and several MagicMock factories were misclassified as Phase-4 sites.
-**Next Action:** Execute Phase 1 — migrate `tests/fixtures/strategy_entities.py` 4 sites to private kwargs.
+**Active Phase:** Phase 2 (ready to start)
+**Last Action:** Phase 1 complete. `tests/fixtures/strategy_entities.py` lines 318, 320, 425 migrated to private kwargs (line 140 stays public per F-A-012 deferral). Scope crept by 3 lines into `test_roundtrip_ships.py:46/56/62` because the wrapper raises TypeError on duplicate public+private kwargs; decisions.md captures the rationale. Sharded suite 23368/23368 GREEN.
+**Next Action:** Execute Phase 2 — sweep all direct call sites in tests + rewrite `planet_from_dict_kwargs`. Phase 2 sweep set shrinks by 1 file (the 3 Phase-1 absorbed lines).
 **Blockers:** None.
 **Context for Next Agent:** Audit landed clean PROCEED on both axes. Phase 1 should be a small, focused commit; sharded suite must stay green at 23368 tests after Phase 1.
 
