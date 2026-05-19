@@ -250,9 +250,18 @@ class TestPausedFleetYardQueue:
         fleet.production_has_resources = lambda costs: all(
             cargo.get(r, 0.0) >= a for r, a in costs.items()
         )
-        fleet.production_consume_resource = lambda r, a: cargo.__setitem__(
-            r, cargo.get(r, 0.0) - a
-        )
+        # PROJ-451 Phase 3 codex audit: return bool to mirror real
+        # ``Fleet.consume_cargo_resource``. Unreachable on this test
+        # path (paused queue is skipped before consume), but a False/None
+        # return would trip the engine's strict assertion if this fixture
+        # were ever reused unpaused.
+        def _consume(r: str, a: float) -> bool:
+            cur = cargo.get(r, 0.0)
+            if cur < a:
+                return False
+            cargo[r] = cur - a
+            return True
+        fleet.production_consume_resource = _consume
         fleet.production_get_resource = lambda r: cargo.get(r, 0.0)
         empire.fleets = [fleet]
 
