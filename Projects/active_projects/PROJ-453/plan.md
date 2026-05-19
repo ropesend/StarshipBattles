@@ -16,12 +16,13 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Mechanical polish sweep (10 findings, all <30 LOC each) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Codex-audit polish (docstring typo fix) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 1 complete; awaiting end-of-project codex audit
-**Last Action:** Phase 1 complete: 10 mechanical polish findings closed (annotations + dead skip guards + stale docstrings). Sharded suite 23368 passed / 0 failed. `validate_phase.py PROJ-453 1` returned PASSED.
-**Next Action:** Dispatch end-of-project codex audit per group execution protocol §10, then merge to main per §3.
+**Active Phase:** Project complete; ready for end-of-project merge to main
+**Last Action:** Phase 2 closed the single in-scope codex-audit issue (stray `)` in `production_engine.py:80` docstring from Phase 1 Task 1.8). Codex verified all 10 Phase 1 findings closed; two other observations were intentionally out-of-scope per the F-B-011 charter.
+**Next Action:** Merge group-b through PROJ-453 to main per protocol §3.
 **Blockers:** None.
 
 ## Checkpoint Log
