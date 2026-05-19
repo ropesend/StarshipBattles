@@ -407,9 +407,23 @@ def test_load_pod_from_staging_yard_iterates_in_reverse():
     pod_c = {"name": "PodC", "mass": 1.0}
     planet.staging_yard = [pod_a, pod_b, pod_c]
 
-    def _remove(idx):
-        return planet.staging_yard.pop(idx)
-    planet.remove_from_staging_yard = MagicMock(side_effect=_remove)
+    # PROJ-450 Phase 1: _dispatch_drop_pod_load pops via the typed API.
+    from game.strategy.data.bay_inventory import DropPod
+
+    def _pop_typed(idx):
+        if not (0 <= idx < len(planet.staging_yard)):
+            return None
+        raw = planet.staging_yard.pop(idx)
+        return DropPod(
+            design_id=str(raw.get("design_id", "")),
+            design_data=dict(raw.get("design_data", {})),
+            mass=float(raw.get("mass", 0.0)),
+            payload={
+                k: v for k, v in raw.items()
+                if k not in {"design_id", "design_data", "mass"}
+            },
+        )
+    planet.pop_staging_yard_typed = MagicMock(side_effect=_pop_typed)
 
     loaded = proc._handler_registry.get(OrderType.TRANSFER)._dispatch_drop_pod_load(fleet, planet, None, 1)
 

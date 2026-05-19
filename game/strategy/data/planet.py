@@ -22,6 +22,62 @@ if _TC:
 # line 187, constructor call at line 190.
 from game.strategy.data.colony_species_config import ColonySpeciesConfig
 
+# PROJ-450 Phase 1: dict ↔ typed staging-yard helpers were lifted from
+# ``game/strategy/engine/order_handlers/transfer_branches.py`` into this
+# module so the conversion lives on the Planet boundary. The substrate
+# stays ``List[Dict[str, Any]]`` for Phase 1; Phase 2 widens the type.
+from game.strategy.data.bay_inventory import DropPod
+from game.strategy.data.carried_vehicle import CarriedVehicle, VALID_VEHICLE_TYPES
+
+
+def _is_carried_vehicle_dict(item: Any) -> bool:
+    """Return True iff ``item`` is a staging-yard dict shaped like a
+    :class:`CarriedVehicle` (mine/fighter/satellite). PROJ-431 Phase 1d:
+    explicit dict-shape probe that replaces the legacy runtime
+    ``CarriedVehicle.from_any()`` discriminator at the staging-yard
+    boundary, which still holds dicts.
+    """
+    if isinstance(item, CarriedVehicle):
+        return True
+    if not isinstance(item, dict):
+        return False
+    return str(item.get("vehicle_type", "")).lower() in VALID_VEHICLE_TYPES
+
+
+def _pod_from_dict(item: Any) -> DropPod:
+    """Promote a legacy drop-pod-shaped dict to a typed
+    :class:`DropPod`. Mirrors the shape ``ShipInstance.bay_inventory``
+    uses when projecting the legacy ``carried_items`` substrate.
+    Extra dict keys land in :attr:`DropPod.payload`.
+    """
+    if isinstance(item, DropPod):
+        return item
+    if not isinstance(item, dict):
+        return DropPod(design_id="", design_data={}, mass=0.0, payload={})
+    return DropPod(
+        design_id=str(item.get("design_id", "")),
+        design_data=dict(item.get("design_data", {})),
+        mass=float(item.get("mass", 0.0)),
+        payload={
+            k: v for k, v in item.items()
+            if k not in {"design_id", "design_data", "mass"}
+        },
+    )
+
+
+def _staging_yard_carried_vehicle(item: Any) -> Optional[CarriedVehicle]:
+    """Promote a staging-yard dict to a typed :class:`CarriedVehicle`
+    when it is shaped like one. Returns ``None`` for drop-pod-shaped
+    entries (which lack a recognised ``vehicle_type``).
+    """
+    if isinstance(item, CarriedVehicle):
+        return item
+    if not isinstance(item, dict):
+        return None
+    if str(item.get("vehicle_type", "")).lower() not in VALID_VEHICLE_TYPES:
+        return None
+    return CarriedVehicle.from_dict(item)
+
 class PlanetType(Enum):
     """
     Broad classification of planetary bodies.
@@ -303,12 +359,38 @@ class Planet:
         """Total mass of items currently in the staging yard."""
         return sum(item.get('mass', 0.0) for item in self._staging_yard)
 
-    def add_to_staging_yard(self, item: Dict[str, Any]) -> bool:
-        """Add an item; return False on insufficient capacity."""
-        item_mass = item.get('mass', 0.0)
+    def add_to_staging_yard(
+        self, item: "Dict[str, Any] | CarriedVehicle | DropPod"
+    ) -> bool:
+        """Add an item; return False on insufficient capacity.
+
+        PROJ-450 Phase 1: accepts typed ``CarriedVehicle`` / ``DropPod``
+        in addition to the legacy dict. The substrate stays
+        ``List[Dict[str, Any]]`` for Phase 1, so typed inputs are
+        normalised to their dict projection internally; Phase 2 widens
+        the substrate. Dict callers (save-load, rollback paths in
+        ``transfer_branches.py``) keep working unchanged.
+
+        DropPod inputs flatten their ``payload`` up to the dict's top
+        level to match the legacy staging-yard substrate shape (the
+        former ``_dispatch_drop_pod_unload`` flatten block at
+        ``transfer_branches.py:454-460``). This preserves
+        ``pop_staging_yard_typed`` round-trips and keeps the on-disk
+        save shape stable.
+        """
+        if isinstance(item, DropPod):
+            item_dict = dict(item.payload)
+            item_dict["design_id"] = item.design_id
+            item_dict["design_data"] = item.design_data
+            item_dict["mass"] = float(item.mass)
+        elif isinstance(item, CarriedVehicle):
+            item_dict = item.to_dict()
+        else:
+            item_dict = item
+        item_mass = item_dict.get('mass', 0.0)
         if self.max_staging_mass > 0 and self.get_staging_mass() + item_mass > self.max_staging_mass:
             return False
-        self._staging_yard.append(item)
+        self._staging_yard.append(item_dict)
         return True
 
     def remove_from_staging_yard(self, index: int) -> Optional[Dict[str, Any]]:
@@ -316,6 +398,33 @@ class Planet:
         if 0 <= index < len(self._staging_yard):
             return self._staging_yard.pop(index)
         return None
+
+    def pop_staging_yard_typed(
+        self, index: int
+    ) -> "CarriedVehicle | DropPod | None":
+        """Pop and return the item at ``index`` as a typed
+        :class:`CarriedVehicle` or :class:`DropPod`.
+
+        PROJ-450 Phase 1: centralises the dict ↔ typed promotion that
+        ``transfer_branches.py`` previously did inline. The legacy
+        ``remove_from_staging_yard`` (dict return) survives for callers
+        that still hold the dict substrate (e.g. rollback paths that
+        re-append via ``add_to_staging_yard``).
+
+        Returns ``None`` when ``index`` is out of range; otherwise
+        returns a typed view. Items shaped like a ``CarriedVehicle``
+        (recognised ``vehicle_type``) promote to ``CarriedVehicle``;
+        anything else falls back to ``DropPod`` (mirroring the legacy
+        ``_pod_from_dict`` discriminator used by
+        ``_dispatch_drop_pod_load``).
+        """
+        raw = self.remove_from_staging_yard(index)
+        if raw is None:
+            return None
+        cv = _staging_yard_carried_vehicle(raw)
+        if cv is not None:
+            return cv
+        return _pod_from_dict(raw)
 
     def can_build_type(self, vehicle_type: str) -> bool:
         """Check if this planet can build the given vehicle type.

@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.bay_inventory import BayInventory, DropPod
+from game.strategy.data.carried_vehicle import CarriedVehicle
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
 from game.strategy.data.species_population import SpeciesPopulation
@@ -224,7 +225,22 @@ def test_dispatch_drop_pod_load_reverse_iteration():
     pod_a = {"name": "PodA", "mass": 10}
     pod_b = {"name": "PodB", "mass": 10}
     planet.staging_yard = [pod_a, pod_b]
-    planet.remove_from_staging_yard = MagicMock(side_effect=lambda i: planet.staging_yard.pop(i))
+
+    # PROJ-450 Phase 1: dispatch uses ``pop_staging_yard_typed`` now;
+    # legacy ``remove_from_staging_yard`` is no longer called from this
+    # branch. Promote the dict to a typed DropPod for the stub.
+    def _pop_typed(i):
+        raw = planet.staging_yard.pop(i)
+        return DropPod(
+            design_id=str(raw.get("design_id", "")),
+            design_data=dict(raw.get("design_data", {})),
+            mass=float(raw.get("mass", 0.0)),
+            payload={
+                k: v for k, v in raw.items()
+                if k not in {"design_id", "design_data", "mass"}
+            },
+        )
+    planet.pop_staging_yard_typed = MagicMock(side_effect=_pop_typed)
 
     galaxy = MagicMock()
     galaxy.get_planet_by_id.return_value = planet
@@ -389,13 +405,15 @@ def test_dispatch_drop_pod_unload():
         result = handler.execute_action_order(fleet, _empire(), galaxy)
     assert result.success is True
     assert result.amount_transferred == 1
-    # The pod arrives at staging as a flattened dict. The handler
-    # rebuilds the dict at the boundary, so its exact shape is implementation
-    # detail — assert it carries the pod identity rather than identity-equal.
+    # PROJ-450 Phase 1: handler passes the typed ``DropPod`` directly;
+    # the dict ↔ typed normalisation lives inside ``Planet``. The pod
+    # identity surfaces via its payload (legacy "name" key) and
+    # ``design_id``.
     assert planet.add_to_staging_yard.call_count == 1
     delivered = planet.add_to_staging_yard.call_args.args[0]
-    assert delivered.get("name") == "PodX"
-    assert delivered.get("design_id") == "drop_pod_basic"
+    assert isinstance(delivered, DropPod)
+    assert delivered.design_id == "drop_pod_basic"
+    assert delivered.payload.get("name") == "PodX"
     # PROJ-436 Phase 9: ship's bay_inventory.pods is drained.
     assert ship.bay_inventory.pods == []
 
@@ -439,9 +457,13 @@ def test_dispatch_carried_vehicle_load_rollback_routes_through_capacity_check():
 
     planet = _planet()
     planet.staging_yard = [fighter_dict]
-    planet.remove_from_staging_yard = MagicMock(
-        side_effect=lambda i: planet.staging_yard.pop(i)
-    )
+
+    # PROJ-450 Phase 1: rollback now restores the typed ``CarriedVehicle``
+    # produced by ``pop_staging_yard_typed`` rather than the raw dict.
+    def _pop_typed(i):
+        raw = planet.staging_yard.pop(i)
+        return CarriedVehicle.from_dict(raw)
+    planet.pop_staging_yard_typed = MagicMock(side_effect=_pop_typed)
     planet.add_to_staging_yard = MagicMock(return_value=True)
 
     galaxy = MagicMock()
@@ -466,9 +488,16 @@ def test_dispatch_carried_vehicle_load_rollback_routes_through_capacity_check():
 
     planet.add_to_staging_yard.assert_called_once()
     restored = planet.add_to_staging_yard.call_args.args[0]
-    assert restored is fighter_dict, (
-        "Rollback must restore the originally-removed item, unchanged."
+    # PROJ-450 Phase 1: rollback restores the typed ``CarriedVehicle``
+    # produced by the typed pop. Identity equality on the source dict
+    # no longer applies; the typed view must carry the original
+    # discriminating fields.
+    assert isinstance(restored, CarriedVehicle), (
+        "Rollback must restore the typed view from pop_staging_yard_typed."
     )
+    assert restored.design_id == fighter_dict["design_id"]
+    assert restored.vehicle_type == fighter_dict["vehicle_type"]
+    assert restored.mass == fighter_dict["mass"]
 
 
 # ---------------------------------------------------------------------------

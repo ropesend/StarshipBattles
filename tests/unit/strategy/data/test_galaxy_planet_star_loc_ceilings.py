@@ -31,7 +31,14 @@ GALAXY_LOC_CEILING = 350  # Phase 4 final: tightened after pathfinding/intercept
 # protocol satisfied by both Planet and Fleet. The growth is the
 # protocol-conformance surface, not bloat; planet.py extraction is
 # still on the Phase 6 Codex-consult question.
-PLANET_LOC_CEILING = 425
+# PROJ-450 Phase 1: raised from 425 to 485 — Phase 1 moved the 3 dict ↔
+# typed staging-yard helpers (``_is_carried_vehicle_dict`` /
+# ``_pod_from_dict`` / ``_staging_yard_carried_vehicle``) IN from
+# ``transfer_branches.py``, widened ``add_to_staging_yard`` to accept
+# typed inputs, and added ``pop_staging_yard_typed``. The growth is the
+# centralised conversion surface on the Planet boundary, not bloat;
+# Phase 2 widens the substrate type itself.
+PLANET_LOC_CEILING = 485
 STARS_LOC_CEILING = 280  # Phase 1: tightened from 770 after Spectrum/StarGenerator extraction.
 
 
