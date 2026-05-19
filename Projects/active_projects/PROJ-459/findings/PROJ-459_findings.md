@@ -21,12 +21,10 @@ This project carries three findings:
 - **Suggested action (original)**: NOT a quick sweep. Bundle into a future "ShipInstance shim retirement" project — likely 2-3 phases of mechanical caller migration per shim cluster (serializer, bridge, resource manager). The class docstring already documents the explicit removal conditions; act on them when bandwidth allows.
 - **Effort (original)**: large
 
-### Status as of 2026-05-19
-- **Disposition in this project: explicit follow-up decision; not closed here.**
-- The original action ("bundle into a future project") is exactly what Codex r4 redesign formalizes: PROJ-449 retires the wrapper + property shims (the easy LOC), and PROJ-459 Phase 3 then re-measures.
-- **Decision matrix for Phase 3:**
-  - If LOC < 500 after PROJ-449 ships: close F-A-007 here. Record "ceiling met after wrapper retirement" in `decisions.md`.
-  - If LOC ≥ 500 after PROJ-449 ships: spin out as a separate "next-touch" project (likely PROJ-461). Document the residual shim cluster (which TD-06 shims survive, why they can't retire without the 910-caller sweep) in the new project's charter. PROJ-459 records the spinout but does NOT attempt the split.
+### Status as of 2026-05-19 (Phase 3 verdict)
+- **Disposition: SPUN OUT as PROJ-461.** Post-PROJ-449 + post-PROJ-454 LOC = **789** (+289 over the 500 ceiling). The retained TD-06 high-value shim cluster + class-docstring catalog account for the residual overage. The 910-caller migration sweep (PROJ-425 Phase 5d/5e estimate) is the actual cost and is out of PROJ-459's scope per Codex r4 directive.
+- PROJ-461 created at `Projects/active_projects/PROJ-461/`. F-A-007 transferred verbatim to `PROJ-461/findings/PROJ-461_findings.md` with updated status. PROJ-459 retains only the measurement-decision narrative here.
+- See PROJ-459 decisions.md row 2026-05-19 (Phase 3 verdict) for the disposition entry.
 
 ---
 

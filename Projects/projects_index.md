@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-461 | ShipInstance LOC reduction (F-A-007 spinout from PROJ-459) | Planning | 2026-05-19 | 2026-05-19 |
 | PROJ-460 | Simulation clean-cut LOC extractions (battle_state_serde + battle_controller spec-in + replay_serialization split) | Planning | 2026-05-18 | 2026-05-18 |
 | PROJ-459 | Strategy data LOC extractions (fleet_serde + planet_gen split) | Planning | 2026-05-18 | 2026-05-18 |
 | PROJ-458 | UIWindow retrofit completion (SettingsWindow + 4 PlanetTargetEditors) | Planning | 2026-05-18 | 2026-05-18 |
