@@ -23,12 +23,19 @@
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** All phases complete; ready for end-of-project merge to main
-**Last Action:** Phase 5 closed the three doc/comment residues + five test-narration sites surfaced by the end-of-project codex audit (response.md verified all 4 findings closed). All Phase 5 edits are comment/docstring-only, no behaviour changes. Per protocol PART 3 Step D, skipping the re-audit (trivial polish).
-**Next Action:** Merge group-b through PROJ-454 to main per protocol §3.
+**Active Phase:** Project complete; merged to main at ab2da0669
+**Last Action:** End-of-project merge to main executed per protocol §3. Merge commit on main: `ab2da0669`. PROJ-454 moved to Archived Projects. This merge is the critical sync signal for Group A's PROJ-450 Phase 4 gate (which reads `origin/main:Projects/active_projects/PROJ-454/plan.md` to detect this).
+**Next Action:** Group B run-agent proceeds to PROJ-456.
 **Blockers:** None.
 
 ## Checkpoint Log
+
+### 2026-05-17 — project-454-end + project-456-start
+- **Done so far**: PROJ-454 fully closed and merged to main at `ab2da0669`. All 5 phases done: F-B-004 (shim retired), F-B-005 (~68-site sweep), F-B-017 (69-call-site facade unwind + 3 dataclass deletions), F-B-018 (legacy-field framing refresh), Phase 5 (codex-audit polish). End-of-project codex audit verified all 4 findings closed; the 3 doc/comment residues it flagged were closed in Phase 5 with no re-audit (trivial polish per PART 3 Step D).
+- **Key decisions**: Phase 1 deviation from plan (rewrote callers to use canonical `get_ability_metadata(name).effect` instead of duplicating shim helpers — strict no-compat-shim per Rule 4). Task 2.9 — deleted drift-gate test outright. Task 3.9 — rewrote `test_order_processor_facade.py` with tighter OrderType cap (≤2). Task 4.4 — kept all 5 OrderExecutionResult fields flat per Codex r4 recommendation.
+- **Open threads**: PROJ-456 (UI shim retirement) and PROJ-457 (UI structural debt) still pending.
+- **Next action**: PROJ-456 Phase 1 Task 1.1.
+- **Cross-group state observed**: origin/main = `ab2da0669` (post-PROJ-454 merge — this unblocks Group A's PROJ-450 Phase 4 sync gate). Group A pushed group-a to `f4503847a`; Group C pushed group-c to `067b27a06`. No `_doc_consolidation/` files present on origin/main yet.
 
 ### 2026-05-17 — phase-2-complete-checkpoint
 - **Done so far**: PROJ-453 fully closed (Phases 1+2, merged at `82b751fe0`). PROJ-454 Phases 1 + 2 closed. Phase 1: deleted `effect_ability_metadata.py` shim and rewrote 2 callers to use `get_ability_metadata(name).effect` (the planning doc's "drop-in import swap" claim was wrong — canonical API has different verb name + nested shape). Phase 2: ~68-site sweep retiring `component_inspector.py`; routine work but large. Net: -2 shim modules (~200 LOC) + 4 test files renamed/deleted.
