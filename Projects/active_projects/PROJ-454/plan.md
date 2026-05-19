@@ -16,15 +16,15 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. F-B-004 — Retire `effect_ability_metadata.py` (131 LOC, 2 callers) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. F-B-005 — Retire `component_inspector.py` (~68 caller sites — 52 imports + 16 patch targets — across ~31 files; sized up from `~45` after codex audit 2026-05-19) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. F-B-005 — Retire `component_inspector.py` (~68 caller sites — 52 imports + 16 patch targets — across ~31 files; sized up from `~45` after codex audit 2026-05-19) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. F-B-017 — Unwind `OrderProcessor.process_*` facade reshape; delete legacy typed result dataclasses (68 sites / 12 files; sized up from `~15 / 7` after codex audit 2026-05-19) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. F-B-018 — Remove "legacy field" framing on `OrderExecutionResult` (fields become live unified surface post-Phase-3 facade unwind; delete specific fields ONLY if Phase 4 audit shows they're dead) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 2 (F-B-005 component_inspector retirement, ~68 sites)
-**Last Action:** Phase 1 complete. Retired `effect_ability_metadata.py` shim (131 LOC) and its tests; ported the 57 valuable behaviour pins to `tests/unit/strategy/services/test_ability_metadata_effects.py`. The plan's "drop-in import path swap" assumption was wrong (canonical `ability_metadata.py` exposes a different API surface) — the 2 callers were rewritten to navigate `get_ability_metadata(name).effect: EffectFacet`. Documented the deviation in decisions.md. Sharded 23366 / 23366 green.
-**Next Action:** Phase 2 Task 2.1 — caller-discovery sweep for `component_inspector`.
+**Active Phase:** Phase 3 (F-B-017 OrderProcessor facade unwind, 68 sites/12 files)
+**Last Action:** Phase 2 complete. Retired `component_inspector.py` (67 LOC re-export shim) and 1 static-drift-gate test. Migrated all production callers across `game/strategy/{data,engine,services,validation}/` + `game/ui/screens/` to import directly from `component_abilities` (Surface A, 12 symbols, ~23 files) or `component_layers` (Surface B, 4 symbols, just `ship_instance.py` lines 635/654/663). Migrated test files: renamed `tests/unit/strategy/test_component_inspector.py` → `tests/unit/strategy/services/test_component_abilities.py`; renamed `test_component_inspector_layers.py` → `test_component_layers.py`; deleted `test_component_inspector_surface.py` (drift gate served the shim, no purpose post-retirement). Repointed all 16 `patch(...)` targets in test_fleet_capability_calculator / test_fleet_data_source / test_fleet_report_filters / test_strategy_fleet_command_router. Refreshed docstring references in canonical modules + 3 adjacent files. Sharded 23363/23363 green.
+**Next Action:** Phase 3 Task 3.1 — caller inventory for `OrderProcessor.process_join_fleet` / `process_colonize` / `process_transfer`.
 **Blockers:** None.
 
 ## Checkpoint Log

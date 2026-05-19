@@ -302,7 +302,7 @@ class StrategyDetailFormatter:
 
     def _planet_has_ability(self, planet, ability_key: str) -> bool:
         """Check if a planet has any operational facility with the given ability."""
-        from game.strategy.services.component_inspector import extract_abilities_from_component
+        from game.strategy.services.component_abilities import extract_abilities_from_component
         from game.core.patterns.layer_iterator import iter_components
 
         registries = getattr(self.scene, 'session', None)

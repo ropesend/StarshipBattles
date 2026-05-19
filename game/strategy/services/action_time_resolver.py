@@ -31,7 +31,7 @@ from game.strategy.services.ability_metadata import (
     ability_action_time_field,
     get_ability_metadata,
 )
-from game.strategy.services.component_inspector import (
+from game.strategy.services.component_abilities import (
     iterate_design_components,
 )
 from game.strategy.data.order_types import OrderType
@@ -239,5 +239,5 @@ def _get_abilities(comp, component_registry: Optional[Dict[str, Any]] = None) ->
 
     Delegates to centralized extract_abilities_from_component().
     """
-    from game.strategy.services.component_inspector import extract_abilities_from_component
+    from game.strategy.services.component_abilities import extract_abilities_from_component
     return extract_abilities_from_component(comp, component_registry)

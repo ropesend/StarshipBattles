@@ -1,18 +1,19 @@
 """Per-instance layer-view helpers for ``ShipInstance``.
 
-PROJ-433: extracted from ``component_inspector.py``. These helpers were
-added by PROJ-425 Phase 2 (TD-06) and join a ship design's layer entries
-with the per-instance ``ComponentState`` map to produce instance-level
-views (current HP, damage status, layer grouping). They are the second
-half of the ``component_inspector`` split — the ability-iteration helpers
-live in ``game.strategy.services.component_abilities``.
+PROJ-433: extracted from the prior ``component_inspector.py`` module.
+These helpers were added by PROJ-425 Phase 2 (TD-06) and join a ship
+design's layer entries with the per-instance ``ComponentState`` map to
+produce instance-level views (current HP, damage status, layer
+grouping). They are the second half of the original split — the
+ability-iteration helpers live in
+``game.strategy.services.component_abilities``.
 
 ``lookup_design_max_hp`` ships here because its only consumer is
 ``iter_components_by_layer`` (PROJ-433 Phase 0 grep). Keeping it next to
-its caller avoids cross-module coupling between the two new modules.
+its caller avoids cross-module coupling between the two modules.
 
-The legacy ``game.strategy.services.component_inspector`` module is now a
-thin re-export shim that re-exports both new modules' public surfaces.
+PROJ-454 Phase 2 retired the ``component_inspector`` re-export shim;
+callers import directly from this module or ``component_abilities``.
 """
 from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
 

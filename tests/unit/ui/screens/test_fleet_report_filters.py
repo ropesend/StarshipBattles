@@ -342,42 +342,42 @@ class TestHasWarpCapability:
 
     def test_ship_without_warp_drive(self):
         """Ship without WarpJump ability should return False."""
-        from game.strategy.services.component_inspector import has_warp_capability
+        from game.strategy.services.component_abilities import has_warp_capability
 
         ship = make_mock_ship(mass=1000, warp_tonnage=None)
         assert has_warp_capability(ship) is False
 
     def test_ship_with_sufficient_warp_drive(self):
         """Ship with WarpJump exceeding mass should return True."""
-        from game.strategy.services.component_inspector import has_warp_capability
+        from game.strategy.services.component_abilities import has_warp_capability
 
         ship = make_mock_ship(mass=1000, warp_tonnage=1500)
         assert has_warp_capability(ship) is True
 
     def test_ship_with_equal_warp_tonnage(self):
         """Ship with WarpJump equal to mass should return True."""
-        from game.strategy.services.component_inspector import has_warp_capability
+        from game.strategy.services.component_abilities import has_warp_capability
 
         ship = make_mock_ship(mass=1000, warp_tonnage=1000)
         assert has_warp_capability(ship) is True
 
     def test_ship_with_insufficient_warp_drive(self):
         """Ship with WarpJump less than mass should return False."""
-        from game.strategy.services.component_inspector import has_warp_capability
+        from game.strategy.services.component_abilities import has_warp_capability
 
         ship = make_mock_ship(mass=1000, warp_tonnage=500)
         assert has_warp_capability(ship) is False
 
     def test_ship_with_zero_mass(self):
         """Ship with zero mass should return False (edge case)."""
-        from game.strategy.services.component_inspector import has_warp_capability
+        from game.strategy.services.component_abilities import has_warp_capability
 
         ship = make_mock_ship(mass=0, warp_tonnage=1000)
         assert has_warp_capability(ship) is False
 
     def test_warp_capability_with_expected_stats(self):
         """Warp capability determined from expected_stats should work."""
-        from game.strategy.services.component_inspector import has_warp_capability
+        from game.strategy.services.component_abilities import has_warp_capability
 
         ship = make_mock_ship(mass=1000, warp_tonnage=1500)
         # Verify expected_stats has warp_max_tonnage
@@ -860,7 +860,7 @@ class TestFilterPredicateIsolation:
             return candidate is ship and ability_name == "OpenWarpPoint" and registry == {}
 
         with patch(
-            "game.strategy.services.component_inspector.ship_has_ability",
+            "game.strategy.services.component_abilities.ship_has_ability",
             side_effect=has_ability,
         ) as ship_has_ability:
             assert filters._should_exclude_by_special_capabilities(
@@ -1076,7 +1076,7 @@ class TestSpecialCapabilityFilter:
             'destroy_planet': FilterState.NO,
         }
 
-        with patch('game.strategy.services.component_inspector.ship_has_ability',
+        with patch('game.strategy.services.component_abilities.ship_has_ability',
                    side_effect=mock_has_ability):
             result = filter_ships([ship_with, ship_without], filter_state)
 
@@ -1102,7 +1102,7 @@ class TestSpecialCapabilityFilter:
             'destroy_planet': FilterState.YES,
         }
 
-        with patch('game.strategy.services.component_inspector.ship_has_ability',
+        with patch('game.strategy.services.component_abilities.ship_has_ability',
                    side_effect=mock_has_ability):
             result = filter_ships([ship_with, ship_without], filter_state)
 
@@ -1152,7 +1152,7 @@ class TestSpecialCapabilityFilter:
             filter_key: FilterState.NO,
         }
 
-        with patch('game.strategy.services.component_inspector.ship_has_ability',
+        with patch('game.strategy.services.component_abilities.ship_has_ability',
                    side_effect=mock_has_ability):
             result = filter_ships([ship_with, ship_without], filter_state)
 
@@ -1175,7 +1175,7 @@ class TestSpecialCapabilitySort:
         def mock_has_ability(ship, ability_name, registry):
             return ship.serial == 2 and ability_name == 'DestroyPlanet'
 
-        with patch('game.strategy.services.component_inspector.ship_has_ability',
+        with patch('game.strategy.services.component_abilities.ship_has_ability',
                    side_effect=mock_has_ability):
             result = sort_ships([ship1, ship2, ship3], 'can_destroy_planet', descending=True)
 

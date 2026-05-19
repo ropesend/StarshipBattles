@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from game.core.patterns.layer_iterator import iter_keyed_components
-from game.strategy.services.component_inspector import extract_abilities_from_component
+from game.strategy.services.component_abilities import extract_abilities_from_component
 
 
 @dataclass(frozen=True)

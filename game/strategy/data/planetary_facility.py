@@ -9,7 +9,7 @@ from typing import Dict, List, Any
 
 from game.core.patterns.layer_iterator import iter_components, get_component_id
 from game.core.validation_helpers import require_keys
-from game.strategy.services.component_inspector import get_component_abilities
+from game.strategy.services.component_abilities import get_component_abilities
 from game.strategy.data.component_activation_state import (
     ActivationPhase,
     ComponentActivationState,

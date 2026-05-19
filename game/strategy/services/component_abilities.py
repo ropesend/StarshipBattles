@@ -1,15 +1,15 @@
 """Ability-iteration helpers for ship and facility design components.
 
-PROJ-433: extracted from ``component_inspector.py`` after that module
-exceeded 500 LOC following PROJ-425 Phase 2's layer-view additions. This
-module owns the "Surface A" helpers — walking a design's component
-entries, resolving abilities (inline or via registry lookup), and the
-``has_warp_capability`` ship-level query.
+PROJ-433: extracted from the prior ``component_inspector.py`` module
+after it exceeded 500 LOC following PROJ-425 Phase 2's layer-view
+additions. This module owns the "Surface A" helpers — walking a
+design's component entries, resolving abilities (inline or via registry
+lookup), and the ``has_warp_capability`` ship-level query.
 
 The complementary layer-view helpers live in
-``game.strategy.services.component_layers``. The legacy
-``game.strategy.services.component_inspector`` module is now a thin
-re-export shim that keeps every prior import path working.
+``game.strategy.services.component_layers``. PROJ-454 Phase 2 retired
+the ``component_inspector`` re-export shim; callers import directly
+from this module or ``component_layers``.
 
 PROJ-108 Phase 3 origin: consolidated duplicated component/ability
 iteration patterns from ColonizeValidator, SuperweaponValidator, and

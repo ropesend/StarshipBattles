@@ -27,7 +27,7 @@ from game.simulation.components.component import load_components_data, load_modi
 from game.simulation.entities.ship_loader import load_vehicle_classes_data
 from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_design_stats import calculate_design_stats
-from game.strategy.services.component_inspector import has_warp_capability
+from game.strategy.services.component_abilities import has_warp_capability
 
 
 @pytest.fixture

@@ -144,7 +144,7 @@ def colony_has_planetary_yard(colony, registries=None) -> bool:
         True if the colony has a PlanetaryYard, False otherwise.
     """
     from game.core.patterns.layer_iterator import iter_components
-    from game.strategy.services.component_inspector import get_component_abilities
+    from game.strategy.services.component_abilities import get_component_abilities
 
     for facility in colony.facilities:
         if not facility.is_operational:
@@ -221,7 +221,7 @@ def _get_planetary_yard_size_multiplier(planet, registries=None) -> float:
         Size multiplier (default 1.0 if no modifier or no PlanetaryYard found).
     """
     from game.core.patterns.layer_iterator import iter_components
-    from game.strategy.services.component_inspector import get_component_abilities
+    from game.strategy.services.component_abilities import get_component_abilities
 
     for facility in planet.facilities:
         if not getattr(facility, 'is_operational', True):

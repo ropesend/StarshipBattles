@@ -129,12 +129,12 @@ def _walk_strategic_abilities(design_data: Dict[str, Any], registries: Any):
     """Yield (ability_name, ability_data) pairs for strategic-scope abilities.
 
     Walks every component in the design's layers and extracts each ability
-    via the existing component_inspector helper. Filters by _STRATEGIC_SCOPES
+    via the existing component_abilities helper. Filters by _STRATEGIC_SCOPES
     so combat-only scopes (self/fleet/team) stay in the FleetAuraManager
     path.
     """
     from game.core.patterns.layer_iterator import iter_keyed_components
-    from game.strategy.services.component_inspector import extract_abilities_from_component
+    from game.strategy.services.component_abilities import extract_abilities_from_component
 
     for _comp_key, _layer, comp in iter_keyed_components(design_data):
         abilities = extract_abilities_from_component(comp, registries)

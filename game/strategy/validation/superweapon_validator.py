@@ -5,7 +5,7 @@ PROJ-102 Phase 4: Business logic validation for strategic superweapon orders.
 """
 from typing import Any, Dict, List, Optional
 from game.core.validation import ValidationResult
-from game.strategy.services.component_inspector import (
+from game.strategy.services.component_abilities import (
     find_ship_with_ability as _inspector_find_ship,
     ship_has_ability,
 )

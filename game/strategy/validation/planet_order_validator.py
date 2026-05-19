@@ -10,7 +10,7 @@ import logging
 
 from game.core.validation import ValidationResult
 from game.core.patterns.layer_iterator import iter_components
-from game.strategy.services.component_inspector import get_component_abilities
+from game.strategy.services.component_abilities import get_component_abilities
 
 logger = logging.getLogger(__name__)
 

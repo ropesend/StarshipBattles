@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, TYPE_CHECKING
 
-from game.strategy.services.component_inspector import iter_facility_ability_entries
+from game.strategy.services.component_abilities import iter_facility_ability_entries
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire

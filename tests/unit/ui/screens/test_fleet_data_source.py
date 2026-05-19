@@ -293,12 +293,12 @@ class TestFleetDataSourceCellValueYesNoColumns:
     @pytest.mark.parametrize("col_id,patch_target,return_value,expected", [
         pytest.param(
             "warp",
-            "game.strategy.services.component_inspector.has_warp_capability",
+            "game.strategy.services.component_abilities.has_warp_capability",
             True, "Yes", id="warp-yes",
         ),
         pytest.param(
             "warp",
-            "game.strategy.services.component_inspector.has_warp_capability",
+            "game.strategy.services.component_abilities.has_warp_capability",
             False, "No", id="warp-no",
         ),
         pytest.param(
@@ -453,7 +453,7 @@ class TestFleetDataSourceCellValueSpecialCapabilities:
         ds = _make_data_source(ships=[ship])
 
         with patch(
-            "game.strategy.services.component_inspector.ship_has_ability",
+            "game.strategy.services.component_abilities.ship_has_ability",
             return_value=True,
         ):
             assert ds.get_cell_value(0, "can_destroy_planet") == "Yes"
@@ -466,7 +466,7 @@ class TestFleetDataSourceCellValueSpecialCapabilities:
         ds = _make_data_source(ships=[ship])
 
         with patch(
-            "game.strategy.services.component_inspector.ship_has_ability",
+            "game.strategy.services.component_abilities.ship_has_ability",
             return_value=False,
         ):
             assert ds.get_cell_value(0, "can_destroy_planet") == "No"
@@ -483,7 +483,7 @@ class TestFleetDataSourceCellValueSpecialCapabilities:
 
         for col_id in SPECIAL_CAPABILITY_COLUMNS:
             with patch(
-                "game.strategy.services.component_inspector.ship_has_ability",
+                "game.strategy.services.component_abilities.ship_has_ability",
                 return_value=True,
             ):
                 assert ds.get_cell_value(0, col_id) == "Yes"

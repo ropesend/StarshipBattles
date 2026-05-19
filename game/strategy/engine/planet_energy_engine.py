@@ -25,7 +25,7 @@ from game.strategy.services.ability_metadata import (
     StrategicKind,
     abilities_with_kind_tag,
 )
-from game.strategy.services.component_inspector import iter_facility_ability_entries
+from game.strategy.services.component_abilities import iter_facility_ability_entries
 from game.strategy.data.component_activation_state import (
     ComponentActivationState,
 )
@@ -83,9 +83,9 @@ def get_activatable_ability_info(comp, ability_key: str, registries=None) -> Opt
 def _extract_abilities(comp, registries: Optional[GameRegistries] = None) -> dict:
     """Extract abilities dict from a component entry.
 
-    Delegates to the centralized extract_abilities_from_component() in component_inspector.
+    Delegates to the centralized extract_abilities_from_component() in component_abilities.
     """
-    from game.strategy.services.component_inspector import extract_abilities_from_component
+    from game.strategy.services.component_abilities import extract_abilities_from_component
     return extract_abilities_from_component(comp, registries)
 
 
