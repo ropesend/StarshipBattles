@@ -18,15 +18,15 @@
 | 0. Re-measure LOC of all 12 F-C-027 files after PROJ-456 ships (rescope) | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Extract one responsibility from `build_queue_screen.py` (958 → under 500) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Same recipe for `planet_list_window.py` (862 → under 500) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Same recipe for `test_lab/screen.py` (744 → under 500) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Same recipe for `test_lab/screen.py` (744 → under 500) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. F-C-028 — Split `game/core/exceptions.py` | Dropped (user decision 2026-05-19) | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Document remaining over-ceiling files as "next-touch" rule in decisions.md | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Document remaining over-ceiling files as "next-touch" rule in decisions.md | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-19
-**Active Phase:** Phase 3 (test_lab/screen.py extraction)
-**Last Action:** Phase 2 complete: planet_list_window.py 862 → 453 LOC. Extracted (a) helpers + production UI builder into `planet_list_helpers.py` (~250 LOC): `_get_planetary_ids`, `_format_population`, `_render_effect_cell`, `build_effect_columns`, `PlanetListUiBuilder`; (b) event dispatch + selection coordination into `planet_list_event_router.py` (~270 LOC): `process_event`, `_set_all_filters`, `_set_all_effects`, `_toggle_filter`, `_navigate_to_selected`, `_on_planet_selected`, `_resolve_demographic_view`, `_detail_panel_geometry`. Window retains a thin `process_event` delegate (1-line body) + a `_super_process_event` hook the router uses to call the base class. Migrated tests for `_on_planet_selected` (3 sites) and `_detail_panel_geometry` (1 fixture) to use the router. Sharded 23375/23375 green.
-**Next Action:** Phase 3 — extract one responsibility from `test_lab/screen.py` (744 → under 500).
+**Active Phase:** All phases complete; awaiting end-of-project codex audit
+**Last Action:** Phase 3 + Phase 5 complete. Phase 3: test_lab/screen.py 744 → 416 LOC; extracted ~325 LOC into `test_lab/screen_actions.TestLabScreenActions` covering battle execution helpers, battle launch (`_switch_to_battle`), run callbacks, and result viewers (JSON popups + clipboard copy + battle state viewer + custom seed prompt); migrated 3 test fixtures + 12 reach-through sites. Phase 5: documented the 9 remaining over-ceiling UI files as a "next-touch" rule in decisions.md (no CLAUDE.md/AGENTS.md cross-reference per Codex r4 framing — rule is file-specific). Sharded 23377/23377 green.
+**Next Action:** Dispatch PROJ-457 end-of-project codex audit per protocol §10.
 **Blockers:** PROJ-456 must complete first (Group B serial order; hard gate per coordinator 2026-05-19) — Phase 0 explicitly re-measures the 12 over-ceiling files after PROJ-456's shim retirement.
 
 ## Overview
