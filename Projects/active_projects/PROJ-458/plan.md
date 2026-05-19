@@ -24,9 +24,9 @@
 
 ## Current State
 **Last Updated:** 2026-05-19
-**Active Phase:** Project complete — merging to main
-**Last Action:** End-of-project codex audit landed (`consults/20260519T145550Z_end-of-project-audit/response.md`) with verdict "Extra phases needed... once that doc-freshness issue is fixed, I do not see a remaining production blocker in PROJ-458." Codex flagged one verified issue: `docs/known-issues.md` Phase 1 substantive edit left the `> Last verified: 2026-05-07` stamp unchanged, violating `docs/03_CONVENTIONS.md:502-513`. Phase 6 applied: stamp bumped to `2026-05-19` with the canonical convention format (`> **Last verified:** YYYY-MM-DD - <one-sentence summary>`). All 5 Phase 1-5 retrofits + the 6 candidate verifications codex performed all PASS. Combined sharded across all 6 phases: 23463/23463 on retry (1 flake on `test_reset_button_resets_settings_to_defaults` in the first run, passed in isolation per §13).
-**Next Action:** End-of-project merge to `main` per protocol §3.
+**Active Phase:** Project complete; merged to main at 5aaa1039b
+**Last Action:** PROJ-458 closed: merged `group-c` into `main` at SHA `5aaa1039b` (merge commit "Merge group-c through PROJ-458 (end of project)"). Rebase of `group-c` on `main` pulled in Group B's PROJ-457 merge (7 commits ahead of where Group A had left main); no conflicts. Post-rebase sharded: 23471/23471 (23463 from my 6 phases + 8 from Group B). End-of-project codex audit landed at `consults/20260519T145550Z_end-of-project-audit/response.md` with verdict "Extra phases needed... once that doc-freshness issue is fixed, I do not see a remaining production blocker." Phase 6 applied (docs/known-issues.md verification-stamp bump to 2026-05-19 + canonical format).
+**Next Action:** Advance to PROJ-460 (position 4 of 4 — FINAL — in Group C's serial order).
 **2026-05-19 cross-group resolution (final):** No edits required to PROJ-458 beyond the Group C execution-context block. Zero file overlap with Group A or Group B verified.
 
 ## Overview
