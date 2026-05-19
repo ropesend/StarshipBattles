@@ -15,7 +15,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Re-verify Stage 3 preflight audit; verify PROJ-449 Phase 3 precondition | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
+| 0. Re-verify Stage 3 preflight audit; verify PROJ-449 Phase 3 precondition | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. Path A engine-only API cleanup (typed accept + typed pop) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Substrate widening (`_staging_yard: List[CarriedVehicle \| DropPod]`) + serde normalization | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. UI reader migration + DTO / validator / write-service tightening | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
@@ -24,9 +24,11 @@
 
 ## Current State
 **Last Updated:** 2026-05-19
-**Active Phase:** Planning
-**Last Action:** Group A cross-group collision resolution applied: serial position changed to LAST in Group A (`449 → 451 → 459 → 450`); Phase 0 cross-group sync gate added (Task 0.6 — waits for PROJ-454 + PROJ-456 to mark `Status: Complete` before Phase 1 starts). Phase 3 Task 3.2 reader-pattern hardened to handle the tuple return from the typed read-only property (codex r5 caught the `isinstance(staging_yard, list)` silent-skip bug). Group A is ready for execution.
-**Next Action:** Run agent picks up PROJ-450 Phase 0 LAST in Group A serial order, AFTER PROJ-449 + PROJ-451 + PROJ-459 close AND the cross-group sync gate clears (PROJ-454 + PROJ-456 from Group B both Complete).
+**Active Phase:** Phase 1 (ready)
+**Last Action:** Phase 0 audit complete. PROJ-449 Phase 3 precondition SATISFIED (wrapper + setter gone; read-only @property survives intentionally). Cross-group sync gate CLEARED (PROJ-454 + PROJ-456 both Complete on origin/main at SHAs `ab2da0669` + `244c1fa16`). All 3 blockers verified at HEAD (UI reader at `strategy_detail_fmt.py:289`, integration-test mutations across 4 files, validator+write-service probes). F-A-013 verified complete (no action). Findings at `findings/phase_0_audit.md`. PROJ-450 Phase 1 unblocked.
+
+**Original action (2026-05-19):** Group A cross-group collision resolution applied: serial position changed to LAST in Group A (`449 → 451 → 459 → 450`); Phase 0 cross-group sync gate added (Task 0.6 — waits for PROJ-454 + PROJ-456 to mark `Status: Complete` before Phase 1 starts). Phase 3 Task 3.2 reader-pattern hardened to handle the tuple return from the typed read-only property (codex r5 caught the `isinstance(staging_yard, list)` silent-skip bug). Group A is ready for execution.
+**Next Action:** Execute Phase 1 — Path A engine-only API cleanup (typed accept + typed pop on Planet, centralize the 3 helpers from `transfer_branches.py:41-87` into private module helpers in `planet.py`).
 **Blockers:** Sequential prerequisites: PROJ-449 Phase 3 (Planet wrapper + property cluster deletion). Cross-group sync gate: PROJ-454 + PROJ-456 (Group B). Phase 0 verifies both before Phase 1.
 **Context for Next Agent:** This is the substrate-typing project that the cancelled PROJ-444..447 Joint A phase tried (and could not complete) in May 2026. The Joint A preflight report documented three hard blockers (UI reader, integration tests, validator probes) that all required cross-bucket coordination. Codex r4 redesign re-bundles all of those owners into PROJ-450 as a single job. **The must-know Path A rationale and BLOCKER #1 reasoning are inlined into `design.md`** (sections "Why partial Path A is justified" + "BLOCKER #1 — the rationale for permanent typed-readonly") — this project is executable from project-local docs alone. The archived preflight at `Projects/archived_projects/PROJ-444to447_coordinator/stage_3_joint_a_preflight_findings.md` is OPTIONAL background reading; nothing in it is required to execute the phases.
 
