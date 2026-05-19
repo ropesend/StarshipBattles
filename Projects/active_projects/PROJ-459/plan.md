@@ -15,17 +15,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Re-measure target files after PROJ-449 + PROJ-451 ship | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
+| 0. Re-measure target files after PROJ-449 + PROJ-451 ship | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
 | 1. F-A-008 — extract `Fleet.to_dict` / `Fleet.from_dict` into `fleet_serde.py` | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. F-A-009 — split `planet_gen.py` by sub-concern (or document deferral) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. F-A-007 measurement decision — `ship_instance.py` close-or-spinout | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-19
-**Active Phase:** Planning
-**Last Action:** Group A cross-group collision resolution applied: doc-consolidation rule added (PROJ-457/459/460 all touch `docs/01_ARCHITECTURE.md` + `docs/02_PATTERNS.md`; last-to-finish does consolidated edit). Phase 3 LOC measurement note updated to gate on PROJ-454 (Group B) too — codex r5 found PROJ-454's component_inspector import removal at `ship_instance.py:635/654/663` materially affects the close-or-spinout threshold. Group A is ready for execution.
-**Next Action:** Run agent picks up PROJ-459 Phase 0 AFTER PROJ-449 + PROJ-451 close (Group A serial order: PROJ-449 → PROJ-451 → PROJ-459 → PROJ-450). Phase 0 is the gate that confirms scope.
-**Blockers:** Phase 1 hard-gated on PROJ-451 (production resource-consumption); Phase 3 hard-gated on PROJ-449 (wrapper retirement) AND PROJ-454 (Group B services + facade retirement; codex r5 COL-2 finding). Phase 0 confirms scope.
+**Active Phase:** Phase 1 (ready)
+**Last Action:** Phase 0 re-measurement complete. PROJ-449 merged at SHA `ebb5c0e7f`; PROJ-451 merged at `893482c04`; PROJ-454 merged at `ab2da0669` (Group B). LOC table: fleet.py 686→693 (+7 from PROJ-451 Task 2.0); planet_gen.py 610→610 (unchanged); ship_instance.py 839→789 (−50 from PROJ-449). Phase 3 provisional verdict: **SPINOUT to PROJ-461** (789 LOC > 500). Phase 1 extraction targets stable at fleet.py:527-664. Phase 2 split candidates identified: moon-generation cluster (~90 LOC) and surface-type-resource cluster (~170 LOC). Findings written to `findings/phase_0_remeasurement.md`.
+**Next Action:** Execute Phase 1 — extract `Fleet.to_dict` / `Fleet.from_dict` / `Fleet.resolve_order_references` into `game/strategy/data/fleet_serde.py` modeled on `planet_serde.py`.
+**Blockers:** None.
 
 ## Overview
 Three clean LOC extractions in the strategy-data layer, plus a measurement-only decision on `ship_instance.py`:
