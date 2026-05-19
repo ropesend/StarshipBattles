@@ -9,9 +9,6 @@ from typing import List, Optional, Tuple, TYPE_CHECKING, Any, Dict
 
 from game.core.hex_math import HexCoord
 from game.core.protocols import IPostBattleShip
-from game.core.exceptions import PersistenceException
-from game.core.error_codes import ErrorCode
-from game.core.validation_helpers import require_keys
 from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
 from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
 from game.strategy.data.fleet_pursuer_tracker import FleetPursuerTracker
@@ -525,41 +522,9 @@ class Fleet:
         other_fleet.trigger_speed_recalculation()
 
     def to_dict(self) -> Dict[str, Any]:
-        """Serialize for save game."""
-        ships_data = [s.to_dict() for s in self.ships]
-
-        location_data = None
-        if isinstance(self.location, HexCoord):
-            location_data = {'q': self.location.q, 'r': self.location.r}
-        elif isinstance(self.location, tuple):
-            location_data = list(self.location)
-
-        data: Dict[str, Any] = {
-            'id': self.id,
-            'owner_id': self.owner_id,
-            'location': location_data,
-            'speed': self.speed,
-            'display_name': self.display_name,
-            'ships': ships_data,
-            'orders': [o.to_dict() for o in self.orders],
-            'path': [{'q': p.q, 'r': p.r} if isinstance(p, HexCoord) else list(p) if isinstance(p, tuple) else p for p in self.path],
-            'construction_queue': self.construction_queue,
-            'construction_queue_paused': self.construction_queue_paused,
-        }
-
-        # PROJ-431 Phase 2: minefield runtime state moved to ``MineGroup``.
-        # Real fleets no longer carry sensitivity / threshold / mine_positions
-        # / scatter_seed fields.
-
-        # Serialize hierarchy
-        if self._task_forces:
-            data['task_forces'] = [tf.to_dict() for tf in self._task_forces]
-
-        fleet_policy_data = self.fleet_policy.to_dict()
-        if fleet_policy_data:
-            data['fleet_policy'] = fleet_policy_data
-
-        return data
+        """Serialize Fleet to dict for save system. See fleet_serde.py."""
+        from game.strategy.data.fleet_serde import fleet_to_dict
+        return fleet_to_dict(self)
 
     @classmethod
     def from_dict(
@@ -567,73 +532,48 @@ class Fleet:
         data: Dict[str, Any],
         registries: Optional['GameRegistries'] = None
     ) -> 'Fleet':
-        """
-        Deserialize from save game.
+        """Deserialize Fleet from save data. See fleet_serde.py.
 
         Args:
-            data: Dict with fleet data
+            data: Dict with fleet data.
             registries: Optional GameRegistries for DI. If provided, ships
                 and FleetCapabilityCalculator will use these registries.
 
         Returns:
-            Reconstructed Fleet
+            Reconstructed Fleet.
 
         Raises:
-            PersistenceException: If required keys missing
+            PersistenceException: If required keys missing or any embedded
+                ship/order entry is corrupt.
         """
-        # PROJ-210: Order deserialization delegated to OrderSerializer
-        from game.strategy.data.order_serializer import OrderSerializer
-
-        require_keys(data, ['id', 'owner_id'], 'Fleet')
-
-        location = data.get('location')
-        if isinstance(location, dict) and 'q' in location and 'r' in location:
-            location = HexCoord(location['q'], location['r'])
-        elif isinstance(location, list):
-            location = HexCoord(location[0], location[1])
-
-        # PROJ-211: Extract component_registry from registries for DI
-        component_registry = registries.components if registries else None
-
-        # PROJ-431 Phase 3: ``group_kind`` field deleted from Fleet. Any
-        # value in a save predating Phase 3 is silently ignored — saves are
-        # disposable per CLAUDE.md (no migration shim).
-        fleet = cls(
-            fleet_id=data['id'],
-            owner_id=data['owner_id'],
-            location=location,
-            speed=data.get('speed', 5.0),
-            component_registry=component_registry,
-            display_name=data.get('display_name', ''),
+        from game.strategy.data.fleet_serde import (
+            _deserialize_fleet_orders,
+            _deserialize_fleet_ships,
+            fleet_from_dict_kwargs,
         )
+
+        fleet = cls(**fleet_from_dict_kwargs(data, registries))
 
         # PROJ-431 Phase 2: ``Fleet`` no longer carries minefield runtime
         # state. Any save predating Phase 2 that stored those fields on
         # a fleet entry has them silently ignored — they belong on
         # ``MineGroup`` instances now, which live on ``deployed_groups``.
 
-        # PROJ-251: Strict deserialization — corrupt ships fail the load
-        for i, ship_data in enumerate(data.get('ships', [])):
-            try:
-                ship = ShipInstance.from_dict(ship_data, registries=registries)
-                fleet.ships.append(ship)
-            except (PersistenceException, KeyError, TypeError, ValueError) as e:
-                raise PersistenceException(
-                    f"Corrupt ship data at index {i} in fleet '{data.get('id', '?')}'",
-                    code=ErrorCode.CORRUPT_DATA.value,
-                    context={"fleet_id": data.get('id'), "ship_index": i, "original_error": str(e)}
-                ) from e
+        # PROJ-251: Strict deserialization — corrupt ships fail the load.
+        fleet.ships = _deserialize_fleet_ships(
+            data.get('ships', []), registries, fleet_id=data.get('id'),
+        )
 
-        # Restore fleet hierarchy
+        # Restore fleet hierarchy.
         from game.strategy.data.task_force import TaskForce
         for tf_data in data.get('task_forces', []):
             fleet._task_forces.append(TaskForce.from_dict(tf_data))
 
-        # Restore fleet-level combat policy
+        # Restore fleet-level combat policy.
         if 'fleet_policy' in data:
             fleet.fleet_policy = CombatPolicy.from_dict(data['fleet_policy'])
 
-        # Restore path
+        # Restore path.
         for p in data.get('path', []):
             if isinstance(p, dict) and 'q' in p and 'r' in p:
                 fleet.path.append(HexCoord(p['q'], p['r']))
@@ -642,13 +582,12 @@ class Fleet:
             else:
                 fleet.path.append(p)
 
-        # PROJ-210: Restore orders using serializer
-        fleet.orders = OrderSerializer.deserialize_orders(
-            data.get('orders', []),
-            data['id']
+        # PROJ-210: Restore orders via serializer (wrapped by fleet_serde).
+        fleet.orders = _deserialize_fleet_orders(
+            data.get('orders', []), data['id'],
         )
 
-        # Restore construction queue
+        # Restore construction queue.
         fleet.construction_queue = data.get('construction_queue', [])
         fleet.construction_queue_paused = data.get('construction_queue_paused', False)
 

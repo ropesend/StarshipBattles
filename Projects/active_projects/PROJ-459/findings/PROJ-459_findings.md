@@ -21,12 +21,10 @@ This project carries three findings:
 - **Suggested action (original)**: NOT a quick sweep. Bundle into a future "ShipInstance shim retirement" project — likely 2-3 phases of mechanical caller migration per shim cluster (serializer, bridge, resource manager). The class docstring already documents the explicit removal conditions; act on them when bandwidth allows.
 - **Effort (original)**: large
 
-### Status as of 2026-05-19
-- **Disposition in this project: explicit follow-up decision; not closed here.**
-- The original action ("bundle into a future project") is exactly what Codex r4 redesign formalizes: PROJ-449 retires the wrapper + property shims (the easy LOC), and PROJ-459 Phase 3 then re-measures.
-- **Decision matrix for Phase 3:**
-  - If LOC < 500 after PROJ-449 ships: close F-A-007 here. Record "ceiling met after wrapper retirement" in `decisions.md`.
-  - If LOC ≥ 500 after PROJ-449 ships: spin out as a separate "next-touch" project (likely PROJ-461). Document the residual shim cluster (which TD-06 shims survive, why they can't retire without the 910-caller sweep) in the new project's charter. PROJ-459 records the spinout but does NOT attempt the split.
+### Status as of 2026-05-19 (Phase 3 verdict)
+- **Disposition: SPUN OUT as PROJ-461.** Post-PROJ-449 + post-PROJ-454 LOC = **789** (+289 over the 500 ceiling). The retained TD-06 high-value shim cluster + class-docstring catalog account for the residual overage. The 910-caller migration sweep (PROJ-425 Phase 5d/5e estimate) is the actual cost and is out of PROJ-459's scope per Codex r4 directive.
+- PROJ-461 created at `Projects/active_projects/PROJ-461/`. F-A-007 transferred verbatim to `PROJ-461/findings/PROJ-461_findings.md` with updated status. PROJ-459 retains only the measurement-decision narrative here.
+- See PROJ-459 decisions.md row 2026-05-19 (Phase 3 verdict) for the disposition entry.
 
 ---
 
@@ -43,10 +41,19 @@ This project carries three findings:
 - **Effort (original)**: small
 
 ### Status as of 2026-05-19
-- **Disposition in this project: Phase 1 closes this finding.**
+- **Disposition in this project: CLOSED via Phase 1 extraction.**
 - Re-measurement confirms fleet.py is now 686 LOC (up slightly from the original 677 — small drift). `Fleet.to_dict` is at fleet.py:520; `Fleet.from_dict` is at fleet.py:558; `resolve_order_references` is at fleet.py:657. All three are at the locations the original finding identified.
 - Phase 1 mirrors the planet_serde extraction exactly. Save-format byte-identity is the regression gate; targeted save-load tests are the TDD entry point.
 - Note: Fleet's from_dict requires the `registries` parameter (unlike Planet's), because ship deserialization needs it. The fleet_serde split must thread the registry through. Verified by Read of fleet.py:558-655 on 2026-05-19.
+
+### Closure record — 2026-05-19 Phase 1 execution
+- `game/strategy/data/fleet_serde.py` created (168 LOC). Public surface: `fleet_to_dict`, `fleet_from_dict_kwargs`, `_deserialize_fleet_ships`, `_deserialize_fleet_orders`. Mirrors `planet_serde.py` (219 LOC).
+- `Fleet.to_dict` reduced to a 1-line facade calling `fleet_to_dict(self)`. `Fleet.from_dict` is a **thin facade** that calls `Fleet(**fleet_from_dict_kwargs(data, registries))` then performs the unavoidable post-construction hydration of `ships` / `task_forces` / `fleet_policy` / `path` / `construction_queue` / `orders` (none of which `Fleet.__init__` accepts as kwargs — see decisions.md row 2026-05-19 "fleet_from_dict_kwargs returns only Fleet.__init__ kwargs"). `Fleet.resolve_order_references` stays a method on `Fleet` (already a thin delegate to `OrderSerializer`; moving it adds no value — see decisions.md row 2026-05-19).
+- fleet.py LOC: 693 → 632 (−61). Still above 500-LOC ceiling; the next mechanical extraction target (order-queue management, ~120 LOC) is the natural next-touch.
+- Save-format byte-identical, confirmed by new characterization test at `tests/integration/save_load/test_fleet_serde_roundtrip.py` (3 tests).
+- Targeted regression: 35 tests pass (`test_fleet_serde_roundtrip.py` + `test_roundtrip_fleet.py` + `test_serialization.py`). Broader `tests/integration/save_load/` + `tests/unit/strategy/fleet/`: 388 pass.
+- Full sharded suite: 23397/23397 passed, 0 failures.
+- F-A-008 marked **closed**.
 
 ---
 

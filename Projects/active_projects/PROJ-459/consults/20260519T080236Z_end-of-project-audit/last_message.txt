@@ -1,0 +1,3 @@
+Processed the consult request and wrote the response at [response.md](/abs/path/C:/Dev/Starship Battles/Projects/active_projects/PROJ-459/consults/20260519T080236Z_end-of-project-audit/response.md).
+
+The consult is marked `needs-fixes`. The two verified issues are that PROJ-459’s closure note incorrectly says `Fleet.from_dict` became a 1-line facade, and PROJ-461 is still too template-level to be a solid canonical follow-up because its phase checklist is blank and its LOC baseline is stale relative to current HEAD. No tests were run because `allow_tests=false`.

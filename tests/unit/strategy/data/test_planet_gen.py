@@ -11,6 +11,11 @@ from unittest.mock import MagicMock, patch
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.planet import PlanetType
+from game.strategy.data.planet_gen_surface import (
+    determine_planet_type,
+    generate_resources,
+    generate_surface_flags,
+)
 
 
 # =============================================================================
@@ -350,7 +355,7 @@ class TestSurfaceFlags:
         """Large bodies have higher activity and magnetic field."""
         from game.strategy.data.planet_physics import MASS_EARTH
 
-        water, activity, mag = planet_generator._generate_surface_flags(MASS_EARTH, 300)
+        water, activity, mag = generate_surface_flags(MASS_EARTH, 300)
 
         # Earth-like should have notable activity
         assert activity > 0
@@ -360,7 +365,7 @@ class TestSurfaceFlags:
         """Small bodies have low activity."""
         from game.strategy.data.planet_physics import MASS_CERES
 
-        water, activity, mag = planet_generator._generate_surface_flags(MASS_CERES, 200)
+        water, activity, mag = generate_surface_flags(MASS_CERES, 200)
 
         # Ceres-like should have minimal activity
         assert activity <= 0.2
@@ -370,7 +375,7 @@ class TestSurfaceFlags:
         """Water present in habitable temperature range."""
         from game.strategy.data.planet_physics import MASS_EARTH
 
-        water, _, _ = planet_generator._generate_surface_flags(MASS_EARTH, 290)
+        water, _, _ = generate_surface_flags(MASS_EARTH, 290)
 
         # Should have some water in habitable range
         assert water >= 0
@@ -379,7 +384,7 @@ class TestSurfaceFlags:
         """No water when too hot (boiled off)."""
         from game.strategy.data.planet_physics import MASS_EARTH
 
-        water, _, _ = planet_generator._generate_surface_flags(MASS_EARTH, 500)
+        water, _, _ = generate_surface_flags(MASS_EARTH, 500)
 
         assert water == 0
 
@@ -395,7 +400,7 @@ class TestPlanetTypeDetermination:
         """Very massive body classified as Jovian."""
         from game.strategy.data.planet_physics import MASS_JUPITER
 
-        p_type = planet_generator._determine_type(
+        p_type = determine_planet_type(
             mass=MASS_JUPITER,
             temp=150,
             pressure=1000,
@@ -407,7 +412,7 @@ class TestPlanetTypeDetermination:
 
     def test_determine_type_ice_giant(self, planet_generator):
         """Moderately massive cold body classified as Ice Giant."""
-        p_type = planet_generator._determine_type(
+        p_type = determine_planet_type(
             mass=5e25,  # Neptune-ish
             temp=80,
             pressure=100,
@@ -421,7 +426,7 @@ class TestPlanetTypeDetermination:
         """Hot terrestrial classified as Magma."""
         from game.strategy.data.planet_physics import MASS_EARTH
 
-        p_type = planet_generator._determine_type(
+        p_type = determine_planet_type(
             mass=MASS_EARTH,
             temp=1500,
             pressure=100,
@@ -435,7 +440,7 @@ class TestPlanetTypeDetermination:
         """Cold terrestrial classified as Cryoplanet."""
         from game.strategy.data.planet_physics import MASS_MARS
 
-        p_type = planet_generator._determine_type(
+        p_type = determine_planet_type(
             mass=MASS_MARS,
             temp=50,
             pressure=0.001,
@@ -450,7 +455,7 @@ class TestPlanetTypeDetermination:
         # Mass must be above dwarf_max (2e23) and below giant_min (6e24)
         # Vacuum threshold is 500 Pa, so pressure < 500 triggers vacuum path
         # temp above cold_limit (200) and below cryo_max (255) puts in barren
-        p_type = planet_generator._determine_type(
+        p_type = determine_planet_type(
             mass=5e23,  # Between dwarf_max (2e23) and giant_min (6e24)
             temp=220,   # Above cold_limit (200), below cryo_max (255)
             pressure=100,  # Below vacuum threshold (500)
@@ -466,7 +471,7 @@ class TestPlanetTypeDetermination:
 
         # Pelagic requires: mass in terrestrial range, pressure > vacuum (500),
         # water > ocean_world (0.85)
-        p_type = planet_generator._determine_type(
+        p_type = determine_planet_type(
             mass=MASS_EARTH,
             temp=290,
             pressure=101325,  # 1 atm (well above vacuum threshold of 500)
@@ -484,7 +489,7 @@ class TestPlanetTypeDetermination:
         # pressure > continental_pressure_min (5000),
         # temp in continental range (255-330),
         # water > arid (0.2) and < ocean_world (0.85)
-        p_type = planet_generator._determine_type(
+        p_type = determine_planet_type(
             mass=MASS_EARTH,
             temp=288,  # In continental temp range (255-330)
             pressure=101325,  # 1 atm (above continental_pressure_min of 5000)
@@ -500,7 +505,7 @@ class TestPlanetTypeDetermination:
 
         # Arid requires: mass in terrestrial range,
         # pressure > vacuum (500), water < arid (0.2)
-        p_type = planet_generator._determine_type(
+        p_type = determine_planet_type(
             mass=MASS_MARS,  # ~6.4e23, above dwarf_max
             temp=300,
             pressure=1000,  # Above vacuum threshold (500)
@@ -514,7 +519,7 @@ class TestPlanetTypeDetermination:
         """Cold dwarf classified as Ice Dwarf."""
         from game.strategy.data.planet_physics import MASS_CERES
 
-        p_type = planet_generator._determine_type(
+        p_type = determine_planet_type(
             mass=MASS_CERES * 0.5,
             temp=40,
             pressure=0,
@@ -528,7 +533,7 @@ class TestPlanetTypeDetermination:
         """Warm dwarf classified as Planetoid."""
         from game.strategy.data.planet_physics import MASS_CERES
 
-        p_type = planet_generator._determine_type(
+        p_type = determine_planet_type(
             mass=MASS_CERES * 0.5,
             temp=250,
             pressure=0,
@@ -550,7 +555,7 @@ class TestResourceGeneration:
         """_generate_resources returns dict of resources."""
         from game.strategy.data.planet_physics import MASS_EARTH
 
-        resources = planet_generator._generate_resources(MASS_EARTH, PlanetType.CONTINENTAL)
+        resources = generate_resources(MASS_EARTH, PlanetType.CONTINENTAL)
 
         assert isinstance(resources, dict)
 
@@ -558,7 +563,7 @@ class TestResourceGeneration:
         """Resources dict has quantity and quality for each resource."""
         from game.strategy.data.planet_physics import MASS_EARTH
 
-        resources = planet_generator._generate_resources(MASS_EARTH, PlanetType.CONTINENTAL)
+        resources = generate_resources(MASS_EARTH, PlanetType.CONTINENTAL)
 
         for res_name, res_data in resources.items():
             assert 'quantity' in res_data
@@ -568,7 +573,7 @@ class TestResourceGeneration:
         """Resource quantities are non-negative."""
         from game.strategy.data.planet_physics import MASS_EARTH
 
-        resources = planet_generator._generate_resources(MASS_EARTH, PlanetType.CONTINENTAL)
+        resources = generate_resources(MASS_EARTH, PlanetType.CONTINENTAL)
 
         for res_name, res_data in resources.items():
             assert res_data['quantity'] >= 0
@@ -577,7 +582,7 @@ class TestResourceGeneration:
         """Resource quality is bounded within valid range."""
         from game.strategy.data.planet_physics import MASS_EARTH
 
-        resources = planet_generator._generate_resources(MASS_EARTH, PlanetType.CONTINENTAL)
+        resources = generate_resources(MASS_EARTH, PlanetType.CONTINENTAL)
 
         for res_name, res_data in resources.items():
             assert 5.0 <= res_data['quality'] <= 100
@@ -586,8 +591,8 @@ class TestResourceGeneration:
         """Large planets tend to have higher resource quantities."""
         from game.strategy.data.planet_physics import MASS_JUPITER, MASS_CERES
 
-        large_resources = planet_generator._generate_resources(MASS_JUPITER, PlanetType.JOVIAN)
-        small_resources = planet_generator._generate_resources(MASS_CERES, PlanetType.PLANETOID)
+        large_resources = generate_resources(MASS_JUPITER, PlanetType.JOVIAN)
+        small_resources = generate_resources(MASS_CERES, PlanetType.PLANETOID)
 
         large_qty = sum(r['quantity'] for r in large_resources.values())
         small_qty = sum(r['quantity'] for r in small_resources.values())
@@ -603,7 +608,7 @@ class TestResourceGeneration:
         totals = {res: 0 for res in ["metals", "organics", "vapors", "radioactives", "exotics"]}
         n_samples = 50
         for _ in range(n_samples):
-            resources = planet_generator._generate_resources(MASS_EARTH, PlanetType.CONTINENTAL)
+            resources = generate_resources(MASS_EARTH, PlanetType.CONTINENTAL)
             for res_name, res_data in resources.items():
                 totals[res_name] += res_data['quantity']
 
@@ -623,8 +628,8 @@ class TestResourceGeneration:
         large_quals = []
         small_quals = []
         for _ in range(30):
-            large = planet_generator._generate_resources(MASS_JUPITER, PlanetType.JOVIAN)
-            small = planet_generator._generate_resources(MASS_CERES, PlanetType.PLANETOID)
+            large = generate_resources(MASS_JUPITER, PlanetType.JOVIAN)
+            small = generate_resources(MASS_CERES, PlanetType.PLANETOID)
             large_quals.append(sum(r['quality'] for r in large.values()) / 5)
             small_quals.append(sum(r['quality'] for r in small.values()) / 5)
 
@@ -638,7 +643,7 @@ class TestResourceGeneration:
         from game.strategy.data.planet_physics import MASS_CERES
 
         for _ in range(20):
-            resources = planet_generator._generate_resources(MASS_CERES, PlanetType.PLANETOID)
+            resources = generate_resources(MASS_CERES, PlanetType.PLANETOID)
             for res_name, res_data in resources.items():
                 assert res_data['quantity'] >= 10_000, (
                     f"{res_name} quantity {res_data['quantity']} below minimum floor"
@@ -655,7 +660,7 @@ class TestResourceGeneration:
         magma_totals = {"metals": 0, "organics": 0, "radioactives": 0}
         n_samples = 50
         for _ in range(n_samples):
-            resources = planet_generator._generate_resources(MASS_EARTH, PlanetType.MAGMA)
+            resources = generate_resources(MASS_EARTH, PlanetType.MAGMA)
             for res in magma_totals:
                 magma_totals[res] += resources[res]['quantity']
 
@@ -675,7 +680,7 @@ class TestResourceGeneration:
         metals_total = 0
         n_samples = 50
         for _ in range(n_samples):
-            resources = planet_generator._generate_resources(MASS_JUPITER, PlanetType.JOVIAN)
+            resources = generate_resources(MASS_JUPITER, PlanetType.JOVIAN)
             vapors_total += resources['vapors']['quantity']
             metals_total += resources['metals']['quantity']
 

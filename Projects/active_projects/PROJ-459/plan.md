@@ -15,17 +15,21 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Re-measure target files after PROJ-449 + PROJ-451 ship | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. F-A-008 — extract `Fleet.to_dict` / `Fleet.from_dict` into `fleet_serde.py` | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. F-A-009 — split `planet_gen.py` by sub-concern (or document deferral) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. F-A-007 measurement decision — `ship_instance.py` close-or-spinout | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 0. Re-measure target files after PROJ-449 + PROJ-451 ship | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
+| 1. F-A-008 — extract `Fleet.to_dict` / `Fleet.from_dict` into `fleet_serde.py` | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. F-A-009 — split `planet_gen.py` by sub-concern (or document deferral) | Complete (split) | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. F-A-007 measurement decision — `ship_instance.py` close-or-spinout | Complete (SPINOUT — PROJ-461) | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-19
-**Active Phase:** Planning
-**Last Action:** Group A cross-group collision resolution applied: doc-consolidation rule added (PROJ-457/459/460 all touch `docs/01_ARCHITECTURE.md` + `docs/02_PATTERNS.md`; last-to-finish does consolidated edit). Phase 3 LOC measurement note updated to gate on PROJ-454 (Group B) too — codex r5 found PROJ-454's component_inspector import removal at `ship_instance.py:635/654/663` materially affects the close-or-spinout threshold. Group A is ready for execution.
-**Next Action:** Run agent picks up PROJ-459 Phase 0 AFTER PROJ-449 + PROJ-451 close (Group A serial order: PROJ-449 → PROJ-451 → PROJ-459 → PROJ-450). Phase 0 is the gate that confirms scope.
-**Blockers:** Phase 1 hard-gated on PROJ-451 (production resource-consumption); Phase 3 hard-gated on PROJ-449 (wrapper retirement) AND PROJ-454 (Group B services + facade retirement; codex r5 COL-2 finding). Phase 0 confirms scope.
+**Active Phase:** All phases complete; codex audit next
+**Last Action:** Phase 3 complete. Verdict: SPINOUT to PROJ-461. ship_instance.py LOC = **789** (post PROJ-449 + PROJ-454), +289 over the 500 ceiling. Per Codex r4 directive ("F-A-007 should not be smuggled in as a side quest"), F-A-007 is transferred verbatim to PROJ-461 at `Projects/active_projects/PROJ-461/` with its own findings file. PROJ-459 retains only the measurement-decision narrative. PROJ-461 scoped to retire the 5 TD-06 high-value shim clusters via per-shim caller migration sweep (~910 callers per PROJ-425 Phase 5d/5e estimate).
+
+Phase 2 complete on branch `group-a`. Extracted `_generate_surface_flags`, `_determine_type`, `_generate_resources` from `PlanetGenerator` into new module `game/strategy/data/planet_gen_surface.py` (236 LOC). All three were pure functions (no `self` references in their bodies). `_get_planetary_ids` cached helper moved with `_generate_resources`. `planet_gen.py` 610 → 427 LOC (−183, **under the 500 ceiling**). 27 test call-site migrations across `test_planet_gen.py` + `test_planet_classification_logic.py` to call the module functions directly. One downstream fix in `tests/integration/strategy/test_planet_physics.py` re-pointed leaky re-exports at canonical sources. Sharded 23397/23397 GREEN. F-A-009 closed via split.
+
+Phase 1 complete on branch `group-a`. Created `game/strategy/data/fleet_serde.py` (168 LOC) mirroring `planet_serde.py` (219 LOC). Public surface: `fleet_to_dict`, `fleet_from_dict_kwargs`, `_deserialize_fleet_ships`, `_deserialize_fleet_orders`. `Fleet.to_dict` / `Fleet.from_dict` reduced to facade shape; `Fleet.resolve_order_references` stays on Fleet (mirrors planet_serde precedent — see decisions.md). fleet.py 693 → 632 LOC (−61); under target of ~545 but the irreducible post-construction hydration (task_forces / fleet_policy / path / construction_queue) must stay on Fleet per the `__init__` constraint. New characterization test `tests/integration/save_load/test_fleet_serde_roundtrip.py` (3 tests) locks byte-identical save shape. Targeted gate: 35 pass; broader save_load + fleet: 388 pass; full sharded: **23397/23397 passed, 0 failures**. F-A-008 closed. Doc edits staged to `Projects/active_projects/_doc_consolidation/PROJ-459_pending.md` per cross-group consolidation rule. Changes uncommitted, staged for main agent.
+**Next Action:** Dispatch end-of-project codex audit per protocol §10, then handle doc-consolidation per protocol §9 (if last finisher), then merge to main.
+**Blockers:** None.
 
 ## Overview
 Three clean LOC extractions in the strategy-data layer, plus a measurement-only decision on `ship_instance.py`:
