@@ -224,10 +224,14 @@ class TransferValidator:
     ) -> ValidationResult:
         """Validate a load operation (colony -> fleet)."""
         if cargo_type == "drop_pod":
-            # Validate staging yard has items
-            staging = getattr(planet, 'staging_yard', [])
-            if not isinstance(staging, list):
-                staging = []
+            # Validate staging yard has items.
+            # PROJ-450 Phase 3 changed the public Planet.staging_yard
+            # property to return ``tuple[CarriedVehicle | DropPod, ...]``;
+            # a ``list``-only isinstance check would reject the tuple
+            # and silently treat planets with pods as empty.
+            staging = getattr(planet, 'staging_yard', ())
+            if not isinstance(staging, (list, tuple)):
+                staging = ()
             if not staging:
                 return ValidationResult.error(
                     f"{planet.name} has no items in staging yard.",

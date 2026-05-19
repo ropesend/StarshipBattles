@@ -38,13 +38,15 @@ GALAXY_LOC_CEILING = 350  # Phase 4 final: tightened after pathfinding/intercept
 # typed inputs, and added ``pop_staging_yard_typed``. The growth is the
 # centralised conversion surface on the Planet boundary, not bloat;
 # Phase 2 widens the substrate type itself.
-# PROJ-450 Phase 2: raised from 485 to 525 — Phase 2 widened the
-# substrate type to ``List[CarriedVehicle | DropPod]``, added a
-# ``__post_init__`` normaliser (so direct kwarg construction promotes
-# dicts to typed entries) and the temporary dict-projection
-# ``staging_yard`` bridge property docstring. Phase 3 deletes the
-# bridge — ceiling will drop back.
-PLANET_LOC_CEILING = 525
+# PROJ-450 Phase 3 codex-audit: reclaimed headroom. Phase 2 raised the
+# ceiling to 525 to absorb the substrate-widening surface; Phase 3
+# replaced the dict-projection bridge with a one-line typed read-only
+# property, so the file is now 504 LOC. Ceiling reset to 520 (≈16 LOC
+# headroom for incremental edits without thrash). The file remains
+# slightly above the 500 project convention but the headroom-vs-thrash
+# trade-off favours leaving it at 504+ with a tight ceiling rather than
+# forcing a sub-500 split that would just extract docstrings.
+PLANET_LOC_CEILING = 520
 STARS_LOC_CEILING = 280  # Phase 1: tightened from 770 after Spectrum/StarGenerator extraction.
 
 
