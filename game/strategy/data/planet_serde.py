@@ -15,12 +15,42 @@ from game.core.validation_helpers import (
     validate_non_negative,
     validate_positive,
 )
+from game.strategy.data.bay_inventory import DropPod
+from game.strategy.data.carried_vehicle import CarriedVehicle
 
 if TYPE_CHECKING:
     from game.strategy.data.planet import Planet, PlanetType
 
 
 __all__ = ["planet_to_dict", "planet_from_dict_kwargs"]
+
+
+def _normalize_to_typed(
+    items: list,
+) -> "list[CarriedVehicle | DropPod]":
+    """Promote save-shape dicts to typed entries.
+
+    PROJ-450 Phase 2: invoked by ``planet_from_dict_kwargs`` so the
+    loaded Planet's ``_staging_yard`` is typed even though the on-disk
+    save uses dicts. Mirrors the discriminator logic in
+    :func:`game.strategy.data.planet._staging_yard_carried_vehicle` and
+    :func:`game.strategy.data.planet._pod_from_dict`.
+    """
+    from game.strategy.data.planet import (
+        _staging_yard_carried_vehicle,
+        _pod_from_dict,
+    )
+    result: list[CarriedVehicle | DropPod] = []
+    for item in items:
+        if isinstance(item, (CarriedVehicle, DropPod)):
+            result.append(item)
+            continue
+        cv = _staging_yard_carried_vehicle(item)
+        if cv is not None:
+            result.append(cv)
+            continue
+        result.append(_pod_from_dict(item))
+    return result
 
 
 def planet_to_dict(planet: "Planet") -> Dict[str, Any]:
@@ -49,7 +79,14 @@ def planet_to_dict(planet: "Planet") -> Dict[str, Any]:
         "deposits": {k: v.copy() for k, v in planet.deposits.items()},
         "stockpile": dict(planet._stockpile),
         "max_stockpile": dict(planet._max_stockpile),
-        "staging_yard": list(planet._staging_yard),
+        # PROJ-450 Phase 2: substrate holds typed CarriedVehicle /
+        # DropPod entries; flatten back to dict shape at the save
+        # boundary. Defensive: a dict that slipped into the substrate
+        # via direct assignment passes through unchanged.
+        "staging_yard": [
+            item if isinstance(item, dict) else item.to_dict()
+            for item in planet._staging_yard
+        ],
         "max_staging_mass": planet.max_staging_mass,
         "facilities": [f.to_dict() for f in planet.facilities],
         "populations": [
@@ -156,7 +193,7 @@ def planet_from_dict_kwargs(data: dict) -> Dict[str, Any]:
         deposits=data.get("deposits", {}),
         _stockpile=data.get("stockpile", {}),
         _max_stockpile=data.get("max_stockpile", {}),
-        _staging_yard=data.get("staging_yard", []),
+        _staging_yard=_normalize_to_typed(data.get("staging_yard", [])),
         max_staging_mass=data.get("max_staging_mass", 0.0),
         facilities=facilities,
         populations=populations,

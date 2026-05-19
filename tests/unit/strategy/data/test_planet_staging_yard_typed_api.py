@@ -175,3 +175,115 @@ def test_pop_staging_yard_typed_returns_none_on_out_of_range():
     assert planet.pop_staging_yard_typed(0) is None
     assert planet.pop_staging_yard_typed(5) is None
     assert planet.pop_staging_yard_typed(-1) is None
+
+
+# ---------------------------------------------------------------------------
+# PROJ-450 Phase 2: typed substrate contract
+# ---------------------------------------------------------------------------
+
+
+def test_staging_yard_internal_storage_is_typed():
+    """After ``add_to_staging_yard``, the private ``_staging_yard``
+    list holds typed :class:`CarriedVehicle` / :class:`DropPod` entries
+    rather than dicts.
+
+    PROJ-450 Phase 2 contract: the substrate is widened to
+    ``List[CarriedVehicle | DropPod]``. Dict inputs are promoted to
+    typed entries before append.
+    """
+    planet = _empty_planet()
+    cv = CarriedVehicle(
+        design_id="fighter_alpha",
+        design_data={"name": "fighter_alpha"},
+        vehicle_type="fighter",
+        mass=20.0,
+        current_hp=80,
+    )
+    pod = DropPod(
+        design_id="drop_pod_basic",
+        design_data={"name": "drop_pod_basic"},
+        mass=100.0,
+        payload={"name": "PodAlpha"},
+    )
+    legacy_pod = {
+        "design_id": "drop_pod_legacy",
+        "mass": 50.0,
+        "name": "LegacyPod",
+    }
+    assert planet.add_to_staging_yard(cv) is True
+    assert planet.add_to_staging_yard(pod) is True
+    assert planet.add_to_staging_yard(legacy_pod) is True
+    for stored in planet._staging_yard:
+        assert isinstance(stored, (CarriedVehicle, DropPod)), (
+            f"_staging_yard entry is {type(stored).__name__}, expected "
+            f"CarriedVehicle | DropPod (PROJ-450 Phase 2)"
+        )
+
+
+def test_save_round_trip_preserves_typed_substrate():
+    """A save -> load round-trip leaves ``_staging_yard`` typed.
+
+    The save format on-disk is dict-shaped (per the
+    :meth:`CarriedVehicle.to_dict` / :meth:`DropPod.to_dict`
+    serialisation), but the loaded Planet's substrate is typed again
+    via ``planet_serde._normalize_to_typed``.
+    """
+    from game.strategy.data.planet import Planet
+
+    planet = _empty_planet()
+    cv = CarriedVehicle(
+        design_id="fighter_alpha",
+        design_data={"name": "fighter_alpha"},
+        vehicle_type="fighter",
+        mass=20.0,
+        current_hp=80,
+    )
+    pod = DropPod(
+        design_id="drop_pod_basic",
+        design_data={"name": "drop_pod_basic"},
+        mass=100.0,
+        payload={"name": "PodAlpha"},
+    )
+    assert planet.add_to_staging_yard(cv) is True
+    assert planet.add_to_staging_yard(pod) is True
+
+    saved = planet.to_dict()
+    loaded = Planet.from_dict(saved)
+
+    assert len(loaded._staging_yard) == 2
+    for stored in loaded._staging_yard:
+        assert isinstance(stored, (CarriedVehicle, DropPod)), (
+            f"After round-trip, _staging_yard entry is "
+            f"{type(stored).__name__}, expected typed"
+        )
+
+
+def test_save_format_remains_dict_shape():
+    """``planet.to_dict()['staging_yard']`` is still
+    ``List[Dict[str, Any]]`` — typed entries flatten back to dicts at
+    the save boundary."""
+    planet = _empty_planet()
+    cv = CarriedVehicle(
+        design_id="fighter_alpha",
+        design_data={"name": "fighter_alpha"},
+        vehicle_type="fighter",
+        mass=20.0,
+        current_hp=80,
+    )
+    pod = DropPod(
+        design_id="drop_pod_basic",
+        design_data={"name": "drop_pod_basic"},
+        mass=100.0,
+        payload={"name": "PodAlpha"},
+    )
+    assert planet.add_to_staging_yard(cv) is True
+    assert planet.add_to_staging_yard(pod) is True
+
+    saved = planet.to_dict()
+    yard = saved["staging_yard"]
+    assert isinstance(yard, list)
+    for entry in yard:
+        assert isinstance(entry, dict), (
+            f"save-shape staging_yard entry is {type(entry).__name__}, "
+            f"expected dict"
+        )

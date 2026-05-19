@@ -45,9 +45,11 @@ class TestPlanetBuiltSmallCraftToStaging:
         )
         # Routed to staging_yard, not _spawn_ship.
         planet.add_to_staging_yard.assert_called_once()
-        # CarriedVehicle-shaped (current_hp recorded).
+        # PROJ-450 Phase 2: typed CarriedVehicle entry.
+        from game.strategy.data.carried_vehicle import CarriedVehicle
         staging_item = planet.add_to_staging_yard.call_args[0][0]
-        assert staging_item['vehicle_type'] == vtype
+        assert isinstance(staging_item, CarriedVehicle)
+        assert staging_item.vehicle_type == vtype
 
 
 class TestFleetBuiltSmallCraftToBay:

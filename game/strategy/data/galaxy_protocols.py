@@ -43,6 +43,8 @@ if TYPE_CHECKING:
     from game.core.hex_math import HexCoord
     from game.strategy.data.star_system import StarSystem
     from game.strategy.data.planet import Planet
+    from game.strategy.data.bay_inventory import DropPod
+    from game.strategy.data.carried_vehicle import CarriedVehicle
 
 
 __all__ = [
@@ -186,14 +188,25 @@ class IStagingYardHolder(Protocol):
         """Total mass of items currently in the staging yard."""
         ...
 
-    def add_to_staging_yard(self, item: Dict[str, Any]) -> bool:
-        """Add `item`; return False on insufficient capacity."""
+    def add_to_staging_yard(
+        self, item: "CarriedVehicle | DropPod | Dict[str, Any]"
+    ) -> bool:
+        """Add ``item``; return False on insufficient capacity.
+
+        PROJ-450 Phase 2: the substrate is typed
+        (``List[CarriedVehicle | DropPod]``); legacy ``Dict[str, Any]``
+        inputs are still accepted and normalised on the Planet
+        boundary.
+        """
         ...
 
     def remove_from_staging_yard(
         self, index: int
-    ) -> Optional[Dict[str, Any]]:
-        """Remove by index; return removed item or None."""
+    ) -> "CarriedVehicle | DropPod | None":
+        """Remove by index; return removed item or None.
+
+        PROJ-450 Phase 2: returns typed entries directly.
+        """
         ...
 
     @property

@@ -38,7 +38,13 @@ GALAXY_LOC_CEILING = 350  # Phase 4 final: tightened after pathfinding/intercept
 # typed inputs, and added ``pop_staging_yard_typed``. The growth is the
 # centralised conversion surface on the Planet boundary, not bloat;
 # Phase 2 widens the substrate type itself.
-PLANET_LOC_CEILING = 485
+# PROJ-450 Phase 2: raised from 485 to 525 — Phase 2 widened the
+# substrate type to ``List[CarriedVehicle | DropPod]``, added a
+# ``__post_init__`` normaliser (so direct kwarg construction promotes
+# dicts to typed entries) and the temporary dict-projection
+# ``staging_yard`` bridge property docstring. Phase 3 deletes the
+# bridge — ceiling will drop back.
+PLANET_LOC_CEILING = 525
 STARS_LOC_CEILING = 280  # Phase 1: tightened from 770 after Spectrum/StarGenerator extraction.
 
 
@@ -78,7 +84,11 @@ SERVICE_CEILINGS = {
     # PROJ-443 Phase 3a: raised from 200 to 210 to reflect 2-LOC drift since
     # PROJ-372 Phase 5 close. Trivial overshoot; phase 6 Codex consult may
     # decide whether to require tightening back.
-    "strategy/data/galaxy_protocols.py": 210,
+    # PROJ-450 Phase 2: raised from 210 to 230 — Phase 2 tightened
+    # IStagingYardHolder.add_to_staging_yard / remove_from_staging_yard
+    # signatures to the typed union + added per-method docstrings
+    # documenting the typed substrate.
+    "strategy/data/galaxy_protocols.py": 230,
     "strategy/data/spectrum.py": 80,
     "core/spectrum_math.py": 200,
     "strategy/generation/star_generator.py": 500,

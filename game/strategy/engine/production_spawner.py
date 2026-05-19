@@ -9,6 +9,8 @@ import logging
 import uuid
 from typing import Optional, Any, Dict, List, Mapping, Tuple, TYPE_CHECKING
 
+from game.strategy.data.bay_inventory import DropPod
+from game.strategy.data.carried_vehicle import CarriedVehicle, VALID_VEHICLE_TYPES
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.data.ship_instance import ShipInstance
@@ -344,24 +346,37 @@ class ProductionSpawner:
             max_hp = int(stats.get('max_hp', 0))
 
         vehicle_type = item.get('type', 'drop_pod').lower()
-        staging_item: Dict[str, Any] = {
-            'design_id': design_id,
-            'name': design_data.get('name', design_id),
-            'vehicle_type': vehicle_type,
-            'design_data': design_data,
-            'mass': total_mass,
-            'owner_id': empire.id,
-        }
-        # PROJ-FMS-A Phase 4: design-backed carried vehicles (mine /
-        # fighter / satellite) carry a typed per-instance HP through
-        # staging so transfer round-trips preserve damage state. Drop
-        # pods retain their legacy dict shape.
-        if vehicle_type in ("mine", "fighter", "satellite"):
-            staging_item['current_hp'] = max_hp
+        item_name = design_data.get('name', design_id)
+        # PROJ-450 Phase 2: construct typed staging entries directly.
+        # CarriedVehicle covers mines / fighters / satellites (carries
+        # per-instance HP for transfer round-trips); everything else
+        # (e.g. drop_pod) goes to DropPod with owner_id + name + type
+        # stashed in payload so the existing UI / transfer-branches
+        # readers continue to find them via the dict-projection bridge.
+        staging_entry: "CarriedVehicle | DropPod"
+        if vehicle_type in VALID_VEHICLE_TYPES:
+            staging_entry = CarriedVehicle(
+                design_id=design_id,
+                design_data=design_data,
+                vehicle_type=vehicle_type,
+                mass=total_mass,
+                current_hp=max_hp,
+            )
+        else:
+            staging_entry = DropPod(
+                design_id=design_id,
+                design_data=design_data,
+                mass=total_mass,
+                payload={
+                    'name': item_name,
+                    'vehicle_type': vehicle_type,
+                    'owner_id': empire.id,
+                },
+            )
 
-        if planet.add_to_staging_yard(staging_item):
+        if planet.add_to_staging_yard(staging_entry):
             logger.info(
-                f"Spawned {staging_item['vehicle_type']} '{staging_item['name']}' "
+                f"Spawned {vehicle_type} '{item_name}' "
                 f"to staging yard on {planet.name} (mass: {total_mass:.0f})"
             )
             # QA-OBS-4: emit a SHIP_BUILT event so the in-game event log
@@ -374,18 +389,18 @@ class ProductionSpawner:
                     category=EventCategory.PRODUCTION,
                     empire_id=empire.id,
                     message=(
-                        f"Built {staging_item['vehicle_type']} "
-                        f"{staging_item['name']} on {planet.name} (staging yard)"
+                        f"Built {vehicle_type} "
+                        f"{item_name} on {planet.name} (staging yard)"
                     ),
                     design_id=design_id,
                     planet_id=planet.id,
                     location_name=planet.name,
-                    vehicle_type=staging_item['vehicle_type'],
+                    vehicle_type=vehicle_type,
                 )
         else:
             logger.warning(
                 f"Staging yard full on {planet.name}: cannot store "
-                f"'{staging_item['name']}' (mass: {total_mass:.0f})"
+                f"'{item_name}' (mass: {total_mass:.0f})"
             )
             # QA-OBS-4: failure path also needs a visible event so the
             # player learns the output was discarded (mirrors the
@@ -396,14 +411,14 @@ class ProductionSpawner:
                     category=EventCategory.PRODUCTION,
                     empire_id=empire.id,
                     message=(
-                        f"Cannot store {staging_item['vehicle_type']} "
-                        f"{staging_item['name']} on {planet.name} - "
+                        f"Cannot store {vehicle_type} "
+                        f"{item_name} on {planet.name} - "
                         f"staging yard full (output discarded)"
                     ),
                     design_id=design_id,
                     planet_id=planet.id,
                     location_name=planet.name,
-                    vehicle_type=staging_item['vehicle_type'],
+                    vehicle_type=vehicle_type,
                 )
 
     def _spawn_ship(

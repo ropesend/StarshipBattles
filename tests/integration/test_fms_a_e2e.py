@@ -302,7 +302,11 @@ class TestTransferHandlerVehicleE2E:
             fresh_registries
         )
         # Pre-load the ship instead — and clear the planet staging.
-        planet.staging_yard.clear()
+        # PROJ-450 Phase 2.0: the staging_yard property is a fresh dict
+        # projection over the typed _staging_yard substrate, so an
+        # in-place .clear() would silently no-op. Use the mutator API.
+        while planet._staging_yard:
+            planet.remove_from_staging_yard(0)
         mine = CarriedVehicle(
             design_id="qs_mine_small",
             design_data={"name": "qs_mine_small", "ship_class": "Mine (Small)"},

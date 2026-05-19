@@ -113,10 +113,14 @@ def _build_decorated_planet(name: str, location: HexCoord) -> Planet:
     }
     planet._stockpile = {"metals": 250.0, "organics": 75.0}
     planet._max_stockpile = {"metals": 1000.0, "organics": 500.0}
-    planet._staging_yard = [
-        {"design_id": "test_ship", "ready_at_turn": 5, "mass": 100.0},
-    ]
     planet.max_staging_mass = 500.0
+    # PROJ-450 Phase 2: route through the public mutator so the entry
+    # is promoted to a typed DropPod / CarriedVehicle on the way in.
+    # Direct ``planet._staging_yard = [dict, ...]`` would skip the
+    # typed-substrate invariant enforced by ``Planet.__post_init__``.
+    planet.add_to_staging_yard(
+        {"design_id": "test_ship", "ready_at_turn": 5, "mass": 100.0}
+    )
     planet.facilities = [
         PlanetaryFacility(
             instance_id="fixture-facility-uuid-0001",
