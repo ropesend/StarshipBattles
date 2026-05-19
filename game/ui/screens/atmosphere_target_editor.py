@@ -2,6 +2,11 @@
 
 Provides sliders and numeric display for each gas, plus a "Set to Species Ideal"
 button that populates targets from the colony's species atmosphere preferences.
+
+PROJ-458 Phase 2: retrofitted with the Pattern #33 two-stage UIWindow
+bypass-init shape — Stage 1 pure-Python state + ``ui_builder`` seam
+above the bypass guard, Stage 2 ``super().__init__`` + widget tree
+below.
 """
 from __future__ import annotations
 
@@ -12,7 +17,7 @@ from pygame_gui.elements import (
     UIPanel, UILabel, UIButton, UIHorizontalSlider,
     UIScrollingContainer,
 )
-from typing import Any, Dict, Optional, Callable, TYPE_CHECKING
+from typing import Any, Dict, Optional, Callable, Protocol, TYPE_CHECKING
 
 from game.ui.screens.species_selector_mixin import build_species_selector
 from game.ui.screens.planet_target_editor_base import PlanetTargetEditor
@@ -21,6 +26,31 @@ if TYPE_CHECKING:
     from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 logger = logging.getLogger(__name__)
+
+
+class AtmosphereTargetEditorUiBuilder(Protocol):
+    """Stage-2 widget-tree builder for :class:`AtmosphereTargetEditor`.
+
+    Pattern #33 retrofit seam: production instantiates
+    :class:`DefaultAtmosphereTargetEditorUiBuilder`; tests may inject a
+    no-op builder under ``bypass_init``.
+    """
+
+    def build(self, window: "AtmosphereTargetEditor") -> None: ...
+
+
+class DefaultAtmosphereTargetEditorUiBuilder:
+    """Real pygame_gui widget tree builder for production paths.
+
+    Thin wrapper around the editor's existing ``_build_ui()`` method.
+    Keeping the widget construction body on the editor preserves
+    encapsulation of the gas / slider / label dicts that ``_build_ui``
+    populates and that subsequent methods (``update``, ``_on_apply``,
+    etc.) read.
+    """
+
+    def build(self, window: "AtmosphereTargetEditor") -> None:
+        window._build_ui()
 
 # All possible gases in order
 ALL_GASES = ["N2", "O2", "CO2", "H2O", "CH4", "H2", "He", "Ar", "NH3", "SO2"]
@@ -59,6 +89,7 @@ class AtmosphereTargetEditor(PlanetTargetEditor):
         on_apply_callback: Optional[Callable[[int, Dict[str, float]], None]] = None,
         on_close_callback: Optional[Callable[[], None]] = None,
         race_config=None,
+        ui_builder: Optional[AtmosphereTargetEditorUiBuilder] = None,
     ):
         """Initialize atmosphere target editor.
 
@@ -70,14 +101,12 @@ class AtmosphereTargetEditor(PlanetTargetEditor):
             on_apply_callback: Called with (planet_id, target_dict) when Apply clicked.
             on_close_callback: Called when window is closed.
             race_config: Optional RaceConfig for species ideal presets.
+            ui_builder: Optional Stage-2 widget builder. Production
+                supplies :class:`DefaultAtmosphereTargetEditorUiBuilder`;
+                tests inject a no-op builder under ``bypass_init``.
         """
-        super().__init__(
-            rect, manager,
-            window_display_title=f"Atmosphere Target: {planet.name}",
-            resizable=True,
-            window_manager=window_manager,
-        )
-
+        # Stage 1 — pure-Python state + UI-builder seam.
+        # No pygame_gui widgets, no self.get_container(), no asset I/O.
         self.planet = planet
         self.on_apply_callback = on_apply_callback
         self.on_close_callback = on_close_callback
@@ -100,8 +129,26 @@ class AtmosphereTargetEditor(PlanetTargetEditor):
         self.sliders: Dict[str, UIHorizontalSlider] = {}
         self.value_labels: Dict[str, UILabel] = {}
         self.current_labels: Dict[str, UILabel] = {}
+        self._ui_builder: AtmosphereTargetEditorUiBuilder = (
+            ui_builder or DefaultAtmosphereTargetEditorUiBuilder()
+        )
 
-        self._build_ui()
+        # Bypass guard — type(self) so subclass flags win.
+        if getattr(type(self), "bypass_init", False):
+            self.ui_manager = manager
+            self._window_init_bypassed = True
+            object.__setattr__(self, "_rect", rect)
+            return
+
+        # Stage 2 — heavy widget tree.
+        super().__init__(
+            rect, manager,
+            window_display_title=f"Atmosphere Target: {planet.name}",
+            resizable=True,
+            window_manager=window_manager,
+        )
+        self._window_init_bypassed = False
+        self._ui_builder.build(self)
 
     def _build_ui(self) -> None:
         """Build the editor UI with sliders for each gas."""
