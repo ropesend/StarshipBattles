@@ -683,7 +683,22 @@ class ProductionEngine(IProductionEngine):
         for res, amount in cost_this_step.items():
             if amount > 0:
                 before = colony_or_fleet.production_get_resource(res)
-                colony_or_fleet.production_consume_resource(res, amount)
+                consume_succeeded = colony_or_fleet.production_consume_resource(res, amount)
+                # DI-2026-05-18-007 closure (PROJ-451 Phase 3 option B):
+                # the IProductionResourceSource contract MUSTs that
+                # ``production_consume_resource`` returns True whenever
+                # ``production_has_resources`` returned True for the same
+                # ``(resource_type, amount)`` in the same engine tick.
+                # A False return is a programmer error in the implementer;
+                # surface it loudly rather than silently burning tick
+                # capacity. Per CLAUDE.md "Capability validation is hard,
+                # not soft."
+                assert consume_succeeded, (
+                    f"Contract breach: production_consume_resource("
+                    f"{res!r}, {amount}) returned False on "
+                    f"{type(colony_or_fleet).__name__} but "
+                    f"production_has_resources passed earlier in this tick."
+                )
                 after = colony_or_fleet.production_get_resource(res)
                 actually_consumed = before - after
                 item['resources_consumed'][res] = (

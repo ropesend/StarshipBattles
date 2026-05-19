@@ -211,6 +211,40 @@ def test_apply_resource_consumption_emits_shortage_on_zero_consume(fresh_registr
     )
 
 
+def test_apply_resource_consumption_raises_on_contract_breach(fresh_registries, empire):
+    """PROJ-451 Phase 3 (option B, DI-2026-05-18-007 closure):
+
+    When ``production_consume_resource`` returns False after
+    affordability passed, ``_apply_resource_consumption`` raises
+    ``AssertionError`` rather than silently burning ``tick_capacity``.
+    Failure is a programmer error in the implementer (the Protocol
+    contract MUSTs consume succeeds when has-resources returned True
+    in the same tick), not a runtime degradation mode.
+    """
+    event_bus = MagicMock()
+    engine_with_bus = ProductionEngine(
+        registries=fresh_registries, event_bus=event_bus,
+    )
+    mock_source = MagicMock(spec=Fleet)
+    # Source consents to affordability + reports resources, but consume
+    # returns False — synthesises a broken implementer.
+    mock_source.production_has_resources.return_value = True
+    mock_source.production_get_resource.return_value = 1.0
+    mock_source.production_consume_resource.return_value = False
+    mock_source.location = None
+
+    item = {
+        "design_id": "broken-impl",
+        "type": "ship",
+        "resources_consumed": {"metals": 0.0},
+    }
+
+    with pytest.raises(AssertionError, match="Contract breach"):
+        engine_with_bus._apply_resource_consumption(
+            empire, item, {"metals": 0.1}, mock_source,
+        )
+
+
 def test_apply_resource_consumption_skips_zero_amount_resources(engine, empire):
     """Resources with `amount <= 0` are not consumed (guard preserved).
 

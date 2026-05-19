@@ -77,7 +77,15 @@ def _make_colony(
         return all(colony.stockpile.get(r, 0.0) >= a for r, a in costs.items())
 
     def consume_from_stockpile(resource, amount):
-        colony.stockpile[resource] = colony.stockpile.get(resource, 0.0) - amount
+        # PROJ-451 Phase 3 (option B): mirror real Planet.consume_from_stockpile
+        # bool return. The engine asserts the contract that consume succeeds
+        # when affordability passed; returning None (implicit) reads as
+        # False and trips the assertion.
+        current = colony.stockpile.get(resource, 0.0)
+        if current < amount:
+            return False
+        colony.stockpile[resource] = current - amount
+        return True
 
     def get_stockpile(resource):
         return colony.stockpile.get(resource, 0.0)
