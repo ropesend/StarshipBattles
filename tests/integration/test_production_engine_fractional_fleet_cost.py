@@ -219,10 +219,6 @@ class TestFractionalCostRoundedToZeroEmitsResourceShortage:
     engine must route to the shortage-emit path.
     """
 
-    @pytest.mark.xfail(
-        reason="PROJ-451 Phase 1 RED — fixed by Phase 2 (RESOURCE_SHORTAGE emit on zero-consume).",
-        strict=True,
-    )
     def test_engine_level_zero_consume_emits_resource_shortage(self, engine):
         fleet: Fleet = create_test_fleet(num_ships=1)
         fleet.ships[0]._cargo_mgr.set_cargo("metals", 1)
@@ -255,10 +251,6 @@ class TestQueueLoopRoundedToZeroEmitsResourceShortage:
     primitive. The queue stalls AND a shortage event must surface.
     """
 
-    @pytest.mark.xfail(
-        reason="PROJ-451 Phase 1 RED — fixed by Phase 2 (RESOURCE_SHORTAGE emit on zero-consume).",
-        strict=True,
-    )
     def test_fractional_per_step_cost_against_int_cargo_emits_resource_shortage(
         self, engine,
     ):

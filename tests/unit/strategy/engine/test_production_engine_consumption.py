@@ -165,10 +165,6 @@ def test_apply_resource_consumption_raises_when_not_production_resource_source(e
         engine._apply_resource_consumption(empire, item, {"metals": 7.0}, bare)
 
 
-@pytest.mark.xfail(
-    reason="PROJ-451 Phase 1 RED — fixed by Phase 2 (emit RESOURCE_SHORTAGE on zero-consume).",
-    strict=True,
-)
 def test_apply_resource_consumption_emits_shortage_on_zero_consume(fresh_registries, empire):
     """PROJ-451 Phase 1 RED: DI-2026-05-18-006 unit-test analog.
 

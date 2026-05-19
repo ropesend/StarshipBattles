@@ -281,10 +281,17 @@ class Fleet:
         Returns:
             True if successful, False if insufficient.
         """
+        # DI-2026-05-18-006 / PROJ-451 Phase 2 Task 2.0: round the gate
+        # to match ``has_cargo_resources`` (`fleet.py:267`) and the
+        # actual unload amount below. Pre-fix asymmetry: this gate
+        # compared raw ``amount`` while the has-side rounded, so the
+        # two methods disagreed on rounded-to-zero costs against a
+        # zero-balance store (has → True, consume → False).
         total = self._resource_agg.get_fleet_cargo_current(resource_type)
-        if total < amount:
+        rounded = int(round(amount))
+        if total < rounded:
             return False
-        self._resource_agg.unload_cargo_from_fleet(resource_type, int(round(amount)))
+        self._resource_agg.unload_cargo_from_fleet(resource_type, rounded)
         return True
 
     def get_cargo_resource(self, resource_type: str) -> float:
