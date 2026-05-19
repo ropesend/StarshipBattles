@@ -169,8 +169,8 @@ def build_queue_screen(ui_manager, mock_design_catalog, mock_design_loader, mock
     from game.ui.screens.build_queue_screen import BuildQueueScreen
     bq_screen = BuildQueueScreen(
         manager,
-        planet,
-        on_close,
+        initial_yard=planet,
+        on_close_callback=on_close,
         design_catalog=mock_design_catalog,
         design_loader=mock_design_loader,
         hex_coord=hex_coord,

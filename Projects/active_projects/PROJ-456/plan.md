@@ -16,16 +16,16 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Smallest-shim cluster: `draw_grid` + broad-catch marker + 3 single-method shims | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. `build_context` legacy-kwarg sweep | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. `build_context` legacy-kwarg sweep | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. BattleSetupState `side_0` / `side_1` cluster (2 production + 5 test files) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. `transfer_dialog` cluster + characterization sweep (drops file under 500-LOC ceiling) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Big-three shim clusters: StrategyRenderer, NewGameSetupScreen, BattleSetupScreen | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 2 (build_context legacy-kwarg sweep)
-**Last Action:** Phase 1 complete. F-C-002 broad-catch marker added; F-C-005 `draw_grid` free function deleted (test migrated to `GridLayer().draw(...)`); F-C-007 `_description_controller` property+setter deleted (already orphaned — no test callers); F-C-010 `_get_order_description` shim deleted (3 test files migrated + 1 shim-delegation test deleted); F-C-012 EventLogWindow `empire_name=None` partial-close per Option B (docstring updated + 10 test sites pass explicit `empire_name="Test Empire"`; production None-path kept intact because controller's `getattr(empire, "name", None)` can legitimately yield None). Sharded 23362/23362 green.
-**Next Action:** Phase 2 Task 2.1 — caller sweep for `BuildQueueScreen(..., build_context=...)`.
+**Active Phase:** Phase 3 (BattleSetupState side_0/side_1 cluster)
+**Last Action:** Phase 2 complete. Retired the `BuildQueueScreen.__init__(build_context=...)` legacy kwarg. Migration scope ended up larger than the original checklist (1 production + 26 test files vs 1 + 1 documented): 25 sites in `test_build_queue_screen_lifecycle.py` (deleted `build_context=None,` lines — every call had it explicitly), 1 site in `strategy_build_queue_manager.py` (production), plus 11 sites across 6 integration-test files that passed the yard POSITIONALLY (not as a kwarg) — these would have broken silently because removing the `build_context` param shifts positional arg binding. The integration-test sweep (test_basics, test_portrait_logging, test_queue_selector ×3, test_build_queue_drag_drop, test_build_queue_formatting, conftest) migrated `BuildQueueScreen(manager, planet, ...)` to `BuildQueueScreen(manager, initial_yard=planet, ...)` and converted subsequent positional args (`on_close`, `lambda: None`) to kwargs. Deleted the legacy param from the constructor signature and the resolution line. Sharded 23362/23362 green.
+**Next Action:** Phase 3 Task 3.1 — sweep `BattleSetupState.side_0`/`side_1` (81 refs).
 **Blockers:** None.
 
 ## Checkpoint Log

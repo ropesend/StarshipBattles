@@ -336,8 +336,8 @@ def test_no_savegame_path_handled_gracefully(mock_design_catalog, mock_design_lo
     from game.ui.screens.build_queue_screen import BuildQueueScreen
     screen_obj = BuildQueueScreen(
         manager,
-        planet,
-        lambda: None,
+        initial_yard=planet,
+        on_close_callback=lambda: None,
         design_catalog=mock_design_catalog,
         design_loader=mock_design_loader,
         hex_coord=hex_coord,
@@ -451,8 +451,8 @@ def test_add_ship_to_queue_with_shipyard(mock_design_catalog, mock_design_loader
 
     bq_screen = BuildQueueScreen(
         manager,
-        planet,
-        lambda: None,
+        initial_yard=planet,
+        on_close_callback=lambda: None,
         design_catalog=mock_design_catalog,
         design_loader=mock_design_loader,
         hex_coord=hex_coord,

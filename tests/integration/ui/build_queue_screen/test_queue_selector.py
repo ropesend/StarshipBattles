@@ -162,8 +162,8 @@ def build_queue_screen(ui_manager, mock_design_catalog, mock_design_loader, mock
     from game.ui.screens.build_queue_screen import BuildQueueScreen
     bq_screen = BuildQueueScreen(
         manager,
-        planet,
-        on_close,
+        initial_yard=planet,
+        on_close_callback=on_close,
         design_catalog=mock_design_catalog,
         design_loader=mock_design_loader,
         hex_coord=hex_coord,
@@ -296,7 +296,9 @@ def test_multiple_queue_sources_create_buttons(ui_manager):
 
     from game.ui.screens.build_queue_screen import BuildQueueScreen
     bq = BuildQueueScreen(
-        manager, planet, lambda: None,
+        manager,
+        on_close_callback=lambda: None,
+        initial_yard=planet,
         design_catalog=mock_lib, design_loader=MagicMock(),
         hex_coord=hex_coord,
         galaxy=galaxy,
@@ -352,7 +354,9 @@ def test_multi_select_sets_active_to_none(ui_manager):
 
     from game.ui.screens.build_queue_screen import BuildQueueScreen
     bq = BuildQueueScreen(
-        manager, planet, lambda: None,
+        manager,
+        on_close_callback=lambda: None,
+        initial_yard=planet,
         design_catalog=mock_lib, design_loader=MagicMock(),
         hex_coord=hex_coord,
         galaxy=galaxy,
@@ -429,7 +433,9 @@ def test_queue_display_shows_active_source_items(ui_manager):
 
     from game.ui.screens.build_queue_screen import BuildQueueScreen
     bq = BuildQueueScreen(
-        manager, planet, lambda: None,
+        manager,
+        on_close_callback=lambda: None,
+        initial_yard=planet,
         design_catalog=mock_lib, design_loader=MagicMock(),
         hex_coord=hex_coord,
         galaxy=galaxy,

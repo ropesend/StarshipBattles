@@ -266,7 +266,7 @@ def build_queue_screen(mock_design_catalog, mock_design_loader, mock_registries,
     # PROJ-396 MAJ-002: portrait_session replaced by narrow theme_id_supplier.
     bq_screen = BuildQueueScreen(
         manager,
-        planet,
+        initial_yard=planet,
         on_close_callback=on_close,
         design_catalog=mock_design_catalog,
         design_loader=mock_design_loader,
