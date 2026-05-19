@@ -20,12 +20,19 @@
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Project complete; ready for end-of-project merge to main
-**Last Action:** Phase 2 closed the single in-scope codex-audit issue (stray `)` in `production_engine.py:80` docstring from Phase 1 Task 1.8). Codex verified all 10 Phase 1 findings closed; two other observations were intentionally out-of-scope per the F-B-011 charter.
-**Next Action:** Merge group-b through PROJ-453 to main per protocol §3.
+**Active Phase:** Project complete; merged to main at 82b751fe0
+**Last Action:** End-of-project merge to main executed per protocol §3. Merge commit on main: `82b751fe0`. PROJ-453 moved to Archived Projects in projects_index.md. group-b rebased atop the merge.
+**Next Action:** Group B run-agent proceeds to PROJ-454.
 **Blockers:** None.
 
 ## Checkpoint Log
+
+### 2026-05-17 — project-453-end + project-454-start
+- **Done so far**: PROJ-453 fully closed. Phase 1 landed 10 mechanical polish items (commit `8946798cb`); end-of-project codex audit verified all 10 closed but flagged a stray `)` typo from Task 1.8. Phase 2 closed the typo (commit `367942079`). Merged to main as `82b751fe0`. Two out-of-scope codex observations (untyped `_get_nav_service` + 3 untyped `__init__` kwargs in F-B-011 file set) documented as future polish in decisions.md, no DI entries created.
+- **Key decisions**: Treated codex's typo finding as a new Phase 2 per protocol PART 3 Step D; treated the other two codex observations as out-of-scope per the F-B-011 finding charter (accessors vs constructor kwargs are different finding families). Skipped the re-audit on Phase 2 per the "trivial polish" exception in PART 3 Step D.
+- **Open threads**: None for PROJ-453. PROJ-454 starts next.
+- **Next action**: PROJ-454 Phase 1 Task 1.1 (verify symbol parity between `effect_ability_metadata.py` and `ability_metadata.py`).
+- **Cross-group state observed**: origin/main now at `82b751fe0` (post-PROJ-453 merge). Group A pushed `group-a` updates (`d531b430a`); Group C published `origin/group-c` since session start. No `_doc_consolidation/` files on origin/main yet.
 
 ### 2026-05-17 — project-453-start
 - **Done so far**: Group B session-start (§2): branched group-b off main, pushed to origin. §14 pre-flight green (baseline 23368 passed). Mandatory reading complete (CLAUDE.md / AGENTS.md / docs/01-03 / project init protocol / Patterns #33 #36). DI log reviewed (12 entries; most resolved by archived PROJ-444/445/438).
