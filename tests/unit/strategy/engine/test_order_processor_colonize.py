@@ -99,10 +99,10 @@ def _colonizable_planet(planet_id: int = 99, name: str = "Eden") -> MagicMock:
 
 
 def test_process_colonize_returns_false_when_no_current_order():
-    """No order → returns ColonizeResult(colonized=False)."""
+    """No order → returns OrderExecutionResult(colonized=False)."""
     proc = OrderProcessor()
     fleet = _fleet_with_order(None)
-    result = proc.process_colonize(fleet, _empire(), MagicMock(), {})
+    result = proc.get_handler(OrderType.COLONIZE).execute_action_order(fleet, _empire(), MagicMock(), component_registry={})
     assert result.colonized is False
 
 
@@ -121,7 +121,7 @@ def test_process_colonize_returns_false_when_validation_fails():
         "game.strategy.validation.ColonizeValidator.validate"
     ) as mock_validate:
         mock_validate.return_value = MagicMock(is_valid=False, message="bad")
-        result = proc.process_colonize(fleet, empire, galaxy, {})
+        result = proc.get_handler(OrderType.COLONIZE).execute_action_order(fleet, empire, galaxy, component_registry={})
 
     assert result.colonized is False
     fleet.pop_order.assert_called_once()
@@ -154,7 +154,7 @@ def test_process_colonize_resolves_any_planet_picks_first_unowned():
         "game.strategy.validation.ColonizeValidator.validate",
         return_value=MagicMock(is_valid=True),
     ):
-        result = proc.process_colonize(fleet, empire, galaxy, {})
+        result = proc.get_handler(OrderType.COLONIZE).execute_action_order(fleet, empire, galaxy, component_registry={})
 
     assert result.colonized is True
     empire.add_colony.assert_called_once_with(free1)
@@ -178,7 +178,7 @@ def test_process_colonize_returns_false_when_no_drop_pod_in_fleet():
         "game.strategy.validation.ColonizeValidator.validate",
         return_value=MagicMock(is_valid=True),
     ):
-        result = proc.process_colonize(fleet, empire, galaxy, {})
+        result = proc.get_handler(OrderType.COLONIZE).execute_action_order(fleet, empire, galaxy, component_registry={})
 
     assert result.colonized is False
     fleet.pop_order.assert_called_once()
@@ -210,7 +210,7 @@ def test_process_colonize_adds_colony_pops_order_and_deploys_pod():
         "game.strategy.validation.ColonizeValidator.validate",
         return_value=MagicMock(is_valid=True),
     ):
-        result = proc.process_colonize(fleet, empire, galaxy, {})
+        result = proc.get_handler(OrderType.COLONIZE).execute_action_order(fleet, empire, galaxy, component_registry={})
 
     assert result.colonized is True
     empire.add_colony.assert_called_once_with(planet)
@@ -242,7 +242,7 @@ def test_process_colonize_seeds_stockpile_from_design_initial_stockpile():
         "game.strategy.validation.ColonizeValidator.validate",
         return_value=MagicMock(is_valid=True),
     ):
-        proc.process_colonize(fleet, empire, galaxy, {})
+        proc.get_handler(OrderType.COLONIZE).execute_action_order(fleet, empire, galaxy, component_registry={})
 
     add_calls = {c.args[0]: c.args[1] for c in planet.add_to_stockpile.call_args_list}
     assert add_calls == {"metals": 50.0, "organics": 25.0}
@@ -280,7 +280,7 @@ def test_process_colonize_logs_colony_founded_event_with_system_and_local_hex():
         "game.strategy.validation.ColonizeValidator.validate",
         return_value=MagicMock(is_valid=True),
     ):
-        proc.process_colonize(fleet, empire, galaxy, {})
+        proc.get_handler(OrderType.COLONIZE).execute_action_order(fleet, empire, galaxy, component_registry={})
 
     founded = [e for e in captured if e[0] == EventType.COLONY_FOUNDED]
     assert len(founded) == 1

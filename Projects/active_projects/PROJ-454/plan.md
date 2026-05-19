@@ -17,17 +17,24 @@
 |-------|--------|-----------|
 | 1. F-B-004 — Retire `effect_ability_metadata.py` (131 LOC, 2 callers) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. F-B-005 — Retire `component_inspector.py` (~68 caller sites — 52 imports + 16 patch targets — across ~31 files; sized up from `~45` after codex audit 2026-05-19) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. F-B-017 — Unwind `OrderProcessor.process_*` facade reshape; delete legacy typed result dataclasses (68 sites / 12 files; sized up from `~15 / 7` after codex audit 2026-05-19) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. F-B-017 — Unwind `OrderProcessor.process_*` facade reshape; delete legacy typed result dataclasses (68 sites / 12 files; sized up from `~15 / 7` after codex audit 2026-05-19) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. F-B-018 — Remove "legacy field" framing on `OrderExecutionResult` (fields become live unified surface post-Phase-3 facade unwind; delete specific fields ONLY if Phase 4 audit shows they're dead) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-17
-**Active Phase:** Phase 3 (F-B-017 OrderProcessor facade unwind, 68 sites/12 files)
-**Last Action:** Phase 2 complete. Retired `component_inspector.py` (67 LOC re-export shim) and 1 static-drift-gate test. Migrated all production callers across `game/strategy/{data,engine,services,validation}/` + `game/ui/screens/` to import directly from `component_abilities` (Surface A, 12 symbols, ~23 files) or `component_layers` (Surface B, 4 symbols, just `ship_instance.py` lines 635/654/663). Migrated test files: renamed `tests/unit/strategy/test_component_inspector.py` → `tests/unit/strategy/services/test_component_abilities.py`; renamed `test_component_inspector_layers.py` → `test_component_layers.py`; deleted `test_component_inspector_surface.py` (drift gate served the shim, no purpose post-retirement). Repointed all 16 `patch(...)` targets in test_fleet_capability_calculator / test_fleet_data_source / test_fleet_report_filters / test_strategy_fleet_command_router. Refreshed docstring references in canonical modules + 3 adjacent files. Sharded 23363/23363 green.
-**Next Action:** Phase 3 Task 3.1 — caller inventory for `OrderProcessor.process_join_fleet` / `process_colonize` / `process_transfer`.
+**Active Phase:** Phase 4 (F-B-018 OrderExecutionResult legacy-field framing)
+**Last Action:** Phase 3 complete. Migrated 69 call sites across 12 test files (count was 68 in the codex re-audit; actual HEAD count was 69 — test_transfer_order.py had 8 not 7) from `processor.process_join_fleet/colonize/transfer(...)` to `processor.get_handler(OrderType.X).execute_action_order(...)`. Migration done via a one-shot Python script (with one minor bug — duplicated `component_registry=` prefix when the original call had already passed it as a kwarg; fixed post-hoc with a regex sweep across 5 files / 31 sites). Deleted 3 legacy facade methods (`process_join_fleet`, `process_colonize`, `process_transfer`), 3 result dataclasses (`JoinFleetResult`, `ColonizeResult`, `TransferResult`), and refreshed the module docstring. Dropped `ColonizeResult`/`TransferResult` imports from 2 test files. Refreshed `test_order_processor_facade.py` to tighten the OrderType-reference cap from ≤6 to ≤2 (only `process_instant_orders` remains as a `OrderType.X` reference site). Sharded 23363/23363 green.
+**Next Action:** Phase 4 Task 4.1 — audit `OrderExecutionResult` legacy-field framing.
 **Blockers:** None.
 
 ## Checkpoint Log
+
+### 2026-05-17 — phase-2-complete-checkpoint
+- **Done so far**: PROJ-453 fully closed (Phases 1+2, merged at `82b751fe0`). PROJ-454 Phases 1 + 2 closed. Phase 1: deleted `effect_ability_metadata.py` shim and rewrote 2 callers to use `get_ability_metadata(name).effect` (the planning doc's "drop-in import swap" claim was wrong — canonical API has different verb name + nested shape). Phase 2: ~68-site sweep retiring `component_inspector.py`; routine work but large. Net: -2 shim modules (~200 LOC) + 4 test files renamed/deleted.
+- **Key decisions**: (1) Phase 1 deviation documented in decisions.md (no compat shim in the canonical module). (2) Task 2.9 — deleted drift-gate test rather than refactor as re-emergence guard. Both decisions enforced CLAUDE.md Rule 4 (no compat shims) more strictly than the original plan anticipated.
+- **Open threads**: Phase 3 (F-B-017 facade unwind) and Phase 4 (legacy-field reframing) still pending.
+- **Next action**: PROJ-454 Phase 3 Task 3.1 — call-site inventory for `OrderProcessor.process_join_fleet` / `process_colonize` / `process_transfer` (68 sites / 12 files).
+- **Cross-group state observed**: `origin/main` = `82b751fe0` (post-PROJ-453 merge). `origin/group-a` advanced to `d531b430a`; `origin/group-c` exists. No `_doc_consolidation/` files on origin/main yet.
 
 ### 2026-05-17 — project-454-start
 - **Done so far**: PROJ-453 closed and merged (`82b751fe0`). Group B serial gate cleared for PROJ-454.

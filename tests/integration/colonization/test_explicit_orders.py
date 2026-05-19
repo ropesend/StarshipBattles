@@ -62,7 +62,7 @@ class TestExplicitColonizeOrders(unittest.TestCase):
         transfer_handler = self.processor._handler_registry.get(OrderType.TRANSFER)
         with patch('game.strategy.validation.TransferValidator.validate', return_value=ValidationResult.success()):
             with patch.object(transfer_handler, '_dispatch_load_planet_passengers', return_value=100):
-                result = self.processor.process_transfer(self.fleet, self.empire, self.galaxy)
+                result = self.processor.get_handler(OrderType.TRANSFER).execute_action_order(self.fleet, self.empire, self.galaxy)
                 self.assertTrue(result.success)
 
     def test_generic_load_population_auto_resolves_colony(self):
@@ -88,7 +88,7 @@ class TestExplicitColonizeOrders(unittest.TestCase):
         transfer_handler = self.processor._handler_registry.get(OrderType.TRANSFER)
         with patch('game.strategy.validation.TransferValidator.validate', return_value=ValidationResult.success()):
             with patch.object(transfer_handler, '_dispatch_load_planet_passengers', return_value=1000):
-                result = self.processor.process_transfer(self.fleet, self.empire, self.galaxy)
+                result = self.processor.get_handler(OrderType.TRANSFER).execute_action_order(self.fleet, self.empire, self.galaxy)
                 self.assertTrue(result.success)
                 self.assertEqual(result.amount_transferred, 1000)
 
@@ -102,7 +102,7 @@ class TestExplicitColonizeOrders(unittest.TestCase):
         # No planets at fleet's hex
         self.galaxy.get_planets_at_global_hex.return_value = []
 
-        result = self.processor.process_transfer(self.fleet, self.empire, self.galaxy)
+        result = self.processor.get_handler(OrderType.TRANSFER).execute_action_order(self.fleet, self.empire, self.galaxy)
         # Should succeed (no-op) and pop the order
         self.assertTrue(result.success)
         self.assertEqual(len(self.fleet.orders), 0)  # Order was popped

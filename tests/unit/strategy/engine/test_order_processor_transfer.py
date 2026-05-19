@@ -71,7 +71,7 @@ def test_process_transfer_returns_false_when_target_not_dict():
     fleet = _fleet()
     fleet.get_current_order.return_value = order
 
-    result = proc.process_transfer(fleet, _empire(), MagicMock())
+    result = proc.get_handler(OrderType.TRANSFER).execute_action_order(fleet, _empire(), MagicMock())
     assert result.success is False
     fleet.pop_order.assert_called_once()
 
@@ -109,7 +109,7 @@ def test_process_transfer_load_population_auto_resolves_colony_at_fleet_hex():
         "game.strategy.validation.TransferValidator.validate",
         return_value=_ok_validation(),
     ):
-        result = proc.process_transfer(fleet, empire, galaxy)
+        result = proc.get_handler(OrderType.TRANSFER).execute_action_order(fleet, empire, galaxy)
 
     assert result.success is True
     assert pop.count == 5
@@ -128,7 +128,7 @@ def test_process_transfer_load_population_no_colony_returns_success_skipped():
     galaxy = MagicMock()
     galaxy.get_planets_at_global_hex.return_value = []  # nothing here
 
-    result = proc.process_transfer(fleet, _empire(), galaxy)
+    result = proc.get_handler(OrderType.TRANSFER).execute_action_order(fleet, _empire(), galaxy)
 
     assert result.success is True
     assert "skipped" in result.message
@@ -166,7 +166,7 @@ def test_process_transfer_target_fleet_lookup_searches_galaxy_empires():
         "game.strategy.validation.TransferValidator.validate",
         return_value=_ok_validation(),
     ):
-        result = proc.process_transfer(src, _empire(), galaxy)
+        result = proc.get_handler(OrderType.TRANSFER).execute_action_order(src, _empire(), galaxy)
 
     assert result.success is True
 
@@ -198,7 +198,7 @@ def test_process_transfer_target_fleet_falls_back_to_owner_empire_when_galaxy_la
         "game.strategy.validation.TransferValidator.validate",
         return_value=_ok_validation(),
     ):
-        result = proc.process_transfer(src, owner, galaxy)
+        result = proc.get_handler(OrderType.TRANSFER).execute_action_order(src, owner, galaxy)
 
     assert result.success is True
 
@@ -228,7 +228,7 @@ def test_process_transfer_drop_pod_skips_location_check():
         "game.strategy.validation.TransferValidator.validate",
         return_value=_ok_validation(),
     ) as mock_v:
-        proc.process_transfer(fleet, _empire(), galaxy)
+        proc.get_handler(OrderType.TRANSFER).execute_action_order(fleet, _empire(), galaxy)
 
     assert mock_v.call_args.kwargs["skip_location_check"] is True
 
@@ -265,7 +265,7 @@ def test_process_transfer_load_passengers_caps_by_population_count():
         "game.strategy.validation.TransferValidator.validate",
         return_value=_ok_validation(),
     ):
-        result = proc.process_transfer(fleet, empire, galaxy)
+        result = proc.get_handler(OrderType.TRANSFER).execute_action_order(fleet, empire, galaxy)
 
     assert result.amount_transferred == 3
     assert pop.count == 0
@@ -299,7 +299,7 @@ def test_process_transfer_load_passengers_with_species_id_targets_specific_speci
         "game.strategy.validation.TransferValidator.validate",
         return_value=_ok_validation(),
     ):
-        result = proc.process_transfer(fleet, empire, galaxy)
+        result = proc.get_handler(OrderType.TRANSFER).execute_action_order(fleet, empire, galaxy)
 
     assert result.amount_transferred == 4
     assert humans.count == 5  # untouched
@@ -329,7 +329,7 @@ def test_process_transfer_unload_passengers_creates_new_species_population_when_
         "game.strategy.validation.TransferValidator.validate",
         return_value=_ok_validation(),
     ):
-        proc.process_transfer(fleet, empire, galaxy)
+        proc.get_handler(OrderType.TRANSFER).execute_action_order(fleet, empire, galaxy)
 
     assert len(planet.populations) == 1
     assert planet.populations[0].race_id == "newcomers"
@@ -366,7 +366,7 @@ def test_process_transfer_load_resource_caps_by_planet_stockpile():
         "game.strategy.validation.TransferValidator.validate",
         return_value=_ok_validation(),
     ):
-        result = proc.process_transfer(fleet, empire, galaxy)
+        result = proc.get_handler(OrderType.TRANSFER).execute_action_order(fleet, empire, galaxy)
 
     assert result.amount_transferred == 2
     fleet.resources.load_cargo_to_fleet.assert_called_with("metals", 2)

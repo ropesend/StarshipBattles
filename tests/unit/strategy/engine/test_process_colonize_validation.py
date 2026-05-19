@@ -198,10 +198,8 @@ class TestProcessColonizeValidation:
 
         # Execute colonization
         processor = OrderProcessor()
-        result = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=component_registry
-        )
+        result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=component_registry)
 
         # Phase 3: Drop pods are universal
         assert result.colonized is True
@@ -231,10 +229,8 @@ class TestProcessColonizeValidation:
 
         # Execute colonization WITH component registry
         processor = OrderProcessor()
-        result = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=component_registry
-        )
+        result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=component_registry)
 
         # Assert: Colonization succeeded
         assert result.colonized is True
@@ -268,10 +264,8 @@ class TestProcessColonizeValidation:
 
         # Execute colonization
         processor = OrderProcessor()
-        result = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=component_registry
-        )
+        result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=component_registry)
 
         # Assert: Colonization failed, no ships removed
         assert result.colonized is False
@@ -304,10 +298,8 @@ class TestProcessColonizeValidation:
 
         # Execute colonization
         processor = OrderProcessor()
-        result = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=component_registry
-        )
+        result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=component_registry)
 
         # Assert: Order was popped
         assert len(fleet.orders) == 0
@@ -383,10 +375,8 @@ class TestProcessColonizeAnyPlanet:
 
         # Execute colonization
         processor = OrderProcessor()
-        result = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=component_registry
-        )
+        result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=component_registry)
 
         # Assert: First unowned planet colonized (pods are universal)
         assert result.colonized is True
@@ -417,10 +407,8 @@ class TestProcessColonizeAnyPlanet:
 
         # Execute colonization
         processor = OrderProcessor()
-        result = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=component_registry
-        )
+        result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
+            fleet, empire, galaxy, component_registry=component_registry)
 
         # Assert: Colonization failed
         assert result.colonized is False

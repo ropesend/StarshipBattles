@@ -1,26 +1,25 @@
 """
 OrderProcessor - centralized order lifecycle management (facade).
 
-PROJ-368: this module is now a thin facade over the per-OrderType
-handler registry in `game.strategy.engine.order_handlers`. Every method
-delegates to a registered `IOrderHandler`. The legacy private helpers
-(`_execute_fleet_merge`, `_execute_load`, `_execute_unload`,
-`_execute_fleet_transfer`, `_load_pod_from_staging_yard`,
-`_unload_pod_to_staging_yard`, `_deploy_drop_pod`,
-`_validate_tick_inputs`, `_elect_canonical_merges`,
-`_emit_join_cancelled`) were deleted in Phase 4 -- their live copies
-live on the corresponding handlers.
+PROJ-368 made this a thin facade over the per-OrderType handler
+registry in `game.strategy.engine.order_handlers`. PROJ-454 Phase 3
+deleted the three legacy per-action shims (`process_join_fleet` /
+`process_colonize` / `process_transfer`) and their typed result
+dataclasses (`JoinFleetResult` / `ColonizeResult` / `TransferResult`);
+every consumer now invokes the unified handler-direct path
+``processor.get_handler(OrderType.X).execute_action_order(...)`` and
+reads fields directly off the unified ``OrderExecutionResult``.
 
-Public surface kept for backward compatibility with existing
-characterization tests (PROJ-333):
-- `JoinFleetResult`, `ColonizeResult`, `TransferResult` typed result
-  dataclasses (legacy contracts).
-- `process_join_fleet`, `process_colonize`, `process_transfer`,
-  `process_instant_orders`, `execute_action_order` public methods.
+Surviving public surface:
+- ``get_handler(order_type)`` — registry accessor (PROJ-438 Phase 6).
+- ``process_instant_orders(empires)`` — drives the BUG-122 three-phase
+  JOIN_FLEET pipeline; the only place ``OrderType.JOIN_FLEET`` is
+  referenced inside the facade module.
+- ``execute_action_order(fleet, empire, galaxy, ...)`` — the canonical
+  per-fleet action dispatch used by ``ActionExecutionEngine``.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Optional, List, Tuple, Dict, Any, TYPE_CHECKING
 import logging
 
@@ -34,28 +33,6 @@ if TYPE_CHECKING:
     from game.strategy.data.galaxy import Galaxy
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class JoinFleetResult:
-    """Result of a JOIN_FLEET operation."""
-    merged: bool
-    cancelled: bool = False
-
-
-@dataclass
-class ColonizeResult:
-    """Result of a COLONIZE operation."""
-    colonized: bool
-    planet_name: Optional[str] = None
-
-
-@dataclass
-class TransferResult:
-    """Result of a TRANSFER operation."""
-    success: bool
-    amount_transferred: int = 0
-    message: str = ""
 
 
 class OrderProcessor(IOrderProcessor):
@@ -93,54 +70,6 @@ class OrderProcessor(IOrderProcessor):
         than touching ``_handler_registry`` directly.
         """
         return self._handler_registry.get(order_type)
-
-    def process_join_fleet(
-        self,
-        fleet: Fleet,
-        empire: "Empire",
-        galaxy: "Galaxy",
-    ) -> JoinFleetResult:
-        """Process a JOIN_FLEET order. Delegates to JoinFleetHandler."""
-        handler = self._handler_registry.get(OrderType.JOIN_FLEET)
-        result = handler.execute_action_order(fleet, empire, galaxy)
-        return JoinFleetResult(merged=result.merged, cancelled=result.cancelled)
-
-    def process_colonize(
-        self,
-        fleet: Fleet,
-        empire: "Empire",
-        galaxy: "Galaxy",
-        component_registry: Dict[str, Any],
-    ) -> ColonizeResult:
-        """Process a COLONIZE order. Delegates to ColonizeHandler."""
-        handler = self._handler_registry.get(OrderType.COLONIZE)
-        result = handler.execute_action_order(
-            fleet, empire, galaxy,
-            component_registry=component_registry,
-        )
-        return ColonizeResult(colonized=result.colonized, planet_name=result.planet_name)
-
-    def process_transfer(
-        self,
-        fleet: Fleet,
-        empire: "Empire",
-        galaxy: "Galaxy",
-    ) -> TransferResult:
-        """Process a TRANSFER / LOAD_POPULATION / UNLOAD_POPULATION order.
-
-        PROJ-368 review MIN-001: delegates immediately like the other facade
-        shims. ``TransferHandler`` is registered as a single instance for all
-        three transfer-family OrderTypes and validates the current order
-        internally — a wrong/missing order returns
-        ``success=False, message="No TRANSFER order"`` from the handler.
-        """
-        handler = self._handler_registry.get(OrderType.TRANSFER)
-        result = handler.execute_action_order(fleet, empire, galaxy)
-        return TransferResult(
-            success=result.success,
-            amount_transferred=result.amount_transferred,
-            message=result.message,
-        )
 
     def process_instant_orders(
         self,

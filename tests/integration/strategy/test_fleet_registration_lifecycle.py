@@ -209,7 +209,7 @@ class TestJoinFleetUnregistersMergedFleet:
 
         # Process via OrderProcessor.process_join_fleet
         processor = OrderProcessor()
-        result = processor.process_join_fleet(source_fleet, emp1, galaxy)
+        result = processor.get_handler(OrderType.JOIN_FLEET).execute_action_order(source_fleet, emp1, galaxy)
 
         assert result.merged is True
 
