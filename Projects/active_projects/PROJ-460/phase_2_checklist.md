@@ -92,6 +92,6 @@
 - [x] `BattleController.start_from_spec` is a 1-line facade
 - [x] battle_controller.py drops to ~700 LOC
 - [x] `pytest tests/unit/simulation/battle_controller/ tests/integration/replay/` green
-- [x] **Manual UI smoke test passed** (start a battle via BattleSetupScreen)
+- [x] **Manual UI smoke SUPERSEDED** by the automated replay/save_load gate (404 passed incl. `test_headless_visual_equivalence`) per the Group C prompt — see Task 2.4 + decisions.md. No `python -m game` run performed.
 - [x] Sharded suite green
 - [x] F-D-011 partial status updated in findings file

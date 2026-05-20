@@ -19,6 +19,8 @@
 | 2. F-D-011 partial — extract `battle_controller.py` `start_from_spec` headless / spec-in flow | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. F-D-011 partial — split `replay_serialization.py` into `replay_capture_serde.py` + `replay_outcome_serde.py` (+ shared helpers) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Document the 10 remaining over-ceiling simulation files as next-touch | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Codex-audit bookkeeping reconciliation (manual-smoke wording) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Doc consolidation (LAST-runner: apply PROJ-457/459/460 pending blocks) | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-19
@@ -176,7 +178,7 @@ python Tools/test_sharded/test_sharded.py
 
 `BattleController.start_from_spec` (battle_controller.py:242-368, ~125 LOC) is the spec-in path that constructs the engine from a `BattleSpec`. It's self-contained orchestration that doesn't share state with the visual-mode controller's per-frame update logic. Clean extraction target.
 
-**Manual UI smoke test required.** This is battle-screen-adjacent code; the visual-mode start path goes through `BattleController.start_from_spec(...)`. Even with full test-suite coverage, a manual run of "start a battle in BattleSetupScreen, watch ticks happen" is the gate that catches subtle pre-tick-callback wiring drift.
+**Manual UI smoke test — SUPERSEDED by the automated replay gate (Group C prompt).** This was originally framed as battle-screen-adjacent code requiring a manual `python -m game` smoke. The Group C execution prompt explicitly supersedes it: "automated coverage is now the contract" / "There is no manual UI-smoke STOP. The replay + save_load automated suite is the contract for battle-screen regressions on PROJ-460." The Phase 2 gate was satisfied by `pytest tests/integration/replay/ tests/integration/save_load/ tests/unit/simulation/battle_controller/` = 404 passed (includes `test_headless_visual_equivalence` + `test_start_from_spec`). No manual smoke was performed.
 
 - Identify the natural extraction. Options:
   - **Option A:** Create `game/simulation/battle_controller_spec.py` with a free function `build_controller_from_spec(controller, spec, ai_factory, ship_builder=None, registry_provider=None) -> BattleServiceResult` that holds the body of `start_from_spec`. `BattleController.start_from_spec` becomes a 1-line facade.
@@ -246,6 +248,23 @@ Per Codex r4 risk callout: "Keep the other 10 over-ceiling simulation files as '
 
 **Checkpoint:** `decisions.md` carries 10 next-touch entries. PROJ-460 scope explicitly held to 3 files; the 10 others remain as next-touch.
 
+### Phase 5: Codex-audit bookkeeping reconciliation (manual-smoke wording) [Trivial]
+**Status:** Complete
+Audit-driven doc-only phase. The end-of-project codex audit
+(`consults/20260520T040703Z_end-of-project-audit/response.md`) verified "Ready to
+merge" with one low-severity bookkeeping issue: the Phase 2 manual-UI-smoke wording
+in `phase_2_checklist.md:95` + `plan.md:179` + `plan.md:286` contradicted Task 2.4's
+"SUPERSEDED" note. Phase 5 reconciles all sites. 0 LOC production change; no re-audit.
+See `phase_5_checklist.md`.
+
+### Phase 6: Doc consolidation — LAST-runner responsibility (protocol §9.2) [Simple]
+**Status:** Complete
+PROJ-460 is the LAST of PROJ-457 / PROJ-459 / PROJ-460 to finish (the §9.2 check found
+both sibling pending files already on `origin/main`). Phase 6 applies all three staged
+`_doc_consolidation/PROJ-*_pending.md` blocks to `docs/01_ARCHITECTURE.md` (+
+`docs/systems/strategy_layer.md` per PROJ-459) and `git rm`s the three pending files.
+PROJ-457's block is a no-op. See `phase_6_checklist.md`.
+
 ## Verification Checklist
 
 ### Project Start (REQUIRED)
@@ -265,11 +284,11 @@ Per Codex r4 risk callout: "Keep the other 10 over-ceiling simulation files as '
 - [ ] battle_state.py, battle_controller.py, replay_serialization.py — three Phase 1/2/3 cuts landed
 - [ ] 10 next-touch entries in `decisions.md`
 - [ ] `findings/PROJ-460_findings.md` updated with final status per finding (F-D-028 closed; F-D-011 actionable slice closed; F-D-011 next-touch ledger documented)
-- [ ] Save-load tests green (`pytest tests/integration/save_load/`)
-- [ ] Replay tests green (`pytest tests/integration/replay/`)
-- [ ] Sharded suite green
-- [ ] Manual smoke test: start a battle via BattleSetupScreen, confirm no visual-mode regression
-- [ ] Docs updated if architecture/patterns changed
+- [x] Save-load tests green (`pytest tests/integration/save_load/`)
+- [x] Replay tests green (`pytest tests/integration/replay/`)
+- [x] Sharded suite green (23476/23476)
+- [x] Manual smoke test — SUPERSEDED by the automated replay/save_load gate per the Group C prompt (no `python -m game` run; `test_headless_visual_equivalence` + the replay suite are the contract)
+- [x] Docs updated if architecture/patterns changed — staged to `_doc_consolidation/PROJ-460_pending.md` + applied in the doc-consolidation phase (PROJ-460 is the LAST runner)
 - [ ] User verified
 
 ## Audit Log
@@ -278,13 +297,13 @@ Per Codex r4 risk callout: "Keep the other 10 over-ceiling simulation files as '
 | 1 | | | |
 
 ## Completion Checklist
-- [ ] Phase 1 battle_state_serde extraction landed (F-D-028 closed)
-- [ ] Phase 2 battle_controller spec-in extraction landed (F-D-011 partial closed)
-- [ ] Phase 3 replay_serialization split landed (F-D-011 partial closed)
-- [ ] Phase 4 next-touch documentation written (10 files in decisions.md)
-- [ ] All tests passing
-- [ ] Manual UI smoke test passed
-- [ ] Audit passed (no significant issues; in particular: no "structural omnibus" scope creep into the 10 next-touch files)
+- [x] Phase 1 battle_state_serde extraction landed (F-D-028 closed)
+- [x] Phase 2 battle_controller spec-in extraction landed (F-D-011 partial closed)
+- [x] Phase 3 replay_serialization split landed (F-D-011 partial closed)
+- [x] Phase 4 next-touch documentation written (10 files in decisions.md)
+- [x] All tests passing (sharded 23476/23476; replay/save_load gates green per phase)
+- [x] Manual UI smoke test — SUPERSEDED by the automated replay gate per the Group C prompt
+- [x] Audit passed (codex end-of-project audit verdict "Ready to merge"; no scope creep into the 10 next-touch files; one low-severity bookkeeping issue addressed in Phase 5)
 - [ ] User verified
 
 ## Checkpoint Log
