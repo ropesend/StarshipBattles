@@ -151,10 +151,10 @@
     },
     "codex-starship-consult-respond": {
       "agents": {
-        "codex": 23
+        "codex": 24
       },
-      "count": 23,
-      "last_used": "2026-05-19T14:56:11Z"
+      "count": 24,
+      "last_used": "2026-05-20T04:08:05Z"
     },
     "codex-starship-project-system": {
       "agents": {
