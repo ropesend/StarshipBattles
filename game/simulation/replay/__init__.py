@@ -11,14 +11,17 @@ in ``output/saves/<save>/replays/``) lives in
 
 Public API (Phase 2):
     REPLAY_SCHEMA_VERSION    — string constant pinned in every saved record
-    serialization helpers    — see ``replay_serialization``
+    serialization helpers    — split across ``replay_serde_helpers`` (shared
+                               Vector2/ComponentStateSpec helpers + version),
+                               ``replay_capture_serde`` (BattleSpec graph), and
+                               ``replay_outcome_serde`` (BattleOutcome graph)
     ReplaySpec               — JSON-safe mirror of ``BattleSpec``
     ReplayOutcome            — JSON-safe mirror of ``BattleOutcome``
     ReplayRecord             — spec + outcome + metadata + version
 
 The package is import-free at the simulation hot path: nothing in
-``game/simulation/systems/battle_engine.py`` imports from here. Phase 3 adds
-``replay_capture.py`` which is the single hook.
+``game/simulation/systems/battle_engine.py`` imports from here. The single
+runtime capture hook lives in ``replay_capture.py``.
 """
 from __future__ import annotations
 
@@ -30,19 +33,21 @@ from game.simulation.replay.replay_capture import (
     reset_default_capture_sink,
     set_default_capture_sink,
 )
-from game.simulation.replay.replay_serialization import (
-    REPLAY_SCHEMA_VERSION,
+from game.simulation.replay.replay_serde_helpers import REPLAY_SCHEMA_VERSION
+from game.simulation.replay.replay_capture_serde import (
     boundary_to_dict,
     boundary_from_dict,
-    compute_components_registry_hash,
     modifier_entry_to_dict,
     modifier_entry_from_dict,
     modifier_stack_to_dict,
     modifier_stack_from_dict,
     battle_spec_to_dict,
     battle_spec_from_dict,
+)
+from game.simulation.replay.replay_outcome_serde import (
     battle_outcome_to_dict,
     battle_outcome_from_dict,
+    compute_components_registry_hash,
 )
 from game.simulation.replay.replay_spec import ReplaySpec, ReplayShipSpec
 from game.simulation.replay.replay_outcome import ReplayOutcome

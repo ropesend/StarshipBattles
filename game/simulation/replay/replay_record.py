@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional, Tuple
 
 from game.simulation.replay.replay_outcome import ReplayOutcome
-from game.simulation.replay.replay_serialization import REPLAY_SCHEMA_VERSION
+from game.simulation.replay.replay_serde_helpers import REPLAY_SCHEMA_VERSION
 from game.simulation.replay.replay_spec import ReplaySpec
 
 

@@ -43,7 +43,7 @@ from typing import Any, Dict, List, Tuple
 
 from game.simulation.battle_outcome import BattleOutcome
 from game.simulation.replay.replay_record import ReplayRecord
-from game.simulation.replay.replay_serialization import battle_outcome_to_dict
+from game.simulation.replay.replay_outcome_serde import battle_outcome_to_dict
 
 
 _DEFAULT_MAX_DIFFS = 25

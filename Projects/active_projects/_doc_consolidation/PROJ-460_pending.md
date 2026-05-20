@@ -71,3 +71,41 @@ Note that the spec-in battle initialization flow now lives in a sibling module:
 > is a 1-line facade. The spec-in flow constructs the engine from a `BattleSpec`
 > (the same `start_engine_from_spec` path `run_battle` uses) and adopts it into
 > the controller's service.
+
+---
+
+## docs/01_ARCHITECTURE.md (Phase 3)
+
+### Anchor: `game/simulation/replay/` package description
+### Operation: replace-mention
+### Source: PROJ-460 Phase 3 — F-D-011 partial, replay_serialization split
+
+The replay package's serialization is no longer a single `replay_serialization.py`
+module; it is split by direction. Update any architecture-doc mention of
+`replay_serialization` to:
+
+> The `game/simulation/replay/` package serializes the `BattleSpec` / `BattleOutcome`
+> graph across three modules (PROJ-460 Phase 3, F-D-011): `replay_serde_helpers.py`
+> (shared `Vector2` / `ComponentStateSpec` helpers + `REPLAY_SCHEMA_VERSION`),
+> `replay_capture_serde.py` (spec-side / capture serialization — boundary, modifier
+> stack, ship/squadron/task-force/team specs, `battle_spec_to_dict`/`from_dict`), and
+> `replay_outcome_serde.py` (outcome-side / load serialization — hit records, weapon
+> summaries, ship stats, `battle_outcome_to_dict`/`from_dict`,
+> `compute_components_registry_hash`). The package `__init__` re-exports the public
+> serde functions, so callers using `from game.simulation.replay import …` are
+> unaffected. The runtime capture hook remains in `replay_capture.py` (distinct from
+> the new `replay_capture_serde.py`). The pre-split `replay_serialization.py` was
+> deleted (no compat shim).
+
+---
+
+## docs/02_PATTERNS.md (Phase 3)
+
+### Anchor: AST guard / serde-allowlist mention OR a "directional serde split" note
+### Operation: optional
+### Source: PROJ-460 Phase 3
+
+If `docs/02_PATTERNS.md` names specific serde modules anywhere, add the 3 new
+replay serde modules. Otherwise no edit required — the directional-split
+(capture vs outcome + shared helpers) is a one-off structural decision, not a
+reusable pattern that needs a catalogue entry.

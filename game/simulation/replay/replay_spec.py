@@ -32,8 +32,8 @@ from game.simulation.battle_spec import (
     TaskForceSpec,
     TeamSpec,
 )
-from game.simulation.replay.replay_serialization import (
-    REPLAY_SCHEMA_VERSION,
+from game.simulation.replay.replay_serde_helpers import REPLAY_SCHEMA_VERSION
+from game.simulation.replay.replay_capture_serde import (
     battle_spec_to_dict,
     battle_spec_from_dict,
 )

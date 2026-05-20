@@ -30,7 +30,7 @@ from game.simulation.replay import (
     run_replay_headless,
     set_default_capture_sink,
 )
-from game.simulation.replay.replay_serialization import battle_outcome_to_dict
+from game.simulation.replay.replay_outcome_serde import battle_outcome_to_dict
 from game.simulation.systems.battle_end_conditions import TickLimitCondition
 from game.strategy.services.replay_store import ReplaySettings, ReplayStore
 from tests.fixtures.battle import make_minimal_spec
