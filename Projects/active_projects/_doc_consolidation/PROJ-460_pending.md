@@ -52,3 +52,22 @@ add `battle_state_serde.py` as the third concrete instance — and note it is th
 `planet_serde.py` / `fleet_serde.py`). If no such pattern entry is added, no
 edit is required here (the existing AST-guard "lifecycle/serde allowlists"
 wording already covers it generically).
+
+---
+
+## docs/01_ARCHITECTURE.md (Phase 2)
+
+### Anchor: `game/simulation/` package map (battle-controller / battle-mode bullet)
+### Operation: insert-into-list / append-to-sentence
+### Source: PROJ-460 Phase 2 — F-D-011 partial, battle_controller spec-in extraction
+
+Note that the spec-in battle initialization flow now lives in a sibling module:
+
+> `battle_controller.py` is the central orchestrator for all battle modes
+> (manual / Combat Lab / strategy / hypothetical). The spec-in initialization
+> path — `BattleController.start_from_spec` — delegates to
+> `build_controller_from_spec(controller, spec, ...)` in the sibling
+> `battle_controller_spec.py` (PROJ-460 Phase 2, F-D-011 partial); the method
+> is a 1-line facade. The spec-in flow constructs the engine from a `BattleSpec`
+> (the same `start_engine_from_spec` path `run_battle` uses) and adopts it into
+> the controller's service.
