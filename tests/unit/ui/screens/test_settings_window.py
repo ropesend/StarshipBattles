@@ -177,6 +177,14 @@ class TestResetButton:
         with pytest.MonkeyPatch.context() as mp:
             from pygame_gui.elements import UIWindow as _UIWindow
             mp.setattr(_UIWindow, "process_event", lambda self, e: False)
+            # SettingsWindow.process_event guards with
+            # `event.type == pygame.event.custom_type()`. custom_type()
+            # draws from the same pygame user-event pool as
+            # UI_BUTTON_PRESSED and its live counter can collide with it
+            # under heavy parallel sharding — pin it to a sentinel that
+            # can never equal a real event type so the guard is
+            # deterministic.
+            mp.setattr(pygame.event, "custom_type", lambda: -1)
             handled = window.process_event(event)
 
         assert handled is True
@@ -201,6 +209,10 @@ class TestCloseButton:
             from pygame_gui.elements import UIWindow as _UIWindow
             mp.setattr(_UIWindow, "process_event", lambda self, e: False)
             mp.setattr(_UIWindow, "kill", lambda self: None)
+            # See test_reset_button_resets_settings_to_defaults: pin
+            # custom_type() so the process_event guard is deterministic
+            # under parallel sharding.
+            mp.setattr(pygame.event, "custom_type", lambda: -1)
             handled = window.process_event(event)
 
         assert handled is True
