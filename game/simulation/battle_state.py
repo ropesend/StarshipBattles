@@ -20,9 +20,6 @@ import logging
 from game.core.constants import LayerType, AttackType
 from game.core.exceptions import ValidationException, PersistenceException
 from game.core.error_codes import ErrorCode
-from game.core.validation_helpers import (
-    require_keys, validate_non_negative, validate_positive
-)
 
 logger = logging.getLogger(__name__)
 
@@ -46,14 +43,8 @@ class ComponentState:
     modifiers: List[Dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
-            'component_id': self.component_id,
-            'current_hp': self.current_hp,
-            'max_hp': self.max_hp,
-            'is_active': self.is_active,
-            'layer': self.layer,
-            'modifiers': self.modifiers,
-        }
+        from game.simulation.battle_state_serde import component_state_to_dict
+        return component_state_to_dict(self)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ComponentState':
@@ -68,22 +59,8 @@ class ComponentState:
         Raises:
             PersistenceException: If required keys are missing or values are invalid
         """
-        require_keys(
-            data,
-            ['component_id', 'current_hp', 'max_hp', 'is_active', 'layer'],
-            'ComponentState'
-        )
-        validate_non_negative(data['current_hp'], 'current_hp', 'ComponentState')
-        validate_positive(data['max_hp'], 'max_hp', 'ComponentState')
-
-        return cls(
-            component_id=data['component_id'],
-            current_hp=data['current_hp'],
-            max_hp=data['max_hp'],
-            is_active=data['is_active'],
-            layer=data['layer'],
-            modifiers=data.get('modifiers', []),
-        )
+        from game.simulation.battle_state_serde import component_state_from_dict
+        return component_state_from_dict(data)
 
     @classmethod
     def from_component(cls, component: 'Any') -> 'ComponentState':
@@ -147,33 +124,8 @@ class ShipState:
     current_target_id: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
-            'ship_id': self.ship_id,
-            'name': self.name,
-            'ship_class': self.ship_class,
-            'theme_id': self.theme_id,
-            'team_id': self.team_id,
-            'color': list(self.color),
-            'movement_policy': self.movement_policy,
-            'targeting_policy': self.targeting_policy,
-            'position': list(self.position),
-            'velocity': list(self.velocity),
-            'angle': self.angle,
-            'current_hp': self.current_hp,
-            'max_hp': self.max_hp,
-            'current_shields': self.current_shields,
-            'max_shields': self.max_shields,
-            'components': {
-                layer: [c.to_dict() for c in comps]
-                for layer, comps in self.components.items()
-            },
-            'resource_levels': self.resource_levels,
-            'resource_max': self.resource_max,
-            'is_alive': self.is_alive,
-            'is_derelict': self.is_derelict,
-            'retreat_status': self.retreat_status,
-            'current_target_id': self.current_target_id,
-        }
+        from game.simulation.battle_state_serde import ship_state_to_dict
+        return ship_state_to_dict(self)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ShipState':
@@ -188,92 +140,8 @@ class ShipState:
         Raises:
             PersistenceException: If required keys are missing or values are invalid
         """
-        require_keys(
-            data,
-            ['ship_id', 'name', 'ship_class', 'theme_id', 'team_id', 'color',
-             'movement_policy', 'position', 'velocity', 'angle', 'current_hp',
-             'max_hp', 'current_shields', 'max_shields'],
-            'ShipState'
-        )
-
-        # Validate color format (must be list/tuple with at least 3 elements)
-        color = data['color']
-        if not isinstance(color, (list, tuple)) or len(color) < 3:
-            raise PersistenceException(
-                f"ShipState: color must be a list/tuple with at least 3 elements, got {type(color).__name__}",
-                code=ErrorCode.CORRUPT_DATA.value,
-                context={
-                    "source": "ShipState",
-                    "field": "color",
-                    "value": str(color)[:100],
-                    "expected": "list or tuple with >= 3 elements"
-                }
-            )
-
-        # Validate position format
-        position = data['position']
-        if not isinstance(position, (list, tuple)) or len(position) < 2:
-            raise PersistenceException(
-                f"ShipState: position must be a list/tuple with at least 2 elements, got {type(position).__name__}",
-                code=ErrorCode.CORRUPT_DATA.value,
-                context={
-                    "source": "ShipState",
-                    "field": "position",
-                    "value": str(position)[:100],
-                    "expected": "list or tuple with >= 2 elements"
-                }
-            )
-
-        # Validate velocity format
-        velocity = data['velocity']
-        if not isinstance(velocity, (list, tuple)) or len(velocity) < 2:
-            raise PersistenceException(
-                f"ShipState: velocity must be a list/tuple with at least 2 elements, got {type(velocity).__name__}",
-                code=ErrorCode.CORRUPT_DATA.value,
-                context={
-                    "source": "ShipState",
-                    "field": "velocity",
-                    "value": str(velocity)[:100],
-                    "expected": "list or tuple with >= 2 elements"
-                }
-            )
-
-        # Deserialize components with resilient error handling
-        components = {}
-        for layer, comps in data.get('components', {}).items():
-            components[layer] = []
-            for i, c in enumerate(comps):
-                try:
-                    components[layer].append(ComponentState.from_dict(c))
-                except (PersistenceException, KeyError, TypeError) as e:
-                    logger.warning(
-                        f"ShipState: skipping corrupt component at {layer}[{i}]: {e}"
-                    )
-
-        return cls(
-            ship_id=data['ship_id'],
-            name=data['name'],
-            ship_class=data['ship_class'],
-            theme_id=data['theme_id'],
-            team_id=data['team_id'],
-            color=tuple(color),
-            movement_policy=data['movement_policy'],
-            targeting_policy=data.get('targeting_policy', 'standard'),
-            position=tuple(position),
-            velocity=tuple(velocity),
-            angle=data['angle'],
-            current_hp=data['current_hp'],
-            max_hp=data['max_hp'],
-            current_shields=data['current_shields'],
-            max_shields=data['max_shields'],
-            components=components,
-            resource_levels=data.get('resource_levels', {}),
-            resource_max=data.get('resource_max', {}),
-            is_alive=data.get('is_alive', True),
-            is_derelict=data.get('is_derelict', False),
-            retreat_status=data.get('retreat_status'),
-            current_target_id=data.get('current_target_id'),
-        )
+        from game.simulation.battle_state_serde import ship_state_from_dict
+        return ship_state_from_dict(data)
 
     @classmethod
     def from_ship(cls, ship: 'Ship', ship_id: Optional[str] = None) -> 'ShipState':
@@ -458,47 +326,13 @@ class ProjectileState:
     is_alive: bool = True
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
-            'projectile_id': self.projectile_id,
-            'owner_ship_id': self.owner_ship_id,
-            'team_id': self.team_id,
-            'position': list(self.position),
-            'velocity': list(self.velocity),
-            'damage': self.damage,
-            'max_range': self.max_range,
-            'endurance': self.endurance,
-            'max_endurance': self.max_endurance,
-            'projectile_type': self.projectile_type,
-            'turn_rate': self.turn_rate,
-            'max_speed': self.max_speed,
-            'target_ship_id': self.target_ship_id,
-            'hp': self.hp,
-            'max_hp': self.max_hp,
-            'distance_traveled': self.distance_traveled,
-            'is_alive': self.is_alive,
-        }
+        from game.simulation.battle_state_serde import projectile_state_to_dict
+        return projectile_state_to_dict(self)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ProjectileState':
-        return cls(
-            projectile_id=data['projectile_id'],
-            owner_ship_id=data.get('owner_ship_id'),
-            team_id=data['team_id'],
-            position=tuple(data['position']),
-            velocity=tuple(data['velocity']),
-            damage=data['damage'],
-            max_range=data['max_range'],
-            endurance=data['endurance'],
-            max_endurance=data['max_endurance'],
-            projectile_type=data['projectile_type'],
-            turn_rate=data.get('turn_rate', 0),
-            max_speed=data.get('max_speed', 0),
-            target_ship_id=data.get('target_ship_id'),
-            hp=data.get('hp', 1),
-            max_hp=data.get('max_hp', 1),
-            distance_traveled=data.get('distance_traveled', 0),
-            is_alive=data.get('is_alive', True),
-        )
+        from game.simulation.battle_state_serde import projectile_state_from_dict
+        return projectile_state_from_dict(data)
 
     @classmethod
     def from_projectile(cls, proj: 'Projectile', ship_id_map: Dict[str, str]) -> 'ProjectileState':
@@ -626,18 +460,8 @@ class BattleState:
     created_at: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
-            'version': self.version,
-            'battle_id': self.battle_id,
-            'seed': self.seed,
-            'tick_count': self.tick_count,
-            'ships': {sid: s.to_dict() for sid, s in self.ships.items()},
-            'projectiles': [p.to_dict() for p in self.projectiles],
-            'end_condition_data': self.end_condition_data,
-            'allow_retreat': self.allow_retreat,
-            'allow_reinforcements': self.allow_reinforcements,
-            'created_at': self.created_at,
-        }
+        from game.simulation.battle_state_serde import battle_state_to_dict
+        return battle_state_to_dict(self)
 
     def to_json(self, indent: int = 2) -> str:
         """Serialize to JSON string."""
@@ -645,26 +469,8 @@ class BattleState:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'BattleState':
-        ships = {}
-        for sid, sdata in data.get('ships', {}).items():
-            ships[sid] = ShipState.from_dict(sdata)
-
-        projectiles = []
-        for pdata in data.get('projectiles', []):
-            projectiles.append(ProjectileState.from_dict(pdata))
-
-        return cls(
-            version=data.get('version', '1.0'),
-            battle_id=data.get('battle_id', ''),
-            seed=data.get('seed'),
-            tick_count=data.get('tick_count', 0),
-            ships=ships,
-            projectiles=projectiles,
-            end_condition_data=data.get('end_condition_data', {"type": "team_eliminated"}),
-            allow_retreat=data.get('allow_retreat', False),
-            allow_reinforcements=data.get('allow_reinforcements', False),
-            created_at=data.get('created_at', ''),
-        )
+        from game.simulation.battle_state_serde import battle_state_from_dict
+        return battle_state_from_dict(data)
 
     @classmethod
     def from_json(cls, json_str: str) -> 'BattleState':
@@ -785,17 +591,8 @@ class BattleResults:
     captured_ships: List[ShipState] = field(default_factory=list)  # Future: derelicts captured by winner
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
-            'winner': self.winner,
-            'tick_count': self.tick_count,
-            'seed': self.seed,
-            'initial_state': self.initial_state.to_dict() if self.initial_state else None,
-            'final_state': self.final_state.to_dict() if self.final_state else None,
-            'surviving_ships': [s.to_dict() for s in self.surviving_ships],
-            'destroyed_ships': [s.to_dict() for s in self.destroyed_ships],
-            'escaped_ships': [s.to_dict() for s in self.escaped_ships],
-            'captured_ships': [s.to_dict() for s in self.captured_ships],
-        }
+        from game.simulation.battle_state_serde import battle_results_to_dict
+        return battle_results_to_dict(self)
 
     def to_json(self, indent: int = 2) -> str:
         """Serialize to JSON string."""
@@ -803,25 +600,8 @@ class BattleResults:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'BattleResults':
-        initial_state = None
-        if data.get('initial_state'):
-            initial_state = BattleState.from_dict(data['initial_state'])
-
-        final_state = None
-        if data.get('final_state'):
-            final_state = BattleState.from_dict(data['final_state'])
-
-        return cls(
-            winner=data.get('winner'),
-            tick_count=data.get('tick_count', 0),
-            seed=data.get('seed'),
-            initial_state=initial_state,
-            final_state=final_state,
-            surviving_ships=[ShipState.from_dict(s) for s in data.get('surviving_ships', [])],
-            destroyed_ships=[ShipState.from_dict(s) for s in data.get('destroyed_ships', [])],
-            escaped_ships=[ShipState.from_dict(s) for s in data.get('escaped_ships', [])],
-            captured_ships=[ShipState.from_dict(s) for s in data.get('captured_ships', [])],
-        )
+        from game.simulation.battle_state_serde import battle_results_from_dict
+        return battle_results_from_dict(data)
 
     def get_team_survivors(self, team_id: int) -> List[ShipState]:
         """Get surviving ships for a specific team."""
