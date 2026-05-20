@@ -1,6 +1,6 @@
 # Strategy Layer System
 
-> **Last verified:** 2026-05-18 — PROJ-436 Phase 10 doc refresh: minefield-resolver storage indirection note updated (`ship.bay_inventory.bay` typed slot is the canonical write surface; `ship.carried_items` shim deleted in Phase 9). Earlier: issue #25 — defeated players skip rotation; one-shot defeat modal composes with the issue #9 turn-start helper.
+> **Last verified:** 2026-05-19 — PROJ-459 consolidated doc update: noted `Fleet` save/load now follows the `planet_serde.py` sibling-module pattern at `game/strategy/data/fleet_serde.py`. Earlier (2026-05-18): PROJ-436 Phase 10 doc refresh updated the minefield-resolver storage indirection note (`ship.bay_inventory.bay` typed slot is the canonical write surface; `ship.carried_items` shim deleted in Phase 9). Earlier: issue #25 — defeated players skip rotation; one-shot defeat modal composes with the issue #9 turn-start helper.
 
 System documentation for the turn-based strategy layer.
 
@@ -844,7 +844,7 @@ Key files:
 - `GalaxyPathfindingService`: pathfinding over system graph and sectors.
 - `InterceptCalculator`: fleet intercept calculations.
 
-`Galaxy`, `Planet`, and `Star` are now facade/delegate classes with LOC and method-body guards. Keep new behavior in focused services rather than growing those data classes back into god classes. `Planet` query-style behavior routes through `PlanetQueryService`; habitability multiplier lookup routes through context-injectable `PlanetHabitabilityService`; serde lives in `planet_serde.py`.
+`Galaxy`, `Planet`, and `Star` are now facade/delegate classes with LOC and method-body guards. Keep new behavior in focused services rather than growing those data classes back into god classes. `Planet` query-style behavior routes through `PlanetQueryService`; habitability multiplier lookup routes through context-injectable `PlanetHabitabilityService`; serde lives in `planet_serde.py`. Fleet save/load follows the same sibling-module pattern at `game/strategy/data/fleet_serde.py` (PROJ-459) — `Fleet.to_dict` / `Fleet.from_dict` are 1-line facades delegating to the module-level serde functions.
 
 `StarSystem` contains `name`, `global_location`, optional `region_id`, `stars`, `planets`, `warp_points`, `storms`.
 
