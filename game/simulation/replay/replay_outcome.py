@@ -11,8 +11,8 @@ from dataclasses import dataclass
 from typing import Any, Dict
 
 from game.simulation.battle_outcome import BattleOutcome
-from game.simulation.replay.replay_serialization import (
-    REPLAY_SCHEMA_VERSION,
+from game.simulation.replay.replay_serde_helpers import REPLAY_SCHEMA_VERSION
+from game.simulation.replay.replay_outcome_serde import (
     battle_outcome_to_dict,
     battle_outcome_from_dict,
 )

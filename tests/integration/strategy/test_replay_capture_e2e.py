@@ -149,7 +149,7 @@ def _real_store_run_battle_factory(sink, *, recorded_specs):
     """
     from game.simulation.replay import ReplaySpec
     from game.simulation.replay.replay_outcome import ReplayOutcome
-    from game.simulation.replay.replay_serialization import REPLAY_SCHEMA_VERSION
+    from game.simulation.replay.replay_serde_helpers import REPLAY_SCHEMA_VERSION
 
     def _patched(spec, **kwargs):
         recorded_specs.append(spec)

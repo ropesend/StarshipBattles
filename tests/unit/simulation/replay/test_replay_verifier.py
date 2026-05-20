@@ -18,7 +18,7 @@ from typing import Any, Dict
 import pytest
 
 from game.simulation.replay import REPLAY_SCHEMA_VERSION, ReplayOutcome, ReplayRecord, ReplaySpec
-from game.simulation.replay.replay_serialization import battle_outcome_to_dict
+from game.simulation.replay.replay_outcome_serde import battle_outcome_to_dict
 from game.simulation.replay.replay_verifier import (
     Difference,
     ReplayVerificationResult,

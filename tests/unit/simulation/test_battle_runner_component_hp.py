@@ -284,7 +284,7 @@ def test_extract_component_states_populates_max_hp_and_status_distinctly():
     """
     from game.simulation.battle_runner import _extract_component_states
     from game.simulation.components.component_constants import ComponentStatus
-    from game.simulation.replay.replay_serialization import (
+    from game.simulation.replay.replay_serde_helpers import (
         _component_state_from_dict,
         _component_state_to_dict,
     )

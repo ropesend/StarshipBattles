@@ -1,6 +1,6 @@
 # Phase 4: Document the 10 remaining over-ceiling simulation files as next-touch
 
-**Status:** Not Started
+**Status:** Complete
 **Depends on:** Phase 3 complete
 **Review Mode:** lightweight (docs only; no code touched)
 **Files:**
@@ -33,14 +33,14 @@ $files = @(
 foreach ($f in $files) { '{0,5}  {1}' -f (Get-Content $f | Measure-Object -Line).Lines, $f }
 ```
 
-- [ ] Record the current LOC. Compare against the 2026-05-19 baseline (in `plan.md` "Out of Scope" table). Drift is expected if any phases touched call sites incidentally.
-- [ ] Note if any file dropped below 500 LOC — possibly Phase 1 / Phase 2 / Phase 3 changes propagated. If so, document the drop and remove that file from the next-touch list.
+- [x] Record the current LOC. Compare against the 2026-05-19 baseline (in `plan.md` "Out of Scope" table). Drift is expected if any phases touched call sites incidentally.
+- [x] Note if any file dropped below 500 LOC — possibly Phase 1 / Phase 2 / Phase 3 changes propagated. If so, document the drop and remove that file from the next-touch list.
 
 ### Task 4.2: Add 10 next-touch entries to `decisions.md` [Simple]
 
 **File:** `Projects/active_projects/PROJ-460/decisions.md`
 
-- [ ] Append the following entries (one per remaining over-ceiling file):
+- [x] Append the following entries (one per remaining over-ceiling file):
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
@@ -55,33 +55,33 @@ foreach ($f in $files) { '{0,5}  {1}' -f (Get-Content $f | Measure-Object -Line)
 | 2026-MM-DD | `vehicle_design_service.py` next-touch (516 LOC) | Service-level; modest ceiling overage; revisit on next touch. |
 | 2026-MM-DD | `combat/fleet_aura_manager.py` next-touch (515 LOC) | Aura manager with mixed responsibilities; needs separate scope analysis; revisit on next touch. |
 
-- [ ] Update LOC numbers from Task 4.1 if drift occurred.
-- [ ] Replace `2026-MM-DD` with today's actual date.
+- [x] Update LOC numbers from Task 4.1 if drift occurred.
+- [x] Replace `2026-MM-DD` with today's actual date.
 
 ### Task 4.3: Finalize F-D-011 status in findings [Simple]
 
 **File:** `Projects/active_projects/PROJ-460/findings/PROJ-460_findings.md`
 
-- [ ] Update the F-D-011 entry's "Status as of 2026-05-19" section to note final disposition:
+- [x] Update the F-D-011 entry's "Status as of 2026-05-19" section to note final disposition:
   - "Actionable slice closed in PROJ-460: battle_state.py Phase 1, battle_controller.py Phase 2, replay_serialization.py Phase 3."
   - "10 next-touch files documented in `decisions.md` per Codex r4 discipline rule. Each carries a one-line entry with current LOC and rationale for not splitting in this project."
   - "Any future work on any of these 10 files should be a separate scope decision driven by the next touch on that file."
 
 ### Task 4.4: Verify discipline [Simple]
 
-- [ ] Confirm NO production code changes happened in Phase 4. `git status --short` should show only `decisions.md` and `findings/PROJ-460_findings.md`.
-- [ ] If anything else is modified: stop. Review whether the change actually belongs in Phase 4 or is scope creep that should be in a separate project.
+- [x] Confirm NO production code changes happened in Phase 4. `git status --short` should show only `decisions.md` and `findings/PROJ-460_findings.md`.
+- [x] If anything else is modified: stop. Review whether the change actually belongs in Phase 4 or is scope creep that should be in a separate project.
 
 ### Task 4.5: Commit [Simple]
 
-- [ ] Commit message: `PROJ-460 Phase 4: document 10 over-ceiling simulation files as next-touch (Codex r4 discipline rule)`
-- [ ] Update `plan.md` Current State to: "All phases complete; ready for verification."
+- [x] Commit message: `PROJ-460 Phase 4: document 10 over-ceiling simulation files as next-touch (Codex r4 discipline rule)`
+- [x] Update `plan.md` Current State to: "All phases complete; ready for verification."
 
 ---
 
 ## Phase Completion Checklist
-- [ ] 10 next-touch entries added to `decisions.md` with current LOC values
-- [ ] F-D-011 status finalized in `findings/PROJ-460_findings.md`
-- [ ] No production code touched in Phase 4
-- [ ] Sharded suite green (from Phase 3; no new code in Phase 4)
-- [ ] `plan.md` Current State updated to "All phases complete"
+- [x] 10 next-touch entries added to `decisions.md` with current LOC values
+- [x] F-D-011 status finalized in `findings/PROJ-460_findings.md`
+- [x] No production code touched in Phase 4
+- [x] Sharded suite green (from Phase 3; no new code in Phase 4)
+- [x] `plan.md` Current State updated to "All phases complete"
