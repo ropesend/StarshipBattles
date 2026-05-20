@@ -1,0 +1,32 @@
+[
+  {
+    "file": "game/simulation/battle_runner.py",
+    "line": 182,
+    "content": "engine.replay_id: Optional[str] = None  # type: ignore[attr-defined]"
+  },
+  {
+    "file": "game/simulation/battle_runner.py",
+    "line": 192,
+    "content": "engine.replay_id = replay_id  # type: ignore[attr-defined]"
+  },
+  {
+    "file": "game/simulation/systems/attack_processor.py",
+    "line": 123,
+    "content": "new_ship.launched_in_battle_id = battle_id  # type: ignore[attr-defined]"
+  },
+  {
+    "file": "game/strategy/adapters/simulation_adapter.py",
+    "line": 488,
+    "content": "def _lookup(ship_spec):  # type: ignore[no-redef]"
+  },
+  {
+    "file": "game/strategy/engine/issuer_adapter.py",
+    "line": 303,
+    "content": "return gh  # type: ignore[no-any-return]"
+  },
+  {
+    "file": "game/ui/pygame_gui_patch.py",
+    "line": 152,
+    "content": "self._get_next_id_node(  # type: ignore[attr-defined]"
+  }
+]

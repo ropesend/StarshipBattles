@@ -1,0 +1,2972 @@
+{
+  "status": "errors_found",
+  "exit_code": 1,
+  "error_count": 593,
+  "errors": [
+    {
+      "raw": "game\\ui\\screens\\test_lab\\viewmodel.py:53: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\test_lab\\viewmodel.py",
+      "line": "53"
+    },
+    {
+      "raw": "game\\ui\\screens\\test_lab\\viewmodel.py:54: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\test_lab\\viewmodel.py",
+      "line": "54"
+    },
+    {
+      "raw": "game\\ui\\screens\\test_lab\\viewmodel.py:57: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\test_lab\\viewmodel.py",
+      "line": "57"
+    },
+    {
+      "raw": "game\\ui\\screens\\test_lab\\viewmodel.py:58: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\test_lab\\viewmodel.py",
+      "line": "58"
+    },
+    {
+      "raw": "game\\ui\\screens\\test_lab\\viewmodel.py:61: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\test_lab\\viewmodel.py",
+      "line": "61"
+    },
+    {
+      "raw": "game\\ui\\screens\\test_lab\\viewmodel.py:62: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\test_lab\\viewmodel.py",
+      "line": "62"
+    },
+    {
+      "raw": "game\\ui\\screens\\test_lab\\viewmodel.py:63: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\test_lab\\viewmodel.py",
+      "line": "63"
+    },
+    {
+      "raw": "game\\ui\\screens\\test_lab\\viewmodel.py:64: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\test_lab\\viewmodel.py",
+      "line": "64"
+    },
+    {
+      "raw": "game\\ui\\screens\\test_lab\\viewmodel.py:65: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\test_lab\\viewmodel.py",
+      "line": "65"
+    },
+    {
+      "raw": "game\\ui\\screens\\test_lab\\viewmodel.py:68: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\test_lab\\viewmodel.py",
+      "line": "68"
+    },
+    {
+      "raw": "game\\ui\\screens\\test_lab\\viewmodel.py:69: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\test_lab\\viewmodel.py",
+      "line": "69"
+    },
+    {
+      "raw": "game\\ui\\screens\\test_lab\\viewmodel.py:70: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\test_lab\\viewmodel.py",
+      "line": "70"
+    },
+    {
+      "raw": "game\\ui\\screens\\test_lab\\viewmodel.py:71: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\test_lab\\viewmodel.py",
+      "line": "71"
+    },
+    {
+      "raw": "game\\ui\\screens\\test_lab\\viewmodel.py:72: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\test_lab\\viewmodel.py",
+      "line": "72"
+    },
+    {
+      "raw": "game\\ui\\screens\\test_lab\\viewmodel.py:73: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\test_lab\\viewmodel.py",
+      "line": "73"
+    },
+    {
+      "raw": "game\\ui\\screens\\test_lab\\viewmodel.py:76: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\test_lab\\viewmodel.py",
+      "line": "76"
+    },
+    {
+      "raw": "game\\ui\\screens\\test_lab\\viewmodel.py:77: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\test_lab\\viewmodel.py",
+      "line": "77"
+    },
+    {
+      "raw": "game\\ui\\screens\\test_lab\\viewmodel.py:80: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\test_lab\\viewmodel.py",
+      "line": "80"
+    },
+    {
+      "raw": "game\\ui\\screens\\test_lab\\viewmodel.py:81: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\test_lab\\viewmodel.py",
+      "line": "81"
+    },
+    {
+      "raw": "game\\ui\\screens\\test_lab\\viewmodel.py:84: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\test_lab\\viewmodel.py",
+      "line": "84"
+    },
+    {
+      "raw": "game\\ui\\screens\\test_lab\\viewmodel.py:85: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\test_lab\\viewmodel.py",
+      "line": "85"
+    },
+    {
+      "raw": "game\\ui\\screens\\test_lab\\viewmodel.py:88: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\test_lab\\viewmodel.py",
+      "line": "88"
+    },
+    {
+      "raw": "game\\core\\patterns\\layer_iterator.py:38: error: Returning Any from function declared to return \"str\"  [no-any-return]",
+      "file": "game\\core\\patterns\\layer_iterator.py",
+      "line": "38"
+    },
+    {
+      "raw": "game\\strategy\\services\\ability_sources\\warp_point.py:56: error: Returning Any from function declared to return \"bool\"  [no-any-return]",
+      "file": "game\\strategy\\services\\ability_sources\\warp_point.py",
+      "line": "56"
+    },
+    {
+      "raw": "game\\ai\\spatial_behaviors\\base.py:76: error: Cannot determine type of \"x\"  [has-type]",
+      "file": "game\\ai\\spatial_behaviors\\base.py",
+      "line": "76"
+    },
+    {
+      "raw": "game\\ai\\spatial_behaviors\\base.py:76: error: Cannot determine type of \"y\"  [has-type]",
+      "file": "game\\ai\\spatial_behaviors\\base.py",
+      "line": "76"
+    },
+    {
+      "raw": "game\\ai\\interfaces\\controllable.py:268: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\ai\\interfaces\\controllable.py",
+      "line": "268"
+    },
+    {
+      "raw": "game\\ai\\interfaces\\controllable.py:272: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\ai\\interfaces\\controllable.py",
+      "line": "272"
+    },
+    {
+      "raw": "game\\ai\\interfaces\\controllable.py:276: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\ai\\interfaces\\controllable.py",
+      "line": "276"
+    },
+    {
+      "raw": "game\\ai\\interfaces\\controllable.py:280: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\ai\\interfaces\\controllable.py",
+      "line": "280"
+    },
+    {
+      "raw": "game\\ai\\interfaces\\controllable.py:284: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\ai\\interfaces\\controllable.py",
+      "line": "284"
+    },
+    {
+      "raw": "game\\ai\\interfaces\\controllable.py:288: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\ai\\interfaces\\controllable.py",
+      "line": "288"
+    },
+    {
+      "raw": "game\\ai\\interfaces\\controllable.py:292: error: Returning Any from function declared to return \"bool\"  [no-any-return]",
+      "file": "game\\ai\\interfaces\\controllable.py",
+      "line": "292"
+    },
+    {
+      "raw": "game\\ai\\interfaces\\controllable.py:308: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\ai\\interfaces\\controllable.py",
+      "line": "308"
+    },
+    {
+      "raw": "game\\ai\\interfaces\\controllable.py:332: error: Returning Any from function declared to return \"int\"  [no-any-return]",
+      "file": "game\\ai\\interfaces\\controllable.py",
+      "line": "332"
+    },
+    {
+      "raw": "game\\ai\\interfaces\\controllable.py:336: error: Returning Any from function declared to return \"bool\"  [no-any-return]",
+      "file": "game\\ai\\interfaces\\controllable.py",
+      "line": "336"
+    },
+    {
+      "raw": "game\\ai\\interfaces\\controllable.py:344: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\ai\\interfaces\\controllable.py",
+      "line": "344"
+    },
+    {
+      "raw": "game\\ai\\interfaces\\controllable.py:360: error: Returning Any from function declared to return \"int\"  [no-any-return]",
+      "file": "game\\ai\\interfaces\\controllable.py",
+      "line": "360"
+    },
+    {
+      "raw": "game\\ai\\interfaces\\controllable.py:372: error: Returning Any from function declared to return \"list[Any]\"  [no-any-return]",
+      "file": "game\\ai\\interfaces\\controllable.py",
+      "line": "372"
+    },
+    {
+      "raw": "game\\ai\\interfaces\\controllable.py:376: error: Returning Any from function declared to return \"dict[str, Any]\"  [no-any-return]",
+      "file": "game\\ai\\interfaces\\controllable.py",
+      "line": "376"
+    },
+    {
+      "raw": "game\\ai\\interfaces\\controllable.py:380: error: Returning Any from function declared to return \"str\"  [no-any-return]",
+      "file": "game\\ai\\interfaces\\controllable.py",
+      "line": "380"
+    },
+    {
+      "raw": "game\\ai\\interfaces\\controllable.py:384: error: Returning Any from function declared to return \"str\"  [no-any-return]",
+      "file": "game\\ai\\interfaces\\controllable.py",
+      "line": "384"
+    },
+    {
+      "raw": "game\\ai\\interfaces\\controllable.py:388: error: Returning Any from function declared to return \"str\"  [no-any-return]",
+      "file": "game\\ai\\interfaces\\controllable.py",
+      "line": "388"
+    },
+    {
+      "raw": "game\\ai\\interfaces\\controllable.py:392: error: Returning Any from function declared to return \"list[Any]\"  [no-any-return]",
+      "file": "game\\ai\\interfaces\\controllable.py",
+      "line": "392"
+    },
+    {
+      "raw": "game\\simulation\\components\\abilities\\resources.py:63: error: Returning Any from function declared to return \"ResourceRegistry | None\"  [no-any-return]",
+      "file": "game\\simulation\\components\\abilities\\resources.py",
+      "line": "63"
+    },
+    {
+      "raw": "game\\simulation\\components\\abilities\\resources.py:99: error: Returning Any from function declared to return \"bool\"  [no-any-return]",
+      "file": "game\\simulation\\components\\abilities\\resources.py",
+      "line": "99"
+    },
+    {
+      "raw": "game\\simulation\\components\\abilities\\resources.py:114: error: Returning Any from function declared to return \"bool\"  [no-any-return]",
+      "file": "game\\simulation\\components\\abilities\\resources.py",
+      "line": "114"
+    },
+    {
+      "raw": "game\\simulation\\components\\abilities\\resources.py:125: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\components\\abilities\\resources.py",
+      "line": "125"
+    },
+    {
+      "raw": "game\\simulation\\components\\abilities\\resources.py:154: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\components\\abilities\\resources.py",
+      "line": "154"
+    },
+    {
+      "raw": "game\\simulation\\components\\abilities\\resources.py:194: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\components\\abilities\\resources.py",
+      "line": "194"
+    },
+    {
+      "raw": "game\\simulation\\components\\abilities\\resources.py:234: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\components\\abilities\\resources.py",
+      "line": "234"
+    },
+    {
+      "raw": "game\\simulation\\components\\abilities\\harvester.py:26: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\components\\abilities\\harvester.py",
+      "line": "26"
+    },
+    {
+      "raw": "game\\simulation\\components\\abilities\\harvester.py:73: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\components\\abilities\\harvester.py",
+      "line": "73"
+    },
+    {
+      "raw": "game\\simulation\\components\\abilities\\harvester.py:107: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\components\\abilities\\harvester.py",
+      "line": "107"
+    },
+    {
+      "raw": "game\\simulation\\components\\abilities\\harvester.py:110: error: Dict entry 2 has incompatible type \"str\": \"None\"; expected \"str\": \"str\"  [dict-item]",
+      "file": "game\\simulation\\components\\abilities\\harvester.py",
+      "line": "110"
+    },
+    {
+      "raw": "game\\simulation\\components\\abilities\\harvester.py:130: error: Dict entry 2 has incompatible type \"str\": \"None\"; expected \"str\": \"str\"  [dict-item]",
+      "file": "game\\simulation\\components\\abilities\\harvester.py",
+      "line": "130"
+    },
+    {
+      "raw": "game\\simulation\\components\\abilities\\harvester.py:146: error: Attribute \"production_rates\" already defined on line 142  [no-redef]",
+      "file": "game\\simulation\\components\\abilities\\harvester.py",
+      "line": "146"
+    },
+    {
+      "raw": "game\\simulation\\components\\abilities\\harvester.py:150: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\components\\abilities\\harvester.py",
+      "line": "150"
+    },
+    {
+      "raw": "game\\simulation\\components\\abilities\\defense.py:46: error: \"ShieldProjection\" has no attribute \"base_capacity\"; maybe \"capacity\"?  [attr-defined]",
+      "file": "game\\simulation\\components\\abilities\\defense.py",
+      "line": "46"
+    },
+    {
+      "raw": "game\\simulation\\components\\abilities\\planetary\\terraforming.py:45: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\components\\abilities\\planetary\\terraforming.py",
+      "line": "45"
+    },
+    {
+      "raw": "game\\simulation\\components\\abilities\\planetary\\terraforming.py:86: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\components\\abilities\\planetary\\terraforming.py",
+      "line": "86"
+    },
+    {
+      "raw": "game\\simulation\\components\\abilities\\planetary\\terraforming.py:136: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\components\\abilities\\planetary\\terraforming.py",
+      "line": "136"
+    },
+    {
+      "raw": "game\\simulation\\components\\abilities\\planetary\\terraforming.py:179: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\components\\abilities\\planetary\\terraforming.py",
+      "line": "179"
+    },
+    {
+      "raw": "game\\simulation\\components\\abilities\\planetary\\resource_modifiers.py:47: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\components\\abilities\\planetary\\resource_modifiers.py",
+      "line": "47"
+    },
+    {
+      "raw": "game\\simulation\\components\\abilities\\planetary\\resource_modifiers.py:96: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\components\\abilities\\planetary\\resource_modifiers.py",
+      "line": "96"
+    },
+    {
+      "raw": "game\\simulation\\components\\abilities\\planetary\\resource_modifiers.py:146: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\components\\abilities\\planetary\\resource_modifiers.py",
+      "line": "146"
+    },
+    {
+      "raw": "game\\simulation\\systems\\tick_phase.py:64: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\simulation\\systems\\tick_phase.py",
+      "line": "64"
+    },
+    {
+      "raw": "game\\simulation\\combat\\ram_target_resolver.py:152: error: Returning Any from function declared to return \"bool\"  [no-any-return]",
+      "file": "game\\simulation\\combat\\ram_target_resolver.py",
+      "line": "152"
+    },
+    {
+      "raw": "game\\strategy\\data\\planet_physics.py:129: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\strategy\\data\\planet_physics.py",
+      "line": "129"
+    },
+    {
+      "raw": "game\\simulation\\projectile_manager.py:22: error: Returning Any from function declared to return \"list[Any]\"  [no-any-return]",
+      "file": "game\\simulation\\projectile_manager.py",
+      "line": "22"
+    },
+    {
+      "raw": "game\\strategy\\generation\\loaders\\system_blueprints_loader.py:50: error: Returning Any from function declared to return \"dict[str, Any]\"  [no-any-return]",
+      "file": "game\\strategy\\generation\\loaders\\system_blueprints_loader.py",
+      "line": "50"
+    },
+    {
+      "raw": "game\\strategy\\generation\\loaders\\system_blueprints_loader.py:73: error: Returning Any from function declared to return \"dict[str, Any]\"  [no-any-return]",
+      "file": "game\\strategy\\generation\\loaders\\system_blueprints_loader.py",
+      "line": "73"
+    },
+    {
+      "raw": "game\\strategy\\generation\\loaders\\system_blueprints_loader.py:114: error: Returning Any from function declared to return \"str\"  [no-any-return]",
+      "file": "game\\strategy\\generation\\loaders\\system_blueprints_loader.py",
+      "line": "114"
+    },
+    {
+      "raw": "game\\strategy\\generation\\loaders\\system_blueprints_loader.py:116: error: Returning Any from function declared to return \"str\"  [no-any-return]",
+      "file": "game\\strategy\\generation\\loaders\\system_blueprints_loader.py",
+      "line": "116"
+    },
+    {
+      "raw": "game\\simulation\\components\\modifier_effects.py:252: error: Need type annotation for \"errors\" (hint: \"errors: list[<type>] = ...\")  [var-annotated]",
+      "file": "game\\simulation\\components\\modifier_effects.py",
+      "line": "252"
+    },
+    {
+      "raw": "game\\strategy\\generation\\region_classifier.py:170: error: Returning Any from function declared to return \"int\"  [no-any-return]",
+      "file": "game\\strategy\\generation\\region_classifier.py",
+      "line": "170"
+    },
+    {
+      "raw": "game\\strategy\\generation\\region_classifier.py:236: error: Need type annotation for \"neighbors\"  [var-annotated]",
+      "file": "game\\strategy\\generation\\region_classifier.py",
+      "line": "236"
+    },
+    {
+      "raw": "game\\strategy\\data\\spatial_index.py:142: error: Incompatible types in assignment (expression has type \"Generator[list[tuple[HexCoord, Any]], None, None]\", variable has type \"dict_values[tuple[int, int], list[tuple[HexCoord, Any]]]\")  [assignment]",
+      "file": "game\\strategy\\data\\spatial_index.py",
+      "line": "142"
+    },
+    {
+      "raw": "game\\ui\\screens\\star_list_presets.py:127: error: Returning Any from function declared to return \"list[Any]\"  [no-any-return]",
+      "file": "game\\ui\\screens\\star_list_presets.py",
+      "line": "127"
+    },
+    {
+      "raw": "game\\strategy\\data\\resource_generation_config.py:131: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\strategy\\data\\resource_generation_config.py",
+      "line": "131"
+    },
+    {
+      "raw": "game\\simulation\\components\\component_stats_calculator.py:125: error: Incompatible default for parameter \"component\" (default has type \"None\", parameter has type \"Component\")  [assignment]",
+      "file": "game\\simulation\\components\\component_stats_calculator.py",
+      "line": "125"
+    },
+    {
+      "raw": "game\\simulation\\components\\component_stats_calculator.py:125: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\simulation\\components\\component_stats_calculator.py",
+      "line": "125"
+    },
+    {
+      "raw": "game\\simulation\\components\\component_stats_calculator.py:125: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\simulation\\components\\component_stats_calculator.py",
+      "line": "125"
+    },
+    {
+      "raw": "game\\simulation\\components\\component_stats_calculator.py:207: error: Incompatible default for parameter \"context\" (default has type \"None\", parameter has type \"dict[str, Any]\")  [assignment]",
+      "file": "game\\simulation\\components\\component_stats_calculator.py",
+      "line": "207"
+    },
+    {
+      "raw": "game\\simulation\\components\\component_stats_calculator.py:207: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\simulation\\components\\component_stats_calculator.py",
+      "line": "207"
+    },
+    {
+      "raw": "game\\simulation\\components\\component_stats_calculator.py:207: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\simulation\\components\\component_stats_calculator.py",
+      "line": "207"
+    },
+    {
+      "raw": "game\\simulation\\components\\component_stats_calculator.py:270: error: \"Component\" has no attribute \"evaluated_resource_cost\"; maybe \"get_resource_cost\"?  [attr-defined]",
+      "file": "game\\simulation\\components\\component_stats_calculator.py",
+      "line": "270"
+    },
+    {
+      "raw": "game\\simulation\\components\\component_stats_calculator.py:275: error: \"Component\" has no attribute \"evaluated_resource_cost\"; maybe \"get_resource_cost\"?  [attr-defined]",
+      "file": "game\\simulation\\components\\component_stats_calculator.py",
+      "line": "275"
+    },
+    {
+      "raw": "game\\simulation\\components\\component_stats_calculator.py:286: error: \"Component\" has no attribute \"evaluated_resource_cost\"; maybe \"get_resource_cost\"?  [attr-defined]",
+      "file": "game\\simulation\\components\\component_stats_calculator.py",
+      "line": "286"
+    },
+    {
+      "raw": "game\\simulation\\components\\component_stats_calculator.py:329: error: Incompatible default for parameter \"context\" (default has type \"None\", parameter has type \"dict[str, Any]\")  [assignment]",
+      "file": "game\\simulation\\components\\component_stats_calculator.py",
+      "line": "329"
+    },
+    {
+      "raw": "game\\simulation\\components\\component_stats_calculator.py:329: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\simulation\\components\\component_stats_calculator.py",
+      "line": "329"
+    },
+    {
+      "raw": "game\\simulation\\components\\component_stats_calculator.py:329: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\simulation\\components\\component_stats_calculator.py",
+      "line": "329"
+    },
+    {
+      "raw": "game\\simulation\\components\\ability_manager.py:244: error: Incompatible types in assignment (expression has type \"Ability | None\", variable has type \"Ability\")  [assignment]",
+      "file": "game\\simulation\\components\\ability_manager.py",
+      "line": "244"
+    },
+    {
+      "raw": "game\\simulation\\combat\\families\\projectile.py:30: error: Item \"Ability\" of \"Ability | None\" has no attribute \"projectile_speed\"  [union-attr]",
+      "file": "game\\simulation\\combat\\families\\projectile.py",
+      "line": "30"
+    },
+    {
+      "raw": "game\\simulation\\combat\\families\\projectile.py:30: error: Item \"None\" of \"Ability | None\" has no attribute \"projectile_speed\"  [union-attr]",
+      "file": "game\\simulation\\combat\\families\\projectile.py",
+      "line": "30"
+    },
+    {
+      "raw": "game\\simulation\\combat\\families\\projectile.py:47: error: Item \"Ability\" of \"Ability | None\" has no attribute \"damage\"  [union-attr]",
+      "file": "game\\simulation\\combat\\families\\projectile.py",
+      "line": "47"
+    },
+    {
+      "raw": "game\\simulation\\combat\\families\\projectile.py:47: error: Item \"None\" of \"Ability | None\" has no attribute \"damage\"  [union-attr]",
+      "file": "game\\simulation\\combat\\families\\projectile.py",
+      "line": "47"
+    },
+    {
+      "raw": "game\\simulation\\combat\\families\\projectile.py:48: error: Item \"Ability\" of \"Ability | None\" has no attribute \"range\"  [union-attr]",
+      "file": "game\\simulation\\combat\\families\\projectile.py",
+      "line": "48"
+    },
+    {
+      "raw": "game\\simulation\\combat\\families\\projectile.py:48: error: Item \"None\" of \"Ability | None\" has no attribute \"range\"  [union-attr]",
+      "file": "game\\simulation\\combat\\families\\projectile.py",
+      "line": "48"
+    },
+    {
+      "raw": "game\\ui\\effects\\hit_effects.py:88: error: Argument \"duration\" to \"HitEffect\" has incompatible type \"object\"; expected \"float\"  [arg-type]",
+      "file": "game\\ui\\effects\\hit_effects.py",
+      "line": "88"
+    },
+    {
+      "raw": "game\\ui\\effects\\hit_effects.py:152: error: Unsupported operand types for * (\"float\" and \"object\")  [operator]",
+      "file": "game\\ui\\effects\\hit_effects.py",
+      "line": "152"
+    },
+    {
+      "raw": "game\\ui\\effects\\hit_effects.py:182: error: Unsupported operand types for * (\"float\" and \"object\")  [operator]",
+      "file": "game\\ui\\effects\\hit_effects.py",
+      "line": "182"
+    },
+    {
+      "raw": "game\\ui\\effects\\hit_effects.py:212: error: Unsupported operand types for * (\"float\" and \"object\")  [operator]",
+      "file": "game\\ui\\effects\\hit_effects.py",
+      "line": "212"
+    },
+    {
+      "raw": "game\\ui\\screens\\event_log_data_source.py:116: error: Returning Any from function declared to return \"str\"  [no-any-return]",
+      "file": "game\\ui\\screens\\event_log_data_source.py",
+      "line": "116"
+    },
+    {
+      "raw": "game\\ui\\screens\\event_log_data_source.py:119: error: Returning Any from function declared to return \"str\"  [no-any-return]",
+      "file": "game\\ui\\screens\\event_log_data_source.py",
+      "line": "119"
+    },
+    {
+      "raw": "game\\ui\\screens\\event_log_data_source.py:142: error: Returning Any from function declared to return \"str\"  [no-any-return]",
+      "file": "game\\ui\\screens\\event_log_data_source.py",
+      "line": "142"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_queue_data_source.py:182: error: Returning Any from function declared to return \"Surface | None\"  [no-any-return]",
+      "file": "game\\ui\\screens\\build_queue_queue_data_source.py",
+      "line": "182"
+    },
+    {
+      "raw": "game\\ui\\screens\\race_asset_loader.py:203: error: Need type annotation for \"result\" (hint: \"result: dict[<type>, <type>] = ...\")  [var-annotated]",
+      "file": "game\\ui\\screens\\race_asset_loader.py",
+      "line": "203"
+    },
+    {
+      "raw": "game\\strategy\\engine\\issuer_adapter.py:183: error: Returning Any from function declared to return \"HexCoord\"  [no-any-return]",
+      "file": "game\\strategy\\engine\\issuer_adapter.py",
+      "line": "183"
+    },
+    {
+      "raw": "game\\simulation\\entities\\stat_contributors\\launch.py:53: error: \"Ship\" has no attribute \"fighter_capacity\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\stat_contributors\\launch.py",
+      "line": "53"
+    },
+    {
+      "raw": "game\\simulation\\entities\\stat_contributors\\launch.py:60: error: \"Ship\" has no attribute \"fighters_per_wave\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\stat_contributors\\launch.py",
+      "line": "60"
+    },
+    {
+      "raw": "game\\simulation\\entities\\stat_contributors\\launch.py:62: error: \"Ship\" has no attribute \"launch_cycle\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\stat_contributors\\launch.py",
+      "line": "62"
+    },
+    {
+      "raw": "game\\simulation\\entities\\stat_contributors\\launch.py:63: error: \"Ship\" has no attribute \"launch_cycle\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\stat_contributors\\launch.py",
+      "line": "63"
+    },
+    {
+      "raw": "game\\simulation\\entities\\stat_contributors\\launch.py:66: error: \"Ship\" has no attribute \"fighter_launch_rate_tons_per_sec\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\stat_contributors\\launch.py",
+      "line": "66"
+    },
+    {
+      "raw": "game\\simulation\\entities\\stat_contributors\\launch.py:87: error: \"Ship\" has no attribute \"satellite_capacity\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\stat_contributors\\launch.py",
+      "line": "87"
+    },
+    {
+      "raw": "game\\simulation\\entities\\stat_contributors\\launch.py:94: error: \"Ship\" has no attribute \"satellites_per_wave\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\stat_contributors\\launch.py",
+      "line": "94"
+    },
+    {
+      "raw": "game\\simulation\\entities\\stat_contributors\\launch.py:96: error: \"Ship\" has no attribute \"satellite_launch_cycle\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\stat_contributors\\launch.py",
+      "line": "96"
+    },
+    {
+      "raw": "game\\simulation\\entities\\stat_contributors\\launch.py:97: error: \"Ship\" has no attribute \"satellite_launch_cycle\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\stat_contributors\\launch.py",
+      "line": "97"
+    },
+    {
+      "raw": "game\\simulation\\entities\\stat_contributors\\launch.py:100: error: \"Ship\" has no attribute \"satellite_launch_rate_tons_per_sec\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\stat_contributors\\launch.py",
+      "line": "100"
+    },
+    {
+      "raw": "game\\simulation\\entities\\stat_contributors\\launch.py:118: error: \"Ship\" has no attribute \"bay_capacity_mass\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\stat_contributors\\launch.py",
+      "line": "118"
+    },
+    {
+      "raw": "game\\simulation\\combat\\damage_calculator.py:41: error: Incompatible default for parameter \"rng\" (default has type \"None\", parameter has type \"Random\")  [assignment]",
+      "file": "game\\simulation\\combat\\damage_calculator.py",
+      "line": "41"
+    },
+    {
+      "raw": "game\\simulation\\combat\\damage_calculator.py:41: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\simulation\\combat\\damage_calculator.py",
+      "line": "41"
+    },
+    {
+      "raw": "game\\simulation\\combat\\damage_calculator.py:41: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\simulation\\combat\\damage_calculator.py",
+      "line": "41"
+    },
+    {
+      "raw": "game\\simulation\\combat\\damage_calculator.py:91: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\combat\\damage_calculator.py",
+      "line": "91"
+    },
+    {
+      "raw": "game\\simulation\\combat\\damage_calculator.py:103: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\combat\\damage_calculator.py",
+      "line": "103"
+    },
+    {
+      "raw": "game\\simulation\\combat\\damage_calculator.py:110: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\combat\\damage_calculator.py",
+      "line": "110"
+    },
+    {
+      "raw": "game\\simulation\\combat\\damage_calculator.py:120: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\combat\\damage_calculator.py",
+      "line": "120"
+    },
+    {
+      "raw": "game\\simulation\\combat\\damage_calculator.py:127: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\combat\\damage_calculator.py",
+      "line": "127"
+    },
+    {
+      "raw": "game\\simulation\\combat\\damage_calculator.py:139: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\combat\\damage_calculator.py",
+      "line": "139"
+    },
+    {
+      "raw": "game\\simulation\\combat\\damage_calculator.py:152: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\combat\\damage_calculator.py",
+      "line": "152"
+    },
+    {
+      "raw": "game\\simulation\\combat\\damage_calculator.py:207: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\simulation\\combat\\damage_calculator.py",
+      "line": "207"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:92: error: Incompatible default for parameter \"species_id\" (default has type \"None\", parameter has type \"str\")  [assignment]",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "92"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:92: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "92"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:92: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "92"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:94: error: Incompatible default for parameter \"projected_cargo\" (default has type \"None\", parameter has type \"int\")  [assignment]",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "94"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:94: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "94"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:94: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "94"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:190: error: Incompatible default for parameter \"species_id\" (default has type \"None\", parameter has type \"str\")  [assignment]",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "190"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:190: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "190"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:190: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "190"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:222: error: Incompatible default for parameter \"species_id\" (default has type \"None\", parameter has type \"str\")  [assignment]",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "222"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:222: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "222"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:222: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "222"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:223: error: Incompatible default for parameter \"projected_cargo\" (default has type \"None\", parameter has type \"int\")  [assignment]",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "223"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:223: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "223"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:223: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "223"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:319: error: Incompatible default for parameter \"species_id\" (default has type \"None\", parameter has type \"str\")  [assignment]",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "319"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:319: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "319"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:319: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "319"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:320: error: Incompatible default for parameter \"projected_cargo\" (default has type \"None\", parameter has type \"int\")  [assignment]",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "320"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:320: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "320"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:320: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "320"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:347: error: Incompatible default for parameter \"design_id\" (default has type \"None\", parameter has type \"str\")  [assignment]",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "347"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:347: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "347"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:347: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "347"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:403: error: Incompatible default for parameter \"design_id\" (default has type \"None\", parameter has type \"str\")  [assignment]",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "403"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:403: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "403"
+    },
+    {
+      "raw": "game\\strategy\\validation\\transfer_validator.py:403: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\strategy\\validation\\transfer_validator.py",
+      "line": "403"
+    },
+    {
+      "raw": "game\\strategy\\data\\galaxy_warp_generator.py:172: error: Returning Any from function declared to return \"int\"  [no-any-return]",
+      "file": "game\\strategy\\data\\galaxy_warp_generator.py",
+      "line": "172"
+    },
+    {
+      "raw": "game\\strategy\\data\\galaxy_warp_generator.py:174: error: Returning Any from function declared to return \"int\"  [no-any-return]",
+      "file": "game\\strategy\\data\\galaxy_warp_generator.py",
+      "line": "174"
+    },
+    {
+      "raw": "game\\strategy\\data\\galaxy_warp_generator.py:295: error: Need type annotation for \"inter_region_links\" (hint: \"inter_region_links: dict[<type>, <type>] = ...\")  [var-annotated]",
+      "file": "game\\strategy\\data\\galaxy_warp_generator.py",
+      "line": "295"
+    },
+    {
+      "raw": "game\\strategy\\data\\galaxy_warp_generator.py:371: error: Returning Any from function declared to return \"dict[Any, Any]\"  [no-any-return]",
+      "file": "game\\strategy\\data\\galaxy_warp_generator.py",
+      "line": "371"
+    },
+    {
+      "raw": "game\\ai\\target_evaluator.py:211: error: \"ICombatShip\" has no attribute \"get_components_by_layer\"; maybe \"get_components_by_ability\"?  [attr-defined]",
+      "file": "game\\ai\\target_evaluator.py",
+      "line": "211"
+    },
+    {
+      "raw": "game\\ai\\target_evaluator.py:308: error: Incompatible types in assignment (expression has type \"float\", variable has type \"int\")  [assignment]",
+      "file": "game\\ai\\target_evaluator.py",
+      "line": "308"
+    },
+    {
+      "raw": "game\\ai\\target_evaluator.py:313: error: Incompatible types in assignment (expression has type \"float\", variable has type \"int\")  [assignment]",
+      "file": "game\\ai\\target_evaluator.py",
+      "line": "313"
+    },
+    {
+      "raw": "game\\ai\\target_evaluator.py:316: error: Incompatible types in assignment (expression has type \"float\", variable has type \"int\")  [assignment]",
+      "file": "game\\ai\\target_evaluator.py",
+      "line": "316"
+    },
+    {
+      "raw": "game\\ai\\target_evaluator.py:319: error: Incompatible types in assignment (expression has type \"float\", variable has type \"int\")  [assignment]",
+      "file": "game\\ai\\target_evaluator.py",
+      "line": "319"
+    },
+    {
+      "raw": "game\\ai\\target_evaluator.py:322: error: Incompatible types in assignment (expression has type \"float\", variable has type \"int\")  [assignment]",
+      "file": "game\\ai\\target_evaluator.py",
+      "line": "322"
+    },
+    {
+      "raw": "game\\strategy\\services\\planet_habitability_service.py:53: error: Incompatible return value type (got \"float | None\", expected \"float\")  [return-value]",
+      "file": "game\\strategy\\services\\planet_habitability_service.py",
+      "line": "53"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ability_aggregator.py:57: error: Incompatible types in assignment (expression has type \"int\", target has type \"bool\")  [assignment]",
+      "file": "game\\simulation\\entities\\ability_aggregator.py",
+      "line": "57"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ability_aggregator.py:58: error: Generator has incompatible item type \"int | float\"; expected \"bool\"  [misc]",
+      "file": "game\\simulation\\entities\\ability_aggregator.py",
+      "line": "58"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ability_aggregator.py:85: error: Need type annotation for \"totals\" (hint: \"totals: dict[<type>, <type>] = ...\")  [var-annotated]",
+      "file": "game\\simulation\\entities\\ability_aggregator.py",
+      "line": "85"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ability_aggregator.py:88: error: Need type annotation for \"ability_groups\" (hint: \"ability_groups: dict[<type>, <type>] = ...\")  [var-annotated]",
+      "file": "game\\simulation\\entities\\ability_aggregator.py",
+      "line": "88"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ability_aggregator.py:173: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\simulation\\entities\\ability_aggregator.py",
+      "line": "173"
+    },
+    {
+      "raw": "game\\strategy\\services\\system_effects_collector.py:303: error: Returning Any from function declared to return \"str\"  [no-any-return]",
+      "file": "game\\strategy\\services\\system_effects_collector.py",
+      "line": "303"
+    },
+    {
+      "raw": "game\\simulation\\entities\\stat_contributors\\defense.py:48: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\stat_contributors\\defense.py",
+      "line": "48"
+    },
+    {
+      "raw": "game\\simulation\\entities\\stat_contributors\\defense.py:49: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\stat_contributors\\defense.py",
+      "line": "49"
+    },
+    {
+      "raw": "game\\simulation\\entities\\stat_contributors\\defense.py:57: error: \"Ability\" has no attribute \"capacity\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\stat_contributors\\defense.py",
+      "line": "57"
+    },
+    {
+      "raw": "game\\simulation\\entities\\stat_contributors\\defense.py:73: error: \"Ability\" has no attribute \"rate\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\stat_contributors\\defense.py",
+      "line": "73"
+    },
+    {
+      "raw": "game\\simulation\\entities\\stat_contributors\\defense.py:82: error: \"Ability\" has no attribute \"amount\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\stat_contributors\\defense.py",
+      "line": "82"
+    },
+    {
+      "raw": "game\\simulation\\entities\\stat_contributors\\defense.py:101: error: Incompatible types in assignment (expression has type \"float\", variable has type \"int\")  [assignment]",
+      "file": "game\\simulation\\entities\\stat_contributors\\defense.py",
+      "line": "101"
+    },
+    {
+      "raw": "game\\simulation\\entities\\stat_contributors\\defense.py:102: error: Incompatible types in assignment (expression has type \"float\", variable has type \"int\")  [assignment]",
+      "file": "game\\simulation\\entities\\stat_contributors\\defense.py",
+      "line": "102"
+    },
+    {
+      "raw": "game\\simulation\\entities\\stat_contributors\\defense.py:108: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\stat_contributors\\defense.py",
+      "line": "108"
+    },
+    {
+      "raw": "game\\simulation\\entities\\stat_contributors\\defense.py:110: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\stat_contributors\\defense.py",
+      "line": "110"
+    },
+    {
+      "raw": "game\\simulation\\combat\\fleet_aura_manager.py:81: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\simulation\\combat\\fleet_aura_manager.py",
+      "line": "81"
+    },
+    {
+      "raw": "game\\simulation\\combat\\fleet_aura_manager.py:82: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\simulation\\combat\\fleet_aura_manager.py",
+      "line": "82"
+    },
+    {
+      "raw": "game\\simulation\\combat\\fleet_aura_manager.py:83: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\simulation\\combat\\fleet_aura_manager.py",
+      "line": "83"
+    },
+    {
+      "raw": "game\\simulation\\combat\\fleet_aura_manager.py:86: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\simulation\\combat\\fleet_aura_manager.py",
+      "line": "86"
+    },
+    {
+      "raw": "game\\simulation\\combat\\fleet_aura_manager.py:87: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\simulation\\combat\\fleet_aura_manager.py",
+      "line": "87"
+    },
+    {
+      "raw": "game\\simulation\\combat\\fleet_aura_manager.py:323: error: Argument 1 to \"append\" of \"list\" has incompatible type \"tuple[Any, Any]\"; expected \"tuple[int, Any, Any, int]\"  [arg-type]",
+      "file": "game\\simulation\\combat\\fleet_aura_manager.py",
+      "line": "323"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stats.py:91: error: Incompatible types in assignment (expression has type \"None\", variable has type \"list[str]\")  [assignment]",
+      "file": "game\\simulation\\entities\\ship_stats.py",
+      "line": "91"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stats.py:148: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\ship_stats.py",
+      "line": "148"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stats.py:178: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\ship_stats.py",
+      "line": "178"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stats.py:179: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\ship_stats.py",
+      "line": "179"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stats.py:185: error: \"Ship\" has no attribute \"fighter_capacity\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\ship_stats.py",
+      "line": "185"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stats.py:186: error: \"Ship\" has no attribute \"fighters_per_wave\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\ship_stats.py",
+      "line": "186"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stats.py:187: error: \"Ship\" has no attribute \"fighter_size_cap\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\ship_stats.py",
+      "line": "187"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stats.py:188: error: \"Ship\" has no attribute \"launch_cycle\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\ship_stats.py",
+      "line": "188"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stats.py:192: error: \"Ship\" has no attribute \"fighter_launch_rate_tons_per_sec\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\ship_stats.py",
+      "line": "192"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stats.py:199: error: \"Ship\" has no attribute \"satellite_capacity\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\ship_stats.py",
+      "line": "199"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stats.py:200: error: \"Ship\" has no attribute \"satellites_per_wave\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\ship_stats.py",
+      "line": "200"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stats.py:201: error: \"Ship\" has no attribute \"satellite_launch_cycle\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\ship_stats.py",
+      "line": "201"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stats.py:202: error: \"Ship\" has no attribute \"satellite_launch_rate_tons_per_sec\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\ship_stats.py",
+      "line": "202"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stats.py:212: error: \"Ship\" has no attribute \"bay_capacity_mass\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\ship_stats.py",
+      "line": "212"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stats.py:255: error: \"Ability\" has no attribute \"amount\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\ship_stats.py",
+      "line": "255"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stats.py:257: error: \"Ability\" has no attribute \"amount\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\ship_stats.py",
+      "line": "257"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stats.py:259: error: \"Ability\" has no attribute \"amount\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\ship_stats.py",
+      "line": "259"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stats.py:385: error: Incompatible types in assignment (expression has type \"float\", variable has type \"int\")  [assignment]",
+      "file": "game\\simulation\\entities\\ship_stats.py",
+      "line": "385"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stats.py:386: error: Incompatible types in assignment (expression has type \"float\", variable has type \"int\")  [assignment]",
+      "file": "game\\simulation\\entities\\ship_stats.py",
+      "line": "386"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stats.py:451: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\ship_stats.py",
+      "line": "451"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stats.py:498: error: \"Ship\" has no attribute \"signature_bonus\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\ship_stats.py",
+      "line": "498"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stats.py:509: error: \"Ship\" has no attribute \"ammo_gen_rate\"  [attr-defined]",
+      "file": "game\\simulation\\entities\\ship_stats.py",
+      "line": "509"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_stat_querier.py:54: error: Returning Any from function declared to return \"float | int | bool\"  [no-any-return]",
+      "file": "game\\simulation\\entities\\ship_stat_querier.py",
+      "line": "54"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_loader.py:46: error: Returning Any from function declared to return \"ShipDesignValidator\"  [no-any-return]",
+      "file": "game\\simulation\\entities\\ship_loader.py",
+      "line": "46"
+    },
+    {
+      "raw": "game\\simulation\\entities\\ship_loader.py:113: error: Returning Any from function declared to return \"dict[Any, Any]\"  [no-any-return]",
+      "file": "game\\simulation\\entities\\ship_loader.py",
+      "line": "113"
+    },
+    {
+      "raw": "game\\simulation\\battle_state.py:242: error: Need type annotation for \"components\" (hint: \"components: dict[<type>, <type>] = ...\")  [var-annotated]",
+      "file": "game\\simulation\\battle_state.py",
+      "line": "242"
+    },
+    {
+      "raw": "game\\simulation\\battle_state.py:287: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\simulation\\battle_state.py",
+      "line": "287"
+    },
+    {
+      "raw": "game\\simulation\\battle_state.py:316: error: Argument \"color\" to \"ShipState\" has incompatible type \"tuple[int, ...]\"; expected \"tuple[int, int, int]\"  [arg-type]",
+      "file": "game\\simulation\\battle_state.py",
+      "line": "316"
+    },
+    {
+      "raw": "game\\simulation\\battle_state.py:320: error: Cannot determine type of \"x\"  [has-type]",
+      "file": "game\\simulation\\battle_state.py",
+      "line": "320"
+    },
+    {
+      "raw": "game\\simulation\\battle_state.py:320: error: Cannot determine type of \"y\"  [has-type]",
+      "file": "game\\simulation\\battle_state.py",
+      "line": "320"
+    },
+    {
+      "raw": "game\\simulation\\battle_state.py:394: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\simulation\\battle_state.py",
+      "line": "394"
+    },
+    {
+      "raw": "game\\simulation\\battle_state.py:531: error: Cannot determine type of \"x\"  [has-type]",
+      "file": "game\\simulation\\battle_state.py",
+      "line": "531"
+    },
+    {
+      "raw": "game\\simulation\\battle_state.py:531: error: Cannot determine type of \"y\"  [has-type]",
+      "file": "game\\simulation\\battle_state.py",
+      "line": "531"
+    },
+    {
+      "raw": "game\\simulation\\battle_state.py:532: error: Cannot determine type of \"x\"  [has-type]",
+      "file": "game\\simulation\\battle_state.py",
+      "line": "532"
+    },
+    {
+      "raw": "game\\simulation\\battle_state.py:532: error: Cannot determine type of \"y\"  [has-type]",
+      "file": "game\\simulation\\battle_state.py",
+      "line": "532"
+    },
+    {
+      "raw": "game\\simulation\\systems\\attack_processor.py:96: error: Item \"None\" of \"Any | None\" has no attribute \"team_id\"  [union-attr]",
+      "file": "game\\simulation\\systems\\attack_processor.py",
+      "line": "96"
+    },
+    {
+      "raw": "game\\simulation\\systems\\attack_processor.py:97: error: Item \"None\" of \"Any | None\" has no attribute \"name\"  [union-attr]",
+      "file": "game\\simulation\\systems\\attack_processor.py",
+      "line": "97"
+    },
+    {
+      "raw": "game\\simulation\\systems\\attack_processor.py:101: error: Argument \"source_ship\" to \"_spawn_from_carried_vehicle\" has incompatible type \"Any | None\"; expected \"Ship\"  [arg-type]",
+      "file": "game\\simulation\\systems\\attack_processor.py",
+      "line": "101"
+    },
+    {
+      "raw": "game\\simulation\\systems\\attack_processor.py:113: error: Item \"None\" of \"Any | None\" has no attribute \"velocity\"  [union-attr]",
+      "file": "game\\simulation\\systems\\attack_processor.py",
+      "line": "113"
+    },
+    {
+      "raw": "game\\simulation\\systems\\attack_processor.py:114: error: Item \"None\" of \"Any | None\" has no attribute \"angle\"  [union-attr]",
+      "file": "game\\simulation\\systems\\attack_processor.py",
+      "line": "114"
+    },
+    {
+      "raw": "game\\simulation\\systems\\attack_processor.py:116: error: Item \"None\" of \"Any | None\" has no attribute \"angle\"  [union-attr]",
+      "file": "game\\simulation\\systems\\attack_processor.py",
+      "line": "116"
+    },
+    {
+      "raw": "game\\simulation\\systems\\attack_processor.py:123: error: Unused \"type: ignore\" comment  [unused-ignore]",
+      "file": "game\\simulation\\systems\\attack_processor.py",
+      "line": "123"
+    },
+    {
+      "raw": "game\\simulation\\systems\\attack_processor.py:139: error: Item \"None\" of \"Any | None\" has no attribute \"name\"  [union-attr]",
+      "file": "game\\simulation\\systems\\attack_processor.py",
+      "line": "139"
+    },
+    {
+      "raw": "game\\simulation\\systems\\attack_processor.py:196: error: Cannot determine type of \"x\"  [has-type]",
+      "file": "game\\simulation\\systems\\attack_processor.py",
+      "line": "196"
+    },
+    {
+      "raw": "game\\simulation\\systems\\attack_processor.py:197: error: Cannot determine type of \"y\"  [has-type]",
+      "file": "game\\simulation\\systems\\attack_processor.py",
+      "line": "197"
+    },
+    {
+      "raw": "game\\simulation\\systems\\attack_processor.py:203: error: \"Ship\" has no attribute \"current_hp\"  [attr-defined]",
+      "file": "game\\simulation\\systems\\attack_processor.py",
+      "line": "203"
+    },
+    {
+      "raw": "game\\simulation\\systems\\attack_processor.py:216: error: \"Ship\" has no attribute \"components\"  [attr-defined]",
+      "file": "game\\simulation\\systems\\attack_processor.py",
+      "line": "216"
+    },
+    {
+      "raw": "game\\strategy\\services\\design_cost_calculator.py:61: error: Returning Any from function declared to return \"dict[str, float]\"  [no-any-return]",
+      "file": "game\\strategy\\services\\design_cost_calculator.py",
+      "line": "61"
+    },
+    {
+      "raw": "game\\simulation\\systems\\battle_engine.py:169: error: \"IAIControllerFactory\" has no attribute \"set_rng\"  [attr-defined]",
+      "file": "game\\simulation\\systems\\battle_engine.py",
+      "line": "169"
+    },
+    {
+      "raw": "game\\simulation\\systems\\battle_engine.py:254: error: Returning Any from function declared to return \"list[Any]\"  [no-any-return]",
+      "file": "game\\simulation\\systems\\battle_engine.py",
+      "line": "254"
+    },
+    {
+      "raw": "game\\strategy\\services\\ship_instance_factory.py:69: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\strategy\\services\\ship_instance_factory.py",
+      "line": "69"
+    },
+    {
+      "raw": "game\\strategy\\services\\ship_instance_factory.py:153: error: Item \"None\" of \"ShipConsumableManager | None\" has no attribute \"replace_levels\"  [union-attr]",
+      "file": "game\\strategy\\services\\ship_instance_factory.py",
+      "line": "153"
+    },
+    {
+      "raw": "game\\strategy\\services\\ship_instance_factory.py:162: error: Item \"None\" of \"ShipCargoManager | None\" has no attribute \"set_cargo\"  [union-attr]",
+      "file": "game\\strategy\\services\\ship_instance_factory.py",
+      "line": "162"
+    },
+    {
+      "raw": "game\\strategy\\data\\ship_instance_serializer.py:46: error: Item \"None\" of \"ShipConsumableManager | None\" has no attribute \"get_all_levels\"  [union-attr]",
+      "file": "game\\strategy\\data\\ship_instance_serializer.py",
+      "line": "46"
+    },
+    {
+      "raw": "game\\strategy\\data\\ship_instance_serializer.py:58: error: Item \"None\" of \"ShipCargoManager | None\" has no attribute \"get_all_cargo\"  [union-attr]",
+      "file": "game\\strategy\\data\\ship_instance_serializer.py",
+      "line": "58"
+    },
+    {
+      "raw": "game\\strategy\\data\\ship_instance_serializer.py:200: error: Item \"None\" of \"ShipConsumableManager | None\" has no attribute \"get_all_levels\"  [union-attr]",
+      "file": "game\\strategy\\data\\ship_instance_serializer.py",
+      "line": "200"
+    },
+    {
+      "raw": "game\\strategy\\data\\ship_instance_serializer.py:202: error: Item \"None\" of \"ShipCargoManager | None\" has no attribute \"get_all_cargo\"  [union-attr]",
+      "file": "game\\strategy\\data\\ship_instance_serializer.py",
+      "line": "202"
+    },
+    {
+      "raw": "game\\simulation\\battle_runner.py:131: error: Cannot determine type of \"x\"  [has-type]",
+      "file": "game\\simulation\\battle_runner.py",
+      "line": "131"
+    },
+    {
+      "raw": "game\\simulation\\battle_runner.py:132: error: Cannot determine type of \"y\"  [has-type]",
+      "file": "game\\simulation\\battle_runner.py",
+      "line": "132"
+    },
+    {
+      "raw": "game\\simulation\\battle_runner.py:134: error: Argument 1 to \"Vector2\" has incompatible type \"Vector2\"; expected \"float\"  [arg-type]",
+      "file": "game\\simulation\\battle_runner.py",
+      "line": "134"
+    },
+    {
+      "raw": "game\\simulation\\battle_runner.py:182: error: Type cannot be declared in assignment to non-self attribute  [misc]",
+      "file": "game\\simulation\\battle_runner.py",
+      "line": "182"
+    },
+    {
+      "raw": "game\\simulation\\battle_runner.py:182: note: Error code \"misc\" not covered by \"type: ignore[attr-defined]\" comment",
+      "file": "game\\simulation\\battle_runner.py",
+      "line": "182"
+    },
+    {
+      "raw": "game\\simulation\\battle_runner.py:200: error: Argument \"end_condition\" to \"start_teams\" of \"BattleEngine\" has incompatible type \"object\"; expected \"IEndCondition | None\"  [arg-type]",
+      "file": "game\\simulation\\battle_runner.py",
+      "line": "200"
+    },
+    {
+      "raw": "game\\simulation\\battle_runner.py:249: error: \"IRegistryProvider\" has no attribute \"get_resource_catalog\"  [attr-defined]",
+      "file": "game\\simulation\\battle_runner.py",
+      "line": "249"
+    },
+    {
+      "raw": "game\\simulation\\battle_runner.py:567: error: Argument 1 to \"Vector2\" has incompatible type \"Vector2\"; expected \"float\"  [arg-type]",
+      "file": "game\\simulation\\battle_runner.py",
+      "line": "567"
+    },
+    {
+      "raw": "game\\simulation\\battle_runner.py:620: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\simulation\\battle_runner.py",
+      "line": "620"
+    },
+    {
+      "raw": "game\\simulation\\battle_runner.py:681: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\simulation\\battle_runner.py",
+      "line": "681"
+    },
+    {
+      "raw": "game\\simulation\\battle_runner.py:690: error: Item \"None\" of \"Any | None\" has no attribute \"name\"  [union-attr]",
+      "file": "game\\simulation\\battle_runner.py",
+      "line": "690"
+    },
+    {
+      "raw": "game\\strategy\\engine\\order_handlers\\launch_satellites.py:203: error: \"type[EventType]\" has no attribute \"FACILITY_ACTIVATED\"  [attr-defined]",
+      "file": "game\\strategy\\engine\\order_handlers\\launch_satellites.py",
+      "line": "203"
+    },
+    {
+      "raw": "game\\strategy\\data\\planet_gen.py:48: error: Incompatible default for parameter \"blueprint\" (default has type \"None\", parameter has type \"dict[Any, Any]\")  [assignment]",
+      "file": "game\\strategy\\data\\planet_gen.py",
+      "line": "48"
+    },
+    {
+      "raw": "game\\strategy\\data\\planet_gen.py:48: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\strategy\\data\\planet_gen.py",
+      "line": "48"
+    },
+    {
+      "raw": "game\\strategy\\data\\planet_gen.py:48: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\strategy\\data\\planet_gen.py",
+      "line": "48"
+    },
+    {
+      "raw": "game\\strategy\\data\\planet_gen.py:94: error: Incompatible default for parameter \"blueprint\" (default has type \"None\", parameter has type \"dict[Any, Any]\")  [assignment]",
+      "file": "game\\strategy\\data\\planet_gen.py",
+      "line": "94"
+    },
+    {
+      "raw": "game\\strategy\\data\\planet_gen.py:94: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\strategy\\data\\planet_gen.py",
+      "line": "94"
+    },
+    {
+      "raw": "game\\strategy\\data\\planet_gen.py:94: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\strategy\\data\\planet_gen.py",
+      "line": "94"
+    },
+    {
+      "raw": "game\\strategy\\data\\planet_gen.py:176: error: Argument 3 to \"_generate_mass_constrained\" of \"PlanetGenerator\" has incompatible type \"Any | None\"; expected \"str\"  [arg-type]",
+      "file": "game\\strategy\\data\\planet_gen.py",
+      "line": "176"
+    },
+    {
+      "raw": "game\\strategy\\data\\planet_gen.py:195: error: Need type annotation for \"excluded\" (hint: \"excluded: set[<type>] = ...\")  [var-annotated]",
+      "file": "game\\strategy\\data\\planet_gen.py",
+      "line": "195"
+    },
+    {
+      "raw": "game\\strategy\\data\\planet_gen.py:205: error: Incompatible default for parameter \"bias\" (default has type \"None\", parameter has type \"str\")  [assignment]",
+      "file": "game\\strategy\\data\\planet_gen.py",
+      "line": "205"
+    },
+    {
+      "raw": "game\\strategy\\data\\planet_gen.py:205: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\strategy\\data\\planet_gen.py",
+      "line": "205"
+    },
+    {
+      "raw": "game\\strategy\\data\\planet_gen.py:205: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\strategy\\data\\planet_gen.py",
+      "line": "205"
+    },
+    {
+      "raw": "game\\strategy\\data\\planet_gen.py:245: error: Incompatible default for parameter \"max_total\" (default has type \"None\", parameter has type \"int\")  [assignment]",
+      "file": "game\\strategy\\data\\planet_gen.py",
+      "line": "245"
+    },
+    {
+      "raw": "game\\strategy\\data\\planet_gen.py:245: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\strategy\\data\\planet_gen.py",
+      "line": "245"
+    },
+    {
+      "raw": "game\\strategy\\data\\planet_gen.py:245: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\strategy\\data\\planet_gen.py",
+      "line": "245"
+    },
+    {
+      "raw": "game\\strategy\\data\\planet_gen.py:311: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\strategy\\data\\planet_gen.py",
+      "line": "311"
+    },
+    {
+      "raw": "game\\strategy\\engine\\handlers\\recover_satellites.py:56: error: Argument 2 to \"_resolve_player_fleet\" of \"BaseCommandHandler\" has incompatible type \"int | None\"; expected \"int\"  [arg-type]",
+      "file": "game\\strategy\\engine\\handlers\\recover_satellites.py",
+      "line": "56"
+    },
+    {
+      "raw": "game\\strategy\\engine\\handlers\\recover_satellites.py:58: error: Returning Any from function declared to return \"ValidationResult\"  [no-any-return]",
+      "file": "game\\strategy\\engine\\handlers\\recover_satellites.py",
+      "line": "58"
+    },
+    {
+      "raw": "game\\strategy\\engine\\handlers\\recover_satellites.py:88: error: Argument 2 to \"_resolve_player_planet\" of \"BaseCommandHandler\" has incompatible type \"int | None\"; expected \"int\"  [arg-type]",
+      "file": "game\\strategy\\engine\\handlers\\recover_satellites.py",
+      "line": "88"
+    },
+    {
+      "raw": "game\\strategy\\engine\\handlers\\recover_satellites.py:90: error: Returning Any from function declared to return \"ValidationResult\"  [no-any-return]",
+      "file": "game\\strategy\\engine\\handlers\\recover_satellites.py",
+      "line": "90"
+    },
+    {
+      "raw": "game\\strategy\\engine\\handlers\\recover_satellites.py:106: error: Argument \"handler_class\" to \"CommandSpec\" has incompatible type \"type[RecoverSatellitesCommandHandler]\"; expected \"type[ICommandHandler]\"  [arg-type]",
+      "file": "game\\strategy\\engine\\handlers\\recover_satellites.py",
+      "line": "106"
+    },
+    {
+      "raw": "game\\strategy\\engine\\handlers\\recover_satellites.py:107: error: \"type[RecoverSatellitesCommandHandler]\" has no attribute \"__command_spec_kwargs__\"  [attr-defined]",
+      "file": "game\\strategy\\engine\\handlers\\recover_satellites.py",
+      "line": "107"
+    },
+    {
+      "raw": "game\\strategy\\engine\\handlers\\lay_mines.py:66: error: Argument 2 to \"_resolve_player_fleet\" of \"BaseCommandHandler\" has incompatible type \"int | None\"; expected \"int\"  [arg-type]",
+      "file": "game\\strategy\\engine\\handlers\\lay_mines.py",
+      "line": "66"
+    },
+    {
+      "raw": "game\\strategy\\engine\\handlers\\lay_mines.py:68: error: Returning Any from function declared to return \"ValidationResult\"  [no-any-return]",
+      "file": "game\\strategy\\engine\\handlers\\lay_mines.py",
+      "line": "68"
+    },
+    {
+      "raw": "game\\strategy\\engine\\handlers\\lay_mines.py:124: error: Argument 2 to \"_resolve_player_planet\" of \"BaseCommandHandler\" has incompatible type \"int | None\"; expected \"int\"  [arg-type]",
+      "file": "game\\strategy\\engine\\handlers\\lay_mines.py",
+      "line": "124"
+    },
+    {
+      "raw": "game\\strategy\\engine\\handlers\\lay_mines.py:126: error: Returning Any from function declared to return \"ValidationResult\"  [no-any-return]",
+      "file": "game\\strategy\\engine\\handlers\\lay_mines.py",
+      "line": "126"
+    },
+    {
+      "raw": "game\\strategy\\engine\\handlers\\lay_mines.py:163: error: Argument \"handler_class\" to \"CommandSpec\" has incompatible type \"type[LayMinesCommandHandler]\"; expected \"type[ICommandHandler]\"  [arg-type]",
+      "file": "game\\strategy\\engine\\handlers\\lay_mines.py",
+      "line": "163"
+    },
+    {
+      "raw": "game\\strategy\\engine\\handlers\\lay_mines.py:164: error: \"type[LayMinesCommandHandler]\" has no attribute \"__command_spec_kwargs__\"  [attr-defined]",
+      "file": "game\\strategy\\engine\\handlers\\lay_mines.py",
+      "line": "164"
+    },
+    {
+      "raw": "game\\strategy\\services\\cargo_transfer_service.py:42: error: Returning Any from function declared to return \"HexCoord\"  [no-any-return]",
+      "file": "game\\strategy\\services\\cargo_transfer_service.py",
+      "line": "42"
+    },
+    {
+      "raw": "game\\strategy\\services\\cargo_transfer_service.py:64: error: Need type annotation for \"items\" (hint: \"items: list[<type>] = ...\")  [var-annotated]",
+      "file": "game\\strategy\\services\\cargo_transfer_service.py",
+      "line": "64"
+    },
+    {
+      "raw": "game\\strategy\\services\\cargo_transfer_service.py:152: error: Need type annotation for \"items\" (hint: \"items: list[<type>] = ...\")  [var-annotated]",
+      "file": "game\\strategy\\services\\cargo_transfer_service.py",
+      "line": "152"
+    },
+    {
+      "raw": "game\\strategy\\services\\cargo_transfer_service.py:217: error: Need type annotation for \"items\" (hint: \"items: list[<type>] = ...\")  [var-annotated]",
+      "file": "game\\strategy\\services\\cargo_transfer_service.py",
+      "line": "217"
+    },
+    {
+      "raw": "game\\strategy\\services\\cargo_transfer_service.py:298: error: Argument \"direction\" to \"IssueTransferCommand\" has incompatible type \"str\"; expected \"TransferDirection\"  [arg-type]",
+      "file": "game\\strategy\\services\\cargo_transfer_service.py",
+      "line": "298"
+    },
+    {
+      "raw": "game\\strategy\\engine\\planet_action_engine.py:198: error: Argument 2 to \"_get_energy_drain_rate\" of \"PlanetActionEngine\" has incompatible type \"str | None\"; expected \"str\"  [arg-type]",
+      "file": "game\\strategy\\engine\\planet_action_engine.py",
+      "line": "198"
+    },
+    {
+      "raw": "game\\strategy\\engine\\planet_action_engine.py:271: error: Argument 2 to \"_get_deactivation_time\" of \"PlanetActionEngine\" has incompatible type \"str | None\"; expected \"str\"  [arg-type]",
+      "file": "game\\strategy\\engine\\planet_action_engine.py",
+      "line": "271"
+    },
+    {
+      "raw": "game\\strategy\\engine\\planet_action_engine.py:393: error: Returning Any from function declared to return \"str | None\"  [no-any-return]",
+      "file": "game\\strategy\\engine\\planet_action_engine.py",
+      "line": "393"
+    },
+    {
+      "raw": "game\\strategy\\engine\\action_execution_engine.py:233: error: Returning Any from function declared to return \"bool\"  [no-any-return]",
+      "file": "game\\strategy\\engine\\action_execution_engine.py",
+      "line": "233"
+    },
+    {
+      "raw": "game\\strategy\\engine\\turn_engine.py:424: error: Incompatible return value type (got \"Any | None\", expected \"IMovementEngine\")  [return-value]",
+      "file": "game\\strategy\\engine\\turn_engine.py",
+      "line": "424"
+    },
+    {
+      "raw": "game\\strategy\\engine\\turn_engine.py:429: error: Incompatible return value type (got \"Any | None\", expected \"IProductionEngine\")  [return-value]",
+      "file": "game\\strategy\\engine\\turn_engine.py",
+      "line": "429"
+    },
+    {
+      "raw": "game\\strategy\\engine\\turn_engine.py:434: error: Incompatible return value type (got \"Any | None\", expected \"IOrderProcessor\")  [return-value]",
+      "file": "game\\strategy\\engine\\turn_engine.py",
+      "line": "434"
+    },
+    {
+      "raw": "game\\strategy\\engine\\turn_engine.py:439: error: Incompatible return value type (got \"Any | None\", expected \"IConflictEngine\")  [return-value]",
+      "file": "game\\strategy\\engine\\turn_engine.py",
+      "line": "439"
+    },
+    {
+      "raw": "game\\strategy\\engine\\turn_engine.py:444: error: Incompatible return value type (got \"Any | None\", expected \"IConsumableEngine\")  [return-value]",
+      "file": "game\\strategy\\engine\\turn_engine.py",
+      "line": "444"
+    },
+    {
+      "raw": "game\\strategy\\engine\\turn_engine.py:449: error: Incompatible return value type (got \"Any | None\", expected \"IPopulationEngine\")  [return-value]",
+      "file": "game\\strategy\\engine\\turn_engine.py",
+      "line": "449"
+    },
+    {
+      "raw": "game\\strategy\\engine\\turn_engine.py:454: error: Incompatible return value type (got \"Any | None\", expected \"IResupplyEngine\")  [return-value]",
+      "file": "game\\strategy\\engine\\turn_engine.py",
+      "line": "454"
+    },
+    {
+      "raw": "game\\strategy\\engine\\turn_engine.py:459: error: Incompatible return value type (got \"Any | None\", expected \"IHarvestingEngine\")  [return-value]",
+      "file": "game\\strategy\\engine\\turn_engine.py",
+      "line": "459"
+    },
+    {
+      "raw": "game\\strategy\\engine\\turn_engine.py:464: error: Incompatible return value type (got \"Any | None\", expected \"IActionExecutionEngine\")  [return-value]",
+      "file": "game\\strategy\\engine\\turn_engine.py",
+      "line": "464"
+    },
+    {
+      "raw": "game\\strategy\\engine\\turn_engine.py:469: error: Incompatible return value type (got \"Any | None\", expected \"IEnvironmentalHazardEngine\")  [return-value]",
+      "file": "game\\strategy\\engine\\turn_engine.py",
+      "line": "469"
+    },
+    {
+      "raw": "game\\strategy\\engine\\turn_engine.py:474: error: Incompatible return value type (got \"Any | None\", expected \"IPlanetEnergyEngine\")  [return-value]",
+      "file": "game\\strategy\\engine\\turn_engine.py",
+      "line": "474"
+    },
+    {
+      "raw": "game\\strategy\\engine\\turn_engine.py:479: error: Incompatible return value type (got \"Any | None\", expected \"IPlanetActionEngine\")  [return-value]",
+      "file": "game\\strategy\\engine\\turn_engine.py",
+      "line": "479"
+    },
+    {
+      "raw": "game\\strategy\\engine\\turn_engine.py:484: error: Incompatible return value type (got \"Any | None\", expected \"IComponentActivationEngine\")  [return-value]",
+      "file": "game\\strategy\\engine\\turn_engine.py",
+      "line": "484"
+    },
+    {
+      "raw": "game\\strategy\\engine\\turn_engine.py:494: error: Incompatible return value type (got \"Any | None\", expected \"IOrganicsConsumptionEngine\")  [return-value]",
+      "file": "game\\strategy\\engine\\turn_engine.py",
+      "line": "494"
+    },
+    {
+      "raw": "game\\strategy\\engine\\turn_engine.py:503: error: Incompatible return value type (got \"Any | None\", expected \"IHappinessEngine\")  [return-value]",
+      "file": "game\\strategy\\engine\\turn_engine.py",
+      "line": "503"
+    },
+    {
+      "raw": "game\\strategy\\engine\\turn_engine.py:508: error: Incompatible return value type (got \"Any | None\", expected \"IQualityEngine\")  [return-value]",
+      "file": "game\\strategy\\engine\\turn_engine.py",
+      "line": "508"
+    },
+    {
+      "raw": "game\\strategy\\engine\\turn_engine.py:513: error: Incompatible return value type (got \"Any | None\", expected \"IAtmosphereEngine\")  [return-value]",
+      "file": "game\\strategy\\engine\\turn_engine.py",
+      "line": "513"
+    },
+    {
+      "raw": "game\\strategy\\engine\\turn_engine.py:518: error: Incompatible return value type (got \"Any | None\", expected \"IWaterEngine\")  [return-value]",
+      "file": "game\\strategy\\engine\\turn_engine.py",
+      "line": "518"
+    },
+    {
+      "raw": "game\\strategy\\engine\\turn_engine.py:521: error: Name \"PlanetModifierEffectEngine\" is not defined  [name-defined]",
+      "file": "game\\strategy\\engine\\turn_engine.py",
+      "line": "521"
+    },
+    {
+      "raw": "game\\strategy\\engine\\production_engine.py:227: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\strategy\\engine\\production_engine.py",
+      "line": "227"
+    },
+    {
+      "raw": "game\\strategy\\engine\\production_engine.py:245: error: Returning Any from function declared to return \"dict[str, float]\"  [no-any-return]",
+      "file": "game\\strategy\\engine\\production_engine.py",
+      "line": "245"
+    },
+    {
+      "raw": "game\\strategy\\adapters\\simulation_adapter.py:52: error: Incompatible return value type (got \"DefaultRegistryProvider\", expected \"GameRegistries\")  [return-value]",
+      "file": "game\\strategy\\adapters\\simulation_adapter.py",
+      "line": "52"
+    },
+    {
+      "raw": "game\\strategy\\adapters\\simulation_adapter.py:186: error: Argument \"team_survivors\" to \"BattleResult\" has incompatible type \"dict[int, list[Ship]]\"; expected \"dict[int, list[IPostBattleShip]]\"  [arg-type]",
+      "file": "game\\strategy\\adapters\\simulation_adapter.py",
+      "line": "186"
+    },
+    {
+      "raw": "game\\strategy\\adapters\\simulation_adapter.py:323: error: Argument \"pre_tick_loop_callback\" to \"run_battle\" has incompatible type \"Callable[[Any, BattleSpec], None] | None\"; expected \"Callable[[BattleEngine], None] | None\"  [arg-type]",
+      "file": "game\\strategy\\adapters\\simulation_adapter.py",
+      "line": "323"
+    },
+    {
+      "raw": "game\\strategy\\adapters\\simulation_adapter.py:488: error: Unused \"type: ignore\" comment  [unused-ignore]",
+      "file": "game\\strategy\\adapters\\simulation_adapter.py",
+      "line": "488"
+    },
+    {
+      "raw": "game\\strategy\\engine\\session\\persistence_adapter.py:55: error: \"None\" has no attribute \"to_dict\"  [attr-defined]",
+      "file": "game\\strategy\\engine\\session\\persistence_adapter.py",
+      "line": "55"
+    },
+    {
+      "raw": "game\\ui\\services\\ship_factory.py:129: error: Argument 1 to \"Vector2\" has incompatible type \"game.core.math.Vector2 | pygame.math.Vector2\"; expected \"float\"  [arg-type]",
+      "file": "game\\ui\\services\\ship_factory.py",
+      "line": "129"
+    },
+    {
+      "raw": "game\\ui\\services\\ship_factory.py:175: error: \"Ship\" has no attribute \"formation\"  [attr-defined]",
+      "file": "game\\ui\\services\\ship_factory.py",
+      "line": "175"
+    },
+    {
+      "raw": "game\\ui\\screens\\planet_menu_items.py:95: error: \"object\" has no attribute \"location\"  [attr-defined]",
+      "file": "game\\ui\\screens\\planet_menu_items.py",
+      "line": "95"
+    },
+    {
+      "raw": "game\\ui\\screens\\planet_abilities_controller.py:117: error: Need type annotation for \"present_abilities\" (hint: \"present_abilities: set[<type>] = ...\")  [var-annotated]",
+      "file": "game\\ui\\screens\\planet_abilities_controller.py",
+      "line": "117"
+    },
+    {
+      "raw": "game\\ui\\screens\\builder\\weapons_viewmodel.py:365: error: Need type annotation for \"points\" (hint: \"points: list[<type>] = ...\")  [var-annotated]",
+      "file": "game\\ui\\screens\\builder\\weapons_viewmodel.py",
+      "line": "365"
+    },
+    {
+      "raw": "game\\ui\\screens\\builder\\weapons_viewmodel.py:414: error: Unsupported operand types for + (\"None\" and \"float\")  [operator]",
+      "file": "game\\ui\\screens\\builder\\weapons_viewmodel.py",
+      "line": "414"
+    },
+    {
+      "raw": "game\\ui\\screens\\builder\\weapons_viewmodel.py:414: note: Left operand is of type \"Any | None\"",
+      "file": "game\\ui\\screens\\builder\\weapons_viewmodel.py",
+      "line": "414"
+    },
+    {
+      "raw": "game\\strategy\\services\\planet_economy_projector.py:92: error: Argument 1 to \"planet_habitability_multiplier\" has incompatible type \"IPlanet\"; expected \"Planet\"  [arg-type]",
+      "file": "game\\strategy\\services\\planet_economy_projector.py",
+      "line": "92"
+    },
+    {
+      "raw": "game\\strategy\\services\\planet_economy_projector.py:124: error: \"IPlanet\" has no attribute \"get_species_config\"  [attr-defined]",
+      "file": "game\\strategy\\services\\planet_economy_projector.py",
+      "line": "124"
+    },
+    {
+      "raw": "game\\strategy\\services\\deployment_zone_calculator.py:104: error: Cannot determine type of \"y\"  [has-type]",
+      "file": "game\\strategy\\services\\deployment_zone_calculator.py",
+      "line": "104"
+    },
+    {
+      "raw": "game\\strategy\\services\\deployment_zone_calculator.py:105: error: Cannot determine type of \"x\"  [has-type]",
+      "file": "game\\strategy\\services\\deployment_zone_calculator.py",
+      "line": "105"
+    },
+    {
+      "raw": "game\\simulation\\services\\vehicle_design_service.py:270: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\simulation\\services\\vehicle_design_service.py",
+      "line": "270"
+    },
+    {
+      "raw": "game\\simulation\\services\\vehicle_design_service.py:275: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\simulation\\services\\vehicle_design_service.py",
+      "line": "275"
+    },
+    {
+      "raw": "game\\simulation\\services\\vehicle_design_service.py:329: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\simulation\\services\\vehicle_design_service.py",
+      "line": "329"
+    },
+    {
+      "raw": "game\\simulation\\services\\vehicle_design_service.py:333: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\simulation\\services\\vehicle_design_service.py",
+      "line": "333"
+    },
+    {
+      "raw": "game\\simulation\\services\\vehicle_design_service.py:338: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\simulation\\services\\vehicle_design_service.py",
+      "line": "338"
+    },
+    {
+      "raw": "game\\simulation\\services\\vehicle_design_service.py:365: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\simulation\\services\\vehicle_design_service.py",
+      "line": "365"
+    },
+    {
+      "raw": "game\\simulation\\services\\vehicle_design_service.py:370: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\simulation\\services\\vehicle_design_service.py",
+      "line": "370"
+    },
+    {
+      "raw": "game\\simulation\\services\\vehicle_design_service.py:475: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\simulation\\services\\vehicle_design_service.py",
+      "line": "475"
+    },
+    {
+      "raw": "game\\simulation\\services\\vehicle_design_service.py:478: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\simulation\\services\\vehicle_design_service.py",
+      "line": "478"
+    },
+    {
+      "raw": "game\\ui\\screens\\setup_data_io.py:82: error: Need type annotation for \"ships\" (hint: \"ships: list[<type>] = ...\")  [var-annotated]",
+      "file": "game\\ui\\screens\\setup_data_io.py",
+      "line": "82"
+    },
+    {
+      "raw": "game\\ui\\screens\\setup_data_io.py:191: error: Need type annotation for \"new_team1\" (hint: \"new_team1: list[<type>] = ...\")  [var-annotated]",
+      "file": "game\\ui\\screens\\setup_data_io.py",
+      "line": "191"
+    },
+    {
+      "raw": "game\\ui\\screens\\setup_data_io.py:192: error: Need type annotation for \"new_team2\" (hint: \"new_team2: list[<type>] = ...\")  [var-annotated]",
+      "file": "game\\ui\\screens\\setup_data_io.py",
+      "line": "192"
+    },
+    {
+      "raw": "game\\ui\\screens\\builder\\modifier_logic.py:103: error: Returning Any from function declared to return \"float\"  [no-any-return]",
+      "file": "game\\ui\\screens\\builder\\modifier_logic.py",
+      "line": "103"
+    },
+    {
+      "raw": "game\\strategy\\engine\\empire_economy_calculator.py:240: error: Item \"list[Any]\" of \"dict[Any, Any] | list[Any]\" has no attribute \"get\"  [union-attr]",
+      "file": "game\\strategy\\engine\\empire_economy_calculator.py",
+      "line": "240"
+    },
+    {
+      "raw": "game\\strategy\\engine\\empire_economy_calculator.py:241: error: Item \"list[Any]\" of \"dict[Any, Any] | list[Any]\" has no attribute \"get\"  [union-attr]",
+      "file": "game\\strategy\\engine\\empire_economy_calculator.py",
+      "line": "241"
+    },
+    {
+      "raw": "game\\ui\\screens\\setup_screen.py:68: error: Need type annotation for \"available_ship_designs\" (hint: \"available_ship_designs: list[<type>] = ...\")  [var-annotated]",
+      "file": "game\\ui\\screens\\setup_screen.py",
+      "line": "68"
+    },
+    {
+      "raw": "game\\ui\\screens\\setup_screen.py:69: error: Need type annotation for \"team1\" (hint: \"team1: list[<type>] = ...\")  [var-annotated]",
+      "file": "game\\ui\\screens\\setup_screen.py",
+      "line": "69"
+    },
+    {
+      "raw": "game\\ui\\screens\\setup_screen.py:70: error: Need type annotation for \"team2\" (hint: \"team2: list[<type>] = ...\")  [var-annotated]",
+      "file": "game\\ui\\screens\\setup_screen.py",
+      "line": "70"
+    },
+    {
+      "raw": "game\\ui\\screens\\setup_screen.py:246: error: Incompatible types in assignment (expression has type \"tuple[Any, int]\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\setup_screen.py",
+      "line": "246"
+    },
+    {
+      "raw": "game\\ui\\screens\\setup_screen.py:251: error: \"None\" object is not iterable  [misc]",
+      "file": "game\\ui\\screens\\setup_screen.py",
+      "line": "251"
+    },
+    {
+      "raw": "game\\ui\\screens\\setup_screen.py:252: error: Cannot determine type of \"team_idx\"  [has-type]",
+      "file": "game\\ui\\screens\\setup_screen.py",
+      "line": "252"
+    },
+    {
+      "raw": "game\\ui\\screens\\setup_screen.py:253: error: Cannot determine type of \"team_idx\"  [has-type]",
+      "file": "game\\ui\\screens\\setup_screen.py",
+      "line": "253"
+    },
+    {
+      "raw": "game\\ui\\screens\\setup_screen.py:256: error: Cannot determine type of \"display_idx\"  [has-type]",
+      "file": "game\\ui\\screens\\setup_screen.py",
+      "line": "256"
+    },
+    {
+      "raw": "game\\ui\\screens\\setup_screen.py:257: error: Cannot determine type of \"display_idx\"  [has-type]",
+      "file": "game\\ui\\screens\\setup_screen.py",
+      "line": "257"
+    },
+    {
+      "raw": "game\\ui\\screens\\setup_screen.py:259: error: Cannot determine type of \"display_idx\"  [has-type]",
+      "file": "game\\ui\\screens\\setup_screen.py",
+      "line": "259"
+    },
+    {
+      "raw": "game\\ui\\services\\battle_ui_service.py:54: error: Returning Any from function declared to return \"str | None\"  [no-any-return]",
+      "file": "game\\ui\\services\\battle_ui_service.py",
+      "line": "54"
+    },
+    {
+      "raw": "game\\ui\\services\\battle_ui_service.py:106: error: Argument 1 to \"_convert_ship\" of \"BattleUIService\" has incompatible type \"Ship\"; expected \"ICombatShip\"  [arg-type]",
+      "file": "game\\ui\\services\\battle_ui_service.py",
+      "line": "106"
+    },
+    {
+      "raw": "game\\ui\\services\\battle_ui_service.py:106: note: \"Ship\" is missing following \"ICombatShip\" protocol member:",
+      "file": "game\\ui\\services\\battle_ui_service.py",
+      "line": "106"
+    },
+    {
+      "raw": "game\\ui\\services\\battle_ui_service.py:106: note:     layers",
+      "file": "game\\ui\\services\\battle_ui_service.py",
+      "line": "106"
+    },
+    {
+      "raw": "game\\ui\\services\\battle_ui_service.py:176: error: Item \"None\" of \"Any | None\" has no attribute \"get_all_resources\"  [union-attr]",
+      "file": "game\\ui\\services\\battle_ui_service.py",
+      "line": "176"
+    },
+    {
+      "raw": "game\\ui\\services\\battle_ui_service.py:205: error: \"ICombatShip\" has no attribute \"id\"  [attr-defined]",
+      "file": "game\\ui\\services\\battle_ui_service.py",
+      "line": "205"
+    },
+    {
+      "raw": "game\\ui\\services\\battle_ui_service.py:208: error: \"ICombatShip\" has no attribute \"angle\"  [attr-defined]",
+      "file": "game\\ui\\services\\battle_ui_service.py",
+      "line": "208"
+    },
+    {
+      "raw": "game\\ui\\services\\battle_ui_service.py:215: error: \"ICombatShip\" has no attribute \"velocity\"  [attr-defined]",
+      "file": "game\\ui\\services\\battle_ui_service.py",
+      "line": "215"
+    },
+    {
+      "raw": "game\\ui\\services\\battle_ui_service.py:221: error: \"ICombatShip\" has no attribute \"current_shields\"  [attr-defined]",
+      "file": "game\\ui\\services\\battle_ui_service.py",
+      "line": "221"
+    },
+    {
+      "raw": "game\\ui\\services\\battle_ui_service.py:222: error: \"ICombatShip\" has no attribute \"max_shields\"  [attr-defined]",
+      "file": "game\\ui\\services\\battle_ui_service.py",
+      "line": "222"
+    },
+    {
+      "raw": "game\\ui\\services\\battle_ui_service.py:223: error: \"ICombatShip\" has no attribute \"current_speed\"  [attr-defined]",
+      "file": "game\\ui\\services\\battle_ui_service.py",
+      "line": "223"
+    },
+    {
+      "raw": "game\\ui\\services\\battle_ui_service.py:224: error: \"ICombatShip\" has no attribute \"max_speed\"  [attr-defined]",
+      "file": "game\\ui\\services\\battle_ui_service.py",
+      "line": "224"
+    },
+    {
+      "raw": "game\\ui\\services\\battle_ui_service.py:225: error: \"ICombatShip\" has no attribute \"mass\"  [attr-defined]",
+      "file": "game\\ui\\services\\battle_ui_service.py",
+      "line": "225"
+    },
+    {
+      "raw": "game\\ui\\services\\battle_ui_service.py:226: error: \"ICombatShip\" has no attribute \"total_thrust\"  [attr-defined]",
+      "file": "game\\ui\\services\\battle_ui_service.py",
+      "line": "226"
+    },
+    {
+      "raw": "game\\ui\\services\\battle_ui_service.py:227: error: \"ICombatShip\" has no attribute \"turn_speed\"  [attr-defined]",
+      "file": "game\\ui\\services\\battle_ui_service.py",
+      "line": "227"
+    },
+    {
+      "raw": "game\\ui\\services\\battle_ui_service.py:228: error: \"ICombatShip\" has no attribute \"total_shots_fired\"  [attr-defined]",
+      "file": "game\\ui\\services\\battle_ui_service.py",
+      "line": "228"
+    },
+    {
+      "raw": "game\\ui\\services\\battle_ui_service.py:229: error: \"ICombatShip\" has no attribute \"crew_onboard\"  [attr-defined]",
+      "file": "game\\ui\\services\\battle_ui_service.py",
+      "line": "229"
+    },
+    {
+      "raw": "game\\ui\\services\\battle_ui_service.py:230: error: \"ICombatShip\" has no attribute \"crew_required\"  [attr-defined]",
+      "file": "game\\ui\\services\\battle_ui_service.py",
+      "line": "230"
+    },
+    {
+      "raw": "game\\ui\\services\\battle_ui_service.py:234: error: \"ICombatShip\" has no attribute \"movement_policy\"  [attr-defined]",
+      "file": "game\\ui\\services\\battle_ui_service.py",
+      "line": "234"
+    },
+    {
+      "raw": "game\\ui\\services\\battle_ui_service.py:235: error: \"ICombatShip\" has no attribute \"source_file\"  [attr-defined]",
+      "file": "game\\ui\\services\\battle_ui_service.py",
+      "line": "235"
+    },
+    {
+      "raw": "game\\app_bootstrap.py:200: error: Argument 1 to \"_detect_resolution\" has incompatible type \"Namespace | None\"; expected \"Namespace\"  [arg-type]",
+      "file": "game\\app_bootstrap.py",
+      "line": "200"
+    },
+    {
+      "raw": "game\\app_bootstrap.py:208: error: Incompatible types in assignment (expression has type \"Surface | None\", variable has type \"Surface\")  [assignment]",
+      "file": "game\\app_bootstrap.py",
+      "line": "208"
+    },
+    {
+      "raw": "game\\ui\\screens\\star_list_filters.py:43: error: Need type annotation for \"stars\" (hint: \"stars: list[<type>] = ...\")  [var-annotated]",
+      "file": "game\\ui\\screens\\star_list_filters.py",
+      "line": "43"
+    },
+    {
+      "raw": "game\\strategy\\services\\empire_economy_service.py:89: error: Returning Any from function declared to return \"EmpireEconomySnapshot\"  [no-any-return]",
+      "file": "game\\strategy\\services\\empire_economy_service.py",
+      "line": "89"
+    },
+    {
+      "raw": "game\\strategy\\facade\\slices\\planet_slice.py:69: error: \"None\" has no attribute \"get_system_at_location\"  [attr-defined]",
+      "file": "game\\strategy\\facade\\slices\\planet_slice.py",
+      "line": "69"
+    },
+    {
+      "raw": "game\\strategy\\facade\\slices\\planet_slice.py:77: error: Argument 1 to \"GalaxyPathfindingService\" has incompatible type \"None\"; expected \"IGalaxySystemGraph\"  [arg-type]",
+      "file": "game\\strategy\\facade\\slices\\planet_slice.py",
+      "line": "77"
+    },
+    {
+      "raw": "game\\ui\\screens\\workshop_viewmodel_layer_ops.py:82: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\ui\\screens\\workshop_viewmodel_layer_ops.py",
+      "line": "82"
+    },
+    {
+      "raw": "game\\ui\\screens\\workshop_viewmodel_layer_ops.py:100: error: Returning Any from function declared to return \"LayerType | None\"  [no-any-return]",
+      "file": "game\\ui\\screens\\workshop_viewmodel_layer_ops.py",
+      "line": "100"
+    },
+    {
+      "raw": "game\\ui\\screens\\workshop_viewmodel_layer_ops.py:103: error: Returning Any from function declared to return \"LayerType | None\"  [no-any-return]",
+      "file": "game\\ui\\screens\\workshop_viewmodel_layer_ops.py",
+      "line": "103"
+    },
+    {
+      "raw": "game\\ui\\screens\\workshop_viewmodel_layer_ops.py:178: error: \"Ship\" has no attribute \"layers\"  [attr-defined]",
+      "file": "game\\ui\\screens\\workshop_viewmodel_layer_ops.py",
+      "line": "178"
+    },
+    {
+      "raw": "game\\ui\\screens\\workshop_viewmodel_layer_ops.py:191: error: Returning Any from function declared to return \"LayerType | None\"  [no-any-return]",
+      "file": "game\\ui\\screens\\workshop_viewmodel_layer_ops.py",
+      "line": "191"
+    },
+    {
+      "raw": "game\\ui\\screens\\workshop_viewmodel_layer_ops.py:206: error: Returning Any from function declared to return \"bool\"  [no-any-return]",
+      "file": "game\\ui\\screens\\workshop_viewmodel_layer_ops.py",
+      "line": "206"
+    },
+    {
+      "raw": "game\\ui\\screens\\workshop_viewmodel_layer_ops.py:232: error: Item \"Ship\" of \"Ship | None\" has no attribute \"layers\"  [union-attr]",
+      "file": "game\\ui\\screens\\workshop_viewmodel_layer_ops.py",
+      "line": "232"
+    },
+    {
+      "raw": "game\\ui\\screens\\workshop_viewmodel_layer_ops.py:232: error: Item \"None\" of \"Ship | None\" has no attribute \"layers\"  [union-attr]",
+      "file": "game\\ui\\screens\\workshop_viewmodel_layer_ops.py",
+      "line": "232"
+    },
+    {
+      "raw": "game\\ui\\screens\\workshop_viewmodel_layer_ops.py:238: error: Item \"Ship\" of \"Ship | None\" has no attribute \"layers\"  [union-attr]",
+      "file": "game\\ui\\screens\\workshop_viewmodel_layer_ops.py",
+      "line": "238"
+    },
+    {
+      "raw": "game\\ui\\screens\\workshop_viewmodel_layer_ops.py:238: error: Item \"None\" of \"Ship | None\" has no attribute \"layers\"  [union-attr]",
+      "file": "game\\ui\\screens\\workshop_viewmodel_layer_ops.py",
+      "line": "238"
+    },
+    {
+      "raw": "game\\ui\\screens\\workshop_viewmodel_layer_ops.py:250: error: Argument 1 to \"move_component\" of \"VehicleDesignService\" has incompatible type \"Ship | None\"; expected \"Ship\"  [arg-type]",
+      "file": "game\\ui\\screens\\workshop_viewmodel_layer_ops.py",
+      "line": "250"
+    },
+    {
+      "raw": "game\\ui\\pygame_gui_patch.py:152: error: Unused \"type: ignore\" comment  [unused-ignore]",
+      "file": "game\\ui\\pygame_gui_patch.py",
+      "line": "152"
+    },
+    {
+      "raw": "game\\ui\\screens\\race_browser_dialog.py:46: error: Incompatible types in assignment (expression has type \"UIScrollingContainer\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\race_browser_dialog.py",
+      "line": "46"
+    },
+    {
+      "raw": "game\\ui\\screens\\race_browser_dialog.py:57: error: Incompatible types in assignment (expression has type \"UIButton\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\race_browser_dialog.py",
+      "line": "57"
+    },
+    {
+      "raw": "game\\ui\\screens\\race_browser_dialog.py:64: error: Incompatible types in assignment (expression has type \"UIButton\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\race_browser_dialog.py",
+      "line": "64"
+    },
+    {
+      "raw": "game\\ui\\screens\\race_browser_dialog.py:70: error: \"None\" has no attribute \"disable\"  [attr-defined]",
+      "file": "game\\ui\\screens\\race_browser_dialog.py",
+      "line": "70"
+    },
+    {
+      "raw": "game\\ui\\screens\\race_browser_dialog.py:73: error: Incompatible types in assignment (expression has type \"UILabel\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\race_browser_dialog.py",
+      "line": "73"
+    },
+    {
+      "raw": "game\\ui\\screens\\race_browser_dialog.py:79: error: \"None\" has no attribute \"hide\"  [attr-defined]",
+      "file": "game\\ui\\screens\\race_browser_dialog.py",
+      "line": "79"
+    },
+    {
+      "raw": "game\\ui\\screens\\race_browser_dialog.py:123: error: Need type annotation for \"race_rows\" (hint: \"race_rows: list[<type>] = ...\")  [var-annotated]",
+      "file": "game\\ui\\screens\\race_browser_dialog.py",
+      "line": "123"
+    },
+    {
+      "raw": "game\\ui\\screens\\race_browser_dialog.py:163: error: \"None\" has no attribute \"show\"  [attr-defined]",
+      "file": "game\\ui\\screens\\race_browser_dialog.py",
+      "line": "163"
+    },
+    {
+      "raw": "game\\ui\\screens\\race_browser_dialog.py:171: error: \"None\" has no attribute \"get_relative_rect\"  [attr-defined]",
+      "file": "game\\ui\\screens\\race_browser_dialog.py",
+      "line": "171"
+    },
+    {
+      "raw": "game\\ui\\screens\\race_browser_dialog.py:173: error: \"None\" has no attribute \"set_scrollable_area_dimensions\"  [attr-defined]",
+      "file": "game\\ui\\screens\\race_browser_dialog.py",
+      "line": "173"
+    },
+    {
+      "raw": "game\\ui\\screens\\race_browser_dialog.py:192: error: \"None\" has no attribute \"get_relative_rect\"  [attr-defined]",
+      "file": "game\\ui\\screens\\race_browser_dialog.py",
+      "line": "192"
+    },
+    {
+      "raw": "game\\ui\\screens\\race_browser_dialog.py:228: error: \"object\" has no attribute \"append\"  [attr-defined]",
+      "file": "game\\ui\\screens\\race_browser_dialog.py",
+      "line": "228"
+    },
+    {
+      "raw": "game\\ui\\screens\\race_browser_dialog.py:301: error: \"None\" has no attribute \"enable\"  [attr-defined]",
+      "file": "game\\ui\\screens\\race_browser_dialog.py",
+      "line": "301"
+    },
+    {
+      "raw": "game\\ui\\screens\\race_browser_dialog.py:304: error: \"None\" has no attribute \"disable\"  [attr-defined]",
+      "file": "game\\ui\\screens\\race_browser_dialog.py",
+      "line": "304"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:43: error: \"DataListWindowMixin\" has no attribute \"column_manager\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "43"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:49: error: \"DataListWindowMixin\" has no attribute \"virtual_table\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "49"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:50: error: \"DataListWindowMixin\" has no attribute \"virtual_table\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "50"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:51: error: \"DataListWindowMixin\" has no attribute \"refresh_list\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "51"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:55: error: \"DataListWindowMixin\" has no attribute \"txt_preset_name\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "55"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:58: error: \"DataListWindowMixin\" has no attribute \"_capture_current_state\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "58"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:59: error: \"DataListWindowMixin\" has no attribute \"preset_manager\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "59"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:60: error: Cannot determine type of \"dd_presets\"  [has-type]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "60"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:61: error: Cannot determine type of \"dd_presets\"  [has-type]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "61"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:62: error: Cannot determine type of \"dd_presets\"  [has-type]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "62"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:64: error: \"DataListWindowMixin\" has no attribute \"preset_manager\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "64"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:67: error: \"DataListWindowMixin\" has no attribute \"ui_manager\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "67"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:79: error: \"DataListWindowMixin\" has no attribute \"ui_filters\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "79"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:104: error: \"DataListWindowMixin\" has no attribute \"virtual_table\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "104"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:105: error: \"DataListWindowMixin\" has no attribute \"virtual_table\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "105"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:109: error: \"DataListWindowMixin\" has no attribute \"virtual_table\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "109"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:113: error: \"DataListWindowMixin\" has no attribute \"column_manager\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "113"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:114: error: \"DataListWindowMixin\" has no attribute \"virtual_table\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "114"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:115: error: \"DataListWindowMixin\" has no attribute \"virtual_table\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "115"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:116: error: \"DataListWindowMixin\" has no attribute \"refresh_list\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "116"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:120: error: \"DataListWindowMixin\" has no attribute \"column_manager\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "120"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:121: error: \"DataListWindowMixin\" has no attribute \"virtual_table\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "121"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:122: error: \"DataListWindowMixin\" has no attribute \"refresh_list\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "122"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:129: error: \"DataListWindowMixin\" has no attribute \"preset_manager\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "129"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:130: error: \"DataListWindowMixin\" has no attribute \"_apply_state\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "130"
+    },
+    {
+      "raw": "game\\ui\\screens\\data_list_window_mixin.py:130: error: \"DataListWindowMixin\" has no attribute \"preset_manager\"  [attr-defined]",
+      "file": "game\\ui\\screens\\data_list_window_mixin.py",
+      "line": "130"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_selector.py:91: error: \"IContainerAndContainerLike\" has no attribute \"elements\"  [attr-defined]",
+      "file": "game\\ui\\screens\\build_queue_selector.py",
+      "line": "91"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_selector.py:192: error: Argument 1 has incompatible type \"BuildQueueSource | None\"; expected \"BuildQueueSource\"  [arg-type]",
+      "file": "game\\ui\\screens\\build_queue_selector.py",
+      "line": "192"
+    },
+    {
+      "raw": "game\\ui\\components\\table\\header.py:80: error: \"UIButton\" has no attribute \"col_ref\"  [attr-defined]",
+      "file": "game\\ui\\components\\table\\header.py",
+      "line": "80"
+    },
+    {
+      "raw": "game\\ui\\components\\table\\header.py:81: error: \"UIButton\" has no attribute \"direction\"  [attr-defined]",
+      "file": "game\\ui\\components\\table\\header.py",
+      "line": "81"
+    },
+    {
+      "raw": "game\\ui\\components\\table\\header.py:100: error: \"UIButton\" has no attribute \"sort_col_ref\"  [attr-defined]",
+      "file": "game\\ui\\components\\table\\header.py",
+      "line": "100"
+    },
+    {
+      "raw": "game\\ui\\components\\table\\header.py:113: error: \"UIButton\" has no attribute \"col_ref\"  [attr-defined]",
+      "file": "game\\ui\\components\\table\\header.py",
+      "line": "113"
+    },
+    {
+      "raw": "game\\ui\\components\\table\\header.py:114: error: \"UIButton\" has no attribute \"direction\"  [attr-defined]",
+      "file": "game\\ui\\components\\table\\header.py",
+      "line": "114"
+    },
+    {
+      "raw": "game\\ui\\screens\\star_list_sidebar.py:49: error: Need type annotation for \"ui_filters\" (hint: \"ui_filters: dict[<type>, <type>] = ...\")  [var-annotated]",
+      "file": "game\\ui\\screens\\star_list_sidebar.py",
+      "line": "49"
+    },
+    {
+      "raw": "game\\ui\\screens\\star_list_sidebar.py:134: error: \"UIButton\" has no attribute \"col_ref\"  [attr-defined]",
+      "file": "game\\ui\\screens\\star_list_sidebar.py",
+      "line": "134"
+    },
+    {
+      "raw": "game\\ui\\screens\\galaxy_test\\screen.py:83: error: Need type annotation for \"_ui_elements\" (hint: \"_ui_elements: list[<type>] = ...\")  [var-annotated]",
+      "file": "game\\ui\\screens\\galaxy_test\\screen.py",
+      "line": "83"
+    },
+    {
+      "raw": "game\\ui\\screens\\galaxy_test\\screen.py:183: error: Module \"pygame.event\" is not valid as a type  [valid-type]",
+      "file": "game\\ui\\screens\\galaxy_test\\screen.py",
+      "line": "183"
+    },
+    {
+      "raw": "game\\ui\\screens\\galaxy_test\\screen.py:183: note: Perhaps you meant to use a protocol matching the module structure?",
+      "file": "game\\ui\\screens\\galaxy_test\\screen.py",
+      "line": "183"
+    },
+    {
+      "raw": "game\\ui\\screens\\galaxy_test\\screen.py:189: error: pygame.event? has no attribute \"type\"  [attr-defined]",
+      "file": "game\\ui\\screens\\galaxy_test\\screen.py",
+      "line": "189"
+    },
+    {
+      "raw": "game\\ui\\screens\\galaxy_test\\screen.py:190: error: pygame.event? has no attribute \"ui_element\"  [attr-defined]",
+      "file": "game\\ui\\screens\\galaxy_test\\screen.py",
+      "line": "190"
+    },
+    {
+      "raw": "game\\ui\\screens\\galaxy_test\\screen.py:194: error: pygame.event? has no attribute \"type\"  [attr-defined]",
+      "file": "game\\ui\\screens\\galaxy_test\\screen.py",
+      "line": "194"
+    },
+    {
+      "raw": "game\\ui\\screens\\galaxy_test\\screen.py:195: error: pygame.event? has no attribute \"key\"  [attr-defined]",
+      "file": "game\\ui\\screens\\galaxy_test\\screen.py",
+      "line": "195"
+    },
+    {
+      "raw": "game\\ui\\screens\\galaxy_test\\screen.py:205: error: pygame.event? has no attribute \"type\"  [attr-defined]",
+      "file": "game\\ui\\screens\\galaxy_test\\screen.py",
+      "line": "205"
+    },
+    {
+      "raw": "game\\ui\\screens\\galaxy_test\\screen.py:211: error: pygame.event? has no attribute \"type\"  [attr-defined]",
+      "file": "game\\ui\\screens\\galaxy_test\\screen.py",
+      "line": "211"
+    },
+    {
+      "raw": "game\\ui\\screens\\galaxy_test\\screen.py:212: error: pygame.event? has no attribute \"button\"  [attr-defined]",
+      "file": "game\\ui\\screens\\galaxy_test\\screen.py",
+      "line": "212"
+    },
+    {
+      "raw": "game\\ui\\screens\\galaxy_test\\screen.py:213: error: pygame.event? has no attribute \"pos\"  [attr-defined]",
+      "file": "game\\ui\\screens\\galaxy_test\\screen.py",
+      "line": "213"
+    },
+    {
+      "raw": "game\\ui\\screens\\builder\\left_panel.py:19: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]",
+      "file": "game\\ui\\screens\\builder\\left_panel.py",
+      "line": "19"
+    },
+    {
+      "raw": "game\\ui\\screens\\builder\\left_panel.py:155: error: Missing named argument \"registries\" for \"get_all_components\"  [call-arg]",
+      "file": "game\\ui\\screens\\builder\\left_panel.py",
+      "line": "155"
+    },
+    {
+      "raw": "game\\ui\\screens\\builder\\left_panel.py:155: note: \"get_all_components\" defined in \"game.simulation.components.component_loader\"",
+      "file": "game\\ui\\screens\\builder\\left_panel.py",
+      "line": "155"
+    },
+    {
+      "raw": "game\\ui\\screens\\strategy_panel_manager.py:25: error: Cannot find implementation or library stub for module named \"game.core.input_system\"  [import-not-found]",
+      "file": "game\\ui\\screens\\strategy_panel_manager.py",
+      "line": "25"
+    },
+    {
+      "raw": "game\\ui\\screens\\strategy_panel_manager.py:54: error: Incompatible types in assignment (expression has type \"None\", variable has type \"Rect\")  [assignment]",
+      "file": "game\\ui\\screens\\strategy_panel_manager.py",
+      "line": "54"
+    },
+    {
+      "raw": "game\\ui\\screens\\strategy_panel_manager.py:100: error: Function \"builtins.callable\" is not valid as a type  [valid-type]",
+      "file": "game\\ui\\screens\\strategy_panel_manager.py",
+      "line": "100"
+    },
+    {
+      "raw": "game\\ui\\screens\\strategy_panel_manager.py:100: note: Perhaps you meant \"typing.Callable\" instead of \"callable\"?",
+      "file": "game\\ui\\screens\\strategy_panel_manager.py",
+      "line": "100"
+    },
+    {
+      "raw": "game\\ui\\screens\\strategy_panel_manager.py:411: error: Name \"StrategyUI\" is not defined  [name-defined]",
+      "file": "game\\ui\\screens\\strategy_panel_manager.py",
+      "line": "411"
+    },
+    {
+      "raw": "game\\ui\\screens\\strategy_panel_manager.py:470: error: Name \"StrategyUI\" is not defined  [name-defined]",
+      "file": "game\\ui\\screens\\strategy_panel_manager.py",
+      "line": "470"
+    },
+    {
+      "raw": "game\\ui\\screens\\builder\\right_panel.py:139: error: Argument 1 to \"UIDropDownMenu\" has incompatible type \"list[str]\"; expected \"list[str | tuple[str, str]]\"  [arg-type]",
+      "file": "game\\ui\\screens\\builder\\right_panel.py",
+      "line": "139"
+    },
+    {
+      "raw": "game\\ui\\screens\\builder\\right_panel.py:139: note: \"list\" is invariant -- see https://mypy.readthedocs.io/en/stable/common_issues.html#variance",
+      "file": "game\\ui\\screens\\builder\\right_panel.py",
+      "line": "139"
+    },
+    {
+      "raw": "game\\ui\\screens\\builder\\right_panel.py:139: note: Consider using \"Sequence\" instead, which is covariant",
+      "file": "game\\ui\\screens\\builder\\right_panel.py",
+      "line": "139"
+    },
+    {
+      "raw": "game\\ui\\screens\\builder\\right_panel.py:150: error: Argument 1 to \"UIDropDownMenu\" has incompatible type \"list[str]\"; expected \"list[str | tuple[str, str]]\"  [arg-type]",
+      "file": "game\\ui\\screens\\builder\\right_panel.py",
+      "line": "150"
+    },
+    {
+      "raw": "game\\ui\\screens\\builder\\right_panel.py:150: note: \"list\" is invariant -- see https://mypy.readthedocs.io/en/stable/common_issues.html#variance",
+      "file": "game\\ui\\screens\\builder\\right_panel.py",
+      "line": "150"
+    },
+    {
+      "raw": "game\\ui\\screens\\builder\\right_panel.py:150: note: Consider using \"Sequence\" instead, which is covariant",
+      "file": "game\\ui\\screens\\builder\\right_panel.py",
+      "line": "150"
+    },
+    {
+      "raw": "game\\ui\\screens\\builder\\right_panel.py:204: error: Incompatible types in assignment (expression has type \"UIDropDownMenu | None\", variable has type \"UIDropDownMenu\")  [assignment]",
+      "file": "game\\ui\\screens\\builder\\right_panel.py",
+      "line": "204"
+    },
+    {
+      "raw": "game\\ui\\screens\\builder\\right_panel.py:221: error: Incompatible types in assignment (expression has type \"UIDropDownMenu | None\", variable has type \"UIDropDownMenu\")  [assignment]",
+      "file": "game\\ui\\screens\\builder\\right_panel.py",
+      "line": "221"
+    },
+    {
+      "raw": "game\\ui\\screens\\builder\\right_panel.py:232: error: Incompatible types in assignment (expression has type \"UIDropDownMenu | None\", variable has type \"UIDropDownMenu\")  [assignment]",
+      "file": "game\\ui\\screens\\builder\\right_panel.py",
+      "line": "232"
+    },
+    {
+      "raw": "game\\ui\\screens\\builder\\right_panel.py:243: error: Incompatible types in assignment (expression has type \"UIDropDownMenu | None\", variable has type \"UIDropDownMenu\")  [assignment]",
+      "file": "game\\ui\\screens\\builder\\right_panel.py",
+      "line": "243"
+    },
+    {
+      "raw": "game\\ui\\screens\\builder\\right_panel.py:249: error: Incompatible types in assignment (expression has type \"UIDropDownMenu | None\", variable has type \"UIDropDownMenu\")  [assignment]",
+      "file": "game\\ui\\screens\\builder\\right_panel.py",
+      "line": "249"
+    },
+    {
+      "raw": "game\\ui\\screens\\builder\\right_panel.py:312: error: Incompatible types in assignment (expression has type \"UIImage\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\builder\\right_panel.py",
+      "line": "312"
+    },
+    {
+      "raw": "game\\ui\\screens\\builder\\right_panel.py:355: error: Incompatible types in assignment (expression has type \"UIDropDownMenu | None\", variable has type \"UIDropDownMenu\")  [assignment]",
+      "file": "game\\ui\\screens\\builder\\right_panel.py",
+      "line": "355"
+    },
+    {
+      "raw": "game\\ui\\screens\\builder\\right_panel.py:366: error: Incompatible types in assignment (expression has type \"UIDropDownMenu | None\", variable has type \"UIDropDownMenu\")  [assignment]",
+      "file": "game\\ui\\screens\\builder\\right_panel.py",
+      "line": "366"
+    },
+    {
+      "raw": "game\\ui\\screens\\builder\\right_panel.py:377: error: Incompatible types in assignment (expression has type \"UIDropDownMenu | None\", variable has type \"UIDropDownMenu\")  [assignment]",
+      "file": "game\\ui\\screens\\builder\\right_panel.py",
+      "line": "377"
+    },
+    {
+      "raw": "game\\ui\\screens\\fleet_data_source.py:204: error: Item \"None\" of \"ShipDisplayFormatter | None\" has no attribute \"get_display_id\"  [union-attr]",
+      "file": "game\\ui\\screens\\fleet_data_source.py",
+      "line": "204"
+    },
+    {
+      "raw": "game\\ui\\screens\\fleet_data_source.py:209: error: Returning Any from function declared to return \"str\"  [no-any-return]",
+      "file": "game\\ui\\screens\\fleet_data_source.py",
+      "line": "209"
+    },
+    {
+      "raw": "game\\ui\\screens\\fleet_data_source.py:249: error: Item \"None\" of \"ShipCargoManager | None\" has no attribute \"get_cargo_capacity\"  [union-attr]",
+      "file": "game\\ui\\screens\\fleet_data_source.py",
+      "line": "249"
+    },
+    {
+      "raw": "game\\ui\\screens\\fleet_data_source.py:250: error: Item \"None\" of \"ShipCargoManager | None\" has no attribute \"get_current_cargo\"  [union-attr]",
+      "file": "game\\ui\\screens\\fleet_data_source.py",
+      "line": "250"
+    },
+    {
+      "raw": "game\\ui\\screens\\fleet_data_source.py:260: error: Item \"None\" of \"ShipCargoManager | None\" has no attribute \"total_cargo_units\"  [union-attr]",
+      "file": "game\\ui\\screens\\fleet_data_source.py",
+      "line": "260"
+    },
+    {
+      "raw": "game\\ui\\screens\\strategy_render\\systems.py:234: error: List comprehension has incompatible type List[float]; expected List[int]  [misc]",
+      "file": "game\\ui\\screens\\strategy_render\\systems.py",
+      "line": "234"
+    },
+    {
+      "raw": "game\\ui\\panels\\race_environment_panel.py:95: error: Argument 2 to \"_create_points_label\" of \"RaceEnvironmentPanel\" has incompatible type \"int | float\"; expected \"int\"  [arg-type]",
+      "file": "game\\ui\\panels\\race_environment_panel.py",
+      "line": "95"
+    },
+    {
+      "raw": "game\\ui\\panels\\race_environment_panel.py:97: error: Argument 2 to \"_create_homeworld_dropdown\" of \"RaceEnvironmentPanel\" has incompatible type \"int | float\"; expected \"int\"  [arg-type]",
+      "file": "game\\ui\\panels\\race_environment_panel.py",
+      "line": "97"
+    },
+    {
+      "raw": "game\\ui\\panels\\race_environment_panel.py:100: error: Argument 2 to \"_create_repro_and_happiness\" of \"RaceEnvironmentPanel\" has incompatible type \"int | float\"; expected \"int\"  [arg-type]",
+      "file": "game\\ui\\panels\\race_environment_panel.py",
+      "line": "100"
+    },
+    {
+      "raw": "game\\ui\\panels\\race_environment_panel.py:105: error: Argument 3 to \"create_section_header\" has incompatible type \"int | float\"; expected \"int\"  [arg-type]",
+      "file": "game\\ui\\panels\\race_environment_panel.py",
+      "line": "105"
+    },
+    {
+      "raw": "game\\ui\\panels\\race_environment_panel.py:109: error: Argument 3 to \"_create_factor_rows\" of \"RaceEnvironmentPanel\" has incompatible type \"int | float\"; expected \"int\"  [arg-type]",
+      "file": "game\\ui\\panels\\race_environment_panel.py",
+      "line": "109"
+    },
+    {
+      "raw": "game\\ui\\panels\\race_environment_panel.py:114: error: Argument 3 to \"create_section_header\" has incompatible type \"int | float\"; expected \"int\"  [arg-type]",
+      "file": "game\\ui\\panels\\race_environment_panel.py",
+      "line": "114"
+    },
+    {
+      "raw": "game\\ui\\panels\\race_environment_panel.py:118: error: Argument 3 to \"_create_factor_rows\" of \"RaceEnvironmentPanel\" has incompatible type \"int | float\"; expected \"int\"  [arg-type]",
+      "file": "game\\ui\\panels\\race_environment_panel.py",
+      "line": "118"
+    },
+    {
+      "raw": "game\\ui\\panels\\race_environment_panel.py:307: error: Item \"None\" of \"Any | None\" has no attribute \"selected_option\"  [union-attr]",
+      "file": "game\\ui\\panels\\race_environment_panel.py",
+      "line": "307"
+    },
+    {
+      "raw": "game\\ui\\panels\\build_queue_controller.py:389: error: Incompatible default for parameter \"category\" (default has type \"None\", parameter has type \"str\")  [assignment]",
+      "file": "game\\ui\\panels\\build_queue_controller.py",
+      "line": "389"
+    },
+    {
+      "raw": "game\\ui\\panels\\build_queue_controller.py:389: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\ui\\panels\\build_queue_controller.py",
+      "line": "389"
+    },
+    {
+      "raw": "game\\ui\\panels\\build_queue_controller.py:389: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\ui\\panels\\build_queue_controller.py",
+      "line": "389"
+    },
+    {
+      "raw": "game\\ui\\panels\\build_queue_controller.py:389: error: Incompatible default for parameter \"index\" (default has type \"None\", parameter has type \"int\")  [assignment]",
+      "file": "game\\ui\\panels\\build_queue_controller.py",
+      "line": "389"
+    },
+    {
+      "raw": "game\\ui\\panels\\build_queue_controller.py:538: error: Argument 1 to \"_source_can_build_category\" of \"BuildQueueController\" has incompatible type \"BuildQueueSource | None\"; expected \"BuildQueueSource\"  [arg-type]",
+      "file": "game\\ui\\panels\\build_queue_controller.py",
+      "line": "538"
+    },
+    {
+      "raw": "game\\ui\\panels\\build_queue_controller.py:540: error: Item \"None\" of \"BuildQueueSource | None\" has no attribute \"display_name\"  [union-attr]",
+      "file": "game\\ui\\panels\\build_queue_controller.py",
+      "line": "540"
+    },
+    {
+      "raw": "game\\ui\\panels\\build_queue_controller.py:546: error: Argument 1 to \"_needs_planet_selection\" of \"BuildQueueController\" has incompatible type \"BuildQueueSource | None\"; expected \"BuildQueueSource\"  [arg-type]",
+      "file": "game\\ui\\panels\\build_queue_controller.py",
+      "line": "546"
+    },
+    {
+      "raw": "game\\ui\\panels\\build_queue_controller.py:549: error: Item \"None\" of \"Galaxy | None\" has no attribute \"get_planets_at_global_hex\"  [union-attr]",
+      "file": "game\\ui\\panels\\build_queue_controller.py",
+      "line": "549"
+    },
+    {
+      "raw": "game\\ui\\panels\\build_queue_controller.py:549: error: Argument 1 to \"get_planets_at_global_hex\" of \"Galaxy\" has incompatible type \"HexCoord | None\"; expected \"HexCoord\"  [arg-type]",
+      "file": "game\\ui\\panels\\build_queue_controller.py",
+      "line": "549"
+    },
+    {
+      "raw": "game\\ui\\panels\\build_queue_controller.py:550: error: Item \"None\" of \"Empire | None\" has no attribute \"id\"  [union-attr]",
+      "file": "game\\ui\\panels\\build_queue_controller.py",
+      "line": "550"
+    },
+    {
+      "raw": "game\\ui\\panels\\build_queue_controller.py:556: error: Argument 1 to \"_add_item_with_target_planet\" of \"BuildQueueController\" has incompatible type \"BuildQueueSource | None\"; expected \"BuildQueueSource\"  [arg-type]",
+      "file": "game\\ui\\panels\\build_queue_controller.py",
+      "line": "556"
+    },
+    {
+      "raw": "game\\ui\\panels\\build_queue_controller.py:567: error: Argument 1 to \"_get_entity_info\" of \"BuildQueueController\" has incompatible type \"BuildQueueSource | None\"; expected \"BuildQueueSource\"  [arg-type]",
+      "file": "game\\ui\\panels\\build_queue_controller.py",
+      "line": "567"
+    },
+    {
+      "raw": "game\\ui\\panels\\build_queue_controller.py:568: error: Argument 1 to \"_get_target_planet_id\" of \"BuildQueueController\" has incompatible type \"BuildQueueSource | None\"; expected \"BuildQueueSource\"  [arg-type]",
+      "file": "game\\ui\\panels\\build_queue_controller.py",
+      "line": "568"
+    },
+    {
+      "raw": "game\\ui\\panels\\build_queue_controller.py:575: error: Item \"None\" of \"BuildQueueSource | None\" has no attribute \"display_name\"  [union-attr]",
+      "file": "game\\ui\\panels\\build_queue_controller.py",
+      "line": "575"
+    },
+    {
+      "raw": "game\\ui\\screens\\battle_screen.py:98: error: Need type annotation for \"beams\" (hint: \"beams: list[<type>] = ...\")  [var-annotated]",
+      "file": "game\\ui\\screens\\battle_screen.py",
+      "line": "98"
+    },
+    {
+      "raw": "game\\ui\\screens\\battle_screen.py:157: error: \"BattleUI\" has no attribute \"expanded_ships\"  [attr-defined]",
+      "file": "game\\ui\\screens\\battle_screen.py",
+      "line": "157"
+    },
+    {
+      "raw": "game\\ui\\screens\\battle_screen.py:158: error: \"BattleUI\" has no attribute \"stats_scroll_offset\"  [attr-defined]",
+      "file": "game\\ui\\screens\\battle_screen.py",
+      "line": "158"
+    },
+    {
+      "raw": "game\\ui\\screens\\battle_screen.py:427: error: Item \"None\" of \"BattleController | None\" has no attribute \"get_outcome\"  [union-attr]",
+      "file": "game\\ui\\screens\\battle_screen.py",
+      "line": "427"
+    },
+    {
+      "raw": "game\\ui\\screens\\battle_screen.py:511: error: \"Camera\" has no attribute \"show_overlay\"  [attr-defined]",
+      "file": "game\\ui\\screens\\battle_screen.py",
+      "line": "511"
+    },
+    {
+      "raw": "game\\ui\\screens\\transfer_grid_renderer.py:104: error: Incompatible types in assignment (expression has type \"UIDropDownMenu\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\transfer_grid_renderer.py",
+      "line": "104"
+    },
+    {
+      "raw": "game\\ui\\screens\\transfer_grid_renderer.py:118: error: Incompatible types in assignment (expression has type \"UIDropDownMenu\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\transfer_grid_renderer.py",
+      "line": "118"
+    },
+    {
+      "raw": "game\\ui\\screens\\transfer_grid_renderer.py:127: error: Incompatible types in assignment (expression has type \"UIButton\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\transfer_grid_renderer.py",
+      "line": "127"
+    },
+    {
+      "raw": "game\\ui\\screens\\transfer_grid_renderer.py:141: error: Incompatible types in assignment (expression has type \"UILabel\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\transfer_grid_renderer.py",
+      "line": "141"
+    },
+    {
+      "raw": "game\\ui\\screens\\transfer_grid_renderer.py:147: error: Incompatible types in assignment (expression has type \"UILabel\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\transfer_grid_renderer.py",
+      "line": "147"
+    },
+    {
+      "raw": "game\\ui\\screens\\transfer_grid_renderer.py:173: error: Incompatible types in assignment (expression has type \"UIScrollingContainer\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\transfer_grid_renderer.py",
+      "line": "173"
+    },
+    {
+      "raw": "game\\ui\\screens\\transfer_grid_renderer.py:183: error: Incompatible types in assignment (expression has type \"UIButton\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\transfer_grid_renderer.py",
+      "line": "183"
+    },
+    {
+      "raw": "game\\ui\\screens\\transfer_grid_renderer.py:190: error: Incompatible types in assignment (expression has type \"UIButton\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\transfer_grid_renderer.py",
+      "line": "190"
+    },
+    {
+      "raw": "game\\ui\\screens\\transfer_grid_renderer.py:196: error: Incompatible types in assignment (expression has type \"UIButton\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\transfer_grid_renderer.py",
+      "line": "196"
+    },
+    {
+      "raw": "game\\ui\\screens\\transfer_grid_renderer.py:216: error: Argument \"options_list\" to \"UIDropDownMenu\" has incompatible type \"list[str] | list[str | tuple[str, str]]\"; expected \"list[str | tuple[str, str]]\"  [arg-type]",
+      "file": "game\\ui\\screens\\transfer_grid_renderer.py",
+      "line": "216"
+    },
+    {
+      "raw": "game\\ui\\screens\\transfer_grid_renderer.py:259: error: \"None\" has no attribute \"relative_rect\"  [attr-defined]",
+      "file": "game\\ui\\screens\\transfer_grid_renderer.py",
+      "line": "259"
+    },
+    {
+      "raw": "game\\ui\\screens\\transfer_grid_renderer.py:260: error: \"None\" has no attribute \"set_scrollable_area_dimensions\"  [attr-defined]",
+      "file": "game\\ui\\screens\\transfer_grid_renderer.py",
+      "line": "260"
+    },
+    {
+      "raw": "game\\ui\\screens\\cargo_quick_dialog.py:57: error: \"CargoQuickDialog\" has no attribute \"lbl_title\"  [attr-defined]",
+      "file": "game\\ui\\screens\\cargo_quick_dialog.py",
+      "line": "57"
+    },
+    {
+      "raw": "game\\ui\\screens\\cargo_quick_dialog.py:67: error: \"CargoQuickDialog\" has no attribute \"btn_confirm\"  [attr-defined]",
+      "file": "game\\ui\\screens\\cargo_quick_dialog.py",
+      "line": "67"
+    },
+    {
+      "raw": "game\\ui\\screens\\cargo_quick_dialog.py:73: error: \"CargoQuickDialog\" has no attribute \"btn_cancel\"  [attr-defined]",
+      "file": "game\\ui\\screens\\cargo_quick_dialog.py",
+      "line": "73"
+    },
+    {
+      "raw": "game\\ui\\screens\\cargo_quick_dialog.py:92: error: \"CargoQuickDialog\" has no attribute \"btn_confirm\"  [attr-defined]",
+      "file": "game\\ui\\screens\\cargo_quick_dialog.py",
+      "line": "92"
+    },
+    {
+      "raw": "game\\ui\\screens\\cargo_quick_dialog.py:95: error: \"CargoQuickDialog\" has no attribute \"btn_cancel\"  [attr-defined]",
+      "file": "game\\ui\\screens\\cargo_quick_dialog.py",
+      "line": "95"
+    },
+    {
+      "raw": "game\\ui\\screens\\cargo_quick_dialog.py:121: error: \"CargoQuickDialog\" has no attribute \"lbl_no_items\"  [attr-defined]",
+      "file": "game\\ui\\screens\\cargo_quick_dialog.py",
+      "line": "121"
+    },
+    {
+      "raw": "game\\ui\\screens\\cargo_quick_dialog.py:273: error: Return type \"None\" of \"process_event\" incompatible with return type \"bool\" in supertype \"pygame_gui.elements.ui_window.UIWindow\"  [override]",
+      "file": "game\\ui\\screens\\cargo_quick_dialog.py",
+      "line": "273"
+    },
+    {
+      "raw": "game\\ui\\screens\\cargo_quick_dialog.py:273: error: Return type \"None\" of \"process_event\" incompatible with return type \"bool\" in supertype \"pygame_gui.core.ui_element.UIElement\"  [override]",
+      "file": "game\\ui\\screens\\cargo_quick_dialog.py",
+      "line": "273"
+    },
+    {
+      "raw": "game\\ui\\screens\\cargo_quick_dialog.py:273: error: Return type \"None\" of \"process_event\" incompatible with return type \"bool\" in supertype \"pygame_gui.core.interfaces.element_interface.IUIElementInterface\"  [override]",
+      "file": "game\\ui\\screens\\cargo_quick_dialog.py",
+      "line": "273"
+    },
+    {
+      "raw": "game\\ui\\screens\\cargo_quick_dialog.py:273: error: Return type \"None\" of \"process_event\" incompatible with return type \"bool\" in supertype \"pygame_gui.core.interfaces.window_interface.IWindowInterface\"  [override]",
+      "file": "game\\ui\\screens\\cargo_quick_dialog.py",
+      "line": "273"
+    },
+    {
+      "raw": "game\\ui\\screens\\cargo_quick_dialog.py:288: error: \"CargoQuickDialog\" has no attribute \"btn_cancel\"  [attr-defined]",
+      "file": "game\\ui\\screens\\cargo_quick_dialog.py",
+      "line": "288"
+    },
+    {
+      "raw": "game\\ui\\screens\\cargo_quick_dialog.py:290: error: \"CargoQuickDialog\" has no attribute \"btn_confirm\"  [attr-defined]",
+      "file": "game\\ui\\screens\\cargo_quick_dialog.py",
+      "line": "290"
+    },
+    {
+      "raw": "game\\ui\\screens\\strategy_windows\\move_choice_dialog.py:69: error: Incompatible types in assignment (expression has type \"MoveChoiceWindow\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\strategy_windows\\move_choice_dialog.py",
+      "line": "69"
+    },
+    {
+      "raw": "game\\ui\\screens\\strategy_windows\\move_choice_dialog.py:93: error: \"kill\" of \"StrategyModalWindow\" does not return a value (it only ever returns None)  [func-returns-value]",
+      "file": "game\\ui\\screens\\strategy_windows\\move_choice_dialog.py",
+      "line": "93"
+    },
+    {
+      "raw": "game\\ui\\screens\\strategy_windows\\move_choice_dialog.py:94: error: \"kill\" of \"StrategyModalWindow\" does not return a value (it only ever returns None)  [func-returns-value]",
+      "file": "game\\ui\\screens\\strategy_windows\\move_choice_dialog.py",
+      "line": "94"
+    },
+    {
+      "raw": "game\\ui\\screens\\radiation_shield_editor.py:86: error: Argument 3 to \"build_species_selector\" has incompatible type \"IUIManagerInterface\"; expected \"UIManager\"  [arg-type]",
+      "file": "game\\ui\\screens\\radiation_shield_editor.py",
+      "line": "86"
+    },
+    {
+      "raw": "game\\ui\\screens\\atmosphere_target_editor.py:115: error: Argument 3 to \"build_species_selector\" has incompatible type \"IUIManagerInterface\"; expected \"UIManager\"  [arg-type]",
+      "file": "game\\ui\\screens\\atmosphere_target_editor.py",
+      "line": "115"
+    },
+    {
+      "raw": "game\\ui\\screens\\strategy_windows\\transfer_dialogs.py:43: error: Incompatible types in assignment (expression has type \"TransferDialog\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\strategy_windows\\transfer_dialogs.py",
+      "line": "43"
+    },
+    {
+      "raw": "game\\ui\\screens\\strategy_windows\\transfer_dialogs.py:70: error: Incompatible types in assignment (expression has type \"CargoQuickDialog\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\strategy_windows\\transfer_dialogs.py",
+      "line": "70"
+    },
+    {
+      "raw": "game\\ui\\screens\\strategy_windows\\selection_prompts.py:49: error: Incompatible types in assignment (expression has type \"PlanetSelectionWindow\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\strategy_windows\\selection_prompts.py",
+      "line": "49"
+    },
+    {
+      "raw": "game\\ui\\screens\\strategy_windows\\selection_prompts.py:69: error: Incompatible types in assignment (expression has type \"SystemSelectionWindow\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\strategy_windows\\selection_prompts.py",
+      "line": "69"
+    },
+    {
+      "raw": "game\\ui\\screens\\strategy_windows\\selection_prompts.py:87: error: Incompatible types in assignment (expression has type \"FleetSelectionWindow\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\strategy_windows\\selection_prompts.py",
+      "line": "87"
+    },
+    {
+      "raw": "game\\ui\\screens\\strategy_windows\\event_log_window_ctrl.py:106: error: Incompatible types in assignment (expression has type \"EventLogWindow\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\strategy_windows\\event_log_window_ctrl.py",
+      "line": "106"
+    },
+    {
+      "raw": "game\\ui\\screens\\strategy_windows\\event_log_window_ctrl.py:146: error: Argument 1 to \"from_registries\" of \"ReplayResolver\" has incompatible type \"object\"; expected \"ReplayStore\"  [arg-type]",
+      "file": "game\\ui\\screens\\strategy_windows\\event_log_window_ctrl.py",
+      "line": "146"
+    },
+    {
+      "raw": "game\\ui\\screens\\strategy_windows\\build_queue_windows.py:34: error: Incompatible types in assignment (expression has type \"BuildQueueListWindow\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\strategy_windows\\build_queue_windows.py",
+      "line": "34"
+    },
+    {
+      "raw": "game\\ui\\screens\\strategy_windows\\build_queue_windows.py:73: error: Incompatible types in assignment (expression has type \"EmpireBuildQueueWindow\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\strategy_windows\\build_queue_windows.py",
+      "line": "73"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:54: error: Incompatible default for parameter \"design_catalog\" (default has type \"None\", parameter has type \"DesignCatalog\")  [assignment]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "54"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:54: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "54"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:54: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "54"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:55: error: Incompatible default for parameter \"design_loader\" (default has type \"None\", parameter has type \"DesignLoaderAdapter\")  [assignment]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "55"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:55: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "55"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:55: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "55"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:56: error: Incompatible default for parameter \"hex_coord\" (default has type \"None\", parameter has type \"HexCoord\")  [assignment]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "56"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:56: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "56"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:56: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "56"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:57: error: Incompatible default for parameter \"galaxy\" (default has type \"None\", parameter has type \"Galaxy\")  [assignment]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "57"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:57: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "57"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:57: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "57"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:58: error: Incompatible default for parameter \"empire\" (default has type \"None\", parameter has type \"Empire\")  [assignment]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "58"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:58: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "58"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:58: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "58"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:131: error: Item \"None\" of \"IContainerAndContainerLike | None\" has no attribute \"get_container\"  [union-attr]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "131"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:224: error: Incompatible types in assignment (expression has type \"BuildQueuePanels\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "224"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:225: error: \"None\" has no attribute \"queue_selector\"  [attr-defined]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "225"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:226: error: Incompatible types in assignment (expression has type \"BuildQueueRenderer\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "226"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:228: error: Argument \"panels\" to \"BuildQueueRenderer\" has incompatible type \"None\"; expected \"BuildQueuePanels\"  [arg-type]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "228"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:231: error: Incompatible types in assignment (expression has type \"BuildQueueController\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "231"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:235: error: \"None\" has no attribute \"design_report\"  [attr-defined]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "235"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:245: error: Incompatible types in assignment (expression has type \"BuildQueueDragHandler\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "245"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:248: error: \"None\" has no attribute \"add_to_queue\"  [attr-defined]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "248"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:250: error: \"None\" has no attribute \"refresh_design_report\"  [attr-defined]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "250"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:330: error: Incompatible types in assignment (expression has type \"HexCoord\", variable has type \"None\")  [assignment]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "330"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:357: error: \"None\" has no attribute \"build_context\"  [attr-defined]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "357"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:358: error: \"None\" has no attribute \"hex_coord\"  [attr-defined]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "358"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:359: error: \"None\" has no attribute \"galaxy\"  [attr-defined]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "359"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:360: error: \"None\" has no attribute \"empire\"  [attr-defined]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "360"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:362: error: \"None\" has no attribute \"set_active_queue\"  [attr-defined]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "362"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:370: error: \"None\" has no attribute \"set_selected_queues\"  [attr-defined]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "370"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:371: error: \"None\" has no attribute \"reset_filters\"  [attr-defined]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "371"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:374: error: \"None\" has no attribute \"reset_state\"  [attr-defined]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "374"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:378: error: \"None\" has no attribute \"design_catalog\"  [attr-defined]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "378"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:384: error: \"None\" has no attribute \"design_catalog\"  [attr-defined]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "384"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:385: error: \"None\" has no attribute \"design_loader\"  [attr-defined]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "385"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:388: error: \"None\" has no attribute \"queue_sources\"  [attr-defined]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "388"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:389: error: \"None\" has no attribute \"selected_indices\"  [attr-defined]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "389"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:390: error: \"None\" has no attribute \"active_source\"  [attr-defined]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "390"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:391: error: \"None\" has no attribute \"refresh\"  [attr-defined]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "391"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:399: error: \"None\" has no attribute \"update_queue_header\"  [attr-defined]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "399"
+    },
+    {
+      "raw": "game\\ui\\screens\\build_queue_screen.py:490: error: \"None\" has no attribute \"draw_drag_preview\"  [attr-defined]",
+      "file": "game\\ui\\screens\\build_queue_screen.py",
+      "line": "490"
+    }
+  ]
+}

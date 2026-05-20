@@ -1,0 +1,67 @@
+[
+  {
+    "file": "game/strategy/combat/battle_assembly.py",
+    "line": 81,
+    "content": "return tuple(float(v) for v in bounds)  # type: ignore[return-value]"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 202,
+    "content": "def _event_bus(self):  # type: ignore[no-untyped-def]"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 217,
+    "content": "def fleet_mutator(self):  # type: ignore[no-untyped-def]"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 227,
+    "content": "def _fleet_mutator(self):  # type: ignore[no-untyped-def]"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 231,
+    "content": "def planet_mutator(self):  # type: ignore[no-untyped-def]"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 236,
+    "content": "def _planet_mutator(self):  # type: ignore[no-untyped-def]"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 240,
+    "content": "def empire_mutator(self):  # type: ignore[no-untyped-def]"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 245,
+    "content": "def _empire_mutator(self):  # type: ignore[no-untyped-def]"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 249,
+    "content": "def ship_mutator(self):  # type: ignore[no-untyped-def]"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 254,
+    "content": "def _ship_mutator(self):  # type: ignore[no-untyped-def]"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 258,
+    "content": "def _command_registry(self):  # type: ignore[no-untyped-def]"
+  },
+  {
+    "file": "game/ui/screens/defeat_dialog.py",
+    "line": 83,
+    "content": "self._dismiss_button = None  # type: ignore[assignment]"
+  },
+  {
+    "file": "game/ui/screens/turn_failed_dialog.py",
+    "line": 99,
+    "content": "self._dismiss_button = None  # type: ignore[assignment]"
+  }
+]

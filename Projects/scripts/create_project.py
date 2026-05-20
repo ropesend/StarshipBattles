@@ -8,6 +8,7 @@ Usage:
 """
 
 import argparse
+import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -16,7 +17,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from utils.config import ACTIVE_DIR
-from utils.index_manager import get_next_project_id, add_project_to_index
+from utils.index_manager import (
+    add_project_to_index,
+    get_next_project_id,
+    index_lock,
+)
 
 
 # Templates with embedded reminder banners
@@ -158,86 +163,93 @@ When all tasks above are done:
 '''
 
 
-def create_project(title: str, project_id: str = None) -> str:
+def create_project(title: str, project_id: str | None = None) -> str:
     """Create a new project with directory structure.
 
-    Returns the project ID.
+    Returns the project ID. ID reservation, directory creation, and the index
+    update run as one transaction under ``index_lock()`` so concurrent creators
+    cannot collide on the same PROJ id or interleave a read-modify-write of
+    ``projects_index.md``. If the index update fails, the just-created directory
+    is rolled back rather than left as an orphan that isn't in the index.
     """
-    # Get project ID
-    if project_id is None:
-        project_id = get_next_project_id()
-
     date = datetime.now().strftime("%Y-%m-%d")
     date_time = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-    print(f"\n{'=' * 50}")
-    print(f"Creating New Project: {project_id}")
-    print('=' * 50)
+    with index_lock():
+        # Reserve the ID inside the lock so it's atomic with the mkdir below.
+        if project_id is None:
+            project_id = get_next_project_id()
 
-    # Create project directory
-    project_dir = ACTIVE_DIR / project_id
-    findings_dir = project_dir / "findings"
+        print(f"\n{'=' * 50}")
+        print(f"Creating New Project: {project_id}")
+        print('=' * 50)
 
-    # Safety check: fail if directory already exists (prevents overwrites)
-    if project_dir.exists():
-        print(f"\n[ERROR] Directory already exists: {project_dir}")
-        print("        This suggests the index is out of sync with the filesystem.")
-        print("        Run: python Projects/scripts/sync_index.py --fix")
-        print("        Or manually remove the directory if it's orphaned.")
-        sys.exit(1)
+        # Create project directory
+        project_dir = ACTIVE_DIR / project_id
+        findings_dir = project_dir / "findings"
 
-    print(f"\nSTEP 1: Create directory structure")
-    project_dir.mkdir(parents=True, exist_ok=False)
-    findings_dir.mkdir(exist_ok=True)
-    print(f"  Created: {project_dir}")
-    print(f"  Created: {findings_dir}")
+        # Safety check: fail if directory already exists (prevents overwrites)
+        if project_dir.exists():
+            print(f"\n[ERROR] Directory already exists: {project_dir}")
+            print("        This suggests the index is out of sync with the filesystem.")
+            print("        Run: python Projects/scripts/sync_index.py --fix")
+            print("        Or manually remove the directory if it's orphaned.")
+            sys.exit(1)
 
-    # Create plan.md
-    print(f"\nSTEP 2: Create project files")
-    plan_content = PLAN_TEMPLATE.format(
-        project_id=project_id,
-        title=title,
-        date=date_time,
-    )
-    (project_dir / "plan.md").write_text(plan_content, encoding='utf-8')
-    print(f"  Created: plan.md")
+        print(f"\nSTEP 1: Create directory structure")
+        project_dir.mkdir(parents=True, exist_ok=False)
+        findings_dir.mkdir(exist_ok=True)
+        print(f"  Created: {project_dir}")
+        print(f"  Created: {findings_dir}")
 
-    # Create design.md
-    design_content = DESIGN_TEMPLATE.format(project_id=project_id)
-    (project_dir / "design.md").write_text(design_content, encoding='utf-8')
-    print(f"  Created: design.md")
+        # Create plan.md
+        print(f"\nSTEP 2: Create project files")
+        plan_content = PLAN_TEMPLATE.format(
+            project_id=project_id,
+            title=title,
+            date=date_time,
+        )
+        (project_dir / "plan.md").write_text(plan_content, encoding='utf-8')
+        print(f"  Created: plan.md")
 
-    # Create decisions.md
-    decisions_content = DECISIONS_TEMPLATE.format(
-        project_id=project_id,
-        title=title,
-        date=date,
-    )
-    (project_dir / "decisions.md").write_text(decisions_content, encoding='utf-8')
-    print(f"  Created: decisions.md")
+        # Create design.md
+        design_content = DESIGN_TEMPLATE.format(project_id=project_id)
+        (project_dir / "design.md").write_text(design_content, encoding='utf-8')
+        print(f"  Created: design.md")
 
-    # Create initial phase checklist
-    phase_content = PHASE_TEMPLATE.format(
-        project_id=project_id,
-        phase_num=1,
-        phase_name="TBD",
-    )
-    (project_dir / "phase_1_checklist.md").write_text(phase_content, encoding='utf-8')
-    print(f"  Created: phase_1_checklist.md")
+        # Create decisions.md
+        decisions_content = DECISIONS_TEMPLATE.format(
+            project_id=project_id,
+            title=title,
+            date=date,
+        )
+        (project_dir / "decisions.md").write_text(decisions_content, encoding='utf-8')
+        print(f"  Created: decisions.md")
 
-    # Create manifest.md (for parallel execution)
-    manifest_content = MANIFEST_TEMPLATE.format(project_id=project_id)
-    (project_dir / "manifest.md").write_text(manifest_content, encoding='utf-8')
-    print(f"  Created: manifest.md")
+        # Create initial phase checklist
+        phase_content = PHASE_TEMPLATE.format(
+            project_id=project_id,
+            phase_num=1,
+            phase_name="TBD",
+        )
+        (project_dir / "phase_1_checklist.md").write_text(phase_content, encoding='utf-8')
+        print(f"  Created: phase_1_checklist.md")
 
-    # Update projects_index.md
-    print(f"\nSTEP 3: Update projects_index.md")
-    try:
-        add_project_to_index(project_id, title, "Planning")
-        print(f"  Added {project_id} to index")
-    except Exception as e:
-        print(f"  [WARN] Could not update index: {e}")
-        print(f"         Please add manually to projects_index.md")
+        # Create manifest.md (for parallel execution)
+        manifest_content = MANIFEST_TEMPLATE.format(project_id=project_id)
+        (project_dir / "manifest.md").write_text(manifest_content, encoding='utf-8')
+        print(f"  Created: manifest.md")
+
+        # Update projects_index.md. A failure here is fatal: roll back the
+        # directory so we never leave a project on disk that isn't indexed.
+        print(f"\nSTEP 3: Update projects_index.md")
+        try:
+            add_project_to_index(project_id, title, "Planning")
+            print(f"  Added {project_id} to index")
+        except Exception:
+            shutil.rmtree(project_dir, ignore_errors=True)
+            print(f"  [ERROR] Failed to update index; rolled back {project_dir}")
+            raise
 
     print(f"\n{'=' * 50}")
     print(f"PROJECT CREATED")

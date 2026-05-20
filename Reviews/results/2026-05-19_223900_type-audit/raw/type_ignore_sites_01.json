@@ -1,0 +1,32 @@
+[
+  {
+    "file": "game/strategy/combat/pre_tick_setup_registry.py",
+    "line": 90,
+    "content": "wrapped = setup  # type: ignore[assignment]"
+  },
+  {
+    "file": "game/strategy/data/deployed_group.py",
+    "line": 51,
+    "content": "cls._type_name = type_name  # type: ignore[attr-defined]"
+  },
+  {
+    "file": "game/strategy/systems/save_game_service.py",
+    "line": 74,
+    "content": "self._replay_store.set_save_root(_Path(save_path))  # type: ignore[attr-defined]"
+  },
+  {
+    "file": "game/strategy/systems/save_game_service.py",
+    "line": 82,
+    "content": "self._replay_store.clear_save_root()  # type: ignore[attr-defined]"
+  },
+  {
+    "file": "game/ui/assets/ship_theme_manager.py",
+    "line": 254,
+    "content": "ew, eh = int(expected[0]), int(expected[1])  # type: ignore[index]"
+  },
+  {
+    "file": "game/ui/panels/race_theme_gallery.py",
+    "line": 118,
+    "content": "def _discover_assets(self) -> List[Tuple[str, Dict[str, pygame.Surface]]]:  # type: ignore[override]"
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "file": "game/ui/panels/ship_detail_panel.py",
+    "line": 593,
+    "content": "label._proj315_color = color  # type: ignore[attr-defined]"
+  },
+  {
+    "file": "game/ui/panels/ship_detail_panel.py",
+    "line": 594,
+    "content": "label._proj315_strike = strike  # type: ignore[attr-defined]"
+  }
+]

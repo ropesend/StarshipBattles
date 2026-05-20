@@ -1,0 +1,72 @@
+[
+  {
+    "file": "game/strategy/data/deployed_group.py",
+    "line": 48,
+    "function": "_register_type",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/data/deployed_group.py",
+    "line": 49,
+    "function": "deco",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/commands/order_metadata_view.py",
+    "line": 76,
+    "function": "_registry",
+    "class": "OrderMetadataView",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_handlers/create_dyson_sphere.py",
+    "line": 39,
+    "function": "_precheck",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_handlers/create_dyson_sphere.py",
+    "line": 51,
+    "function": "_effect",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/systems/design_catalog.py",
+    "line": 236,
+    "function": "load_design_data",
+    "class": "DesignCatalog",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/ui/screens/gravity_target_editor.py",
+    "line": 164,
+    "function": "_button_handlers",
+    "class": "GravityTargetEditor",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_game_state_manager.py",
+    "line": 166,
+    "function": "_iter_snapshot_windows",
+    "class": "StrategyGameStateManager",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_modal_window.py",
+    "line": 273,
+    "function": "check_clicked_inside_or_blocking",
+    "class": "StrategyModalWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/workshop_ship_io.py",
+    "line": 67,
+    "function": "_design_catalog",
+    "class": "WorkshopShipIO",
+    "layer": "ui"
+  }
+]

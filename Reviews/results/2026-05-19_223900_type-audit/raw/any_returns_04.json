@@ -1,0 +1,660 @@
+[
+  {
+    "file": "game/app.py",
+    "line": 180,
+    "function": "_route_get",
+    "class": "Game",
+    "layer": "unknown"
+  },
+  {
+    "file": "game/app.py",
+    "line": 198,
+    "function": "active_scene",
+    "class": "Game",
+    "layer": "unknown"
+  },
+  {
+    "file": "game/app.py",
+    "line": 203,
+    "function": "battle_scene",
+    "class": "Game",
+    "layer": "unknown"
+  },
+  {
+    "file": "game/app.py",
+    "line": 208,
+    "function": "battle_setup",
+    "class": "Game",
+    "layer": "unknown"
+  },
+  {
+    "file": "game/app.py",
+    "line": 213,
+    "function": "strategy_scene",
+    "class": "Game",
+    "layer": "unknown"
+  },
+  {
+    "file": "game/app.py",
+    "line": 218,
+    "function": "builder_scene",
+    "class": "Game",
+    "layer": "unknown"
+  },
+  {
+    "file": "game/app.py",
+    "line": 223,
+    "function": "test_lab_scene",
+    "class": "Game",
+    "layer": "unknown"
+  },
+  {
+    "file": "game/app.py",
+    "line": 228,
+    "function": "menu_scene",
+    "class": "Game",
+    "layer": "unknown"
+  },
+  {
+    "file": "game/app.py",
+    "line": 233,
+    "function": "menu_ui_manager",
+    "class": "Game",
+    "layer": "unknown"
+  },
+  {
+    "file": "game/ai/protocols.py",
+    "line": 42,
+    "function": "position",
+    "class": "IGridEntity",
+    "layer": "ai"
+  },
+  {
+    "file": "game/ai/protocols.py",
+    "line": 75,
+    "function": "type",
+    "class": "IProjectile",
+    "layer": "ai"
+  },
+  {
+    "file": "game/core/formula_evaluator.py",
+    "line": 81,
+    "function": "_eval_node",
+    "class": null,
+    "layer": "core"
+  },
+  {
+    "file": "game/core/registry.py",
+    "line": 248,
+    "function": "get_validator",
+    "class": "RegistryManager",
+    "layer": "core"
+  },
+  {
+    "file": "game/core/registry.py",
+    "line": 339,
+    "function": "get_validator",
+    "class": null,
+    "layer": "core"
+  },
+  {
+    "file": "game/core/state_machine.py",
+    "line": 69,
+    "function": "state",
+    "class": "ScreenStateMachine",
+    "layer": "core"
+  },
+  {
+    "file": "game/core/state_machine.py",
+    "line": 133,
+    "function": "pop_and_return",
+    "class": "ScreenStateMachine",
+    "layer": "core"
+  },
+  {
+    "file": "game/core/protocols/combat.py",
+    "line": 22,
+    "function": "position",
+    "class": "ICombatant",
+    "layer": "core"
+  },
+  {
+    "file": "game/core/protocols/combat.py",
+    "line": 83,
+    "function": "position",
+    "class": "ICombatShip",
+    "layer": "core"
+  },
+  {
+    "file": "game/core/protocols/common.py",
+    "line": 27,
+    "function": "location",
+    "class": "ILocatable",
+    "layer": "core"
+  },
+  {
+    "file": "game/simulation/components/abilities/base.py",
+    "line": 258,
+    "function": "get_effective_stat",
+    "class": "Ability",
+    "layer": "simulation"
+  },
+  {
+    "file": "game/simulation/systems/fighter_reboard.py",
+    "line": 294,
+    "function": "_ensure_overflow_fighter_group",
+    "class": null,
+    "layer": "simulation"
+  },
+  {
+    "file": "game/simulation/systems/fighter_reboard.py",
+    "line": 301,
+    "function": "_ensure_overflow_group",
+    "class": null,
+    "layer": "simulation"
+  },
+  {
+    "file": "game/strategy/engine/environmental_hazard_engine.py",
+    "line": 65,
+    "function": "_get_ship_mutator",
+    "class": "EnvironmentalHazardEngine",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/planet_modifier_effect_engine.py",
+    "line": 34,
+    "function": "_get_planet_mutator",
+    "class": "PlanetModifierEffectEngine",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/services/planet_write_service.py",
+    "line": 125,
+    "function": "pop_construction_item",
+    "class": "PlanetWriteService",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/ui/screens/empire_build_queue_filter_manager.py",
+    "line": 223,
+    "function": "sort_key",
+    "class": "BuildQueueFilterManager",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/empire_build_queue_window.py",
+    "line": 301,
+    "function": "search_entry",
+    "class": "EmpireBuildQueueWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/empire_build_queue_window.py",
+    "line": 306,
+    "function": "btn_apply_filters",
+    "class": "EmpireBuildQueueWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/empire_build_queue_window.py",
+    "line": 363,
+    "function": "get_hex_for_source",
+    "class": "EmpireBuildQueueWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/fleet_report_sidebar.py",
+    "line": 470,
+    "function": "check_button_presses",
+    "class": "FleetReportSidebar",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/fleet_report_window.py",
+    "line": 248,
+    "function": "process_event",
+    "class": "FleetReportWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/keybindings_scene.py",
+    "line": 166,
+    "function": "group_height",
+    "class": "KeybindingsScene",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_list_window.py",
+    "line": 211,
+    "function": "filter_types",
+    "class": "PlanetListWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_list_window.py",
+    "line": 221,
+    "function": "filter_owner",
+    "class": "PlanetListWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_list_window.py",
+    "line": 231,
+    "function": "filter_effects",
+    "class": "PlanetListWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_list_window.py",
+    "line": 241,
+    "function": "filter_ranges",
+    "class": "PlanetListWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_list_window.py",
+    "line": 292,
+    "function": "_capture_current_state",
+    "class": "PlanetListWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/species_selector_mixin.py",
+    "line": 147,
+    "function": "_get_active_race_config",
+    "class": "RaceConfigResolverMixin",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_renderer.py",
+    "line": 115,
+    "function": "_get_font",
+    "class": "StrategyRenderer",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_renderer.py",
+    "line": 121,
+    "function": "camera",
+    "class": "StrategyRenderer",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_renderer.py",
+    "line": 125,
+    "function": "galaxy",
+    "class": "StrategyRenderer",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_renderer.py",
+    "line": 129,
+    "function": "systems",
+    "class": "StrategyRenderer",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_renderer.py",
+    "line": 133,
+    "function": "empires",
+    "class": "StrategyRenderer",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_renderer.py",
+    "line": 137,
+    "function": "hex_size",
+    "class": "StrategyRenderer",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_renderer.py",
+    "line": 141,
+    "function": "screen_width",
+    "class": "StrategyRenderer",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_renderer.py",
+    "line": 145,
+    "function": "screen_height",
+    "class": "StrategyRenderer",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_renderer.py",
+    "line": 149,
+    "function": "SIDEBAR_WIDTH",
+    "class": "StrategyRenderer",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_renderer.py",
+    "line": 153,
+    "function": "TOP_BAR_HEIGHT",
+    "class": "StrategyRenderer",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_renderer.py",
+    "line": 157,
+    "function": "empire_assets",
+    "class": "StrategyRenderer",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_renderer.py",
+    "line": 174,
+    "function": "_build_hex_outline_data",
+    "class": "StrategyRenderer",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_renderer.py",
+    "line": 177,
+    "function": "_get_hex_outline_data",
+    "class": "StrategyRenderer",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_screen_assets.py",
+    "line": 54,
+    "function": "get_object_asset",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_ui_action_router.py",
+    "line": 35,
+    "function": "scene",
+    "class": "UIActionRouter",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/workshop_screen.py",
+    "line": 193,
+    "function": "_get_vehicle_classes",
+    "class": "DesignWorkshopScreen",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/workshop_screen.py",
+    "line": 369,
+    "function": "selected_component",
+    "class": "DesignWorkshopScreen",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/workshop_screen.py",
+    "line": 377,
+    "function": "dragged_item",
+    "class": "DesignWorkshopScreen",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/workshop_screen.py",
+    "line": 386,
+    "function": "ship",
+    "class": "DesignWorkshopScreen",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/workshop_screen.py",
+    "line": 390,
+    "function": "selected_components",
+    "class": "DesignWorkshopScreen",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/workshop_screen.py",
+    "line": 398,
+    "function": "available_components",
+    "class": "DesignWorkshopScreen",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/workshop_screen.py",
+    "line": 578,
+    "function": "_get_button_definitions",
+    "class": "DesignWorkshopScreen",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/modifier_row.py",
+    "line": 129,
+    "function": "build_ui",
+    "class": "ModifierControlRow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_definitions.py",
+    "line": 34,
+    "function": "get_value",
+    "class": "StatDefinition",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_definitions.py",
+    "line": 43,
+    "function": "format_value",
+    "class": "StatDefinition",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_definitions.py",
+    "line": 48,
+    "function": "get_display_unit",
+    "class": "StatDefinition",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_definitions.py",
+    "line": 53,
+    "function": "get_status",
+    "class": "StatDefinition",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 36,
+    "function": "_get_constant_consumption",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 52,
+    "function": "_get_max_endurance",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 66,
+    "function": "_discover_resources",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 89,
+    "function": "sort_key",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 98,
+    "function": "_build_resource_rows",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 182,
+    "function": "get_logistics_rows",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 191,
+    "function": "get_construction_rows",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 199,
+    "function": "res_getter",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 260,
+    "function": "get_strategic_rows",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 267,
+    "function": "rate_getter",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 277,
+    "function": "cap_getter",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 286,
+    "function": "yard_getter",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 295,
+    "function": "shipyard_getter",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 304,
+    "function": "max_mass_getter",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 314,
+    "function": "staging_getter",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 337,
+    "function": "get_cargo_rows",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 344,
+    "function": "cap_getter",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 405,
+    "function": "get_planetary_engineering_rows",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 415,
+    "function": "rate_getter",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 452,
+    "function": "get_planetary_defense_rows",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 465,
+    "function": "drain_getter",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 525,
+    "function": "get_strategic_modifier_rows",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 537,
+    "function": "mult_getter",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 557,
+    "function": "get_superweapon_rows",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 569,
+    "function": "count_getter",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/weapons_panel.py",
+    "line": 170,
+    "function": "hovered_weapon",
+    "class": "WeaponsReportPanel",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/galaxy_test/galaxy_mode.py",
+    "line": 63,
+    "function": "create_ui",
+    "class": "GalaxyModeHelper",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_render/planets.py",
+    "line": 57,
+    "function": "load_planet_v3_image",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/services/validation_service.py",
+    "line": 46,
+    "function": "_get_validator",
+    "class": "ValidationService",
+    "layer": "ui"
+  }
+]

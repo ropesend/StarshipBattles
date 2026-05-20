@@ -1,0 +1,44 @@
+[
+  {
+    "file": "game/strategy/engine/handlers/construction_queue.py",
+    "line": 106,
+    "function": "_resolve_design_data",
+    "class": "AddToConstructionQueueCommandHandler",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_handlers/implode_planet.py",
+    "line": 39,
+    "function": "_effect",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_handlers/stellerate_star.py",
+    "line": 47,
+    "function": "_precheck",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_handlers/stellerate_star.py",
+    "line": 54,
+    "function": "_effect",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/ui/screens/transfer_mass_preview.py",
+    "line": 189,
+    "function": "_get_catalog",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/water_target_editor.py",
+    "line": 173,
+    "function": "_button_handlers",
+    "class": "WaterTargetEditor",
+    "layer": "ui"
+  }
+]

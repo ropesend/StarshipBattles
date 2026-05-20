@@ -4,10 +4,10 @@
   "skills": {
     "claude-consult": {
       "agents": {
-        "claude": 1
+        "claude": 2
       },
-      "count": 1,
-      "last_used": "2026-05-18T05:32:40Z"
+      "count": 2,
+      "last_used": "2026-05-20T05:18:13Z"
     },
     "claude-discuss-start": {
       "agents": {
@@ -74,10 +74,10 @@
     },
     "codex-starship-consult-respond": {
       "agents": {
-        "codex": 2
+        "codex": 4
       },
-      "count": 2,
-      "last_used": "2026-05-19T14:34:15Z"
+      "count": 4,
+      "last_used": "2026-05-20T06:11:03Z"
     },
     "codex-starship-performance-profiling": {
       "agents": {
@@ -127,6 +127,13 @@
       },
       "count": 27,
       "last_used": "2026-05-08T23:20:05Z"
+    },
+    "ocode-type-audit": {
+      "agents": {
+        "ocode": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-20T06:04:02Z"
     },
     "skill-creator": {
       "agents": {

@@ -1,14 +1,66 @@
 """Utilities for managing projects_index.md."""
+import os
 import re
+import time
+import uuid
+from contextlib import contextmanager
 from pathlib import Path
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Iterator, List, Optional
 from datetime import datetime
 
 from .config import (
     INDEX_FILE, VALID_STATUSES, ACTIVE_DIR, ARCHIVED_DIR,
     DEEP_ARCHIVE_DIR, DEEP_ARCHIVE_INDEX,
 )
+
+# Reclaim a lock older than this; a creator normally holds it for milliseconds,
+# so a minute means "the holder crashed", not "still working" (LLM-pace, per
+# CLAUDE.md — timeout ~= 2x expected, not 10x).
+_LOCK_STALE_SECONDS = 60.0
+
+
+def _lock_path() -> Path:
+    """Lockfile lives next to the index so test redirection of INDEX_FILE moves it too."""
+    return INDEX_FILE.parent / ".index.lock"
+
+
+@contextmanager
+def index_lock(timeout: float = 30.0, poll: float = 0.05) -> Iterator[None]:
+    """Cross-process mutex around the project-index reservation transaction.
+
+    Uses atomic ``os.mkdir`` as the lock primitive — works on Windows without
+    ``fcntl`` and needs no third-party deps. Callers wrap the whole
+    reserve-id -> mkdir -> add-to-index sequence so concurrent creators cannot
+    collide on a PROJ id or interleave a read-modify-write of the index.
+    """
+    lock = _lock_path()
+    deadline = time.monotonic() + timeout
+    while True:
+        try:
+            os.mkdir(lock)
+            break
+        except FileExistsError:
+            # Reclaim a stale lock left by a crashed/killed creator.
+            try:
+                age = time.time() - lock.stat().st_mtime
+                if age > _LOCK_STALE_SECONDS:
+                    os.rmdir(lock)
+                    continue
+            except FileNotFoundError:
+                continue  # released between our mkdir and stat — retry now
+            if time.monotonic() >= deadline:
+                raise TimeoutError(
+                    f"Could not acquire project index lock at {lock} within {timeout}s"
+                )
+            time.sleep(poll)
+    try:
+        yield
+    finally:
+        try:
+            os.rmdir(lock)
+        except OSError:  # Intentional: best-effort release; stale-reclaim covers leaks
+            pass
 
 
 @dataclass
@@ -27,8 +79,15 @@ def read_projects_index() -> str:
 
 
 def write_projects_index(content: str) -> None:
-    """Write the projects index file."""
-    INDEX_FILE.write_text(content, encoding='utf-8')
+    """Write the projects index file atomically (temp + rename).
+
+    A plain ``write_text`` truncates in place, so a crash mid-write corrupts
+    the index. Writing a sibling temp file and ``os.replace``-ing it makes the
+    swap atomic on both POSIX and Windows.
+    """
+    tmp = INDEX_FILE.parent / f".projects_index.{os.getpid()}.{uuid.uuid4().hex}.tmp"
+    tmp.write_text(content, encoding='utf-8')
+    os.replace(tmp, INDEX_FILE)
 
 
 def get_next_project_id() -> str:

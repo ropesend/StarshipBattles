@@ -1,0 +1,44 @@
+[
+  {
+    "file": "game/app_bootstrap.py",
+    "line": 310,
+    "function": "_replay_combat_lab_fallback",
+    "class": null,
+    "layer": "unknown"
+  },
+  {
+    "file": "game/strategy/adapters/simulation_adapter.py",
+    "line": 488,
+    "function": "_lookup",
+    "class": "SimulationBattleResolver",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/ui/pygame_gui_patch.py",
+    "line": 90,
+    "function": "_to_tuple",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/atmosphere_target_editor.py",
+    "line": 223,
+    "function": "_button_handlers",
+    "class": "AtmosphereTargetEditor",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/radiation_shield_editor.py",
+    "line": 176,
+    "function": "_button_handlers",
+    "class": "RadiationShieldEditor",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/test_lab/details/validation.py",
+    "line": 39,
+    "function": "_phase_color",
+    "class": null,
+    "layer": "ui"
+  }
+]
