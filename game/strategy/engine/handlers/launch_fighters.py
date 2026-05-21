@@ -64,11 +64,7 @@ class LaunchFightersCommandHandler(BaseCommandHandler):
             return ValidationResult.error(
                 "Launch Fighters (fleet) requires ship_instance_id."
             )
-        carrier = None
-        for ship in fleet.ships:
-            if str(ship.instance_id) == str(cmd.ship_instance_id):
-                carrier = ship
-                break
+        carrier = self._find_ship(fleet, cmd.ship_instance_id)
         if carrier is None:
             return ValidationResult.error(
                 f"Ship {cmd.ship_instance_id!r} not found in Fleet {fleet.id}."

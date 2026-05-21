@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
     from game.strategy.data.fleet import Fleet
     from game.strategy.data.galaxy import Galaxy
+    from game.strategy.data.ship_instance import ShipInstance
 
 
 @dataclass
@@ -157,6 +158,22 @@ class BaseOrderHandler:
             )
             self._ship_mutator = ShipInstanceWriteService()
         return self._ship_mutator
+
+    @staticmethod
+    def _find_ship(
+        fleet: "Fleet", ship_instance_id: Any
+    ) -> Optional["ShipInstance"]:
+        """Resolve a ship within ``fleet`` by stringified instance id.
+
+        DUP-X-1 (PROJ-465): consolidated from five byte-identical copies
+        in the launch/recover/lay vehicle order handlers. Compares
+        ``str(ship.instance_id) == str(ship_instance_id)`` so callers may
+        pass either an int or a str id.
+        """
+        for ship in fleet.ships:
+            if str(ship.instance_id) == str(ship_instance_id):
+                return ship
+        return None
 
     def _emit_event(
         self,

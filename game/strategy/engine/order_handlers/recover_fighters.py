@@ -230,15 +230,6 @@ class RecoverFightersOrderHandler(BaseOrderHandler):
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _find_ship(
-        fleet: Fleet, ship_instance_id: str
-    ) -> Optional[ShipInstance]:
-        for ship in fleet.ships:
-            if str(ship.instance_id) == str(ship_instance_id):
-                return ship
-        return None
-
-    @staticmethod
     def _find_fighter_wing(
         empire: "Empire",
         *,

@@ -147,6 +147,42 @@ class TestTacticalFighterLaunchDesignInstance:
         assert hps == [70, 71, 72]
 
 
+class TestLaunchInBattleSharedImplementation:
+    """Cluster 8 (PROJ-465): ``launch_fighters_in_battle`` and
+    ``launch_satellites_in_battle`` share one implementation.
+
+    Both public methods must remain (AI carrier controller resolves them
+    by name via ``getattr``) and must spawn identically for the same
+    inputs — they differ only in docstring.
+    """
+
+    def test_both_methods_spawn_identically(self, fresh_registries):
+        engine = _make_engine(fresh_registries)
+        carrier = _make_carrier_stub(fresh_registries)
+        engine.ships = [carrier]
+        engine.ai_controllers = []
+
+        cv = CarriedVehicle(
+            design_id="test_fighter",
+            design_data=_minimal_fighter_design(),
+            vehicle_type="fighter",
+            mass=20.0,
+            current_hp=77,
+        )
+
+        spawned_f = engine.launch_fighters_in_battle(carrier, [cv])
+        spawned_s = engine.launch_satellites_in_battle(carrier, [cv])
+
+        assert len(spawned_f) == 1
+        assert len(spawned_s) == 1
+        assert spawned_f[0].current_hp == pytest.approx(spawned_s[0].current_hp)
+
+    def test_both_public_names_present(self, fresh_registries):
+        engine = _make_engine(fresh_registries)
+        assert callable(getattr(engine, "launch_fighters_in_battle"))
+        assert callable(getattr(engine, "launch_satellites_in_battle"))
+
+
 class TestLegacyFighterClassLaunchRemoved:
     """PROJ-FMS-C audit Fix 1: the legacy class-string LAUNCH path is gone.
 

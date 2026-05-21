@@ -22,6 +22,52 @@ if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
 
 
+def _contribute_launch(
+    ship: "Ship",
+    comp: "Component",
+    *,
+    launch_ability: str,
+    capacity_field: str,
+    per_wave_field: str,
+    cycle_field: str,
+    rate_field: str,
+) -> None:
+    """Cluster 19 (PROJ-465): shared tactical-launch aggregation body.
+
+    The fighter and satellite contributors are structurally identical,
+    differing only in the gating ability name and the four ship fields
+    they accumulate into. Behaviour, arithmetic, gating, and iteration
+    order are preserved exactly — the only change is reading/writing the
+    target fields by name via ``getattr``/``setattr``.
+    """
+    if not comp.has_ability(launch_ability):
+        return
+
+    # Co-located VehicleStorage contributes to the capacity field. Storage
+    # without a launch bay still rolls up via launch-ability presence on
+    # the same component — matches the pre-audit gating shape.
+    setattr(
+        ship,
+        capacity_field,
+        getattr(ship, capacity_field)
+        + sum(
+            getattr(ab, "capacity", 0)
+            for ab in comp.get_abilities("VehicleStorage")
+        ),
+    )
+
+    for tl in comp.get_abilities(launch_ability):
+        cap = int(getattr(tl, "capacity_per_action", 0) or 0)
+        if cap > 0:
+            setattr(ship, per_wave_field, getattr(ship, per_wave_field) + cap)
+        cycle = float(getattr(tl, "cycle_time", 0.0) or 0.0)
+        if cycle > getattr(ship, cycle_field):
+            setattr(ship, cycle_field, cycle)
+        rate = float(getattr(tl, "launch_rate_tons_per_sec", 0.0) or 0.0)
+        if rate > 0:
+            setattr(ship, rate_field, getattr(ship, rate_field) + rate)
+
+
 def contribute_vehicle_launch(
     ship: "Ship", comp: "Component", acc: StatAccumulator
 ) -> None:
@@ -44,26 +90,15 @@ def contribute_vehicle_launch(
     max ``cycle_time``. The authoritative tactical-throughput dial is
     ``fighter_launch_rate_tons_per_sec``.
     """
-    if not comp.has_ability("TacticalFighterLaunch"):
-        return
-
-    # Co-located VehicleStorage contributes to fighter_capacity. Storage
-    # without a launch bay still rolls up via TacticalFighterLaunch presence
-    # on the same component — matches the pre-audit gating shape.
-    ship.fighter_capacity += sum(
-        getattr(ab, "capacity", 0) for ab in comp.get_abilities("VehicleStorage")
+    _contribute_launch(
+        ship,
+        comp,
+        launch_ability="TacticalFighterLaunch",
+        capacity_field="fighter_capacity",
+        per_wave_field="fighters_per_wave",
+        cycle_field="launch_cycle",
+        rate_field="fighter_launch_rate_tons_per_sec",
     )
-
-    for tl in comp.get_abilities("TacticalFighterLaunch"):
-        cap = int(getattr(tl, "capacity_per_action", 0) or 0)
-        if cap > 0:
-            ship.fighters_per_wave += cap
-        cycle = float(getattr(tl, "cycle_time", 0.0) or 0.0)
-        if cycle > ship.launch_cycle:
-            ship.launch_cycle = cycle
-        rate = float(getattr(tl, "launch_rate_tons_per_sec", 0.0) or 0.0)
-        if rate > 0:
-            ship.fighter_launch_rate_tons_per_sec += rate
 
 
 def contribute_tactical_satellite_launch(
@@ -77,27 +112,15 @@ def contribute_tactical_satellite_launch(
     a carrier mounting both fighter and satellite tactical bays exposes
     both stat sets independently.
     """
-    if not comp.has_ability("TacticalSatelliteLaunch"):
-        return
-
-    # Co-located VehicleStorage contributes to satellite_capacity. Mirrors
-    # the fighter gating shape: storage on a non-launch component does
-    # not roll up unless a TacticalSatelliteLaunch is present on the
-    # same component.
-    ship.satellite_capacity += sum(
-        getattr(ab, "capacity", 0) for ab in comp.get_abilities("VehicleStorage")
+    _contribute_launch(
+        ship,
+        comp,
+        launch_ability="TacticalSatelliteLaunch",
+        capacity_field="satellite_capacity",
+        per_wave_field="satellites_per_wave",
+        cycle_field="satellite_launch_cycle",
+        rate_field="satellite_launch_rate_tons_per_sec",
     )
-
-    for tl in comp.get_abilities("TacticalSatelliteLaunch"):
-        cap = int(getattr(tl, "capacity_per_action", 0) or 0)
-        if cap > 0:
-            ship.satellites_per_wave += cap
-        cycle = float(getattr(tl, "cycle_time", 0.0) or 0.0)
-        if cycle > ship.satellite_launch_cycle:
-            ship.satellite_launch_cycle = cycle
-        rate = float(getattr(tl, "launch_rate_tons_per_sec", 0.0) or 0.0)
-        if rate > 0:
-            ship.satellite_launch_rate_tons_per_sec += rate
 
 
 def contribute_vehicle_bay(

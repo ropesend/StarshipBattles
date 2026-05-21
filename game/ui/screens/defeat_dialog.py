@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 import pygame
 import pygame_gui
 
-from game.ui.screens.strategy_modal_window import StrategyModalWindow
+from game.ui.screens.strategy_modal_window import DismissableModalDialog
 
 if TYPE_CHECKING:
     from game.ui.screens.strategy_window_manager import StrategyWindowManager
@@ -40,7 +40,7 @@ def _format_body(empire_name: str) -> str:
     )
 
 
-class DefeatDialog(StrategyModalWindow):
+class DefeatDialog(DismissableModalDialog):
     """Modal dialog shown once when an empire is first detected as defeated.
 
     Inherits from :class:`StrategyModalWindow` so it auto-registers with
@@ -103,19 +103,3 @@ class DefeatDialog(StrategyModalWindow):
             manager=manager,
             container=self,
         )
-
-    def process_event(self, event: pygame.event.Event) -> bool:
-        """Handle the dismiss-button click.
-
-        Returns ``True`` if this dialog consumed the event so pygame_gui
-        does not deliver it elsewhere; otherwise delegates to the base
-        class.
-        """
-        if (
-            event.type == pygame_gui.UI_BUTTON_PRESSED
-            and getattr(self, "_dismiss_button", None) is not None
-            and event.ui_element is self._dismiss_button
-        ):
-            self.kill()
-            return True
-        return super().process_event(event)

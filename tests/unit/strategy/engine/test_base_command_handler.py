@@ -12,6 +12,32 @@ from game.core.exceptions import ValidationException
 from game.strategy.engine.handlers import BaseCommandHandler
 
 
+class TestFindShip:
+    """DUP-X-7 (PROJ-465): shared `_find_ship` on BaseCommandHandler."""
+
+    def test_find_ship_matches_by_str_instance_id(self):
+        ship_a = Mock()
+        ship_a.instance_id = 7
+        ship_b = Mock()
+        ship_b.instance_id = "abc"
+        fleet = Mock()
+        fleet.ships = [ship_a, ship_b]
+
+        assert BaseCommandHandler._find_ship(fleet, "7") is ship_a
+        assert BaseCommandHandler._find_ship(fleet, 7) is ship_a
+        assert BaseCommandHandler._find_ship(fleet, "abc") is ship_b
+        assert BaseCommandHandler._find_ship(fleet, "missing") is None
+
+    def test_find_ship_returns_first_match(self):
+        ship_a = Mock()
+        ship_a.instance_id = "x"
+        ship_b = Mock()
+        ship_b.instance_id = "x"
+        fleet = Mock()
+        fleet.ships = [ship_a, ship_b]
+        assert BaseCommandHandler._find_ship(fleet, "x") is ship_a
+
+
 class TestResolveFleet:
     """Tests for BaseCommandHandler._resolve_fleet()."""
 

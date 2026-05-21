@@ -71,6 +71,53 @@ def test_order_execution_result_default_values():
     assert result.amount_transferred == 0
 
 
+def test_base_order_handler_find_ship_matches_by_str_instance_id():
+    """DUP-X-1: `_find_ship` is shared on BaseOrderHandler.
+
+    Characterizes the byte-identical behaviour the 5 order handlers
+    previously each owned: linear scan of ``fleet.ships`` comparing
+    ``str(ship.instance_id) == str(ship_instance_id)``.
+    """
+    ship_a = MagicMock()
+    ship_a.instance_id = 7
+    ship_b = MagicMock()
+    ship_b.instance_id = "abc"
+    fleet = MagicMock()
+    fleet.ships = [ship_a, ship_b]
+
+    # int/str coercion: passing "7" matches ship_a whose id is int 7.
+    assert BaseOrderHandler._find_ship(fleet, "7") is ship_a
+    assert BaseOrderHandler._find_ship(fleet, 7) is ship_a
+    assert BaseOrderHandler._find_ship(fleet, "abc") is ship_b
+    assert BaseOrderHandler._find_ship(fleet, "missing") is None
+
+
+def test_find_ship_shared_across_all_order_handlers():
+    """All 5 vehicle order handlers resolve `_find_ship` to the base copy."""
+    from game.strategy.engine.order_handlers.launch_fighters import (
+        LaunchFightersOrderHandler,
+    )
+    from game.strategy.engine.order_handlers.launch_satellites import (
+        LaunchSatellitesOrderHandler,
+    )
+    from game.strategy.engine.order_handlers.lay_mines import LayMinesOrderHandler
+    from game.strategy.engine.order_handlers.recover_fighters import (
+        RecoverFightersOrderHandler,
+    )
+    from game.strategy.engine.order_handlers.recover_satellites import (
+        RecoverSatellitesOrderHandler,
+    )
+
+    for cls in (
+        LaunchFightersOrderHandler,
+        LaunchSatellitesOrderHandler,
+        LayMinesOrderHandler,
+        RecoverFightersOrderHandler,
+        RecoverSatellitesOrderHandler,
+    ):
+        assert cls._find_ship is BaseOrderHandler._find_ship
+
+
 def test_base_order_handler_emit_event_with_no_bus():
     handler = BaseOrderHandler(event_bus=None)
     # Should be a silent no-op (no AttributeError on `None.log_event`).

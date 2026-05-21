@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+import pygame_gui
 from pygame_gui.elements import UIWindow
 
 if TYPE_CHECKING:
@@ -290,3 +291,31 @@ class StrategyModalWindow(UIWindow):
         if not self.visible:
             return False
         return super().check_clicked_inside_or_blocking(event)
+
+
+class DismissableModalDialog(StrategyModalWindow):
+    """Strategy modal that closes itself when its ``_dismiss_button`` is pressed.
+
+    Cluster 7 (PROJ-465): owns the character-for-character identical
+    ``process_event`` previously duplicated in :class:`DefeatDialog` and
+    :class:`TurnFailedDialog`. Subclasses build their own body and a
+    ``self._dismiss_button`` (or set it to ``None`` under bypass-init);
+    this base handles the dismiss click and delegates everything else to
+    :class:`StrategyModalWindow`.
+    """
+
+    def process_event(self, event: "Any") -> bool:
+        """Handle the dismiss-button click.
+
+        Returns ``True`` if this dialog consumed the event so pygame_gui
+        does not deliver it elsewhere; otherwise delegates to the base
+        class.
+        """
+        if (
+            event.type == pygame_gui.UI_BUTTON_PRESSED
+            and getattr(self, "_dismiss_button", None) is not None
+            and event.ui_element is self._dismiss_button
+        ):
+            self.kill()
+            return True
+        return super().process_event(event)

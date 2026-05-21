@@ -163,6 +163,19 @@ class BaseCommandHandler:
         return BaseCommandHandler._resolve_fleet(session, fleet_id, empire_id=active.id)
 
     @staticmethod
+    def _find_ship(fleet: 'Fleet', ship_instance_id: Any) -> Any:
+        """Resolve a ship within ``fleet`` by stringified instance id.
+
+        DUP-X-7 (PROJ-465): consolidated from five byte-identical inline
+        loops in the launch/recover/lay command handlers. Returns the
+        first ship whose ``str(instance_id)`` matches, else ``None``.
+        """
+        for ship in fleet.ships:
+            if str(ship.instance_id) == str(ship_instance_id):
+                return ship
+        return None
+
+    @staticmethod
     def _resolve_fleet_required(session: 'GameSession', fleet_id: int, empire_id: int = None) -> 'Fleet':
         """Resolve a fleet by ID, raising ValidationException if not found.
 

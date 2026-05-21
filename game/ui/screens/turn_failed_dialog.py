@@ -19,7 +19,7 @@ import pygame
 import pygame_gui
 
 from game.core.exceptions import EnginePhaseError, TurnFailedError
-from game.ui.screens.strategy_modal_window import StrategyModalWindow
+from game.ui.screens.strategy_modal_window import DismissableModalDialog
 
 if TYPE_CHECKING:
     from game.ui.screens.strategy_window_manager import StrategyWindowManager
@@ -55,7 +55,7 @@ def _format_body(error: TurnFailedError | EnginePhaseError) -> str:
     )
 
 
-class TurnFailedDialog(StrategyModalWindow):
+class TurnFailedDialog(DismissableModalDialog):
     """Modal dialog shown when a turn-processing phase fails.
 
     Inherits from :class:`StrategyModalWindow` so it auto-registers with
@@ -119,19 +119,3 @@ class TurnFailedDialog(StrategyModalWindow):
             manager=manager,
             container=self,
         )
-
-    def process_event(self, event: pygame.event.Event) -> bool:
-        """Handle the dismiss-button click.
-
-        Returns ``True`` if this dialog consumed the event so pygame_gui
-        does not deliver it elsewhere; otherwise delegates to the base
-        class.
-        """
-        if (
-            event.type == pygame_gui.UI_BUTTON_PRESSED
-            and getattr(self, "_dismiss_button", None) is not None
-            and event.ui_element is self._dismiss_button
-        ):
-            self.kill()
-            return True
-        return super().process_event(event)

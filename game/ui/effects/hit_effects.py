@@ -143,12 +143,27 @@ def _draw_shield_hit(
     screen.blit(surf, (int(pos[0]) - size, int(pos[1]) - size))
 
 
-def _draw_armor_hit(
+def _draw_radial_hit(
     screen: pygame.Surface, pos: Tuple, effect: HitEffect,
-    t: float, alpha: int, zoom: float
+    t: float, alpha: int, zoom: float,
+    *,
+    effect_type: HitEffectType,
+    circle_color: Tuple[int, int, int],
+    circle_width_scale: int,
+    angle_step: int,
+    line_length_mult: float,
+    line_width: int,
 ) -> None:
-    """Expanding circle + 6 radiating lines, orange."""
-    config = _EFFECT_CONFIG[HitEffectType.ARMOR_HIT]
+    """Cluster 10 (PROJ-465): shared expanding-circle + radiating-lines
+    body for :func:`_draw_armor_hit` and :func:`_draw_component_destroyed`.
+
+    The two callers differ only in parameters: circle color, circle
+    outline width scale (``2`` vs ``3``), the line angular step (``60``
+    -> 6 lines vs ``45`` -> 8 lines), the line-length multiplier (``1.3``
+    vs ``1.4``), and the per-line width (``1`` vs ``2``). All arithmetic,
+    early-return guards, and draw ordering are preserved exactly.
+    """
+    config = _EFFECT_CONFIG[effect_type]
     max_r = effect.ship_radius * config['radius_scale'] * zoom
     r = int(max_r * t)
     if r < 1:
@@ -158,19 +173,34 @@ def _draw_armor_hit(
     surf = pygame.Surface((size * 2, size * 2), pygame.SRCALPHA)
     center = (size, size)
 
-    color = (255, 160, 0, alpha)
-    pygame.draw.circle(surf, color, center, r, max(1, int(2 * (1 - t))))
+    color = (*circle_color, alpha)
+    pygame.draw.circle(surf, color, center, r, max(1, int(circle_width_scale * (1 - t))))
 
-    # 6 radiating lines
     line_color = (255, 200, 50, alpha)
-    line_len = r * 1.3
-    for angle_deg in range(0, 360, 60):
+    line_len = r * line_length_mult
+    for angle_deg in range(0, 360, angle_step):
         angle = math.radians(angle_deg)
         end = (int(center[0] + math.cos(angle) * line_len),
                int(center[1] + math.sin(angle) * line_len))
-        pygame.draw.line(surf, line_color, center, end, 1)
+        pygame.draw.line(surf, line_color, center, end, line_width)
 
     screen.blit(surf, (int(pos[0]) - size, int(pos[1]) - size))
+
+
+def _draw_armor_hit(
+    screen: pygame.Surface, pos: Tuple, effect: HitEffect,
+    t: float, alpha: int, zoom: float
+) -> None:
+    """Expanding circle + 6 radiating lines, orange."""
+    _draw_radial_hit(
+        screen, pos, effect, t, alpha, zoom,
+        effect_type=HitEffectType.ARMOR_HIT,
+        circle_color=(255, 160, 0),
+        circle_width_scale=2,
+        angle_step=60,
+        line_length_mult=1.3,
+        line_width=1,
+    )
 
 
 def _draw_component_destroyed(
@@ -178,29 +208,15 @@ def _draw_component_destroyed(
     t: float, alpha: int, zoom: float
 ) -> None:
     """Larger expanding circle + 8 radiating lines, deep orange."""
-    config = _EFFECT_CONFIG[HitEffectType.COMPONENT_DESTROYED]
-    max_r = effect.ship_radius * config['radius_scale'] * zoom
-    r = int(max_r * t)
-    if r < 1:
-        return
-
-    size = int(max_r) + 4
-    surf = pygame.Surface((size * 2, size * 2), pygame.SRCALPHA)
-    center = (size, size)
-
-    color = (255, 120, 0, alpha)
-    pygame.draw.circle(surf, color, center, r, max(1, int(3 * (1 - t))))
-
-    # 8 radiating lines
-    line_color = (255, 200, 50, alpha)
-    line_len = r * 1.4
-    for angle_deg in range(0, 360, 45):
-        angle = math.radians(angle_deg)
-        end = (int(center[0] + math.cos(angle) * line_len),
-               int(center[1] + math.sin(angle) * line_len))
-        pygame.draw.line(surf, line_color, center, end, 2)
-
-    screen.blit(surf, (int(pos[0]) - size, int(pos[1]) - size))
+    _draw_radial_hit(
+        screen, pos, effect, t, alpha, zoom,
+        effect_type=HitEffectType.COMPONENT_DESTROYED,
+        circle_color=(255, 120, 0),
+        circle_width_scale=3,
+        angle_step=45,
+        line_length_mult=1.4,
+        line_width=2,
+    )
 
 
 def _draw_ship_destroyed(

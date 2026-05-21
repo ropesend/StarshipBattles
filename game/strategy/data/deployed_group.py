@@ -303,6 +303,31 @@ class _ShipBearingDeployedGroup(DeployedGroup):
             return True
         return False
 
+    @classmethod
+    def _from_dict_payload(cls, data: Dict[str, Any]) -> "_ShipBearingDeployedGroup":
+        """DUP-X-5 (PROJ-465): shared deserialiser for ship-bearing groups.
+
+        ``FighterWing`` and ``SatelliteConstellation`` previously owned
+        byte-identical copies of this method. ``cls(...)`` dispatches to
+        the concrete subclass, so the same body builds the correct type.
+        Materialised ``ShipInstance`` entries pass through unchanged;
+        dict entries are rehydrated via :meth:`ShipInstance.from_dict`.
+        """
+        from game.strategy.data.ship_instance import ShipInstance
+
+        group = cls(
+            group_id=data["id"],
+            owner_id=int(data["owner_id"]),
+            location=cls._decode_location(data["location"]),
+            display_name=str(data.get("display_name", "") or ""),
+        )
+        for ship_data in data.get("ships", []) or []:
+            if isinstance(ship_data, ShipInstance):
+                group.ships.append(ship_data)
+            elif isinstance(ship_data, dict):
+                group.ships.append(ShipInstance.from_dict(ship_data))
+        return group
+
 
 @_register_type("fighter_wing")
 class FighterWing(_ShipBearingDeployedGroup):
@@ -348,23 +373,6 @@ class FighterWing(_ShipBearingDeployedGroup):
         data["ships"] = [s.to_dict() for s in self.ships]
         return data
 
-    @classmethod
-    def _from_dict_payload(cls, data: Dict[str, Any]) -> "FighterWing":
-        from game.strategy.data.ship_instance import ShipInstance
-
-        wing = cls(
-            group_id=data["id"],
-            owner_id=int(data["owner_id"]),
-            location=cls._decode_location(data["location"]),
-            display_name=str(data.get("display_name", "") or ""),
-        )
-        for ship_data in data.get("ships", []) or []:
-            if isinstance(ship_data, ShipInstance):
-                wing.ships.append(ship_data)
-            elif isinstance(ship_data, dict):
-                wing.ships.append(ShipInstance.from_dict(ship_data))
-        return wing
-
 
 # ---------------------------------------------------------------------------
 # SatelliteConstellation (PROJ-431 Phase 3)
@@ -405,20 +413,3 @@ class SatelliteConstellation(_ShipBearingDeployedGroup):
         data = super().to_dict()
         data["ships"] = [s.to_dict() for s in self.ships]
         return data
-
-    @classmethod
-    def _from_dict_payload(cls, data: Dict[str, Any]) -> "SatelliteConstellation":
-        from game.strategy.data.ship_instance import ShipInstance
-
-        c = cls(
-            group_id=data["id"],
-            owner_id=int(data["owner_id"]),
-            location=cls._decode_location(data["location"]),
-            display_name=str(data.get("display_name", "") or ""),
-        )
-        for ship_data in data.get("ships", []) or []:
-            if isinstance(ship_data, ShipInstance):
-                c.ships.append(ship_data)
-            elif isinstance(ship_data, dict):
-                c.ships.append(ShipInstance.from_dict(ship_data))
-        return c

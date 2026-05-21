@@ -520,22 +520,7 @@ class BattleEngine:
         ``carried_vehicles`` if any individual spawn fails — failures
         are logged via :attr:`logger`).
         """
-        from game.core.constants import AttackType
-
-        spawned: List[Any] = []
-        for cv in carried_vehicles:
-            attack = {
-                'type': AttackType.LAUNCH,
-                'source': carrier,
-                'origin': carrier.position,
-                'hangar': None,
-                'carried_vehicle': cv,
-            }
-            ships_before = list(self.ships)
-            _attacks.process_launch_attack(self, attack)
-            new_ships = [s for s in self.ships if s not in ships_before]
-            spawned.extend(new_ships)
-        return spawned
+        return self._launch_carried_in_battle(carrier, carried_vehicles)
 
     def launch_satellites_in_battle(
         self,
@@ -554,6 +539,24 @@ class BattleEngine:
         and aura management.
 
         Returns the list of spawned Ship objects.
+        """
+        return self._launch_carried_in_battle(carrier, carried_vehicles)
+
+    def _launch_carried_in_battle(
+        self,
+        carrier: 'Ship',
+        carried_vehicles: List[Any],
+    ) -> List[Any]:
+        """Cluster 8 (PROJ-465): shared body for the tactical launch
+        action surfaces :meth:`launch_fighters_in_battle` and
+        :meth:`launch_satellites_in_battle`.
+
+        The two public methods are byte-identical apart from their
+        docstrings — fighter vs satellite is already encoded in each
+        ``CarriedVehicle.vehicle_type`` and resolved downstream by
+        :func:`process_launch_attack`. Behaviour, ordering, and RNG usage
+        are unchanged: each CV is processed in order and the per-CV
+        ships-before/ships-after diff is preserved exactly.
         """
         from game.core.constants import AttackType
 

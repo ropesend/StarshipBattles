@@ -117,3 +117,21 @@ class TestFighterWingSerialisation:
         assert isinstance(restored, FighterWing)
         assert len(restored.ships) == 2
         assert {s.design_id for s in restored.ships} == {"xa", "xb"}
+
+    def test_ship_bearing_groups_share_from_dict_payload(self):
+        """DUP-X-5 (PROJ-465): FighterWing and SatelliteConstellation
+        resolve ``_from_dict_payload`` to the shared
+        ``_ShipBearingDeployedGroup`` template (byte-identical bodies)."""
+        from game.strategy.data.deployed_group import (
+            SatelliteConstellation,
+            _ShipBearingDeployedGroup,
+        )
+
+        assert (
+            FighterWing._from_dict_payload.__func__
+            is _ShipBearingDeployedGroup._from_dict_payload.__func__
+        )
+        assert (
+            SatelliteConstellation._from_dict_payload.__func__
+            is _ShipBearingDeployedGroup._from_dict_payload.__func__
+        )

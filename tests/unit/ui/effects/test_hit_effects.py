@@ -200,6 +200,79 @@ class TestDrawEffects:
             )
 
 
+class TestRadialHitDrawSignature:
+    """Cluster 10 (PROJ-465): ``_draw_armor_hit`` and
+    ``_draw_component_destroyed`` share a parameterized
+    ``_draw_radial_hit`` body. Pin the per-type draw signature so the
+    extraction is proven behaviour-preserving:
+
+    - armor: 1 circle (width ``max(1,int(2*(1-t)))``) + 6 lines at
+      60-degree steps, line_len = r*1.3, line width 1, line color
+      (255,200,50,alpha).
+    - component_destroyed: 1 circle (width ``max(1,int(3*(1-t)))``) + 8
+      lines at 45-degree steps, line_len = r*1.4, line width 2, same
+      line color.
+    """
+
+    def _spy_draw(self, effect_type, *, t, alpha, zoom, ship_radius):
+        from game.ui.effects import hit_effects as he_module
+        from game.ui.effects.hit_effects import (
+            _draw_armor_hit,
+            _draw_component_destroyed,
+        )
+        from unittest.mock import patch
+
+        fn = {
+            HitEffectType.ARMOR_HIT: _draw_armor_hit,
+            HitEffectType.COMPONENT_DESTROYED: _draw_component_destroyed,
+        }[effect_type]
+        e = HitEffect(
+            effect_type=effect_type,
+            world_x=0.0, world_y=0.0,
+            ship_radius=ship_radius,
+            duration=1.0, elapsed=t,
+        )
+        screen = _screen()
+        with patch.object(he_module.pygame.draw, "circle") as mc, \
+                patch.object(he_module.pygame.draw, "line") as ml:
+            fn(screen, (50, 50), e, t=t, alpha=alpha, zoom=zoom)
+        return mc, ml
+
+    def test_armor_hit_draw_signature(self):
+        mc, ml = self._spy_draw(
+            HitEffectType.ARMOR_HIT, t=0.5, alpha=128, zoom=1.0,
+            ship_radius=40.0,
+        )
+        # max_r = 40 * 0.5 * 1.0 = 20; r = int(20*0.5) = 10
+        assert mc.call_count == 1
+        circle_args = mc.call_args
+        assert circle_args.args[1] == (255, 160, 0, 128)  # color
+        assert circle_args.args[3] == 10  # r
+        assert circle_args.args[4] == max(1, int(2 * (1 - 0.5)))  # width=1
+        # 6 lines at 60-degree steps
+        assert ml.call_count == 6
+        first_line = ml.call_args_list[0]
+        assert first_line.args[1] == (255, 200, 50, 128)  # line_color
+        assert first_line.args[4] == 1  # line width
+
+    def test_component_destroyed_draw_signature(self):
+        mc, ml = self._spy_draw(
+            HitEffectType.COMPONENT_DESTROYED, t=0.5, alpha=128, zoom=1.0,
+            ship_radius=40.0,
+        )
+        # max_r = 40 * 0.8 * 1.0 = 32; r = int(32*0.5) = 16
+        assert mc.call_count == 1
+        circle_args = mc.call_args
+        assert circle_args.args[1] == (255, 120, 0, 128)  # color
+        assert circle_args.args[3] == 16  # r
+        assert circle_args.args[4] == max(1, int(3 * (1 - 0.5)))  # width=1
+        # 8 lines at 45-degree steps
+        assert ml.call_count == 8
+        first_line = ml.call_args_list[0]
+        assert first_line.args[1] == (255, 200, 50, 128)  # line_color
+        assert first_line.args[4] == 2  # line width
+
+
 # ----------------------------------------------------------------------------
 # Ship-destroyed flash window
 # ----------------------------------------------------------------------------

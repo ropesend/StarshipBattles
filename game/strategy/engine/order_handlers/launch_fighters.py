@@ -236,15 +236,6 @@ class LaunchFightersOrderHandler(BaseOrderHandler):
     # Helpers
     # ------------------------------------------------------------------
 
-    @staticmethod
-    def _find_ship(
-        fleet: Fleet, ship_instance_id: str
-    ) -> Optional[ShipInstance]:
-        for ship in fleet.ships:
-            if str(ship.instance_id) == str(ship_instance_id):
-                return ship
-        return None
-
     def _create_fighter_group(
         self, *, empire: "Empire", target_hex: HexCoord,
     ) -> FighterWing:
