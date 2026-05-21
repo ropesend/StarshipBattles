@@ -105,6 +105,25 @@
         "game/ui/screens/planet_list_presets.py",
         "game/ui/screens/battle_setup/panels/center_panel.py"
       ]
+    },
+    {
+      "date": "2026-05-20",
+      "review_dir": "Reviews/results/2026-05-20_060020_audit_shrink",
+      "deep_review_shard": "03",
+      "seed": "shrink-2026-05-20_060020",
+      "production_loc": 182101,
+      "dead_code_files": 0,
+      "dead_code_functions": 0,
+      "dead_code_imports": 0,
+      "duplication_clusters": 26,
+      "estimated_shrinkable_loc": 1460,
+      "top_hotspots": [
+        "race_setup/input_handler.py",
+        "planet_list_event_router.py",
+        "battle_setup/input_handler.py",
+        "planet_list_presets.py",
+        "strategy_detail_fmt.py"
+      ]
     }
   ]
 }

@@ -4,6 +4,15 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-473 | Thread per-instance RNG through planet/star generation to enable global random.seed removal (deferred from PROJ-471) | Planning | 2026-05-20 | 2026-05-20 |
+| PROJ-472 | Facade read-path migration: route game/ui access through strategy facade DTOs (deferred from PROJ-470) | Planning | 2026-05-20 | 2026-05-20 |
+| PROJ-471 | State hygiene — singleton-divergence consolidation + collection/RNG hygiene (2026-05-20) | Planning | 2026-05-20 | 2026-05-20 |
+| PROJ-470 | Pattern conformance - facade read-path, modal, event-bus + doc/hygiene drift (2026-05-20) | Planning | 2026-05-20 | 2026-05-20 |
+| PROJ-469 | Docs cleanup — cross-doc consistency + terminology (2026-05-20) | Planning | 2026-05-20 | 2026-05-20 |
+| PROJ-468 | Docs cleanup — reference: systems + guides docs (2026-05-20) | Planning | 2026-05-20 | 2026-05-20 |
+| PROJ-467 | Docs cleanup — foundation: root agent + architecture/core docs + protocols (2026-05-20) | Planning | 2026-05-20 | 2026-05-20 |
+| PROJ-466 | Error handling cleanup - session-init crash + exception hygiene (2026-05-20) | Planning | 2026-05-20 | 2026-05-20 |
+| PROJ-465 | Audit-shrink cleanup 2026-05-20 | Planning | 2026-05-20 | 2026-05-20 |
 | PROJ-464 | Type cleanup — presentation (UI + top-level) (2026-05-19) | Planning | 2026-05-19 | 2026-05-19 |
 | PROJ-463 | Type cleanup — domain (simulation/strategy/ai) (2026-05-19) | Planning | 2026-05-19 | 2026-05-19 |
 | PROJ-462 | Type cleanup — foundation (core/services/engine/research/assets) (2026-05-19) | Planning | 2026-05-19 | 2026-05-19 |

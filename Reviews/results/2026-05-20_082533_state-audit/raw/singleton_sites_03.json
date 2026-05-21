@@ -1,0 +1,14 @@
+[
+  {
+    "file": "game/core/profiling.py",
+    "line": 17,
+    "variable": "_default_profiler",
+    "context": "_default_profiler: Optional['Profiler'] = None"
+  },
+  {
+    "file": "game/ui/assets/ship_theme_manager.py",
+    "line": 54,
+    "variable": "_default_ship_theme_manager",
+    "context": "_default_ship_theme_manager: Optional['ShipThemeManager'] = None"
+  }
+]

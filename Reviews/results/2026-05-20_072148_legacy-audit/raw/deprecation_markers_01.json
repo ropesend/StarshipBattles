@@ -1,0 +1,25 @@
+{
+  "detector": "deprecation_markers",
+  "scanned_files": 217,
+  "total_findings": 3,
+  "findings": [
+    {
+      "file": "game/strategy/data/ship_instance.py",
+      "line": 170,
+      "marker": "# legacy",
+      "context": "    # legacy ``carried_items: List[Dict[str, Any]]`` mixed-shape list."
+    },
+    {
+      "file": "game/strategy/data/ship_instance.py",
+      "line": 180,
+      "marker": "# legacy",
+      "context": "    # legacy dict-list shape \u2014 see ``carried_items`` property."
+    },
+    {
+      "file": "game/strategy/data/ship_instance_serializer.py",
+      "line": 62,
+      "marker": "# legacy",
+      "context": "        # legacy ``carried_items`` dict-list shape is no longer the"
+    }
+  ]
+}

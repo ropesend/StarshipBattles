@@ -1,0 +1,404 @@
+[
+  {
+    "doc": "docs/README.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/01_ARCHITECTURE.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/02_PATTERNS.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/03_CONVENTIONS.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/04_SERVICES.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/05_ERROR_HANDLING.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/06_UI_STYLE_GUIDE.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/systems/ability_reference.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/systems/ai_system.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/systems/combat_simulation.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/systems/fighters.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/systems/minefields.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/systems/orders_system.md",
+    "last_verified": "2026-05-07",
+    "days_stale": 13,
+    "stale": false
+  },
+  {
+    "doc": "docs/systems/production_system.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/systems/research_system.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/systems/resource_system.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/systems/satellites.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/systems/save_load.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/systems/strategy_layer.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/guides/adding_abilities.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/guides/adding_modifiers.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/guides/component_system.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/guides/modifier_system.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/guides/performance_profiling.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/guides/pre_commit_hooks.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/guides/qs_complex_design.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/guides/simulation_testing.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "docs/guides/testing_infrastructure.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "AGENTS.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "CLAUDE.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": ".agents/CODEX.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/01_initialize_project.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/02_plan_protocol.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/03a_continue_working.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/03b_parallel_projects.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/03c_phase_aware_execution.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/04_audit_project.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/05_close_project.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/06_revise_project.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/07_extract_phase.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/08_automated_loop_protocol.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/09_review_project.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/10_manage_refactor_plan.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/11_create_from_shrink_audit.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/12_create_from_test_review.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/13_create_from_type_audit.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/14_create_from_error_audit.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/15_refinement_feedback.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/16_create_from_legacy_audit.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/17_create_from_docs_audit.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/18_create_from_pattern_audit.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/19_create_from_state_audit.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/20_create_from_testcoverage_audit.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/WORKER_TEMPLATE.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Projects/protocols/context_config.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Reviews/protocols/00_review_core.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Reviews/protocols/01_general_review.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Reviews/protocols/02_test_coverage_review.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Reviews/protocols/03_focused_question_review.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Reviews/protocols/04_migration_review.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Reviews/protocols/05_security_review.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Reviews/protocols/06_performance_review.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Reviews/protocols/07_technical_debt_review.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Reviews/protocols/08_consistency_review.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Reviews/protocols/09_update_review.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Reviews/protocols/10_review_to_project.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  },
+  {
+    "doc": "Reviews/protocols/11_apply_doc_audit.md",
+    "last_verified": null,
+    "days_stale": -1,
+    "stale": false
+  }
+]

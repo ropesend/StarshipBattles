@@ -1,0 +1,242 @@
+[
+  {
+    "file": "game/app.py",
+    "line": 518,
+    "context": "except Exception as e:  # Intentional broad catch: top-level crash handler, logs and re-raises",
+    "has_comment": false
+  },
+  {
+    "file": "game/ai/ai_factory.py",
+    "line": 190,
+    "context": "except Exception:  # Intentional broad catch: iter_components on minimal stubs raises across many shapes; default to \"no tactical launch\".",
+    "has_comment": false
+  },
+  {
+    "file": "game/ai/carrier_controller.py",
+    "line": 104,
+    "context": "except Exception:  # Intentional broad catch: base AI sub-systems (target eval, behavior trees) raise across many edge cases; the auto-launch hook must still run on subsequent ticks.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ai/carrier_controller.py",
+    "line": 199,
+    "context": "except Exception:  # Intentional broad catch: AI auto-launch must not break the battle loop on a bad design payload.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ai/carrier_controller.py",
+    "line": 230,
+    "context": "except Exception:  # Intentional broad catch: component-iter on minimal stubs raises across many shapes; treat as \"no launch ability\".",
+    "has_comment": false
+  },
+  {
+    "file": "game/ai/carrier_controller.py",
+    "line": 241,
+    "context": "except Exception:  # Intentional broad catch: grid lookups on stub fixtures may raise; treat as \"no enemy\".",
+    "has_comment": false
+  },
+  {
+    "file": "game/ai/carrier_controller.py",
+    "line": 298,
+    "context": "except Exception:  # Intentional broad catch: stubs may not implement set_bay_inventory; ignore and let the next tick retry.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ai/carrier_controller.py",
+    "line": 353,
+    "context": "except Exception:  # Intentional broad catch: stubs may not implement set_bay_inventory; ignore and let the next tick retry.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ai/carrier_controller.py",
+    "line": 388,
+    "context": "except Exception:  # Intentional broad catch: component-iter on minimal stubs raises across many shapes; treat as \"no launch ability\".",
+    "has_comment": false
+  },
+  {
+    "file": "game/ai/carrier_controller.py",
+    "line": 403,
+    "context": "except Exception:  # Intentional broad catch: stub adapters may raise; treat as \"dead\".",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/systems/battle_engine.py",
+    "line": 470,
+    "context": "except Exception:  # Intentional broad catch: ramming must not break the battle loop.",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/systems/battle_engine.py",
+    "line": 493,
+    "context": "except Exception:  # Intentional broad catch: mine ticking must not break the battle loop on a single bad mine.",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/systems/battle_engine.py",
+    "line": 610,
+    "context": "except Exception:  # Intentional broad catch: damage-calc lookup is best-effort.",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/systems/battle_engine.py",
+    "line": 641,
+    "context": "except Exception:  # Intentional broad catch: damage-calc lookup is best-effort.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/conflict_modifier_collection.py",
+    "line": 83,
+    "context": "except Exception as e:  # Intentional broad catch: external collector may raise any type from non-engine empire/system extensions; ERROR-log and proceed with degraded modifier stack so battle still resolves. Hex + empire context included to allow log-side debugging.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/turn_state_snapshot.py",
+    "line": 56,
+    "context": "except Exception as e:  # Intentional broad catch: any to_dict() failure must become SNAPSHOT_FAILED PersistenceException for the turn rollback contract.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/order_handlers/lay_mines.py",
+    "line": 315,
+    "context": "except Exception:  # Intentional broad catch: event-bus emission is best-effort; missing event types in older bus configurations must not break the lay-mines action.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/order_handlers/recover_satellites.py",
+    "line": 191,
+    "context": "except Exception:  # Intentional broad catch: event-bus emission is best-effort; missing event types in older bus configurations must not break the recovery action.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/order_handlers/recover_satellites.py",
+    "line": 250,
+    "context": "except Exception:  # Intentional broad catch: stats path raises for ships built without registries; fall back to design_data mass when available.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/design_cost_calculator.py",
+    "line": 84,
+    "context": "except Exception as e:  # Intentional broad catch: Ship loading is best-effort; inline cost fallback already attempted",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/design_validator.py",
+    "line": 76,
+    "context": "except Exception as e:  # Intentional broad catch: Ship.from_dict may raise various persistence/validation errors; collect as error string in result.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/design_validator.py",
+    "line": 92,
+    "context": "except Exception as e:  # Intentional broad catch: ShipDesignValidator may raise unexpected types; collect as result error rather than crash the validator.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/system_effects_collector.py",
+    "line": 230,
+    "context": "except Exception:  # Intentional broad catch: source-impl errors must not poison the pipeline",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/system_effects_collector.py",
+    "line": 238,
+    "context": "except Exception:  # Intentional broad catch: same as above",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/systems/design_catalog.py",
+    "line": 88,
+    "context": "except Exception:  # Intentional broad catch: schema-validation failures during upsert must not corrupt the catalog \u2014 fall back to dropping the entry.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/systems/save_game_service.py",
+    "line": 75,
+    "context": "except Exception:  # Intentional broad catch: store hooks must not crash save/load",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/systems/save_game_service.py",
+    "line": 83,
+    "context": "except Exception:  # Intentional broad catch: store hooks must not crash delete",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/systems/save_game_service.py",
+    "line": 518,
+    "context": "except Exception:  # Intentional broad catch: a flush failure must not abort the save.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/validation/transfer_validator.py",
+    "line": 391,
+    "context": "except Exception as exc:  # Intentional broad catch: capability probe; missing registry => no capacity.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/validation/transfer_validator.py",
+    "line": 421,
+    "context": "except Exception as exc:  # Intentional broad catch: facade probe; treat missing accessor as empty.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/assets/ship_theme_manager.py",
+    "line": 261,
+    "context": "except Exception:  # Intentional broad catch: size validation is best-effort, must not block discovery.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/panels/ship_detail_panel.py",
+    "line": 452,
+    "context": "except Exception:  # Intentional broad catch: UI tests run without ApplicationContext",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/species_selector_mixin.py",
+    "line": 126,
+    "context": "except Exception:  # Intentional broad catch: RaceLibrary load surfaces I/O, JSON, and schema-validation errors; UI mixin must not crash species selection on bad data",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/strategy_event_router.py",
+    "line": 232,
+    "context": "except Exception:  # Intentional broad catch: empire/race lookup may fail on save drift or library load errors; editor opens without race-specific UI",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/strategy_event_router.py",
+    "line": 333,
+    "context": "except Exception:  # Intentional broad catch: registry provider may be uninitialized; food editor opens without resource catalog",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/strategy_event_router.py",
+    "line": 345,
+    "context": "except Exception:  # Intentional broad catch: RaceLibrary load surfaces I/O, JSON, and schema-validation errors; resolver returns None on failure",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/strategy_event_router.py",
+    "line": 377,
+    "context": "except Exception:  # Intentional broad catch: empire/race lookup may fail on save drift or library load errors; caller falls back to None",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/battle_setup/fleet_hierarchy_editor.py",
+    "line": 190,
+    "context": "except Exception:  # Intentional broad catch: registry provider may be uninitialized (tests) or partially loaded; None signals \"no registries\" to callers",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/builder/event_bus.py",
+    "line": 77,
+    "context": "except Exception as e:  # Intentional broad catch: event handler isolation prevents handler bugs from crashing callers",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/services/image/background.py",
+    "line": 217,
+    "context": "except Exception as e:  # Intentional broad catch: provider escape \u2014 wrap as ImageUnexpectedError so worker-thread crashes don't leave caller polling forever.",
+    "has_comment": false
+  }
+]

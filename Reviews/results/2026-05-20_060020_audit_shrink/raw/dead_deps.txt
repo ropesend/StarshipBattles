@@ -1,0 +1,36 @@
+Building dependency graph...
+Reachable files: 839
+Total production source files: 778
+Potentially Dead Files: 30
+
+--- Potentially Dead Files (relative paths) ---
+conftest.py
+game\ai\group_target_coordinator.py
+game\ai\spatial_behaviors\__init__.py
+game\ai\spatial_behaviors\_formation_utils.py
+game\ai\spatial_behaviors\base.py
+game\ai\spatial_behaviors\battle_line.py
+game\ai\spatial_behaviors\column.py
+game\ai\spatial_behaviors\escort.py
+game\ai\spatial_behaviors\free_maneuver.py
+game\ai\spatial_behaviors\patrol_zone.py
+game\ai\spatial_behaviors\screen.py
+game\simulation\components\modifier_introspection.py
+game\simulation\designs.py
+game\simulation\systems\tech_preset_loader.py
+game\strategy\facade\dto\fleet_hierarchy_dto.py
+game\strategy\services\deployment_zone_calculator.py
+game\strategy\services\mine_group_service.py
+game\strategy\services\task_group_suggester.py
+game\ui\orchestration\__init__.py
+game\ui\screens\build_queue_viewmodel.py
+game\ui\screens\setup_data_io.py
+game\ui\screens\setup_renderer.py
+game\ui\screens\setup_screen.py
+game\ui\screens\test_lab\details\chrome.py
+game\ui\screens\test_lab\details\propulsion_outcomes.py
+game\ui\screens\test_lab\details\resource_outcomes.py
+game\ui\screens\test_lab\details\validation.py
+game\ui\widgets\panel_factory.py
+game\ui\widgets\ui_element_registry.py
+qa_launcher.py

@@ -1,0 +1,44 @@
+[
+  {
+    "file": "game/strategy/engine/handlers/construction_queue.py",
+    "line": 106,
+    "function": "_resolve_design_data",
+    "class": "AddToConstructionQueueCommandHandler",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_handlers/open_warp_point.py",
+    "line": 38,
+    "function": "_precheck",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_handlers/open_warp_point.py",
+    "line": 54,
+    "function": "_effect",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_handlers/stellerate_star.py",
+    "line": 47,
+    "function": "_precheck",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_handlers/stellerate_star.py",
+    "line": 54,
+    "function": "_effect",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/ui/screens/strategy_modal_window.py",
+    "line": 273,
+    "function": "check_clicked_inside_or_blocking",
+    "class": "StrategyModalWindow",
+    "layer": "ui"
+  }
+]

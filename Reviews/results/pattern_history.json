@@ -21,6 +21,22 @@
       "health_score": 94.0,
       "layer_violations": 0,
       "doc_accuracy_pct": 94.3
+    },
+    {
+      "date": "2026-05-20",
+      "patterns_documented": 43,
+      "patterns_accurate_docs": 40,
+      "patterns_minor_diff_docs": 3,
+      "patterns_stale_docs": 0,
+      "patterns_wrong_docs": 0,
+      "layer_violations_total": 0,
+      "critical_findings": 2,
+      "major_findings": 3,
+      "minor_findings": 11,
+      "loc_ceiling_violations": 69,
+      "pattern_health_pct": 93.5,
+      "facade_integrity": "write-path only, read-path gap",
+      "naming_collisions": 0
     }
   ]
 }

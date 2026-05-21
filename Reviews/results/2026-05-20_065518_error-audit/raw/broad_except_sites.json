@@ -1,0 +1,770 @@
+[
+  {
+    "file": "game/app.py",
+    "line": 518,
+    "context": "except Exception as e:  # Intentional broad catch: top-level crash handler, logs and re-raises",
+    "has_comment": false
+  },
+  {
+    "file": "game/ai/ai_factory.py",
+    "line": 190,
+    "context": "except Exception:  # Intentional broad catch: iter_components on minimal stubs raises across many shapes; default to \"no tactical launch\".",
+    "has_comment": false
+  },
+  {
+    "file": "game/ai/carrier_controller.py",
+    "line": 104,
+    "context": "except Exception:  # Intentional broad catch: base AI sub-systems (target eval, behavior trees) raise across many edge cases; the auto-launch hook must still run on subsequent ticks.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ai/carrier_controller.py",
+    "line": 199,
+    "context": "except Exception:  # Intentional broad catch: AI auto-launch must not break the battle loop on a bad design payload.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ai/carrier_controller.py",
+    "line": 230,
+    "context": "except Exception:  # Intentional broad catch: component-iter on minimal stubs raises across many shapes; treat as \"no launch ability\".",
+    "has_comment": false
+  },
+  {
+    "file": "game/ai/carrier_controller.py",
+    "line": 241,
+    "context": "except Exception:  # Intentional broad catch: grid lookups on stub fixtures may raise; treat as \"no enemy\".",
+    "has_comment": false
+  },
+  {
+    "file": "game/ai/carrier_controller.py",
+    "line": 298,
+    "context": "except Exception:  # Intentional broad catch: stubs may not implement set_bay_inventory; ignore and let the next tick retry.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ai/carrier_controller.py",
+    "line": 353,
+    "context": "except Exception:  # Intentional broad catch: stubs may not implement set_bay_inventory; ignore and let the next tick retry.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ai/carrier_controller.py",
+    "line": 388,
+    "context": "except Exception:  # Intentional broad catch: component-iter on minimal stubs raises across many shapes; treat as \"no launch ability\".",
+    "has_comment": false
+  },
+  {
+    "file": "game/ai/carrier_controller.py",
+    "line": 403,
+    "context": "except Exception:  # Intentional broad catch: stub adapters may raise; treat as \"dead\".",
+    "has_comment": false
+  },
+  {
+    "file": "game/core/event_logging.py",
+    "line": 60,
+    "context": "except Exception:  # Intentional broad catch: third-party event handler may raise anything; instrumentation must never crash the simulation",
+    "has_comment": false
+  },
+  {
+    "file": "game/core/formula_evaluator.py",
+    "line": 308,
+    "context": "except Exception as e:  # Intentional broad catch: catch-and-convert to FormulaException",
+    "has_comment": false
+  },
+  {
+    "file": "game/core/roles.py",
+    "line": 233,
+    "context": "except Exception:  # Intentional broad catch: subscriber callbacks may raise anything; one bad subscriber must not abort the rest of the invalidation fan-out",
+    "has_comment": false
+  },
+  {
+    "file": "game/services/llm/background.py",
+    "line": 285,
+    "context": "except Exception as e:  # PROJ-321..328 audit S1.1: catch unexpected non-LLM provider exceptions; preserves wait() contract",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/battle_controller.py",
+    "line": 444,
+    "context": "except Exception:  # Intentional broad catch: capture must not crash visual-mode battle end",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/battle_runner.py",
+    "line": 190,
+    "context": "except Exception:  # Intentional broad catch: capture must not crash a battle",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/battle_runner.py",
+    "line": 370,
+    "context": "except Exception:  # Intentional broad catch: capture must not crash a battle",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/combat/combat_events.py",
+    "line": 161,
+    "context": "except Exception:  # Intentional broad catch: subscribers may raise anything; one buggy observer must not break combat event dispatch",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/combat/ram_target_resolver.py",
+    "line": 168,
+    "context": "except Exception as exc:  # Intentional broad catch: damage pipeline can fail on minimal test ships; fall through to direct decrement so the symmetric exchange still resolves.",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/entities/ship_serialization.py",
+    "line": 109,
+    "context": "except Exception as e:  # Intentional broad catch: diagnostic logging before re-raise",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/replay/replay_serialization.py",
+    "line": 597,
+    "context": "except Exception:  # Intentional broad catch: capture must not crash a battle on registry shape drift",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/replay/replay_serialization.py",
+    "line": 612,
+    "context": "except Exception:  # Intentional broad catch: tolerate odd to_dict implementations",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/systems/attack_processor.py",
+    "line": 124,
+    "context": "except Exception:  # Intentional broad catch: tagging is best-effort metadata; failure must not break the launch.",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/systems/attack_processor.py",
+    "line": 137,
+    "context": "except Exception:  # Intentional broad catch: tracker is best-effort metadata; failure must not break the launch.",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/systems/attack_processor.py",
+    "line": 187,
+    "context": "except Exception:  # Intentional broad catch: ShipSerializer.from_dict raises across many design-data corruption modes; treat as launch failure rather than crash the battle.",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/systems/attack_processor.py",
+    "line": 204,
+    "context": "except Exception:  # Intentional broad catch: setting current_hp on minimal stubs may raise; the new ship's design max_hp is the safe default.",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/systems/attack_processor.py",
+    "line": 217,
+    "context": "except Exception:  # Intentional broad catch: minimal stub ships may treat ``components`` as a property; ignore and fall back to the default initial state.",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/systems/battle_engine.py",
+    "line": 470,
+    "context": "except Exception:  # Intentional broad catch: ramming must not break the battle loop.",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/systems/battle_engine.py",
+    "line": 493,
+    "context": "except Exception:  # Intentional broad catch: mine ticking must not break the battle loop on a single bad mine.",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/systems/battle_engine.py",
+    "line": 610,
+    "context": "except Exception:  # Intentional broad catch: damage-calc lookup is best-effort.",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/systems/battle_engine.py",
+    "line": 641,
+    "context": "except Exception:  # Intentional broad catch: damage-calc lookup is best-effort.",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/systems/fighter_reboard.py",
+    "line": 131,
+    "context": "except Exception:  # Intentional broad catch: load_vehicle may raise across many failure modes (registries missing, stub fleets); treat as \"couldn't reboard\" rather than crash the hook.",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/systems/fighter_reboard.py",
+    "line": 234,
+    "context": "except Exception:  # Intentional broad catch: ShipSerializer.to_dict may raise on minimal test ships; reboard is best-effort.",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/systems/tactical_mine_resolver.py",
+    "line": 347,
+    "context": "except Exception:  # Intentional broad catch: stat lookup can vary across Ship implementations.",
+    "has_comment": false
+  },
+  {
+    "file": "game/simulation/systems/tactical_mine_resolver.py",
+    "line": 382,
+    "context": "except Exception as exc:  # Intentional broad catch: per-tick mine damage must never break the battle loop on a single misbehaving target.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/adapters/simulation_adapter.py",
+    "line": 494,
+    "context": "except Exception:  # Intentional broad catch: capture must not crash a battle",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/combat/post_battle_hook_builder.py",
+    "line": 106,
+    "context": "except Exception:  # Intentional broad catch: reboard failures must not break post-battle persistence; log + continue.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/combat/post_battle_hook_builder.py",
+    "line": 124,
+    "context": "except Exception:  # Intentional broad catch: writeback failures must not break post-battle persistence.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/data/carried_vehicle_deploy.py",
+    "line": 85,
+    "context": "except Exception:  # Intentional broad catch: test stubs / partial fixtures may treat ``components`` as a property; treat as \"damage state not restorable\" rather than crash the launch.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/data/carried_vehicle_deploy.py",
+    "line": 109,
+    "context": "except Exception:  # Intentional broad catch: best-effort by contract \u2014 see docstring.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/data/ship_cargo_manager.py",
+    "line": 180,
+    "context": "except Exception:  # Intentional broad catch: Ship.from_dict() raises across many failure modes (missing component, malformed layer); a missing bay is a \"no capacity\" signal, not a crash.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/data/ship_cargo_manager.py",
+    "line": 276,
+    "context": "except Exception:  # Intentional broad catch: stats path raises for ships built without registries (test fixtures); treat as zero capacity.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/conflict_modifier_collection.py",
+    "line": 83,
+    "context": "except Exception as e:  # Intentional broad catch: external collector may raise any type from non-engine empire/system extensions; ERROR-log and proceed with degraded modifier stack so battle still resolves. Hex + empire context included to allow log-side debugging.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/game_initializer.py",
+    "line": 178,
+    "context": "except Exception:  # Intentional broad catch: hex impl errors don't poison iteration",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/minefield_resolver.py",
+    "line": 112,
+    "context": "except Exception as exc:  # Intentional broad catch: stats computation can fail on partial/test ShipInstances; fall back to mid-range so the resolver still produces a non-zero p_trigger.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/minefield_resolver.py",
+    "line": 275,
+    "context": "except Exception:  # Intentional broad catch: stats lookup can fail on minimal test ShipInstances; fall back to the documented default.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/minefield_resolver.py",
+    "line": 302,
+    "context": "except Exception as exc:  # Intentional broad catch: damage pipeline can fail on partial / test designs; fall through to direct-HP decrement so a single broken ship doesn't break the whole turn.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/minefield_resolver.py",
+    "line": 572,
+    "context": "except Exception:  # Intentional broad catch: stats may be unavailable in test fixtures; fall back to 0.0.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/movement_phase_collaborator.py",
+    "line": 155,
+    "context": "except Exception:  # Intentional broad catch: minefield resolution must never break the turn loop; log and continue.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/turn_engine.py",
+    "line": 311,
+    "context": "except Exception as e:  # Intentional broad catch: wraps unknown phase failures as EnginePhaseError(T001) and re-raises with phase_name + tick context; documented strategy-layer pattern.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/turn_engine.py",
+    "line": 697,
+    "context": "except Exception:  # Intentional broad catch: cache invalidation must not mask the original EnginePhaseError",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/turn_engine.py",
+    "line": 808,
+    "context": "except Exception:  # Intentional broad catch: UI callback must never break turn processing (PROJ-308)",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/turn_engine_settings.py",
+    "line": 58,
+    "context": "except Exception:  # Intentional broad catch: corrupt settings must not block turn processing",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/turn_state_snapshot.py",
+    "line": 56,
+    "context": "except Exception as e:  # Intentional broad catch: any to_dict() failure must become SNAPSHOT_FAILED PersistenceException for the turn rollback contract.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/order_handlers/launch_fighters.py",
+    "line": 230,
+    "context": "except Exception:  # Intentional broad catch: event-bus emission is best-effort; missing event types in older bus configurations must not break the launch action.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/order_handlers/launch_satellites.py",
+    "line": 213,
+    "context": "except Exception:  # Intentional broad catch: event-bus emission is best-effort; missing event types in older bus configurations must not break the launch action.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/order_handlers/lay_mines.py",
+    "line": 315,
+    "context": "except Exception:  # Intentional broad catch: event-bus emission is best-effort; missing event types in older bus configurations must not break the lay-mines action.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/order_handlers/recover_fighters.py",
+    "line": 211,
+    "context": "except Exception:  # Intentional broad catch: event-bus emission is best-effort; missing event types in older bus configurations must not break the recovery action.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/order_handlers/recover_fighters.py",
+    "line": 272,
+    "context": "except Exception:  # Intentional broad catch: stats path raises for ships built without registries; fall back to design_data mass when available.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/order_handlers/recover_satellites.py",
+    "line": 191,
+    "context": "except Exception:  # Intentional broad catch: event-bus emission is best-effort; missing event types in older bus configurations must not break the recovery action.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/order_handlers/recover_satellites.py",
+    "line": 250,
+    "context": "except Exception:  # Intentional broad catch: stats path raises for ships built without registries; fall back to design_data mass when available.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/engine/session/bootstrap.py",
+    "line": 269,
+    "context": "except Exception as e:  # Intentional broad catch: preserves the existing null-object substitution semantics on the new-game path.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/facade/dto/fleet_dto.py",
+    "line": 279,
+    "context": "except Exception:  # Intentional broad catch: mock fleets in tests return non-tuple values; treat as zero.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/facade/dto/fleet_dto.py",
+    "line": 293,
+    "context": "except Exception:  # Intentional broad catch: same as above; treat unreadable bays as zero.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/facade/slices/fleet_slice.py",
+    "line": 178,
+    "context": "except Exception:  # Intentional broad catch: fixtures may not wire a cargo mgr; treat as uncapped.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/formulas/colony_output.py",
+    "line": 85,
+    "context": "except Exception as e:  # Intentional broad catch: race_registry may raise any type from duck-typed get_race; warn-log and skip species to avoid poisoning colony output calculation",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/component_layers.py",
+    "line": 54,
+    "context": "except Exception:  # Intentional broad catch: registry may be absent in legacy save context",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/design_cost_calculator.py",
+    "line": 84,
+    "context": "except Exception as e:  # Intentional broad catch: Ship loading is best-effort; inline cost fallback already attempted",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/design_validator.py",
+    "line": 76,
+    "context": "except Exception as e:  # Intentional broad catch: Ship.from_dict may raise various persistence/validation errors; collect as error string in result.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/design_validator.py",
+    "line": 92,
+    "context": "except Exception as e:  # Intentional broad catch: ShipDesignValidator may raise unexpected types; collect as result error rather than crash the validator.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/race_description_llm_controller.py",
+    "line": 308,
+    "context": "except Exception as e:  # Intentional broad catch: UI callbacks must not crash the controller",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/replay_store.py",
+    "line": 88,
+    "context": "except Exception:  # Intentional broad catch: corrupt settings must not block capture",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/replay_store.py",
+    "line": 291,
+    "context": "except Exception:  # Intentional broad catch: capture must not crash",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/replay_store.py",
+    "line": 304,
+    "context": "except Exception:  # Intentional broad catch: bad subscriber must not block persist",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/replay_store.py",
+    "line": 393,
+    "context": "except Exception:  # Intentional broad catch: corrupt files must be skipped, not raised",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/replay_store.py",
+    "line": 400,
+    "context": "except Exception:  # Intentional broad catch: schema mismatches must be skipped",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/replay_verification_coordinator.py",
+    "line": 314,
+    "context": "except Exception:  # Intentional broad catch: worker death must be visible and not deadlock waiters",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/replay_verification_coordinator.py",
+    "line": 372,
+    "context": "except Exception as exc:  # Intentional broad catch: worker must continue past one bad record",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/replay_verification_sidecar.py",
+    "line": 126,
+    "context": "except Exception:  # Intentional broad catch: sidecar write must not crash worker",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/replay_verification_sidecar.py",
+    "line": 149,
+    "context": "except Exception:  # Intentional broad catch: corrupt sidecars must be skipped, not raised",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/ship_instance_factory.py",
+    "line": 60,
+    "context": "except Exception as e:  # Intentional broad catch: ShipSerializer.from_dict() may raise various exception types on corrupt/incomplete design data; falling back to empty components is safe \u2014 callers treat empty dict as \"no per-component data available\".",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/strategic_ability_scanner.py",
+    "line": 152,
+    "context": "except Exception:  # Intentional broad catch: adapter errors must not poison harvest aggregation",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/strategic_ability_scanner.py",
+    "line": 175,
+    "context": "except Exception:  # Intentional broad catch: adapter errors must not poison harvest aggregation",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/system_effects_collector.py",
+    "line": 230,
+    "context": "except Exception:  # Intentional broad catch: source-impl errors must not poison the pipeline",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/system_effects_collector.py",
+    "line": 238,
+    "context": "except Exception:  # Intentional broad catch: same as above",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/services/ability_sources/fleet.py",
+    "line": 111,
+    "context": "except Exception:  # Intentional broad catch: ship-impl errors don't poison iteration",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/systems/design_catalog.py",
+    "line": 88,
+    "context": "except Exception:  # Intentional broad catch: schema-validation failures during upsert must not corrupt the catalog \u2014 fall back to dropping the entry.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/systems/save_game_service.py",
+    "line": 75,
+    "context": "except Exception:  # Intentional broad catch: store hooks must not crash save/load",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/systems/save_game_service.py",
+    "line": 83,
+    "context": "except Exception:  # Intentional broad catch: store hooks must not crash delete",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/systems/save_game_service.py",
+    "line": 518,
+    "context": "except Exception:  # Intentional broad catch: a flush failure must not abort the save.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/validation/transfer_validator.py",
+    "line": 391,
+    "context": "except Exception as exc:  # Intentional broad catch: capability probe; missing registry => no capacity.",
+    "has_comment": false
+  },
+  {
+    "file": "game/strategy/validation/transfer_validator.py",
+    "line": 421,
+    "context": "except Exception as exc:  # Intentional broad catch: facade probe; treat missing accessor as empty.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/assets/ship_theme_manager.py",
+    "line": 261,
+    "context": "except Exception:  # Intentional broad catch: size validation is best-effort, must not block discovery.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/panels/build_queue_controller.py",
+    "line": 276,
+    "context": "except Exception:  # Intentional broad catch: design validation traverses arbitrary registry/save data; queue panel must remain usable on validator failure",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/panels/race_description_panel.py",
+    "line": 399,
+    "context": "except Exception as e:  # Intentional broad catch: rebuild is defensive",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/panels/race_environment_panel.py",
+    "line": 331,
+    "context": "except Exception as e:  # Intentional broad catch: the points label is non-critical UI; any failure (missing race attribute, bad budget config, etc.) blanks the label rather than crashing the panel.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/panels/ship_detail_panel.py",
+    "line": 452,
+    "context": "except Exception:  # Intentional broad catch: UI tests run without ApplicationContext",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/panels/system_tree_panel.py",
+    "line": 463,
+    "context": "except Exception:  # Intentional broad catch: effect collection traverses save/registry data; tree panel must not crash on display",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/panels/system_tree_panel.py",
+    "line": 478,
+    "context": "except Exception:  # Intentional broad catch: effect collection traverses empire/registry/save data \u2014 many drift-failure modes; tree panel must not crash on display",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/panels/system_tree_panel.py",
+    "line": 493,
+    "context": "except Exception:  # Intentional broad catch: effect collection traverses empire/registry/save data \u2014 many drift-failure modes; tree panel must not crash on display",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/event_log_window.py",
+    "line": 540,
+    "context": "except Exception:  # Intentional broad catch: pygame_gui internals may not be ready in test contexts",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/planet_menu_items.py",
+    "line": 52,
+    "context": "except Exception:  # Intentional broad catch: missing registries / partial mocks in tests must not break menu construction.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/species_selector_mixin.py",
+    "line": 126,
+    "context": "except Exception:  # Intentional broad catch: RaceLibrary load surfaces I/O, JSON, and schema-validation errors; UI mixin must not crash species selection on bad data",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/strategy_detail_fmt.py",
+    "line": 430,
+    "context": "except Exception:  # Intentional broad catch: registry manager may be uninitialized; fall back to inline-ability inspection",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/strategy_event_router.py",
+    "line": 232,
+    "context": "except Exception:  # Intentional broad catch: empire/race lookup may fail on save drift or library load errors; editor opens without race-specific UI",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/strategy_event_router.py",
+    "line": 333,
+    "context": "except Exception:  # Intentional broad catch: registry provider may be uninitialized; food editor opens without resource catalog",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/strategy_event_router.py",
+    "line": 345,
+    "context": "except Exception:  # Intentional broad catch: RaceLibrary load surfaces I/O, JSON, and schema-validation errors; resolver returns None on failure",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/strategy_event_router.py",
+    "line": 377,
+    "context": "except Exception:  # Intentional broad catch: empire/race lookup may fail on save drift or library load errors; caller falls back to None",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/strategy_fleet_command_router.py",
+    "line": 272,
+    "context": "except Exception:  # Intentional broad catch: registry provider may be uninitialized; ability-button handler falls back to no registry",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/transfer_controller.py",
+    "line": 176,
+    "context": "except Exception:  # Intentional broad catch: catalog lookup must not block the transfer dialog from opening",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/transfer_dialog.py",
+    "line": 307,
+    "context": "except Exception:  # Intentional broad catch: dialog-level catastrophic failure must not leak; kill modal then re-raise.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/workshop_data_reloader.py",
+    "line": 26,
+    "context": "except Exception:  # Intentional broad catch: Tkinter init is platform-dependent",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/battle_setup/controller.py",
+    "line": 56,
+    "context": "except Exception:  # Intentional broad catch: registry provider may be uninitialized (tests) or partially loaded; None signals \"no registries\" to callers",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/battle_setup/controller.py",
+    "line": 123,
+    "context": "except Exception as e:  # Intentional broad catch: corrupt design data must not poison the design library scan \u2014 log and skip per file.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/battle_setup/fleet_hierarchy_editor.py",
+    "line": 190,
+    "context": "except Exception:  # Intentional broad catch: registry provider may be uninitialized (tests) or partially loaded; None signals \"no registries\" to callers",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/builder/event_bus.py",
+    "line": 77,
+    "context": "except Exception as e:  # Intentional broad catch: event handler isolation prevents handler bugs from crashing callers",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/builder/stat_rows_dynamic.py",
+    "line": 31,
+    "context": "except Exception:  # Intentional broad catch: catalog may be unavailable in some test fixtures.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/strategy_windows/event_log_window_ctrl.py",
+    "line": 147,
+    "context": "except Exception:  # Intentional broad catch: resolver build must not crash the Event Log open path",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/strategy_windows/event_log_window_ctrl.py",
+    "line": 183,
+    "context": "except Exception:  # Intentional broad catch: replay launch failures must not crash the Event Log",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/screens/strategy_windows/planet_abilities_ctrl.py",
+    "line": 36,
+    "context": "except Exception:  # Intentional broad catch: registry provider may be uninitialized; abilities window opens without registry-backed lookups",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 69,
+    "context": "except Exception as e:  # Intentional broad catch: Tkinter Tk() and withdraw() can raise platform-specific subclasses (TclError, _tkinter.TclError, OSError on broken display, ImportError on minimal Python builds without _tkinter); narrow catches above (TclError, RuntimeError) cover the documented cases \u2014 this is the safety net for the long tail. Returning None disables Tkinter cleanly so the rest of the UI keeps working without dialog support.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 100,
+    "context": "except Exception:  # Intentional broad catch: Tk.destroy() raises tkinter.TclError variants when the interpreter is already torn down (common in pytest fixtures), and on some platforms _tkinter raises a bare RuntimeError on double-destroy. Reset is best-effort \u2014 swallowing here is correct because the goal (root no longer usable) is achieved either way.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 142,
+    "context": "except Exception as e:  # Intentional broad catch: filedialog.asksaveasfilename raises tkinter.TclError on Linux when no display is reachable mid-session, OSError if the initial directory is on a removed drive, and per-platform native-dialog errors that aren't documented as a stable type. Returning None falls back to \"user cancelled\" semantics \u2014 the caller already handles None for cancellation.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 175,
+    "context": "except Exception as e:  # Intentional broad catch: filedialog.askopenfilename raises tkinter.TclError on display loss mid-session, OSError on inaccessible initialdir, and per-platform native-dialog errors. Returning None matches the \"user cancelled\" path \u2014 same semantics from the caller's perspective.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 206,
+    "context": "except Exception as e:  # Intentional broad catch: simpledialog.askstring raises tkinter.TclError if the parent root has been destroyed, RuntimeError if the Tk event loop is in a bad state, and ValueError on malformed encoding. Falling back to initialvalue (or None) is safe because the caller already treats None as \"cancelled\".",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 229,
+    "context": "except Exception as e:  # Intentional broad catch: tkinter.TclError variants on clipboard access (X11 selection contention on Linux, OSError on Windows when another app holds the clipboard, RuntimeError if the root was destroyed). Returning False signals \"copy failed\" without crashing; the caller can show a status message or fall back to a different mechanism.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/services/image/background.py",
+    "line": 217,
+    "context": "except Exception as e:  # Intentional broad catch: provider escape \u2014 wrap as ImageUnexpectedError so worker-thread crashes don't leave caller polling forever.",
+    "has_comment": false
+  },
+  {
+    "file": "game/ui/services/image/openai_provider.py",
+    "line": 413,
+    "context": "except Exception:  # Intentional broad catch: image-size detection is best-effort; failure must not block return.",
+    "has_comment": false
+  }
+]

@@ -1,0 +1,499 @@
+[
+  {
+    "file": "game/context.py",
+    "line": 50,
+    "variable": "_default_planet_habitability_service",
+    "function": "set_default_planet_habitability_service",
+    "context": "global _default_planet_habitability_service"
+  },
+  {
+    "file": "game/context.py",
+    "line": 58,
+    "variable": "_default_planet_habitability_service",
+    "function": "_install_default_habitability_service",
+    "context": "global _default_planet_habitability_service"
+  },
+  {
+    "file": "game/exit_dialog.py",
+    "line": 24,
+    "variable": "_exit_yes_rect",
+    "function": "draw_exit_dialog",
+    "context": "global _exit_yes_rect, _exit_no_rect"
+  },
+  {
+    "file": "game/exit_dialog.py",
+    "line": 24,
+    "variable": "_exit_no_rect",
+    "function": "draw_exit_dialog",
+    "context": "global _exit_yes_rect, _exit_no_rect"
+  },
+  {
+    "file": "game/ai/policy_manager.py",
+    "line": 34,
+    "variable": "_default_policy_manager",
+    "function": "get_default_policy_manager",
+    "context": "global _default_policy_manager"
+  },
+  {
+    "file": "game/assets/asset_manager.py",
+    "line": 365,
+    "variable": "_default_asset_manager",
+    "function": "get_default_asset_manager",
+    "context": "global _default_asset_manager"
+  },
+  {
+    "file": "game/assets/asset_manager.py",
+    "line": 373,
+    "variable": "_default_asset_manager",
+    "function": "set_default_asset_manager",
+    "context": "global _default_asset_manager"
+  },
+  {
+    "file": "game/core/profiling.py",
+    "line": 27,
+    "variable": "_default_profiler",
+    "function": "set_default_profiler",
+    "context": "global _default_profiler"
+  },
+  {
+    "file": "game/core/registry.py",
+    "line": 296,
+    "variable": "_default_manager",
+    "function": "set_default_registry_manager",
+    "context": "global _default_manager"
+  },
+  {
+    "file": "game/core/registry.py",
+    "line": 312,
+    "variable": "_default_manager",
+    "function": "get_default_registry_manager",
+    "context": "global _default_manager"
+  },
+  {
+    "file": "game/core/registry.py",
+    "line": 480,
+    "variable": "_default_provider",
+    "function": "get_default_registry_provider",
+    "context": "global _default_provider"
+  },
+  {
+    "file": "game/core/registry_cache.py",
+    "line": 57,
+    "variable": "_cached_registries",
+    "function": "get_cached_registries",
+    "context": "global _cached_registries"
+  },
+  {
+    "file": "game/core/registry_cache.py",
+    "line": 82,
+    "variable": "_cached_registries",
+    "function": "reset_cached_registries",
+    "context": "global _cached_registries"
+  },
+  {
+    "file": "game/services/llm/background.py",
+    "line": 144,
+    "variable": "_in_flight_calls",
+    "function": "start",
+    "context": "global _in_flight_calls"
+  },
+  {
+    "file": "game/services/llm/background.py",
+    "line": 329,
+    "variable": "_in_flight_calls",
+    "function": "_run",
+    "context": "global _in_flight_calls"
+  },
+  {
+    "file": "game/services/llm/defaults.py",
+    "line": 38,
+    "variable": "_default_llm_provider",
+    "function": "set_default_llm_provider",
+    "context": "global _default_llm_provider"
+  },
+  {
+    "file": "game/simulation/components/component_loader.py",
+    "line": 48,
+    "variable": "_default_cache_manager",
+    "function": "get_default_cache_manager",
+    "context": "global _default_cache_manager"
+  },
+  {
+    "file": "game/simulation/components/component_loader.py",
+    "line": 69,
+    "variable": "_default_cache_manager",
+    "function": "reset_component_caches",
+    "context": "global _default_cache_manager"
+  },
+  {
+    "file": "game/simulation/entities/stat_contributors/registry.py",
+    "line": 108,
+    "variable": "CREW_PRIORITY_REGISTRY",
+    "function": "unregister_crew_priority",
+    "context": "global CREW_PRIORITY_REGISTRY"
+  },
+  {
+    "file": "game/simulation/replay/replay_capture.py",
+    "line": 121,
+    "variable": "_default_sink",
+    "function": "set_default_capture_sink",
+    "context": "global _default_sink"
+  },
+  {
+    "file": "game/simulation/replay/replay_capture.py",
+    "line": 127,
+    "variable": "_default_sink",
+    "function": "reset_default_capture_sink",
+    "context": "global _default_sink"
+  },
+  {
+    "file": "game/simulation/services/ship_materializer.py",
+    "line": 187,
+    "variable": "_default_ship_materializer",
+    "function": "get_default_ship_materializer",
+    "context": "global _default_ship_materializer"
+  },
+  {
+    "file": "game/simulation/services/ship_materializer.py",
+    "line": 203,
+    "variable": "_default_ship_materializer",
+    "function": "set_default_ship_materializer",
+    "context": "global _default_ship_materializer"
+  },
+  {
+    "file": "game/strategy/config/economy_config.py",
+    "line": 137,
+    "variable": "_default",
+    "function": "get_default_economy_config",
+    "context": "global _default"
+  },
+  {
+    "file": "game/strategy/config/economy_config.py",
+    "line": 146,
+    "variable": "_default",
+    "function": "set_default_economy_config",
+    "context": "global _default"
+  },
+  {
+    "file": "game/strategy/data/build_queue_source.py",
+    "line": 38,
+    "variable": "_production_rates_cache",
+    "function": "_load_production_rates",
+    "context": "global _production_rates_cache"
+  },
+  {
+    "file": "game/strategy/data/container.py",
+    "line": 81,
+    "variable": "_resource_catalog",
+    "function": "_get_resource_catalog",
+    "context": "global _resource_catalog"
+  },
+  {
+    "file": "game/strategy/data/container.py",
+    "line": 94,
+    "variable": "_resource_catalog",
+    "function": "set_resource_catalog",
+    "context": "global _resource_catalog"
+  },
+  {
+    "file": "game/strategy/data/design_role_registry.py",
+    "line": 41,
+    "variable": "_default",
+    "function": "get_default_design_role_registry",
+    "context": "global _default"
+  },
+  {
+    "file": "game/strategy/data/design_role_registry.py",
+    "line": 53,
+    "variable": "_default",
+    "function": "set_default_design_role_registry",
+    "context": "global _default"
+  },
+  {
+    "file": "game/strategy/data/design_role_registry.py",
+    "line": 61,
+    "variable": "_default",
+    "function": "reset_default_design_role_registry",
+    "context": "global _default"
+  },
+  {
+    "file": "game/strategy/data/galaxy_system_generator.py",
+    "line": 241,
+    "variable": "_PLANET_TYPES_CACHE",
+    "function": "_load_planet_types",
+    "context": "global _PLANET_TYPES_CACHE"
+  },
+  {
+    "file": "game/strategy/data/galaxy_system_generator.py",
+    "line": 295,
+    "variable": "_STAR_TYPES_CACHE",
+    "function": "_load_star_types",
+    "context": "global _STAR_TYPES_CACHE"
+  },
+  {
+    "file": "game/strategy/data/galaxy_system_generator.py",
+    "line": 320,
+    "variable": "_SYSTEM_ARCHETYPES_CACHE",
+    "function": "_load_system_archetypes",
+    "context": "global _SYSTEM_ARCHETYPES_CACHE"
+  },
+  {
+    "file": "game/strategy/data/galaxy_warp_generator.py",
+    "line": 360,
+    "variable": "_WARP_POINT_TYPES_CACHE",
+    "function": "_load_warp_point_types",
+    "context": "global _WARP_POINT_TYPES_CACHE"
+  },
+  {
+    "file": "game/strategy/data/homeworld_presets.py",
+    "line": 32,
+    "variable": "_presets_cache",
+    "function": "load_homeworld_presets",
+    "context": "global _presets_cache"
+  },
+  {
+    "file": "game/strategy/data/homeworld_presets.py",
+    "line": 136,
+    "variable": "_presets_cache",
+    "function": "clear_cache",
+    "context": "global _presets_cache"
+  },
+  {
+    "file": "game/strategy/engine/minefield_balance.py",
+    "line": 156,
+    "variable": "_CACHED",
+    "function": "load_minefield_balance",
+    "context": "global _CACHED"
+  },
+  {
+    "file": "game/strategy/engine/minefield_balance.py",
+    "line": 179,
+    "variable": "_CACHED",
+    "function": "reset_minefield_balance_cache",
+    "context": "global _CACHED"
+  },
+  {
+    "file": "game/strategy/facade/slices/command_dispatch_slice.py",
+    "line": 36,
+    "variable": "_specs_cache",
+    "function": "_invalidate_specs_cache",
+    "context": "global _specs_cache"
+  },
+  {
+    "file": "game/strategy/facade/slices/command_dispatch_slice.py",
+    "line": 104,
+    "variable": "_specs_cache",
+    "function": "__getattr__",
+    "context": "global _specs_cache"
+  },
+  {
+    "file": "game/strategy/services/ability_iterator.py",
+    "line": 276,
+    "variable": "_FLEETS_AT_HEX_LOOKUP",
+    "function": "set_fleet_lookups",
+    "context": "global _FLEETS_AT_HEX_LOOKUP, _FLEETS_IN_SYSTEM_LOOKUP"
+  },
+  {
+    "file": "game/strategy/services/ability_iterator.py",
+    "line": 276,
+    "variable": "_FLEETS_IN_SYSTEM_LOOKUP",
+    "function": "set_fleet_lookups",
+    "context": "global _FLEETS_AT_HEX_LOOKUP, _FLEETS_IN_SYSTEM_LOOKUP"
+  },
+  {
+    "file": "game/strategy/services/race_description_prompt_builder.py",
+    "line": 36,
+    "variable": "_APTITUDE_DISPLAY_NAMES_CACHE",
+    "function": "_aptitude_display_names",
+    "context": "global _APTITUDE_DISPLAY_NAMES_CACHE"
+  },
+  {
+    "file": "game/strategy/validation/transfer_validator.py",
+    "line": 53,
+    "variable": "_resource_catalog",
+    "function": "_get_resource_catalog",
+    "context": "global _resource_catalog"
+  },
+  {
+    "file": "game/ui/assets/ship_theme_manager.py",
+    "line": 444,
+    "variable": "_default_ship_theme_manager",
+    "function": "get_default_ship_theme_manager",
+    "context": "global _default_ship_theme_manager"
+  },
+  {
+    "file": "game/ui/assets/ship_theme_manager.py",
+    "line": 452,
+    "variable": "_default_ship_theme_manager",
+    "function": "set_default_ship_theme_manager",
+    "context": "global _default_ship_theme_manager"
+  },
+  {
+    "file": "game/ui/panels/empire_treasury_panel.py",
+    "line": 335,
+    "variable": "_RESOURCE_ICON_CACHE",
+    "function": "_clear_resource_icon_cache",
+    "context": "global _RESOURCE_ICON_CACHE"
+  },
+  {
+    "file": "game/ui/panels/empire_treasury_panel.py",
+    "line": 350,
+    "variable": "_RESOURCE_ICON_CACHE",
+    "function": "load_resource_icons",
+    "context": "global _RESOURCE_ICON_CACHE"
+  },
+  {
+    "file": "game/ui/panels/race_flag_gallery.py",
+    "line": 42,
+    "variable": "_FLAG_THUMBNAIL_CACHE",
+    "function": "_clear_thumbnail_caches",
+    "context": "global _FLAG_THUMBNAIL_CACHE"
+  },
+  {
+    "file": "game/ui/panels/race_flag_gallery.py",
+    "line": 124,
+    "variable": "_FLAG_THUMBNAIL_CACHE",
+    "function": "_discover_assets",
+    "context": "global _FLAG_THUMBNAIL_CACHE"
+  },
+  {
+    "file": "game/ui/panels/race_portrait_gallery.py",
+    "line": 40,
+    "variable": "_PORTRAIT_THUMBNAIL_CACHE",
+    "function": "_clear_thumbnail_caches",
+    "context": "global _PORTRAIT_THUMBNAIL_CACHE"
+  },
+  {
+    "file": "game/ui/panels/race_portrait_gallery.py",
+    "line": 122,
+    "variable": "_PORTRAIT_THUMBNAIL_CACHE",
+    "function": "_discover_assets",
+    "context": "global _PORTRAIT_THUMBNAIL_CACHE"
+  },
+  {
+    "file": "game/ui/panels/race_theme_gallery.py",
+    "line": 39,
+    "variable": "_THEME_THUMBNAIL_CACHE",
+    "function": "_clear_thumbnail_caches",
+    "context": "global _THEME_THUMBNAIL_CACHE"
+  },
+  {
+    "file": "game/ui/panels/race_theme_gallery.py",
+    "line": 126,
+    "variable": "_THEME_THUMBNAIL_CACHE",
+    "function": "_discover_assets",
+    "context": "global _THEME_THUMBNAIL_CACHE"
+  },
+  {
+    "file": "game/ui/renderer/sprites.py",
+    "line": 116,
+    "variable": "_default_sprite_manager",
+    "function": "get_default_sprite_manager",
+    "context": "global _default_sprite_manager"
+  },
+  {
+    "file": "game/ui/renderer/sprites.py",
+    "line": 124,
+    "variable": "_default_sprite_manager",
+    "function": "set_default_sprite_manager",
+    "context": "global _default_sprite_manager"
+  },
+  {
+    "file": "game/ui/screens/battle_setup_state.py",
+    "line": 29,
+    "variable": "_next_fleet_id",
+    "function": "_generate_fleet_id",
+    "context": "global _next_fleet_id"
+  },
+  {
+    "file": "game/ui/screens/transfer_mass_preview.py",
+    "line": 199,
+    "variable": "_catalog",
+    "function": "_get_catalog",
+    "context": "global _catalog"
+  },
+  {
+    "file": "game/ui/screens/transfer_view_model.py",
+    "line": 40,
+    "variable": "_resource_catalog",
+    "function": "_get_resource_catalog",
+    "context": "global _resource_catalog"
+  },
+  {
+    "file": "game/ui/services/game_settings.py",
+    "line": 85,
+    "variable": "_default_game_settings",
+    "function": "get_default_game_settings",
+    "context": "global _default_game_settings"
+  },
+  {
+    "file": "game/ui/services/game_settings.py",
+    "line": 93,
+    "variable": "_default_game_settings",
+    "function": "set_default_game_settings",
+    "context": "global _default_game_settings"
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 44,
+    "variable": "_tk_root",
+    "function": "get_tk_root",
+    "context": "global _tk_root, _initialized, _available"
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 44,
+    "variable": "_initialized",
+    "function": "get_tk_root",
+    "context": "global _tk_root, _initialized, _available"
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 44,
+    "variable": "_available",
+    "function": "get_tk_root",
+    "context": "global _tk_root, _initialized, _available"
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 95,
+    "variable": "_tk_root",
+    "function": "reset_tk_root",
+    "context": "global _tk_root, _initialized, _available"
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 95,
+    "variable": "_initialized",
+    "function": "reset_tk_root",
+    "context": "global _tk_root, _initialized, _available"
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 95,
+    "variable": "_available",
+    "function": "reset_tk_root",
+    "context": "global _tk_root, _initialized, _available"
+  },
+  {
+    "file": "game/ui/services/image/background.py",
+    "line": 115,
+    "variable": "_in_flight_calls",
+    "function": "start",
+    "context": "global _in_flight_calls"
+  },
+  {
+    "file": "game/ui/services/image/background.py",
+    "line": 248,
+    "variable": "_in_flight_calls",
+    "function": "_run",
+    "context": "global _in_flight_calls"
+  },
+  {
+    "file": "game/ui/services/image/defaults.py",
+    "line": 41,
+    "variable": "_default_image_provider",
+    "function": "set_default_image_provider",
+    "context": "global _default_image_provider"
+  }
+]

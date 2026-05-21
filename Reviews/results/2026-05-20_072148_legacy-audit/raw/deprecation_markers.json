@@ -1,0 +1,61 @@
+{
+  "detector": "deprecation_markers",
+  "scanned_files": 846,
+  "total_findings": 9,
+  "findings": [
+    {
+      "file": "game/ai/carrier_controller.py",
+      "line": 358,
+      "marker": "# Legacy",
+      "context": "    # Legacy ability-lookup helper (kept for test fixtures)"
+    },
+    {
+      "file": "game/strategy/combat/post_battle_hook_builder.py",
+      "line": 67,
+      "marker": "# legacy",
+      "context": "            # legacy direct-construction tests."
+    },
+    {
+      "file": "game/strategy/data/planetary_facility.py",
+      "line": 196,
+      "marker": "# Deprecated",
+      "context": "    # Deprecated fuel-specific wrappers (F-A-012)"
+    },
+    {
+      "file": "game/strategy/data/ship_instance.py",
+      "line": 170,
+      "marker": "# legacy",
+      "context": "    # legacy ``carried_items: List[Dict[str, Any]]`` mixed-shape list."
+    },
+    {
+      "file": "game/strategy/data/ship_instance.py",
+      "line": 180,
+      "marker": "# legacy",
+      "context": "    # legacy dict-list shape \u2014 see ``carried_items`` property."
+    },
+    {
+      "file": "game/strategy/data/ship_instance_serializer.py",
+      "line": 62,
+      "marker": "# legacy",
+      "context": "        # legacy ``carried_items`` dict-list shape is no longer the"
+    },
+    {
+      "file": "game/strategy/services/mine_group_service.py",
+      "line": 130,
+      "marker": "# legacy",
+      "context": "            # legacy test stub that still uses ``fleets``."
+    },
+    {
+      "file": "game/ui/screens/strategy_detail_fmt.py",
+      "line": 564,
+      "marker": "# legacy",
+      "context": "        # legacy projection)."
+    },
+    {
+      "file": "game/ui/screens/test_lab/dialogs.py",
+      "line": 256,
+      "marker": "# Old",
+      "context": "            # Old value (strikethrough)"
+    }
+  ]
+}

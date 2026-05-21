@@ -1,0 +1,14 @@
+[
+  {
+    "file": "game/assets/asset_manager.py",
+    "line": 14,
+    "variable": "_default_asset_manager",
+    "context": "_default_asset_manager: AssetManager | None = None"
+  },
+  {
+    "file": "game/simulation/replay/replay_capture.py",
+    "line": 110,
+    "variable": "_default_sink",
+    "context": "_default_sink: IReplayCaptureSink = NullCaptureSink()"
+  }
+]

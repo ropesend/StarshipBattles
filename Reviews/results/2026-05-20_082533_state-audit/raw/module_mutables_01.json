@@ -1,0 +1,352 @@
+[
+  {
+    "file": "game/context.py",
+    "line": 23,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/core/constants.py",
+    "line": 5,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/core/registry_cache.py",
+    "line": 39,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"get_cached_registries\", \"reset_cached_registries\"]"
+  },
+  {
+    "file": "game/research/data/__init__.py",
+    "line": 6,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['TechNode', 'TechRequirement', 'TechTree', 'ResearchTracker', 'NodeState']"
+  },
+  {
+    "file": "game/services/llm/background.py",
+    "line": 371,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/services/llm/defaults.py",
+    "line": 42,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"get_default_llm_provider\", \"set_default_llm_provider\"]"
+  },
+  {
+    "file": "game/services/llm/factory.py",
+    "line": 79,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"LLMProviderFactory\", \"register_provider\"]"
+  },
+  {
+    "file": "game/simulation/combat/boundary.py",
+    "line": 215,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/combat/ram_target_resolver.py",
+    "line": 226,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"RamTargetResolver\"]"
+  },
+  {
+    "file": "game/simulation/combat/telemetry.py",
+    "line": 367,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/entities/ship_stat_querier.py",
+    "line": 12,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['ShipStatQuerier']"
+  },
+  {
+    "file": "game/simulation/managers/__init__.py",
+    "line": 12,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['RetreatManager', 'RetreatState', 'RetreatMethod', 'BattleStateManager']"
+  },
+  {
+    "file": "game/simulation/replay/replay_serialization.py",
+    "line": 621,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/replay/replay_verifier.py",
+    "line": 222,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/services/ship_materializer.py",
+    "line": 207,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/services/__init__.py",
+    "line": 8,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/combat/post_battle_hook_builder.py",
+    "line": 28,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"PostBattleHookBuilder\"]"
+  },
+  {
+    "file": "game/strategy/combat/strategy_modifier_stack_builder.py",
+    "line": 25,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"StrategyModifierStackBuilder\"]"
+  },
+  {
+    "file": "game/strategy/combat/pre_tick_setup/__init__.py",
+    "line": 17,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/data/design_role_registry.py",
+    "line": 94,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/data/fleet_serde.py",
+    "line": 33,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/engine/turn_engine_config.py",
+    "line": 47,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['TurnEngineConfig']"
+  },
+  {
+    "file": "game/strategy/engine/handlers/launch_satellites.py",
+    "line": 155,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"LaunchSatellitesCommandHandler\", \"register\"]"
+  },
+  {
+    "file": "game/strategy/engine/handlers/lay_mines.py",
+    "line": 168,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"LayMinesCommandHandler\", \"register\"]"
+  },
+  {
+    "file": "game/strategy/engine/order_handlers/launch_fighters.py",
+    "line": 294,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"LaunchFightersOrderHandler\"]"
+  },
+  {
+    "file": "game/strategy/engine/order_handlers/lay_mines.py",
+    "line": 380,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"LayMinesOrderHandler\"]"
+  },
+  {
+    "file": "game/strategy/facade/dto/__init__.py",
+    "line": 17,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/generation/star_generator.py",
+    "line": 38,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"StarGenerator\"]"
+  },
+  {
+    "file": "game/strategy/interfaces/engines/components.py",
+    "line": 20,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['IComponentActivationEngine']"
+  },
+  {
+    "file": "game/strategy/services/ability_metadata.py",
+    "line": 553,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/services/component_layers.py",
+    "line": 27,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/services/fleet_write_service.py",
+    "line": 35,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"FleetWriteService\"]"
+  },
+  {
+    "file": "game/strategy/services/mine_group_service.py",
+    "line": 151,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"MineGroupService\"]"
+  },
+  {
+    "file": "game/strategy/services/planet_economy_projector.py",
+    "line": 240,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/services/planet_write_service.py",
+    "line": 31,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"PlanetWriteService\"]"
+  },
+  {
+    "file": "game/strategy/services/race_description_llm_controller.py",
+    "line": 312,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"FieldStatus\", \"RaceDescriptionLLMController\"]"
+  },
+  {
+    "file": "game/strategy/services/ship_instance_write_service.py",
+    "line": 22,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"ShipInstanceWriteService\", \"_DEFAULT_MAX_HP\"]"
+  },
+  {
+    "file": "game/ui/components/table/__init__.py",
+    "line": 28,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/ui/screens/cargo_quick_dialog.py",
+    "line": 330,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"CargoQuickDialog\", \"CargoQuickDialogUiBuilder\"]"
+  },
+  {
+    "file": "game/ui/screens/new_game_setup_ui_builder.py",
+    "line": 41,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"NewGameSetupUiBuilder\"]"
+  },
+  {
+    "file": "game/ui/screens/planet_list_window.py",
+    "line": 449,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/ui/screens/planet_menu_items.py",
+    "line": 155,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"PlanetMenuItem\", \"build_menu_items\"]"
+  },
+  {
+    "file": "game/ui/screens/strategy_renderer.py",
+    "line": 73,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"StrategyRenderer\", \"WARP_POINT_ROTATION_SPEED\"]"
+  },
+  {
+    "file": "game/ui/screens/transfer_dialog.py",
+    "line": 412,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/ui/screens/battle_setup/__init__.py",
+    "line": 16,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"FleetBattleSetupScreen\"]"
+  },
+  {
+    "file": "game/ui/screens/test_lab/__init__.py",
+    "line": 22,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['TestLabScreen', 'TestLabDataExtractor', 'get_test_data_dir']"
+  },
+  {
+    "file": "game/ui/screens/test_lab/details/__init__.py",
+    "line": 13,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"TestRunDetailsPanel\"]"
+  },
+  {
+    "file": "game/ui/screens/test_lab/renderer/__init__.py",
+    "line": 13,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"TestLabRenderer\"]"
+  },
+  {
+    "file": "game/ui/services/image/types.py",
+    "line": 43,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"ImageResult\"]"
+  },
+  {
+    "file": "game/ui/utils/__init__.py",
+    "line": 38,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  }
+]

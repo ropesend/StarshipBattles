@@ -1,0 +1,386 @@
+{
+  "protocols_found": 76,
+  "protocols": [
+    {
+      "class": "IGridEntity",
+      "file": "game/ai/protocols.py",
+      "line": 34
+    },
+    {
+      "class": "IProjectile",
+      "file": "game/ai/protocols.py",
+      "line": 67
+    },
+    {
+      "class": "IComponentHealth",
+      "file": "game/ai/protocols.py",
+      "line": 85
+    },
+    {
+      "class": "IValidationRule",
+      "file": "game/core/validation.py",
+      "line": 24
+    },
+    {
+      "class": "IResourceReader",
+      "file": "game/core/protocols/boundary.py",
+      "line": 15
+    },
+    {
+      "class": "IPostBattleShip",
+      "file": "game/core/protocols/boundary.py",
+      "line": 35
+    },
+    {
+      "class": "IResourceHolder",
+      "file": "game/core/protocols/boundary.py",
+      "line": 85
+    },
+    {
+      "class": "ICombatant",
+      "file": "game/core/protocols/combat.py",
+      "line": 10
+    },
+    {
+      "class": "IDamageable",
+      "file": "game/core/protocols/combat.py",
+      "line": 28
+    },
+    {
+      "class": "ICombatShip",
+      "file": "game/core/protocols/combat.py",
+      "line": 45
+    },
+    {
+      "class": "ILocatable",
+      "file": "game/core/protocols/common.py",
+      "line": 24
+    },
+    {
+      "class": "INamed",
+      "file": "game/core/protocols/common.py",
+      "line": 33
+    },
+    {
+      "class": "IOwnable",
+      "file": "game/core/protocols/common.py",
+      "line": 42
+    },
+    {
+      "class": "ISerializable",
+      "file": "game/core/protocols/persistence.py",
+      "line": 8
+    },
+    {
+      "class": "IRegistryProvider",
+      "file": "game/core/protocols/registry.py",
+      "line": 8
+    },
+    {
+      "class": "IEmpire",
+      "file": "game/core/protocols/strategy_domain.py",
+      "line": 19
+    },
+    {
+      "class": "IFacility",
+      "file": "game/core/protocols/strategy_domain.py",
+      "line": 113
+    },
+    {
+      "class": "IRaceRegistry",
+      "file": "game/core/protocols/strategy_domain.py",
+      "line": 170
+    },
+    {
+      "class": "IShipInstance",
+      "file": "game/core/protocols/strategy_domain.py",
+      "line": 185
+    },
+    {
+      "class": "IStarSystem",
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 15
+    },
+    {
+      "class": "IStar",
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 45
+    },
+    {
+      "class": "IPlanet",
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 74
+    },
+    {
+      "class": "IOrderable",
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 177
+    },
+    {
+      "class": "IZoneOccupant",
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 206
+    },
+    {
+      "class": "IFleet",
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 232
+    },
+    {
+      "class": "IWarpPoint",
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 306
+    },
+    {
+      "class": "ISectorEnvironment",
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 319
+    },
+    {
+      "class": "IStorm",
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 337
+    },
+    {
+      "class": "IAbilitySource",
+      "file": "game/core/protocols/strategy_entities.py",
+      "line": 361
+    },
+    {
+      "class": "IFleetMutator",
+      "file": "game/core/protocols/strategy_mutators.py",
+      "line": 41
+    },
+    {
+      "class": "IPlanetMutator",
+      "file": "game/core/protocols/strategy_mutators.py",
+      "line": 79
+    },
+    {
+      "class": "IEmpireMutator",
+      "file": "game/core/protocols/strategy_mutators.py",
+      "line": 142
+    },
+    {
+      "class": "IShipInstanceMutator",
+      "file": "game/core/protocols/strategy_mutators.py",
+      "line": 175
+    },
+    {
+      "class": "IScene",
+      "file": "game/core/protocols/ui.py",
+      "line": 9
+    },
+    {
+      "class": "ICamera",
+      "file": "game/core/protocols/ui.py",
+      "line": 34
+    },
+    {
+      "class": "LLMProvider",
+      "file": "game/services/llm/provider.py",
+      "line": 19
+    },
+    {
+      "class": "WeaponHandler",
+      "file": "game/simulation/combat/attack_contract.py",
+      "line": 153
+    },
+    {
+      "class": "BoundaryRegion",
+      "file": "game/simulation/combat/boundary.py",
+      "line": 44
+    },
+    {
+      "class": "IAbility",
+      "file": "game/simulation/interfaces/ability_protocols.py",
+      "line": 44
+    },
+    {
+      "class": "IResourceConsumptionAbility",
+      "file": "game/simulation/interfaces/ability_protocols.py",
+      "line": 98
+    },
+    {
+      "class": "IResourceStorageAbility",
+      "file": "game/simulation/interfaces/ability_protocols.py",
+      "line": 126
+    },
+    {
+      "class": "IResourceGenerationAbility",
+      "file": "game/simulation/interfaces/ability_protocols.py",
+      "line": 145
+    },
+    {
+      "class": "IWeaponAbility",
+      "file": "game/simulation/interfaces/ability_protocols.py",
+      "line": 168
+    },
+    {
+      "class": "IBeamWeaponAbility",
+      "file": "game/simulation/interfaces/ability_protocols.py",
+      "line": 212
+    },
+    {
+      "class": "ISeekerWeaponAbility",
+      "file": "game/simulation/interfaces/ability_protocols.py",
+      "line": 231
+    },
+    {
+      "class": "IProjectileWeaponAbility",
+      "file": "game/simulation/interfaces/ability_protocols.py",
+      "line": 265
+    },
+    {
+      "class": "IWarpJumpAbility",
+      "file": "game/simulation/interfaces/ability_protocols.py",
+      "line": 283
+    },
+    {
+      "class": "IAIController",
+      "file": "game/simulation/interfaces/ai_controller.py",
+      "line": 23
+    },
+    {
+      "class": "IAIControllerFactory",
+      "file": "game/simulation/interfaces/ai_controller.py",
+      "line": 79
+    },
+    {
+      "class": "IComponent",
+      "file": "game/simulation/interfaces/component_protocols.py",
+      "line": 42
+    },
+    {
+      "class": "ICombatShip",
+      "file": "game/simulation/interfaces/entity_protocols.py",
+      "line": 45
+    },
+    {
+      "class": "IProjectile",
+      "file": "game/simulation/interfaces/entity_protocols.py",
+      "line": 238
+    },
+    {
+      "class": "IPhysicsShip",
+      "file": "game/simulation/interfaces/entity_protocols.py",
+      "line": 379
+    },
+    {
+      "class": "ISerializableShip",
+      "file": "game/simulation/interfaces/entity_protocols.py",
+      "line": 422
+    },
+    {
+      "class": "IReplayCaptureSink",
+      "file": "game/simulation/replay/replay_capture.py",
+      "line": 60
+    },
+    {
+      "class": "IShipMaterializer",
+      "file": "game/simulation/services/ship_materializer.py",
+      "line": 49
+    },
+    {
+      "class": "IEndCondition",
+      "file": "game/simulation/systems/battle_end_conditions.py",
+      "line": 64
+    },
+    {
+      "class": "ITickPhase",
+      "file": "game/simulation/systems/tick_phase.py",
+      "line": 37
+    },
+    {
+      "class": "BuildContext",
+      "file": "game/strategy/data/build_context.py",
+      "line": 11
+    },
+    {
+      "class": "IHabitabilityCalculator",
+      "file": "game/strategy/data/galaxy_protocols.py",
+      "line": 60
+    },
+    {
+      "class": "IGalaxySystemGraph",
+      "file": "game/strategy/data/galaxy_protocols.py",
+      "line": 84
+    },
+    {
+      "class": "IGalaxySpatialQuery",
+      "file": "game/strategy/data/galaxy_protocols.py",
+      "line": 102
+    },
+    {
+      "class": "IStockpileHolder",
+      "file": "game/strategy/data/galaxy_protocols.py",
+      "line": 133
+    },
+    {
+      "class": "IStagingYardHolder",
+      "file": "game/strategy/data/galaxy_protocols.py",
+      "line": 171
+    },
+    {
+      "class": "IIssuerAdapter",
+      "file": "game/strategy/engine/issuer_adapter.py",
+      "line": 46
+    },
+    {
+      "class": "IProductionResourceSource",
+      "file": "game/strategy/engine/production_engine.py",
+      "line": 46
+    },
+    {
+      "class": "ICommandHandler",
+      "file": "game/strategy/engine/handlers/base.py",
+      "line": 92
+    },
+    {
+      "class": "IOrderHandler",
+      "file": "game/strategy/engine/order_handlers/base.py",
+      "line": 65
+    },
+    {
+      "class": "ISystemPlacementStrategy",
+      "file": "game/strategy/generation/placement_strategies.py",
+      "line": 21
+    },
+    {
+      "class": "DensityPrimitive",
+      "file": "game/strategy/generation/density/primitives/density_primitive.py",
+      "line": 12
+    },
+    {
+      "class": "IBattleUI",
+      "file": "game/ui/interfaces/battle_ui.py",
+      "line": 176
+    },
+    {
+      "class": "_MapperLike",
+      "file": "game/ui/screens/fleet_menu_items.py",
+      "line": 50
+    },
+    {
+      "class": "StrategyScreenComposition",
+      "file": "game/ui/screens/strategy_screen_composition.py",
+      "line": 47
+    },
+    {
+      "class": "DropTarget",
+      "file": "game/ui/screens/builder/drop_target.py",
+      "line": 4
+    },
+    {
+      "class": "GroupingStrategy",
+      "file": "game/ui/screens/builder/grouping_strategies.py",
+      "line": 6
+    },
+    {
+      "class": "ImageProvider",
+      "file": "game/ui/services/image/provider.py",
+      "line": 24
+    }
+  ],
+  "typeguards_found": 33
+}

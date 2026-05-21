@@ -1,0 +1,168 @@
+{
+  "group": "G2",
+  "label": "docs/systems",
+  "total": 23,
+  "dead_refs": [
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 19,
+      "reference": "game/strategy/services/component_inspector.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 108,
+      "reference": "tests/unit/strategy/services/test_effect_ability_metadata.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 184,
+      "reference": "game/strategy/services/effect_ability_metadata.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 373,
+      "reference": "game/simulation/components/abilities/planetary.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 489,
+      "reference": "game/strategy/services/component_inspector.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 571,
+      "reference": "tests/unit/strategy/services/test_effect_ability_metadata.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 585,
+      "reference": "tests/unit/strategy/services/test_effect_ability_metadata.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 546,
+      "reference": "tests/unit/simulation/test_unified_entry_guard.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 547,
+      "reference": "tests/unit/simulation/replay/test_replay_serialization.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 548,
+      "reference": "tests/unit/strategy/test_replay_resolver.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 548,
+      "reference": "tests/unit/strategy/test_replay_store.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 556,
+      "reference": "tests/path/to/test.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/fighters.md",
+      "line": 244,
+      "reference": "game/ui/screens/planet_context_menu.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/minefields.md",
+      "line": 247,
+      "reference": "game/ui/screens/planet_context_menu.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/minefields.md",
+      "line": 323,
+      "reference": "game/ui/screens/planet_context_menu.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 137,
+      "reference": "game/strategy/engine/commands/specs.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 137,
+      "reference": "game/strategy/engine/command_handlers.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 420,
+      "reference": "game/strategy/engine/commands/specs.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 422,
+      "reference": "game/strategy/engine/command_handlers.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 392,
+      "reference": "game/strategy/engine/command_handlers.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/research_system.md",
+      "line": 24,
+      "reference": "game/research/ui/",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 692,
+      "reference": "game/strategy/services/effect_ability_metadata.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 831,
+      "reference": "data/spectrum.py",
+      "prefix": "data",
+      "exists": false
+    }
+  ]
+}

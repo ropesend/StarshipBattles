@@ -1,0 +1,14 @@
+{
+  "audit_name": "state",
+  "runs": [
+    {
+      "score_total": 47.7,
+      "critical": 1,
+      "major": 14,
+      "minor": 18,
+      "singletons": 14,
+      "random_seed_sites": 2,
+      "global_usages": 71
+    }
+  ]
+}

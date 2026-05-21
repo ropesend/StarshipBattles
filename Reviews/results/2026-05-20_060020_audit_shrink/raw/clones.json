@@ -1,0 +1,488 @@
+{
+  "total_clusters": 26,
+  "total_duplicated_loc": 754,
+  "clusters": [
+    {
+      "member_count": 5,
+      "max_similarity": 0.991,
+      "estimated_loc": 37,
+      "members": [
+        {
+          "file": "strategy\\engine\\order_handlers\\launch_fighters.py",
+          "function": "execute_action_order",
+          "line": 74
+        },
+        {
+          "file": "strategy\\engine\\order_handlers\\launch_satellites.py",
+          "function": "execute_action_order",
+          "line": 59
+        },
+        {
+          "file": "strategy\\engine\\order_handlers\\lay_mines.py",
+          "function": "execute_action_order",
+          "line": 144
+        },
+        {
+          "file": "strategy\\engine\\order_handlers\\recover_fighters.py",
+          "function": "execute_action_order",
+          "line": 67
+        },
+        {
+          "file": "strategy\\engine\\order_handlers\\recover_satellites.py",
+          "function": "execute_action_order",
+          "line": 54
+        }
+      ]
+    },
+    {
+      "member_count": 3,
+      "max_similarity": 1.0,
+      "estimated_loc": 12,
+      "members": [
+        {
+          "file": "simulation\\components\\abilities\\planetary\\shields.py",
+          "function": "__init__",
+          "line": 98
+        },
+        {
+          "file": "simulation\\components\\abilities\\planetary\\stat_modifiers.py",
+          "function": "__init__",
+          "line": 125
+        },
+        {
+          "file": "simulation\\components\\abilities\\planetary\\stat_modifiers.py",
+          "function": "__init__",
+          "line": 50
+        }
+      ]
+    },
+    {
+      "member_count": 3,
+      "max_similarity": 0.987,
+      "estimated_loc": 42,
+      "members": [
+        {
+          "file": "ui\\screens\\strategy_superweapons.py",
+          "function": "handle_close_warp_designation",
+          "line": 239
+        },
+        {
+          "file": "ui\\screens\\strategy_superweapons.py",
+          "function": "handle_dyson_sphere_designation",
+          "line": 281
+        },
+        {
+          "file": "ui\\screens\\strategy_superweapons.py",
+          "function": "handle_stellerate_star_designation",
+          "line": 142
+        }
+      ]
+    },
+    {
+      "member_count": 3,
+      "max_similarity": 0.964,
+      "estimated_loc": 52,
+      "members": [
+        {
+          "file": "strategy\\engine\\handlers\\launch_fighters.py",
+          "function": "_execute_fleet",
+          "line": 57
+        },
+        {
+          "file": "strategy\\engine\\handlers\\launch_satellites.py",
+          "function": "_execute_fleet",
+          "line": 58
+        },
+        {
+          "file": "strategy\\engine\\handlers\\lay_mines.py",
+          "function": "_execute_fleet",
+          "line": 63
+        }
+      ]
+    },
+    {
+      "member_count": 3,
+      "max_similarity": 0.95,
+      "estimated_loc": 37,
+      "members": [
+        {
+          "file": "strategy\\engine\\handlers\\launch_fighters.py",
+          "function": "_execute_planet",
+          "line": 108
+        },
+        {
+          "file": "strategy\\engine\\handlers\\launch_satellites.py",
+          "function": "_execute_planet",
+          "line": 110
+        },
+        {
+          "file": "strategy\\engine\\handlers\\lay_mines.py",
+          "function": "_execute_planet",
+          "line": 121
+        }
+      ]
+    },
+    {
+      "member_count": 3,
+      "max_similarity": 0.911,
+      "estimated_loc": 24,
+      "members": [
+        {
+          "file": "ui\\screens\\strategy_windows\\selection_prompts.py",
+          "function": "open_system",
+          "line": 55
+        },
+        {
+          "file": "ui\\screens\\strategy_windows\\selection_prompts.py",
+          "function": "prompt_fleet",
+          "line": 74
+        },
+        {
+          "file": "ui\\screens\\strategy_windows\\selection_prompts.py",
+          "function": "prompt_planet",
+          "line": 29
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 1.0,
+      "estimated_loc": 14,
+      "members": [
+        {
+          "file": "ui\\screens\\defeat_dialog.py",
+          "function": "process_event",
+          "line": 107
+        },
+        {
+          "file": "ui\\screens\\turn_failed_dialog.py",
+          "function": "process_event",
+          "line": 123
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 1.0,
+      "estimated_loc": 39,
+      "members": [
+        {
+          "file": "simulation\\systems\\battle_engine.py",
+          "function": "launch_fighters_in_battle",
+          "line": 499
+        },
+        {
+          "file": "simulation\\systems\\battle_engine.py",
+          "function": "launch_satellites_in_battle",
+          "line": 540
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 1.0,
+      "estimated_loc": 21,
+      "members": [
+        {
+          "file": "services\\llm\\background.py",
+          "function": "cancel",
+          "line": 182
+        },
+        {
+          "file": "ui\\services\\image\\background.py",
+          "function": "cancel",
+          "line": 139
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.994,
+      "estimated_loc": 27,
+      "members": [
+        {
+          "file": "ui\\effects\\hit_effects.py",
+          "function": "_draw_armor_hit",
+          "line": 146
+        },
+        {
+          "file": "ui\\effects\\hit_effects.py",
+          "function": "_draw_component_destroyed",
+          "line": 176
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.983,
+      "estimated_loc": 30,
+      "members": [
+        {
+          "file": "strategy\\engine\\order_handlers\\recover_fighters.py",
+          "function": "execute_for_issuer",
+          "line": 107
+        },
+        {
+          "file": "strategy\\engine\\order_handlers\\recover_satellites.py",
+          "function": "execute_for_issuer",
+          "line": 90
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.981,
+      "estimated_loc": 87,
+      "members": [
+        {
+          "file": "strategy\\engine\\order_handlers\\recover_fighters.py",
+          "function": "_run_with_issuer",
+          "line": 139
+        },
+        {
+          "file": "strategy\\engine\\order_handlers\\recover_satellites.py",
+          "function": "_run_with_issuer",
+          "line": 119
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.979,
+      "estimated_loc": 8,
+      "members": [
+        {
+          "file": "ui\\screens\\battle_setup\\controller.py",
+          "function": "delete_squadron",
+          "line": 293
+        },
+        {
+          "file": "ui\\screens\\battle_setup\\controller.py",
+          "function": "duplicate_squadron",
+          "line": 283
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.977,
+      "estimated_loc": 11,
+      "members": [
+        {
+          "file": "strategy\\facade\\dto\\fleet_dto.py",
+          "function": "_sum_vehicle_bay_max",
+          "line": 285
+        },
+        {
+          "file": "strategy\\facade\\dto\\fleet_dto.py",
+          "function": "_sum_vehicle_bay_used",
+          "line": 271
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.976,
+      "estimated_loc": 7,
+      "members": [
+        {
+          "file": "simulation\\components\\abilities\\base.py",
+          "function": "__init_subclass__",
+          "line": 450
+        },
+        {
+          "file": "simulation\\components\\abilities\\base.py",
+          "function": "__init_subclass__",
+          "line": 502
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.971,
+      "estimated_loc": 31,
+      "members": [
+        {
+          "file": "strategy\\engine\\handlers\\recover_fighters.py",
+          "function": "_execute_fleet",
+          "line": 51
+        },
+        {
+          "file": "strategy\\engine\\handlers\\recover_satellites.py",
+          "function": "_execute_fleet",
+          "line": 53
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.968,
+      "estimated_loc": 13,
+      "members": [
+        {
+          "file": "ui\\panels\\system_tree_panel.py",
+          "function": "_add_sector_effects",
+          "line": 482
+        },
+        {
+          "file": "ui\\panels\\system_tree_panel.py",
+          "function": "_add_system_effects",
+          "line": 467
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.955,
+      "estimated_loc": 15,
+      "members": [
+        {
+          "file": "strategy\\systems\\race_randomizer.py",
+          "function": "_pick_leader",
+          "line": 127
+        },
+        {
+          "file": "strategy\\systems\\race_randomizer.py",
+          "function": "_pick_name_entry",
+          "line": 109
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.948,
+      "estimated_loc": 41,
+      "members": [
+        {
+          "file": "simulation\\entities\\stat_contributors\\launch.py",
+          "function": "contribute_tactical_satellite_launch",
+          "line": 69
+        },
+        {
+          "file": "simulation\\entities\\stat_contributors\\launch.py",
+          "function": "contribute_vehicle_launch",
+          "line": 25
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.946,
+      "estimated_loc": 16,
+      "members": [
+        {
+          "file": "ui\\screens\\builder\\grouping_strategies.py",
+          "function": "group_components",
+          "line": 18
+        },
+        {
+          "file": "ui\\screens\\builder\\grouping_strategies.py",
+          "function": "group_components",
+          "line": 53
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.937,
+      "estimated_loc": 86,
+      "members": [
+        {
+          "file": "strategy\\engine\\order_handlers\\launch_fighters.py",
+          "function": "_run_with_issuer",
+          "line": 147
+        },
+        {
+          "file": "strategy\\engine\\order_handlers\\launch_satellites.py",
+          "function": "_run_with_issuer",
+          "line": 130
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.935,
+      "estimated_loc": 14,
+      "members": [
+        {
+          "file": "ui\\panels\\race_aptitudes_panel.py",
+          "function": "_create_content",
+          "line": 91
+        },
+        {
+          "file": "ui\\panels\\race_identity_panel.py",
+          "function": "_create_content",
+          "line": 86
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.925,
+      "estimated_loc": 36,
+      "members": [
+        {
+          "file": "ui\\services\\tkinter_utils.py",
+          "function": "open_load_dialog",
+          "line": 147
+        },
+        {
+          "file": "ui\\services\\tkinter_utils.py",
+          "function": "open_save_dialog",
+          "line": 108
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.921,
+      "estimated_loc": 24,
+      "members": [
+        {
+          "file": "ui\\screens\\test_lab\\renderer\\category_panel.py",
+          "function": "__init__",
+          "line": 28
+        },
+        {
+          "file": "ui\\screens\\test_lab\\renderer\\test_list_panel.py",
+          "function": "__init__",
+          "line": 27
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.905,
+      "estimated_loc": 14,
+      "members": [
+        {
+          "file": "strategy\\data\\deployed_group.py",
+          "function": "_from_dict_payload",
+          "line": 352
+        },
+        {
+          "file": "strategy\\data\\deployed_group.py",
+          "function": "_from_dict_payload",
+          "line": 410
+        }
+      ]
+    },
+    {
+      "member_count": 2,
+      "max_similarity": 0.879,
+      "estimated_loc": 16,
+      "members": [
+        {
+          "file": "strategy\\engine\\order_handlers\\recover_fighters.py",
+          "function": "_find_fighter_wing",
+          "line": 242
+        },
+        {
+          "file": "strategy\\engine\\order_handlers\\recover_satellites.py",
+          "function": "_find_satellite_constellation",
+          "line": 222
+        }
+      ]
+    }
+  ]
+}

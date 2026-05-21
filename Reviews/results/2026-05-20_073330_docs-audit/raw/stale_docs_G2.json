@@ -1,0 +1,79 @@
+{
+  "group": "G2",
+  "label": "docs/systems",
+  "total": 12,
+  "staleness": [
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/systems/ai_system.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/systems/fighters.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/systems/minefields.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "last_verified": "2026-05-07",
+      "days_stale": 13,
+      "stale": false
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/systems/research_system.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/systems/resource_system.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/systems/satellites.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/systems/save_load.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    }
+  ]
+}

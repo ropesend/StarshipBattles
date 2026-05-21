@@ -1,0 +1,114 @@
+[
+  {
+    "file": "game/assets/asset_manager.py",
+    "line": 365,
+    "variable": "_default_asset_manager",
+    "function": "get_default_asset_manager",
+    "context": "global _default_asset_manager"
+  },
+  {
+    "file": "game/assets/asset_manager.py",
+    "line": 373,
+    "variable": "_default_asset_manager",
+    "function": "set_default_asset_manager",
+    "context": "global _default_asset_manager"
+  },
+  {
+    "file": "game/simulation/entities/stat_contributors/registry.py",
+    "line": 108,
+    "variable": "CREW_PRIORITY_REGISTRY",
+    "function": "unregister_crew_priority",
+    "context": "global CREW_PRIORITY_REGISTRY"
+  },
+  {
+    "file": "game/simulation/replay/replay_capture.py",
+    "line": 121,
+    "variable": "_default_sink",
+    "function": "set_default_capture_sink",
+    "context": "global _default_sink"
+  },
+  {
+    "file": "game/simulation/replay/replay_capture.py",
+    "line": 127,
+    "variable": "_default_sink",
+    "function": "reset_default_capture_sink",
+    "context": "global _default_sink"
+  },
+  {
+    "file": "game/strategy/config/economy_config.py",
+    "line": 137,
+    "variable": "_default",
+    "function": "get_default_economy_config",
+    "context": "global _default"
+  },
+  {
+    "file": "game/strategy/config/economy_config.py",
+    "line": 146,
+    "variable": "_default",
+    "function": "set_default_economy_config",
+    "context": "global _default"
+  },
+  {
+    "file": "game/strategy/data/build_queue_source.py",
+    "line": 38,
+    "variable": "_production_rates_cache",
+    "function": "_load_production_rates",
+    "context": "global _production_rates_cache"
+  },
+  {
+    "file": "game/strategy/data/galaxy_warp_generator.py",
+    "line": 360,
+    "variable": "_WARP_POINT_TYPES_CACHE",
+    "function": "_load_warp_point_types",
+    "context": "global _WARP_POINT_TYPES_CACHE"
+  },
+  {
+    "file": "game/strategy/data/homeworld_presets.py",
+    "line": 32,
+    "variable": "_presets_cache",
+    "function": "load_homeworld_presets",
+    "context": "global _presets_cache"
+  },
+  {
+    "file": "game/strategy/data/homeworld_presets.py",
+    "line": 136,
+    "variable": "_presets_cache",
+    "function": "clear_cache",
+    "context": "global _presets_cache"
+  },
+  {
+    "file": "game/strategy/facade/slices/command_dispatch_slice.py",
+    "line": 36,
+    "variable": "_specs_cache",
+    "function": "_invalidate_specs_cache",
+    "context": "global _specs_cache"
+  },
+  {
+    "file": "game/strategy/facade/slices/command_dispatch_slice.py",
+    "line": 104,
+    "variable": "_specs_cache",
+    "function": "__getattr__",
+    "context": "global _specs_cache"
+  },
+  {
+    "file": "game/strategy/services/race_description_prompt_builder.py",
+    "line": 36,
+    "variable": "_APTITUDE_DISPLAY_NAMES_CACHE",
+    "function": "_aptitude_display_names",
+    "context": "global _APTITUDE_DISPLAY_NAMES_CACHE"
+  },
+  {
+    "file": "game/strategy/validation/transfer_validator.py",
+    "line": 53,
+    "variable": "_resource_catalog",
+    "function": "_get_resource_catalog",
+    "context": "global _resource_catalog"
+  },
+  {
+    "file": "game/ui/screens/transfer_view_model.py",
+    "line": 40,
+    "variable": "_resource_catalog",
+    "function": "_get_resource_catalog",
+    "context": "global _resource_catalog"
+  }
+]

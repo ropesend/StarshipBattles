@@ -1,0 +1,464 @@
+[
+  {
+    "file": "game/ai/satellite_controller.py",
+    "line": 123,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"SatelliteAIController\"]"
+  },
+  {
+    "file": "game/ai/interfaces/__init__.py",
+    "line": 20,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/core/error_codes.py",
+    "line": 223,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['ErrorCode']"
+  },
+  {
+    "file": "game/core/registry.py",
+    "line": 31,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/core/return_destination.py",
+    "line": 23,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"ReturnDestination\"]"
+  },
+  {
+    "file": "game/core/roles.py",
+    "line": 243,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/core/state_machine.py",
+    "line": 38,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['ScreenStateMachine']"
+  },
+  {
+    "file": "game/core/__init__.py",
+    "line": 142,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/core/patterns/__init__.py",
+    "line": 14,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/core/protocols/strategy_mutators.py",
+    "line": 32,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/services/provider_factory.py",
+    "line": 87,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"resolve_provider\"]"
+  },
+  {
+    "file": "game/services/llm/types.py",
+    "line": 89,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/services/llm/__init__.py",
+    "line": 32,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/battle_outcome.py",
+    "line": 193,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/components/abilities/ui_colors.py",
+    "line": 54,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/components/abilities/__init__.py",
+    "line": 295,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/components/abilities/planetary/__init__.py",
+    "line": 40,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/replay/replay_record.py",
+    "line": 93,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"ReplayRecord\"]"
+  },
+  {
+    "file": "game/simulation/systems/tactical_mine_resolver.py",
+    "line": 593,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/simulation/validation/__init__.py",
+    "line": 22,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/adapters/__init__.py",
+    "line": 10,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['SimulationBattleResolver']"
+  },
+  {
+    "file": "game/strategy/combat/pre_tick_setup_registry.py",
+    "line": 26,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"PreTickBattleSetupRegistry\"]"
+  },
+  {
+    "file": "game/strategy/combat/team_spec_builder.py",
+    "line": 43,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"TeamSpecBuilder\"]"
+  },
+  {
+    "file": "game/strategy/combat/pre_tick_setup/reboard_setup.py",
+    "line": 14,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"build_fighter_reboard_setup\"]"
+  },
+  {
+    "file": "game/strategy/data/carried_vehicle_deploy.py",
+    "line": 113,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/data/deployed_group.py",
+    "line": 32,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/data/galaxy_protocols.py",
+    "line": 50,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/data/galaxy_state.py",
+    "line": 31,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"GalaxyState\"]"
+  },
+  {
+    "file": "game/strategy/data/planet_gen_surface.py",
+    "line": 232,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/data/planet_serde.py",
+    "line": 25,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"planet_to_dict\", \"planet_from_dict_kwargs\"]"
+  },
+  {
+    "file": "game/strategy/engine/issuer_adapter.py",
+    "line": 368,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/engine/handlers/fms_shared.py",
+    "line": 109,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/engine/order_handlers/recover_satellites.py",
+    "line": 274,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"RecoverSatellitesOrderHandler\"]"
+  },
+  {
+    "file": "game/strategy/engine/session/__init__.py",
+    "line": 23,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/engine/superweapon_handlers/__init__.py",
+    "line": 18,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/facade/dto/container_snapshot.py",
+    "line": 54,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"ContainerSnapshotInfo\"]"
+  },
+  {
+    "file": "game/strategy/formulas/colony_output.py",
+    "line": 37,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"planet_habitability_multiplier\", \"projected_growth_rate\"]"
+  },
+  {
+    "file": "game/strategy/formulas/__init__.py",
+    "line": 9,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/generation/density/primitives/__init__.py",
+    "line": 15,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/interfaces/engines/combat.py",
+    "line": 21,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['IConflictEngine', 'IEnvironmentalHazardEngine']"
+  },
+  {
+    "file": "game/strategy/interfaces/engines/orders.py",
+    "line": 20,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['IOrderProcessor', 'IActionExecutionEngine']"
+  },
+  {
+    "file": "game/strategy/interfaces/engines/production.py",
+    "line": 16,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['IProductionEngine']"
+  },
+  {
+    "file": "game/strategy/services/replay_store.py",
+    "line": 495,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"ReplaySettings\", \"ReplayStore\", \"load_replay_settings\"]"
+  },
+  {
+    "file": "game/strategy/services/replay_verification_coordinator.py",
+    "line": 438,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/services/system_effects_collector.py",
+    "line": 60,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/strategy/services/__init__.py",
+    "line": 5,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['CargoTransferService']"
+  },
+  {
+    "file": "game/strategy/services/ability_sources/__init__.py",
+    "line": 32,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/ui/fonts.py",
+    "line": 27,
+    "variable": "_font_cache",
+    "type": "Dict",
+    "context": "_font_cache: dict = {}"
+  },
+  {
+    "file": "game/ui/__init__.py",
+    "line": 19,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/ui/components/filters/__init__.py",
+    "line": 3,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"TriStateFilterWidget\"]"
+  },
+  {
+    "file": "game/ui/filters/__init__.py",
+    "line": 4,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"FilterState\", \"FilterStateManager\"]"
+  },
+  {
+    "file": "game/ui/research/__init__.py",
+    "line": 8,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ['ResearchTreeScene']"
+  },
+  {
+    "file": "game/ui/screens/cargo_quick_dialog_controller.py",
+    "line": 131,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"CargoQuickDialogController\"]"
+  },
+  {
+    "file": "game/ui/screens/design_image_helper.py",
+    "line": 35,
+    "variable": "_portrait_cache",
+    "type": "Dict",
+    "context": "_portrait_cache: Dict[Tuple[str, int], pygame.Surface] = {}"
+  },
+  {
+    "file": "game/ui/screens/design_image_helper.py",
+    "line": 36,
+    "variable": "_topdown_cache",
+    "type": "Dict",
+    "context": "_topdown_cache: Dict[Tuple[str, int], Optional[pygame.Surface]] = {}"
+  },
+  {
+    "file": "game/ui/screens/new_game_setup_controller.py",
+    "line": 360,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"NewGameSetupController\"]"
+  },
+  {
+    "file": "game/ui/screens/new_game_setup_view_model.py",
+    "line": 186,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/ui/screens/planet_abilities_window.py",
+    "line": 275,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/ui/screens/planet_list_controller.py",
+    "line": 48,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"PlanetListController\"]"
+  },
+  {
+    "file": "game/ui/screens/strategy_screen_composition.py",
+    "line": 114,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"StrategyScreenComposition\", \"StrategyScreenCompositionFactory\"]"
+  },
+  {
+    "file": "game/ui/screens/transfer_mass_preview.py",
+    "line": 206,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/ui/screens/race_setup/ui_builder.py",
+    "line": 42,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"RaceSetupUiBuilder\"]"
+  },
+  {
+    "file": "game/ui/screens/race_setup/__init__.py",
+    "line": 27,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"RaceSetupScreen\"]"
+  },
+  {
+    "file": "game/ui/services/__init__.py",
+    "line": 20,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = ["
+  },
+  {
+    "file": "game/ui/services/image/defaults.py",
+    "line": 45,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"get_default_image_provider\", \"set_default_image_provider\"]"
+  },
+  {
+    "file": "game/ui/services/image/provider.py",
+    "line": 82,
+    "variable": "__all__",
+    "type": "List",
+    "context": "__all__ = [\"ImageProvider\"]"
+  }
+]

@@ -1,0 +1,86 @@
+[
+  {
+    "file": "game/core/profiling.py",
+    "line": 27,
+    "variable": "_default_profiler",
+    "function": "set_default_profiler",
+    "context": "global _default_profiler"
+  },
+  {
+    "file": "game/strategy/data/container.py",
+    "line": 81,
+    "variable": "_resource_catalog",
+    "function": "_get_resource_catalog",
+    "context": "global _resource_catalog"
+  },
+  {
+    "file": "game/strategy/data/container.py",
+    "line": 94,
+    "variable": "_resource_catalog",
+    "function": "set_resource_catalog",
+    "context": "global _resource_catalog"
+  },
+  {
+    "file": "game/strategy/data/galaxy_system_generator.py",
+    "line": 241,
+    "variable": "_PLANET_TYPES_CACHE",
+    "function": "_load_planet_types",
+    "context": "global _PLANET_TYPES_CACHE"
+  },
+  {
+    "file": "game/strategy/data/galaxy_system_generator.py",
+    "line": 295,
+    "variable": "_STAR_TYPES_CACHE",
+    "function": "_load_star_types",
+    "context": "global _STAR_TYPES_CACHE"
+  },
+  {
+    "file": "game/strategy/data/galaxy_system_generator.py",
+    "line": 320,
+    "variable": "_SYSTEM_ARCHETYPES_CACHE",
+    "function": "_load_system_archetypes",
+    "context": "global _SYSTEM_ARCHETYPES_CACHE"
+  },
+  {
+    "file": "game/strategy/engine/minefield_balance.py",
+    "line": 156,
+    "variable": "_CACHED",
+    "function": "load_minefield_balance",
+    "context": "global _CACHED"
+  },
+  {
+    "file": "game/strategy/engine/minefield_balance.py",
+    "line": 179,
+    "variable": "_CACHED",
+    "function": "reset_minefield_balance_cache",
+    "context": "global _CACHED"
+  },
+  {
+    "file": "game/ui/assets/ship_theme_manager.py",
+    "line": 444,
+    "variable": "_default_ship_theme_manager",
+    "function": "get_default_ship_theme_manager",
+    "context": "global _default_ship_theme_manager"
+  },
+  {
+    "file": "game/ui/assets/ship_theme_manager.py",
+    "line": 452,
+    "variable": "_default_ship_theme_manager",
+    "function": "set_default_ship_theme_manager",
+    "context": "global _default_ship_theme_manager"
+  },
+  {
+    "file": "game/ui/services/image/background.py",
+    "line": 115,
+    "variable": "_in_flight_calls",
+    "function": "start",
+    "context": "global _in_flight_calls"
+  },
+  {
+    "file": "game/ui/services/image/background.py",
+    "line": 248,
+    "variable": "_in_flight_calls",
+    "function": "_run",
+    "context": "global _in_flight_calls"
+  }
+]

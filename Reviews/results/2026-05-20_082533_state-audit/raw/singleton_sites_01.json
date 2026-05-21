@@ -1,0 +1,26 @@
+[
+  {
+    "file": "game/context.py",
+    "line": 33,
+    "variable": "_default_planet_habitability_service",
+    "context": "_default_planet_habitability_service: Optional['IHabitabilityCalculator'] = None"
+  },
+  {
+    "file": "game/services/llm/defaults.py",
+    "line": 17,
+    "variable": "_default_llm_provider",
+    "context": "_default_llm_provider: Optional[LLMProvider] = None"
+  },
+  {
+    "file": "game/simulation/services/ship_materializer.py",
+    "line": 177,
+    "variable": "_default_ship_materializer",
+    "context": "_default_ship_materializer: Optional[IShipMaterializer] = None"
+  },
+  {
+    "file": "game/ui/renderer/sprites.py",
+    "line": 14,
+    "variable": "_default_sprite_manager",
+    "context": "_default_sprite_manager: Optional['SpriteManager'] = None"
+  }
+]

@@ -1,0 +1,22 @@
+[
+  {
+    "file": "game/core/json_utils.py",
+    "line": 104,
+    "call": "json.load"
+  },
+  {
+    "file": "game/core/json_utils.py",
+    "line": 145,
+    "call": "json.load"
+  },
+  {
+    "file": "game/core/json_utils.py",
+    "line": 186,
+    "call": "json.dump"
+  },
+  {
+    "file": "game/strategy/engine/minefield_balance.py",
+    "line": 162,
+    "call": "json.load"
+  }
+]

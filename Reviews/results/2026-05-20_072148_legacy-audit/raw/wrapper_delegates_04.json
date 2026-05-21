@@ -1,0 +1,16 @@
+{
+  "detector": "wrapper_delegates",
+  "scanned_files": 214,
+  "total_findings": 1,
+  "findings": [
+    {
+      "file": "game/simulation/systems/battle_engine.py",
+      "line": 687,
+      "function": "_collect_new_attacks",
+      "delegates_to": "_attacks.collect_new_attacks",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def _collect_new_attacks(self, alive_ships: List['Ship']) -> List[Any]:"
+    }
+  ]
+}

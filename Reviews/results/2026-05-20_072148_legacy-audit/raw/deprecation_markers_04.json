@@ -1,0 +1,25 @@
+{
+  "detector": "deprecation_markers",
+  "scanned_files": 214,
+  "total_findings": 3,
+  "findings": [
+    {
+      "file": "game/strategy/combat/post_battle_hook_builder.py",
+      "line": 67,
+      "marker": "# legacy",
+      "context": "            # legacy direct-construction tests."
+    },
+    {
+      "file": "game/strategy/data/planetary_facility.py",
+      "line": 196,
+      "marker": "# Deprecated",
+      "context": "    # Deprecated fuel-specific wrappers (F-A-012)"
+    },
+    {
+      "file": "game/ui/screens/test_lab/dialogs.py",
+      "line": 256,
+      "marker": "# Old",
+      "context": "            # Old value (strikethrough)"
+    }
+  ]
+}

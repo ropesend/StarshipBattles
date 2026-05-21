@@ -1,0 +1,352 @@
+[
+  {
+    "file": "game/ai/interfaces/controllable.py",
+    "line": 41,
+    "function": "get_position",
+    "class": "IControllable",
+    "layer": "ai"
+  },
+  {
+    "file": "game/ai/interfaces/controllable.py",
+    "line": 46,
+    "function": "get_velocity",
+    "class": "IControllable",
+    "layer": "ai"
+  },
+  {
+    "file": "game/ai/interfaces/controllable.py",
+    "line": 239,
+    "function": "ship",
+    "class": "ShipControllableAdapter",
+    "layer": "ai"
+  },
+  {
+    "file": "game/ai/interfaces/controllable.py",
+    "line": 258,
+    "function": "get_position",
+    "class": "ShipControllableAdapter",
+    "layer": "ai"
+  },
+  {
+    "file": "game/ai/interfaces/controllable.py",
+    "line": 262,
+    "function": "get_velocity",
+    "class": "ShipControllableAdapter",
+    "layer": "ai"
+  },
+  {
+    "file": "game/simulation/interfaces/component_protocols.py",
+    "line": 90,
+    "function": "status",
+    "class": "IComponent",
+    "layer": "simulation"
+  },
+  {
+    "file": "game/strategy/data/order_serializer.py",
+    "line": 99,
+    "function": "_deserialize_target",
+    "class": "OrderSerializer",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/environmental_hazard_engine.py",
+    "line": 65,
+    "function": "_get_ship_mutator",
+    "class": "EnvironmentalHazardEngine",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/ui/screens/empire_build_queue_window.py",
+    "line": 301,
+    "function": "search_entry",
+    "class": "EmpireBuildQueueWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/empire_build_queue_window.py",
+    "line": 306,
+    "function": "btn_apply_filters",
+    "class": "EmpireBuildQueueWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/empire_build_queue_window.py",
+    "line": 363,
+    "function": "get_hex_for_source",
+    "class": "EmpireBuildQueueWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/fleet_report_sidebar.py",
+    "line": 470,
+    "function": "check_button_presses",
+    "class": "FleetReportSidebar",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_list_presets.py",
+    "line": 25,
+    "function": "_load_from_disk",
+    "class": "PresetManager",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_list_presets.py",
+    "line": 35,
+    "function": "get_preset_names",
+    "class": "PresetManager",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_list_presets.py",
+    "line": 48,
+    "function": "get_preset",
+    "class": "PresetManager",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_list_presets.py",
+    "line": 56,
+    "function": "get_all_presets",
+    "class": "PresetManager",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_list_presets.py",
+    "line": 124,
+    "function": "apply_planet_list_state",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_menu_items.py",
+    "line": 59,
+    "function": "_global_hex",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_fleet_command_router.py",
+    "line": 39,
+    "function": "scene",
+    "class": "FleetCommandRouter",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_screen_assets.py",
+    "line": 54,
+    "function": "get_object_asset",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_ui.py",
+    "line": 352,
+    "function": "_get_label_for_obj",
+    "class": "StrategyUI",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_ui.py",
+    "line": 355,
+    "function": "_get_object_asset",
+    "class": "StrategyUI",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_ui.py",
+    "line": 359,
+    "function": "_format_spectrum",
+    "class": "StrategyUI",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_ui.py",
+    "line": 378,
+    "function": "_format_atmosphere_raw",
+    "class": "StrategyUI",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_ui.py",
+    "line": 433,
+    "function": "handle_click",
+    "class": "StrategyUI",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_ui_action_router.py",
+    "line": 35,
+    "function": "scene",
+    "class": "UIActionRouter",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/workshop_data_reloader.py",
+    "line": 81,
+    "function": "right_panel",
+    "class": "WorkshopDataReloader",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/workshop_data_reloader.py",
+    "line": 86,
+    "function": "left_panel",
+    "class": "WorkshopDataReloader",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/workshop_data_reloader.py",
+    "line": 91,
+    "function": "view",
+    "class": "WorkshopDataReloader",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/workshop_data_reloader.py",
+    "line": 96,
+    "function": "controller",
+    "class": "WorkshopDataReloader",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/workshop_viewmodel_ship_ops.py",
+    "line": 207,
+    "function": "validate_design",
+    "class": "WorkshopShipOps",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_definitions.py",
+    "line": 34,
+    "function": "get_value",
+    "class": "StatDefinition",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_definitions.py",
+    "line": 43,
+    "function": "format_value",
+    "class": "StatDefinition",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_definitions.py",
+    "line": 48,
+    "function": "get_display_unit",
+    "class": "StatDefinition",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_definitions.py",
+    "line": 53,
+    "function": "get_status",
+    "class": "StatDefinition",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/structure_list_items.py",
+    "line": 262,
+    "function": "_create_tree_line",
+    "class": "IndividualComponentItem",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/structure_list_items.py",
+    "line": 285,
+    "function": "get_abs_rect",
+    "class": "IndividualComponentItem",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/structure_list_items.py",
+    "line": 289,
+    "function": "handle_event",
+    "class": "IndividualComponentItem",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/structure_list_items.py",
+    "line": 506,
+    "function": "handle_event",
+    "class": "LayerComponentItem",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/structure_list_items.py",
+    "line": 534,
+    "function": "get_abs_rect",
+    "class": "LayerComponentItem",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/weapons_panel.py",
+    "line": 170,
+    "function": "hovered_weapon",
+    "class": "WeaponsReportPanel",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/weapons_viewmodel.py",
+    "line": 110,
+    "function": "hovered_weapon",
+    "class": "WeaponsViewModel",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/weapons_viewmodel.py",
+    "line": 392,
+    "function": "calc_damage_at_range",
+    "class": "WeaponsViewModel",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_render/planets.py",
+    "line": 57,
+    "function": "load_planet_v3_image",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_render/systems.py",
+    "line": 60,
+    "function": "load_star_image",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_windows/fleet_report_ctrl.py",
+    "line": 53,
+    "function": "split_fleet_callback",
+    "class": "FleetReportRegistrar",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/test_lab/data_extractor.py",
+    "line": 21,
+    "function": "get_test_data_dir",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/test_lab/data_extractor.py",
+    "line": 55,
+    "function": "extract_ships",
+    "class": "TestLabDataExtractor",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/test_lab/data_extractor.py",
+    "line": 168,
+    "function": "_extract_component_ids",
+    "class": "TestLabDataExtractor",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/test_lab/data_extractor.py",
+    "line": 187,
+    "function": "load_component",
+    "class": "TestLabDataExtractor",
+    "layer": "ui"
+  }
+]

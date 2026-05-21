@@ -1,0 +1,151 @@
+{
+  "layers": {
+    "game_root": {
+      "layer": "game_root",
+      "total_files": 7,
+      "total_loc": 1959,
+      "total_symbols": 120,
+      "tested_symbols": 51,
+      "tier_counts": {
+        "0": 4,
+        "1": 0,
+        "2": 3,
+        "3": 0
+      },
+      "coverage_pct": 42.5
+    },
+    "ai": {
+      "layer": "ai",
+      "total_files": 23,
+      "total_loc": 3813,
+      "total_symbols": 211,
+      "tested_symbols": 173,
+      "tier_counts": {
+        "0": 1,
+        "1": 2,
+        "2": 13,
+        "3": 7
+      },
+      "coverage_pct": 82.0
+    },
+    "assets": {
+      "layer": "assets",
+      "total_files": 2,
+      "total_loc": 556,
+      "total_symbols": 28,
+      "tested_symbols": 19,
+      "tier_counts": {
+        "0": 0,
+        "1": 0,
+        "2": 2,
+        "3": 0
+      },
+      "coverage_pct": 67.9
+    },
+    "core": {
+      "layer": "core",
+      "total_files": 38,
+      "total_loc": 7102,
+      "total_symbols": 536,
+      "tested_symbols": 246,
+      "tier_counts": {
+        "0": 10,
+        "1": 3,
+        "2": 10,
+        "3": 15
+      },
+      "coverage_pct": 45.9
+    },
+    "engine": {
+      "layer": "engine",
+      "total_files": 4,
+      "total_loc": 407,
+      "total_symbols": 20,
+      "tested_symbols": 17,
+      "tier_counts": {
+        "0": 1,
+        "1": 0,
+        "2": 2,
+        "3": 1
+      },
+      "coverage_pct": 85.0
+    },
+    "research": {
+      "layer": "research",
+      "total_files": 7,
+      "total_loc": 965,
+      "total_symbols": 46,
+      "tested_symbols": 43,
+      "tier_counts": {
+        "0": 3,
+        "1": 0,
+        "2": 2,
+        "3": 2
+      },
+      "coverage_pct": 93.5
+    },
+    "services": {
+      "layer": "services",
+      "total_files": 9,
+      "total_loc": 1172,
+      "total_symbols": 34,
+      "tested_symbols": 25,
+      "tier_counts": {
+        "0": 3,
+        "1": 1,
+        "2": 1,
+        "3": 4
+      },
+      "coverage_pct": 73.5
+    },
+    "simulation": {
+      "layer": "simulation",
+      "total_files": 132,
+      "total_loc": 28307,
+      "total_symbols": 1405,
+      "tested_symbols": 892,
+      "tier_counts": {
+        "0": 32,
+        "1": 10,
+        "2": 58,
+        "3": 32
+      },
+      "coverage_pct": 63.5
+    },
+    "strategy": {
+      "layer": "strategy",
+      "total_files": 289,
+      "total_loc": 58706,
+      "total_symbols": 2415,
+      "tested_symbols": 1592,
+      "tier_counts": {
+        "0": 57,
+        "1": 13,
+        "2": 152,
+        "3": 67
+      },
+      "coverage_pct": 65.9
+    },
+    "ui": {
+      "layer": "ui",
+      "total_files": 335,
+      "total_loc": 79114,
+      "total_symbols": 3246,
+      "tested_symbols": 1785,
+      "tier_counts": {
+        "0": 84,
+        "1": 25,
+        "2": 191,
+        "3": 35
+      },
+      "coverage_pct": 55.0
+    }
+  },
+  "totals": {
+    "total_files": 846,
+    "total_loc": 182101,
+    "total_symbols": 8061,
+    "tested_symbols": 4843,
+    "overall_coverage_pct": 60.1
+  }
+}

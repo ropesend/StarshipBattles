@@ -1,0 +1,86 @@
+[
+  {
+    "file": "game/context.py",
+    "line": 33,
+    "variable": "_default_planet_habitability_service",
+    "context": "_default_planet_habitability_service: Optional['IHabitabilityCalculator'] = None"
+  },
+  {
+    "file": "game/ai/policy_manager.py",
+    "line": 23,
+    "variable": "_default_policy_manager",
+    "context": "_default_policy_manager: Optional['PolicyManager'] = None"
+  },
+  {
+    "file": "game/assets/asset_manager.py",
+    "line": 14,
+    "variable": "_default_asset_manager",
+    "context": "_default_asset_manager: AssetManager | None = None"
+  },
+  {
+    "file": "game/core/profiling.py",
+    "line": 17,
+    "variable": "_default_profiler",
+    "context": "_default_profiler: Optional['Profiler'] = None"
+  },
+  {
+    "file": "game/core/registry.py",
+    "line": 284,
+    "variable": "_default_manager",
+    "context": "_default_manager: Optional[RegistryManager] = None"
+  },
+  {
+    "file": "game/core/registry.py",
+    "line": 466,
+    "variable": "_default_provider",
+    "context": "_default_provider: Optional[DefaultRegistryProvider] = None"
+  },
+  {
+    "file": "game/services/llm/defaults.py",
+    "line": 17,
+    "variable": "_default_llm_provider",
+    "context": "_default_llm_provider: Optional[LLMProvider] = None"
+  },
+  {
+    "file": "game/simulation/components/component_loader.py",
+    "line": 37,
+    "variable": "_default_cache_manager",
+    "context": "_default_cache_manager: 'Optional[ComponentCacheManager]' = None"
+  },
+  {
+    "file": "game/simulation/replay/replay_capture.py",
+    "line": 110,
+    "variable": "_default_sink",
+    "context": "_default_sink: IReplayCaptureSink = NullCaptureSink()"
+  },
+  {
+    "file": "game/simulation/services/ship_materializer.py",
+    "line": 177,
+    "variable": "_default_ship_materializer",
+    "context": "_default_ship_materializer: Optional[IShipMaterializer] = None"
+  },
+  {
+    "file": "game/ui/assets/ship_theme_manager.py",
+    "line": 54,
+    "variable": "_default_ship_theme_manager",
+    "context": "_default_ship_theme_manager: Optional['ShipThemeManager'] = None"
+  },
+  {
+    "file": "game/ui/renderer/sprites.py",
+    "line": 14,
+    "variable": "_default_sprite_manager",
+    "context": "_default_sprite_manager: Optional['SpriteManager'] = None"
+  },
+  {
+    "file": "game/ui/services/game_settings.py",
+    "line": 22,
+    "variable": "_default_game_settings",
+    "context": "_default_game_settings: Optional['GameSettings'] = None"
+  },
+  {
+    "file": "game/ui/services/image/defaults.py",
+    "line": 19,
+    "variable": "_default_image_provider",
+    "context": "_default_image_provider: Optional[ImageProvider] = None"
+  }
+]

@@ -1,0 +1,27 @@
+[
+  {
+    "file": "game/simulation/battle_runner.py",
+    "line": 182,
+    "content": "engine.replay_id: Optional[str] = None  # type: ignore[attr-defined]"
+  },
+  {
+    "file": "game/simulation/battle_runner.py",
+    "line": 192,
+    "content": "engine.replay_id = replay_id  # type: ignore[attr-defined]"
+  },
+  {
+    "file": "game/strategy/systems/save_game_service.py",
+    "line": 74,
+    "content": "self._replay_store.set_save_root(_Path(save_path))  # type: ignore[attr-defined]"
+  },
+  {
+    "file": "game/strategy/systems/save_game_service.py",
+    "line": 82,
+    "content": "self._replay_store.clear_save_root()  # type: ignore[attr-defined]"
+  },
+  {
+    "file": "game/ui/screens/defeat_dialog.py",
+    "line": 83,
+    "content": "self._dismiss_button = None  # type: ignore[assignment]"
+  }
+]

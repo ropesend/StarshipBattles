@@ -1,0 +1,170 @@
+[
+  {
+    "file": "game/ai/policy_manager.py",
+    "line": 34,
+    "variable": "_default_policy_manager",
+    "function": "get_default_policy_manager",
+    "context": "global _default_policy_manager"
+  },
+  {
+    "file": "game/core/registry.py",
+    "line": 296,
+    "variable": "_default_manager",
+    "function": "set_default_registry_manager",
+    "context": "global _default_manager"
+  },
+  {
+    "file": "game/core/registry.py",
+    "line": 312,
+    "variable": "_default_manager",
+    "function": "get_default_registry_manager",
+    "context": "global _default_manager"
+  },
+  {
+    "file": "game/core/registry.py",
+    "line": 480,
+    "variable": "_default_provider",
+    "function": "get_default_registry_provider",
+    "context": "global _default_provider"
+  },
+  {
+    "file": "game/simulation/components/component_loader.py",
+    "line": 48,
+    "variable": "_default_cache_manager",
+    "function": "get_default_cache_manager",
+    "context": "global _default_cache_manager"
+  },
+  {
+    "file": "game/simulation/components/component_loader.py",
+    "line": 69,
+    "variable": "_default_cache_manager",
+    "function": "reset_component_caches",
+    "context": "global _default_cache_manager"
+  },
+  {
+    "file": "game/ui/panels/empire_treasury_panel.py",
+    "line": 335,
+    "variable": "_RESOURCE_ICON_CACHE",
+    "function": "_clear_resource_icon_cache",
+    "context": "global _RESOURCE_ICON_CACHE"
+  },
+  {
+    "file": "game/ui/panels/empire_treasury_panel.py",
+    "line": 350,
+    "variable": "_RESOURCE_ICON_CACHE",
+    "function": "load_resource_icons",
+    "context": "global _RESOURCE_ICON_CACHE"
+  },
+  {
+    "file": "game/ui/panels/race_flag_gallery.py",
+    "line": 42,
+    "variable": "_FLAG_THUMBNAIL_CACHE",
+    "function": "_clear_thumbnail_caches",
+    "context": "global _FLAG_THUMBNAIL_CACHE"
+  },
+  {
+    "file": "game/ui/panels/race_flag_gallery.py",
+    "line": 124,
+    "variable": "_FLAG_THUMBNAIL_CACHE",
+    "function": "_discover_assets",
+    "context": "global _FLAG_THUMBNAIL_CACHE"
+  },
+  {
+    "file": "game/ui/panels/race_portrait_gallery.py",
+    "line": 40,
+    "variable": "_PORTRAIT_THUMBNAIL_CACHE",
+    "function": "_clear_thumbnail_caches",
+    "context": "global _PORTRAIT_THUMBNAIL_CACHE"
+  },
+  {
+    "file": "game/ui/panels/race_portrait_gallery.py",
+    "line": 122,
+    "variable": "_PORTRAIT_THUMBNAIL_CACHE",
+    "function": "_discover_assets",
+    "context": "global _PORTRAIT_THUMBNAIL_CACHE"
+  },
+  {
+    "file": "game/ui/panels/race_theme_gallery.py",
+    "line": 39,
+    "variable": "_THEME_THUMBNAIL_CACHE",
+    "function": "_clear_thumbnail_caches",
+    "context": "global _THEME_THUMBNAIL_CACHE"
+  },
+  {
+    "file": "game/ui/panels/race_theme_gallery.py",
+    "line": 126,
+    "variable": "_THEME_THUMBNAIL_CACHE",
+    "function": "_discover_assets",
+    "context": "global _THEME_THUMBNAIL_CACHE"
+  },
+  {
+    "file": "game/ui/screens/transfer_mass_preview.py",
+    "line": 199,
+    "variable": "_catalog",
+    "function": "_get_catalog",
+    "context": "global _catalog"
+  },
+  {
+    "file": "game/ui/services/game_settings.py",
+    "line": 85,
+    "variable": "_default_game_settings",
+    "function": "get_default_game_settings",
+    "context": "global _default_game_settings"
+  },
+  {
+    "file": "game/ui/services/game_settings.py",
+    "line": 93,
+    "variable": "_default_game_settings",
+    "function": "set_default_game_settings",
+    "context": "global _default_game_settings"
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 44,
+    "variable": "_tk_root",
+    "function": "get_tk_root",
+    "context": "global _tk_root, _initialized, _available"
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 44,
+    "variable": "_initialized",
+    "function": "get_tk_root",
+    "context": "global _tk_root, _initialized, _available"
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 44,
+    "variable": "_available",
+    "function": "get_tk_root",
+    "context": "global _tk_root, _initialized, _available"
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 95,
+    "variable": "_tk_root",
+    "function": "reset_tk_root",
+    "context": "global _tk_root, _initialized, _available"
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 95,
+    "variable": "_initialized",
+    "function": "reset_tk_root",
+    "context": "global _tk_root, _initialized, _available"
+  },
+  {
+    "file": "game/ui/services/tkinter_utils.py",
+    "line": 95,
+    "variable": "_available",
+    "function": "reset_tk_root",
+    "context": "global _tk_root, _initialized, _available"
+  },
+  {
+    "file": "game/ui/services/image/defaults.py",
+    "line": 41,
+    "variable": "_default_image_provider",
+    "function": "set_default_image_provider",
+    "context": "global _default_image_provider"
+  }
+]

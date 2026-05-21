@@ -1,0 +1,863 @@
+[
+  {
+    "file": "game/core/registry.py",
+    "line": 248,
+    "function": "get_validator",
+    "class": "RegistryManager",
+    "layer": "core"
+  },
+  {
+    "file": "game/core/registry.py",
+    "line": 339,
+    "function": "get_validator",
+    "class": null,
+    "layer": "core"
+  },
+  {
+    "file": "game/core/protocols/strategy_entities.py",
+    "line": 30,
+    "function": "global_location",
+    "class": "IStarSystem",
+    "layer": "core"
+  },
+  {
+    "file": "game/core/protocols/strategy_entities.py",
+    "line": 64,
+    "function": "star_type",
+    "class": "IStar",
+    "layer": "core"
+  },
+  {
+    "file": "game/core/protocols/strategy_entities.py",
+    "line": 77,
+    "function": "planet_type",
+    "class": "IPlanet",
+    "layer": "core"
+  },
+  {
+    "file": "game/core/protocols/strategy_entities.py",
+    "line": 104,
+    "function": "location",
+    "class": "IPlanet",
+    "layer": "core"
+  },
+  {
+    "file": "game/core/protocols/strategy_entities.py",
+    "line": 250,
+    "function": "location",
+    "class": "IFleet",
+    "layer": "core"
+  },
+  {
+    "file": "game/core/protocols/strategy_entities.py",
+    "line": 290,
+    "function": "capabilities",
+    "class": "IFleet",
+    "layer": "core"
+  },
+  {
+    "file": "game/core/protocols/strategy_entities.py",
+    "line": 295,
+    "function": "resources",
+    "class": "IFleet",
+    "layer": "core"
+  },
+  {
+    "file": "game/core/protocols/strategy_entities.py",
+    "line": 300,
+    "function": "battle",
+    "class": "IFleet",
+    "layer": "core"
+  },
+  {
+    "file": "game/core/protocols/strategy_entities.py",
+    "line": 313,
+    "function": "location",
+    "class": "IWarpPoint",
+    "layer": "core"
+  },
+  {
+    "file": "game/core/protocols/strategy_entities.py",
+    "line": 322,
+    "function": "local_hex",
+    "class": "ISectorEnvironment",
+    "layer": "core"
+  },
+  {
+    "file": "game/core/protocols/strategy_entities.py",
+    "line": 327,
+    "function": "system",
+    "class": "ISectorEnvironment",
+    "layer": "core"
+  },
+  {
+    "file": "game/core/protocols/strategy_entities.py",
+    "line": 331,
+    "function": "calculate_radiation",
+    "class": "ISectorEnvironment",
+    "layer": "core"
+  },
+  {
+    "file": "game/core/protocols/ui.py",
+    "line": 62,
+    "function": "position",
+    "class": "ICamera",
+    "layer": "core"
+  },
+  {
+    "file": "game/core/protocols/ui.py",
+    "line": 66,
+    "function": "world_to_screen",
+    "class": "ICamera",
+    "layer": "core"
+  },
+  {
+    "file": "game/core/protocols/ui.py",
+    "line": 78,
+    "function": "screen_to_world",
+    "class": "ICamera",
+    "layer": "core"
+  },
+  {
+    "file": "game/simulation/components/component_stats_calculator.py",
+    "line": 305,
+    "function": "evaluate_recursive",
+    "class": "ComponentStatsCalculator",
+    "layer": "simulation"
+  },
+  {
+    "file": "game/simulation/interfaces/entity_protocols.py",
+    "line": 88,
+    "function": "position",
+    "class": "ICombatShip",
+    "layer": "simulation"
+  },
+  {
+    "file": "game/simulation/interfaces/entity_protocols.py",
+    "line": 93,
+    "function": "velocity",
+    "class": "ICombatShip",
+    "layer": "simulation"
+  },
+  {
+    "file": "game/simulation/interfaces/entity_protocols.py",
+    "line": 199,
+    "function": "resources",
+    "class": "ICombatShip",
+    "layer": "simulation"
+  },
+  {
+    "file": "game/simulation/interfaces/entity_protocols.py",
+    "line": 204,
+    "function": "combat_engine",
+    "class": "ICombatShip",
+    "layer": "simulation"
+  },
+  {
+    "file": "game/simulation/interfaces/entity_protocols.py",
+    "line": 265,
+    "function": "position",
+    "class": "IProjectile",
+    "layer": "simulation"
+  },
+  {
+    "file": "game/simulation/interfaces/entity_protocols.py",
+    "line": 270,
+    "function": "velocity",
+    "class": "IProjectile",
+    "layer": "simulation"
+  },
+  {
+    "file": "game/simulation/interfaces/entity_protocols.py",
+    "line": 304,
+    "function": "type",
+    "class": "IProjectile",
+    "layer": "simulation"
+  },
+  {
+    "file": "game/strategy/data/stars.py",
+    "line": 161,
+    "function": "__getattr__",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/harvesting_engine.py",
+    "line": 196,
+    "function": "_get_planet_mutator",
+    "class": "HarvestingEngine",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/harvesting_engine.py",
+    "line": 205,
+    "function": "_get_empire_mutator",
+    "class": "HarvestingEngine",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/turn_engine.py",
+    "line": 286,
+    "function": "_time_phase",
+    "class": "TurnEngine",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/handlers/base.py",
+    "line": 323,
+    "function": "_resolve_build_entity",
+    "class": "BaseCommandHandler",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/handlers/base.py",
+    "line": 377,
+    "function": "_resolve_queue_owner",
+    "class": "BaseCommandHandler",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/handlers/base.py",
+    "line": 419,
+    "function": "_build_colonize_target",
+    "class": "BaseCommandHandler",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/order_handlers/base.py",
+    "line": 143,
+    "function": "_get_planet_mutator",
+    "class": "BaseOrderHandler",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/order_handlers/base.py",
+    "line": 152,
+    "function": "_get_ship_mutator",
+    "class": "BaseOrderHandler",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/services/planet_write_service.py",
+    "line": 125,
+    "function": "pop_construction_item",
+    "class": "PlanetWriteService",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/ui/screens/build_queue_list_window.py",
+    "line": 210,
+    "function": "process_event",
+    "class": "BuildQueueListWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/design_selector_window.py",
+    "line": 388,
+    "function": "_get_role_filter_options",
+    "class": "DesignSelectorWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/fleet_report_window.py",
+    "line": 248,
+    "function": "process_event",
+    "class": "FleetReportWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_list_filters.py",
+    "line": 38,
+    "function": "gather_planets",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_list_filters.py",
+    "line": 174,
+    "function": "filter_planets",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_list_filters.py",
+    "line": 215,
+    "function": "sort_planets",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_list_filters.py",
+    "line": 252,
+    "function": "get_column_value",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_list_filters.py",
+    "line": 280,
+    "function": "compute_planet_ranges",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_list_filters.py",
+    "line": 333,
+    "function": "get_system_name",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_list_filters.py",
+    "line": 348,
+    "function": "get_owner_name",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_list_window.py",
+    "line": 211,
+    "function": "filter_types",
+    "class": "PlanetListWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_list_window.py",
+    "line": 221,
+    "function": "filter_owner",
+    "class": "PlanetListWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_list_window.py",
+    "line": 231,
+    "function": "filter_effects",
+    "class": "PlanetListWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_list_window.py",
+    "line": 241,
+    "function": "filter_ranges",
+    "class": "PlanetListWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/planet_list_window.py",
+    "line": 292,
+    "function": "_capture_current_state",
+    "class": "PlanetListWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/setup_data_io.py",
+    "line": 34,
+    "function": "get_base_path",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/setup_data_io.py",
+    "line": 39,
+    "function": "scan_ship_designs",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/setup_data_io.py",
+    "line": 65,
+    "function": "load_ships_from_entries",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/setup_data_io.py",
+    "line": 171,
+    "function": "load_battle_setup",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/setup_data_io.py",
+    "line": 185,
+    "function": "find_design",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/setup_renderer.py",
+    "line": 35,
+    "function": "draw_available_ships",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/setup_screen.py",
+    "line": 133,
+    "function": "get_team_display_groups",
+    "class": "BattleSetupScreen",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/star_list_filters.py",
+    "line": 20,
+    "function": "gather_stars",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/star_list_filters.py",
+    "line": 67,
+    "function": "filter_stars",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/star_list_filters.py",
+    "line": 121,
+    "function": "sort_stars",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/star_list_filters.py",
+    "line": 163,
+    "function": "compute_star_ranges",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/star_list_filters.py",
+    "line": 203,
+    "function": "get_system_name",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/star_list_filters.py",
+    "line": 217,
+    "function": "get_star_type_display",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/star_list_window.py",
+    "line": 277,
+    "function": "filter_types",
+    "class": "StarListWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/star_list_window.py",
+    "line": 285,
+    "function": "filter_ranges",
+    "class": "StarListWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/star_list_window.py",
+    "line": 448,
+    "function": "_capture_current_state",
+    "class": "StarListWindow",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_click_dispatcher.py",
+    "line": 53,
+    "function": "scene",
+    "class": "ClickModeDispatcher",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_click_dispatcher.py",
+    "line": 517,
+    "function": "_resolve_click_target",
+    "class": "ClickModeDispatcher",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_colonization.py",
+    "line": 40,
+    "function": "systems",
+    "class": "ColonizationSystem",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_colonization.py",
+    "line": 44,
+    "function": "camera",
+    "class": "ColonizationSystem",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_colonization.py",
+    "line": 48,
+    "function": "hex_size",
+    "class": "ColonizationSystem",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_colonization.py",
+    "line": 224,
+    "function": "request_colonize_order",
+    "class": "ColonizationSystem",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_colonization.py",
+    "line": 246,
+    "function": "_get_system_at_hex",
+    "class": "ColonizationSystem",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_colonization.py",
+    "line": 259,
+    "function": "_resolve_planet_global_hex",
+    "class": "ColonizationSystem",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_event_router.py",
+    "line": 336,
+    "function": "resolve_race",
+    "class": "StrategyEventRouter",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_event_router.py",
+    "line": 363,
+    "function": "_get_race_config",
+    "class": "StrategyEventRouter",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/battle_setup/controller.py",
+    "line": 411,
+    "function": "_build_end_condition",
+    "class": "BattleSetupController",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stats_config.py",
+    "line": 46,
+    "function": "load_stats_config",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 12,
+    "function": "fmt_time",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 23,
+    "function": "fmt_multiply",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 26,
+    "function": "fmt_decimal",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 29,
+    "function": "fmt_score",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 32,
+    "function": "fmt_targeting",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 38,
+    "function": "get_total_crew_requirement",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 70,
+    "function": "get_mass_display",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 73,
+    "function": "get_crew_capacity",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 76,
+    "function": "get_life_support",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 79,
+    "function": "get_max_targets",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 82,
+    "function": "get_armor_hp",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 88,
+    "function": "get_maneuver_points",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 91,
+    "function": "get_strategic_speed",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 103,
+    "function": "get_fuel_consumption",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 106,
+    "function": "get_ammo_consumption",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 109,
+    "function": "get_energy_consumption",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 115,
+    "function": "get_resource_storage",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 121,
+    "function": "get_resource_current",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 127,
+    "function": "get_resource_generation",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 133,
+    "function": "get_resource_consumption",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 151,
+    "function": "get_resource_endurance",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 159,
+    "function": "get_resource_replenish",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 167,
+    "function": "get_resource_max_usage",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 193,
+    "function": "get_weapon_count",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 201,
+    "function": "get_total_dps",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 206,
+    "function": "get_dps_duration",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 212,
+    "function": "get_max_range",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 219,
+    "function": "get_warp_capable",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 223,
+    "function": "get_warp_tonnage",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 227,
+    "function": "get_warp_cost",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 231,
+    "function": "get_warp_jumps",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 244,
+    "function": "get_fuel_per_hex",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 256,
+    "function": "get_hex_range",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 267,
+    "function": "get_cargo_capacity",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 271,
+    "function": "get_passenger_capacity",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 275,
+    "function": "get_pod_storage",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 279,
+    "function": "get_colony_types",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 340,
+    "function": "get_superweapon_summary",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 365,
+    "function": "get_repair_rate",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 379,
+    "function": "fmt_yes_no",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 383,
+    "function": "fmt_int",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 389,
+    "function": "fmt_text",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/builder/stat_getters.py",
+    "line": 456,
+    "function": "mass_unit_func",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_render/dyson_spheres.py",
+    "line": 116,
+    "function": "load_dyson_sphere_image",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/test_lab/ship_panels.py",
+    "line": 183,
+    "function": "get_selected_ship_info",
+    "class": "TabbedShipPanel",
+    "layer": "ui"
+  }
+]

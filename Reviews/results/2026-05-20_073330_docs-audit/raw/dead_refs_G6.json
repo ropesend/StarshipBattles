@@ -1,0 +1,35 @@
+{
+  "group": "G6",
+  "label": "Reviews/protocols",
+  "total": 4,
+  "dead_refs": [
+    {
+      "doc": "Reviews/protocols/00_review_core.md",
+      "line": 133,
+      "reference": "game/core/protocols.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "Reviews/protocols/04_migration_review.md",
+      "line": 385,
+      "reference": "game/events/",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "Reviews/protocols/06_performance_review.md",
+      "line": 430,
+      "reference": "game/combat/",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "Reviews/protocols/11_apply_doc_audit.md",
+      "line": 58,
+      "reference": "game/path/file.py",
+      "prefix": "game",
+      "exists": false
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "detector": "wrapper_delegates",
+  "scanned_files": 202,
+  "total_findings": 1,
+  "findings": [
+    {
+      "file": "game/strategy/services/ability_metadata.py",
+      "line": 490,
+      "function": "get_ability_metadata",
+      "delegates_to": "_BY_NAME.get",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "def get_ability_metadata(name: str) -> AbilityMetadata | None:"
+    }
+  ]
+}
