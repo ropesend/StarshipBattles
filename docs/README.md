@@ -1,5 +1,7 @@
 # Starship Battles Documentation Routing
 
+> **Last verified:** 2026-05-20 - foundation doc-drift sweep (PROJ-467)
+
 Source comparison: `docs/README.md` and
 `AgentCoordination/Scratchpad/reports/README_ALT_compact.md`. This is a
 compact agent index, not a replacement for the deeper docs.

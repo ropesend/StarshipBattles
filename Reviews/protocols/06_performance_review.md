@@ -427,7 +427,7 @@ If applicable:
 
 1. User runs "Performance Review" prompt
 2. Coordinator asks scope questions
-3. User: "The combat system feels sluggish during large battles, review game/combat/"
+3. User: "The combat system feels sluggish during large battles, review game/simulation/combat/"
 4. Review folder: `2026-01-23_performance_combat-system/`
 5. Agents: Performance Profiler, Algorithm Analyst, Memory Analyst, Hot Path Identifier
 6. Agents analyze combat code

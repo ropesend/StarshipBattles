@@ -1,5 +1,7 @@
 # Codex Adapter
 
+> **Last verified:** 2026-05-20
+
 This file is the Codex-specific supplement for Starship Battles. Read it after `AGENTS.md` and before code work in this repository.
 
 ## Scope

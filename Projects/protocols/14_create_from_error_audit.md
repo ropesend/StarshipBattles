@@ -121,7 +121,7 @@ For each item in its batch:
 2. Determine I/O pattern:
    - File I/O (`json.load(open(path))`, `json.dump(obj, open(path, 'w'))`) → `VERIFIED`. Recommend swap to `json_utils.read_json(path)` / `json_utils.write_json(path, obj)`.
    - In-memory (`json.loads(s)`, `json.dumps(obj)`) → `OUT_OF_SCOPE`. `json_utils` doesn't offer in-memory equivalents; the audit's own report agrees these are low-risk.
-3. If the file is `game/services/json_utils.py` itself → `OUT_OF_SCOPE` (canonical implementation).
+3. If the file is `game/core/json_utils.py` itself → `OUT_OF_SCOPE` (canonical implementation).
 4. Verdict: `VERIFIED` / `OUT_OF_SCOPE`.
 
 #### `generic_raise` (`raise Exception(...)`)

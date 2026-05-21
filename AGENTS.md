@@ -1,5 +1,7 @@
 # AGENTS.md — Starship Battles
 
+> **Last verified:** 2026-05-20
+
 Compact reference for AI coding agents. See `docs/` for full architecture, patterns, and conventions.
 
 ## Non-Negotiable Rules
@@ -23,7 +25,7 @@ pytest tests/ --testmon
 # Single test
 pytest tests/path/to/test.py -k test_name
 
-# Combat Lab tests
+# Combat Lab tests (scenario suite does NOT run under pytest; use this runner)
 python -m combat_lab.run_tests
 
 # Code shrinkage audit (read-only analysis)
@@ -49,7 +51,7 @@ Key patterns: Registry, ApplicationContext DI (`game/context.py` manages 10 serv
 
 ## Critical Conventions
 
-- **Python 3.14**. Return-type annotations required on every public function/method (PEP 604 syntax: `int | None`). Dunders exempt.
+- **Python 3.13+**. Return-type annotations required on every public function/method (PEP 604 syntax: `int | None`). Dunders exempt.
 - **500 LOC ceiling on production files.** When a file approaches 500 lines, split into single-responsibility sub-modules. Test files exempt.
 - **Specific exceptions required.** Broad catches (`except Exception`) must carry `# Intentional broad catch: <reason>` on the same line.
 - **No save-file migration.** Old saves are disposable. Never write compatibility shims for old save formats.

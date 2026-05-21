@@ -1,6 +1,6 @@
 # Conventions
 
-> **Last verified:** 2026-05-17 - Round 4 doc-audit fixes: corrected `markers.py` listing (removed retired `VehicleLaunchAbility`), added the "polymorphic FMS commands (`planet_id` rule)" convention, the right-click context-menu triple convention, and the "Capability validation is hard, not soft" convention.
+> **Last verified:** 2026-05-20 - PROJ-467 foundation doc-drift sweep: corrected the `get_system_at_hex()` path to `game/strategy/services/galaxy_pathfinding_service.py` and removed a hardcoded `C:/Users/rossr/...` checkout path that violated the doc's own no-checkout-path convention. Earlier (2026-05-17): Round 4 doc-audit fixes: corrected `markers.py` listing (removed retired `VehicleLaunchAbility`), added the "polymorphic FMS commands (`planet_id` rule)" convention, the right-click context-menu triple convention, and the "Capability validation is hard, not soft" convention.
 
 Compact convention reference for Starship Battles. Use this with `docs/01_ARCHITECTURE.md` and `docs/02_PATTERNS.md` before coding.
 
@@ -29,7 +29,7 @@ Compact convention reference for Starship Battles. Use this with `docs/01_ARCHIT
 
 - **Star system/system** means a circular map region centered on a star. Data type: `StarSystem`.
 - **Sector** means one addressable galaxy hex. Data type: `HexCoord`.
-- A system boundary has radius 50 hexes from `system.global_location`, defined by `get_system_at_hex()` in `game/strategy/data/pathfinding.py`; systems are placed at least 400 hexes apart center-to-center.
+- A system boundary has radius 50 hexes from `system.global_location`, defined by `GalaxyPathfindingService.get_system_at_hex()` in `game/strategy/services/galaxy_pathfinding_service.py`; systems are placed at least 400 hexes apart center-to-center.
 - A system contains many sectors: central star, orbiting planets, warp points, and storms each occupy specific sectors.
 - Entities inside a system store local coordinates. Convert with `global_hex = system.global_location + entity.location`.
 - `fleet.location`, `warp_point.location`, and `planet.location` are sectors. `system.global_location` is the system origin sector in global coordinates.
@@ -329,7 +329,7 @@ Do **not** ship per-size-tier component variants like `<role>_small / <role>_med
 
 Stat-binding requirement: an ability whose primary value should scale with the size mount must declare the matching `*_mult` binding in its `STAT_BINDINGS` and apply it in `recalculate()` (mirror `WeaponAbility` / `BeamWeaponAbility` / `WarheadAbility`). Without the binding, dropping `simple_size_mount` on the component has no effect on the ability's value.
 
-Established by QA 2026-05-16 Obs 1 after `warhead_{small,medium,large}` and `laserhead_{small,medium,large}` were collapsed to single `warhead` / `laserhead` components in line with the earlier Round 3 bay / launch-bay consolidation. See [`feedback_one_component_per_role`](../C:/Users/rossr/.claude/projects/c--Developer-StarshipBattles/memory/feedback_one_component_per_role.md) in the auto-memory store for the originating preference.
+Established by QA 2026-05-16 Obs 1 after `warhead_{small,medium,large}` and `laserhead_{small,medium,large}` were collapsed to single `warhead` / `laserhead` components in line with the earlier Round 3 bay / launch-bay consolidation. The originating preference (`feedback_one_component_per_role`) lives in the per-user Claude auto-memory store, not in the repo.
 
 Example shape:
 

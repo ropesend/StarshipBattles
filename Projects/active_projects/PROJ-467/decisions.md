@@ -1,0 +1,14 @@
+# PROJ-467: Decisions Log
+
+> **LOG ALL DECISIONS HERE**
+> When you make a design choice or the user specifies a preference, add it to this table.
+> Future agents will reference this to understand why things were done a certain way.
+
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| 2026-05-20 | Project initialized | Starting point for Docs cleanup — foundation: root agent + architecture/core docs + protocols (2026-05-20) |
+| 2026-05-20 | Bundled findings from `2026-05-20_073330_docs-audit` by doc-file-cluster locality across root agent docs, architecture/core docs, and procedural protocols (autonomous decision; Codex consult advised folding the small procedural fixes into this foundation bundle, keeping PROJ-469 cross-doc-pure) | Bundling driven by doc-file-cluster rather than severity to maximize editing continuity (one doc swept end-to-end per task); full bundling discussion in findings/bundling_decisions.md |
+| 2026-05-20 | Codex consult (planning, `AgentCoordination/Scratchpad/Consult/20260521T032207Z_docs-audit-bundling/response.md`) recommended: keep 3 projects, fold procedural fixes into foundation, EXCLUDE the `docs/_ignore/` UNCERTAIN, confirmed all 4 rejections correct. Final decision (Claude owns): accepted all four points. | Codex advises, initiator owns the call; advice was evidence-cited (file:line) and consistent with protocol 17's pure-cross-doc-bundle rule. |
+| 2026-05-20 | **Revision (protocol 06): DROPPED finding `DEAD-PAT-legacy`** (the CRITICAL item to remove `test_run_details.py` / `race_setup_screen.py` pattern refs at `docs/02_PATTERNS.md:818-827`). Removed from Phase 1 (Task 1.2). | Dual independent+Codex review verified `docs/02_PATTERNS.md:818,819,824,827` are NOT live pattern examples — they are explicitly marked as removed historical shims ("(Removed PROJ-417)", "(Removed PROJ-416)", "(Removed PROJ-383)") inside the Re-Export Shim section. Deleting them is churn, not accuracy work; the finding was a false/stale positive on review. Re-read of live lines confirms the markers are present and correct. |
+| 2026-05-20 | Phase 1 reduced from 2 CRITICAL items to 1 (Python baseline only). Verified all remaining 17 items still hold against live repo before editing (re-read every cited code/doc line; confirmed deleted/moved paths via filesystem). | Per revision instruction: verify each remaining claim against the live repo; drop any that no longer hold. All 17 held. |
+| 2026-05-20 | `02_PATTERNS.md:38` (`DEAD-PAT-classes`) reworded for clarity rather than path-deletion. The text "Stable keys map to data/classes/callables" is a slash-separated list of value KINDS (data, classes, callables), not a `data/classes/` directory path. Confirmed `data/classes/` never existed. | Avoids the genuine reader-confusion the finding flagged (looks like a path) while preserving the intended meaning. |

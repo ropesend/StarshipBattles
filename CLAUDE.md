@@ -1,8 +1,10 @@
 # Claude Code Adapter
 
+> **Last verified:** 2026-05-20
+
 This file is the Claude-Code-specific delta over `AGENTS.md`. Read `AGENTS.md` first; it owns the non-negotiable rules, canonical commands, test infrastructure summary, conventions, architecture overview, and skill-usage policy. This file adds only Claude Code-specific behavior.
 
-> **Note:** For automated CLI loop execution, see retired loop systems at `_marked_for_deletion_2026-05-29/Projects/`. The active workflow is interactive sessions; this file is the interactive-mode adapter.
+> **Note:** The automated CLI loop systems are retired. The active workflow is interactive sessions; this file is the interactive-mode adapter.
 
 ---
 
@@ -108,8 +110,8 @@ source of truth. Do not copy architecture summaries into this adapter.
   syntax such as `int | None`; dunders are exempt.
 - Production files under `game/` should stay under 500 LOC. Split by
   responsibility when a touched file approaches that ceiling.
-- Broad `except Exception` catches require an intentional-reason comment on
-  the same line or immediately above.
+- Broad `except Exception` catches require an intentional-reason comment
+  (`# Intentional broad catch: <reason>`) on the same line.
 - Prefer existing registries, services, protocols, and helpers over new local
   mechanisms.
 - Agent skills, protocols, prompts, and coordination scripts must discover the

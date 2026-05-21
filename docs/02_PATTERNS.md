@@ -1,6 +1,6 @@
 # 02_PATTERNS Compact Agent Reference
 
-> **Last verified:** 2026-05-18 — PROJ-436 Phase 10 doc refresh: added Pattern #43 (Unified Container Substrate); updated Pattern #38 (CarriedVehicle Substrate) and Pattern #41 (Polymorphic Order Issuer) to reflect the Phase 9 deletion of `_CarriedItemsProxy` + `ShipInstance.carried_items` (typed `BayInventory.bay` slot is the canonical write surface). Earlier: source doc last verified 2026-05-17.
+> **Last verified:** 2026-05-20 — PROJ-467 foundation doc-drift sweep: fixed Pattern #6's `commands.py` → `commands/` package path and reworded Pattern #4's "data/classes/callables" to "data, classes, or callables" (value kinds, not a directory). Earlier (2026-05-18): PROJ-436 Phase 10 doc refresh: added Pattern #43 (Unified Container Substrate); updated Pattern #38 (CarriedVehicle Substrate) and Pattern #41 (Polymorphic Order Issuer) to reflect the Phase 9 deletion of `_CarriedItemsProxy` + `ShipInstance.carried_items` (typed `BayInventory.bay` slot is the canonical write surface). Earlier: source doc last verified 2026-05-17.
 
 Balanced compact derivative of `docs/02_PATTERNS.md` and
 `AgentCoordination/Scratchpad/reports/02_PATTERNS_ALT_compact.md`.
@@ -35,7 +35,7 @@ deletion of `VALID_CARGO_TYPES` (Phase 7),
 | 1 | ApplicationContext | `game/context.py::ApplicationContext` owns the app service graph; callers own lifetime. |
 | 2 | Protocol + TypeGuard | `game/core/protocols/` defines cross-layer structural contracts plus duck-typed guards. |
 | 3 | Registry DI | Services receive `IRegistryProvider`; tests use `TestRegistryProvider`; simulation gets explicit registries. |
-| 4 | Registry | Stable keys map to data/classes/callables; avoid switch statements and hardcoded type lists. |
+| 4 | Registry | Stable keys map to data, classes, or callables; avoid switch statements and hardcoded type lists. |
 | 5 | Facade / Delegate | Facades expose narrow APIs; delegates own cohesive behavior. |
 | 6 | CQRS-lite | Strategy writes use commands; reads use frozen/read-only DTOs. |
 | 7 | CommandHandlerRegistry | Command/order dispatch is registry-backed and self-registering. |
@@ -167,7 +167,7 @@ Use when a class has multiple independent reasons to change. Keep facade methods
 
 ## 6. CQRS-lite Strategy Session
 
-Where: `game/strategy/facade/`, DTOs under `game/strategy/facade/dto/`, commands under `game/strategy/engine/commands.py`.
+Where: `game/strategy/facade/`, DTOs under `game/strategy/facade/dto/`, commands under the `game/strategy/engine/commands/` package.
 
 Contract:
 - Writes go through command DTOs and command handlers, usually via `facade.handle_command(...)` or the grouped `facade.commands.<verb>(...)` namespace (TD-08; prefix-stripped command helpers, registry-driven).

@@ -34,7 +34,7 @@ Every session follows this exact sequence:
 
 ### 3. Work Execution Rules
 
-**Follow Protocol 08** (Automated Loop Protocol) strictly.
+**Follow Protocol 03a** (`03a_continue_working.md`, the current autonomous-work loop) strictly. (Protocol 08, the Automated Loop Protocol, is retired — see Protocols Reference below.)
 
 **One unit of work per session:**
 - Execute ONE phase, OR
@@ -60,11 +60,11 @@ Every session follows this exact sequence:
 
 **When all phases complete:**
 - Automatically trigger audit (Protocol 04)
-- Follow audit workflow (Protocol 08)
-- Maximum 5 audit cycles per project
+- Follow the audit workflow in `04_audit_project.md`
+- Maximum 3 audit cycles per project
 - If audit passes -> Mark project `[x]`, move to next
 - If audit fails -> Add fix phases, continue
-- After 5 cycles -> Mark project `[~]`, move to next
+- After 3 cycles -> Escalate to user
 
 ### 6. Update & Exit
 
