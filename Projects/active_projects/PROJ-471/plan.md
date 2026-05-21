@@ -14,15 +14,15 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Critical + class-shared-state (state-corruption gate) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Major (singleton-divergence + collection + RNG hygiene) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Minor (stale-bridge / dead-code / test-seam cleanup) | Partial (3.4 done; 3.1 dropped; 3.2/3.3 not done) | [phase_3_checklist.md](phase_3_checklist.md) |
+| 2. Major (singleton-divergence + collection + RNG hygiene) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Minor (stale-bridge / dead-code / test-seam cleanup) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Codex-audit remediation | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-21
-**Active Phase:** Phase 2/3 tail (partial) — core determinism + seam work complete + Codex-audit Phase 4 complete
-**Last Action:** Implemented Phase 1 Task 1.2 (`ShipCombatEngine` → per-battle `CombatSubsystems` bundle, determinism preserved); Phase 2 Tasks 2.1, 2.2, 2.8, 2.9, 2.10; Phase 3 Task 3.4. Ran one-round Codex audit → 4 findings, ALL verified, ALL remediated in new Phase 4 (4.1–4.4). Full sharded suite green (23532 passed / 0 failed). combat_lab 168 passed / 2 PRE-EXISTING failures (`TOHIT-ATK-FLEET-003/004`, unrelated). PROJ-473 populated with the deferred rng-threading scope.
-**Next Action (remaining, NOT done this session):** Phase 2 Task 2.3 (`_default_manager` dual-pattern doc decision), 2.4/2.5/2.6/2.7 (UI consumer migrations — bulky, low determinism risk), 2.13 (`exit_dialog` rects — lowest-priority "drop first"); Phase 3 Tasks 3.2 (`_default_profiler` design-cleanup eval), 3.3 (`_default_llm_provider` bridge removal, gated on 2.7).
+**Active Phase:** ALL PHASES COMPLETE — no remaining Partial/incomplete tasks.
+**Last Action:** Finished the Phase 2/3 tail. DONE: 2.6 (removed silent sprite-manager auto-create — the ST-01-005 state bug; migrated app_bootstrap consumer to `ctx.sprite_manager`) and 2.13 (`exit_dialog` rect globals → per-instance `ExitDialog` class owned by `RunLoop`). RESOLVED-as-documented-bridge: 2.3 (`_default_manager` dual pattern), 3.2 (`_default_profiler` hook). DROPPED-as-moot-for-state-hygiene (single startup setter ⇒ no production divergence; migration is a disproportionate ctx-less UI-DI refactor): 2.4, 2.5, 2.7, and 3.3 (gated on 2.7). All decisions recorded in `decisions.md` (2026-05-21). Re-ran touched suites + full sharded suite.
+**Next Action:** None — project complete pending user verification.
 **Blockers:** None
 
 ## Overview
@@ -65,7 +65,7 @@ Created from the state-management audit at `Reviews/results/2026-05-20_082533_st
 - [findings/bundling_decisions.md](findings/bundling_decisions.md) - Bundling rationale + Codex consult record
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing
-- [ ] Audit passed
+- [x] All phase checklists complete (Phases 1–4 + tail done/resolved/dropped-with-reason)
+- [x] All tests passing (sharded 23537 passed / 0 failed; combat_lab 168 passed / 2 PRE-EXISTING `TOHIT-ATK-FLEET-003/004` failures unrelated to this work)
+- [x] Audit passed (Codex finish-audit: 1 advisory finding, rejected-as-defect; b/c/e clean)
 - [ ] User verified

@@ -15,11 +15,7 @@ import pygame
 
 from game.core.constants import GameState
 from game.core.input_actions import InputAction
-from game.exit_dialog import (
-    draw_exit_dialog,
-    handle_exit_dialog_cancel,
-    handle_exit_dialog_click,
-)
+from game.exit_dialog import ExitDialog
 
 if TYPE_CHECKING:
     from game.app_bootstrap import BootstrapResult
@@ -44,6 +40,7 @@ class RunLoop:
         self._boot = boot
         self._router = router
         self._state_machine = state_machine
+        self._exit_dialog = ExitDialog()
         self.running = True
 
     def request_shutdown(self) -> None:
@@ -111,9 +108,9 @@ class RunLoop:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 self._router.show_exit_dialog = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if handle_exit_dialog_click(event.pos):
+                if self._exit_dialog.handle_click(event.pos):
                     self.running = False
-                elif handle_exit_dialog_cancel(event.pos):
+                elif self._exit_dialog.handle_cancel(event.pos):
                     self._router.show_exit_dialog = False
 
     def _handle_normal_events(self, events: list[Any]) -> None:
@@ -220,4 +217,4 @@ class RunLoop:
             router.active_scene.draw(screen)
 
         if router.show_exit_dialog:
-            draw_exit_dialog(screen, font_large, font_med)
+            self._exit_dialog.draw(screen, font_large, font_med)

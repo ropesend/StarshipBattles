@@ -41,7 +41,6 @@ from game.core.resources import ResourceCatalog
 from game.simulation.components.component import load_components, load_modifiers
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.ui.fonts import get_font
-from game.ui.renderer.sprites import get_default_sprite_manager
 from game.ui.services.input_mapper import InputMapper
 
 if TYPE_CHECKING:
@@ -262,7 +261,7 @@ def bootstrap(args: argparse.Namespace | None = None) -> BootstrapResult:
     # (the manager reads the just-derived PNGs), but BEFORE scene
     # constructors (which build rendering pipelines).
     with _timed_phase("assets.load_sprites", ctx.profiler):
-        sprite_mgr = get_default_sprite_manager()
+        sprite_mgr = ctx.sprite_manager
         sprite_mgr.load_sprites(Paths.ROOT_DIR)
 
     # Centralised keybindings (PROJ-71).

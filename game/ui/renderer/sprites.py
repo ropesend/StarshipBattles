@@ -112,10 +112,24 @@ class SpriteManager:
 
 
 def get_default_sprite_manager() -> SpriteManager:
-    """Get the module-level SpriteManager instance, creating one if needed."""
-    global _default_sprite_manager
+    """Get the module-level SpriteManager instance.
+
+    PROJ-471 (ST-01-005): does NOT auto-create. ``create_production()``
+    calls ``set_default_sprite_manager()`` once at startup; tests that use
+    this accessor must prime it the same way. A missing manager indicates a
+    real ordering bug (accessor reached before bootstrap) rather than a
+    condition to paper over with a fresh, unloaded — and divergent — manager.
+
+    Raises:
+        RuntimeError: if no manager has been set yet.
+    """
     if _default_sprite_manager is None:
-        _default_sprite_manager = SpriteManager()
+        raise RuntimeError(
+            "Default SpriteManager has not been set. "
+            "ApplicationContext.create_production() calls "
+            "set_default_sprite_manager() at startup; call it before "
+            "get_default_sprite_manager() (tests must prime it explicitly)."
+        )
     return _default_sprite_manager
 
 

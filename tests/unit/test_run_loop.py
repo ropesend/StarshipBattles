@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 
 import pygame
 
-import game.run_loop as run_loop_module
 from game.core.constants import GameState
 from game.core.input_actions import InputAction
 from game.run_loop import RunLoop
@@ -88,8 +87,8 @@ def test_escape_closes_exit_dialog():
 def test_exit_dialog_yes_click_stops_loop(monkeypatch):
     loop, _, router, _ = _make_loop()
     router.show_exit_dialog = True
-    monkeypatch.setattr(run_loop_module, "handle_exit_dialog_click", lambda pos: True)
-    monkeypatch.setattr(run_loop_module, "handle_exit_dialog_cancel", lambda pos: False)
+    monkeypatch.setattr(loop._exit_dialog, "handle_click", lambda pos: True)
+    monkeypatch.setattr(loop._exit_dialog, "handle_cancel", lambda pos: False)
     event = SimpleNamespace(type=pygame.MOUSEBUTTONDOWN, pos=(10, 10))
 
     loop._handle_exit_dialog_events([event])
@@ -100,8 +99,8 @@ def test_exit_dialog_yes_click_stops_loop(monkeypatch):
 def test_exit_dialog_cancel_click_hides_dialog(monkeypatch):
     loop, _, router, _ = _make_loop()
     router.show_exit_dialog = True
-    monkeypatch.setattr(run_loop_module, "handle_exit_dialog_click", lambda pos: False)
-    monkeypatch.setattr(run_loop_module, "handle_exit_dialog_cancel", lambda pos: True)
+    monkeypatch.setattr(loop._exit_dialog, "handle_click", lambda pos: False)
+    monkeypatch.setattr(loop._exit_dialog, "handle_cancel", lambda pos: True)
     event = SimpleNamespace(type=pygame.MOUSEBUTTONDOWN, pos=(10, 10))
 
     loop._handle_exit_dialog_events([event])

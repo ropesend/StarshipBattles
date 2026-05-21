@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Partial — Task 3.4 DONE; 3.1 DROPPED (not dead); 3.2, 3.3 NOT DONE
+**Status:** Complete — Task 3.4 DONE; 3.1 DROPPED (not dead); 3.2 RESOLVED (keep bridge as intentional hook); 3.3 DROPPED (gated on 2.7, which was dropped)
 **Objective:** Remove the two truly-dead bridge singletons, evaluate (do not blindly delete) the profiler bridge, and add the missing crew-priority test-isolation seam. Do this last, after the singleton-divergence and collection work in Phases 1–2.
 
 ---
@@ -25,16 +25,16 @@ of the application-context contract (`tests/unit/ui/services/image/test_defaults
 **File:** `game/core/profiling.py`
 **Tests:** `pytest tests/ -k profil`; then `pytest tests/ --testmon`
 
-- [ ] The audit flagged `set_default_profiler` (`profiling.py:25`) as a removable bridge (0 `get_default_profiler()` consumers; all access is via `ctx.profiler`). **Verification correction (Codex consult):** `set_default_profiler()` is still called in `create_production()` (`game/context.py:165-176`), and `profile_action` / `profile_block` (`profiling.py:116-149`) still depend on `_default_profiler` as their live module-level hook. This is a design cleanup, not dead-code deletion. Decide whether to (a) migrate `profile_action`/`profile_block` to require ctx, then remove the bridge, or (b) keep the bridge as the intentional module-level profiling hook. Record the decision in `decisions.md`.
-- [ ] If removing: ensure `profile_action` / `profile_block` callers have a ctx-based path before deleting `_default_profiler` / `set_default_profiler`.
-- [ ] Verify: pytest passes; profiling decorators still function; no broken `profile_action`/`profile_block` callers.
+- [x] RESOLVED — decision (b): keep the bridge as the intentional module-level profiling hook. Re-verified `profile_action`/`profile_block` (`profiling.py:116-149`) read `_default_profiler` directly and are applied at import/definition time across the codebase with no `ctx` at their call sites; `set_default_profiler()` is the single startup wiring (`context.py:176`). Migrating the decorators/context-managers to require ctx would mean threading ctx into every decorated function — large change, zero divergence benefit (single startup setter). Decision in `decisions.md` (2026-05-21).
+- [x] Not removing — bridge retained; `profile_action`/`profile_block` unchanged.
+- [x] Verify: existing `tests/ -k profil` stays green; decorators still function.
 
 ### Task 3.3: Remove `_default_llm_provider` bridge (if Phase 2.7 done) [Simple]
 **File:** `game/services/llm/defaults.py`
 **Tests:** `pytest tests/ -k llm`; then `pytest tests/ --testmon`
 
-- [ ] Once Task 2.7 has migrated `panel_factory.py:167` to `ctx.llm_provider`, remove the now-stale `set_default_llm_provider()` (`defaults.py:31`) and drop its `create_production()` call (`game/context.py:183`), leaving `ctx.llm_provider` as the single path. Skip if Task 2.7 was not completed.
-- [ ] Verify: pytest passes; no `get_default_llm_provider()` production consumers remain.
+- [x] DROPPED — gated on Task 2.7, which was dropped (see Phase 2 + decisions.md 2026-05-21). The sole consumer was not migrated (ctx-less UI chain), so the `set_default_llm_provider()` bridge + its `create_production()` call remain as the intentional module-level hook. No change.
+- [x] Verify: n/a — bridge intentionally retained.
 
 ### Task 3.4: Add `reset_crew_priority_registry()` test seam [Simple]
 **File:** `game/simulation/entities/stat_contributors/registry.py`
@@ -49,9 +49,9 @@ of the application-context contract (`tests/unit/ui/services/image/test_defaults
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked (done / resolved / dropped-with-reason)
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase
 
 _Source audit: `Reviews/results/2026-05-20_082533_state-audit/`. See `findings/source_audit.md` for the link._
