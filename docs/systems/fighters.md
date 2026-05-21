@@ -1,6 +1,6 @@
 # Fighters System
 
-> **Last verified:** 2026-05-17 - PROJ-FMS-C end-to-end fighter system
+> **Last verified:** 2026-05-20 - PROJ-468: removed dead `planet_context_menu.py` link (file gone; menu is `planet_menu_items.py` + `fms_menu_callbacks.py`). Earlier 2026-05-17 - PROJ-FMS-C end-to-end fighter system
 > shipped; Round 4 QA pass re-architected the system: components were
 > consolidated (`fighter_launch_bay`, `fighter_bay`, `vehicle_bay`;
 > recovery collocated on launch bays), tactical launch was rewritten
@@ -240,8 +240,7 @@ mirrors that: a facility with `RecoverFighters` issues
 the planet's `staging_yard` (capacity-checked by `max_staging_mass`). The
 right-click planet menu (built by
 [`planet_menu_items.build_menu_items`](../../game/ui/screens/planet_menu_items.py),
-wired through [`fms_menu_callbacks`](../../game/ui/screens/fms_menu_callbacks.py)
-and [`planet_context_menu`](../../game/ui/screens/planet_context_menu.py))
+wired through [`fms_menu_callbacks`](../../game/ui/screens/fms_menu_callbacks.py))
 exposes both rows when capability gates pass.
 
 ## End-of-battle reboard

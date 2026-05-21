@@ -1,6 +1,6 @@
 # Service Layer Architecture
 
-> **Last verified:** 2026-05-08 - Balanced compact rewrite from `docs/04_SERVICES.md` and `AgentCoordination/Scratchpad/reports/04_SERVICES_ALT_compact.md`; reconciled against current service files under `game/services/`, `game/simulation/services/`, `game/strategy/services/`, and `game/ui/screens/builder/`.
+> **Last verified:** 2026-05-20 - Reconciled component-inspector/effect-ability-metadata references against current service files (PROJ-468): removed the deleted `component_inspector.py` shim claim and stale `effect_ability_metadata.py` references; canonical paths are `component_abilities.py`, `component_layers.py`, and `ability_metadata.py`.
 
 Compact reference for service responsibilities, contracts, DI rules, APIs,
 invariants, extension points, warnings, and tests. This removes release-note
@@ -55,12 +55,11 @@ game/strategy/services/
   combat_modifier_collector.py     Pre-battle strategic combat modifiers
   component_abilities.py           Ability iteration helpers (Surface A — PROJ-433 split)
   component_layers.py              Per-instance layer-view helpers (Surface B — PROJ-433 split)
-  component_inspector.py           Thin re-export shim over component_abilities + component_layers (legacy import path)
   deployment_zone_calculator.py    BattleRole -> battlefield positions
   design_cost_calculator.py        Registry-backed design cost calculation
   design_validator.py              Strategy design validation
   effect_ability_display.py        Effect display/grouping helpers
-  effect_ability_metadata.py       Effect metadata registry
+  ability_metadata.py              Unified ability metadata registry (effect + energy facets)
   empire_economy_service.py        UI-safe facade over EmpireEconomyCalculator
   empire_write_service.py          IEmpireMutator implementation
   fleet_cargo_projector.py         Project queued cargo transfers
@@ -477,9 +476,9 @@ across two modules:
   `damaged_components_by_layer`, `count_damaged_components`,
   `lookup_design_max_hp`).
 
-`game/strategy/services/component_inspector.py` is preserved as a thin
-re-export shim so the existing import path keeps working. New code should
-import directly from `component_abilities` or `component_layers`.
+The legacy `game/strategy/services/component_inspector.py` re-export shim was
+removed (PROJ-454). `component_abilities` and `component_layers` are the only
+import paths; there is no `component_inspector` module to import from.
 
 Critical registry invariant: facility and ship `design_data` often stores only
 component IDs. Ability checks must resolve through the component registry. Do
@@ -523,7 +522,7 @@ Registry parameter is critical: facility `design_data` typically stores bare
 component IDs (`{"id": "stellar_stabilizer"}`) and ability data is looked up via
 the component registry. Callers that omit `registries` silently get nothing back,
 even from active stabilizers. The scanner's `_extract_ability` delegates to
-`component_inspector.extract_abilities_from_component`, which accepts either a
+`component_abilities.extract_abilities_from_component`, which accepts either a
 `GameRegistries` or a plain components dict. Component iteration uses
 `iter_keyed_components` from `game.core.patterns.layer_iterator`.
 
@@ -535,7 +534,7 @@ Locations:
 - Iterator: `game/strategy/services/ability_iterator.py`
 - Adapters: `game/strategy/services/ability_sources/`
 - Collector: `game/strategy/services/system_effects_collector.py`
-- Metadata/display helpers: `effect_ability_metadata.py`, `effect_ability_display.py`
+- Metadata/display helpers: `ability_metadata.py`, `effect_ability_display.py`
 
 Purpose: unified pipeline for "things at a hex/system project effects." Current
 providers include facilities, storms, fleets, planets, stars, warp points, and
@@ -602,7 +601,7 @@ Intrinsic ability helpers (stars, warp points, archetypes, planets):
 Stale-reference correction: the legacy `AreaEffectManager` / `EnvironmentalEffects`
 service wording is obsolete. Current effect display and environment behavior
 flow through `ability_iterator`, `SystemEffectsCollector`, and
-`effect_ability_metadata`. Storms now declare `abilities: Dict[str, Any]`
+`ability_metadata`. Storms now declare `abilities: Dict[str, Any]`
 matching the `components.json` shape; overlapping storms multiply per-provider
 (no shared `stack_group`) so two ion storms apply 0.5x · 0.5x = 0.25x shields.
 An adapter package AST guard forbids `get_default_registry_provider()` calls
@@ -612,7 +611,7 @@ Extension recipe for a new strategic effect:
 
 1. Ensure an `IAbilitySource` can expose the ability.
 2. Register a provider with `ability_iterator` if the source type is new.
-3. Add one metadata entry in `effect_ability_metadata.py` for display, value field, kind, grouping, and owner-aware scopes.
+3. Add one metadata entry in `ability_metadata.py` (an `AbilityMetadata` entry with an `EffectFacet`) for display, value field, kind, grouping, and owner-aware scopes.
 4. Let `SystemEffectsCollector` aggregate. Avoid central collector edits unless the aggregation contract itself changes.
 
 ### Stabilizers, Superweapons, System Destruction

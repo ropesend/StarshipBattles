@@ -1,5 +1,7 @@
 # Pre-commit Hook Card
 
+> **Last verified:** 2026-05-20 - Checked against the local Git pre-commit hook contract and `.github/workflows/agent_coordination.yml` (PROJ-468; the only G3 guide previously lacking a freshness stamp).
+
 This hook is a raw local Git hook in the checkout's Git hooks directory
 (usually `.git/hooks/`); this guide does not require the `pre-commit`
 framework. The CI copy of the same check is tracked in

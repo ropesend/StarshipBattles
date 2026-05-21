@@ -1,6 +1,6 @@
 # QS Complex Design - Compact Agent Reference
 
-> **Last verified:** 2026-05-08 - Balanced from `docs/guides/qs_complex_design.md`, `AgentCoordination/Scratchpad/reports/guides_qs_complex_design_ALT_compact.md`, and current QS design/code paths.
+> **Last verified:** 2026-05-20 - PROJ-468 reference fixes: replaced deleted `component_inspector.py` with `component_abilities.py` + `component_layers.py`; updated `planetary.py` file refs to the `planetary/` package; replaced dead `test_component_inspector.py` test path with `test_component_abilities.py` / `test_component_layers.py`. Earlier 2026-05-08 balanced rewrite against current QS design/code paths.
 
 Compact reference for shipped Quickstart planetary complex designs. For component ability details, use `docs/systems/ability_reference.md`; for production behavior, use `docs/systems/production_system.md`. Do not read `docs/_ignore/`.
 
@@ -29,7 +29,7 @@ At runtime, a design becomes a `PlanetaryFacility` on a planet. Stat calculation
 | `game/strategy/systems/design_catalog.py` | In-memory per-empire design lookup + UI surface (`search_designs`, `filter_designs`, `save_design` orchestrator) |
 | `game/strategy/systems/design_repository.py` | Disk-bound filesystem + JSON persistence; owns `DesignLoadResult` |
 | `game/strategy/engine/production_spawner.py` | Facility creation after colony/fleet construction completion |
-| `game/strategy/services/component_inspector.py` | Canonical registry-backed ability inspection for design data |
+| `game/strategy/services/component_abilities.py` + `component_layers.py` | Canonical registry-backed ability inspection for design data (PROJ-433 split of the former `component_inspector.py`) |
 | `game/strategy/services/strategic_ability_scanner.py` | Scoped strategic ability queries and multiplier/rate aggregation |
 | `game/strategy/services/system_effects_collector.py` | UI-facing sector/system effect aggregation |
 
@@ -209,7 +209,7 @@ The tier number is still not parsed separately by QS code; the mechanical contra
 
 ## Strategic Ability Families
 
-Complexes commonly use these component ability families. See `game/simulation/components/abilities/planetary.py` and `docs/systems/ability_reference.md` for exact fields.
+Complexes commonly use these component ability families. See the `game/simulation/components/abilities/planetary/` package and `docs/systems/ability_reference.md` for exact fields.
 
 | Ability | Typical complex use |
 |---|---|
@@ -316,7 +316,7 @@ Use additional focused tests based on behavior touched:
 
 | Change Area | Useful tests |
 |---|---|
-| Component ability parsing/lookup | `pytest tests/unit/strategy/test_component_inspector.py` |
+| Component ability parsing/lookup | `pytest tests/unit/strategy/services/test_component_abilities.py tests/unit/strategy/services/test_component_layers.py` |
 | Planetary ability classes | `pytest tests/unit/simulation/components/abilities/test_planetary_abilities.py` |
 | Activatable facilities/shields/stabilizers | `pytest tests/unit/strategy/engine/test_planet_action_engine.py tests/unit/strategy/engine/test_planet_energy_engine.py` |
 | Terraforming modifiers | `pytest tests/unit/strategy/engine/test_atmosphere_engine.py tests/unit/strategy/engine/test_water_engine.py tests/unit/strategy/engine/test_planet_modifier_effect_engine.py` |
@@ -335,6 +335,6 @@ python Tools/test_sharded/test_sharded.py
 - Do not create compatibility shims for old save/design shapes. Old saves are disposable.
 - Do not read `docs/_ignore/`.
 - Do not hardcode absolute checkout paths in docs, tooling, skills, or examples.
-- Do not duplicate ability scanning logic. Use `component_inspector`, `strategic_ability_scanner`, `ability_iterator`, or `system_effects_collector` depending on scope.
+- Do not duplicate ability scanning logic. Use `component_abilities` / `component_layers`, `strategic_ability_scanner`, `ability_iterator`, or `system_effects_collector` depending on scope.
 - Do not assume `design_role` is enforced by all loaders. It is optional at load time but should be present on new shipped designs so UI filters and classification stay useful.
 - Do not treat complex tier as flavor text. The selected `ship_class` controls vehicle class mass budget and hull.

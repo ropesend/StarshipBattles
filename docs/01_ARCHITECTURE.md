@@ -1,6 +1,6 @@
 # Starship Battles - Architecture Compact Reference
 
-> **Last verified:** 2026-05-20 — PROJ-467 foundation doc-drift sweep: added the `game/strategy/` prefix to the `galaxy_protocols.py` listing and moved "pathfinding" out of the `data/` listing (it lives in `services/galaxy_pathfinding_service.py`). Earlier (2026-05-18): PROJ-436 Phase 10 doc refresh: `game/strategy/data/` listing now flags the unified `Container` storage substrate (`container.py`, `containable.py`, `bay_inventory.py`'s four-slot widening), the `Empire.resource_pool` pure-aggregation contract, and the `IProductionResourceSource` Protocol seam that replaced the `ProductionEngine.context_type` dispatch. Earlier (2026-05-08): balanced compact replacement derived from `docs/01_ARCHITECTURE.md` and `AgentCoordination/Scratchpad/reports/01_ARCHITECTURE_ALT_compact.md`, with source checks for current exports, protocol modules, turn-engine phases, and recent strategy decomposition paths.
+> **Last verified:** 2026-05-20 — PROJ-468: added a New-Game Initialization (GameInitializer) subsection documenting `game/strategy/engine/game_initializer.py`. PROJ-467 foundation doc-drift sweep: added the `game/strategy/` prefix to the `galaxy_protocols.py` listing and moved "pathfinding" out of the `data/` listing (it lives in `services/galaxy_pathfinding_service.py`). Earlier (2026-05-18): PROJ-436 Phase 10 doc refresh: `game/strategy/data/` listing now flags the unified `Container` storage substrate (`container.py`, `containable.py`, `bay_inventory.py`'s four-slot widening), the `Empire.resource_pool` pure-aggregation contract, and the `IProductionResourceSource` Protocol seam that replaced the `ProductionEngine.context_type` dispatch. Earlier (2026-05-08): balanced compact replacement derived from `docs/01_ARCHITECTURE.md` and `AgentCoordination/Scratchpad/reports/01_ARCHITECTURE_ALT_compact.md`, with source checks for current exports, protocol modules, turn-engine phases, and recent strategy decomposition paths.
 
 This is the agent-facing architecture reference. It preserves current contracts, paths, invariants, extension rules, and high-value test references while dropping release-note chronology and repeated prose.
 
@@ -396,6 +396,41 @@ UI StrategyScreen
 - `SessionPersistenceAdapter` (`persistence_adapter.py`): `serialize(session)` returns the save dict byte-for-byte; `rehydrate_state(data, ai_factory=..., turn_number_provider=..., race_registry_provider=...)` returns a `SessionBootstrapState`. The four post-deserialize wiring steps (galaxy back-refs, fleet registration, order-target resolve, pursuer-tracker rebuild) run via `restore_graph_wiring(galaxy, empires)` in `game/strategy/engine/session/graph_restoration.py` — PROJ-438 Phase 1 collapsed the previously-duplicated inline loops in `SessionPersistenceAdapter.rehydrate_state()` and `TurnStateSnapshot.restore()` into this shared collaborator. Per-empire `DesignCatalog` repopulation is save-load-only by intentional design.
 
 Public API is unchanged: `GameSession(config=..., ai_factory=...)`, `GameSession.from_dict(data, ai_factory=...)`, `GameSession.to_dict()`. Both `__init__` and `from_dict` route through the canonical `_apply_bootstrap_state(state)` method, which is the single internal assignment path. The save schema is unchanged.
+
+### New-Game Initialization (GameInitializer)
+
+The new-game branch of `SessionBootstrap.new_game_state(...)` delegates galaxy
+and empire creation to `game/strategy/engine/game_initializer.py`
+(`GameInitializer`), extracted from `GameSession` (PROJ-87 Phase 6) so
+initialization logic stays isolated from session management. Its single public
+entry point is the static `GameInitializer.initialize(config, *,
+planet_mutator=None, empire_mutator=None) -> tuple[Galaxy, list[Empire]]`.
+
+The flow:
+
+1. Build empires from `GameConfig` (`_create_empires`; deterministic, consumes
+   no RNG).
+2. Generate the galaxy and place homeworlds, retrying on a planet shortage. At
+   `N=1` with multiple empires (FEAT-27) the lone star system must hold at least
+   one homestead planet per empire; some blueprints can roll too few, so a
+   shortage raises an internal `_PlanetShortageError` and the loop re-rolls a
+   deterministically-perturbed `galaxy_seed` (via `dataclasses.replace`) up to
+   `_PLANET_SHORTAGE_RETRY_ATTEMPTS` (10) times before raising a
+   `ValidationException`. Galaxy generation uses placement strategies from
+   `game/strategy/generation/` (`RandomPlacementStrategy`,
+   `DensityBasedPlacementStrategy`).
+3. Set galaxy back-references on each empire (PROJ-219, for auto fleet
+   registration) and wire fleet-at-hex / fleets-in-system lookups into the
+   unified ability iterator (`_wire_fleet_lookups`, PROJ-305) so fleet
+   sector-effects surface.
+
+`planet_mutator` (`IPlanetMutator`) and `empire_mutator` (`IEmpireMutator`) are
+the PROJ-370 mutation seams: when supplied (the production path via
+`GameSession`) homeworld population seeding and attempt-restart colony resets
+route through the mutators; when `None` (direct test calls) the initializer
+lazy-constructs an `EmpireWriteService` and falls back to direct list
+operations. Loading a saved game does **not** call `GameInitializer` — that
+path runs through `SessionPersistenceAdapter.rehydrate_state` instead.
 
 `TurnEngineConfig` contract:
 

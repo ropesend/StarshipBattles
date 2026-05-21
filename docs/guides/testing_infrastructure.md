@@ -1,6 +1,6 @@
 # Testing Infrastructure
 
-> **Last verified:** 2026-05-17 - Checked against `conftest.py`, `tests/conftest.py`, `tests/unit/conftest.py`, `tests/unit/ui/conftest.py`, `tests/infrastructure/session_cache.py`, `pytest.ini`, `Tools/test_sharded/`, `combat_lab/run_tests.py`, current fixture modules, and the PROJ-443 `norecursedirs` config flip.
+> **Last verified:** 2026-05-20 - Fixed dead single-file pytest example to `tests/unit/simulation/combat/test_damage_calculator.py` (PROJ-468). Prior verification 2026-05-17 against `conftest.py`, `tests/conftest.py`, `tests/unit/conftest.py`, `tests/unit/ui/conftest.py`, `tests/infrastructure/session_cache.py`, `pytest.ini`, `Tools/test_sharded/`, `combat_lab/run_tests.py`, current fixture modules, and the PROJ-443 `norecursedirs` config flip.
 
 Use this as the compact contract for test work. Keep strict TDD: add or identify the failing test first, run it, implement the root-cause fix, then rerun the same test path. Do not read `docs/_ignore/`.
 
@@ -167,7 +167,7 @@ Targeted and incremental pytest:
 
 ```powershell
 pytest tests/ --testmon
-pytest tests/unit/simulation/test_damage.py -n 0
+pytest tests/unit/simulation/combat/test_damage_calculator.py -n 0
 pytest tests/integration/ -n 0
 pytest tests/ -k "test_shield_absorb" -n 0
 pytest tests/ --cov=game -n 12

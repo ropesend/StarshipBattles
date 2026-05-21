@@ -1,6 +1,6 @@
 # Minefields (PROJ-FMS-B)
 
-> **Last verified:** 2026-05-17 — PROJ-FMS-B end-to-end mine system
+> **Last verified:** 2026-05-20 — PROJ-468: removed dead `planet_context_menu.py` references (link + File-table row); menu is `planet_menu_items.py` + `fms_menu_callbacks.py`. Earlier 2026-05-17 — PROJ-FMS-B end-to-end mine system
 > shipped; Round 4 QA pass renamed `mine_launcher_small` to
 > `mine_deployer`, added mine-only `mine_bay` storage, and widened
 > `IssueLayMinesCommand` for planet-issued laying via the polymorphic
@@ -243,8 +243,7 @@ Pattern #40 in `docs/02_PATTERNS.md`) using
 the planet's `staging_yard` and producing a `mine_group` at the
 planet's hex (or merging into an existing one). The planet right-click
 menu ([`planet_menu_items.build_menu_items`](../../game/ui/screens/planet_menu_items.py),
-wired through [`fms_menu_callbacks`](../../game/ui/screens/fms_menu_callbacks.py)
-and [`planet_context_menu`](../../game/ui/screens/planet_context_menu.py))
+wired through [`fms_menu_callbacks`](../../game/ui/screens/fms_menu_callbacks.py))
 exposes the "Lay Mines" row when the facility ability gate passes and
 the staging yard holds at least one mine.
 
@@ -320,7 +319,6 @@ session.
 | `game/strategy/engine/issuer_adapter.py` | `IIssuerAdapter` + `FleetShipIssuerAdapter` / `PlanetStagingYardIssuerAdapter` (Round 4 Obs B) |
 | `game/ui/screens/planet_menu_items.py` | Planet right-click menu items (FMS rows) |
 | `game/ui/screens/fms_menu_callbacks.py` | Shared FMS menu callbacks (Lay Mines / Launch * / Recover *) |
-| `game/ui/screens/planet_context_menu.py` | Planet context-menu wiring |
 | `game/strategy/engine/turn_phase_registry.py` | Turn-engine wiring (descriptor for movement_apply phase) |
 | `game/strategy/engine/movement_phase_collaborator.py` | Owns the movement_apply post-hook pipeline (diff/booster/minefield/prune) |
 | `game/strategy/services/mine_group_service.py` | Player operations on mine_groups |

@@ -1,6 +1,6 @@
 # Ability Reference
 
-> **Last verified:** 2026-05-17 - Verified against `game/simulation/components/abilities/`, strategic ability services, and the compact ability reference. Current live registry has 72 keys (PROJ-FMS-A added 11 new abilities — `Warhead`, `Laserhead`, `RamTarget`, `VehicleBay`, and the six launch + two recovery skeletons; PROJ-FMS-C audit Fix 1 removed `VehicleLaunch`; QA Observation 5 renamed `CrewRequired` to `RequiresMaintenance` and added `ProvidesMaintenance`; Round 4 added the `launch_rate_mult` / `recovery_rate_mult` / `bay_capacity_mult` stat keys for `simple_size_mount` scaling and made all five FMS launch/recover commands polymorphic via `IIssuerAdapter`).
+> **Last verified:** 2026-05-20 - Reference paths reconciled (PROJ-468): replaced deleted `component_inspector.py` with `component_abilities.py` + `component_layers.py`, deleted `effect_ability_metadata.py` with `ability_metadata.py`, `planetary.py` file refs with the `planetary/` package, and dead `test_effect_ability_metadata.py` test paths with current coverage. Prior verification 2026-05-17 against `game/simulation/components/abilities/` and strategic ability services. Current live registry has 72 keys (PROJ-FMS-A added 11 new abilities — `Warhead`, `Laserhead`, `RamTarget`, `VehicleBay`, and the six launch + two recovery skeletons; PROJ-FMS-C audit Fix 1 removed `VehicleLaunch`; QA Observation 5 renamed `CrewRequired` to `RequiresMaintenance` and added `ProvidesMaintenance`; Round 4 added the `launch_rate_mult` / `recovery_rate_mult` / `bay_capacity_mult` stat keys for `simple_size_mount` scaling and made all five FMS launch/recover commands polymorphic via `IIssuerAdapter`).
 
 Compact agent reference for the component ability system. It preserves live registry keys, data shapes, contracts, invariants, extension recipes, warnings, stale-reference corrections, and validation commands while omitting release-note history.
 
@@ -15,8 +15,8 @@ Compact agent reference for the component ability system. It preserves live regi
 - Modifier stat contract: `game/simulation/components/abilities/stat_keys.py`.
 - Ability-to-external-stat bridge: `game/simulation/combat/ability_stat_registry.py`.
 - Ship-stat extension point: `game/simulation/entities/stat_contributors/registry.py`.
-- Strategic source/effect pipeline: `game/strategy/services/ability_iterator.py`, `system_effects_collector.py`, `effect_ability_metadata.py`.
-- Design/facility ability inspection must use `game/strategy/services/component_inspector.py`; loaded designs usually store component IDs, with abilities resolved through the component registry.
+- Strategic source/effect pipeline: `game/strategy/services/ability_iterator.py`, `system_effects_collector.py`, `ability_metadata.py`.
+- Design/facility ability inspection must use `game/strategy/services/component_abilities.py` (ability iteration) and `component_layers.py` (per-instance layer views); loaded designs usually store component IDs, with abilities resolved through the component registry.
 - Current stale-reference corrections: old counts such as 39, 53, 56, or 60 are obsolete; `PodStorage`, `VehicleStorage`, and `MultiplexTracking` are typed marker abilities, not raw-dict stat reads.
 - `PlanetaryShield` and `StrategicResourceGeneration` still inherit the base combat-layer class metadata in live code, but gameplay consumes them as strategic component abilities.
 
@@ -105,7 +105,7 @@ Combination rules:
 - Flat shield bonuses from `ShieldProjection` add across groups.
 - Missing `stack_group` makes each provider its own unique group, so those providers combine at phase 2.
 
-Validation areas: `tests/unit/simulation/combat/test_fleet_aura_provider_identity.py`, `tests/unit/strategy/services/test_combat_modifier_collector.py`, and `tests/unit/strategy/services/test_effect_ability_metadata.py`.
+Validation areas: `tests/unit/simulation/combat/test_fleet_aura_provider_identity.py`, `tests/unit/strategy/services/test_combat_modifier_collector.py`, and `tests/unit/strategy/services/test_ability_metadata_effects.py`.
 
 ### Scopes
 
@@ -181,7 +181,7 @@ Known external stat keys consumed downstream:
 
 ### Strategic Effect Metadata
 
-File: `game/strategy/services/effect_ability_metadata.py`
+File: `game/strategy/services/ability_metadata.py`
 
 This is the current metadata registry for strategic effects. Older references to module-level `SYSTEM_EFFECT_ABILITIES`, `_RATE_ABILITIES`, or collector-local hardcoded lists are stale.
 
@@ -248,24 +248,24 @@ Live keys from `ABILITY_REGISTRY`.
 | `StagingYard` | `StagingYardAbility` | `harvester.py` | combat metadata; strategic use | `self` |
 | `LocalStorage` | `LocalStorageAbility` | `harvester.py` | combat metadata; strategic use | `self` |
 | `CargoStorage` | `CargoStorage` | `cargo.py` | strategic | `self` |
-| `PlanetaryShield` | `PlanetaryShieldAbility` | `planetary.py` | combat metadata; strategic use | `self` |
-| `StrategicResourceGeneration` | `StrategicResourceGenerationAbility` | `planetary.py` | combat metadata; strategic use | `self` |
-| `GeologicStabilizer` | `GeologicStabilizerAbility` | `planetary.py` | strategic | `sector` |
-| `StellarStabilizer` | `StellarStabilizerAbility` | `planetary.py` | strategic | `system` |
-| `WarpFieldStabilizer` | `WarpFieldStabilizerAbility` | `planetary.py` | strategic | `system` |
-| `ResourceHarvestBooster` | `ResourceHarvestBoosterAbility` | `planetary.py` | strategic | `planet` |
-| `BuildRateBooster` | `BuildRateBoosterAbility` | `planetary.py` | strategic | `sector` |
-| `AtmosphereModifier` | `AtmosphereModifierAbility` | `planetary.py` | strategic | `self` |
-| `QualityImprovement` | `QualityImprovementAbility` | `planetary.py` | strategic | `self` |
-| `ShieldModifier` | `ShieldModifierAbility` | `planetary.py` | strategic | `allied_system` |
-| `DamageModifier` | `DamageModifierAbility` | `planetary.py` | strategic | `allied_system` |
-| `GravityModifier` | `GravityModifierAbility` | `planetary.py` | strategic | `self` |
-| `WaterModifier` | `WaterModifierAbility` | `planetary.py` | strategic | `self` |
-| `RadiationShield` | `RadiationShieldAbility` | `planetary.py` | strategic | `self` |
-| `ThrustModifier` | `ThrustModifierAbility` | `planetary.py` | strategic | `sector` |
-| `StrategicSpeedModifier` | `StrategicSpeedModifierAbility` | `planetary.py` | strategic | `sector` |
-| `EnvironmentalDamage` | `EnvironmentalDamageAbility` | `planetary.py` | strategic | `sector` |
-| `FuelDrain` | `FuelDrainAbility` | `planetary.py` | strategic | `sector` |
+| `PlanetaryShield` | `PlanetaryShieldAbility` | `planetary/shields.py` | combat metadata; strategic use | `self` |
+| `StrategicResourceGeneration` | `StrategicResourceGenerationAbility` | `planetary/resource_modifiers.py` | combat metadata; strategic use | `self` |
+| `GeologicStabilizer` | `GeologicStabilizerAbility` | `planetary/stabilizers.py` | strategic | `sector` |
+| `StellarStabilizer` | `StellarStabilizerAbility` | `planetary/stabilizers.py` | strategic | `system` |
+| `WarpFieldStabilizer` | `WarpFieldStabilizerAbility` | `planetary/stabilizers.py` | strategic | `system` |
+| `ResourceHarvestBooster` | `ResourceHarvestBoosterAbility` | `planetary/resource_modifiers.py` | strategic | `planet` |
+| `BuildRateBooster` | `BuildRateBoosterAbility` | `planetary/resource_modifiers.py` | strategic | `sector` |
+| `AtmosphereModifier` | `AtmosphereModifierAbility` | `planetary/terraforming.py` | strategic | `self` |
+| `QualityImprovement` | `QualityImprovementAbility` | `planetary/terraforming.py` | strategic | `self` |
+| `ShieldModifier` | `ShieldModifierAbility` | `planetary/stat_modifiers.py` | strategic | `allied_system` |
+| `DamageModifier` | `DamageModifierAbility` | `planetary/stat_modifiers.py` | strategic | `allied_system` |
+| `GravityModifier` | `GravityModifierAbility` | `planetary/terraforming.py` | strategic | `self` |
+| `WaterModifier` | `WaterModifierAbility` | `planetary/terraforming.py` | strategic | `self` |
+| `RadiationShield` | `RadiationShieldAbility` | `planetary/shields.py` | strategic | `self` |
+| `ThrustModifier` | `ThrustModifierAbility` | `planetary/stat_modifiers.py` | strategic | `sector` |
+| `StrategicSpeedModifier` | `StrategicSpeedModifierAbility` | `planetary/stat_modifiers.py` | strategic | `sector` |
+| `EnvironmentalDamage` | `EnvironmentalDamageAbility` | `planetary/environmental.py` | strategic | `sector` |
+| `FuelDrain` | `FuelDrainAbility` | `planetary/environmental.py` | strategic | `sector` |
 | `DestroyPlanet` | `DestroyPlanet` | `superweapons.py` | strategic | `self` |
 | `DestroyStar` | `DestroyStar` | `superweapons.py` | strategic | `self` |
 | `OpenWarpPoint` | `OpenWarpPoint` | `superweapons.py` | strategic | `self` |
@@ -315,7 +315,7 @@ Source: `game/simulation/components/abilities/propulsion.py`.
 | `StrategicMovement` | scalar movement points | `self`, `allied_sector`, `allied_system` | `strategic_mult -> movement_points` | Strategy-map mobility; can be scoped as tug/tractor-style support. |
 | `WarpJump` | scalar max tonnage, or dict `max_tonnage`, `energy_cost=0` | `self` | none | Warp-capable only when ship mass is within `max_tonnage` and storage can cover warp resource costs. |
 
-Warp checks use `component_inspector.has_warp_capability(ship)` and calculated stats: `mass`, `warp_max_tonnage`, `warp_resource_costs`, `resource_storage`.
+Warp checks use `component_abilities.has_warp_capability(ship)` and calculated stats: `mass`, `warp_max_tonnage`, `warp_resource_costs`, `resource_storage`.
 
 ### Resources
 
@@ -370,7 +370,7 @@ These classes inherit combat default metadata in code, but current gameplay use 
 
 ### Planetary And Strategic Abilities
 
-Source: `game/simulation/components/abilities/planetary.py`.
+Source: `game/simulation/components/abilities/planetary/` package (split across `shields.py`, `stabilizers.py`, `resource_modifiers.py`, `terraforming.py`, `stat_modifiers.py`, `environmental.py`).
 
 | Key | Parameters | Allowed Scopes | Notes |
 |---|---|---|---|
@@ -389,7 +389,7 @@ Source: `game/simulation/components/abilities/planetary.py`.
 
 ### Combat Modifiers From Strategic Sources
 
-Source: `planetary.py`; bridge: `ability_stat_registry.py`; collector: `combat_modifier_collector.py`.
+Source: `planetary/stat_modifiers.py`; bridge: `ability_stat_registry.py`; collector: `combat_modifier_collector.py`.
 
 | Key | Parameters | Allowed Scopes | External Effect |
 |---|---|---|---|
@@ -402,7 +402,7 @@ Activation rule: if ability data carries activation fields, active state is cons
 
 ### Strategic Environmental Rates
 
-Source: `planetary.py`; collector: `system_effects_collector.py`; consumers include `environmental_hazard_engine.py` and `fleet_movement_engine.py`.
+Source: `planetary/environmental.py`; collector: `system_effects_collector.py`; consumers include `environmental_hazard_engine.py` and `fleet_movement_engine.py`.
 
 | Key | Parameters | Aggregation | Notes |
 |---|---|---|---|
@@ -486,9 +486,9 @@ Default entries cannot be unregistered by handle; reset clears and reseeds defau
 
 ## Ability Inspection And Registry Lookup
 
-File: `game/strategy/services/component_inspector.py`.
+Files: `game/strategy/services/component_abilities.py` (ability iteration helpers, below) and `component_layers.py` (per-instance layer-view helpers). The former `component_inspector.py` module was split (PROJ-433) and its re-export shim removed (PROJ-454); import from these two modules directly.
 
-Use these helpers instead of hand-reading `comp.get("abilities", {})`:
+Use these helpers (all in `component_abilities.py`) instead of hand-reading `comp.get("abilities", {})`:
 
 - `get_component_abilities(comp_def) -> dict`
 - `extract_abilities_from_component(comp, registries) -> dict`
@@ -534,8 +534,8 @@ Reason: facility and ship design data often stores component IDs. The abilities 
 
 ### Add A New Strategic System/Sector Effect
 
-1. Add the ability class in `planetary.py` or a new strategic ability module.
-2. Add metadata to `EFFECT_ABILITY_METADATA`.
+1. Add the ability class in the appropriate `planetary/` package module (e.g. `stabilizers.py`, `environmental.py`) or a new strategic ability module.
+2. Add an `AbilityMetadata` entry with an `EffectFacet` in `ability_metadata.py`.
 3. Choose `kind`: `rate` uses rate aggregation; `multiplier` uses multiplier aggregation.
 4. Set `grouping_key_field` when independent instances need separate display/aggregation groups.
 5. Ensure ownerless generated sources use neutral scopes only (`sector`/`system`).
@@ -568,7 +568,7 @@ Focused test areas:
 - Fleet aura stacking: `tests/unit/simulation/combat/test_fleet_aura_provider_identity.py`
 - Ship stat contributors: `tests/unit/simulation/entities/stat_contributors/`, `tests/unit/simulation/entities/test_stat_contributor_extension.py`
 - Strategic source adapters: `tests/unit/strategy/services/ability_sources/`
-- Strategic effects: `tests/unit/strategy/services/test_effect_ability_metadata.py`, `test_effect_ability_display.py`, `test_ability_iterator.py`, `test_combat_modifier_collector.py`
+- Strategic effects: `tests/unit/strategy/services/test_ability_metadata_effects.py`, `test_ability_metadata_contracts.py`, `test_ability_metadata_registry.py`, `test_effect_ability_display.py`, `test_ability_iterator.py`, `test_combat_modifier_collector.py`
 - Data schemas and intrinsic `chance`: `tests/integration/data/test_intrinsic_registries_coverage.py`
 - Strategic ability integration: `tests/integration/test_strategic_abilities.py`
 - Combat integration for strategic modifiers: `tests/integration/strategy/combat/test_suppressor_effects.py`, `test_storm_shield_interference.py`
@@ -582,7 +582,7 @@ pytest tests/integration/test_design_load_warp_capability.py
 pytest tests/unit/simulation/combat/test_ability_stat_registry.py
 pytest tests/unit/simulation/entities/stat_contributors/
 pytest tests/unit/strategy/services/ability_sources/
-pytest tests/unit/strategy/services/test_effect_ability_metadata.py tests/unit/strategy/services/test_ability_iterator.py
+pytest tests/unit/strategy/services/test_ability_metadata_effects.py tests/unit/strategy/services/test_ability_iterator.py
 pytest tests/integration/test_strategic_abilities.py
 python Tools/test_sharded/test_sharded.py
 ```

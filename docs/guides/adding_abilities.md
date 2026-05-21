@@ -1,6 +1,6 @@
 # Adding New Abilities
 
-> **Last verified:** 2026-05-08 - Compact rewrite checked against the original guide, current source contracts, and current registry extension points.
+> **Last verified:** 2026-05-20 - PROJ-468 reference fixes: replaced deleted `component_inspector.py` with `component_abilities.py` + `component_layers.py`; corrected `effect_ability_metadata.py` (removed PROJ-454) to `ability_metadata.py` + `EffectFacet`; replaced dead `test_effect_ability_metadata.py` test paths with `test_ability_metadata_effects.py` and siblings; (Phase 3, Codex-audit) fixed residual `planetary.py` ability-category entry → `planetary/` package and `EFFECT_ABILITY_METADATA` troubleshooting step → `AbilityMetadata`/`EffectFacet`. Earlier 2026-05-08 compact rewrite against current source contracts and registry extension points.
 
 Compact agent reference for adding component abilities. For the full current catalog of registry keys, parameters, and bindings, see `docs/systems/ability_reference.md`.
 
@@ -52,7 +52,7 @@ Important invariants:
 - Abilities read combined stat values but must not mutate `component.stats`.
 - `AbilityManager` preserves existing ability instances and calls `sync_data()` during recalculation to keep runtime state such as cooldowns.
 - Component ability lookup is polymorphic. `comp.get_ability("WeaponAbility")` can return `BeamWeaponAbility`, `ProjectileWeaponAbility`, or another subclass.
-- Facility and complex designs often store component IDs, not inline abilities. Strategy code must use registry-backed helpers in `game/strategy/services/component_inspector.py`.
+- Facility and complex designs often store component IDs, not inline abilities. Strategy code must use registry-backed helpers in `game/strategy/services/component_abilities.py` (ability iteration) and `component_layers.py` (per-instance layer views).
 
 ## Choose The Base Class
 
@@ -419,9 +419,9 @@ The strategy-facing source of truth for ability metadata is `game/strategy/servi
 
 Stale reference correction: `SYSTEM_EFFECT_ABILITIES` no longer lives in `system_effects_collector.py`.
 
-Add new system/sector effect ability metadata in `game/strategy/services/ability_metadata.py` via an `AbilityMetadata` entry with an `EffectFacet`. The legacy `EFFECT_ABILITY_METADATA` tuple in `effect_ability_metadata.py` is now a shim derived from the unified registry — adding new entries there directly is not the supported path.
+Add new system/sector effect ability metadata in `game/strategy/services/ability_metadata.py` via an `AbilityMetadata` entry with an `EffectFacet`. The former `effect_ability_metadata.py` module (and its `EFFECT_ABILITY_METADATA` tuple) was removed (PROJ-454); `ability_metadata.py` is the only supported path.
 
-`EffectAbilityMetadata` controls:
+The `EffectFacet` of an `AbilityMetadata` entry (in `ability_metadata.py`) controls:
 
 - ability name
 - display name, or data-derived display name
@@ -431,7 +431,7 @@ Add new system/sector effect ability metadata in `game/strategy/services/ability
 - owner-aware scopes
 - value field and fallback field
 
-`system_effects_collector.py` filters by scope using `_SYSTEM_SCOPES` and `_SECTOR_SCOPES`, then uses the metadata and display helpers. Add tests in `tests/unit/strategy/services/test_effect_ability_metadata.py` and affected collector tests.
+`system_effects_collector.py` filters by scope using `_SYSTEM_SCOPES` and `_SECTOR_SCOPES`, then uses the metadata and display helpers. Add tests in `tests/unit/strategy/services/test_ability_metadata_effects.py` (and `test_ability_metadata_contracts.py` / `test_ability_metadata_registry.py` as appropriate) and affected collector tests.
 
 ### Strategic Combat Effects
 
@@ -492,7 +492,7 @@ Component ability APIs:
 | `game/simulation/combat/ability_stat_registry.py` | external combat stat projection registry |
 | `game/simulation/combat/weapon_registry.py` | weapon family dispatch registry |
 | `game/simulation/combat/attack_contract.py` | typed attack request/resolution contract |
-| `game/strategy/services/effect_ability_metadata.py` | strategic system/sector effect metadata |
+| `game/strategy/services/ability_metadata.py` | unified strategic ability metadata (effect + energy facets) |
 | `game/strategy/services/system_effects_collector.py` | system/sector effect aggregation |
 | `game/strategy/services/combat_modifier_collector.py` | strategy combat modifier collection |
 | `game/ui/screens/planet_abilities_controller.py` | activation scan and environment editor routing |
@@ -508,7 +508,7 @@ Ability category modules:
 - `crew.py`
 - `resources.py`
 - `markers.py`
-- `planetary.py`
+- `planetary/` (package: `shields.py`, `stabilizers.py`, `resource_modifiers.py`, `terraforming.py`, `stat_modifiers.py`, `environmental.py`)
 - `superweapons.py`
 - `colonize.py`
 - `harvester.py`
@@ -536,7 +536,7 @@ pytest tests/unit/simulation/combat/test_ability_stat_registry.py
 pytest tests/unit/simulation/combat/test_weapon_registry.py
 pytest tests/unit/simulation/entities/stat_contributors/test_registry_pipeline.py
 pytest tests/unit/simulation/entities/test_stat_contributor_extension.py
-pytest tests/unit/strategy/services/test_effect_ability_metadata.py
+pytest tests/unit/strategy/services/test_ability_metadata_effects.py
 pytest tests/unit/ui/screens/test_planet_abilities_controller_scanner.py
 python -m combat_lab.run_tests --fast
 python Tools/test_sharded/test_sharded.py
@@ -579,7 +579,7 @@ Ship stats do not change: add a `STAT_CONTRIBUTOR_REGISTRY` contributor. `STAT_B
 
 External combat modifiers warn or silently do nothing: ensure `ABILITY_STAT_REGISTRY` maps the ability, `KNOWN_EXTERNAL_STAT_KEYS` includes the stat key, and a downstream reader consumes that key.
 
-System or sector effects missing from UI: add `EFFECT_ABILITY_METADATA`; do not add stale `SYSTEM_EFFECT_ABILITIES` constants.
+System or sector effects missing from UI: add an `AbilityMetadata` entry with an `EffectFacet` in `ability_metadata.py`; do not add stale `EFFECT_ABILITY_METADATA` / `SYSTEM_EFFECT_ABILITIES` constants (both retired).
 
 Activatable ability missing from Planet Abilities UI: ensure ability data is a dict carrying `activation_time`, and add only display overrides when the generated label is wrong.
 

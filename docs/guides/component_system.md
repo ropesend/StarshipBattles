@@ -1,6 +1,6 @@
 # Component System - Compact Agent Reference
 
-> **Last verified:** 2026-05-08 - Balanced from `docs/guides/component_system.md`, `AgentCoordination/Scratchpad/reports/guides_component_system_ALT_compact.md`, and current component/ability source files.
+> **Last verified:** 2026-05-20 - PROJ-468 reference fixes: replaced deleted `component_inspector.py` (corrected the false re-export-shim claim and a dead example import) with `component_abilities.py` + `component_layers.py`; replaced dead `test_component_inspector.py` test path with `test_component_abilities.py` / `test_component_layers.py`. Earlier 2026-05-08 balanced rewrite against current component/ability source files.
 
 ## Purpose
 
@@ -20,7 +20,7 @@ Primary code:
 - `game/simulation/components/component_resource_manager.py` - resource costs and activation checks.
 - `game/simulation/components/abilities/` - ability classes, `ABILITY_REGISTRY`, and `get_ability_default_scope`.
 - `game/simulation/entities/stat_contributors/` - ship stat contribution registry and built-in contributors.
-- `game/strategy/services/component_inspector.py` - canonical strategy/facility design ability inspection.
+- `game/strategy/services/component_abilities.py` and `game/strategy/services/component_layers.py` - canonical strategy/facility design ability inspection (ability iteration + per-instance layer views; the former `component_inspector.py` was split by PROJ-433 and its shim removed by PROJ-454).
 
 ## Lifecycle
 
@@ -128,9 +128,10 @@ Common strategic payload fields:
 Strategy/facility scans must resolve component IDs through the component registry. Facility and design data commonly store components as IDs or `{"id": ...}` references, not inline abilities.
 
 Use helpers from `game/strategy/services/component_abilities.py` (ability
-iteration) and `game/strategy/services/component_layers.py` (per-instance
-layer views). Both are re-exported by the legacy `component_inspector`
-import path (PROJ-433 split).
+iteration; the helpers below) and `game/strategy/services/component_layers.py`
+(per-instance layer views). PROJ-433 split the former `component_inspector.py`
+into these two modules and PROJ-454 removed the re-export shim, so import from
+them directly — there is no `component_inspector` import path.
 - `extract_abilities_from_component(comp, registries)`.
 - `iterate_design_components(design_data, component_registry)`.
 - `iter_facility_ability_entries(facility, ability_name, registries)`.
@@ -149,7 +150,7 @@ for comp in facility.design_data["layers"]["CORE"]:
 Correct pattern:
 
 ```python
-from game.strategy.services.component_inspector import iter_facility_ability_entries
+from game.strategy.services.component_abilities import iter_facility_ability_entries
 
 for comp, entry in iter_facility_ability_entries(facility, "PlanetaryShield", registries):
     drain = entry.get("energy_drain_rate", 0)
@@ -313,7 +314,7 @@ Adding a new ability:
 8. Add focused tests and update ability docs/reference if the public ability set changes.
 
 Adding strategic/facility logic:
-1. Scan design/facility components through `component_inspector` helpers.
+1. Scan design/facility components through `component_abilities` / `component_layers` helpers.
 2. Resolve component IDs through registries; do not require inline abilities.
 3. Respect ability scope defaults through `get_ability_default_scope`.
 4. Keep system and sector semantics distinct.
@@ -344,7 +345,7 @@ Targeted tests:
 - `pytest tests/unit/simulation/components`
 - `pytest tests/unit/simulation/components/abilities`
 - `pytest tests/unit/modifiers`
-- `pytest tests/unit/strategy/test_component_inspector.py`
+- `pytest tests/unit/strategy/services/test_component_abilities.py tests/unit/strategy/services/test_component_layers.py`
 - `pytest tests/integration/test_design_load_warp_capability.py`
 - `pytest tests/integration/test_strategic_abilities.py`
 - `pytest tests/unit/simulation/entities/stat_contributors`

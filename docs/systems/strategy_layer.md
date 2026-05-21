@@ -1,6 +1,6 @@
 # Strategy Layer System
 
-> **Last verified:** 2026-05-18 — PROJ-436 Phase 10 doc refresh: minefield-resolver storage indirection note updated (`ship.bay_inventory.bay` typed slot is the canonical write surface; `ship.carried_items` shim deleted in Phase 9). Earlier: issue #25 — defeated players skip rotation; one-shot defeat modal composes with the issue #9 turn-start helper.
+> **Last verified:** 2026-05-20 — PROJ-468 doc refresh: removed the false `effect_ability_metadata.py` "remains importable" shim claim (use `ability_metadata.py`); fixed `data/spectrum.py` → `game/strategy/data/spectrum.py`; added a Superweapon Order Processing section documenting `superweapon_order_processor.py`; (Phase 3, Codex-audit) fixed residual dead refs in the metadata-registry notes and Activatable Ability Extension Checklist (`EFFECT_ABILITY_METADATA` shim removed, `planetary.py` → `planetary/` package, `SYSTEM_EFFECT_ABILITIES` → `EffectFacet` entry). Earlier: 2026-05-18 PROJ-436 Phase 10 — minefield-resolver storage indirection note (`ship.bay_inventory.bay` typed slot is the canonical write surface; `ship.carried_items` shim deleted in Phase 9); issue #25 — defeated players skip rotation; one-shot defeat modal composes with the issue #9 turn-start helper.
 
 System documentation for the turn-based strategy layer.
 
@@ -307,6 +307,37 @@ Order handler registry:
 `OrderProcessor` is intentionally a thin facade. Static guards keep it from re-growing legacy helper branches: `tests/unit/strategy/engine/test_order_processor_no_legacy_helpers.py` and `tests/unit/strategy/engine/order_handlers/test_handler_registry_completeness.py`.
 
 **Issuer-aware execution contract (PROJ-438 Phase 6).** `OrderProcessor.get_handler(order_type)` is the public accessor used by external dispatchers (currently `ActionExecutionEngine._execute_planet_action`, which wraps a planet in a `PlanetStagingYardIssuerAdapter` and dispatches the planet's queued action order through the same registered `IOrderHandler` a fleet would use). `IOrderHandler.execute_for_issuer(*, issuer, order_owner, empire, galaxy=None, registries=None)` is the canonical 5-kwarg signature; launch and recovery handlers share it (recovery handlers accept and ignore `galaxy` / `registries`). The previous private `OrderProcessor._handler_registry` reach-in plus `try / except TypeError` recovery fallback in `ActionExecutionEngine._execute_planet_action` was retired by this unification — one call, no fallback. Pinned by `tests/unit/strategy/engine/test_issuer_execution_contract.py`.
+
+### Superweapon Order Processing
+
+The five `SuperweaponHandlerAdapter` entries above delegate to
+`game/strategy/engine/superweapon_order_processor.py`
+(`SuperweaponOrderProcessor`), the spec-driven dispatcher for galaxy-altering
+superweapon orders. It exposes one `process_*` method per superweapon plus the
+shared `execute_superweapon(...)` prologue:
+
+| Method | Order type | Ship outcome |
+|--------|-----------|--------------|
+| `process_implode_planet` | `IMPLODE_PLANET` | preserved (reusable) |
+| `process_stellerate_star` | `STELLERATE_STAR` | consumed (suicide: destroys every star/planet and every fleet within the 50-hex system radius) |
+| `process_open_warp_point` | `OPEN_WARP_POINT` | preserved |
+| `process_close_warp_point` | `CLOSE_WARP_POINT` | preserved |
+| `process_create_dyson_sphere` | `CREATE_DYSON_SPHERE` | preserved |
+
+Each call returns a `SuperweaponResult(success, fleet_consumed, message)`. The
+per-weapon effect bodies live in
+`game/strategy/engine/superweapon_handlers/` (one module per weapon); the
+processor methods are thin wrappers that import and invoke them. `execute_superweapon`
+runs the common prologue in a test-pinned order: order/target validation,
+per-weapon precheck, the stabilizer block (via `stabilizer_registry`), the
+ability-ship lookup, then the effect — preserving pre-refactor failure
+ordering and message text. The processor is constructed with optional
+`event_bus`, `empire_mutator` (`IEmpireMutator`, PROJ-370), and
+`nav_service` (`FleetNavigationService`, used by warp-graph mutations to
+broadcast path invalidation). Self-destruct is *not* routed here — it was
+lifted to `order_handlers/self_destruct.py` (PROJ-368 Phase 2). Thread
+`component_registry` through every call so the stabilizer scanner can see
+blocking stabilizers.
 
 ## 4. Fleet System
 
@@ -672,7 +703,7 @@ The unified `AbilityMetadataRegistry` is the canonical strategy-facing source of
 Schema:
 
 - `AbilityMetadata(name, effect, role_tags, energy, action_time_field, kind_tags)` — one record per ability.
-- `EffectFacet` — strategic-effect aggregation (display name, kind=rate|multiplier, grouping_key_field, owner_aware_scopes, value_field_primary/fallback). Drives the legacy `EFFECT_ABILITY_METADATA` shim.
+- `EffectFacet` — strategic-effect aggregation (display name, kind=rate|multiplier, grouping_key_field, owner_aware_scopes, value_field_primary/fallback). Consumed directly from the unified registry; the former `EFFECT_ABILITY_METADATA` shim was removed (PROJ-454).
 - `EnergyFacet` — activation cycle (is_activatable, drains_energy, activation_time_field, deactivation_time_field). Drives the action-time resolver's ACTIVATE_ABILITY / DEACTIVATE_ABILITY branch.
 - `RoleTag` — design-role classification (`WEAPON`, `SEEKER`, `BEAM_PROJECTILE`, `SENSOR`, `SUPPORT`, `CARRIER`, `COMMAND`). Drives `design_role.classify_design_role`.
 - `StrategicKind` — strategic categorisation (`COMBAT_MODIFIER`, `COMBAT_FLAT_BONUS`, `STABILIZER`, `SUPERWEAPON`, `ENVIRONMENTAL`, `RESOURCE_BOOSTER`, `BUILD_RATE_BOOSTER`, `PLANETARY_SHIELD`, `ENERGY_DRAINING`). Drives the combat modifier collector, stack builder, build queue source, planet energy engine, and stabilizer / superweapon contract tests.
@@ -689,7 +720,7 @@ Public API:
 
 Cycle-safety invariant: the registry is a leaf — it must NOT import from `game.simulation.components.abilities`. Ability names are strings; metadata is pure data; the registry's job is categorisation, not instantiation. Pinned by `test_ability_metadata_module_does_not_import_simulation_abilities` backed by a hardened AST guard (top-level imports, class-body imports, dynamic `importlib.import_module` / `__import__` calls). The same guard pattern is used by `OrderMetadataView` (PROJ-424) and `TurnPhaseRegistry` (PROJ-428).
 
-Shim: `game/strategy/services/effect_ability_metadata.py` remains importable. It re-derives `EFFECT_ABILITY_METADATA` from the unified registry's `EffectFacet` entries and preserves `find_metadata`, `is_known_effect_ability`, `all_owner_aware_scopes`, and the `EffectAbilityMetadata` symbol so existing consumer chains continue to work unchanged. New entries should be added to `ability_metadata.py` directly; the shim is purely a backward-compatibility surface and is slated for collapse in a follow-up project.
+Module: `game/strategy/services/ability_metadata.py` is the single source of truth. The former `effect_ability_metadata.py` re-export shim was removed (PROJ-454) and is no longer importable. Effect metadata is exposed through the unified registry's `EffectFacet` entries; add new entries to `ability_metadata.py` directly.
 
 Constants retired by PROJ-429 (DO NOT re-introduce):
 
@@ -712,13 +743,13 @@ Shape rationale (vs PROJ-424's `OrderMetadataView`): both projects converge on t
 
 ### Activatable Ability Extension Checklist
 
-1. Define ability class in `planetary.py` with energy/activation/deactivation/scope fields.
+1. Define ability class in the appropriate `game/simulation/components/abilities/planetary/` package module (e.g. `shields.py`, `stabilizers.py`, `environmental.py`) with energy/activation/deactivation/scope fields.
 2. Register in `ABILITY_REGISTRY`.
 3. Add the entry to `game/strategy/services/ability_metadata.py` with an `EnergyFacet` (drains_energy=True). PROJ-429 / TD-07 deleted the dead `_ACTIVATABLE_ABILITIES` list; the unified registry is now the discovery surface and `ability_drains_energy(name)` is the consumer-facing query.
 4. Data-driven abilities window discovery requires `activation_time` in component data; add display override only when CamelCase humanization is wrong.
 5. Add display name to `_ACTIVATABLE_DISPLAY_NAMES` in `strategy_detail_fmt.py`.
 6. If it blocks superweapons, add a `StabilizerSpec` in `stabilizer_registry.py`.
-7. If system/sector scoped, add to `SYSTEM_EFFECT_ABILITIES`.
+7. If system/sector scoped, add an `EffectFacet` to the ability's `AbilityMetadata` entry in `ability_metadata.py` (no separate `SYSTEM_EFFECT_ABILITIES` constant — that was retired).
 8. If combat-affecting, extend `combat_modifier_collector.py` with `require_active=True`.
 9. Add keyboard/UI wiring as needed.
 10. Add component data, QS complex design with `design_role`, tests, and ability/strategy docs.
@@ -828,7 +859,7 @@ Key files:
 - `game/strategy/data/galaxy_protocols.py`: read protocols such as `IGalaxySystemGraph`, `IGalaxySpatialQuery`, `IHabitabilityCalculator`, `IStockpileHolder`, `IStagingYardHolder`.
 - `game/strategy/data/galaxy_system_generator.py`, `galaxy_warp_generator.py`.
 - `game/strategy/generation/placement_strategies.py`, `region_classifier.py`.
-- `game/strategy/data/stars.py`, `data/spectrum.py`, `generation/star_generator.py`, `planet_gen.py`, `classification_config.py`, `resource_generation_config.py`, `star_generation_config.py`, `orbital_generation_config.py`.
+- `game/strategy/data/stars.py`, `game/strategy/data/spectrum.py`, `generation/star_generator.py`, `planet_gen.py`, `classification_config.py`, `resource_generation_config.py`, `star_generation_config.py`, `orbital_generation_config.py`.
 - `game/core/spectrum_math.py`: pure spectrum math helpers split from `stars.py`.
 - `game/strategy/services/planet_query_service.py`, `planet_habitability_service.py`, `galaxy_pathfinding_service.py`, `intercept_calculator.py`.
 - `game/strategy/generation/storm_generator.py`.
