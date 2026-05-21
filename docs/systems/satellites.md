@@ -1,6 +1,15 @@
 # Satellites System
 
-> **Last verified:** 2026-05-18 — PROJ-436 Phase 10 doc refresh:
+> **Last verified:** 2026-05-20 — PROJ-469 cross-doc/terminology fix:
+> replaced the internally-contradictory "distinct `satellite_group`
+> fleet namespace" wording (a `SatelliteConstellation` is a
+> `DeployedGroup`, not a Fleet — see `game/strategy/data/deployed_group.py:375`)
+> and corrected the `IIssuerAdapter` cross-ref from Pattern #40 to #41.
+> Phase 2 (Codex follow-up): corrected the strategic-recovery prose to
+> match the live issuer-polymorphic handler (`execute_for_issuer`,
+> `issuer.location`, prunes from `empire.deployed_groups` not
+> `empire.fleets`) — see `game/strategy/engine/order_handlers/recover_satellites.py:120-170`.
+> Earlier (2026-05-18): PROJ-436 Phase 10 doc refresh:
 > lifecycle map now points at the typed `ShipInstance.bay_inventory.bay[*]`
 > slot (Phase 9 deleted the legacy `carried_items` projection).
 > Earlier (2026-05-17): PROJ-FMS-D end-to-end satellite system shipped
@@ -10,14 +19,16 @@
 > `satellite_launch_bay` now collocates `RecoverSatellites`; tactical
 > launch rewritten from count-per-cycle/cooldown to mass-tons/sec
 > budget; planet-issued launch/recovery first-class via
-> `IIssuerAdapter` (Pattern #40).
+> `IIssuerAdapter` (Pattern #41).
 
 End-to-end satellite lifecycle: design → bay → strategic launch →
 tactical combat (stationary AI) → strategic recovery, with mid-battle
 launches that auto-reboard at battle end. Mirrors the fighter pipeline
 with three deliberate differences: stationary tactical AI, separate
-ability gates from fighters, and a distinct `satellite_group` fleet
-namespace. Source design lives at
+ability gates from fighters, and a distinct deployed-group identity:
+a `SatelliteConstellation` is a `DeployedGroup` (not a Fleet), tracked
+on `empire.deployed_groups` in its own `satellite_group` id namespace
+(300000+). Source design lives at
 [`PROJ-FMS-shared/design.md`](../../Projects/active_projects/PROJ-FMS-shared/design.md);
 this doc is the runtime reference.
 
@@ -188,16 +199,18 @@ IssueRecoverSatellitesCommand(
 
 Exactly one of `fleet_id` / `planet_id` is set (Round 4 Obs B).
 
-`RecoverSatellitesOrderHandler.execute_action_order`:
+`RecoverSatellitesOrderHandler.execute_for_issuer` (issuer-polymorphic
+via `IIssuerAdapter`):
 
-1. Locates the target `satellite_group` (specific id, or first owner-
-   owned group at the recovering fleet's hex).
+1. Locates the target `SatelliteConstellation` (specific
+   `satellite_group_id`, or first owner-owned constellation at the
+   issuer's hex, `issuer.location`).
 2. For each ship up to `count` (or all when `None`): converts to
    `CarriedVehicle` (HP + per-component damage preserved), calls
-   `carrier._cargo_mgr.load_vehicle(cv)`. Partial recovery is allowed
+   `issuer.append_recovered(cv)`. Partial recovery is allowed
    when bay capacity / type filter runs out.
-3. Removes recovered ships from the group; prunes the source group from
-   `empire.fleets` if empty.
+3. Removes recovered ships from the constellation; prunes the source
+   `SatelliteConstellation` from `empire.deployed_groups` if empty.
 
 The ability-gate test pins that a carrier with only
 `RecoverFightersAbility` cannot recover satellites — the
@@ -207,7 +220,7 @@ at action-time resolution, and the bay-side `allowed_types` filter
 rejects satellites into a fighter-only bay even if the order somehow
 slipped through.
 
-## Planet-issued launch / recovery (QA Observation B / Pattern #40)
+## Planet-issued launch / recovery (QA Observation B / Pattern #41)
 
 A planetary-complex facility component exposing
 `StrategicSatelliteLaunch` lets a planet issue

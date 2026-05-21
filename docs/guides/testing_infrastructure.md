@@ -1,6 +1,6 @@
 # Testing Infrastructure
 
-> **Last verified:** 2026-05-20 - Fixed dead single-file pytest example to `tests/unit/simulation/combat/test_damage_calculator.py` (PROJ-468). Prior verification 2026-05-17 against `conftest.py`, `tests/conftest.py`, `tests/unit/conftest.py`, `tests/unit/ui/conftest.py`, `tests/infrastructure/session_cache.py`, `pytest.ini`, `Tools/test_sharded/`, `combat_lab/run_tests.py`, current fixture modules, and the PROJ-443 `norecursedirs` config flip.
+> **Last verified:** 2026-05-20 - PROJ-469 cross-doc fix: corrected the dead `newdocs/02_PATTERNS.md` cross-reference to `docs/02_PATTERNS.md` (the `newdocs/` directory does not exist). Earlier (2026-05-20): Fixed dead single-file pytest example to `tests/unit/simulation/combat/test_damage_calculator.py` (PROJ-468). Prior verification 2026-05-17 against `conftest.py`, `tests/conftest.py`, `tests/unit/conftest.py`, `tests/unit/ui/conftest.py`, `tests/infrastructure/session_cache.py`, `pytest.ini`, `Tools/test_sharded/`, `combat_lab/run_tests.py`, current fixture modules, and the PROJ-443 `norecursedirs` config flip.
 
 Use this as the compact contract for test work. Keep strict TDD: add or identify the failing test first, run it, implement the root-cause fix, then rerun the same test path. Do not read `docs/_ignore/`.
 
@@ -126,7 +126,7 @@ Other important fixture modules:
 - `tests/fixtures/common.py`: `initialized_ship_data`, `initialized_ship_data_with_modifiers`.
 - `tests/fixtures/turn_engine.py`: turn-engine builder helpers used by strategy integration/unit conftests.
 - `tests/fixtures/strategy_entities.py`, `galaxy_fixtures.py`, `mock_planet.py`, `yard_facility.py`: strategy-domain fixtures.
-- `tests/fixtures/ui_widget_factory.py` plus `*_ui_builder.py` fixtures: UI construction seams documented in `newdocs/02_PATTERNS.md`.
+- `tests/fixtures/ui_widget_factory.py` plus `*_ui_builder.py` fixtures: UI construction seams documented in `docs/02_PATTERNS.md`.
 
 ## Test Layout
 

@@ -1,6 +1,6 @@
 # Conventions
 
-> **Last verified:** 2026-05-20 - PROJ-467 foundation doc-drift sweep: corrected the `get_system_at_hex()` path to `game/strategy/services/galaxy_pathfinding_service.py` and removed a hardcoded `C:/Users/rossr/...` checkout path that violated the doc's own no-checkout-path convention. Earlier (2026-05-17): Round 4 doc-audit fixes: corrected `markers.py` listing (removed retired `VehicleLaunchAbility`), added the "polymorphic FMS commands (`planet_id` rule)" convention, the right-click context-menu triple convention, and the "Capability validation is hard, not soft" convention.
+> **Last verified:** 2026-05-20 - PROJ-469 cross-doc fix: corrected the `IIssuerAdapter` cross-reference from Pattern #40 to Pattern #41 (Polymorphic Order Issuer; #40 is the Named Pre-Tick Setup Registry) per `docs/02_PATTERNS.md:74-75`. Earlier (2026-05-20): PROJ-467 foundation doc-drift sweep: corrected the `get_system_at_hex()` path to `game/strategy/services/galaxy_pathfinding_service.py` and removed a hardcoded `C:/Users/rossr/...` checkout path that violated the doc's own no-checkout-path convention. Earlier (2026-05-17): Round 4 doc-audit fixes: corrected `markers.py` listing (removed retired `VehicleLaunchAbility`), added the "polymorphic FMS commands (`planet_id` rule)" convention, the right-click context-menu triple convention, and the "Capability validation is hard, not soft" convention.
 
 Compact convention reference for Starship Battles. Use this with `docs/01_ARCHITECTURE.md` and `docs/02_PATTERNS.md` before coding.
 
@@ -128,7 +128,7 @@ Exactly one of `fleet_id` / `planet_id` must be set per command;
 matching, positive int = partial). Order handlers operate on
 `IIssuerAdapter` (`game/strategy/engine/issuer_adapter.py`) so the
 same handler family serves fleet-ship and planet-facility issuers —
-see Pattern #40 in `docs/02_PATTERNS.md`. Do not add a parallel
+see Pattern #41 in `docs/02_PATTERNS.md`. Do not add a parallel
 `PlanetIssue*Command` family or fork the order handlers.
 
 ## File Organization
