@@ -2,7 +2,7 @@
 
 PROJ-382 Phase 2 (Pattern #10 / Pattern #6 naming hygiene): the workshop /
 build-queue UI bus is named ``WorkshopEventBus`` to avoid colliding with
-the canonical strategy-layer ``EventBus`` (``game/core/events/event_bus.py``).
+the canonical strategy-layer ``EventBus`` (``game/core/event_logging.py``).
 The two buses serve different scopes; sharing the name made imports
 ambiguous at code-review time.
 """

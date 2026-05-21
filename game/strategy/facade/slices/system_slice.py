@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List, Optional
 
 from game.core.hex_math import HexCoord
+from game.core.protocols import is_storm
 from game.strategy.facade.dto import StarInfo, SystemInfo
 
 if TYPE_CHECKING:
@@ -121,12 +122,18 @@ class SystemSlice:
 
         PROJ-300 Phase 7: AreaEffectManager removed; queries the galaxy's
         zone spatial index directly for Storm instances at the hex.
-        """
-        from game.strategy.data.storm import Storm
 
+        PROJ-470 TG-003: uses the ``is_storm`` TypeGuard instead of
+        ``isinstance(zone, Storm)``. The guard requires BOTH ``storm_type``
+        and ``abilities``; ``storm_type`` is unique to ``Storm`` across the
+        strategy layer, so the guard is exactly equivalent to the isinstance
+        check for the zone domain (stars/storms/planets) while conforming to
+        the Pattern #2 Protocol+TypeGuard convention. Characterization test:
+        ``test_get_storm_names_at_hex_excludes_abilities_carrying_non_storm``.
+        """
         galaxy = self._state.session.galaxy
         get_zones = getattr(galaxy, 'get_zones_at_global_hex', None)
         if get_zones is None:
             return []
         zones = get_zones(hex_coord) or []
-        return [zone.name for zone in zones if isinstance(zone, Storm)]
+        return [zone.name for zone in zones if is_storm(zone)]

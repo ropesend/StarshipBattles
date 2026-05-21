@@ -90,6 +90,7 @@ class SettingsRegistrar:
         c.settings_window = SettingsWindow(
             rect,
             c.manager,
+            window_manager=c,
             on_close_callback=self._on_closed,
         )
 

@@ -1,31 +1,68 @@
 """Settings window for the strategy screen.
 
 Provides UI controls for user-configurable game settings.
-"""
-import pygame
-from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIHorizontalSlider, UIButton
 
+PROJ-470 MOD-001 (Pattern #31): migrated from a bare ``UIWindow`` with a
+manual close-callback to the ``StrategyModalWindow`` base class. The base
+class auto-registers the window with the ``StrategyWindowManager`` on
+construction (so ``has_modal_open()`` counts it and ``is_blocking`` blocks
+background hover/click) and auto-deregisters in ``kill()``. The registrar
+slot-cleanup ``on_close_callback`` is preserved and invoked from ``kill()``.
+"""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Callable
+
+import pygame
+from pygame_gui.elements import UIPanel, UILabel, UIHorizontalSlider, UIButton
+
+from game.ui.screens.strategy_modal_window import StrategyModalWindow
 from game.ui.services.game_settings import GameSettings
 import logging
+
+if TYPE_CHECKING:
+    import pygame_gui
+    from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 logger = logging.getLogger(__name__)
 
 
-class SettingsWindow(UIWindow):
+class SettingsWindow(StrategyModalWindow):
     """Modal settings window with sliders for game settings."""
 
-    def __init__(self, rect, manager, on_close_callback=None):
+    def __init__(
+        self,
+        rect: pygame.Rect,
+        manager: "pygame_gui.UIManager",
+        *,
+        window_manager: "StrategyWindowManager | None",
+        on_close_callback: Callable[[], None] | None = None,
+    ):
         """Initialize the settings window.
 
         Args:
             rect: Window rectangle.
             manager: pygame_gui UIManager.
-            on_close_callback: Called when window is closed.
+            window_manager: PROJ-313 StrategyWindowManager (or None outside the
+                strategy screen). The base class registers/deregisters here.
+            on_close_callback: Optional registrar slot-cleanup callback invoked
+                from ``kill()``.
         """
-        super().__init__(rect, manager, window_display_title="Settings")
-
+        # ---- Stage 1: cheap state ----
         self.on_close_callback = on_close_callback
         self._settings = GameSettings()
+
+        # ---- Stage 2: shell (StrategyModalWindow auto-registers) ----
+        super().__init__(
+            rect,
+            manager,
+            window_display_title="Settings",
+            window_manager=window_manager,
+        )
+
+        # ---- Stage 3: widgets (skipped under bypass_init) ----
+        if getattr(self, "_window_init_bypassed", False):
+            return
 
         y = 20
         width = rect.width - 40
@@ -104,6 +141,9 @@ class SettingsWindow(UIWindow):
             self._brightness_label.set_text(f"{value:.0%}")
 
     def kill(self) -> None:
+        """Invoke the registrar slot-cleanup callback, then delegate to
+        ``StrategyModalWindow.kill()`` which deregisters from the window
+        manager before tearing down the underlying window."""
         if self.on_close_callback:
             self.on_close_callback()
         super().kill()

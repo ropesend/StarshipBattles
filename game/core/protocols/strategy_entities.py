@@ -6,9 +6,30 @@ facilities, races, ship instances) live in `strategy_domain.py`.
 """
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Any, Protocol, TypeGuard, runtime_checkable
 
 from game.core.protocols.common import _has_attrs
+
+
+class SourceKind(StrEnum):
+    """Discriminator for :class:`IAbilitySource` implementations (ENUM-001).
+
+    A ``StrEnum`` so members compare equal to their string value — the
+    provider-dict consumers compare with raw strings
+    (``provider.get('source_kind') == 'storm'``,
+    ``!= 'star'``, ``f"sector:{source_kind}"``) and the universal-collector
+    payload carries the value directly. Adding an 8th source kind without
+    adding a member here is a type error at every annotated return site.
+    """
+
+    FACILITY = "facility"
+    STORM = "storm"
+    PLANET = "planet"
+    STAR = "star"
+    WARP_POINT = "warp_point"
+    SYSTEM = "system"
+    FLEET = "fleet"
 
 
 @runtime_checkable
@@ -371,8 +392,8 @@ class IAbilitySource(Protocol):
     live inside source-specific adapters so the collector remains uniform.
     """
     @property
-    def source_kind(self) -> str:
-        """Discriminator: 'facility' | 'storm' | 'planet' | 'star' | 'warp_point' | 'system' | 'fleet'."""
+    def source_kind(self) -> SourceKind:
+        """Discriminator identifying the source category (see :class:`SourceKind`)."""
         ...
 
     @property

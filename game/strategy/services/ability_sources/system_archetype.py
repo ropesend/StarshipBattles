@@ -6,6 +6,7 @@ the system. Most systems have archetype=None and produce no source.
 """
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
+from game.core.protocols import SourceKind
 
 from game.strategy.services.ability_sources.labels import format_intrinsic_source_label
 
@@ -16,8 +17,8 @@ class SystemAbilitySource:
     system: Any  # StarSystem
 
     @property
-    def source_kind(self) -> str:
-        return 'system'
+    def source_kind(self) -> SourceKind:
+        return SourceKind.SYSTEM
 
     @property
     def source_label(self) -> str:

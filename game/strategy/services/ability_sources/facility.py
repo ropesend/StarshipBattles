@@ -9,6 +9,7 @@ injected. Never call `get_default_registry_provider()` from inside this class.
 """
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
+from game.core.protocols import SourceKind
 
 from game.core.patterns.layer_iterator import iter_keyed_components
 from game.strategy.services.component_abilities import extract_abilities_from_component
@@ -22,8 +23,8 @@ class FacilityAbilitySource:
     registries: Any = None  # GameRegistries or compatible — constructor-injected only
 
     @property
-    def source_kind(self) -> str:
-        return 'facility'
+    def source_kind(self) -> SourceKind:
+        return SourceKind.FACILITY
 
     @property
     def source_label(self) -> str:

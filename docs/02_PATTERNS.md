@@ -249,9 +249,15 @@ Use when multiple validators share setup, aggregation, and reporting behavior.
 
 ## 10. Event Bus
 
-Where: `game/ui/screens/builder/event_bus.py`, `game/ui/screens/builder_utils.py::BuilderEvents`, `game/core/event_logging.py`.
+Where: `game/ui/screens/builder/event_bus.py::WorkshopEventBus`, `game/ui/screens/builder_utils.py::BuilderEvents`, `game/core/event_logging.py::EventBus`.
 
-Workshop event bus contract:
+There are **two distinct event-bus classes** with deliberately separate domains; the name divergence is intentional (PROJ-382 naming hygiene), not drift:
+- `WorkshopEventBus` (`game/ui/screens/builder/event_bus.py`) — Workshop / build-queue **UI** pub/sub.
+- `EventBus` (`game/core/event_logging.py`) — session-scoped structured **simulation/strategy** event logging.
+
+They do not share an `EventBusProtocol`; their payload contracts differ (one-arg `data` callback vs structured logging records) and they serve non-overlapping scopes, so a shared protocol is not planned. Renaming the UI bus to `WorkshopEventBus` (PROJ-382 Phase 2) removed the import ambiguity that the shared `EventBus` name created.
+
+`WorkshopEventBus` contract:
 - Simple pub/sub with string event constants.
 - `subscribe(event_type, callback)` validates the callback is callable.
 - `emit(event_type, data=None)` passes exactly one `data` argument.
@@ -697,6 +703,8 @@ Contract:
 
 Use for classes that construct three or more stable, heavy collaborators in `__init__`. Prefer this over `bypass_init` for new UI classes.
 
+> **Adoption note (DOC-032, 2026-05-20):** the single current production consumer of this pattern is `StrategyScreen` (`game/ui/screens/strategy_screen.py` via `StrategyScreenComposition`). The "three or more collaborators" guidance above is the *threshold for adopting* the pattern, not a claim of multiple adopters. Promote additional UI classes to this pattern as they cross the threshold.
+
 Skeleton:
 
 ```python
@@ -819,8 +827,10 @@ Where (remaining confirmed sites; PROJ-416 deleted `race_setup_screen.py` and PR
 - (Removed PROJ-417) `game/ui/screens/test_lab/test_run_details.py` —
   the ~12-LOC re-export shim is deleted; callers import
   `TestRunDetailsPanel` from `game/ui/screens/test_lab/details/` directly.
-- `game/simulation/components/component.py:395-405` — re-exports
-  loader symbols from `game/simulation/components/component_loader.py`.
+- `game/simulation/components/component.py:392-405` — re-exports
+  loader symbols from `game/simulation/components/component_loader.py`
+  (the `# Re-exports from component_loader.py` block header is at line
+  392; the `from ... import (...)` statement spans 395-405).
 - (Removed PROJ-416) `game/ui/screens/race_setup_screen.py` —
   the transitional re-export shim is deleted; all callers import
   from `game/ui/screens/race_setup/screen.py` directly.
@@ -1259,6 +1269,42 @@ family.
 > `ProductionEngine.context_type` storage-dispatch deleted in
 > Phase 8 via the `IProductionResourceSource` Protocol;
 > `_CarriedItemsProxy` deleted in Phase 9.
+
+## 44. HabitabilityFactor Registry
+
+Where: `game/strategy/data/habitability_factors.py`. Consumers across `game/strategy/data/`, `game/strategy/formulas/`, and `game/ui/widgets/` (≈24 references). `AGENTS.md` names this the single source of truth for habitability axes.
+
+Contract:
+- Each habitability axis (gravity, temperature, water, pressure, tectonic, magnetic, radiation, plus 10 atmospheric gases) is one frozen `HabitabilityFactor` dataclass instance: id, display_name, unit, display_scale, weight, default setpoint/tolerance, slider min/max/step, an `extractor(Planet) -> float | None`, a `scorer(value, EnvironmentalPreference) -> float`, and PROJ-293 display fields (`display_unit`, `display_precision`).
+- `FACTOR_REGISTRY: Dict[str, HabitabilityFactor]` assembles 7 scalar factors + 10 gas factors keyed by canonical id (`"gravity"`, …, `"gas.O2"`, …). Gas ids are prefixed `gas.`.
+- Lookup/iteration API: `get_factor(id)` (raises `KeyError` on unknown id), `iter_scalar_factors()` (non-`gas.` factors), `iter_gas_factors()` (`gas.`-prefixed factors).
+- The habitability formula and the race-setup UI both iterate the registry, so adding a new axis is a single data-edit (append a `HabitabilityFactor`); no formula or UI code changes.
+
+When to use: any per-axis habitability data or behavior. Never hardcode an axis list — iterate the registry.
+
+## 45. AbilityMetadataRegistry
+
+Where: `game/strategy/services/ability_metadata.py` (consolidated 11 scattered classification sources per PROJ-429).
+
+Contract:
+- Two classification facets as `Enum`s: `RoleTag` (`WEAPON`, `SEEKER`, `BEAM_PROJECTILE`, `SENSOR`, `SUPPORT`, `CARRIER`, `COMMAND`) and `StrategicKind` (`COMBAT_MODIFIER`, `COMBAT_FLAT_BONUS`, `STABILIZER`, `SUPERWEAPON`, `ENVIRONMENTAL`, `RESOURCE_BOOSTER`, `BUILD_RATE_BOOSTER`, `PLANETARY_SHIELD`, `ENERGY_DRAINING`).
+- `EffectFacet` / `EnergyFacet` describe an ability's multiplier/rate effect and energy-drain behavior; `AbilityMetadata` bundles `effect`, `role_tags: frozenset[RoleTag]`, `energy`, and `kind_tags: frozenset[StrategicKind]` keyed by ability name (string).
+- Query API: `get_ability_metadata(name) -> AbilityMetadata | None`, `ability_has_role_tag(name, tag)`, `ability_has_kind_tag(name, tag)`, `abilities_with_role_tag(tag) -> frozenset[str]`, `abilities_with_kind_tag(tag) -> frozenset[str]`, plus `ability_action_time_field(name)` and `ability_drains_energy(name)`.
+- **Cycle-safety invariant:** this module must NOT import from `game.simulation.components.abilities` (strategy depends on simulation, and the ability classes import back). Ability names are bare strings here; no ability-class instantiation. Pinned by `test_ability_metadata_module_does_not_import_simulation_abilities`.
+
+When to use: any strategy-layer classification of abilities by role or strategic kind. Never re-introduce hardcoded role/kind frozensets at call sites — query this registry.
+
+## 46. RoleRegistry (layered-loading registry)
+
+Where: machinery in `game/core/roles.py`; the strategy accessor in `game/strategy/data/design_role_registry.py`. A variant of Pattern #4 (Registry) specialized for layered file loading + invalidation. Documented here as its own entry because the layered-load + runtime-add gating + invalidation recipe is non-obvious.
+
+Contract:
+- `Role` is a frozen spec; `RoleRegistry(*, allow_runtime_add: bool)` loads roles in layers via `load_from_file(path, source_tag)` / `load_from_file_optional(...)` — base → mods → user overlay — later layers overriding earlier ones by id.
+- `allow_runtime_add` gates `add_user_role(role)`: when `False`, runtime mutation raises `RoleRegistryReadOnlyError`. `register_invalidation_callback(cb)` lets dependents (cached vehicle-type lookups, formation defaults) rebuild when roles change.
+- Two instances: `design_role_registry` (`allow_runtime_add=True`, mutable — subsystems may add user roles) and `combat_lab_role_registry` (`allow_runtime_add=False`, read-only scenario-wiring labels).
+- Accessor convention (the `get_default_*` / `set_default_*` / `reset_default_*` triple): `get_default_design_role_registry()` returns the cached layered-loaded registry; `set_default_design_role_registry(r)` overrides it (tests/DI); `reset_default_design_role_registry()` clears the cache so the next `get_default_*` rebuilds.
+
+When to use: any registry whose contents come from layered JSON (base + mods + user overlay) and whose consumers cache derived views that must invalidate on change.
 
 ## Critical Naming Reminders
 

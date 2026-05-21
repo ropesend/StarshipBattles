@@ -155,3 +155,30 @@ def test_get_storm_names_at_hex_handles_galaxy_without_zone_index() -> None:
     state = SimpleNamespace(session=SimpleNamespace(galaxy=SimpleNamespace()))
 
     assert SystemSlice(state).get_storm_names_at_hex(HexCoord(4, 4)) == []
+
+
+def test_get_storm_names_at_hex_excludes_abilities_carrying_non_storm() -> None:
+    """TG-003 characterization (PROJ-470): the zone spatial index registers
+    stars and planets alongside storms (galaxy_entity_registry.py:50,52,83).
+    A star-like zone carries an ``abilities`` attribute but NOT ``storm_type``.
+
+    The ``is_storm`` TypeGuard requires BOTH ``storm_type`` and ``abilities``,
+    so it must exclude such a zone — exactly as ``isinstance(zone, Storm)``
+    did. This pins that the duck-typed guard did not widen the filter to
+    include ability-carrying stars/planets.
+    """
+    storm = Storm(
+        name="Ion Front",
+        storm_type="ion",
+        location=HexCoord(0, 0),
+        hex_offsets=frozenset({HexCoord(0, 0)}),
+        abilities={},
+    )
+    # Star-like zone: has `abilities` and a `name`, but no `storm_type`.
+    star_like_zone = SimpleNamespace(name="Sol", abilities={"radiation": {}})
+    galaxy = SimpleNamespace(
+        get_zones_at_global_hex=lambda hex_coord: [star_like_zone, storm]
+    )
+    state = SimpleNamespace(session=SimpleNamespace(galaxy=galaxy))
+
+    assert SystemSlice(state).get_storm_names_at_hex(HexCoord(4, 4)) == ["Ion Front"]

@@ -66,6 +66,7 @@ from game.core.protocols.strategy_domain import (
 )
 from game.core.protocols.strategy_entities import (
     IAbilitySource,
+    SourceKind,
     IFleet,
     IOrderable,
     IPlanet,
@@ -112,6 +113,7 @@ __all__ = [
     "ISectorEnvironment",
     "IStorm",
     "IAbilitySource",
+    "SourceKind",
     # Strategy entities — TypeGuards
     "is_star_system",
     "is_star",

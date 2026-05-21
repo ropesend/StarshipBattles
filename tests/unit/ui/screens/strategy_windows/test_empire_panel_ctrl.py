@@ -108,6 +108,9 @@ def test_settings_open_creates_centered_window() -> None:
     assert rect.topleft == (250, 300)
     assert rect.size == (500, 200)
     assert window_cls.call_args.args[1] is composer.manager
+    # MOD-001 (PROJ-470): SettingsWindow is now a StrategyModalWindow; the
+    # registrar wires the window_manager so it registers as a live modal.
+    assert window_cls.call_args.kwargs["window_manager"] is composer
     assert window_cls.call_args.kwargs["on_close_callback"] == registrar._on_closed
     assert composer.settings_window is window_cls.return_value
 

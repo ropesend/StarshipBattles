@@ -8,6 +8,7 @@ generation-time-rolled values via `roll_intrinsic_abilities`. Both
 """
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
+from game.core.protocols import SourceKind
 
 from game.strategy.services.ability_sources.labels import format_intrinsic_source_label
 
@@ -19,8 +20,8 @@ class PlanetIntrinsicAbilitySource:
     system: Any  # parent StarSystem (for global hex math)
 
     @property
-    def source_kind(self) -> str:
-        return 'planet'
+    def source_kind(self) -> SourceKind:
+        return SourceKind.PLANET
 
     @property
     def source_label(self) -> str:

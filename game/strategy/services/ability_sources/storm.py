@@ -10,6 +10,7 @@ adapter falls back to a local-frame `in occupied_hexes` check.
 """
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
+from game.core.protocols import SourceKind
 
 
 @dataclass(frozen=True)
@@ -19,8 +20,8 @@ class StormAbilitySource:
     system: Any = None  # parent StarSystem (for global-frame hex match)
 
     @property
-    def source_kind(self) -> str:
-        return 'storm'
+    def source_kind(self) -> SourceKind:
+        return SourceKind.STORM
 
     @property
     def source_label(self) -> str:

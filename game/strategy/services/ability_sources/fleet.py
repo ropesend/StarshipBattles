@@ -15,6 +15,7 @@ granularity.
 """
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
+from game.core.protocols import SourceKind
 
 
 # Strategic-layer scopes — these flow through FleetAbilitySource.
@@ -40,8 +41,8 @@ class FleetAbilitySource:
     _abilities_cache: Optional[Dict[str, Any]] = field(default=None, init=False, repr=False)
 
     @property
-    def source_kind(self) -> str:
-        return 'fleet'
+    def source_kind(self) -> SourceKind:
+        return SourceKind.FLEET
 
     @property
     def source_label(self) -> str:

@@ -6,6 +6,7 @@ add sector-scope hazards or perks at the warp point's hex.
 """
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
+from game.core.protocols import SourceKind
 
 from game.strategy.services.ability_sources.labels import format_intrinsic_source_label
 
@@ -17,8 +18,8 @@ class WarpPointAbilitySource:
     system: Any
 
     @property
-    def source_kind(self) -> str:
-        return 'warp_point'
+    def source_kind(self) -> SourceKind:
+        return SourceKind.WARP_POINT
 
     @property
     def source_label(self) -> str:

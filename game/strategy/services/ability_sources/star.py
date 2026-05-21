@@ -8,6 +8,7 @@ the danger before flying in.
 """
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
+from game.core.protocols import SourceKind
 
 from game.strategy.services.ability_sources.labels import format_intrinsic_source_label
 
@@ -19,8 +20,8 @@ class StarAbilitySource:
     system: Any  # parent StarSystem
 
     @property
-    def source_kind(self) -> str:
-        return 'star'
+    def source_kind(self) -> SourceKind:
+        return SourceKind.STAR
 
     @property
     def source_label(self) -> str:
