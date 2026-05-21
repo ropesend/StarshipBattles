@@ -1,0 +1,19 @@
+{
+  "detector": "deprecation_markers",
+  "scanned_files": 202,
+  "total_findings": 2,
+  "findings": [
+    {
+      "file": "game/ai/carrier_controller.py",
+      "line": 358,
+      "marker": "# Legacy",
+      "context": "    # Legacy ability-lookup helper (kept for test fixtures)"
+    },
+    {
+      "file": "game/strategy/services/mine_group_service.py",
+      "line": 130,
+      "marker": "# legacy",
+      "context": "            # legacy test stub that still uses ``fleets``."
+    }
+  ]
+}

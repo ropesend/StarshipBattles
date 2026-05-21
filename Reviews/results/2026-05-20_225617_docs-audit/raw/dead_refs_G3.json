@@ -1,0 +1,98 @@
+{
+  "group": "G3",
+  "label": "docs/guides",
+  "total": 13,
+  "dead_refs": [
+    {
+      "doc": "docs/guides/performance_profiling.md",
+      "line": 35,
+      "reference": "tests/path/to/test.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "docs/guides/performance_profiling.md",
+      "line": 42,
+      "reference": "tests/path/to/test.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "docs/guides/performance_profiling.md",
+      "line": 51,
+      "reference": "tests/path/to/test.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 43,
+      "reference": "data/scenario_roles.json",
+      "prefix": "data",
+      "exists": false
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 44,
+      "reference": "data/ships/",
+      "prefix": "data",
+      "exists": false
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 231,
+      "reference": "data/scenario_roles.json",
+      "prefix": "data",
+      "exists": false
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 241,
+      "reference": "data/scenario_roles.json",
+      "prefix": "data",
+      "exists": false
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 277,
+      "reference": "data/ships/",
+      "prefix": "data",
+      "exists": false
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 593,
+      "reference": "data/ships/",
+      "prefix": "data",
+      "exists": false
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "line": 629,
+      "reference": "data/scenario_roles.json",
+      "prefix": "data",
+      "exists": false
+    },
+    {
+      "doc": "docs/guides/testing_infrastructure.md",
+      "line": 40,
+      "reference": "tests/integration/conftest.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "docs/guides/testing_infrastructure.md",
+      "line": 144,
+      "reference": "tests/simulation/",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "docs/guides/testing_infrastructure.md",
+      "line": 304,
+      "reference": "data/assets/test/",
+      "prefix": "data",
+      "exists": false
+    }
+  ]
+}

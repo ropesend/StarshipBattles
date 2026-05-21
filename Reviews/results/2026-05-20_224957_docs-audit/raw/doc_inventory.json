@@ -1,0 +1,522 @@
+{
+  "total_docs": 31,
+  "docs": [
+    {
+      "doc": "docs/README.md",
+      "group": "architecture",
+      "headings": [
+        "Starship Battles Documentation Routing",
+        "Required Reading",
+        "Task Docs",
+        "Domain Docs",
+        "How-To Guides",
+        "Layer Contract",
+        "Current Contracts",
+        "Architecture Anchors",
+        "Extension Recipes",
+        "Stale Name Traps"
+      ],
+      "loc": 242
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "group": "architecture",
+      "headings": [
+        "Starship Battles - Architecture Compact Reference",
+        "Layer Model",
+        "Service Layer Rules",
+        "Composition Root And DI",
+        "Package Map",
+        "`game/core/`",
+        "`game/services/`",
+        "`game/assets/`",
+        "`game/engine/`",
+        "`game/simulation/`"
+      ],
+      "loc": 555
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "group": "architecture",
+      "headings": [
+        "02_PATTERNS Compact Agent Reference",
+        "Global Rules",
+        "Pattern Map",
+        "1. ApplicationContext",
+        "2. Protocol + TypeGuard",
+        "3. Registry DI",
+        "4. Registry Pattern",
+        "5. Facade / Delegate",
+        "6. CQRS-lite Strategy Session",
+        "7. CommandHandlerRegistry"
+      ],
+      "loc": 1316
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "group": "architecture",
+      "headings": [
+        "Conventions",
+        "Naming Rules",
+        "Battle vs Combat",
+        "Screen vs Scene",
+        "Builder vs Workshop",
+        "Star System vs Sector",
+        "Handler Names",
+        "MVVM and UI Decomposition Names",
+        "Ability Module Names",
+        "Order System Names"
+      ],
+      "loc": 589
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "group": "architecture",
+      "headings": [
+        "Service Layer Architecture",
+        "Service Layers",
+        "Directory Map",
+        "Cross-Cutting LLM Service",
+        "Simulation Services",
+        "ShipMaterializer",
+        "BattleService",
+        "VehicleDesignService",
+        "Modifiers",
+        "SimulationDesignLoader"
+      ],
+      "loc": 977
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "group": "architecture",
+      "headings": [
+        "Error Handling Guidelines",
+        "Source Files",
+        "Exception Contract",
+        "Error Codes",
+        "Service Error Hygiene",
+        "Logging Rules",
+        "Structured Events",
+        "JSON And Persistence",
+        "Turn Engine Boundary",
+        "Broad Catch Rule"
+      ],
+      "loc": 348
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "group": "architecture",
+      "headings": [
+        "UI Style Guide Compact Reference",
+        "Visual Identity",
+        "Primary Sources",
+        "Strategy Modal Windows",
+        "`COLORS` Dict",
+        "RGB Constant Families",
+        "Hex-String Constants",
+        "pygame_gui Theme",
+        "Test Lab Theme",
+        "Read-only Component Grouping"
+      ],
+      "loc": 523
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "group": "systems",
+      "headings": [
+        "Ability Reference",
+        "Agent Essentials",
+        "JSON Data Shapes",
+        "Core APIs And Invariants",
+        "Ability Base Contract",
+        "Formula-Driven Data",
+        "AbilityManager",
+        "Stacking",
+        "Scopes",
+        "Stat Keys"
+      ],
+      "loc": 850
+    },
+    {
+      "doc": "docs/systems/ai_system.md",
+      "group": "systems",
+      "headings": [
+        "AI System Compact Reference",
+        "Architecture",
+        "AIController Tick Flow",
+        "Movement Behaviors",
+        "Spatial Behaviors",
+        "Policies",
+        "Target Evaluation",
+        "Group Coordination",
+        "Integration Boundaries",
+        "Extension Recipes"
+      ],
+      "loc": 247
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "group": "systems",
+      "headings": [
+        "Combat Simulation System",
+        "Core Contract",
+        "Primary Files",
+        "Entry Contexts",
+        "Visual Mode",
+        "Spec And Outcome",
+        "Tick Loop",
+        "Boundary, Retreat, And End Conditions",
+        "Formations And Teams",
+        "Strategy Combat"
+      ],
+      "loc": 560
+    },
+    {
+      "doc": "docs/systems/fighters.md",
+      "group": "systems",
+      "headings": [
+        "Fighters System",
+        "Component model (Round 4)",
+        "Quick lifecycle map",
+        "Strategic launch (`OrderType.LAUNCH_FIGHTERS`)",
+        "Tactical launch (mid-battle, design-instance)",
+        "Combat join via typed `FighterWing`",
+        "Fighter AI",
+        "Strategic recovery (`OrderType.RECOVER_FIGHTERS`)",
+        "Planet-issued launch / recovery (QA Observation B / Pattern #40)",
+        "End-of-battle reboard"
+      ],
+      "loc": 302
+    },
+    {
+      "doc": "docs/systems/minefields.md",
+      "group": "systems",
+      "headings": [
+        "Minefields (PROJ-FMS-B)",
+        "Vehicle and component model",
+        "Strategic mine laying",
+        "Strategic detonation math",
+        "Tactical (in-battle) mines",
+        "Player controls (UI / service)",
+        "Planet-issued mine laying (QA Observation B / Pattern #40)",
+        "Ramming",
+        "Balance constants",
+        "File map"
+      ],
+      "loc": 340
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "group": "systems",
+      "headings": [
+        "Orders System Compact Reference",
+        "System Scope",
+        "Lifecycle",
+        "Processing Contracts",
+        "Order Categories",
+        "Cycle break (PROJ-424)",
+        "Movement Orders",
+        "Fleet Action Orders",
+        "Instant Orders",
+        "Planet Action Orders"
+      ],
+      "loc": 425
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "group": "systems",
+      "headings": [
+        "Production System - Compact Agent Reference",
+        "Build Contexts",
+        "Main Flow",
+        "Key Data Shapes",
+        "Queue Discovery and Rates",
+        "Production Tick Flow",
+        "Tick Expenditure Formula",
+        "Resource Sources",
+        "Pause Contract",
+        "Spawning"
+      ],
+      "loc": 557
+    },
+    {
+      "doc": "docs/systems/research_system.md",
+      "group": "systems",
+      "headings": [
+        "Research System Compact Reference",
+        "Files",
+        "Tech Tree",
+        "Tracker",
+        "Leaky Bucket",
+        "UI Boundary",
+        "Extension Recipes",
+        "Tests And Commands"
+      ],
+      "loc": 223
+    },
+    {
+      "doc": "docs/systems/resource_system.md",
+      "group": "systems",
+      "headings": [
+        "Resource System Compact Reference",
+        "Core Model",
+        "Resource Data",
+        "Catalog API",
+        "Behavior Sources",
+        "Runtime Paths",
+        "Planet Storage Contract",
+        "Production Contract",
+        "Transfers",
+        "Operational Consumption"
+      ],
+      "loc": 400
+    },
+    {
+      "doc": "docs/systems/satellites.md",
+      "group": "systems",
+      "headings": [
+        "Satellites System",
+        "Quick lifecycle map",
+        "Differences from fighters",
+        "Strategic launch (`OrderType.LAUNCH_SATELLITES`)",
+        "Tactical launch (mid-battle)",
+        "Stationary tactical AI",
+        "Strategic recovery (`OrderType.RECOVER_SATELLITES`)",
+        "Planet-issued launch / recovery (QA Observation B / Pattern #41)",
+        "End-of-battle reboard",
+        "File map"
+      ],
+      "loc": 334
+    },
+    {
+      "doc": "docs/systems/save_load.md",
+      "group": "systems",
+      "headings": [
+        "Save / Load Compact Reference",
+        "Scope",
+        "Public API",
+        "Disk Layout",
+        "Atomic Persistence",
+        "Versioning",
+        "Replay Store Coupling",
+        "Extension Guidance",
+        "Tests And Commands",
+        "Stale Reference Corrections"
+      ],
+      "loc": 191
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "group": "systems",
+      "headings": [
+        "Strategy Layer System",
+        "Agent Essentials",
+        "1. StrategySessionFacade",
+        "Top-level surface",
+        "Grouped namespaces (`game/strategy/facade/grouped_namespaces.py`)",
+        "Architectural invariant (TD-08)",
+        "Performance / caching contracts",
+        "Test-seeding seam (TD-08 Phase 4)",
+        "Facade slice architecture (internal)",
+        "GameSession Lifecycle (PROJ-423)"
+      ],
+      "loc": 1172
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "group": "guides",
+      "headings": [
+        "Adding New Abilities",
+        "Purpose",
+        "Fast Path",
+        "Data And Lifecycle Invariants",
+        "Choose The Base Class",
+        "Simple Multiplier Pattern",
+        "Static Value Pattern",
+        "Raw Ability Pattern",
+        "Marker Abilities",
+        "Registration"
+      ],
+      "loc": 586
+    },
+    {
+      "doc": "docs/guides/adding_modifiers.md",
+      "group": "guides",
+      "headings": [
+        "Adding Modifiers",
+        "Source Files",
+        "Add a Modifier",
+        "Stat Keys",
+        "Operations",
+        "Formulas",
+        "Restrictions",
+        "Targeted Effects",
+        "Current Invariants",
+        "Extension Recipes"
+      ],
+      "loc": 240
+    },
+    {
+      "doc": "docs/guides/component_system.md",
+      "group": "guides",
+      "headings": [
+        "Component System - Compact Agent Reference",
+        "Purpose",
+        "Lifecycle",
+        "Registry And DI",
+        "Ability Model",
+        "Ability Layer, Scope, And Defaults",
+        "Strategic Abilities",
+        "Stat Bindings, Modifiers, And External Stats",
+        "Stacking And Aggregation",
+        "Formula Evaluation"
+      ],
+      "loc": 367
+    },
+    {
+      "doc": "docs/guides/modifier_system.md",
+      "group": "guides",
+      "headings": [
+        "Modifier System Compact Reference",
+        "Current Paths",
+        "Files",
+        "Modifier Definition",
+        "ModifierEffect",
+        "Formula Evaluation",
+        "Stat Keys",
+        "Ability Binding",
+        "Stacking",
+        "Battle-Scoped Modifiers"
+      ],
+      "loc": 382
+    },
+    {
+      "doc": "docs/guides/performance_profiling.md",
+      "group": "guides",
+      "headings": [
+        "Performance Profiling",
+        "Wrapper Contract",
+        "Commands",
+        "Scenario Selection",
+        "Interpretation",
+        "Internal Profiler",
+        "Extension Recipes",
+        "Verification Commands"
+      ],
+      "loc": 135
+    },
+    {
+      "doc": "docs/guides/pre_commit_hooks.md",
+      "group": "guides",
+      "headings": [
+        "Pre-commit Hook Card",
+        "Hook Contract",
+        "Allowlist",
+        "Install",
+        "Skip transient Git states where partial trees are normal.",
+        "Run / Skip",
+        "CI",
+        "Extension Recipes"
+      ],
+      "loc": 152
+    },
+    {
+      "doc": "docs/guides/qs_complex_design.md",
+      "group": "guides",
+      "headings": [
+        "QS Complex Design - Compact Agent Reference",
+        "Purpose",
+        "Source Files",
+        "Runtime Contracts",
+        "Infrastructure",
+        "JSON Skeleton",
+        "Field Rules",
+        "Component Entry Rules",
+        "Tiers And Mass",
+        "Strategic Ability Families"
+      ],
+      "loc": 340
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "group": "guides",
+      "headings": [
+        "Simulation Testing Compact Reference",
+        "Purpose",
+        "Core Paths",
+        "Commands",
+        "Current Battle Flow",
+        "TestScenario Shape",
+        "Metadata",
+        "Scenario Templates",
+        "Scenario Roles",
+        "Validation Helpers"
+      ],
+      "loc": 632
+    },
+    {
+      "doc": "docs/guides/testing_infrastructure.md",
+      "group": "guides",
+      "headings": [
+        "Testing Infrastructure",
+        "Core Invariants",
+        "Conftest Stack",
+        "Registry Fixtures",
+        "Session Registry Cache",
+        "Fixture Modules",
+        "Test Layout",
+        "Commands",
+        "Sharded Runner Contract",
+        "Extension Recipes"
+      ],
+      "loc": 311
+    },
+    {
+      "doc": "AGENTS.md",
+      "group": "root",
+      "headings": [
+        "AGENTS.md \u2014 Starship Battles",
+        "Non-Negotiable Rules",
+        "Commands",
+        "Full test suite (primary)",
+        "Incremental tests (changed files only)",
+        "Single test",
+        "Combat Lab tests (scenario suite does NOT run under pytest; use this runner)",
+        "Code shrinkage audit (read-only analysis)",
+        "Then /ocode-audit-shrink                         # Phase 2: agents + report",
+        "Architecture (Quick Reference)"
+      ],
+      "loc": 113
+    },
+    {
+      "doc": "CLAUDE.md",
+      "group": "root",
+      "headings": [
+        "Claude Code Adapter",
+        "Your Role: Technical Consultant",
+        "Estimate in LLM time, not human time",
+        "Reinforcement of `AGENTS.md` rules",
+        "1. Strict TDD",
+        "2. Documentation First",
+        "3. Root Cause Fixes",
+        "Project Facts",
+        "Key Conventions",
+        "Claude Skills"
+      ],
+      "loc": 243
+    },
+    {
+      "doc": ".agents/CODEX.md",
+      "group": "root",
+      "headings": [
+        "Codex Adapter",
+        "Scope",
+        "Startup Checklist",
+        "Skill Routing",
+        "Codex Operating Notes",
+        "Skill Usage Logging"
+      ],
+      "loc": 56
+    }
+  ]
+}

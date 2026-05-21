@@ -1,0 +1,17 @@
+[
+  {
+    "file": "game/strategy/combat/pre_tick_setup_registry.py",
+    "line": 90,
+    "content": "wrapped = setup  # type: ignore[assignment]"
+  },
+  {
+    "file": "game/ui/pygame_gui_patch.py",
+    "line": 152,
+    "content": "self._get_next_id_node(  # type: ignore[attr-defined]"
+  },
+  {
+    "file": "game/ui/panels/race_theme_gallery.py",
+    "line": 118,
+    "content": "def _discover_assets(self) -> List[Tuple[str, Dict[str, pygame.Surface]]]:  # type: ignore[override]"
+  }
+]

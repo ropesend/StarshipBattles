@@ -1,0 +1,149 @@
+[
+  {
+    "file": "game/app_bootstrap.py",
+    "line": 310,
+    "function": "_replay_combat_lab_fallback",
+    "class": null,
+    "layer": "unknown"
+  },
+  {
+    "file": "game/strategy/adapters/simulation_adapter.py",
+    "line": 488,
+    "function": "_lookup",
+    "class": "SimulationBattleResolver",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/data/deployed_group.py",
+    "line": 48,
+    "function": "_register_type",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/data/deployed_group.py",
+    "line": 49,
+    "function": "deco",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_initializer.py",
+    "line": 157,
+    "function": "_at_hex",
+    "class": "GameInitializer",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_initializer.py",
+    "line": 163,
+    "function": "_in_system",
+    "class": "GameInitializer",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 202,
+    "function": "_event_bus",
+    "class": "GameSession",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 217,
+    "function": "fleet_mutator",
+    "class": "GameSession",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 227,
+    "function": "_fleet_mutator",
+    "class": "GameSession",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 231,
+    "function": "planet_mutator",
+    "class": "GameSession",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 236,
+    "function": "_planet_mutator",
+    "class": "GameSession",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 240,
+    "function": "empire_mutator",
+    "class": "GameSession",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 245,
+    "function": "_empire_mutator",
+    "class": "GameSession",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 249,
+    "function": "ship_mutator",
+    "class": "GameSession",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 254,
+    "function": "_ship_mutator",
+    "class": "GameSession",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/game_session.py",
+    "line": 258,
+    "function": "_command_registry",
+    "class": "GameSession",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_order_processor.py",
+    "line": 85,
+    "function": "_get_nav_service",
+    "class": "SuperweaponOrderProcessor",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/systems/design_catalog.py",
+    "line": 236,
+    "function": "load_design_data",
+    "class": "DesignCatalog",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/ui/screens/radiation_shield_editor.py",
+    "line": 176,
+    "function": "_button_handlers",
+    "class": "RadiationShieldEditor",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/strategy_game_state_manager.py",
+    "line": 166,
+    "function": "_iter_snapshot_windows",
+    "class": "StrategyGameStateManager",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/test_lab/details/validation.py",
+    "line": 39,
+    "function": "_phase_color",
+    "class": null,
+    "layer": "ui"
+  }
+]

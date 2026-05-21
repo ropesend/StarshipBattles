@@ -1,0 +1,1140 @@
+{
+  "total": 189,
+  "stale": [],
+  "all": [
+    {
+      "doc": "docs/README.md",
+      "line": 3,
+      "proj": "PROJ-467",
+      "current_status": "Docs cleanup \u2014 foundation: root agent + architecture/core docs + protocols (2026-05-20)"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 3,
+      "proj": "PROJ-468",
+      "current_status": "Docs cleanup \u2014 reference: systems + guides docs (2026-05-20)"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 3,
+      "proj": "PROJ-467",
+      "current_status": "Docs cleanup \u2014 foundation: root agent + architecture/core docs + protocols (2026-05-20)"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 3,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 96,
+      "proj": "PROJ-390",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 154,
+      "proj": "PROJ-431",
+      "current_status": "Strategy tech-debt #10/10: Deployable substrate redesign (TD-10)"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 154,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 330,
+      "proj": "PROJ-426",
+      "current_status": "Strategy tech-debt #05/10: Battle spec assembly pipeline (TD-01)"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 390,
+      "proj": "PROJ-423",
+      "current_status": "Strategy tech-debt #02/10: GameSession lifecycle extraction (TD-02)"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 396,
+      "proj": "PROJ-438",
+      "current_status": "Strategy State Surface and Intent Lifecycle Consolidation"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 422,
+      "proj": "PROJ-219",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 424,
+      "proj": "PROJ-305",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 428,
+      "proj": "PROJ-370",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 3,
+      "proj": "PROJ-467",
+      "current_status": "Docs cleanup \u2014 foundation: root agent + architecture/core docs + protocols (2026-05-20)"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 3,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 12,
+      "proj": "PROJ-426",
+      "current_status": "Strategy tech-debt #05/10: Battle spec assembly pipeline (TD-01)"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 15,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 71,
+      "proj": "PROJ-431",
+      "current_status": "Strategy tech-debt #10/10: Deployable substrate redesign (TD-10)"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 73,
+      "proj": "PROJ-426",
+      "current_status": "Strategy tech-debt #05/10: Battle spec assembly pipeline (TD-01)"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 76,
+      "proj": "PROJ-396",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 77,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 188,
+      "proj": "PROJ-383",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 265,
+      "proj": "PROJ-390",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 269,
+      "proj": "PROJ-411",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 269,
+      "proj": "PROJ-411",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 269,
+      "proj": "PROJ-411",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 282,
+      "proj": "PROJ-410",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 284,
+      "proj": "PROJ-373",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 307,
+      "proj": "PROJ-373",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 307,
+      "proj": "PROJ-410",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 313,
+      "proj": "PROJ-411",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 322,
+      "proj": "PROJ-411",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 324,
+      "proj": "PROJ-411",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 347,
+      "proj": "PROJ-411",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 369,
+      "proj": "PROJ-382",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 816,
+      "proj": "PROJ-396",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 818,
+      "proj": "PROJ-416",
+      "current_status": "Legacy removal \u2014 race_setup_screen.py shim + Game.running (PROJ-309 vestige) (2026-05-13)"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 818,
+      "proj": "PROJ-417",
+      "current_status": "Legacy removal \u2014 test_run_details.py shim (2026-05-13)"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 819,
+      "proj": "PROJ-417",
+      "current_status": "Legacy removal \u2014 test_run_details.py shim (2026-05-13)"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 824,
+      "proj": "PROJ-416",
+      "current_status": "Legacy removal \u2014 race_setup_screen.py shim + Game.running (PROJ-309 vestige) (2026-05-13)"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 827,
+      "proj": "PROJ-383",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 863,
+      "proj": "PROJ-382",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 873,
+      "proj": "PROJ-302",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 873,
+      "proj": "PROJ-383",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 894,
+      "proj": "PROJ-431",
+      "current_status": "Strategy tech-debt #10/10: Deployable substrate redesign (TD-10)"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 929,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 945,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 983,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1012,
+      "proj": "PROJ-426",
+      "current_status": "Strategy tech-debt #05/10: Battle spec assembly pipeline (TD-01)"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1079,
+      "proj": "PROJ-438",
+      "current_status": "Strategy State Surface and Intent Lifecycle Consolidation"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1116,
+      "proj": "PROJ-396",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1175,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1183,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1221,
+      "proj": "PROJ-258",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 1251,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 3,
+      "proj": "PROJ-469",
+      "current_status": "Docs cleanup \u2014 cross-doc consistency + terminology (2026-05-20)"
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 3,
+      "proj": "PROJ-467",
+      "current_status": "Docs cleanup \u2014 foundation: root agent + architecture/core docs + protocols (2026-05-20)"
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 580,
+      "proj": "PROJ-300",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 3,
+      "proj": "PROJ-468",
+      "current_status": "Docs cleanup \u2014 reference: systems + guides docs (2026-05-20)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 56,
+      "proj": "PROJ-433",
+      "current_status": "Strategy tech-debt follow-up: component_inspector split (PROJ-425 consult)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 57,
+      "proj": "PROJ-433",
+      "current_status": "Strategy tech-debt follow-up: component_inspector split (PROJ-425 consult)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 386,
+      "proj": "PROJ-392",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 441,
+      "proj": "PROJ-424",
+      "current_status": "Strategy tech-debt #03/10: Order metadata convergence (TD-03)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 465,
+      "proj": "PROJ-433",
+      "current_status": "Strategy tech-debt follow-up: component_inspector split (PROJ-425 consult)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 475,
+      "proj": "PROJ-425",
+      "current_status": "Strategy tech-debt #04/10: ShipInstance slimming (TD-06)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 480,
+      "proj": "PROJ-454",
+      "current_status": "Engine + services obsolete-surface retirement (effect_ability_metadata + component_inspector + OrderProcessor facade unwinding)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 896,
+      "proj": "PROJ-424",
+      "current_status": "Strategy tech-debt #03/10: Order metadata convergence (TD-03)"
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 896,
+      "proj": "PROJ-424",
+      "current_status": "Strategy tech-debt #03/10: Order metadata convergence (TD-03)"
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 13,
+      "proj": "PROJ-252",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 13,
+      "proj": "PROJ-390",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 73,
+      "proj": "PROJ-381",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 74,
+      "proj": "PROJ-381",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 75,
+      "proj": "PROJ-381",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 82,
+      "proj": "PROJ-381",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 147,
+      "proj": "PROJ-252",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/05_ERROR_HANDLING.md",
+      "line": 155,
+      "proj": "PROJ-390",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 3,
+      "proj": "PROJ-468",
+      "current_status": "Docs cleanup \u2014 reference: systems + guides docs (2026-05-20)"
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 489,
+      "proj": "PROJ-433",
+      "current_status": "Strategy tech-debt follow-up: component_inspector split (PROJ-425 consult)"
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 489,
+      "proj": "PROJ-454",
+      "current_status": "Engine + services obsolete-surface retirement (effect_ability_metadata + component_inspector + OrderProcessor facade unwinding)"
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 554,
+      "proj": "PROJ-429",
+      "current_status": "Strategy tech-debt #08/10: Ability metadata unification (TD-07)"
+    },
+    {
+      "doc": "docs/systems/ability_reference.md",
+      "line": 656,
+      "proj": "PROJ-431",
+      "current_status": "Strategy tech-debt #10/10: Deployable substrate redesign (TD-10)"
+    },
+    {
+      "doc": "docs/systems/fighters.md",
+      "line": 3,
+      "proj": "PROJ-468",
+      "current_status": "Docs cleanup \u2014 reference: systems + guides docs (2026-05-20)"
+    },
+    {
+      "doc": "docs/systems/fighters.md",
+      "line": 101,
+      "proj": "PROJ-431",
+      "current_status": "Strategy tech-debt #10/10: Deployable substrate redesign (TD-10)"
+    },
+    {
+      "doc": "docs/systems/fighters.md",
+      "line": 168,
+      "proj": "PROJ-431",
+      "current_status": "Strategy tech-debt #10/10: Deployable substrate redesign (TD-10)"
+    },
+    {
+      "doc": "docs/systems/fighters.md",
+      "line": 279,
+      "proj": "PROJ-426",
+      "current_status": "Strategy tech-debt #05/10: Battle spec assembly pipeline (TD-01)"
+    },
+    {
+      "doc": "docs/systems/minefields.md",
+      "line": 3,
+      "proj": "PROJ-468",
+      "current_status": "Docs cleanup \u2014 reference: systems + guides docs (2026-05-20)"
+    },
+    {
+      "doc": "docs/systems/minefields.md",
+      "line": 99,
+      "proj": "PROJ-431",
+      "current_status": "Strategy tech-debt #10/10: Deployable substrate redesign (TD-10)"
+    },
+    {
+      "doc": "docs/systems/minefields.md",
+      "line": 106,
+      "proj": "PROJ-431",
+      "current_status": "Strategy tech-debt #10/10: Deployable substrate redesign (TD-10)"
+    },
+    {
+      "doc": "docs/systems/minefields.md",
+      "line": 214,
+      "proj": "PROJ-426",
+      "current_status": "Strategy tech-debt #05/10: Battle spec assembly pipeline (TD-01)"
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 70,
+      "proj": "PROJ-424",
+      "current_status": "Strategy tech-debt #03/10: Order metadata convergence (TD-03)"
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 72,
+      "proj": "PROJ-424",
+      "current_status": "Strategy tech-debt #03/10: Order metadata convergence (TD-03)"
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 137,
+      "proj": "PROJ-383",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 161,
+      "proj": "PROJ-424",
+      "current_status": "Strategy tech-debt #03/10: Order metadata convergence (TD-03)"
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 275,
+      "proj": "PROJ-438",
+      "current_status": "Strategy State Surface and Intent Lifecycle Consolidation"
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 275,
+      "proj": "PROJ-438",
+      "current_status": "Strategy State Surface and Intent Lifecycle Consolidation"
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 290,
+      "proj": "PROJ-438",
+      "current_status": "Strategy State Surface and Intent Lifecycle Consolidation"
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 294,
+      "proj": "PROJ-438",
+      "current_status": "Strategy State Surface and Intent Lifecycle Consolidation"
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 422,
+      "proj": "PROJ-383",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 3,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 110,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 244,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 328,
+      "proj": "PROJ-427",
+      "current_status": "Strategy tech-debt #06/10: Production/persistence split (TD-05)"
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 329,
+      "proj": "PROJ-434",
+      "current_status": "Complete DesignLibrary deletion (PROJ-427 phase 6 follow-up)"
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 393,
+      "proj": "PROJ-383",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 431,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 476,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/systems/resource_system.md",
+      "line": 3,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/systems/resource_system.md",
+      "line": 167,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/systems/resource_system.md",
+      "line": 179,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/systems/resource_system.md",
+      "line": 201,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/systems/resource_system.md",
+      "line": 228,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/systems/resource_system.md",
+      "line": 309,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/systems/satellites.md",
+      "line": 3,
+      "proj": "PROJ-469",
+      "current_status": "Docs cleanup \u2014 cross-doc consistency + terminology (2026-05-20)"
+    },
+    {
+      "doc": "docs/systems/satellites.md",
+      "line": 12,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/systems/satellites.md",
+      "line": 42,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/systems/satellites.md",
+      "line": 117,
+      "proj": "PROJ-431",
+      "current_status": "Strategy tech-debt #10/10: Deployable substrate redesign (TD-10)"
+    },
+    {
+      "doc": "docs/systems/save_load.md",
+      "line": 21,
+      "proj": "PROJ-423",
+      "current_status": "Strategy tech-debt #02/10: GameSession lifecycle extraction (TD-02)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 3,
+      "proj": "PROJ-468",
+      "current_status": "Docs cleanup \u2014 reference: systems + guides docs (2026-05-20)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 3,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 89,
+      "proj": "PROJ-423",
+      "current_status": "Strategy tech-debt #02/10: GameSession lifecycle extraction (TD-02)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 98,
+      "proj": "PROJ-438",
+      "current_status": "Strategy State Surface and Intent Lifecycle Consolidation"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 99,
+      "proj": "PROJ-438",
+      "current_status": "Strategy State Surface and Intent Lifecycle Consolidation"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 101,
+      "proj": "PROJ-396",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 105,
+      "proj": "PROJ-432",
+      "current_status": "Strategy tech-debt follow-up: TurnStateSnapshot rehydrate alignment (PROJ-423 consult)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 105,
+      "proj": "PROJ-438",
+      "current_status": "Strategy State Surface and Intent Lifecycle Consolidation"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 105,
+      "proj": "PROJ-219",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 105,
+      "proj": "PROJ-219",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 105,
+      "proj": "PROJ-207",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 105,
+      "proj": "PROJ-222",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 105,
+      "proj": "PROJ-432",
+      "current_status": "Strategy tech-debt follow-up: TurnStateSnapshot rehydrate alignment (PROJ-423 consult)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 105,
+      "proj": "PROJ-438",
+      "current_status": "Strategy State Surface and Intent Lifecycle Consolidation"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 109,
+      "proj": "PROJ-383",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 166,
+      "proj": "PROJ-411",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 210,
+      "proj": "PROJ-438",
+      "current_status": "Strategy State Surface and Intent Lifecycle Consolidation"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 281,
+      "proj": "PROJ-412",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 309,
+      "proj": "PROJ-438",
+      "current_status": "Strategy State Surface and Intent Lifecycle Consolidation"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 335,
+      "proj": "PROJ-370",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 338,
+      "proj": "PROJ-368",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 364,
+      "proj": "PROJ-431",
+      "current_status": "Strategy tech-debt #10/10: Deployable substrate redesign (TD-10)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 398,
+      "proj": "PROJ-269",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 425,
+      "proj": "PROJ-436",
+      "current_status": "Unified Storage Substrate and Container Unification"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 432,
+      "proj": "PROJ-431",
+      "current_status": "Strategy tech-debt #10/10: Deployable substrate redesign (TD-10)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 626,
+      "proj": "PROJ-426",
+      "current_status": "Strategy tech-debt #05/10: Battle spec assembly pipeline (TD-01)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 673,
+      "proj": "PROJ-431",
+      "current_status": "Strategy tech-debt #10/10: Deployable substrate redesign (TD-10)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 697,
+      "proj": "PROJ-429",
+      "current_status": "Strategy tech-debt #08/10: Ability metadata unification (TD-07)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 706,
+      "proj": "PROJ-454",
+      "current_status": "Engine + services obsolete-surface retirement (effect_ability_metadata + component_inspector + OrderProcessor facade unwinding)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 721,
+      "proj": "PROJ-424",
+      "current_status": "Strategy tech-debt #03/10: Order metadata convergence (TD-03)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 721,
+      "proj": "PROJ-428",
+      "current_status": "Strategy tech-debt #07/10: Phase registry hooks (TD-04)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 723,
+      "proj": "PROJ-454",
+      "current_status": "Engine + services obsolete-surface retirement (effect_ability_metadata + component_inspector + OrderProcessor facade unwinding)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 725,
+      "proj": "PROJ-429",
+      "current_status": "Strategy tech-debt #08/10: Ability metadata unification (TD-07)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 742,
+      "proj": "PROJ-424",
+      "current_status": "Strategy tech-debt #03/10: Order metadata convergence (TD-03)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 742,
+      "proj": "PROJ-424",
+      "current_status": "Strategy tech-debt #03/10: Order metadata convergence (TD-03)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 742,
+      "proj": "PROJ-429",
+      "current_status": "Strategy tech-debt #08/10: Ability metadata unification (TD-07)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 748,
+      "proj": "PROJ-429",
+      "current_status": "Strategy tech-debt #08/10: Ability metadata unification (TD-07)"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1085,
+      "proj": "PROJ-412",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 1089,
+      "proj": "PROJ-412",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 3,
+      "proj": "PROJ-468",
+      "current_status": "Docs cleanup \u2014 reference: systems + guides docs (2026-05-20)"
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 3,
+      "proj": "PROJ-454",
+      "current_status": "Engine + services obsolete-surface retirement (effect_ability_metadata + component_inspector + OrderProcessor facade unwinding)"
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 416,
+      "proj": "PROJ-429",
+      "current_status": "Strategy tech-debt #08/10: Ability metadata unification (TD-07)"
+    },
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "line": 422,
+      "proj": "PROJ-454",
+      "current_status": "Engine + services obsolete-surface retirement (effect_ability_metadata + component_inspector + OrderProcessor facade unwinding)"
+    },
+    {
+      "doc": "docs/guides/component_system.md",
+      "line": 3,
+      "proj": "PROJ-468",
+      "current_status": "Docs cleanup \u2014 reference: systems + guides docs (2026-05-20)"
+    },
+    {
+      "doc": "docs/guides/component_system.md",
+      "line": 23,
+      "proj": "PROJ-433",
+      "current_status": "Strategy tech-debt follow-up: component_inspector split (PROJ-425 consult)"
+    },
+    {
+      "doc": "docs/guides/component_system.md",
+      "line": 23,
+      "proj": "PROJ-454",
+      "current_status": "Engine + services obsolete-surface retirement (effect_ability_metadata + component_inspector + OrderProcessor facade unwinding)"
+    },
+    {
+      "doc": "docs/guides/component_system.md",
+      "line": 132,
+      "proj": "PROJ-433",
+      "current_status": "Strategy tech-debt follow-up: component_inspector split (PROJ-425 consult)"
+    },
+    {
+      "doc": "docs/guides/component_system.md",
+      "line": 133,
+      "proj": "PROJ-454",
+      "current_status": "Engine + services obsolete-surface retirement (effect_ability_metadata + component_inspector + OrderProcessor facade unwinding)"
+    },
+    {
+      "doc": "docs/guides/performance_profiling.md",
+      "line": 3,
+      "proj": "PROJ-411",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/performance_profiling.md",
+      "line": 7,
+      "proj": "PROJ-411",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/performance_profiling.md",
+      "line": 7,
+      "proj": "PROJ-411",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/performance_profiling.md",
+      "line": 9,
+      "proj": "PROJ-411",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "docs/guides/pre_commit_hooks.md",
+      "line": 3,
+      "proj": "PROJ-468",
+      "current_status": "Docs cleanup \u2014 reference: systems + guides docs (2026-05-20)"
+    },
+    {
+      "doc": "docs/guides/qs_complex_design.md",
+      "line": 3,
+      "proj": "PROJ-468",
+      "current_status": "Docs cleanup \u2014 reference: systems + guides docs (2026-05-20)"
+    },
+    {
+      "doc": "docs/guides/qs_complex_design.md",
+      "line": 32,
+      "proj": "PROJ-433",
+      "current_status": "Strategy tech-debt follow-up: component_inspector split (PROJ-425 consult)"
+    },
+    {
+      "doc": "docs/guides/testing_infrastructure.md",
+      "line": 3,
+      "proj": "PROJ-469",
+      "current_status": "Docs cleanup \u2014 cross-doc consistency + terminology (2026-05-20)"
+    },
+    {
+      "doc": "docs/guides/testing_infrastructure.md",
+      "line": 3,
+      "proj": "PROJ-468",
+      "current_status": "Docs cleanup \u2014 reference: systems + guides docs (2026-05-20)"
+    },
+    {
+      "doc": "docs/guides/testing_infrastructure.md",
+      "line": 3,
+      "proj": "PROJ-443",
+      "current_status": "Pytest norecursedirs Fix and Hidden-Test Triage"
+    },
+    {
+      "doc": "docs/guides/testing_infrastructure.md",
+      "line": 197,
+      "proj": "PROJ-443",
+      "current_status": "Pytest norecursedirs Fix and Hidden-Test Triage"
+    },
+    {
+      "doc": "Projects/protocols/12_create_from_test_review.md",
+      "line": 298,
+      "proj": "PROJ-320",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "Projects/protocols/12_create_from_test_review.md",
+      "line": 298,
+      "proj": "PROJ-321",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "Projects/protocols/12_create_from_test_review.md",
+      "line": 298,
+      "proj": "PROJ-322",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "Projects/protocols/14_create_from_error_audit.md",
+      "line": 115,
+      "proj": "PROJ-308",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "Projects/protocols/15_refinement_feedback.md",
+      "line": 38,
+      "proj": "PROJ-312",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "Projects/protocols/15_refinement_feedback.md",
+      "line": 38,
+      "proj": "PROJ-313",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "Projects/protocols/16_create_from_legacy_audit.md",
+      "line": 151,
+      "proj": "PROJ-258",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "Projects/protocols/17_create_from_docs_audit.md",
+      "line": 83,
+      "proj": "PROJ-298",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "Projects/protocols/17_create_from_docs_audit.md",
+      "line": 296,
+      "proj": "PROJ-298",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "Projects/protocols/18_create_from_pattern_audit.md",
+      "line": 102,
+      "proj": "PROJ-306",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "Projects/protocols/18_create_from_pattern_audit.md",
+      "line": 330,
+      "proj": "PROJ-306",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "Projects/protocols/18_create_from_pattern_audit.md",
+      "line": 351,
+      "proj": "PROJ-306",
+      "current_status": "unknown"
+    },
+    {
+      "doc": "Projects/protocols/18_create_from_pattern_audit.md",
+      "line": 364,
+      "proj": "PROJ-306",
+      "current_status": "unknown"
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "group": "G3",
+  "label": "docs/guides",
+  "total": 9,
+  "staleness": [
+    {
+      "doc": "docs/guides/adding_abilities.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/guides/adding_modifiers.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/guides/component_system.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/guides/modifier_system.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/guides/performance_profiling.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/guides/pre_commit_hooks.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/guides/qs_complex_design.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/guides/simulation_testing.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "docs/guides/testing_infrastructure.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    }
+  ]
+}

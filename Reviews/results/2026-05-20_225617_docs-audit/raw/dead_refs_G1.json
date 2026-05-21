@@ -1,0 +1,112 @@
+{
+  "group": "G1",
+  "label": "core architecture docs",
+  "total": 15,
+  "dead_refs": [
+    {
+      "doc": "docs/README.md",
+      "line": 172,
+      "reference": "game/core/input_handler.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/README.md",
+      "line": 189,
+      "reference": "tests/path/to/test.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "docs/01_ARCHITECTURE.md",
+      "line": 526,
+      "reference": "game/core/protocols.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 3,
+      "reference": "data/classes/",
+      "prefix": "data",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 88,
+      "reference": "game/core/singleton.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 187,
+      "reference": "game/strategy/engine/command_handlers.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 819,
+      "reference": "game/ui/screens/test_lab/test_run_details.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 824,
+      "reference": "game/ui/screens/race_setup_screen.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/02_PATTERNS.md",
+      "line": 827,
+      "reference": "game/strategy/engine/command_handlers.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 42,
+      "reference": "game/core/input_handler.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/03_CONVENTIONS.md",
+      "line": 308,
+      "reference": "tests/path/to/test.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 479,
+      "reference": "game/strategy/services/component_inspector.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/04_SERVICES.md",
+      "line": 894,
+      "reference": "game/strategy/services/area_effect_manager.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "line": 229,
+      "reference": "data/FiraCode-Regular.ttf",
+      "prefix": "data",
+      "exists": false
+    },
+    {
+      "doc": "docs/06_UI_STYLE_GUIDE.md",
+      "line": 518,
+      "reference": "game/ui/screens/ship_detail_panel.py",
+      "prefix": "game",
+      "exists": false
+    }
+  ]
+}

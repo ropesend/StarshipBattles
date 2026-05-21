@@ -225,6 +225,20 @@
         "type_checking_only_reexports": 0,
         "optional_protocol_methods": 0
       }
+    },
+    {
+      "critical": 2,
+      "major": 7,
+      "minor": 26,
+      "info": 3,
+      "deprecation_markers": 5,
+      "init_reexports": 2,
+      "module_aliases": 0,
+      "name_pair_drift": 0,
+      "optional_protocol_methods": 0,
+      "save_migration_code": 0,
+      "type_checking_only_reexports": 0,
+      "wrapper_delegates": 0
     }
   ]
 }

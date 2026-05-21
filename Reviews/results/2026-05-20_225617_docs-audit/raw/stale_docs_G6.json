@@ -1,0 +1,79 @@
+{
+  "group": "G6",
+  "label": "Reviews/protocols",
+  "total": 12,
+  "staleness": [
+    {
+      "doc": "Reviews/protocols/00_review_core.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Reviews/protocols/01_general_review.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Reviews/protocols/02_test_coverage_review.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Reviews/protocols/03_focused_question_review.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Reviews/protocols/04_migration_review.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Reviews/protocols/05_security_review.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Reviews/protocols/06_performance_review.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Reviews/protocols/07_technical_debt_review.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Reviews/protocols/08_consistency_review.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Reviews/protocols/09_update_review.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Reviews/protocols/10_review_to_project.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Reviews/protocols/11_apply_doc_audit.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    }
+  ]
+}

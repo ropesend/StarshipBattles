@@ -1,0 +1,25 @@
+{
+  "detector": "wrapper_delegates",
+  "scanned_files": 217,
+  "total_findings": 2,
+  "findings": [
+    {
+      "file": "game/simulation/components/component_constants.py",
+      "line": 45,
+      "function": "create_modifier",
+      "delegates_to": "ApplicationModifier",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def create_modifier(self, value=None) -> \"ApplicationModifier\":"
+    },
+    {
+      "file": "game/ui/screens/builder/weapons_viewmodel.py",
+      "line": 392,
+      "function": "calc_damage_at_range",
+      "delegates_to": "ab.get_damage",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "        def calc_damage_at_range(r) -> Any:"
+    }
+  ]
+}

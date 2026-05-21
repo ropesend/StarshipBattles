@@ -1,0 +1,91 @@
+{
+  "group": "G2",
+  "label": "docs/systems",
+  "total": 12,
+  "dead_refs": [
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 546,
+      "reference": "tests/unit/simulation/test_unified_entry_guard.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 547,
+      "reference": "tests/unit/simulation/replay/test_replay_serialization.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 548,
+      "reference": "tests/unit/strategy/test_replay_resolver.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 548,
+      "reference": "tests/unit/strategy/test_replay_store.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/combat_simulation.md",
+      "line": 556,
+      "reference": "tests/path/to/test.py",
+      "prefix": "tests",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 137,
+      "reference": "game/strategy/engine/commands/specs.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 137,
+      "reference": "game/strategy/engine/command_handlers.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 420,
+      "reference": "game/strategy/engine/commands/specs.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/orders_system.md",
+      "line": 422,
+      "reference": "game/strategy/engine/command_handlers.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/production_system.md",
+      "line": 392,
+      "reference": "game/strategy/engine/command_handlers.py",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/research_system.md",
+      "line": 24,
+      "reference": "game/research/ui/",
+      "prefix": "game",
+      "exists": false
+    },
+    {
+      "doc": "docs/systems/strategy_layer.md",
+      "line": 3,
+      "reference": "data/spectrum.py",
+      "prefix": "data",
+      "exists": false
+    }
+  ]
+}

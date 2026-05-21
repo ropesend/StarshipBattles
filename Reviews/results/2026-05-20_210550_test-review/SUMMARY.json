@@ -1,0 +1,158 @@
+{
+  "run_info": {
+    "date": "2026-05-20T21:05:50",
+    "seed": "2026-05-20",
+    "shard_count": 16,
+    "total_files": 1476,
+    "total_loc": 391324
+  },
+  "phase1_claims": 305,
+  "verified": 322,
+  "disputed": 22,
+  "inconclusive": 5,
+  "severity_totals": {
+    "CRITICAL": 65,
+    "MAJOR": 102,
+    "MINOR": 155,
+    "ADVISORY": 0
+  },
+  "category_totals": {
+    "CAT-1 Trivial Pass": 36,
+    "CAT-2 Tests Nothing Real": 18,
+    "CAT-3 Dead Test Code": 4,
+    "CAT-4 Duplicate Testing": 18,
+    "CAT-5 Fixture Bloat": 19,
+    "CAT-6 Mocking Brittleness": 28,
+    "CAT-7 Sleep/Latency": 4,
+    "CAT-8 Needless Complexity": 38,
+    "CAT-9 Simplification": 22,
+    "CAT-10 Parameterize": 88,
+    "CAT-11 Fragile Assertion": 13,
+    "CAT-12 Logic-Heavy": 24,
+    "CAT-13 Tests Targeting Deleted Code": 10
+  },
+  "category_severity_matrix": {
+    "CAT-1 Trivial Pass": { "CRITICAL": 34, "MAJOR": 2, "MINOR": 0 },
+    "CAT-2 Tests Nothing Real": { "CRITICAL": 15, "MAJOR": 3, "MINOR": 0 },
+    "CAT-3 Dead Test Code": { "CRITICAL": 1, "MAJOR": 1, "MINOR": 2 },
+    "CAT-4 Duplicate Testing": { "CRITICAL": 0, "MAJOR": 16, "MINOR": 2 },
+    "CAT-5 Fixture Bloat": { "CRITICAL": 0, "MAJOR": 15, "MINOR": 4 },
+    "CAT-6 Mocking Brittleness": { "CRITICAL": 0, "MAJOR": 25, "MINOR": 3 },
+    "CAT-7 Sleep/Latency": { "CRITICAL": 0, "MAJOR": 4, "MINOR": 0 },
+    "CAT-8 Needless Complexity": { "CRITICAL": 0, "MAJOR": 6, "MINOR": 32 },
+    "CAT-9 Simplification": { "CRITICAL": 0, "MAJOR": 1, "MINOR": 21 },
+    "CAT-10 Parameterize": { "CRITICAL": 0, "MAJOR": 0, "MINOR": 88 },
+    "CAT-11 Fragile Assertion": { "CRITICAL": 0, "MAJOR": 6, "MINOR": 7 },
+    "CAT-12 Logic-Heavy": { "CRITICAL": 0, "MAJOR": 0, "MINOR": 24 },
+    "CAT-13 Tests Targeting Deleted Code": { "CRITICAL": 10, "MAJOR": 0, "MINOR": 0 }
+  },
+  "cross_shard": {
+    "duplicates_found": 6,
+    "helper_duplications": 6,
+    "estimated_loc_savings": 740,
+    "duplicates": [
+      {
+        "id": "DUP-001",
+        "title": "_make_fleet + _make_empire helpers across combat round budget tests",
+        "shards": ["01", "11", "16"],
+        "estimated_loc_savings": 60
+      },
+      {
+        "id": "DUP-002",
+        "title": "_draw_setup + _stub_fonts battle panel helpers",
+        "shards": ["02", "14"],
+        "estimated_loc_savings": 70
+      },
+      {
+        "id": "DUP-003",
+        "title": "Ship serialization roundtrip test pattern duplicated",
+        "shards": ["08", "11"],
+        "estimated_loc_savings": 80
+      },
+      {
+        "id": "DUP-004",
+        "title": "ShipInstance serialization roundtrip",
+        "shards": ["01", "16"],
+        "estimated_loc_savings": 40
+      },
+      {
+        "id": "DUP-005",
+        "title": "_make_colony/_make_planet/_make_empire helper proliferation",
+        "shards": ["03", "04", "05", "06", "09", "10", "16"],
+        "estimated_loc_savings": 180
+      },
+      {
+        "id": "DUP-006",
+        "title": "Stub Modifier classes across builder/workshop tests",
+        "shards": ["02", "07"],
+        "estimated_loc_savings": 40
+      }
+    ],
+    "helper_duplications": [
+      {
+        "id": "HLP-001",
+        "title": "MockGameSession (5 copies across 4 shards)",
+        "shards": ["03", "07", "15", "16"],
+        "estimated_loc_savings": 110
+      },
+      {
+        "id": "HLP-002",
+        "title": "MockPlanetType(Enum) (10+ copies across 8 shards)",
+        "shards": ["02", "03", "04", "06", "09", "12", "15"],
+        "estimated_loc_savings": 80
+      },
+      {
+        "id": "HLP-003",
+        "title": "make_mock_ship_instance local redefinitions",
+        "shards": ["03", "08", "15", "16"],
+        "estimated_loc_savings": 60
+      },
+      {
+        "id": "HLP-004",
+        "title": "_make_fleet (43+ definitions across all shards)",
+        "shards": ["01", "02", "04", "06", "07", "11", "16"],
+        "estimated_loc_savings": 200
+      },
+      {
+        "id": "HLP-005",
+        "title": "setup_tmpdir autouse fixture pattern",
+        "shards": ["03", "07", "15", "16"],
+        "estimated_loc_savings": 30
+      },
+      {
+        "id": "HLP-006",
+        "title": "_make_empire(colonies=None) pattern",
+        "shards": ["03", "05", "07", "09", "10", "16"],
+        "estimated_loc_savings": 50
+      }
+    ]
+  },
+  "shard_summary": [
+    { "shard": "01", "phase1_claims": 23, "verified": 22, "disputed": 2, "inconclusive": 2 },
+    { "shard": "02", "phase1_claims": 24, "verified": 27, "disputed": 0, "inconclusive": 1 },
+    { "shard": "03", "phase1_claims": 22, "verified": 29, "disputed": 0, "inconclusive": 0 },
+    { "shard": "04", "phase1_claims": 16, "verified": 18, "disputed": 3, "inconclusive": 0 },
+    { "shard": "05", "phase1_claims": 11, "verified": 12, "disputed": 0, "inconclusive": 0 },
+    { "shard": "06", "phase1_claims": 19, "verified": 19, "disputed": 4, "inconclusive": 0 },
+    { "shard": "07", "phase1_claims": 30, "verified": 29, "disputed": 5, "inconclusive": 0 },
+    { "shard": "08", "phase1_claims": 9, "verified": 10, "disputed": 1, "inconclusive": 0 },
+    { "shard": "09", "phase1_claims": 9, "verified": 10, "disputed": 0, "inconclusive": 1 },
+    { "shard": "10", "phase1_claims": 21, "verified": 23, "disputed": 0, "inconclusive": 0 },
+    { "shard": "11", "phase1_claims": 19, "verified": 21, "disputed": 0, "inconclusive": 0 },
+    { "shard": "12", "phase1_claims": 25, "verified": 24, "disputed": 1, "inconclusive": 0 },
+    { "shard": "13", "phase1_claims": 26, "verified": 22, "disputed": 2, "inconclusive": 1 },
+    { "shard": "14", "phase1_claims": 27, "verified": 24, "disputed": 3, "inconclusive": 0 },
+    { "shard": "15", "phase1_claims": 6, "verified": 9, "disputed": 1, "inconclusive": 0 },
+    { "shard": "16", "phase1_claims": 18, "verified": 23, "disputed": 0, "inconclusive": 0 }
+  ],
+  "estimated_impact": {
+    "tests_removable_with_zero_coverage_loss": 45,
+    "tests_mergeable_via_parametrize": 180,
+    "estimated_parametrized_clusters": 88,
+    "fixture_rescoping_candidates": 19,
+    "estimated_total_loc_reduction": 4800
+  },
+  "trend_tracking": "run_tracker.py exists but no prior test-review records found for comparison",
+  "layer_weighting": "layer_weight.py exists; severity weights applied: CRITICAL=10, MAJOR=5, MINOR=1, ADVISORY=0.5",
+  "findings_note": "Detailed findings per shard available in VERIFIED_SHARD_01.md through VERIFIED_SHARD_16.md. Cross-shard duplicates detailed in CROSS_SHARD.md."
+}

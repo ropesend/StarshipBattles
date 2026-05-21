@@ -1,0 +1,16 @@
+{
+  "detector": "superseded_pattern_uses",
+  "source": "C:/Dev2/StarshipBattles/Reviews/results/2026-05-20_075227_pattern-audit/raw/patterns_toc.json",
+  "patterns_toc_available": true,
+  "note": "patterns_toc.json catalog read; per-pattern usage scan requires named entry points \u2014 left to Phase 2 LLM review",
+  "superseded_patterns": [
+    {
+      "number": 30,
+      "name": "Registrar Close-Callback",
+      "anchor": "30-registrar-close-callback",
+      "superseded_by": 31
+    }
+  ],
+  "findings": [],
+  "total_findings": 0
+}

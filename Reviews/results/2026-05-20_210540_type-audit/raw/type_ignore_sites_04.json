@@ -1,0 +1,22 @@
+[
+  {
+    "file": "game/simulation/systems/attack_processor.py",
+    "line": 123,
+    "content": "new_ship.launched_in_battle_id = battle_id  # type: ignore[attr-defined]"
+  },
+  {
+    "file": "game/strategy/combat/battle_assembly.py",
+    "line": 81,
+    "content": "return tuple(float(v) for v in bounds)  # type: ignore[return-value]"
+  },
+  {
+    "file": "game/strategy/engine/issuer_adapter.py",
+    "line": 303,
+    "content": "return gh  # type: ignore[no-any-return]"
+  },
+  {
+    "file": "game/ui/screens/turn_failed_dialog.py",
+    "line": 99,
+    "content": "self._dismiss_button = None  # type: ignore[assignment]"
+  }
+]

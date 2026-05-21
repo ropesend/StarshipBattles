@@ -1,0 +1,58 @@
+[
+  {
+    "file": "game/simulation/entities/stat_contributors/registry.py",
+    "line": 298,
+    "function": "iter_for",
+    "class": "_StatContributorRegistry",
+    "layer": "simulation"
+  },
+  {
+    "file": "game/strategy/data/star_system.py",
+    "line": 85,
+    "function": "primary_star",
+    "class": "StarSystem",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_handlers/create_dyson_sphere.py",
+    "line": 39,
+    "function": "_precheck",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_handlers/create_dyson_sphere.py",
+    "line": 51,
+    "function": "_effect",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_handlers/implode_planet.py",
+    "line": 39,
+    "function": "_effect",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/ui/screens/atmosphere_target_editor.py",
+    "line": 223,
+    "function": "_button_handlers",
+    "class": "AtmosphereTargetEditor",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/workshop_ship_io.py",
+    "line": 67,
+    "function": "_design_catalog",
+    "class": "WorkshopShipIO",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/workshop_viewmodel.py",
+    "line": 129,
+    "function": "_with_ship",
+    "class": "WorkshopViewModel",
+    "layer": "ui"
+  }
+]

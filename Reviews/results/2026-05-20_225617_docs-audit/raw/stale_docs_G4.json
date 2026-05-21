@@ -1,0 +1,25 @@
+{
+  "group": "G4",
+  "label": "root agent docs",
+  "total": 3,
+  "staleness": [
+    {
+      "doc": "AGENTS.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "CLAUDE.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": ".agents/CODEX.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    }
+  ]
+}

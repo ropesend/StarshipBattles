@@ -1,0 +1,25 @@
+{
+  "detector": "wrapper_delegates",
+  "scanned_files": 213,
+  "total_findings": 2,
+  "findings": [
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 568,
+      "function": "to_dict",
+      "delegates_to": "ShipSerializer.to_dict",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def to_dict(self) -> Dict[str, Any]:"
+    },
+    {
+      "file": "game/simulation/entities/ship.py",
+      "line": 581,
+      "function": "from_dict",
+      "delegates_to": "ShipSerializer.from_dict",
+      "args_pass_through": true,
+      "legacy_named": false,
+      "context": "    def from_dict("
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+[
+  {
+    "file": "game/strategy/engine/commands/order_metadata_view.py",
+    "line": 76,
+    "function": "_registry",
+    "class": "OrderMetadataView",
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_handlers/close_warp_point.py",
+    "line": 63,
+    "function": "_precheck",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/engine/superweapon_handlers/close_warp_point.py",
+    "line": 75,
+    "function": "_effect",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/strategy/services/ability_sources/fleet.py",
+    "line": 128,
+    "function": "_walk_strategic_abilities",
+    "class": null,
+    "layer": "strategy"
+  },
+  {
+    "file": "game/ui/pygame_gui_patch.py",
+    "line": 90,
+    "function": "_to_tuple",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/gravity_target_editor.py",
+    "line": 164,
+    "function": "_button_handlers",
+    "class": "GravityTargetEditor",
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/transfer_mass_preview.py",
+    "line": 189,
+    "function": "_get_catalog",
+    "class": null,
+    "layer": "ui"
+  },
+  {
+    "file": "game/ui/screens/water_target_editor.py",
+    "line": 173,
+    "function": "_button_handlers",
+    "class": "WaterTargetEditor",
+    "layer": "ui"
+  }
+]

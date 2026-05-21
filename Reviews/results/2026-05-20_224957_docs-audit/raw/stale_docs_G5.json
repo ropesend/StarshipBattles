@@ -1,0 +1,151 @@
+{
+  "group": "G5",
+  "label": "Projects/protocols",
+  "total": 24,
+  "staleness": [
+    {
+      "doc": "Projects/protocols/01_initialize_project.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/02_plan_protocol.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/03a_continue_working.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/03b_parallel_projects.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/03c_phase_aware_execution.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/04_audit_project.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/05_close_project.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/06_revise_project.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/07_extract_phase.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/08_automated_loop_protocol.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/09_review_project.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/10_manage_refactor_plan.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/11_create_from_shrink_audit.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/12_create_from_test_review.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/13_create_from_type_audit.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/14_create_from_error_audit.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/15_refinement_feedback.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/16_create_from_legacy_audit.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/17_create_from_docs_audit.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/18_create_from_pattern_audit.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/19_create_from_state_audit.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/20_create_from_testcoverage_audit.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/WORKER_TEMPLATE.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    },
+    {
+      "doc": "Projects/protocols/context_config.md",
+      "last_verified": null,
+      "days_stale": -1,
+      "stale": false
+    }
+  ]
+}
