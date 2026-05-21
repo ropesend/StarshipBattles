@@ -70,7 +70,10 @@ class TestShipStatsCacheCalculate:
 
     def test_calculate_raises_when_registries_none(self, basic_design_data):
         ship = _make_ship(basic_design_data, registries=None)
-        with pytest.raises(ValueError, match='ShipInstance requires registries'):
+        # PROJ-466: missing-dependency now raises ValidationException, not ValueError.
+        from game.core.exceptions import ValidationException
+
+        with pytest.raises(ValidationException, match='ShipInstance requires registries'):
             ShipStatsCache.calculate(ship)
 
 

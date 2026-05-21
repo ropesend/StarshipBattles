@@ -180,14 +180,22 @@ class TestRunBattleRequiresProviderWhenNoBuilder:
     `registry_provider` MUST raise `RuntimeError`. No silent global lookup."""
 
     def test_raises_when_neither_builder_nor_provider(self):
+        # PROJ-466 (Phase 4 Task 4.2): the missing-dependency error is now
+        # ValidationException(MISSING_DEPENDENCY) — assert the exact type and
+        # code so a regression to a generic builtin (RuntimeError/TypeError)
+        # fails loudly.
+        from game.core.error_codes import ErrorCode
+        from game.core.exceptions import ValidationException
+
         spec = _minimal_spec()
-        with pytest.raises((RuntimeError, TypeError)):
+        with pytest.raises(ValidationException) as ei:
             run_battle(
                 spec,
                 ai_factory=AIControllerFactory(),
                 # No ship_builder.
                 # No registry_provider.
             )
+        assert ei.value.code == ErrorCode.MISSING_DEPENDENCY.value
 
     def test_works_when_registry_provider_is_passed(self, ship_builder):
         """Smoke: providing a registry_provider lets run_battle succeed

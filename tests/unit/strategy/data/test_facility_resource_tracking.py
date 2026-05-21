@@ -246,9 +246,14 @@ class TestGenericConsumableAPI:
         assert facility.get_consumable_storage("fuel") == 0.0
 
     def test_get_max_consumable_storage_raises_on_unknown_resource_id(self):
-        """Unknown-to-catalog resource IDs fail fast."""
+        """Unknown-to-catalog resource IDs fail fast.
+
+        PROJ-466: now raises ValidationException(RESOURCE_NOT_FOUND), not ValueError.
+        """
+        from game.core.exceptions import ValidationException
+
         facility, registries = self._make_storage_facility("organics")
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidationException):
             facility.get_max_consumable_storage("not_a_real_resource", registries)
 
     def test_add_consumable_returns_overflow_when_capacity_exceeded(self):

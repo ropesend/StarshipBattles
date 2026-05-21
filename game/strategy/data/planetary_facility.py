@@ -7,6 +7,8 @@ Extracted from planet.py (PROJ-210) to reduce module size.
 from dataclasses import dataclass, field
 from typing import Dict, List, Any
 
+from game.core.error_codes import ErrorCode
+from game.core.exceptions import ValidationException
 from game.core.patterns.layer_iterator import iter_components, get_component_id
 from game.core.validation_helpers import require_keys
 from game.strategy.services.component_abilities import get_component_abilities
@@ -146,7 +148,11 @@ class PlanetaryFacility:
     def _validate_resource_id(self, resource_id: str) -> None:
         from game.core.resources import ResourceCatalog
         if not ResourceCatalog.from_json().has(resource_id):
-            raise ValueError(f"Unknown resource_id: {resource_id!r}")
+            raise ValidationException(
+                f"Unknown resource_id: {resource_id!r}",
+                code=ErrorCode.RESOURCE_NOT_FOUND.value,
+                context={"resource_id": str(resource_id)},
+            )
 
     def get_consumable_storage(self, resource_id: str) -> float:
         """Return the current stored amount of ``resource_id``."""

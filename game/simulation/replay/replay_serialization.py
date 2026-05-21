@@ -23,8 +23,11 @@ Notes on design:
 """
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, List, Optional, Tuple
 
+from game.core.error_codes import ErrorCode
+from game.core.exceptions import PersistenceException
 from game.core.math import Vector2
 from game.simulation.battle_outcome import (
     BattleOutcome,
@@ -62,6 +65,8 @@ from game.simulation.systems.battle_end_conditions import (
     IEndCondition,
     end_condition_from_dict,
 )
+
+logger = logging.getLogger(__name__)
 
 
 # Strict-match version pinned on every saved replay file. See
@@ -112,8 +117,10 @@ def boundary_to_dict(boundary: Optional[BoundaryRegion]) -> Optional[Dict[str, A
             "type": "unbounded",
             "exit_policy": boundary.exit_policy.value,
         }
-    raise TypeError(
-        f"boundary_to_dict: unknown BoundaryRegion subtype {type(boundary).__name__}"
+    raise PersistenceException(
+        f"boundary_to_dict: unknown BoundaryRegion subtype {type(boundary).__name__}",
+        code=ErrorCode.CORRUPT_DATA.value,
+        context={"subtype": type(boundary).__name__},
     )
 
 
@@ -136,7 +143,11 @@ def boundary_from_dict(data: Optional[Dict[str, Any]]) -> Optional[BoundaryRegio
         )
     if kind == "unbounded":
         return UnboundedRegion(exit_policy=exit_policy)
-    raise ValueError(f"boundary_from_dict: unknown type {kind!r}")
+    raise PersistenceException(
+        f"boundary_from_dict: unknown type {kind!r}",
+        code=ErrorCode.CORRUPT_DATA.value,
+        context={"type": str(kind)},
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -385,6 +396,11 @@ def battle_spec_from_dict(data: Dict[str, Any]) -> BattleSpec:
     try:
         telemetry_level: Any = TelemetryLevel[telemetry_name]
     except KeyError:
+        logger.warning(
+            "Unrecognized telemetry level %r during deserialization; "
+            "falling back to the raw string value",
+            telemetry_name,
+        )
         telemetry_level = telemetry_name  # opaque fallback
 
     return BattleSpec(
@@ -558,6 +574,11 @@ def battle_outcome_from_dict(data: Dict[str, Any]) -> BattleOutcome:
     try:
         telemetry_level: Any = TelemetryLevel[telemetry_name]
     except KeyError:
+        logger.warning(
+            "Unrecognized telemetry level %r during deserialization; "
+            "falling back to the raw string value",
+            telemetry_name,
+        )
         telemetry_level = telemetry_name
     return BattleOutcome(
         end_reason=EndReason(data["end_reason"]),

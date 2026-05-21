@@ -25,6 +25,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from game.core.error_codes import ErrorCode
+from game.core.exceptions import ValidationException
+
 if TYPE_CHECKING:
     from game.core.hex_math import HexCoord
     from game.strategy.data.fleet import Fleet
@@ -40,7 +43,7 @@ class FleetWriteService:
 
     Two-construction shape: callers pass an optional ``FleetNavigationService``
     to satisfy the navigation slice. Without it, ``set_location`` /
-    ``set_path`` raise ``NotImplementedError``.
+    ``set_path`` raise ``ValidationException`` (``MISSING_DEPENDENCY``).
     """
 
     def __init__(
@@ -54,17 +57,19 @@ class FleetWriteService:
     # ------------------------------------------------------------------
     def set_location(self, fleet: "Fleet", new_location: "HexCoord") -> None:
         if self._nav is None:
-            raise NotImplementedError(
+            raise ValidationException(
                 "FleetWriteService requires FleetNavigationService for "
-                "navigation writes; pass navigation_service=... at construction."
+                "navigation writes; pass navigation_service=... at construction.",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
             )
         self._nav.set_location(fleet, new_location)
 
     def set_path(self, fleet: "Fleet", new_path: "list[HexCoord]") -> None:
         if self._nav is None:
-            raise NotImplementedError(
+            raise ValidationException(
                 "FleetWriteService requires FleetNavigationService for "
-                "navigation writes; pass navigation_service=... at construction."
+                "navigation writes; pass navigation_service=... at construction.",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
             )
         self._nav.set_path(fleet, new_path)
 

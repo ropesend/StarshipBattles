@@ -206,6 +206,12 @@ class ScreenRouter:
             f"Starting new game: {config.save_name} with {len(config.players)} players"
         )
         # PROJ-239: AI factory created here (UI layer) and injected into strategy layer.
+        # PROJ-466 Phase 4: do NOT catch SessionInitializationError here. The
+        # new-game path runs inside NewGameSetupController.on_start_clicked,
+        # which owns the recoverable failure UX (keep the setup window alive +
+        # set its error label). Catching here would make that handler dead and
+        # still kill the window via the controller's unconditional kill().
+        # (The quickstart path below has no controller and keeps its own guard.)
         session = GameSession(config=config, ai_factory=AIControllerFactory())
         success, message, save_path = SaveGameService.save_game(session, config.save_name)
         if success:
@@ -243,12 +249,36 @@ class ScreenRouter:
         self.showing_new_game_setup = False
         logger.debug("New game setup cancelled")
 
+    def _show_session_init_error(self, error: Exception) -> None:
+        """Surface a recoverable error dialog for a session-init failure.
+
+        PROJ-466: galaxy generation can fail (e.g. planet shortage after
+        all retries) and raise ``SessionInitializationError``. Rather than
+        letting it propagate to the top-level crash handler, show a
+        ``UIMessageWindow`` so the player can pick a different seed / config.
+        """
+        import pygame_gui.windows
+
+        error_rect = pygame.Rect(0, 0, 400, 200)
+        error_rect.center = (self.width // 2, self.height // 2)
+        pygame_gui.windows.UIMessageWindow(
+            rect=error_rect,
+            html_message=(
+                "<b>Could Not Start Game</b><br><br>"
+                "Galaxy generation failed. Try a different seed or "
+                f"fewer/larger systems.<br><br>{error}"
+            ),
+            manager=self.menu_ui_manager,
+            window_title="Error",
+        )
+
     def _start_quickstart(self, player_count: int) -> None:
         """Start a quickstart game with the specified number of players.
 
         Args:
             player_count: Number of players (1 or 2).
         """
+        from game.core.exceptions import SessionInitializationError
         from game.strategy.engine.game_session import GameSession
         from game.strategy.quickstart_builder import QuickstartBuilder
         from game.strategy.systems.save_game_service import SaveGameService
@@ -263,7 +293,13 @@ class ScreenRouter:
             config = QuickstartBuilder.build_2p_config()
             empire_ids = [0, 1]
 
-        session = GameSession(config=config)
+        # PROJ-466: guard galaxy-generation failure on the quickstart path too.
+        try:
+            session = GameSession(config=config)
+        except SessionInitializationError as e:
+            logger.error("Quickstart session initialization failed: %s", e)
+            self._show_session_init_error(e)
+            return
 
         success, message, save_path = SaveGameService.save_game(session, config.save_name)
 

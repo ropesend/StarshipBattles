@@ -12,6 +12,7 @@ This is a thin coordinator that:
 """
 from __future__ import annotations
 
+import logging
 import pygame
 import json
 from typing import Optional
@@ -24,6 +25,8 @@ from game.ui.colors import (
     DIFF_REMOVED_BG, DIFF_REMOVED_TEXT, VIEWER_BTN_BG, VIEWER_BTN_HOVER,
     VIEWER_BTN_BORDER, SWATCH_BORDER
 )
+
+logger = logging.getLogger(__name__)
 
 
 class BattleStateViewer:
@@ -97,6 +100,10 @@ class BattleStateViewer:
 
         # Stats
         self.diff_stats = {'changed': 0, 'added': 0, 'removed': 0}
+        # PROJ-466: non-None when the last show() call could not parse one
+        # of the supplied JSON strings — surfaced in the legend so a
+        # malformed diff is not mistaken for "states identical".
+        self.diff_error: Optional[str] = None
 
     def show(self, initial_json: Optional[str], final_json: Optional[str],
              test_id: str = None, run_number: int = None) -> None:
@@ -116,6 +123,7 @@ class BattleStateViewer:
         # Compute diff between states
         diff_paths = {}
         self.diff_stats = {'changed': 0, 'added': 0, 'removed': 0}
+        self.diff_error = None
 
         if initial_json and final_json:
             try:
@@ -132,8 +140,15 @@ class BattleStateViewer:
                     elif status == DiffResult.REMOVED:
                         self.diff_stats['removed'] += 1
 
-            except json.JSONDecodeError:
-                pass
+            except json.JSONDecodeError as e:
+                # PROJ-466: do not silently swallow — a malformed state
+                # diff is otherwise indistinguishable from "no changes".
+                logger.warning(
+                    "BattleStateViewer: could not parse battle-state JSON "
+                    "for diff (test_id=%s, run=%s): %s",
+                    test_id, run_number, e,
+                )
+                self.diff_error = f"Could not parse battle-state JSON: {e}"
 
         # Set JSON with diff info
         self.initial_panel.set_json_with_diff(initial_json, diff_paths)
@@ -260,3 +275,12 @@ class BattleStateViewer:
             surface.blit(label_surf, (x + 28, legend_y))
 
             x += 28 + label_surf.get_width() + 30
+
+        # PROJ-466: surface a JSON parse failure visibly so a malformed
+        # diff is not silently shown as "no changes".
+        if self.diff_error:
+            error_surf = self.legend_font.render(
+                self.diff_error, True, DIFF_REMOVED_TEXT
+            )
+            error_x = (self.screen_width - error_surf.get_width()) // 2
+            surface.blit(error_surf, (error_x, legend_y + 24))

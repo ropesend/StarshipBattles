@@ -34,7 +34,7 @@ from typing import TYPE_CHECKING, Callable, List, Optional, Tuple
 import pygame
 
 from game.core.error_codes import ErrorCode
-from game.core.exceptions import ValidationException
+from game.core.exceptions import SessionInitializationError, ValidationException
 from game.core.paths import Paths
 from game.strategy.engine.game_config import (
     DEFAULT_SYSTEM_COUNT,
@@ -183,7 +183,19 @@ class NewGameSetupController:
             f"Starting new game: {save_name} with "
             f"{self._view_model.player_count} players"
         )
-        self._on_start_callback(config)
+        # PROJ-466: the start callback constructs a GameSession, which can
+        # raise SessionInitializationError on galaxy-generation failure. Keep
+        # the setup window alive and surface the error rather than killing the
+        # window (leaving the session indeterminate) or letting it crash.
+        try:
+            self._on_start_callback(config)
+        except SessionInitializationError as exc:
+            logger.error("New game start failed during session init: %s", exc)
+            self._screen.error_label.set_text(
+                "Could not start game (galaxy generation failed). "
+                "Try a different save / fewer systems."
+            )
+            return
         self._screen.kill()
 
     def on_cancel_clicked(self) -> None:

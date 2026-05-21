@@ -121,6 +121,33 @@ def test_battle_state_viewer_close_events_hide_without_panel_dispatch() -> None:
     assert viewer.visible is False
 
 
+def test_PROJ466_show_records_diff_error_on_malformed_json() -> None:
+    """PROJ-466 Phase 2 Task 2.9: a JSON parse failure during show() is no
+    longer silently swallowed — it sets a visible `diff_error` so a
+    malformed diff is not mistaken for 'states identical'."""
+    viewer = _make_viewer()
+    viewer.diff_error = None
+    viewer.initial_panel.set_json_with_diff = MagicMock()
+    viewer.final_panel.set_json_with_diff = MagicMock()
+
+    viewer.show("{ this is : not json", '{"ok": 1}', test_id="t", run_number=1)
+
+    assert viewer.diff_error is not None
+    assert viewer.diff_stats == {"changed": 0, "added": 0, "removed": 0}
+
+
+def test_PROJ466_show_clears_diff_error_on_valid_json() -> None:
+    """A subsequent valid show() clears any prior diff_error."""
+    viewer = _make_viewer()
+    viewer.diff_error = "stale error"
+    viewer.initial_panel.set_json_with_diff = MagicMock()
+    viewer.final_panel.set_json_with_diff = MagicMock()
+
+    viewer.show('{"a": 1}', '{"a": 2}', test_id="t", run_number=1)
+
+    assert viewer.diff_error is None
+
+
 def test_battle_state_viewer_draw_dispatches_panels_legend_and_close_button(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

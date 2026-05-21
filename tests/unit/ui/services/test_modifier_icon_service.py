@@ -91,6 +91,38 @@ def test_get_icon_returns_none_when_pygame_load_fails(
     assert "hardened_mount" not in service._cache
 
 
+def test_PROJ466_get_icon_returns_none_when_load_raises_oserror(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture,
+) -> None:
+    """PROJ-466 Phase 2 Task 2.8: an OSError during load is caught (the
+    narrowed `(pygame.error, OSError)` tuple) and logged, returning None."""
+    service = ModifierIconService(icon_size=26)
+    monkeypatch.setattr(os.path, "exists", lambda _path: True)
+
+    with (
+        caplog.at_level(logging.ERROR, logger="game.ui.services.modifier_icon_service"),
+        patch("pygame.image.load", side_effect=OSError("disk gone")),
+    ):
+        result = service.get_icon("hardened_mount")
+
+    assert result is None
+    assert "Error loading modifier icon" in caplog.text
+
+
+def test_PROJ466_get_icon_does_not_swallow_unexpected_exception(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """PROJ-466 Phase 2 Task 2.8: the gratuitous `(pygame.error, Exception)`
+    catch was narrowed, so an unexpected exception type (e.g. a programming
+    error) now propagates instead of being silently turned into None."""
+    service = ModifierIconService(icon_size=26)
+    monkeypatch.setattr(os.path, "exists", lambda _path: True)
+
+    with patch("pygame.image.load", side_effect=ValueError("unexpected")):
+        with pytest.raises(ValueError):
+            service.get_icon("hardened_mount")
+
+
 def test_clear_cache_removes_cached_icons() -> None:
     service = ModifierIconService(icon_size=26)
     service._cache["hardened_mount"] = pygame.Surface((26, 26), pygame.SRCALPHA)

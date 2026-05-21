@@ -29,19 +29,23 @@ class ShipStatsCache:
         """Recalculate stats from the ship's design + state.
 
         Uses ``calculate_design_stats`` as the single source of truth.
-        Raises ``ValueError`` when no registries are wired — same failure
-        mode as the previous inline path on ``ShipInstance``.
+        Raises ``ValidationException`` (``MISSING_DEPENDENCY``) when no
+        registries are wired.
         """
         # INTENTIONAL LATE IMPORT: cross-layer boundary (strategy -> simulation).
         # Same pattern as ``ShipInstanceBridge.to_ship``.
         from game.simulation.entities.ship_design_stats import calculate_design_stats
 
+        from game.core.error_codes import ErrorCode
+        from game.core.exceptions import ValidationException
+
         registries = ship._registries
         if registries is None:
-            raise ValueError(
+            raise ValidationException(
                 "ShipInstance requires registries for stats calculation. "
                 "Use ShipInstance.create() or from_dict() with registries parameter, "
-                "or set ship._registries after construction."
+                "or set ship._registries after construction.",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
             )
 
         return calculate_design_stats(

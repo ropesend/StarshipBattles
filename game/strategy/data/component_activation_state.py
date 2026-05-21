@@ -16,6 +16,10 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict
 
+from game.core.error_codes import ErrorCode
+from game.core.exceptions import StateException
+from game.core.validation_helpers import require_keys
+
 
 class ActivationPhase(Enum):
     """Component activation lifecycle phases."""
@@ -72,12 +76,17 @@ class ComponentActivationState:
         """Transition from INACTIVE to ACTIVATING.
 
         Raises:
-            ValueError: If not in INACTIVE phase.
+            StateException: If not in INACTIVE phase.
         """
         if self.phase != ActivationPhase.INACTIVE:
-            raise ValueError(
+            raise StateException(
                 f"Cannot start activating from {self.phase.value} phase "
-                f"(must be inactive)"
+                f"(must be inactive)",
+                code=ErrorCode.INVALID_STATE.value,
+                context={
+                    "current_phase": self.phase.value,
+                    "expected_phase": ActivationPhase.INACTIVE.value,
+                },
             )
         self.phase = ActivationPhase.ACTIVATING
         self.progress_ticks = 0
@@ -88,12 +97,17 @@ class ComponentActivationState:
         """Transition from ACTIVE to DEACTIVATING.
 
         Raises:
-            ValueError: If not in ACTIVE phase.
+            StateException: If not in ACTIVE phase.
         """
         if self.phase != ActivationPhase.ACTIVE:
-            raise ValueError(
+            raise StateException(
                 f"Cannot start deactivating from {self.phase.value} phase "
-                f"(must be active)"
+                f"(must be active)",
+                code=ErrorCode.INVALID_STATE.value,
+                context={
+                    "current_phase": self.phase.value,
+                    "expected_phase": ActivationPhase.ACTIVE.value,
+                },
             )
         self.phase = ActivationPhase.DEACTIVATING
         self.progress_ticks = 0
@@ -134,9 +148,26 @@ class ComponentActivationState:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ComponentActivationState':
-        """Deserialize from dict. Requires `phase` field; raises KeyError if missing."""
+        """Deserialize from dict.
+
+        Requires the ``phase`` field. PROJ-466: missing/corrupt data raises
+        ``PersistenceException`` (``CORRUPT_DATA``) via ``require_keys`` /
+        the enum-conversion guard instead of a raw ``KeyError`` /
+        ``ValueError`` at the persistence boundary.
+        """
+        from game.core.exceptions import PersistenceException
+
+        require_keys(data, ['phase'], 'ComponentActivationState')
+        try:
+            phase = ActivationPhase(data['phase'])
+        except ValueError as e:
+            raise PersistenceException(
+                f"ComponentActivationState: unknown phase {data['phase']!r}",
+                code=ErrorCode.CORRUPT_DATA.value,
+                context={"phase": str(data['phase'])},
+            ) from e
         return cls(
-            phase=ActivationPhase(data['phase']),
+            phase=phase,
             progress_ticks=data.get('progress_ticks', 0),
             required_ticks=data.get('required_ticks', 0),
             ability_name=data.get('ability_name', ''),

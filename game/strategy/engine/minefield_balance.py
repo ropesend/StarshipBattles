@@ -10,11 +10,12 @@ instance and pass it directly into the resolver.
 """
 from __future__ import annotations
 
-import json
 import logging
+import os
 from dataclasses import dataclass, field
 from typing import Dict, Optional
 
+from game.core.json_utils import load_json
 from game.core.paths import Paths
 
 logger = logging.getLogger(__name__)
@@ -157,17 +158,18 @@ def load_minefield_balance(force_reload: bool = False) -> MinefieldBalance:
     if _CACHED is not None and not force_reload:
         return _CACHED
     path = Paths.MINES_BALANCE_FILE
-    try:
-        with open(path, "r", encoding="utf-8") as fh:
-            raw = json.load(fh)
-    except FileNotFoundError:
+    # PROJ-466: route the file read through the canonical json_utils helper
+    # instead of a direct json.load. `load_json` returns the sentinel on
+    # missing/corrupt/permission/IO failure, preserving the
+    # fallback-to-defaults behavior. `load_json` logs a missing file only at
+    # DEBUG, but this is a canonical balance file whose absence is an
+    # actionable config problem, so warn explicitly first (Phase 4 Task 4.4).
+    if not os.path.exists(path):
         logger.warning("MinefieldBalance: %s not found; using defaults", path)
         _CACHED = MinefieldBalance()
         return _CACHED
-    except (OSError, json.JSONDecodeError) as exc:
-        logger.error(
-            "MinefieldBalance: failed to load %s (%s); using defaults", path, exc
-        )
+    raw = load_json(path, default=None)
+    if not raw:
         _CACHED = MinefieldBalance()
         return _CACHED
     _CACHED = _from_dict(raw)

@@ -37,6 +37,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Dict, List, Tuple, Union
 
+from game.core.exceptions import StateException
 from game.core.json_utils import load_json_required
 
 logger = logging.getLogger(__name__)
@@ -58,9 +59,14 @@ class Role:
     vehicle_type_filter: Tuple[str, ...] = ()
 
 
-class RoleRegistryReadOnlyError(Exception):
+class RoleRegistryReadOnlyError(StateException):
     """Raised when `add_user_role` is called on a registry that disallows
-    runtime mutation (e.g. `combat_lab_role_registry`)."""
+    runtime mutation (e.g. `combat_lab_role_registry`).
+
+    PROJ-466: inherits from ``StateException`` (and thus ``GameException``)
+    so it participates in the ``code`` / ``context`` contract instead of
+    bypassing the hierarchy as a bare ``Exception`` subclass.
+    """
 
 
 class RoleRegistry:

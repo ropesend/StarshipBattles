@@ -39,5 +39,14 @@ class ImageResult:
     request_id: Optional[str] = None
     revised_prompt: Optional[str] = None
 
+    def __repr__(self) -> str:
+        # PROJ-466: never dump raw image bytes or the revised prompt in
+        # repr. Report safe metadata only.
+        return (
+            f"ImageResult(model={self.model!r}, size={self.size!r}, "
+            f"latency_ms={self.latency_ms}, provider={self.provider!r}, "
+            f"bytes_len={len(self.image_bytes)})"
+        )
+
 
 __all__ = ["ImageResult"]

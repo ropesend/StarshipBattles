@@ -56,7 +56,10 @@ class AssetManager:
             self.manifest_path = path
             
         if not os.path.exists(self.manifest_path):
-            logger.error(f"Asset Manifest not found: {self.manifest_path}")
+            # PROJ-466: a missing manifest is recoverable — the manager
+            # falls back to the missing-texture surface — so warn rather
+            # than error (error level is reserved for failed operations).
+            logger.warning(f"Asset Manifest not found: {self.manifest_path}")
             return
 
         data = load_json(self.manifest_path)
@@ -316,8 +319,10 @@ class AssetManager:
                 if img and img != self.get_missing_texture():
                     return img
 
-            except (FileNotFoundError, pygame.error, ValueError) as e:
-                # Log warning but continue to next resolution
+            except (FileNotFoundError, pygame.error, ValueError, OSError) as e:
+                # PROJ-466: OSError parity with load_star_image (PROJ-381
+                # ERR-02-001) — permission/IO failures degrade to the next
+                # resolution instead of escaping.
                 logger.warning(f"Could not load planet image {image_filename} at {size}px: {e}")
                 continue
 
@@ -329,7 +334,10 @@ class AssetManager:
                 img = self.load_external_image(image_path)
                 if img and img != self.get_missing_texture():
                     return img
-            except (FileNotFoundError, pygame.error, ValueError):
+            except (FileNotFoundError, pygame.error, ValueError, OSError):
+                # PROJ-466: OSError parity here too, so an IO/permission
+                # failure on a stellar-object fallback degrades to the
+                # missing texture instead of escaping the loader.
                 continue
 
         # All resolutions and fallbacks failed - return missing texture

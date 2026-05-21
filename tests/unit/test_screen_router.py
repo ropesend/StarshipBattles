@@ -369,6 +369,90 @@ def test_load_game_success_replaces_strategy_scene_and_clears_load_flag(
     assert router.active_scene is strategy_scene
 
 
+def _install_failing_game_session(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Patch the GameSession import target so construction raises
+    SessionInitializationError (galaxy-generation failure path)."""
+    from game.core.exceptions import SessionInitializationError
+
+    class FailingGameSession:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            raise SessionInitializationError(
+                "galaxy generation failed",
+                context={"original_type": "ValidationException"},
+            )
+
+    monkeypatch.setitem(
+        sys.modules,
+        "game.strategy.engine.game_session",
+        SimpleNamespace(GameSession=FailingGameSession),
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "game.ai.ai_factory",
+        SimpleNamespace(AIControllerFactory=lambda: object()),
+    )
+
+
+def test_PROJ466_new_game_start_session_init_propagates_to_controller(
+    monkeypatch: pytest.MonkeyPatch,
+    router_harness: SimpleNamespace,
+) -> None:
+    """PROJ-466 Phase 4 Task 4.1: the new-game path is owned by the setup
+    controller (which keeps the window alive + sets the error label), so
+    `_on_new_game_start` must NOT swallow `SessionInitializationError` — it
+    propagates so the controller's handler runs. (Phase 1 originally caught
+    it here too, but that made the controller's catch dead and still killed
+    the window via the controller's unconditional kill().)"""
+    from game.core.exceptions import SessionInitializationError
+
+    router = router_harness.router
+    _install_failing_game_session(monkeypatch)
+
+    config = SimpleNamespace(save_name="Doomed", players=[SimpleNamespace(is_human=True)])
+
+    with pytest.raises(SessionInitializationError):
+        router._on_new_game_start(config)
+
+    # Strategy scene must not have been switched to on failure.
+    assert router.active_scene is not getattr(router, "strategy_scene", object())
+
+
+def test_PROJ466_quickstart_session_init_failure_shows_dialog_not_crash(
+    monkeypatch: pytest.MonkeyPatch,
+    router_harness: SimpleNamespace,
+) -> None:
+    """PROJ-466 Phase 1 Task 1.1: a SessionInitializationError from
+    GameSession(...) in _start_quickstart must surface a dialog, not crash."""
+    router = router_harness.router
+    messages: list[dict[str, Any]] = []
+
+    class FakeMessageWindow:
+        def __init__(self, **kwargs: Any) -> None:
+            messages.append(kwargs)
+
+    class FakeQuickstartBuilder:
+        @staticmethod
+        def build_1p_config() -> Any:
+            return SimpleNamespace(save_name="QS", players=[SimpleNamespace(is_human=True)])
+
+    import pygame_gui.windows
+    monkeypatch.setattr(pygame_gui.windows, "UIMessageWindow", FakeMessageWindow)
+    monkeypatch.setitem(
+        sys.modules,
+        "game.strategy.quickstart_builder",
+        SimpleNamespace(QuickstartBuilder=FakeQuickstartBuilder),
+    )
+    _install_failing_game_session(monkeypatch)
+
+    # Must NOT raise.
+    router._start_quickstart(player_count=1)
+
+    assert len(messages) == 1, "Expected exactly one error dialog"
+    assert "html_message" in messages[0]
+
+
 def test_start_battle_delegates_to_controller_and_battle_scene(
     monkeypatch: pytest.MonkeyPatch,
     router_harness: SimpleNamespace,

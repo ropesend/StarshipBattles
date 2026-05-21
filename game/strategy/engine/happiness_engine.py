@@ -89,12 +89,14 @@ class HappinessEngine(IHappinessEngine):
 
     def _validate_tick_inputs(self, empires: List['Empire']) -> None:
         """PROJ-251: precondition validation — reject None colonies loudly."""
+        from game.core.error_codes import ErrorCode
         from game.core.exceptions import ValidationException
         for empire in empires:
             for colony in empire.colonies:
                 if colony is None:
                     raise ValidationException(
                         f"Empire {empire.id}: colony list contains None entry",
+                        code=ErrorCode.INVALID_STATE.value,
                         context={"empire_id": empire.id},
                     )
 

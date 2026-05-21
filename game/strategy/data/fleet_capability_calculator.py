@@ -8,6 +8,9 @@ parameter; there is no fallback to a global registry.
 
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
+from game.core.error_codes import ErrorCode
+from game.core.exceptions import ValidationException
+
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
     from game.strategy.data.ship_instance import ShipInstance
@@ -59,18 +62,19 @@ class FleetCapabilityCalculator:
             True if ship has a component with SpaceShipyard ability.
 
         Raises:
-            ValueError: If no registry available (ship has no _registries and
-                none passed explicitly).
+            ValidationException: If no registry available (ship has no
+                _registries and none passed explicitly).
         """
         from game.strategy.services.component_abilities import ship_has_ability
         registry = component_registry
         if registry is None:
             registry = _get_ship_component_registry(ship)
         if registry is None:
-            raise ValueError(
+            raise ValidationException(
                 "FleetCapabilityCalculator.ship_has_spaceyard requires a component "
                 "registry. Either pass component_registry explicitly or ensure ship "
-                "has _registries set via DI."
+                "has _registries set via DI.",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
             )
         return ship_has_ability(ship, 'SpaceShipyard', registry)
 
@@ -125,8 +129,8 @@ class FleetCapabilityCalculator:
             The component registry for ability lookups.
 
         Raises:
-            ValueError: If no registry available (none injected and fleet
-                has no ships with _registries set).
+            ValidationException: If no registry available (none injected and
+                fleet has no ships with _registries set).
         """
         if self._component_registry is not None:
             return self._component_registry
@@ -135,10 +139,11 @@ class FleetCapabilityCalculator:
             ship_registry = _get_ship_component_registry(ship)
             if ship_registry is not None:
                 return ship_registry
-        raise ValueError(
+        raise ValidationException(
             "FleetCapabilityCalculator requires a component registry. Either "
             "pass component_registry to constructor or ensure fleet has ships "
-            "with _registries set via DI."
+            "with _registries set via DI.",
+            code=ErrorCode.MISSING_DEPENDENCY.value,
         )
 
     def can_build_type(self, vehicle_type: str, galaxy: Any = None) -> bool:

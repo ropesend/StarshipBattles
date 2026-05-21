@@ -13,18 +13,10 @@ from tkinter import filedialog
 from game.core.paths import Paths
 from game.core.profiling import profile_block
 from game.ui.screens.workshop_data_loader import WorkshopDataLoader
+from game.ui.services.tkinter_utils import get_tk_root
 
 logger = logging.getLogger(__name__)
 from game.ui.screens.builder_utils import BuilderEvents
-
-
-# Try to get tk_root for file dialogs
-try:
-    import tkinter as tk
-    tk_root = tk.Tk()
-    tk_root.withdraw()
-except Exception:  # Intentional broad catch: Tkinter init is platform-dependent
-    tk_root = None
 
 
 class WorkshopDataReloader:
@@ -99,7 +91,10 @@ class WorkshopDataReloader:
 
     def on_select_data_pressed(self) -> None:
         """Open dialog to select a data directory and reload game data."""
-        if not tk_root:
+        # PROJ-466: use the shared, lazily-initialized Tk root instead of
+        # constructing a second module-level Tk() at import time (which was
+        # never destroyed and leaked a hidden root in headless test runs).
+        if get_tk_root() is None:
             self.show_error("Tkinter not initialized, cannot open dialog")
             return
 

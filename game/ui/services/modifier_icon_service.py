@@ -78,7 +78,7 @@ class ModifierIconService:
             
             self._cache[modifier_id] = surface
             return surface
-        except (pygame.error, Exception) as e:
+        except (pygame.error, OSError) as e:
             logger.error(f"Error loading modifier icon {icon_path}: {e}")
             return None
 

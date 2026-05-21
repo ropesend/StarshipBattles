@@ -32,6 +32,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
+from game.core.error_codes import ErrorCode
+from game.core.exceptions import ValidationException
 from game.core.math import Vector2
 from game.simulation.battle_outcome import (
     BattleOutcome,
@@ -303,22 +305,23 @@ def run_battle(
             - `outcome.seed == spec.seed`
 
     Raises:
-        RuntimeError: When neither `ship_builder` nor `registry_provider`
-            is supplied. PROJ-306: no silent global lookup from inside
-            `game/simulation/`.
+        ValidationException: When neither `ship_builder` nor
+            `registry_provider` is supplied (MISSING_DEPENDENCY). PROJ-306:
+            no silent global lookup from inside `game/simulation/`.
     """
     _ = headless  # Reserved for Task 6.9's visual-mode integration.
 
     if ship_builder is None:
         if registry_provider is None:
-            raise RuntimeError(
+            raise ValidationException(
                 "run_battle requires either an explicit `ship_builder` "
                 "callable or a `registry_provider` (so the context "
                 "materializer can build one). Per PROJ-252, Simulation "
                 "code cannot resolve the registry provider via global "
                 "lookup. Non-Simulation callers (Strategy adapter, "
                 "app.py, Combat Lab services) should pass "
-                "`registry_provider=get_default_registry_provider()`."
+                "`registry_provider=get_default_registry_provider()`.",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
             )
         ship_builder = build_context_ship_builder(
             registry_provider=registry_provider,

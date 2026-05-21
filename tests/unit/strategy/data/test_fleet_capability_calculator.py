@@ -70,5 +70,8 @@ def test_list_abilities_requires_registry_when_ships_are_present():
     ship = _Ship({"layers": {"CORE": ["warp_drive"]}})
     calculator = FleetCapabilityCalculator(_Fleet([ship]))
 
-    with pytest.raises(ValueError, match="requires a component registry"):
+    # PROJ-466: missing-registry now raises ValidationException, not ValueError.
+    from game.core.exceptions import ValidationException
+
+    with pytest.raises(ValidationException, match="requires a component registry"):
         calculator.list_abilities()

@@ -168,7 +168,10 @@ def test_reload_data_catches_expected_loader_errors(monkeypatch) -> None:
 
 def test_on_select_data_pressed_reports_when_tk_root_is_missing(monkeypatch) -> None:
     reloader, callbacks = _make_reloader()
-    monkeypatch.setattr("game.ui.screens.workshop_data_reloader.tk_root", None)
+    # PROJ-466: now uses the shared get_tk_root() instead of a module-level tk_root.
+    monkeypatch.setattr(
+        "game.ui.screens.workshop_data_reloader.get_tk_root", lambda: None
+    )
 
     reloader.on_select_data_pressed()
 
@@ -184,7 +187,9 @@ def test_on_select_data_pressed_reloads_chosen_directory(monkeypatch) -> None:
     reload_data = MagicMock()
     reloader.reload_data = reload_data
     askdirectory = MagicMock(return_value=directory)
-    monkeypatch.setattr("game.ui.screens.workshop_data_reloader.tk_root", object())
+    monkeypatch.setattr(
+        "game.ui.screens.workshop_data_reloader.get_tk_root", lambda: object()
+    )
     monkeypatch.setattr(
         "game.ui.screens.workshop_data_reloader.filedialog.askdirectory",
         askdirectory,

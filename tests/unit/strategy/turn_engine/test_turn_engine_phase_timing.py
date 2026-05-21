@@ -173,6 +173,69 @@ class TestTimePhase:
                 f"token are silently dropped from observability."
             )
 
+    def test_PROJ466_battle_resolution_context_merged_into_engine_phase_error(
+        self, fresh_registries
+    ):
+        """PROJ-466 Phase 2 Task 2.2: when a phase fails because of a
+        BattleResolutionError (carried on __cause__), `_time_phase` merges
+        the battle-identifying context keys (fleet_ids, empire_ids,
+        hex_coord) into the wrapping EnginePhaseError.context so crash
+        dumps can correlate the failure back to the specific battle.
+        """
+        from game.core.exceptions import BattleResolutionError
+
+        engine = build_test_turn_engine(fresh_registries)
+
+        battle_err = BattleResolutionError(
+            "battle blew up",
+            context={
+                "fleet_ids": [11, 22],
+                "empire_ids": [0, 1],
+                "hex_coord": (5, -3),
+            },
+        )
+
+        def raising_fn():
+            raise battle_err
+
+        with pytest.raises(EnginePhaseError) as exc_info:
+            engine._time_phase('combat', raising_fn)
+
+        ctx = exc_info.value.context
+        assert ctx["fleet_ids"] == [11, 22]
+        assert ctx["empire_ids"] == [0, 1]
+        assert ctx["hex_coord"] == (5, -3)
+        # The cause chain is preserved.
+        assert exc_info.value.__cause__ is battle_err
+
+    def test_PROJ466_battle_context_merged_when_cause_is_nested(
+        self, fresh_registries
+    ):
+        """The BattleResolutionError may be the __cause__ of the raised
+        exception rather than the raised exception itself."""
+        from game.core.exceptions import BattleResolutionError
+
+        engine = build_test_turn_engine(fresh_registries)
+
+        battle_err = BattleResolutionError(
+            "sim failure",
+            context={"fleet_ids": [7], "empire_ids": [2], "hex_coord": (0, 0)},
+        )
+
+        def raising_fn():
+            try:
+                raise battle_err
+            except BattleResolutionError as e:
+                raise RuntimeError("phase wrapper") from e
+
+        with pytest.raises(EnginePhaseError) as exc_info:
+            engine._time_phase('combat', raising_fn)
+
+        ctx = exc_info.value.context
+        assert ctx["fleet_ids"] == [7]
+        assert ctx["empire_ids"] == [2]
+        assert ctx["hex_coord"] == (0, 0)
+
     def test_time_phase_reraises_preexisting_engine_phase_error_without_double_wrapping(
         self, fresh_registries
     ):

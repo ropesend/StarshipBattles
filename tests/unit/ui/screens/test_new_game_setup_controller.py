@@ -257,6 +257,79 @@ class TestOnStartClicked:
         on_start.assert_not_called()
 
 
+    def test_PROJ466_session_init_error_keeps_window_alive_shows_error(self):
+        """PROJ-466 Phase 1 Task 1.2: when the start callback raises
+        SessionInitializationError (galaxy-generation failure), the window
+        stays alive (NOT killed) and the error label is set, instead of the
+        error propagating to the top-level crash handler."""
+        from game.core.exceptions import SessionInitializationError
+
+        def boom(_config):
+            raise SessionInitializationError(
+                "galaxy generation failed",
+                context={"original_type": "ValidationException"},
+            )
+
+        controller, screen, vm = _make_controller(on_start_callback=boom)
+        screen.save_name_input.get_text.return_value = "ValidName"
+        for inp in screen.empire_name_inputs:
+            inp.get_text.return_value = "Empire"
+
+        # Must NOT raise.
+        controller.on_start_clicked()
+
+        screen.error_label.set_text.assert_called()
+        screen.kill.assert_not_called()
+
+    def test_PROJ466_real_router_callback_does_not_swallow_keeps_window_alive(
+        self, monkeypatch
+    ):
+        """PROJ-466 Phase 4 Task 4.1: the REAL router callback
+        (`ScreenRouter._on_new_game_start`) must let SessionInitializationError
+        propagate so the controller — the owner of the new-game failure UX —
+        keeps the window alive and shows the error. This is the composition
+        the per-component Phase 1 tests missed: if the router swallows, the
+        controller's catch is dead and the window is killed anyway."""
+        import sys
+        from types import SimpleNamespace
+
+        from game.core.exceptions import SessionInitializationError
+
+        class FailingGameSession:
+            def __init__(self, *a, **k):
+                raise SessionInitializationError("galaxy generation failed")
+
+        monkeypatch.setitem(
+            sys.modules,
+            "game.strategy.engine.game_session",
+            SimpleNamespace(GameSession=FailingGameSession),
+        )
+        monkeypatch.setitem(
+            sys.modules,
+            "game.ai.ai_factory",
+            SimpleNamespace(AIControllerFactory=lambda: object()),
+        )
+
+        # Build a real ScreenRouter-bound callback without constructing the
+        # whole router: bind the unbound method to a minimal stand-in that
+        # provides only what _on_new_game_start touches before GameSession().
+        from game.screen_router import ScreenRouter
+
+        router_stub = SimpleNamespace()
+        callback = ScreenRouter._on_new_game_start.__get__(router_stub, ScreenRouter)
+
+        controller, screen, vm = _make_controller(on_start_callback=callback)
+        screen.save_name_input.get_text.return_value = "ValidName"
+        for inp in screen.empire_name_inputs:
+            inp.get_text.return_value = "Empire"
+
+        # Must NOT raise (controller catches the propagated error).
+        controller.on_start_clicked()
+
+        screen.error_label.set_text.assert_called()
+        screen.kill.assert_not_called()
+
+
 class TestOnCancelClicked:
     def test_fires_callback_and_kills(self):
         on_cancel = MagicMock(name="on_cancel")

@@ -60,7 +60,7 @@ from __future__ import annotations
 import time
 import logging
 
-from game.core.exceptions import EnginePhaseError
+from game.core.exceptions import BattleResolutionError, EnginePhaseError
 from game.core.error_codes import ErrorCode
 from game.core.validation import ValidationResult
 from game.core.registry import GameRegistries
@@ -319,20 +319,52 @@ class TurnEngine:
             # back to the saved turn. `getattr` defensively in case the
             # attribute drifts in future refactors — context construction
             # itself must never raise a secondary error.
+            phase_context: dict[str, Any] = {
+                "phase_name": key,
+                "tick": self._current_tick,
+                "turn_number": getattr(self, "_current_turn_number", 0),
+                "save_path": getattr(self, "_current_save_path", None),
+                "original_error": str(e),
+                "original_type": type(e).__name__,
+            }
+            # PROJ-466 (XLAYER-MAJ-1): if this phase failed because of a
+            # BattleResolutionError (either raised directly or chained as
+            # __cause__), merge its battle-identifying keys so crash dumps
+            # can pinpoint the failing battle.
+            phase_context.update(self._battle_resolution_context(e))
             raise EnginePhaseError(
                 f"Phase '{key}' failed: {e}",
                 code=ErrorCode.PHASE_FAILED.value,
-                context={
-                    "phase_name": key,
-                    "tick": self._current_tick,
-                    "turn_number": getattr(self, "_current_turn_number", 0),
-                    "save_path": getattr(self, "_current_save_path", None),
-                    "original_error": str(e),
-                    "original_type": type(e).__name__,
-                }
+                context=phase_context,
             ) from e
         self._phase_times[key] += time.perf_counter() - t0
         return result
+
+    @staticmethod
+    def _battle_resolution_context(error: BaseException) -> dict[str, Any]:
+        """Extract battle-identifying context from a BattleResolutionError.
+
+        PROJ-466 (XLAYER-MAJ-1): walk the ``__cause__`` chain starting at
+        ``error`` for a ``BattleResolutionError`` and return its
+        ``fleet_ids`` / ``empire_ids`` / ``hex_coord`` context keys so the
+        wrapping ``EnginePhaseError`` carries enough to identify the
+        failing battle in a crash dump. Returns an empty dict when no
+        ``BattleResolutionError`` is present. Never raises — context
+        extraction must not mask the original failure.
+        """
+        seen: set[int] = set()
+        current: BaseException | None = error
+        while current is not None and id(current) not in seen:
+            seen.add(id(current))
+            if isinstance(current, BattleResolutionError):
+                ctx = current.context or {}
+                return {
+                    k: ctx[k]
+                    for k in ("fleet_ids", "empire_ids", "hex_coord")
+                    if k in ctx
+                }
+            current = current.__cause__
+        return {}
 
     # ---------------------------------------------------------------------
     # PROJ-428 Phase 2: tick-phase hook methods.

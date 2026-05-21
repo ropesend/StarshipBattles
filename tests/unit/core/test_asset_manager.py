@@ -17,13 +17,36 @@ class TestAssetManagerLogging:
         set_default_asset_manager(AssetManager())
 
     @patch("game.assets.asset_manager.logger")
-    def test_load_manifest_file_not_found_uses_log_error(self, mock_logger):
-        """load_manifest should call log_error when file not found."""
+    def test_PROJ466_load_planet_image_oserror_degrades_to_missing_texture(
+        self, mock_logger
+    ):
+        """PROJ-466 Phase 3 Task 3.6 / Phase 4 Task 4.3: an OSError raised
+        while loading a planet image at every resolution must be caught
+        (parity with load_star_image) and degrade to the missing texture
+        with a warning, not propagate."""
+        am = AssetManager()
+        sentinel = object()
+        am.get_missing_texture = MagicMock(return_value=sentinel)
+        am.load_external_image = MagicMock(side_effect=OSError("disk read error"))
+
+        result = am.load_planet_image("planet_1.png", 512)
+
+        assert result is sentinel
+        # The per-size catch logged a warning (not an unhandled propagation).
+        assert mock_logger.warning.called
+        warn_msg = mock_logger.warning.call_args[0][0]
+        assert "planet_1.png" in warn_msg
+
+    @patch("game.assets.asset_manager.logger")
+    def test_load_manifest_file_not_found_uses_log_warning(self, mock_logger):
+        """PROJ-466: a missing manifest is recoverable (missing-texture
+        fallback), so load_manifest now logs at WARNING, not ERROR."""
         am = AssetManager()
         am.load_manifest("non_existent_file.json")
 
-        mock_logger.error.assert_called_once()
-        call_arg = mock_logger.error.call_args[0][0]
+        mock_logger.warning.assert_called_once()
+        mock_logger.error.assert_not_called()
+        call_arg = mock_logger.warning.call_args[0][0]
         assert "not found" in call_arg.lower()
 
     @patch("game.assets.asset_manager.logger")

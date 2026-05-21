@@ -151,10 +151,12 @@ class TestGetCalculatedStatsWithRegistries:
             assert mock_calc.call_args[0][1] is mock_registries
 
     def test_raises_when_registries_none(self, basic_design_data):
-        """get_calculated_stats() should raise ValueError when _registries is None.
+        """get_calculated_stats() should raise when _registries is None.
 
         PROJ-211: Fallback removed. Registries must be explicitly provided.
+        PROJ-466: now ValidationException(MISSING_DEPENDENCY), not ValueError.
         """
+        from game.core.exceptions import ValidationException
         ship = ShipInstance(
             instance_id='test-1',
             design_id='TestDesign',
@@ -165,7 +167,7 @@ class TestGetCalculatedStatsWithRegistries:
         ship._registries = None
 
         # Should raise - no fallback to global registry
-        with pytest.raises(ValueError, match="ShipInstance requires registries"):
+        with pytest.raises(ValidationException, match="ShipInstance requires registries"):
             ship.get_calculated_stats(force_refresh=True)
 
 

@@ -290,7 +290,7 @@ class LLMBackgroundCall:
                     # the inner finally with `_status=RUNNING`, causing
                     # `wait()` to return True on a non-terminal state.
                     logger.exception(
-                        "LLMBackgroundCall worker raised non-LLM exception: %r",
+                        "LLMBackgroundCall worker raised non-LLM exception: %s",
                         e,
                     )
                     wrapped = LLMUnexpectedError(

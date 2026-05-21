@@ -44,6 +44,12 @@ class Message:
     role: Role
     content: str
 
+    def __repr__(self) -> str:
+        # PROJ-466: never dump the full prompt content in repr (logs,
+        # tracebacks, debuggers). Report role + length only.
+        role = self.role.value if isinstance(self.role, Role) else self.role
+        return f"Message(role={role!r}, content_len={len(self.content)})"
+
 
 @dataclass(frozen=True)
 class TokenUsage:
@@ -84,6 +90,22 @@ class CompletionResult:
     latency_seconds: float
     provider: str
     request_id: Optional[str] = None
+
+    def __repr__(self) -> str:
+        # PROJ-466: never dump the full response text in repr. Report
+        # safe metadata only (text length, model, finish reason, latency,
+        # token usage).
+        finish = (
+            self.finish_reason.value
+            if isinstance(self.finish_reason, FinishReason)
+            else self.finish_reason
+        )
+        return (
+            f"CompletionResult(text_len={len(self.text)}, "
+            f"model={self.model!r}, finish_reason={finish!r}, "
+            f"latency_seconds={self.latency_seconds}, "
+            f"total_tokens={self.usage.total_tokens})"
+        )
 
 
 __all__ = [

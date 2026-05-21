@@ -157,7 +157,14 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
                 return True
 
             return True
-        except (ValueError, KeyError):
+        except (ValueError, KeyError) as e:
+            # PROJ-466: a corrupt design that can't be validated is allowed
+            # by default — but log it so the silent pass is observable rather
+            # than masking a genuinely broken design as "valid".
+            logger.warning(
+                "Design '%s' could not be validated (%s); allowing by default",
+                design_id, e,
+            )
             return True  # Can't validate, allow by default
 
     def _load_design_cost(self, session: 'GameSession', entity, design_id: str) -> Dict[str, float]:

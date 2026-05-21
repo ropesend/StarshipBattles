@@ -223,7 +223,7 @@ class ImageBackgroundCall:
                     # ERROR state and `_error` stays typed as
                     # ImageException.
                     logger.exception(
-                        "ImageBackgroundCall worker raised non-Image exception: %r",
+                        "ImageBackgroundCall worker raised non-Image exception: %s",
                         e,
                     )
                     wrapped = ImageUnexpectedError(

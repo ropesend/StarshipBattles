@@ -106,6 +106,13 @@ class SatelliteAIController(AIController):
         try:
             my_pos = self.ship.get_position()
         except AttributeError:
+            # PROJ-466: the two AttributeError swallows in update() already
+            # carry rationale; this one was silent. Log at debug so a ship
+            # missing get_position() (e.g. a mis-wired stub) is observable.
+            logger.debug(
+                "Satellite ship %r has no get_position(); skipping nearest-enemy search",
+                getattr(self.ship, "instance_id", self.ship),
+            )
             return None
         nearest: Optional[Any] = None
         nearest_d: float = float("inf")

@@ -3,6 +3,8 @@
 State machine: INACTIVE → ACTIVATING → ACTIVE → DEACTIVATING → INACTIVE
 """
 import pytest
+
+from game.core.exceptions import StateException
 from game.strategy.data.component_activation_state import (
     ActivationPhase,
     ComponentActivationState,
@@ -57,13 +59,14 @@ class TestStartActivating:
         assert state.energy_drain_rate == 50.0
 
     def test_cannot_activate_when_already_active(self):
+        # PROJ-466: invalid state transition now raises StateException.
         state = ComponentActivationState(phase=ActivationPhase.ACTIVE)
-        with pytest.raises(ValueError):
+        with pytest.raises(StateException):
             state.start_activating(required_ticks=100, energy_drain_rate=10.0)
 
     def test_cannot_activate_when_already_activating(self):
         state = ComponentActivationState(phase=ActivationPhase.ACTIVATING)
-        with pytest.raises(ValueError):
+        with pytest.raises(StateException):
             state.start_activating(required_ticks=100, energy_drain_rate=10.0)
 
 
@@ -79,8 +82,9 @@ class TestStartDeactivating:
         assert state.energy_drain_rate == 50.0  # preserves drain rate
 
     def test_cannot_deactivate_when_inactive(self):
+        # PROJ-466: invalid state transition now raises StateException.
         state = ComponentActivationState(phase=ActivationPhase.INACTIVE)
-        with pytest.raises(ValueError):
+        with pytest.raises(StateException):
             state.start_deactivating(required_ticks=100)
 
 

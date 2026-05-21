@@ -263,15 +263,26 @@ class TestBoundarySerialization:
         assert boundary_from_dict(d) == boundary
 
     def test_unknown_type_raises(self):
-        with pytest.raises(ValueError):
+        # PROJ-466: persistence boundary now raises PersistenceException(P003)
+        # instead of a bare ValueError.
+        from game.core.error_codes import ErrorCode
+        from game.core.exceptions import PersistenceException
+
+        with pytest.raises(PersistenceException) as ei:
             boundary_from_dict({"type": "hexagonal", "exit_policy": "destroy"})
+        assert ei.value.code == ErrorCode.CORRUPT_DATA.value
 
     def test_unknown_boundary_subtype_raises_type_error(self):
+        # PROJ-466: now PersistenceException(P003), not a bare TypeError.
+        from game.core.error_codes import ErrorCode
+        from game.core.exceptions import PersistenceException
+
         class HexBoundary:
             pass
 
-        with pytest.raises(TypeError, match="HexBoundary"):
+        with pytest.raises(PersistenceException, match="HexBoundary") as ei:
             boundary_to_dict(HexBoundary())
+        assert ei.value.code == ErrorCode.CORRUPT_DATA.value
 
 
 # ---------------------------------------------------------------------------

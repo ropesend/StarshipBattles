@@ -74,9 +74,13 @@ def test_set_path_replaces_path(
 
 
 def test_set_location_without_nav_service_raises() -> None:
+    # PROJ-466: a missing nav service is a configuration error, now raised
+    # as ValidationException(MISSING_DEPENDENCY) rather than NotImplementedError.
+    from game.core.exceptions import ValidationException
+
     bare = FleetWriteService(navigation_service=None)
     f = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(ValidationException):
         bare.set_location(f, HexCoord(1, 1))
 
 
