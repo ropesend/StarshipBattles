@@ -289,6 +289,15 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         """
         self.combat_manager.set_event_bus(bus)
 
+    def set_combat_subsystems(self, subsystems: Any) -> None:
+        """Inject the per-battle ``CombatSubsystems`` bundle (PROJ-471).
+
+        Facade to ``ShipCombatManager.set_combat_subsystems`` so the
+        ``BattleEngine`` can thread its seeded, bus-wired subsystems into the
+        ship's combat engine before first use.
+        """
+        self.combat_manager.set_combat_subsystems(subsystems)
+
     @property
     def just_fired_projectiles(self) -> List[Any]:
         """Firing results from last update tick."""

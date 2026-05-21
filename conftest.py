@@ -35,6 +35,7 @@ def reset_game_state(monkeypatch, request):
     from game.simulation.components.component import reset_component_caches
     from game.simulation.entities.stat_contributors.registry import (
         reset_stat_contributor_registry,
+        reset_crew_priority_registry,
     )
 
     # 0. PRE-TEST CLEANUP (ALWAYS - ensures isolation even after test failures)
@@ -55,6 +56,9 @@ def reset_game_state(monkeypatch, request):
     # into the next test, where it can silently double-fire (or after the
     # EXT-02 fix, suppress built-ins) for an unrelated test's ship.
     reset_stat_contributor_registry()
+    # PROJ-471 Task 3.4: sibling crew-priority registry has the same
+    # append-only/leak-across-tests hazard; restore its canonical defaults too.
+    reset_crew_priority_registry()
 
     # Pygame state recovery: ~45 legacy test files still call pygame.quit() in
     # teardown, which leaves the next test in the shard with an uninitialized
@@ -132,6 +136,8 @@ def reset_game_state(monkeypatch, request):
         reset_component_caches()
         # PROJ-360 audit A1: paired with the pre-test reset above.
         reset_stat_contributor_registry()
+        # PROJ-471 Task 3.4: paired with the pre-test crew-priority reset.
+        reset_crew_priority_registry()
 
         # 3. Reset AI Policy Manager
         from game.ai.policy_manager import get_default_policy_manager

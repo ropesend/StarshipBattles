@@ -37,10 +37,28 @@ class ShipCombatManager:
         self.comp_trigger_pulled: bool = False
         self.aim_point: Optional[Any] = None
         self._combat_engine: Optional['ShipCombatEngine'] = None
+        # PROJ-471 Task 1.2: per-battle CombatSubsystems bundle injected by
+        # BattleEngine before the engine is lazily constructed. ``None`` ->
+        # the engine builds its own fresh per-instance bundle.
+        self._combat_subsystems: Optional[Any] = None
 
     # =========================================================================
     # Combat Engine (lazy initialization)
     # =========================================================================
+
+    def set_combat_subsystems(self, subsystems: Any) -> None:
+        """Inject the per-battle ``CombatSubsystems`` bundle (PROJ-471).
+
+        Must be called before the combat engine is first accessed so the
+        seeded, bus-wired subsystems are threaded in. If the engine already
+        exists it is rebuilt against the new bundle (battle restart path).
+        """
+        self._combat_subsystems = subsystems
+        if self._combat_engine is not None:
+            from game.simulation.entities.ship_combat_engine import ShipCombatEngine
+            engine = ShipCombatEngine(self._ship, subsystems=subsystems)
+            engine._event_bus = self._combat_engine._event_bus
+            self._combat_engine = engine
 
     @property
     def combat_engine(self) -> 'ShipCombatEngine':
@@ -50,7 +68,9 @@ class ShipCombatManager:
         """
         if self._combat_engine is None:
             from game.simulation.entities.ship_combat_engine import ShipCombatEngine
-            self._combat_engine = ShipCombatEngine(self._ship)
+            self._combat_engine = ShipCombatEngine(
+                self._ship, subsystems=self._combat_subsystems
+            )
         return self._combat_engine
 
     def set_event_bus(self, bus: Any) -> None:

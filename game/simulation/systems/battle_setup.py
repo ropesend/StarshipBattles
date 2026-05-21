@@ -45,8 +45,18 @@ def initialize_start_state(
     """Shared start-of-battle state reset for ``start`` / ``start_teams``."""
     engine.rng = random.Random(seed)
     engine.collision_system.rng = engine.rng
-    from game.simulation.entities.ship_combat_engine import ShipCombatEngine
-    ShipCombatEngine._damage_calculator = DamageCalculator(rng=engine.rng)
+    # PROJ-471 Task 1.2: build the per-battle CombatSubsystems bundle keyed to
+    # the freshly-seeded RNG (was a class-level ShipCombatEngine attribute
+    # overwrite -- a cross-battle/cross-test state leak). The seeded
+    # DamageCalculator reaches every ship via injection in
+    # ``BattleEngine._initialize_ship``; ram/mine resolvers read it off the
+    # engine's bundle. The session event_bus (set in __init__) is wired into
+    # the bundle's WeaponFiringSystem.
+    from game.simulation.combat.combat_subsystems import CombatSubsystems
+    engine.combat_subsystems = CombatSubsystems.create_default(
+        damage_calculator=DamageCalculator(rng=engine.rng),
+        event_bus=getattr(engine, "event_bus", None),
+    )
 
     engine.ships = []
     engine.ai_controllers = []

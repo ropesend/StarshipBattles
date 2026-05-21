@@ -6,9 +6,10 @@ multiple fleets (real Fleet objects with full hierarchy support),
 system-scope complex selections, and sector-scope complex selections.
 """
 
+import itertools
 import logging
 import uuid
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Callable, Dict, Iterator, List, Optional, TYPE_CHECKING
 
 from game.core.hex_math import HexCoord
 from game.core.validation_helpers import require_keys
@@ -20,15 +21,10 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# Counter for generating unique fleet IDs
-_next_fleet_id = 1000
-
-
-def _generate_fleet_id() -> int:
-    """Generate a unique fleet ID for battle setup fleets."""
-    global _next_fleet_id
-    _next_fleet_id += 1
-    return _next_fleet_id
+# Starting value for per-state fleet-id counters (PROJ-471 Task 2.8: the prior
+# module-level ``_next_fleet_id`` global grew unbounded across the process and
+# leaked across tests; the counter is now instance state).
+_FLEET_ID_BASE = 1000
 
 
 class BattleSetupSide:
@@ -37,8 +33,19 @@ class BattleSetupSide:
     Holds multiple fleets and complex selections for a team (0 or 1).
     """
 
-    def __init__(self, team_id: int):
+    def __init__(
+        self,
+        team_id: int,
+        id_allocator: 'Optional[Callable[[], int]]' = None,
+    ):
         self.team_id = team_id
+        # PROJ-471 Task 2.8: per-instance fleet-id source. The owning
+        # BattleSetupState injects a shared allocator so ids are unique across
+        # all its sides; a standalone Side gets its own local counter.
+        if id_allocator is None:
+            _local = itertools.count(_FLEET_ID_BASE + 1)
+            id_allocator = lambda: next(_local)
+        self._id_allocator = id_allocator
         self.fleets: List[Fleet] = []
         # Materialized list of toggled-on complexes (spec-compiler input).
         # Rebuilt from `*_complex_toggles` at battle-launch time.
@@ -60,7 +67,7 @@ class BattleSetupSide:
         Returns:
             The newly created Fleet.
         """
-        fleet_id = _generate_fleet_id()
+        fleet_id = self._id_allocator()
         fleet = Fleet(fleet_id, self.team_id, HexCoord(0, 0))
         # Store the display name on the fleet for UI purposes
         fleet._battle_setup_name = name
@@ -165,9 +172,17 @@ class BattleSetupState:
                 f"BattleSetupState side_count must be in "
                 f"[{MIN_SIDES}, {MAX_SIDES}]; got {side_count}"
             )
+        # PROJ-471 Task 2.8: one shared per-state fleet-id allocator handed to
+        # every side so ids are unique across sides yet reset per state.
+        self._fleet_id_counter: Iterator[int] = itertools.count(_FLEET_ID_BASE + 1)
         self.sides: List[BattleSetupSide] = [
-            BattleSetupSide(team_id=i) for i in range(side_count)
+            BattleSetupSide(team_id=i, id_allocator=self._new_fleet_id)
+            for i in range(side_count)
         ]
+
+    def _new_fleet_id(self) -> int:
+        """Allocate the next unique fleet id for this state (PROJ-471 Task 2.8)."""
+        return next(self._fleet_id_counter)
 
     # --- N-side API ----------------------------------------------------------
 
@@ -185,7 +200,9 @@ class BattleSetupState:
             raise ValueError(
                 f"BattleSetupState: cannot add more than {MAX_SIDES} sides"
             )
-        new_side = BattleSetupSide(team_id=len(self.sides))
+        new_side = BattleSetupSide(
+            team_id=len(self.sides), id_allocator=self._new_fleet_id
+        )
         self.sides.append(new_side)
         return new_side
 
@@ -236,9 +253,10 @@ class BattleSetupState:
 
     def clear(self) -> None:
         """Reset to empty 2-side state."""
+        self._fleet_id_counter = itertools.count(_FLEET_ID_BASE + 1)
         self.sides = [
-            BattleSetupSide(team_id=0),
-            BattleSetupSide(team_id=1),
+            BattleSetupSide(team_id=0, id_allocator=self._new_fleet_id),
+            BattleSetupSide(team_id=1, id_allocator=self._new_fleet_id),
         ]
 
     def to_dict(self) -> Dict[str, Any]:
@@ -259,7 +277,16 @@ class BattleSetupState:
         count = max(MIN_SIDES, min(MAX_SIDES, len(sides_raw)))
         state = cls(side_count=count)
         for i, side_data in enumerate(sides_raw[:count]):
-            state.sides[i] = BattleSetupSide.from_dict(
-                side_data, registries=registries
-            )
+            side = BattleSetupSide.from_dict(side_data, registries=registries)
+            # PROJ-471 Task 2.8: re-wire the shared per-state allocator so
+            # fleets created after load still get state-unique ids.
+            side._id_allocator = state._new_fleet_id
+            state.sides[i] = side
+        # PROJ-471 Task 4.1 (Codex finding 1): advance the counter past the
+        # highest loaded fleet id so a post-load create_fleet() never collides
+        # with an existing id.
+        loaded_ids = [f.id for sd in state.sides for f in sd.fleets]
+        if loaded_ids:
+            start = max(max(loaded_ids) + 1, _FLEET_ID_BASE + 1)
+            state._fleet_id_counter = itertools.count(start)
         return state

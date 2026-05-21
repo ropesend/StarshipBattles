@@ -191,16 +191,24 @@ def _get_catalog():
 
     Same pattern as :mod:`game.ui.screens.transfer_view_model` —
     catalog reads from ``data/resources.json`` on first use, then
-    re-used. Tests that swap the catalog through
-    :func:`game.strategy.data.container.set_resource_catalog` do not
-    affect this cache; if a Phase 5 consult flags that, the lookup
-    can be re-routed to share the container-side cache.
+    re-used. PROJ-471 Task 2.10 added :func:`_clear_catalog` so tests (and
+    any future catalog swap) can invalidate this process cache.
     """
     global _catalog
     if _catalog is None:
         from game.core.resources import ResourceCatalog
         _catalog = ResourceCatalog.from_json()
     return _catalog
+
+
+def _clear_catalog() -> None:
+    """Invalidate the lazy catalog cache (PROJ-471 Task 2.10 test seam).
+
+    Forces the next :func:`_get_catalog` to reload, removing the
+    stale-catalog-in-tests hazard the docstring previously warned about.
+    """
+    global _catalog
+    _catalog = None
 
 
 __all__ = [

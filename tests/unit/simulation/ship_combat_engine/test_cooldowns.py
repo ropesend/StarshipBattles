@@ -801,10 +801,15 @@ class TestRepairEdgeCases:
 
 
 class TestCombatEngineSharedState:
-    """Tests for ShipCombatEngine shared subsystem state."""
+    """Tests for ShipCombatEngine subsystem ownership.
 
-    def test_multiple_engines_share_subsystems(self):
-        """Multiple ShipCombatEngine instances share subsystems."""
+    PROJ-471 Task 1.2: subsystems are now PER-INSTANCE (no class-level
+    sharing). The previous ``test_multiple_engines_share_subsystems`` pinned
+    the cross-instance/cross-battle state-leak bug and was inverted here.
+    """
+
+    def test_multiple_standalone_engines_have_distinct_subsystems(self):
+        """Standalone engines own distinct subsystems (no class-level leak)."""
         from game.simulation.entities.ship_combat_engine import ShipCombatEngine
 
         ship1 = MagicMock()
@@ -815,11 +820,14 @@ class TestCombatEngineSharedState:
         engine1 = ShipCombatEngine(ship1)
         engine2 = ShipCombatEngine(ship2)
 
-        # They should share the same subsystem instances
-        assert ShipCombatEngine._targeting_system is engine1._targeting_system
-        assert ShipCombatEngine._targeting_system is engine2._targeting_system
-        assert ShipCombatEngine._damage_calculator is engine1._damage_calculator
-        assert ShipCombatEngine._weapon_firing_system is engine1._weapon_firing_system
+        # No class-level shared subsystem state.
+        assert ShipCombatEngine.__dict__.get("_targeting_system") is None
+        assert ShipCombatEngine.__dict__.get("_damage_calculator") is None
+        assert ShipCombatEngine.__dict__.get("_weapon_firing_system") is None
+        # Each engine owns its own subsystems.
+        assert engine1._targeting_system is not engine2._targeting_system
+        assert engine1._damage_calculator is not engine2._damage_calculator
+        assert engine1._weapon_firing_system is not engine2._weapon_firing_system
 
     def test_engine_stores_ship_reference(self):
         """Engine stores correct ship reference."""

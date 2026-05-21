@@ -111,6 +111,27 @@ def unregister_crew_priority(ability_name: str) -> None:
     ]
 
 
+_CREW_PRIORITY_DEFAULTS: List[CrewPriorityEntry] = [
+    CrewPriorityEntry("CommandAndControl", 0),
+    CrewPriorityEntry("CombatPropulsion", 1),
+    CrewPriorityEntry("ManeuveringThruster", 1),
+    CrewPriorityEntry("WeaponAbility", 2),
+]
+
+
+def reset_crew_priority_registry() -> None:
+    """Test-isolation seam (PROJ-471 Task 3.4).
+
+    Restore ``CREW_PRIORITY_REGISTRY`` to its canonical 4 default entries,
+    mirroring the sibling ``reset_stat_contributor_registry()``. Mutates the
+    existing list in place so modules holding a reference observe the reset.
+    """
+    CREW_PRIORITY_REGISTRY[:] = [
+        CrewPriorityEntry(e.ability_name, e.priority)
+        for e in _CREW_PRIORITY_DEFAULTS
+    ]
+
+
 def lookup_crew_priority(component: "Component") -> int:
     """Return the lowest priority value across the abilities the component has."""
     best = CREW_PRIORITY_DEFAULT

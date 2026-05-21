@@ -183,11 +183,14 @@ class ApplicationContext:
         set_default_llm_provider(llm_provider)
         set_default_image_provider(image_provider)
 
-        # Set module-level refs for services with only _default_xxx (no setter)
-        import game.simulation.components.component_loader as _ccm_module
-        _ccm_module._default_cache_manager = component_cache
-        import game.ai.policy_manager as _pm_module
-        _pm_module._default_policy_manager = policy_manager
+        # PROJ-471 Tasks 2.1/2.2: route through setters (no raw module-attr
+        # assignment) so the reset/getter paths cannot diverge from ctx.
+        from game.simulation.components.component_loader import (
+            set_default_cache_manager,
+        )
+        from game.ai.policy_manager import set_default_policy_manager
+        set_default_cache_manager(component_cache)
+        set_default_policy_manager(policy_manager)
 
         return cls(
             registry_manager=registry_mgr,

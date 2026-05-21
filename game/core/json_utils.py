@@ -76,6 +76,19 @@ def get_serializable_registry() -> Dict[str, type]:
     return dict(_SERIALIZABLE_REGISTRY)
 
 
+def clear_serializable_registry(restore: Dict[str, type] | None = None) -> None:
+    """Test-isolation seam (PROJ-471 Task 2.9).
+
+    Replace the module-level serializable registry contents. With no argument
+    it empties the registry; pass a snapshot from ``get_serializable_registry()``
+    to restore a captured baseline. Mutates the existing dict in place so other
+    modules holding a reference observe the reset.
+    """
+    _SERIALIZABLE_REGISTRY.clear()
+    if restore:
+        _SERIALIZABLE_REGISTRY.update(restore)
+
+
 def load_json(
     file_path: Union[str, Path],
     default: Optional[Any] = None,

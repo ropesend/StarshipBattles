@@ -51,6 +51,17 @@ def get_default_cache_manager() -> 'ComponentCacheManager':
     return _default_cache_manager
 
 
+def set_default_cache_manager(manager: 'ComponentCacheManager') -> None:
+    """Set the module-level ComponentCacheManager reference (PROJ-471 Task 2.1).
+
+    Called from ``ApplicationContext.create_production()`` so the module-level
+    default and ``ctx.component_cache`` reference the same instance (prevents
+    singleton divergence). Replaces the prior raw module-attribute assignment.
+    """
+    global _default_cache_manager
+    _default_cache_manager = manager
+
+
 class ComponentCacheManager:
     """Manager for component and modifier caches.
 
@@ -65,9 +76,20 @@ class ComponentCacheManager:
 
 
 def reset_component_caches() -> None:
-    """Reset all caches for test isolation."""
-    global _default_cache_manager
-    _default_cache_manager = ComponentCacheManager()
+    """Reset all caches for test isolation.
+
+    PROJ-471 Task 4.2 (Codex finding 2): clears the EXISTING manager's cache
+    fields in place rather than swapping in a new instance. A reference
+    captured before the reset (such as ``ApplicationContext.component_cache``)
+    therefore stays the live module default with its caches emptied, instead
+    of being orphaned by an instance swap (the prior swap re-introduced the
+    very singleton-divergence this project set out to remove).
+    """
+    mgr = get_default_cache_manager()
+    mgr.component_cache = None
+    mgr.modifier_cache = None
+    mgr.last_component_file = None
+    mgr.last_modifier_file = None
 
 
 # =============================================================================

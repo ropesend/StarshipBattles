@@ -147,6 +147,12 @@ class BattleEngine:
         from game.simulation.combat.combat_events import CombatEventBus
         self.combat_events = CombatEventBus()
 
+        # PROJ-471 Task 1.2: per-battle CombatSubsystems bundle. Built fresh in
+        # ``initialize_start_state`` keyed to the seeded ``self.rng`` and
+        # injected into every ship's ShipCombatEngine. Replaces the former
+        # class-level ShipCombatEngine subsystems (no cross-battle leakage).
+        self.combat_subsystems: Optional[Any] = None
+
         # Fleet aura manager (scoped ability bonuses)
         from game.simulation.combat.fleet_aura_manager import FleetAuraManager
         self.aura_manager = FleetAuraManager()
@@ -227,27 +233,13 @@ class BattleEngine:
         # Distinct from `self.combat_events` (the per-battle CombatEventBus
         # used by DamageCalculator) — this one is the structured, string-keyed
         # session bus that GameSession owns.  When provided, it is forwarded
-        # into the shared `WeaponFiringSystem` so projectile/seeker handlers
+        # into the per-battle `WeaponFiringSystem` so projectile/seeker handlers
         # can thread `Projectile.event_logger=bus.log_event`, surfacing
         # SEEKER_EXPIRE telemetry that PROJ-382 left silently dropped.
+        # PROJ-471 Task 1.2: the bus is wired into the per-battle
+        # CombatSubsystems bundle in ``initialize_start_state`` (it reads
+        # ``self.event_bus``); no eager class-level subsystem creation here.
         self.event_bus = event_bus
-        if event_bus is not None:
-            from game.simulation.entities.ship_combat_engine import ShipCombatEngine
-            from game.simulation.combat.weapon_firing_system import WeaponFiringSystem
-            from game.simulation.combat.targeting_system import TargetingSystem
-
-            # Force creation of the shared firing system so we can hand it
-            # the bus before the first ship fires.  ShipCombatEngine lazily
-            # creates these on first instantiation; do it eagerly here.
-            if ShipCombatEngine._targeting_system is None:
-                ShipCombatEngine._targeting_system = TargetingSystem()
-            if ShipCombatEngine._weapon_firing_system is None:
-                ShipCombatEngine._weapon_firing_system = WeaponFiringSystem(
-                    ShipCombatEngine._targeting_system,
-                    event_bus=event_bus,
-                )
-            else:
-                ShipCombatEngine._weapon_firing_system.set_event_bus(event_bus)
 
     @property
     def projectiles(self) -> List[Any]:
@@ -348,6 +340,11 @@ class BattleEngine:
         Called from start() for initial ships and add_ship_mid_battle() for
         reinforcements. Extracted to ensure parity between both paths.
         """
+        # PROJ-471 Task 1.2: inject the per-battle CombatSubsystems bundle
+        # BEFORE set_event_bus (which triggers lazy combat-engine construction)
+        # so the seeded DamageCalculator + shared subsystems are threaded in.
+        if self.combat_subsystems is not None:
+            ship.set_combat_subsystems(self.combat_subsystems)
         ship.set_event_bus(self.combat_events)
         for comp in ship.get_all_components():
             if comp.is_active:
@@ -600,18 +597,12 @@ class BattleEngine:
         ``ram_target`` are short-circuited — so we can call it
         unconditionally on every tick at minimal cost.
         """
-        # Pull the per-battle damage calculator. ``initialize_start_state``
-        # constructs a fresh one keyed to the battle seed; we just look
-        # it up here. The resolver gracefully falls back to direct-HP
-        # decrement when the lookup fails.
-        damage_calc = None
-        try:
-            from game.simulation.entities.ship_combat_engine import (
-                ShipCombatEngine,
-            )
-            damage_calc = ShipCombatEngine._damage_calculator
-        except Exception:  # Intentional broad catch: damage-calc lookup is best-effort.
-            damage_calc = None
+        # Pull the per-battle damage calculator from the engine-owned
+        # CombatSubsystems bundle (PROJ-471 Task 1.2). ``initialize_start_state``
+        # builds it keyed to the battle seed. The resolver gracefully falls
+        # back to direct-HP decrement when the bundle is absent.
+        _bundle = getattr(self, "combat_subsystems", None)
+        damage_calc = _bundle.damage_calculator if _bundle is not None else None
         self.ram_resolver._damage_calculator = damage_calc
         self.ram_resolver.process_ramming_tick(self.ships)
 
@@ -634,15 +625,11 @@ class BattleEngine:
             if self.mine_resolver is None:
                 return
             resolvers = [self.mine_resolver]
-        # Use the DamageCalculator owned by the ship combat engine if
-        # available — falls back to None and the resolver uses direct
-        # HP decrement.
-        damage_calc = None
-        try:
-            from game.simulation.entities.ship_combat_engine import ShipCombatEngine
-            damage_calc = ShipCombatEngine._damage_calculator
-        except Exception:  # Intentional broad catch: damage-calc lookup is best-effort.
-            damage_calc = None
+        # Use the per-battle DamageCalculator from the engine's
+        # CombatSubsystems bundle (PROJ-471 Task 1.2) — falls back to None and
+        # the resolver uses direct HP decrement.
+        _bundle = getattr(self, "combat_subsystems", None)
+        damage_calc = _bundle.damage_calculator if _bundle is not None else None
         for resolver in resolvers:
             owner_team = getattr(resolver, "_owner_team_id", None)
             if owner_team is None:

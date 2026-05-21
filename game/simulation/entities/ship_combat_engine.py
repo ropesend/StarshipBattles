@@ -20,13 +20,11 @@ from typing import TYPE_CHECKING, List, Optional, Any, Tuple
 
 from game.core.constants import CombatConstants
 from game.core.math import Vector2
-from game.simulation.combat.targeting_system import TargetingSystem
-from game.simulation.combat.damage_calculator import DamageCalculator
-from game.simulation.combat.weapon_firing_system import WeaponFiringSystem
 from game.simulation.components.component_constants import ComponentStatus
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
+    from game.simulation.combat.combat_subsystems import CombatSubsystems
 
 
 class ShipCombatEngine:
@@ -35,32 +33,35 @@ class ShipCombatEngine:
 
     Delegates targeting, damage, and weapon firing to focused subsystems
     while maintaining combat cooldown management.
+
+    PROJ-471 Task 1.2: subsystems are now **per-instance**, not class-level.
+    Within a single battle the ``BattleEngine`` owns one
+    :class:`CombatSubsystems` bundle (carrying the seeded ``DamageCalculator``
+    and the bus-wired ``WeaponFiringSystem``) and injects it into every ship's
+    engine, preserving deterministic shared-within-battle behavior. Standalone
+    construction builds a fresh per-instance bundle so no state leaks across
+    instances/battles/tests.
     """
 
-    # Shared instances for subsystems (stateless, can be shared)
-    _targeting_system: Optional[TargetingSystem] = None
-    _damage_calculator: Optional[DamageCalculator] = None
-    _weapon_firing_system: Optional[WeaponFiringSystem] = None
-
-    def __init__(self, ship: 'Ship'):
+    def __init__(self, ship: 'Ship', subsystems: 'Optional[CombatSubsystems]' = None):
         """
         Initialize combat engine for a ship.
 
         Args:
             ship: The ship this engine controls combat for
+            subsystems: Optional per-battle ``CombatSubsystems`` bundle. When
+                ``None`` a fresh per-instance bundle is created (no shared
+                state).
         """
         self._ship = ship
         self._event_bus = None  # Set by BattleEngine after start()
 
-        # Initialize shared subsystems on first use
-        if ShipCombatEngine._targeting_system is None:
-            ShipCombatEngine._targeting_system = TargetingSystem()
-        if ShipCombatEngine._damage_calculator is None:
-            ShipCombatEngine._damage_calculator = DamageCalculator()
-        if ShipCombatEngine._weapon_firing_system is None:
-            ShipCombatEngine._weapon_firing_system = WeaponFiringSystem(
-                ShipCombatEngine._targeting_system
-            )
+        if subsystems is None:
+            from game.simulation.combat.combat_subsystems import CombatSubsystems
+            subsystems = CombatSubsystems.create_default()
+        self._targeting_system = subsystems.targeting_system
+        self._damage_calculator = subsystems.damage_calculator
+        self._weapon_firing_system = subsystems.weapon_firing_system
 
     # =========================================================================
     # Delegated Methods - Targeting

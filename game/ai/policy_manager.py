@@ -37,6 +37,17 @@ def get_default_policy_manager() -> 'PolicyManager':
     return _default_policy_manager
 
 
+def set_default_policy_manager(manager: 'PolicyManager') -> None:
+    """Set the module-level PolicyManager reference (PROJ-471 Task 2.2).
+
+    Called from ``ApplicationContext.create_production()`` so the module-level
+    default and ``ctx.policy_manager`` reference the same instance (prevents
+    singleton divergence). Replaces the prior raw module-attribute assignment.
+    """
+    global _default_policy_manager
+    _default_policy_manager = manager
+
+
 class PolicyManager:
     """Manager for targeting and movement policies.
 
