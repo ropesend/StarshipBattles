@@ -13,14 +13,15 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Codify the UI-safe surface as machine-checkable data + reconcile drift + promote misfiled TAIL entries | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Codify the UI-safe surface as machine-checkable data + reconcile drift + promote misfiled TAIL entries | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Codex exec-audit follow-ups (Finding 1 doc-drift + Finding 2 durable non-vacuity proof + parser hardening) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-22
-**Active Phase:** Phase 1 (planned, ready to execute)
-**Last Action:** Plan fleshed to execution-ready (pre-flesh + post-flesh Codex consults; live-code verified 2026-05-22). PROJ-472's two read-path guards have landed, so the gate is cleared.
-**Next Action:** Start Phase 1 Task 1.1 (write the failing parity/no-misfile tests first — TDD).
-**Blockers:** None. (Gate cleared: `tests/static_guards/test_facade_read_path_imports_guard.py` and its UISAFE allowlist exist and are green — 340 passed 2026-05-22.)
+**Active Phase:** Phases 1 + 2 complete — awaiting user verification.
+**Last Action:** Implemented all 7 Phase-1 tasks via strict TDD: symbol-level `_UISAFE_SYMBOLS` (33 `(module, member)` pairs) + matcher branch; reconciled the 3 drifts; doc↔guard parity test + parseable fenced token block in Pattern #5; promoted the 12 misfiled TAIL symbols (RED step confirmed the no-misfile invariant fires); deleted the annotation-only `EmpireEconomySnapshot` runtime import (moved under `TYPE_CHECKING`); symbol-level positive control. Ran one-round Codex exec-audit: 2 VERIFIED findings + 1 minor robustness risk fixed in Phase 2; `get_default_economy_config` mutable-dict risk REJECTED (Codex recommended keeping the promotion). Validation: read-path imports guard 344 passed; all static guards 1399 passed; full sharded suite 24243 passed / 0 failed.
+**Next Action:** User verification, then orchestrator commit. (Agent did NOT commit per instructions.)
+**Blockers:** None.
 
 ## Overview
 Follow-on from **PROJ-472**, which landed the read-path policy (option (b):
@@ -130,8 +131,9 @@ promotes the genuinely-detached value/config/enum/static-metadata symbols out of
 - [manifest.md](manifest.md) - File / conflict map
 
 ## Verification
-- [ ] Phase 1 checklist complete
-- [ ] `python Tools/test_sharded/test_sharded.py` green (or targeted static-guard + affected-UI runs)
-- [ ] `_UISAFE_SYMBOLS` is machine-checkable data; parity + no-misfile tests pass
-- [ ] Doc↔guard parity: Pattern #5 token list == `_UISAFE_SYMBOLS`
+- [x] Phase 1 checklist complete
+- [x] Phase 2 (exec-audit follow-ups) checklist complete
+- [x] `python Tools/test_sharded/test_sharded.py` green (24243 passed, 0 failed, 2026-05-22)
+- [x] `_UISAFE_SYMBOLS` is machine-checkable data; parity + no-misfile tests pass
+- [x] Doc↔guard parity: Pattern #5 token list == `_UISAFE_SYMBOLS`
 - [ ] User verified

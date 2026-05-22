@@ -184,19 +184,69 @@ Convention:
   namespaces and frozen DTOs for these (`empires.build_queues`,
   `fleets.get`/`path_projection`, `FleetInfo`, `BuildQueueSourceDTO`, …).
 - **A documented UI-safe surface is allowed** for immutable-ish
-  config/value/enum/protocol types that exist before (or independent of) a live
-  `GameSession`. The UI-safe types are: `GameConfig` (and the `game_config`
-  scalars/`PlayerConfig`), `RaceConfig` (and its label tuples),
-  `EnvironmentalPreference`, `HabitabilityFactor` (and the `habitability_factors`
-  iterators), `ContainableKind`, `ActivationPhase`, and the pre-session
-  race-setup helpers `RacePointBudget` (the cost authority shared with UI save
-  validation) and the `homeworld_presets` loaders/applicators
-  (`load_homeworld_presets`, `apply_preset_to_config`, `get_preset_for_planet_type`,
-  `get_preset_id_from_name`). All of these are edited/read by the race-setup and
-  new-game-setup UI before any session exists. This list is the **source of
-  truth for the guard allowlist** in
-  `tests/static_guards/test_facade_read_path_imports_guard.py`; the guard's
-  `UISAFE` allowlist category must not drift from it.
+  config/value/enum/protocol types and static-data loaders/queries that exist
+  before (or independent of) a live `GameSession`. The UI-safe types are:
+  `GameConfig` (and the `game_config` scalars/`PlayerConfig`), `RaceConfig`
+  (and its label tuples), `EnvironmentalPreference`, `HabitabilityFactor` (and
+  the `habitability_factors` iterators), `ContainableKind`, `ActivationPhase`,
+  `ComponentActivationState` (a detached `@dataclass` of a phase enum + scalar
+  tick counters — no live session ref), the pre-session race-setup helpers
+  `RacePointBudget` (the cost authority shared with UI save validation) and the
+  `homeworld_presets` loaders/applicators (`load_homeworld_presets`,
+  `apply_preset_to_config`, `get_preset_for_planet_type`,
+  `get_preset_id_from_name`), the pure enums `OrderType`, `PlanetType`,
+  `BattleRole`, and `FieldStatus`, the detached `CombatPolicy` scalar dataclass,
+  the cached static-config getter `get_default_economy_config` (NOT the mutating
+  setter), and the static ability/superweapon metadata `StrategicKind`,
+  `abilities_with_kind_tag`, `SUPERWEAPONS`. Membership is a property of the
+  **symbol**, not the file — so a tooling screen may import a UI-safe enum while
+  its live/generation imports stay transitional. The guard enforces this
+  surface as symbol-level `(module, member)` data in `_UISAFE_SYMBOLS`
+  (`tests/static_guards/test_facade_read_path_imports_guard.py`), kept in lockstep
+  with the canonical token block below by a doc<->guard parity test. The
+  canonical token block — one `module.member` per line — is the **machine-checked
+  source of truth**; neither it nor `_UISAFE_SYMBOLS` may drift from the other:
+
+  <!-- PROJ-474 UISAFE canonical token list: parsed by
+       tests/static_guards/test_facade_read_path_imports_guard.py
+       (test_uisafe_symbols_match_pattern5_token_list). One module.member per
+       line. Keep in sync with _UISAFE_SYMBOLS — the parity test fails on drift. -->
+  <!-- PROJ-474 UISAFE canonical token list -->
+  ```
+  game.strategy.engine.game_config.DEFAULT_SYSTEM_COUNT
+  game.strategy.engine.game_config.GameConfig
+  game.strategy.engine.game_config.PlayerConfig
+  game.strategy.engine.game_config.THEME_DEFAULTS
+  game.strategy.engine.game_config.MAX_SYSTEM_COUNT
+  game.strategy.engine.game_config.MIN_SYSTEM_COUNT
+  game.strategy.engine.game_config.VALID_GALAXY_TYPES
+  game.strategy.data.environmental_preference.EnvironmentalPreference
+  game.strategy.data.habitability_factors.iter_gas_factors
+  game.strategy.data.habitability_factors.iter_scalar_factors
+  game.strategy.data.homeworld_presets.apply_preset_to_config
+  game.strategy.data.homeworld_presets.get_preset_for_planet_type
+  game.strategy.data.homeworld_presets.get_preset_id_from_name
+  game.strategy.data.homeworld_presets.load_homeworld_presets
+  game.strategy.data.race_config.RaceConfig
+  game.strategy.data.race_config.GOVERNMENT_ORGANIZATIONS
+  game.strategy.data.race_config.GOVERNMENT_TYPES
+  game.strategy.data.race_config.LEADER_TITLES
+  game.strategy.data.race_config.PHYSICAL_TYPES
+  game.strategy.data.race_config.SOCIETY_TYPES
+  game.strategy.data.race_point_budget.RacePointBudget
+  game.strategy.data.containable.ContainableKind
+  game.strategy.data.component_activation_state.ActivationPhase
+  game.strategy.data.component_activation_state.ComponentActivationState
+  game.strategy.data.order_types.OrderType
+  game.strategy.data.planet.PlanetType
+  game.strategy.data.fleet_hierarchy.BattleRole
+  game.strategy.data.fleet_hierarchy.CombatPolicy
+  game.strategy.config.economy_config.get_default_economy_config
+  game.strategy.services.race_description_llm_controller.FieldStatus
+  game.strategy.services.ability_metadata.StrategicKind
+  game.strategy.services.ability_metadata.abilities_with_kind_tag
+  game.strategy.services.superweapon_registry.SUPERWEAPONS
+  ```
 - **Do NOT allowlist live session/domain traversal helpers** just because they
   are "read-only". The counterexamples — explicitly NON-allowlisted — are
   `BuildQueueSource`, `collect_build_queues_at_hex` /

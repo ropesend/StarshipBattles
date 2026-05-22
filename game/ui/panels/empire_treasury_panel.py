@@ -8,7 +8,7 @@ plus current treasury and storage capacity.
 from __future__ import annotations
 
 import os
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, TYPE_CHECKING
 
 import pygame
 import pygame_gui
@@ -30,9 +30,15 @@ def _get_planetary_ids() -> tuple[str, ...]:
     (no I/O at import). Tests can call ``_get_planetary_ids.cache_clear()``.
     """
     return tuple(d.id for d in ResourceCatalog.from_json().by_display_group("planetary"))
-from game.strategy.services.empire_economy_service import EmpireEconomySnapshot  # PROJ-292 M1
 from game.ui.utils import create_section_header
 from game.ui.utils.resource_display import get_resource_abbreviation
+
+if TYPE_CHECKING:
+    # PROJ-474: EmpireEconomySnapshot is used only as a type annotation
+    # (constructor + refresh()). With ``from __future__ import annotations`` the
+    # annotations are strings at runtime, so the import need not execute. Moving
+    # it under TYPE_CHECKING removes a runtime read-path import the UI never uses.
+    from game.strategy.services.empire_economy_service import EmpireEconomySnapshot  # PROJ-292 M1
 
 
 # Layout constants
