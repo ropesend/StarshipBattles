@@ -7,7 +7,7 @@ PROJ-220: Refactored binary paired-bool filters to tri-state FilterState.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, Any, List
+from typing import TYPE_CHECKING, Dict, Any, List, Mapping, Optional
 
 from game.strategy.services.component_abilities import has_warp_capability
 from game.ui.filters.filter_state import FilterState
@@ -154,14 +154,22 @@ def _should_exclude_by_warp(ship: 'ShipInstance', filter_state: Dict[str, Any]) 
     return _check_tri_state(state, is_warp_capable)
 
 
-def _should_exclude_by_spaceyard(ship: 'ShipInstance', filter_state: Dict[str, Any]) -> bool:
-    """Check if ship should be excluded based on spaceyard capability filter."""
+def _should_exclude_by_spaceyard(
+    ship: 'ShipInstance',
+    filter_state: Dict[str, Any],
+    spaceyard_lookup: Optional[Mapping[str, bool]] = None,
+) -> bool:
+    """Check if ship should be excluded based on spaceyard capability filter.
+
+    PROJ-475 Phase 2 Task 2.6: the spaceyard truth comes from the facade-projected
+    ``instance_id -> has_spaceyard`` lookup (``ShipInfo.has_spaceyard``), not from
+    ``FleetCapabilityCalculator`` in the UI. An absent/None lookup defaults every
+    ship to no-spaceyard.
+    """
     state = filter_state.get('has_spaceyard', FilterState.IGNORE)
     if state is FilterState.IGNORE:
         return False
-    # INTENTIONAL LATE IMPORT: Avoid circular import with strategy data
-    from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
-    has_yard = FleetCapabilityCalculator.ship_has_spaceyard(ship)
+    has_yard = bool((spaceyard_lookup or {}).get(ship.instance_id, False))
     return _check_tri_state(state, has_yard)
 
 
@@ -214,7 +222,11 @@ def _should_exclude_by_status(ship: 'ShipInstance', filter_state: Dict[str, bool
     return not filter_state.get('show_undamaged', True)
 
 
-def filter_ships(ships: List[ShipInstance], filter_state: Dict[str, Any]) -> List[ShipInstance]:
+def filter_ships(
+    ships: List[ShipInstance],
+    filter_state: Dict[str, Any],
+    spaceyard_lookup: Optional[Mapping[str, bool]] = None,
+) -> List[ShipInstance]:
     """
     Filter ships based on combined filter state.
 
@@ -224,6 +236,9 @@ def filter_ships(ships: List[ShipInstance], filter_state: Dict[str, Any]) -> Lis
             Status filters (bool): show_damaged, show_undamaged, show_derelict, show_destroyed
             Tri-state filters (FilterState): warp_capable, has_spaceyard, has_cargo,
                 destroy_planet, open_warp, close_warp, destroy_star, create_sphere
+        spaceyard_lookup: PROJ-475 — ``instance_id -> has_spaceyard`` map projected
+            by the facade. Consulted by the spaceyard filter instead of importing
+            ``FleetCapabilityCalculator``.
 
     Returns:
         Filtered list of ships
@@ -235,7 +250,7 @@ def filter_ships(ships: List[ShipInstance], filter_state: Dict[str, Any]) -> Lis
             continue
 
         # Spaceyard capability filter
-        if _should_exclude_by_spaceyard(ship, filter_state):
+        if _should_exclude_by_spaceyard(ship, filter_state, spaceyard_lookup):
             continue
 
         # Cargo filter (includes population)
@@ -258,7 +273,8 @@ def filter_ships(ships: List[ShipInstance], filter_state: Dict[str, Any]) -> Lis
 def sort_ships(
     ships: List[ShipInstance],
     sort_column: str,
-    descending: bool = False
+    descending: bool = False,
+    spaceyard_lookup: Optional[Mapping[str, bool]] = None,
 ) -> List[ShipInstance]:
     """
     Sort ships by the specified column.
@@ -267,6 +283,9 @@ def sort_ships(
         ships: List of ShipInstance objects
         sort_column: Column ID to sort by ('serial', 'design', 'name', 'hp_pct', 'status', etc.)
         descending: If True, sort in descending order
+        spaceyard_lookup: PROJ-475 — ``instance_id -> has_spaceyard`` map projected
+            by the facade. Used by the ``spaceyard`` sort key instead of importing
+            ``FleetCapabilityCalculator``.
 
     Returns:
         Sorted list of ships
@@ -298,9 +317,8 @@ def sort_ships(
         elif sort_column == 'warp':
             return 1 if has_warp_capability(ship) else 0
         elif sort_column == 'spaceyard':
-            # INTENTIONAL LATE IMPORT: Avoid circular import with strategy data
-            from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
-            return 1 if FleetCapabilityCalculator.ship_has_spaceyard(ship) else 0
+            # PROJ-475 Phase 2 Task 2.6: read from the facade-projected lookup.
+            return 1 if (spaceyard_lookup or {}).get(ship.instance_id, False) else 0
         elif sort_column == 'transport':
             return ship._cargo_mgr.get_cargo_capacity('passengers')
         elif sort_column == 'cargo':

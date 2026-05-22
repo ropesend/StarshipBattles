@@ -148,11 +148,16 @@ _IMPORT_ALLOWLIST: frozenset[tuple[str, str, str]] = frozenset({
     # empire_build_queue_window migrated onto facade.empires.(hex_)build_queues +
     # the enriched BuildQueueSourceDTO; their CLUSTER entries are removed so the
     # guard now enforces the boundary for those files.
-    ('game/ui/screens/strategy_detail_formatter.py', 'game.strategy.data.build_queue_source', 'colony_has_planetary_yard'),  # DEFERRED to PROJ-475: pure read helper (colony, registries)->bool; no live-ref leak, but no facade query exists yet. NOT migrated by PROJ-472 1B/1C.
+    # PROJ-475 Phase 2 Task 2.7 MIGRATED + REMOVED the CLUSTER
+    # colony_has_planetary_yard import for strategy_detail_formatter.py — the
+    # Build-Yard button gate now reads facade.planets.get(planet_id).has_build_yard
+    # (the slice resolves the planetary-yard bit with registries at projection time).
 
-    # --- FLEETCAP: FleetCapabilityCalculator late-imports; deferred to PROJ-475 ---
-    ('game/ui/screens/fleet_data_source.py', 'game.strategy.data.fleet_capability_calculator', 'FleetCapabilityCalculator'),
-    ('game/ui/screens/fleet_report_filters.py', 'game.strategy.data.fleet_capability_calculator', 'FleetCapabilityCalculator'),
+    # --- FLEETCAP: PROJ-475 Phase 2 Task 2.6 MIGRATED + REMOVED both
+    #     FleetCapabilityCalculator late-imports (fleet_data_source +
+    #     fleet_report_filters). The fleet report now consults the
+    #     facade-projected ``ShipInfo.has_spaceyard`` via an
+    #     ``instance_id -> has_spaceyard`` bridge held on the view-model. ---
 
     # --- TAIL: deferred ~75-file tail (PROJ-474/475/476); allowlisted-with-reason ---
     ('game/ui/panels/build_queue_controller.py', 'game.strategy.services.design_validator', 'DesignValidator'),
@@ -223,12 +228,16 @@ _IMPORT_ALLOWLIST: frozenset[tuple[str, str, str]] = frozenset({
     ('game/ui/screens/strategy_detail_formatter.py', 'game.strategy.services.planet_economy_projector', 'compute_planet_production'),
     ('game/ui/screens/strategy_event_router.py', 'game.strategy.systems.race_library', 'RaceLibrary'),
     ('game/ui/screens/strategy_fleet_command_router.py', 'game.strategy.services.component_abilities', 'extract_abilities_from_component'),
-    ('game/ui/screens/strategy_game_state_manager.py', 'game.strategy.systems.save_game_service', 'SaveGameService'),
+    # PROJ-475 Phase 2 Task 2.4 REMOVED the SaveGameService import entry for
+    # strategy_game_state_manager.py — auto-save now routes through
+    # facade.session_meta.save_current_game(); the UI no longer imports the service.
     ('game/ui/screens/strategy_render/cursor.py', 'game.strategy.services.cargo_transfer_service', 'project_fleet_position'),
     # Composition root: StrategyScreen rebuilds the facade from a concrete
     # GameSession in its test-swap setter. Transitional; deprecation is PROJ-475.
     ('game/ui/screens/strategy_screen.py', 'game.strategy.engine.game_session', 'GameSession'),
-    ('game/ui/screens/strategy_screen_lifecycle.py', 'game.strategy.systems.save_game_service', 'SaveGameService'),
+    # PROJ-475 Phase 2 Task 2.4 REMOVED the SaveGameService import entry for
+    # strategy_screen_lifecycle.py — manual save (on_save_game_click) now routes
+    # through facade.session_meta.save_current_game(); the late import is dropped.
     ('game/ui/screens/strategy_superweapons.py', 'game.strategy.services.galaxy_pathfinding_service', 'GalaxyPathfindingService'),
     ('game/ui/screens/strategy_windows/event_log_window_ctrl.py', 'game.strategy.services.replay_resolver', 'ReplayResolver'),
     ('game/ui/screens/strategy_windows/event_log_window_ctrl.py', 'game.strategy.systems.save_game_service', 'SaveGameService'),

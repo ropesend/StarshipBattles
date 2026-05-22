@@ -272,10 +272,17 @@ class StrategyDetailFormatter:
             view=view,
         )
 
-        # Show Build Yard button only if planet has PlanetaryYard or SpaceShipyard
+        # Show Build Yard button only if planet has PlanetaryYard or SpaceShipyard.
+        # PROJ-475 Phase 2 Task 2.7: read the facade-projected ``has_build_yard``
+        # off the PlanetInfo DTO (the slice resolves the planetary-yard bit with
+        # registries) instead of importing ``colony_has_planetary_yard`` here.
         if obj.owner_id == current_empire_id:
-            from game.strategy.data.build_queue_source import colony_has_planetary_yard
-            has_yard = colony_has_planetary_yard(obj, self.scene.registries) or obj.has_space_shipyard
+            has_yard = False
+            facade = getattr(self.scene, "facade", None)
+            if facade is not None:
+                info = facade.planets.get(obj.id)
+                if info is not None:
+                    has_yard = bool(info.has_build_yard)
             if has_yard:
                 self.btn_build_yard.show()
             if self.btn_planet_orders:

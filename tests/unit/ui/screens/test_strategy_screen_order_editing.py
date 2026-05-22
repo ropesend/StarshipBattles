@@ -14,6 +14,9 @@ def _make_screen():
     screen = MagicMock()
     screen.session = MagicMock()
     screen.session.active_empire = MagicMock(id=0)
+    # PROJ-475: BUG-125 gate reads screen.active_empire_id (off the
+    # direct .session read).
+    screen.active_empire_id = 0
     screen._edit_move_ghost_hex = None
     screen._edit_move_order_index = None
     screen._edit_move_fleet = None
@@ -94,7 +97,7 @@ class TestStartEditMove:
 
     def test_opponent_fleet_blocked(self):
         screen = _make_screen()
-        screen.session.active_empire = MagicMock(id=0)
+        screen.active_empire_id = 0
         fleet = _fleet(owner_id=1)  # different owner
         order = _order(OrderType.MOVE, HexCoord(2, 2))
         order_edit.start_edit_move(screen, fleet, 0, order)
@@ -116,7 +119,7 @@ class TestStartEditMove:
 
     def test_active_empire_none_allows_edit(self):
         screen = _make_screen()
-        screen.session.active_empire = None
+        screen.active_empire_id = None
         fleet = _fleet(owner_id=42)
         order = _order(OrderType.MOVE, HexCoord(0, 0))
         order_edit.start_edit_move(screen, fleet, 0, order)

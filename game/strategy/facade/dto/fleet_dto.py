@@ -43,6 +43,10 @@ class ShipInfo:
         ship_class: Ship class (e.g., "Frigate", "Cruiser")
         is_combat_capable: Whether the ship can participate in combat
         current_hp_percent: Current HP as percentage of max (0.0-1.0)
+        has_spaceyard: Whether this ship carries an operational space shipyard
+            (PROJ-475 Phase 1 Task 1.4 — projected from
+            ``FleetCapabilityCalculator.ship_has_spaceyard`` at projection time
+            so the fleet report never imports the calculator).
     """
 
     instance_id: str
@@ -51,6 +55,7 @@ class ShipInfo:
     ship_class: str
     is_combat_capable: bool
     current_hp_percent: float
+    has_spaceyard: bool = False
 
 
 @dataclass(frozen=True)
@@ -137,6 +142,7 @@ class FleetInfo:
                     ship_class=ship_class,
                     is_combat_capable=ship.is_combat_capable(),
                     current_hp_percent=hp_percent,
+                    has_spaceyard=cls._ship_has_spaceyard(ship),
                 )
             )
 
@@ -243,6 +249,26 @@ class FleetInfo:
             vehicle_bay_capacity_used=cls._sum_vehicle_bay_used(fleet),
             vehicle_bay_capacity_max=cls._sum_vehicle_bay_max(fleet),
         )
+
+    @staticmethod
+    def _ship_has_spaceyard(ship: 'Fleet') -> bool:
+        """PROJ-475 Phase 1 Task 1.4: per-ship spaceyard projection.
+
+        Calls ``FleetCapabilityCalculator.ship_has_spaceyard`` once per ship in
+        the facade layer so UI consumers (the fleet report) read the projected
+        ``ShipInfo.has_spaceyard`` instead of importing the calculator. Degrades
+        to ``False`` when the ship lacks a component registry (atypical test
+        fixtures) — mirroring the ``capabilities`` handling above.
+        """
+        from game.core.exceptions import ValidationException
+        from game.strategy.data.fleet_capability_calculator import (
+            FleetCapabilityCalculator,
+        )
+
+        try:
+            return bool(FleetCapabilityCalculator.ship_has_spaceyard(ship))
+        except (ValidationException, AttributeError):
+            return False
 
     @staticmethod
     def _aggregate_carried_vehicles_by_type(

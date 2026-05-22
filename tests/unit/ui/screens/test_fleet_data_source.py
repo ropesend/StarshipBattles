@@ -301,16 +301,6 @@ class TestFleetDataSourceCellValueYesNoColumns:
             "game.strategy.services.component_abilities.has_warp_capability",
             False, "No", id="warp-no",
         ),
-        pytest.param(
-            "spaceyard",
-            "game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard",
-            True, "Yes", id="spaceyard-yes",
-        ),
-        pytest.param(
-            "spaceyard",
-            "game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard",
-            False, "No", id="spaceyard-no",
-        ),
     ])
     def test_yes_no_column(self, col_id, patch_target, return_value, expected):
         """Yes/No-style capability columns return expected text for boolean source."""
@@ -319,6 +309,23 @@ class TestFleetDataSourceCellValueYesNoColumns:
 
         with patch(patch_target, return_value=return_value):
             assert ds.get_cell_value(0, col_id) == expected
+
+    @pytest.mark.parametrize("has_yard,expected", [(True, "Yes"), (False, "No")])
+    def test_spaceyard_column_reads_view_model_lookup(self, has_yard, expected):
+        """PROJ-475 Phase 2 Task 2.6: the spaceyard column reads the
+        facade-projected ``has_spaceyard`` from the view-model bridge, not
+        ``FleetCapabilityCalculator``."""
+        from game.ui.screens.fleet_data_source import FleetDataSource
+
+        ship = Mock()
+        ship.instance_id = "ship-1"
+        view_model = Mock()
+        view_model.get_filtered_ships = Mock(return_value=[ship])
+        view_model.has_spaceyard = Mock(return_value=has_yard)
+        ds = FleetDataSource(view_model)
+
+        assert ds.get_cell_value(0, "spaceyard") == expected
+        view_model.has_spaceyard.assert_called_once_with("ship-1")
 
 
 class TestFleetDataSourceCellValueTransport:

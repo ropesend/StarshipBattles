@@ -448,9 +448,8 @@ class Game:
     def _create_workshop_context(self, context_data: dict) -> Optional["WorkshopContext"]:
         """Create WorkshopContext from strategy scene context data."""
         empire = context_data.get('empire')
-        game_session = context_data.get('game_session')
 
-        if not empire or not game_session:
+        if not empire:
             return None
 
         from game.ui.screens.workshop_context import WorkshopContext
@@ -458,8 +457,11 @@ class Game:
         # Get empire tech (placeholder for now - will be implemented when tech tree exists)
         available_tech_ids: list[str] = []  # TODO: Replace with empire.available_tech or similar
 
-        # Get savegame path (may be None for new games - that's OK!)
-        savegame_path = game_session.save_path if hasattr(game_session, 'save_path') else None
+        # Get savegame path (may be None for new games - that's OK!).
+        # PROJ-475 Phase 2 Task 2.4: the strategy scene now hands a scalar
+        # ``save_path`` (from ``facade.session_meta.save_path()``) instead of the
+        # live ``game_session`` — the UI never holds the session for this.
+        savegame_path = context_data.get('save_path')
 
         # Get empire theme
         empire_theme_id = empire.empire_theme_id if hasattr(empire, 'empire_theme_id') else None

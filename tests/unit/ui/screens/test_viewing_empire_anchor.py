@@ -108,9 +108,10 @@ class TestWorkshopContextHonoursViewingEmpire:
             empire_theme_id="default",
             built_ship_designs=set(),
         )
-        captured["context_data"]["game_session"] = SimpleNamespace(
-            save_path="saves/divergence_test"
-        )
+        # PROJ-475 Phase 2 Task 2.4: the workshop context carries a scalar
+        # ``save_path`` (from facade.session_meta.save_path()), not a live
+        # ``game_session``.
+        captured["context_data"]["save_path"] = "saves/divergence_test"
 
         game = Game.__new__(Game)
         game.registries = MagicMock(name="GameRegistries")

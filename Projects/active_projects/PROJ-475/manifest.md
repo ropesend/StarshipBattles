@@ -15,7 +15,8 @@
 | `game/strategy/facade/dto/fleet_dto.py` (`ShipInfo`) | Production | 1 | `has_spaceyard` per-ship projection (`:127`) |
 | `game/ui/screens/fleet_data_source.py` | Production | 2 | `_format_spaceyard` reads `has_spaceyard` via bridge; remove FLEETCAP import + allowlist entry |
 | `game/ui/screens/fleet_report_filters.py` | Production | 2 | Filter + sort key via bridge; remove 2 FLEETCAP allowlist entries |
-| `game/ui/screens/fleet_report_view_model.py` | Production | 2 | Hold the `instance_id → has_spaceyard` bridge lookup (post-flesh B3) |
+| `game/ui/screens/fleet_report_view_model.py` | Production | 2 | Hold the `instance_id → has_spaceyard` bridge lookup (`set_spaceyard_lookup`/`has_spaceyard`); thread into `_refresh` |
+| `game/ui/screens/fleet_report_window.py` | Production | 2 | `_build_spaceyard_lookup` (reads `facade.fleets.get(fleet_id).ships`); pushes into view-model on init + refresh_list |
 | `game/ui/screens/strategy_detail_formatter.py` | Production | 2 | Use `has_build_yard`; remove CLUSTER `colony_has_planetary_yard` import + allowlist entry |
 | `game/ui/screens/strategy_event_router.py` | Production | 2 | `scene.session.get_empire(...).race_config` → `facade.empires.race_config`; remove 2 Category C allowlist entries |
 | `game/ui/screens/strategy_screen_selection.py` | Production | 2 | BUG-125 gate → `screen.active_empire_id`; remove Category C entry |
@@ -39,8 +40,26 @@
 | `game/strategy/facade/slices/command_dispatch_slice.py` | Production | 4 | same |
 | `tests/static_guards/test_facade_read_path_session_guard.py` | Test | 2,3,4 | Remove Category C/E allowlist entries as migrated; add pin that `facade_state.session` no longer resolves (Phase 4) |
 | `tests/static_guards/test_facade_read_path_imports_guard.py` | Test | 2 | Remove FLEETCAP (3) + CLUSTER (1) allowlist entries |
-| `tests/unit/strategy/facade/...` | Test | 1 | New tests for `race_config`, `save_current_game`, `has_build_yard`, `has_spaceyard` |
+| `tests/unit/strategy/facade/test_empire_race_config.py` | Test | 1 | NEW — race_config surface (3 cases) |
+| `tests/unit/strategy/facade/test_session_meta_save.py` | Test | 1 | NEW — save_current_game surface (2 cases) |
+| `tests/unit/strategy/facade/test_planet_has_build_yard.py` | Test | 1 | NEW — has_build_yard DTO field + slice resolution (5 cases) |
+| `tests/unit/strategy/facade/test_ship_has_spaceyard.py` | Test | 1 | NEW — has_spaceyard DTO field (3 cases) |
+| `game/strategy/facade/slices/planet_slice.py` | Production | 1 | `_project_planet` + `_resolve_has_planetary_yard` resolve build-yard bit with registries |
+| `tests/unit/strategy/facade/slices/test_planet_slice.py` | Test | 1 | Updated 2 `from_planet` stubs to accept `**kwargs` (signature gained `has_planetary_yard`) |
 | `tests/unit/ui/...` | Test | 2,3 | Reader-migration + pass-through-removal tests |
+| `tests/unit/ui/screens/test_strategy_event_router_race_config.py` | Test | 2 | NEW — Task 2.3 race-config via facade (2 cases) |
+| `tests/unit/ui/screens/test_fleet_report_spaceyard_bridge.py` | Test | 2 | NEW — Task 2.6 spaceyard bridge (filter/sort/vm/format/import-absence) |
+| `tests/unit/ui/screens/test_strategy_detail_formatter_build_yard.py` | Test | 2 | NEW — Task 2.7 Build-Yard gate via facade (3 cases) |
+| `tests/unit/ui/screens/test_strategy_screen_selection.py` | Test | 2 | Stub `screen.active_empire_id` for BUG-125 gate |
+| `tests/unit/ui/screens/test_strategy_screen_order_editing.py` | Test | 2 | Stub `screen.active_empire_id` for BUG-125 gate |
+| `tests/unit/ui/screens/test_transfer_controller.py` | Test | 2 | pod-discovery via `viewing_empire_id` + `get_design_catalog_for_empire` |
+| `tests/unit/ui/screens/test_strategy_game_state_manager.py` | Test | 2 | auto-save via `save_current_game()`; fixtures return save triple |
+| `tests/unit/ui/screens/test_strategy_screen_lifecycle.py` | Test | 2 | scalar `save_path` ctx; `on_save_game_click` via facade |
+| `tests/unit/test_app_create_workshop_context.py` | Test | 2 | gate empire-only; scalar `save_path` |
+| `tests/unit/ui/screens/test_viewing_empire_anchor.py` | Test | 2 | scalar `save_path` in workshop ctx |
+| `tests/unit/ui/screens/test_fleet_report_filters.py` | Test | 2 | spaceyard filter/sort via lookup; `make_mock_ship` sets `instance_id` |
+| `tests/unit/ui/screens/test_fleet_data_source.py` | Test | 2 | spaceyard column reads view-model lookup |
+| `tests/unit/ui/screens/strategy_windows/test_empire_panel_ctrl.py` | Test | 2 | stub `scene.registries` (was `scene.session.registries`) |
 | `tests/unit/strategy/engine/test_game_session_projection_boundary.py` | Test | 4 | Keep cache-boundary pin green |
 
 ## Conflict notes

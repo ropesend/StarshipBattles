@@ -21,7 +21,7 @@ def test_get_planets_at_hex_returns_only_exact_global_matches(monkeypatch) -> No
     monkeypatch.setattr(
         PlanetInfo,
         "from_planet",
-        staticmethod(lambda planet: f"planet-{planet.id}"),
+        staticmethod(lambda planet, **kwargs: f"planet-{planet.id}"),
     )
 
     result = PlanetSlice(state).get_planets_at_hex(HexCoord(12, 4))
@@ -45,7 +45,7 @@ def test_get_planets_at_hex_uses_radius_lookup_when_strict_lookup_misses(
     monkeypatch.setattr(
         PlanetInfo,
         "from_planet",
-        staticmethod(lambda planet: planet.id),
+        staticmethod(lambda planet, **kwargs: planet.id),
     )
 
     result = PlanetSlice(state).get_planets_at_hex(HexCoord(5, 4))

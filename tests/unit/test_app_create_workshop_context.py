@@ -30,25 +30,21 @@ def _make_bypass_init_game() -> Game:
 
 
 def test_create_workshop_context_returns_none_when_empire_missing() -> None:
-    """Method must short-circuit to None when context_data lacks an empire."""
+    """Method must short-circuit to None when context_data lacks an empire.
+
+    PROJ-475 Phase 2 Task 2.4: the gate is now empire-only; the live
+    ``game_session`` was replaced by a scalar ``save_path`` so the session is
+    no longer threaded through (or required) here.
+    """
     game = _make_bypass_init_game()
 
-    result = game._create_workshop_context({"game_session": MagicMock()})
-
-    assert result is None
-
-
-def test_create_workshop_context_returns_none_when_session_missing() -> None:
-    """Method must short-circuit to None when context_data lacks a game_session."""
-    game = _make_bypass_init_game()
-
-    result = game._create_workshop_context({"empire": MagicMock()})
+    result = game._create_workshop_context({"save_path": "saves/test_save"})
 
     assert result is None
 
 
 def test_create_workshop_context_builds_workshop_context_when_inputs_present() -> None:
-    """With a valid empire + game_session, method must return a WorkshopContext.
+    """With a valid empire + scalar save_path, method must return a WorkshopContext.
 
     This is the regression — pre-fix this raised
     `AttributeError: 'ScreenRouter' object has no attribute '_create_workshop_context'`.
@@ -62,29 +58,25 @@ def test_create_workshop_context_builds_workshop_context_when_inputs_present() -
         empire_theme_id="default",
         built_ship_designs={"design_a", "design_b"},
     )
-    game_session = SimpleNamespace(save_path="saves/test_save")
 
     result = game._create_workshop_context({
         "empire": empire,
-        "game_session": game_session,
+        "save_path": "saves/test_save",
     })
 
     assert isinstance(result, WorkshopContext)
     assert result.empire_id == 1
 
 
-def test_create_workshop_context_handles_session_without_save_path() -> None:
-    """`game_session.save_path` may be missing for new games — must not raise."""
+def test_create_workshop_context_handles_missing_save_path() -> None:
+    """``save_path`` may be absent for new games — must not raise (PROJ-475)."""
     from game.ui.screens.workshop_context import WorkshopContext
 
     game = _make_bypass_init_game()
 
     empire = SimpleNamespace(id=2, empire_theme_id=None, built_ship_designs=set())
-    game_session = SimpleNamespace()  # no save_path attribute
 
-    result = game._create_workshop_context({
-        "empire": empire,
-        "game_session": game_session,
-    })
+    # No save_path key at all (new game, never saved).
+    result = game._create_workshop_context({"empire": empire})
 
     assert isinstance(result, WorkshopContext)

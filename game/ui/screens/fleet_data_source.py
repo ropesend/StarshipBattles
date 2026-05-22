@@ -236,13 +236,13 @@ class FleetDataSource(ITableDataSource):
         return "Yes" if has_warp_capability(ship) else "No"
 
     def _format_spaceyard(self, ship: "ShipInstance") -> str:
-        """Format spaceyard capability for display."""
-        # INTENTIONAL LATE IMPORT: Avoid circular import
-        from game.strategy.data.fleet_capability_calculator import (
-            FleetCapabilityCalculator,
-        )
+        """Format spaceyard capability for display.
 
-        return "Yes" if FleetCapabilityCalculator.ship_has_spaceyard(ship) else "No"
+        PROJ-475 Phase 2 Task 2.6: reads the facade-projected
+        ``has_spaceyard`` from the view-model's bridge lookup instead of
+        importing ``FleetCapabilityCalculator`` into the UI.
+        """
+        return "Yes" if self._view_model.has_spaceyard(ship.instance_id) else "No"
 
     def _format_transport(self, ship: "ShipInstance") -> str:
         """Format passenger transport capacity for display."""

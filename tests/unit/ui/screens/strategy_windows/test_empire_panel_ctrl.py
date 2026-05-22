@@ -7,9 +7,11 @@ from game.ui.screens.strategy_windows import empire_panel_ctrl
 
 
 def _composer(*, facade: object | None = None) -> SimpleNamespace:
+    # PROJ-475 Phase 2 Task 2.1: empire_panel_ctrl now reads ``scene.registries``
+    # (the facade-fed accessor), not ``scene.session.registries``.
     scene = SimpleNamespace(
         current_empire=MagicMock(name="empire"),
-        session=SimpleNamespace(registries=MagicMock(name="registries")),
+        registries=MagicMock(name="registries"),
         facade=facade,
     )
     return SimpleNamespace(
@@ -40,7 +42,7 @@ def test_empire_panel_open_passes_registries_and_race_registry() -> None:
     assert window_cls.call_args.args[2] is composer.scene.current_empire
     assert window_cls.call_args.kwargs["window_manager"] is composer
     assert window_cls.call_args.kwargs["on_close_callback"] == registrar._on_closed
-    assert window_cls.call_args.kwargs["registries"] is composer.scene.session.registries
+    assert window_cls.call_args.kwargs["registries"] is composer.scene.registries
     assert window_cls.call_args.kwargs["race_registry"] is race_registry
     assert composer.empire_panel_window is window_cls.return_value
 

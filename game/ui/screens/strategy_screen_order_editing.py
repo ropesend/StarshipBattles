@@ -39,8 +39,9 @@ def start_edit_move(screen: "StrategyScreen", fleet, order_index, order) -> None
 
     # BUG-125: gate against active empire — opponent fleets are
     # informational only (read-only via on_ui_selection's gate).
-    active = screen.session.active_empire
-    if active is not None and fleet.owner_id != active.id:
+    # PROJ-475: id-compare via the scene's active_empire_id accessor.
+    active_id = screen.active_empire_id
+    if active_id is not None and fleet.owner_id != active_id:
         return
 
     screen._edit_move_ghost_hex = old_hex

@@ -217,18 +217,10 @@ class StrategyEventRouter:
         ui = self.ui
         scene = ui.scene
 
-        # Get race config for species ideal button
+        # Get race config for species ideal button (PROJ-475: via facade)
         race_config = None
         try:
-            empire = scene.session.get_empire(planet.owner_id)
-            if empire and hasattr(empire, 'race_config'):
-                race_config = empire.race_config
-            elif empire:
-                from game.strategy.systems.race_library import RaceLibrary
-                race_lib = RaceLibrary()
-                race_id = getattr(empire, 'race_id', None)
-                if race_id:
-                    race_config = race_lib.get_race(race_id)
+            race_config = scene.facade.empires.race_config(planet.owner_id)
         except Exception:  # Intentional broad catch: empire/race lookup may fail on save drift or library load errors; editor opens without race-specific UI
             pass
 
@@ -361,19 +353,11 @@ class StrategyEventRouter:
         )
 
     def _get_race_config(self, planet) -> Any:
-        """Get the race config for the planet's owning empire."""
+        """Get the race config for the planet's owning empire (PROJ-475: via facade)."""
         ui = self.ui
         scene = ui.scene
         try:
-            empire = scene.session.get_empire(planet.owner_id)
-            if empire and hasattr(empire, 'race_config'):
-                return empire.race_config
-            elif empire:
-                from game.strategy.systems.race_library import RaceLibrary
-                race_lib = RaceLibrary()
-                race_id = getattr(empire, 'race_id', None)
-                if race_id:
-                    return race_lib.get_race(race_id)
+            return scene.facade.empires.race_config(planet.owner_id)
         except Exception:  # Intentional broad catch: empire/race lookup may fail on save drift or library load errors; caller falls back to None
             pass
         return None

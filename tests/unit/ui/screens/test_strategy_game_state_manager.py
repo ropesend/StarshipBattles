@@ -15,6 +15,13 @@ def _make_game_state_manager():
     mock_screen = MagicMock()
     mock_screen.session = MagicMock()
     mock_screen._facade = MagicMock()
+    # PROJ-475 Phase 2 Task 2.4: auto-save routes through
+    # facade.session_meta.save_current_game() (returns the
+    # (success, message, save_path) triple). Concrete triple so the unpack in
+    # process_full_turn succeeds.
+    mock_screen._facade.session_meta.save_current_game.return_value = (
+        True, "Saved", "/tmp/save.json"
+    )
     mock_screen.ui = MagicMock()
     mock_screen.ui.manager = MagicMock()
     mock_screen.ui.width = 1920
@@ -189,17 +196,23 @@ class TestProcessFullTurnLegacy:
         screen.ui.open_event_log_with_events.assert_not_called()
 
     def test_auto_saves_when_save_path_exists(self):
-        """process_full_turn() should auto-save when session has save_path."""
+        """process_full_turn() should auto-save when the session has a save_path.
+
+        PROJ-475 Phase 2 Task 2.4: auto-save now routes through
+        ``facade.session_meta.save_current_game()`` (the facade owns the
+        session) rather than ``SaveGameService.save_game(screen.session)``.
+        """
         manager, screen = _make_game_state_manager()
-        screen.session.save_path = "/test/save.json"
+        screen._facade.session_meta.save_path.return_value = "/test/save.json"
+        screen._facade.session_meta.save_current_game.return_value = (
+            True, "Saved", "/test/save.json"
+        )
         screen._facade.events.turn_events.return_value = []
 
-        with patch('pygame.display.get_surface', return_value=None), \
-             patch('game.strategy.systems.save_game_service.SaveGameService') as MockSGS:
-            MockSGS.save_game.return_value = (True, "Saved", "/test/save.json")
+        with patch('pygame.display.get_surface', return_value=None):
             manager.process_full_turn()
 
-        MockSGS.save_game.assert_called_once_with(screen.session)
+        screen._facade.session_meta.save_current_game.assert_called_once_with()
 
     def test_does_not_refresh_selected_object_directly(self):
         """process_full_turn() must NOT touch ``selected_object`` itself.
@@ -252,8 +265,7 @@ class TestProcessFullTurnErrorBoundary:
         screen._facade.process_turn.side_effect = err
 
         with patch("pygame.display.get_surface", return_value=None), \
-             patch.object(manager, "_show_turn_failed_dialog") as mock_dialog, \
-             patch("game.strategy.systems.save_game_service.SaveGameService") as MockSGS:
+             patch.object(manager, "_show_turn_failed_dialog") as mock_dialog:
             manager.process_full_turn()
 
         # Dialog opened with the error.
@@ -264,7 +276,8 @@ class TestProcessFullTurnErrorBoundary:
         # turn_processing flag cleared.
         assert screen.turn_processing is False
         # Autosave SKIPPED (rollback already happened in TurnEngine).
-        MockSGS.save_game.assert_not_called()
+        # PROJ-475: autosave routes through facade.session_meta.save_current_game().
+        screen._facade.session_meta.save_current_game.assert_not_called()
         # Event-log popup SKIPPED.
         screen.ui.open_event_log_with_events.assert_not_called()
 
@@ -829,6 +842,11 @@ def _make_n_player_state_manager(n_players: int):
     mock_screen = MagicMock()
     mock_screen.session = MagicMock()
     mock_screen._facade = MagicMock()
+    # PROJ-475 Phase 2 Task 2.4: auto-save routes through
+    # facade.session_meta.save_current_game(); concrete triple for the unpack.
+    mock_screen._facade.session_meta.save_current_game.return_value = (
+        True, "Saved", "/tmp/save.json"
+    )
     mock_screen.ui = MagicMock()
     mock_screen.ui.manager = MagicMock()
     mock_screen.ui.width = 1920

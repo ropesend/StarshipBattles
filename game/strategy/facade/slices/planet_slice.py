@@ -54,7 +54,35 @@ class PlanetSlice:
         planet = self._state.get_planet_by_id(planet_id)
         if planet is None:
             return None
-        return PlanetInfo.from_planet(planet)
+        return self._project_planet(planet)
+
+    def _project_planet(self, planet: "Planet") -> PlanetInfo:
+        """Project a domain ``Planet`` to a ``PlanetInfo``.
+
+        PROJ-475 Phase 1 Task 1.3: resolves the planetary-yard bit here, where
+        ``registries`` is reachable, and passes it to the DTO. The DTO ORs it
+        with ``has_space_shipyard`` for ``has_build_yard``.
+        """
+        return PlanetInfo.from_planet(
+            planet, has_planetary_yard=self._resolve_has_planetary_yard(planet)
+        )
+
+    def _resolve_has_planetary_yard(self, planet: "Planet") -> bool:
+        """True iff the colony has an operational planetary yard.
+
+        Resolved against the session's component registries (which the frozen
+        DTO cannot reach). Degrades to ``False`` for fixtures without
+        ``facilities`` / ``registries``.
+        """
+        from game.strategy.data.build_queue_source import colony_has_planetary_yard
+
+        registries = getattr(self._state.session, "registries", None)
+        try:
+            return bool(colony_has_planetary_yard(planet, registries))
+        except (AttributeError, TypeError):
+            # Test/bootstrap stubs whose ``facilities`` is missing or not a
+            # real iterable (e.g. a bare ``Mock``); treat as no planetary yard.
+            return False
 
     def get_planets_at_hex(self, hex_coord: HexCoord) -> List[PlanetInfo]:
         """Get planets whose global position exactly matches the given hex coordinate.
@@ -86,7 +114,7 @@ class PlanetSlice:
             if p_global == hex_coord:
                 target_planets.append(p)
 
-        return [PlanetInfo.from_planet(planet) for planet in target_planets]
+        return [self._project_planet(planet) for planet in target_planets]
 
     # ------------------------------------------------------------------
     # Container snapshots (PROJ-437 Phase 1a)

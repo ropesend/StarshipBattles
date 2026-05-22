@@ -51,6 +51,23 @@ class EmpireSlice:
             return None
         return EmpireInfo.from_empire(empire)
 
+    def get_empire_race_config(self, empire_id: int) -> object | None:
+        """Return the owning empire's live ``RaceConfig`` (or ``None``).
+
+        PROJ-475 Phase 1 Task 1.1: ``EmpireInfo`` carries no race identity, so
+        ``strategy_event_router`` needs the empire's ``race_config`` to seed the
+        species-ideal button. Returns the raw ``RaceConfig`` (an immutable
+        race-definition value object — decisions.md B12), or ``None`` when the
+        empire is unknown or has no race config. The ``RaceLibrary`` fallback
+        that the UI does today (when ``race_config`` is absent but a ``race_id``
+        exists) stays in the caller — this surface returns only what the empire
+        owns directly.
+        """
+        empire = self._state.get_empire_by_id(empire_id)
+        if empire is None:
+            return None
+        return getattr(empire, "race_config", None)
+
     def get_empire_colonies(self, empire_id: int) -> List[ColonySummary]:
         """Get colony summaries for an empire."""
         empire = self._state.get_empire_by_id(empire_id)

@@ -151,22 +151,20 @@ class TransferController:
         """Discover all pod-type design names from the per-empire catalog.
 
         PROJ-427 Phase 6: was ``DesignLibrary.filter_designs(...)``; now
-        reads through ``session.services.design_catalogs_by_empire[empire_id]``.
-        Returns a sorted list of design names with
-        ``vehicle_type=='Drop Pod'``. Falls back to ``[]`` on any error
-        so the dialog still opens.
+        reads the per-empire ``DesignCatalog``. PROJ-475: routed through
+        ``facade.facade_state.get_design_catalog_for_empire`` anchored on
+        ``viewing_empire_id`` (the canonical "whose data" anchor — decisions.md),
+        off the direct ``scene.session`` read. Returns a sorted list of design
+        names with ``vehicle_type=='Drop Pod'``. Falls back to ``[]`` on any
+        error so the dialog still opens.
         """
         try:
-            session = scene.session
-            empire = getattr(session, "active_empire", None)
-            empire_id = empire.id if empire else 0
-            services = getattr(session, "services", None)
-            catalogs = (
-                getattr(services, "design_catalogs_by_empire", None) or {}
-                if services is not None
-                else {}
+            empire_id = scene.viewing_empire_id
+            if empire_id is None:
+                empire_id = 0
+            catalog = scene.facade.facade_state.get_design_catalog_for_empire(
+                empire_id
             )
-            catalog = catalogs.get(empire_id)
             if catalog is None:
                 return []
             pod_designs = [

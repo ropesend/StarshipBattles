@@ -13,29 +13,33 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. New facade read surfaces (race-config, save, colony-yard, per-ship spaceyard) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Migrate the explicit `.session` reader tail onto facade (remove guard allowlist entries) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. New facade read surfaces (race-config, save, colony-yard, per-ship spaceyard) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Migrate the explicit `.session` reader tail onto facade (remove guard allowlist entries) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Retire the three narrow READ pass-throughs (`enemy_empire` / `human_player_ids` / `active_empire`) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Privatize `FacadeSessionState.session` (rename → `_session`, slice-internal accessor; `_facade_state` + 7 slices) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-22
-**Active Phase:** Planned (execution-ready), pre-flesh + post-flesh Codex consults complete.
-**Last Action:** Fleshed to execution-ready. Pre-flesh consult
-(`AgentCoordination/Scratchpad/Consult/proj475_preflesh/advice.md`) confirmed the
-key finding: the `.session`-guard-allowlisted readers are a SMALL tail, but the
-`StrategyScreen` `galaxy`/`empires`/`systems` pass-throughs are a BROAD raw-domain
-UI bus (renderer re-exporters, render-hot per-frame traversal, context menus,
-list windows, build-queue windows) that the current guards do NOT measure.
-**SCOPE CAPPED** here to the honest, contained first slice (the `.session` tail +
-the three narrow pass-throughs + `FacadeSessionState.session` privatization);
-`galaxy`/`empires`/`systems` deletion + render/read-model boundary deferred to a
-new stub (see Capping below).
-**Next Action:** Phase 1 — add the four new facade read surfaces (TDD). Then
-Phase 2 migrates the readers, Phase 3 retires the narrow pass-throughs, Phase 4
-privatizes `FacadeSessionState.session`.
-**Blockers:** **GATED on PROJ-472** (COMPLETE — both guards landed, suite green).
-Unblocked.
+**Active Phase:** Phase 3 (next). Phases 1 + 2 COMPLETE and validated.
+**Last Action:** Executed Phases 1 + 2.
+- **Phase 1** added the four facade read surfaces: `facade.empires.race_config(empire_id)`
+  (raw `RaceConfig`), `facade.session_meta.save_current_game(save_name=None)`,
+  `PlanetInfo.has_build_yard` (slice resolves planetary-yard with registries, ORed
+  with `has_space_shipyard`), `ShipInfo.has_spaceyard` (calc at projection time).
+- **Phase 2** migrated all 7 reader sites + removed their allowlist entries:
+  empire_panel_ctrl registries DI; both BUG-125 gates → `screen.active_empire_id`;
+  event_router race-config → facade; the three save seams (auto + manual + on_design_click
+  scalar save_path handoff via app.py) → `facade.session_meta.save_current_game()`;
+  transfer_controller → `facade.facade_state.get_design_catalog_for_empire(viewing_empire_id)`;
+  the fleet-report spaceyard bridge (view-model holds `instance_id→has_spaceyard`);
+  the colony Build-Yard gate → `facade.planets.get(id).has_build_yard`.
+- Allowlists tightened: 4 Category C + 3 Category E session entries, 2 FLEETCAP +
+  1 CLUSTER import entries, 2 SaveGameService TAIL import entries — all REMOVED.
+  Both read-path guards GREEN. Full sharded suite GREEN.
+**Next Action:** Phase 3 — retire the three NARROW READ pass-throughs
+(`enemy_empire` DELETE; `human_player_ids` → `facade.session_meta.human_player_ids()`;
+`active_empire` DELETE + rewire `active_empire_id`/`current_empire` to `_session`).
+**Blockers:** None. (PROJ-472 gate satisfied.)
 
 ## Overview
 Follow-on from **PROJ-472**, which tightened but did NOT close the strategy facade

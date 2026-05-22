@@ -219,6 +219,10 @@ class FleetReportWindow(StrategyModalWindow):
             return
 
         (ui_builder or FleetReportLayoutBuilder()).build(self)
+        # PROJ-475 Phase 2 Task 2.6: seed the facade-projected spaceyard map so
+        # the first render's column / filter / sort have it (refresh_list, which
+        # also refreshes it, runs on every subsequent open/reuse).
+        self.view_model.set_spaceyard_lookup(self._build_spaceyard_lookup())
         # Issue #28 iteration 2: capture the pristine snapshot now that
         # ``column_manager`` and the view model are wired.
         self._default_view_state = self.capture_view_state()
@@ -232,10 +236,35 @@ class FleetReportWindow(StrategyModalWindow):
             self.virtual_table.rebuild_row_pool()
             self.refresh_list()
 
+    def _build_spaceyard_lookup(self) -> dict:
+        """Build the facade-projected ``instance_id -> has_spaceyard`` map.
+
+        PROJ-475 Phase 2 Task 2.6: the report runs on raw ``ShipInstance``
+        lists, so it consults ``ShipInfo.has_spaceyard`` (projected by
+        ``facade.fleets.get(fleet_id)``) instead of importing
+        ``FleetCapabilityCalculator``. Degrades to an empty map (every ship
+        reads as no-spaceyard) when the facade is unreachable — e.g. bypassed
+        test windows or a window opened outside the strategy scene.
+        """
+        wm = getattr(self, "_window_manager", None)
+        scene = getattr(wm, "scene", None) if wm is not None else None
+        facade = getattr(scene, "facade", None) if scene is not None else None
+        if facade is None:
+            return {}
+        try:
+            info = facade.fleets.get(self.fleet.id)
+        except Exception:  # Intentional broad catch: a projection failure must not break the report window.
+            return {}
+        if info is None:
+            return {}
+        return {ship.instance_id: ship.has_spaceyard for ship in info.ships}
+
     def refresh_list(self) -> None:
         """Refresh the ship list with current fleet data."""
         # Update view model with current fleet ships
         self.view_model.update_ships(self.fleet.ships)
+        # PROJ-475 Phase 2 Task 2.6: refresh the facade-projected spaceyard map.
+        self.view_model.set_spaceyard_lookup(self._build_spaceyard_lookup())
 
         # Update sidebar summary
         self.sidebar.update_summary(self.fleet)

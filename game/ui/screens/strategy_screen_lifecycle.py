@@ -46,9 +46,12 @@ def on_design_click(screen: "StrategyScreen") -> None:
     # reads from and the new design appears stale after a save. See
     # ``feedback_viewing_empire_anchor`` for the related
     # current_empire-vs-active_empire anchoring rule.
+    # PROJ-475 Phase 2 Task 2.4: hand the workshop a scalar ``save_path``
+    # (read via the facade) instead of the live ``game_session`` — the app
+    # only reads ``.save_path`` off it, so the UI never threads the session.
     context_data = {
         "empire": screen.current_empire,
-        "game_session": screen.session,
+        "save_path": screen.facade.session_meta.save_path(),
         "facade": screen.facade,
     }
 
@@ -147,12 +150,13 @@ def show_coming_soon(screen: "StrategyScreen", feature_name: str) -> None:
 
 def on_save_game_click(screen: "StrategyScreen") -> None:
     """Handle 'Save Game' button click."""
-    from game.strategy.systems.save_game_service import SaveGameService
     import pygame_gui.windows
 
     logger.info("Saving game...")
 
-    success, message, _save_path = SaveGameService.save_game(screen.session)
+    # PROJ-475 Phase 2 Task 2.4: save via the facade (it owns the session and
+    # calls SaveGameService internally) — the UI no longer imports the service.
+    success, message, _save_path = screen.facade.session_meta.save_current_game()
 
     dialog_rect = pygame.Rect(0, 0, UIConfig.CONFIRM_DIALOG_WIDTH, UIConfig.CONFIRM_DIALOG_HEIGHT)
     dialog_rect.center = (screen.screen_width // 2, screen.screen_height // 2)

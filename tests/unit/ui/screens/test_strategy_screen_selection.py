@@ -18,6 +18,8 @@ def _make_screen():
     screen.current_player_index = 0
     screen.session = MagicMock()
     screen.session.active_empire = MagicMock(id=0)
+    # PROJ-475: BUG-125 gate reads screen.active_empire_id.
+    screen.active_empire_id = 0
     screen.ui = MagicMock()
     screen.ui.window_manager = MagicMock()
     screen.ui.window_manager.transfer_dialog = None
@@ -154,14 +156,14 @@ class TestOnColonizePlanetSelected:
 class TestRequestColonizeOrder:
     def test_opponent_fleet_is_blocked(self):
         screen = _make_screen()
-        screen.session.active_empire = MagicMock(id=0)
+        screen.active_empire_id = 0
         fleet = MagicMock(owner_id=99)
         selection.request_colonize_order(screen, fleet)
         screen._colonization.request_colonize_order.assert_not_called()
 
     def test_active_empire_none_allows(self):
         screen = _make_screen()
-        screen.session.active_empire = None
+        screen.active_empire_id = None
         fleet = MagicMock(owner_id=42)
         screen._colonization.request_colonize_order.return_value = {"type": "success"}
         selection.request_colonize_order(screen, fleet)

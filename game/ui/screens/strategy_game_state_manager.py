@@ -315,8 +315,6 @@ class StrategyGameStateManager:
             run_n_turns (FEAT-20) to aggregate events across the loop. The
             return value is ignored by the single-turn `advance_turn` path.
         """
-        from game.strategy.systems.save_game_service import SaveGameService
-
         self._screen.turn_processing = True
         logger.info("Processing Turn...")
 
@@ -393,8 +391,10 @@ class StrategyGameStateManager:
 
         # Auto-save after turn processing
         # PROJ-208: Use facade.session_meta.save_path() instead of session.save_path
+        # PROJ-475 Phase 2 Task 2.4: save via facade.session_meta.save_current_game()
+        # (facade owns the session) — the UI no longer imports SaveGameService.
         if self._screen._facade.session_meta.save_path():
-            success, message, _ = SaveGameService.save_game(self._screen.session)
+            success, message, _ = self._screen._facade.session_meta.save_current_game()
             if success:
                 logger.info(f"Auto-saved: {message}")
             else:

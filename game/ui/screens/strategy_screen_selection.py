@@ -89,9 +89,10 @@ def on_colonize_planet_selected(screen: "StrategyScreen", planet) -> None:
 def request_colonize_order(screen: "StrategyScreen", fleet, planet=None) -> None:
     """Handle colonize request from UI."""
     # BUG-125: gate against active empire — never select an opponent's
-    # fleet for command issuance.
-    active = screen.session.active_empire
-    if active is not None and fleet.owner_id != active.id:
+    # fleet for command issuance. PROJ-475: id-compare via the scene's
+    # active_empire_id accessor (off the direct .session read).
+    active_id = screen.active_empire_id
+    if active_id is not None and fleet.owner_id != active_id:
         return
     screen.selected_fleet = fleet
     result = screen._colonization.request_colonize_order(fleet, planet)

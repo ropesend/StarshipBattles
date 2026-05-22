@@ -41,7 +41,14 @@ class TestOnDesignClick:
         # ``session.active_empire`` (turn-acting empire). The dedicated
         # regression suite lives in ``test_viewing_empire_anchor.py``.
         assert kwargs["context_data"]["empire"] is screen.current_empire
-        assert kwargs["context_data"]["game_session"] is screen.session
+        # PROJ-475 Phase 2 Task 2.4: the workshop context now carries a scalar
+        # ``save_path`` (from facade.session_meta.save_path()), not the live
+        # ``game_session``.
+        assert (
+            kwargs["context_data"]["save_path"]
+            is screen.facade.session_meta.save_path.return_value
+        )
+        assert "game_session" not in kwargs["context_data"]
 
     def test_no_callback_no_call(self):
         screen = _make_screen()
@@ -146,13 +153,19 @@ class TestComingSoon:
 
 
 class TestSaveGameClick:
+    """PROJ-475 Phase 2 Task 2.4: manual save routes through
+    ``screen.facade.session_meta.save_current_game()`` (the facade owns the
+    session and calls SaveGameService internally) — the UI no longer imports
+    or calls SaveGameService directly."""
+
     def test_save_success_shows_success_dialog(self):
         screen = _make_screen()
-        with patch(
-            "game.strategy.systems.save_game_service.SaveGameService.save_game",
-            return_value=(True, "Saved to slot 1", "/p"),
-        ), patch("pygame_gui.windows.UIMessageWindow") as mock_win:
+        screen.facade.session_meta.save_current_game.return_value = (
+            True, "Saved to slot 1", "/p"
+        )
+        with patch("pygame_gui.windows.UIMessageWindow") as mock_win:
             lifecycle.on_save_game_click(screen)
+            screen.facade.session_meta.save_current_game.assert_called_once_with()
             mock_win.assert_called_once()
             kwargs = mock_win.call_args.kwargs
             assert "Successfully" in kwargs["html_message"]
@@ -160,10 +173,10 @@ class TestSaveGameClick:
 
     def test_save_failure_shows_error_dialog(self):
         screen = _make_screen()
-        with patch(
-            "game.strategy.systems.save_game_service.SaveGameService.save_game",
-            return_value=(False, "Disk full", None),
-        ), patch("pygame_gui.windows.UIMessageWindow") as mock_win:
+        screen.facade.session_meta.save_current_game.return_value = (
+            False, "Disk full", None
+        )
+        with patch("pygame_gui.windows.UIMessageWindow") as mock_win:
             lifecycle.on_save_game_click(screen)
             mock_win.assert_called_once()
             kwargs = mock_win.call_args.kwargs

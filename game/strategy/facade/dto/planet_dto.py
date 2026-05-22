@@ -82,6 +82,11 @@ class PlanetInfo:
     owner_id: Optional[int] = None
     is_colonized: bool = False
     has_space_shipyard: bool = False
+    # PROJ-475 Phase 1 Task 1.3: True when the colony has a planetary yard
+    # (registry-resolved at slice projection time) OR a space shipyard. Gates
+    # the strategy detail-formatter Build-Yard button without the UI importing
+    # ``colony_has_planetary_yard``.
+    has_build_yard: bool = False
     total_population: int = 0
     max_population: int = 0
     population_details: Tuple[Tuple[str, int, float], ...] = field(default_factory=tuple)
@@ -96,11 +101,18 @@ class PlanetInfo:
     staging_yard_summary: Tuple[Tuple[str, str, float, int], ...] = field(default_factory=tuple)
 
     @classmethod
-    def from_planet(cls, planet: 'Planet') -> 'PlanetInfo':
+    def from_planet(
+        cls, planet: 'Planet', *, has_planetary_yard: bool = False
+    ) -> 'PlanetInfo':
         """Create a PlanetInfo DTO from a Planet domain object.
 
         Args:
             planet: The Planet domain object to convert
+            has_planetary_yard: PROJ-475 — whether the colony has an
+                operational planetary yard. Resolved by the slice (which has
+                ``registries``) since ``colony_has_planetary_yard`` needs the
+                component registry the DTO cannot reach. ORed with
+                ``has_space_shipyard`` to produce ``has_build_yard``.
 
         Returns:
             An immutable PlanetInfo DTO
@@ -154,6 +166,7 @@ class PlanetInfo:
             owner_id=planet.owner_id,
             is_colonized=planet.owner_id is not None,
             has_space_shipyard=planet.has_space_shipyard,
+            has_build_yard=bool(has_planetary_yard) or bool(planet.has_space_shipyard),
             total_population=planet.total_population,
             max_population=planet.max_population,
             population_details=pop_details,

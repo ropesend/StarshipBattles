@@ -59,7 +59,7 @@ class EmpirePanelRegistrar:
             empire,
             window_manager=c,
             on_close_callback=self._on_closed,
-            registries=c.scene.session.registries,  # PROJ-211: Pass registries for DI
+            registries=c.scene.registries,  # PROJ-211 DI; PROJ-475: via facade.session_meta.registries()
             race_registry=race_registry,
             facade_state=facade_state,
         )

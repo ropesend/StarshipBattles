@@ -64,11 +64,25 @@ def test_collect_sources_checks_projected_position_when_primary_hex_has_no_plane
     assert facade.planets.at_hex.call_args_list[1].args == ((9, 9),)
 
 
+def _scene_with_catalog(viewing_empire_id, catalog) -> SimpleNamespace:
+    """PROJ-475: discover_pod_designs reads the per-empire catalog through
+    ``scene.facade.facade_state.get_design_catalog_for_empire(viewing_empire_id)``."""
+    facade_state = SimpleNamespace(
+        get_design_catalog_for_empire=lambda eid: (
+            catalog if eid == viewing_empire_id else None
+        )
+    )
+    return SimpleNamespace(
+        viewing_empire_id=viewing_empire_id,
+        facade=SimpleNamespace(facade_state=facade_state),
+    )
+
+
 def test_discover_pod_designs_returns_sorted_unique_drop_pod_names(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """PROJ-427 Phase 6: discover_pod_designs now reads through the per-empire
-    DesignCatalog on session.services, not via DesignLibrary."""
+    """PROJ-475 Phase 2 Task 2.5: discover_pod_designs reads the per-empire
+    DesignCatalog via facade.facade_state, anchored on viewing_empire_id."""
     controller, _facade, _view_model = _controller()
 
     catalog = SimpleNamespace(
@@ -79,14 +93,7 @@ def test_discover_pod_designs_returns_sorted_unique_drop_pod_names(
             SimpleNamespace(name="Ignore Me", vehicle_type="Fighter"),
         ]
     )
-    services = SimpleNamespace(design_catalogs_by_empire={4: catalog})
-    scene = SimpleNamespace(
-        session=SimpleNamespace(
-            save_path="save-a",
-            active_empire=SimpleNamespace(id=4),
-            services=services,
-        )
-    )
+    scene = _scene_with_catalog(4, catalog)
 
     assert controller.discover_pod_designs(scene) == ["Alpha Pod", "Zulu Pod"]
 
@@ -94,18 +101,12 @@ def test_discover_pod_designs_returns_sorted_unique_drop_pod_names(
 def test_discover_pod_designs_falls_back_to_empty_list_when_no_catalog(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """PROJ-427 Phase 6: if no catalog is registered for the active empire,
-    discover_pod_designs returns []. Same defensive behavior as the legacy
-    DesignLibrary-error path."""
+    """PROJ-475: if no catalog is registered for the viewing empire,
+    discover_pod_designs returns []. Same defensive behavior as before."""
     controller, _facade, _view_model = _controller()
-    services = SimpleNamespace(design_catalogs_by_empire={})
-    scene = SimpleNamespace(
-        session=SimpleNamespace(
-            save_path="save-a",
-            active_empire=None,
-            services=services,
-        )
-    )
+    # No catalog wired for empire 4: get_design_catalog_for_empire returns None.
+    scene = _scene_with_catalog(99, SimpleNamespace(list_designs=lambda: []))
+    scene.viewing_empire_id = 4
 
     assert controller.discover_pod_designs(scene) == []
 

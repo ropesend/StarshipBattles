@@ -28,6 +28,10 @@ def make_mock_ship(
     ship.serial = serial
     ship.design_id = design_name.lower().replace(" ", "_")
     ship.name = design_name
+    # PROJ-475 Phase 2 Task 2.6: the spaceyard filter / sort key the
+    # facade-projected lookup by ``instance_id``; ``ShipInstance`` sets it in
+    # ``__init__`` so it is not on the class spec — set it explicitly here.
+    ship.instance_id = f"{ship.design_id}-{id(ship)}"
     ship.is_alive = is_alive
     ship.is_derelict = is_derelict
     ship.is_damaged.return_value = is_damaged
@@ -557,21 +561,23 @@ class TestSortShipsNewColumns:
         assert result[0].name == "HasWarp"
 
     def test_sort_by_spaceyard(self):
-        """Sort by spaceyard capability."""
+        """Sort by spaceyard capability.
+
+        PROJ-475 Phase 2 Task 2.6: spaceyard truth comes from the
+        facade-projected ``instance_id -> has_spaceyard`` lookup, not
+        ``FleetCapabilityCalculator``.
+        """
         from game.ui.screens.fleet_report_filters import sort_ships
-        from unittest.mock import patch
 
-        ships = [
-            make_mock_ship(design_name="NoYard"),
-            make_mock_ship(design_name="HasYard"),
-        ]
+        no_yard = make_mock_ship(design_name="NoYard")
+        has_yard = make_mock_ship(design_name="HasYard")
+        ships = [no_yard, has_yard]
+        lookup = {no_yard.instance_id: False, has_yard.instance_id: True}
 
-        def mock_has_yard(ship):
-            return ship.name == "HasYard"
-
-        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard', side_effect=mock_has_yard):
-            result = sort_ships(ships, 'spaceyard', descending=True)
-            assert result[0].name == "HasYard"
+        result = sort_ships(
+            ships, 'spaceyard', descending=True, spaceyard_lookup=lookup
+        )
+        assert result[0].name == "HasYard"
 
     def test_sort_by_transport(self):
         """Sort by transport capability (passenger capacity)."""
@@ -647,14 +653,15 @@ class TestFilterShipsSpaceyard:
         pytest.param(FilterState.IGNORE, ["Carrier", "Destroyer"], id="ignore_passes_all"),
     ])
     def test_spaceyard_filter(self, filter_value, expected_names):
-        """Spaceyard filter respects NO/YES/IGNORE states."""
+        """Spaceyard filter respects NO/YES/IGNORE states.
+
+        PROJ-475 Phase 2 Task 2.6: spaceyard truth comes from the
+        facade-projected lookup, not ``FleetCapabilityCalculator``.
+        """
         from game.ui.screens.fleet_report_filters import filter_ships
-        from unittest.mock import patch
 
         ships = self._make_carrier_destroyer_pair()
-
-        def mock_has_yard(ship):
-            return ship.name == "Carrier"
+        lookup = {s.instance_id: (s.name == "Carrier") for s in ships}
 
         filter_state = {
             'show_damaged': True,
@@ -664,11 +671,7 @@ class TestFilterShipsSpaceyard:
             'has_spaceyard': filter_value,
         }
 
-        with patch(
-            'game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard',
-            side_effect=mock_has_yard,
-        ):
-            result = filter_ships(ships, filter_state)
+        result = filter_ships(ships, filter_state, spaceyard_lookup=lookup)
 
         assert sorted(s.name for s in result) == sorted(expected_names)
 
@@ -798,22 +801,18 @@ class TestFilterPredicateIsolation:
         has_warp.assert_not_called()
 
     def test_worker_i_fleet_filter_predicate_isolation_spaceyard(self):
+        """PROJ-475 Phase 2 Task 2.6: the predicate reads the facade-projected
+        lookup, not ``FleetCapabilityCalculator``."""
         from game.ui.screens import fleet_report_filters as filters
-        from unittest.mock import patch
 
         ship = make_mock_ship(design_name="Tender")
+        lookup = {ship.instance_id: True}
 
-        with patch(
-            "game.strategy.data.fleet_capability_calculator."
-            "FleetCapabilityCalculator.ship_has_spaceyard",
-            return_value=True,
-        ) as has_spaceyard:
-            assert filters._should_exclude_by_spaceyard(
-                ship,
-                {"has_spaceyard": FilterState.NO},
-            ) is True
-
-        has_spaceyard.assert_called_once_with(ship)
+        assert filters._should_exclude_by_spaceyard(
+            ship,
+            {"has_spaceyard": FilterState.NO},
+            lookup,
+        ) is True
 
     def test_worker_i_fleet_filter_predicate_isolation_cargo(self):
         from game.ui.screens import fleet_report_filters as filters
@@ -994,8 +993,8 @@ class TestFilterCombinations:
 
         ships = [ship_yard_cargo, ship_yard_nocargo, ship_noyard_cargo, ship_noyard_nocargo]
 
-        def mock_has_yard(ship):
-            return ship.name in ("Carrier", "Station")
+        # PROJ-475 Phase 2 Task 2.6: facade-projected spaceyard lookup.
+        lookup = {s.instance_id: (s.name in ("Carrier", "Station")) for s in ships}
 
         filter_state = {
             'show_damaged': True,
@@ -1006,8 +1005,7 @@ class TestFilterCombinations:
             'has_cargo': FilterState.YES,  # only ships with cargo
         }
 
-        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard', side_effect=mock_has_yard):
-            result = filter_ships(ships, filter_state)
+        result = filter_ships(ships, filter_state, spaceyard_lookup=lookup)
 
         assert len(result) == 1
         assert result[0].serial == 1  # only yard+cargo ship

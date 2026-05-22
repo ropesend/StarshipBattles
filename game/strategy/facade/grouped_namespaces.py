@@ -245,6 +245,15 @@ class FacadeEmpireQueries:
         """Get empire information by ID."""
         return self._slice.get_empire(empire_id)
 
+    def race_config(self, empire_id: int) -> object | None:
+        """Return the empire's live ``RaceConfig`` value object, or ``None``.
+
+        PROJ-475 Phase 1 Task 1.1. ``RaceConfig`` is an immutable
+        race-definition value object (not live mutable session state), so
+        returning it directly is an acceptable read surface (decisions.md B12).
+        """
+        return self._slice.get_empire_race_config(empire_id)
+
     def colonies(self, empire_id: int) -> List[ColonySummary]:
         """Colony summaries for an empire."""
         return self._slice.get_empire_colonies(empire_id)
@@ -334,6 +343,20 @@ class FacadeSessionInfo:
         consult flagged it as a cross-concern leak.
         """
         return self._session.registries
+
+    def save_current_game(
+        self, save_name: Optional[str] = None
+    ) -> Tuple[bool, str, Optional[str]]:
+        """Save the live session, returning ``(success, message, save_path)``.
+
+        PROJ-475 Phase 1 Task 1.2: the facade owns the session and calls
+        ``SaveGameService.save_game(session, save_name)`` internally, so UI
+        callers never hold the live ``GameSession`` to save it. ``SaveGameService``
+        stays engine-internal — the UI must not import it for the save action.
+        """
+        from game.strategy.systems.save_game_service import SaveGameService
+
+        return SaveGameService.save_game(self._session, save_name)
 
 
 # ---------------------------------------------------------------------------

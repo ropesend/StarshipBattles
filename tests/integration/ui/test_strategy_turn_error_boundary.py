@@ -55,6 +55,13 @@ def _make_state_manager_with_screen():
     mock_screen = MagicMock()
     mock_screen.session = MagicMock()
     mock_screen._facade = MagicMock()
+    # PROJ-475 Phase 2 Task 2.4: auto-save routes through
+    # facade.session_meta.save_current_game() (returns the
+    # (success, message, save_path) triple). Concrete triple so the unpack in
+    # process_full_turn's success path succeeds.
+    mock_screen._facade.session_meta.save_current_game.return_value = (
+        True, "Saved", "/tmp/save.json"
+    )
     mock_screen.ui = MagicMock()
     mock_screen.ui.manager = MagicMock()
     mock_screen.ui.width = 1920

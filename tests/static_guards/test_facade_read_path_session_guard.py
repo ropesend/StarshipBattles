@@ -80,19 +80,27 @@ _SESSION_READ_ALLOWLIST: frozenset[tuple[str, str]] = frozenset({
     ("game/ui/screens/strategy_game_state_manager.py", "session.active_empire"),
     ("game/ui/screens/strategy_screen_order_editing.py", "session.fleet_mutator"),
     # --- Category C: live session readers deferred to PROJ-475 ---
-    ("game/ui/screens/strategy_event_router.py", "session.get_empire"),
-    ("game/ui/screens/strategy_screen_order_editing.py", "session.active_empire"),
-    ("game/ui/screens/strategy_screen_selection.py", "session.active_empire"),
-    ("game/ui/screens/strategy_windows/empire_panel_ctrl.py", "session.registries"),
+    # PROJ-475 Phase 2 MIGRATED + REMOVED the former Category C readers:
+    #   strategy_event_router (session.get_empire → facade.empires.race_config),
+    #   strategy_screen_selection / strategy_screen_order_editing
+    #     (session.active_empire READ → screen.active_empire_id),
+    #   empire_panel_ctrl (session.registries → scene.registries).
+    # The guard now ENFORCES the boundary for those reads. The
+    # order_editing mutator WRITE seam (session.fleet_mutator, Category B
+    # above) STAYS — out of PROJ-475 scope.
     # --- Category E: bare-session ESCAPE seams surfaced by the PROJ-472 1D
     #     hardened matcher (Codex finding 2). The live session object is
     #     handed wholesale to a save service or aliased into a local. All are
     #     pre-existing deferred-tail reads (NOT migrated by PROJ-472); they
     #     stay allowlisted-with-reason and are recorded as deferred to
     #     PROJ-475 (save seams) / PROJ-476 (transfer tooling tail). ---
-    ("game/ui/screens/strategy_game_state_manager.py", "session.__extract__"),  # SaveGameService.save_game(session) — save seam; PROJ-475
-    ("game/ui/screens/strategy_screen_lifecycle.py", "session.__extract__"),  # save/context seam (game_session context); PROJ-475
-    ("game/ui/screens/transfer_controller.py", "session.__extract__"),  # discover_pod_designs aliases session for per-empire catalog; PROJ-475/476 tail
+    # PROJ-475 Phase 2 Task 2.4 MIGRATED + REMOVED the save-seam Category E
+    # entries: strategy_game_state_manager (auto-save) and
+    # strategy_screen_lifecycle (manual save + on_design_click workshop ctx)
+    # now route through facade.session_meta.save_current_game() / a scalar
+    # save_path handoff. Task 2.5 MIGRATED + REMOVED the transfer_controller
+    # entry (discover_pod_designs now uses
+    # facade.facade_state.get_design_catalog_for_empire(viewing_empire_id)).
 })
 
 

@@ -49,6 +49,13 @@ class FleetListViewModel:
     def __init__(self, ships: List[ShipInstance] = None):
         self._ships = ships or []
 
+        # PROJ-475 Phase 2 Task 2.6: facade-projected ``instance_id ->
+        # has_spaceyard`` map. The report runs on raw ``ShipInstance`` lists,
+        # so the spaceyard column / filter / sort consult this bridge instead
+        # of calling ``FleetCapabilityCalculator`` in the UI. Empty until the
+        # window sets it from ``facade.fleets.get(fleet_id).ships``.
+        self._spaceyard_lookup: Dict[str, bool] = {}
+
         # Status filters (4-state, not binary — kept as bools)
         self.filter_show_damaged = True
         self.filter_show_undamaged = True
@@ -84,6 +91,20 @@ class FleetListViewModel:
         """Update the source ship list."""
         self._ships = ships or []
         self._needs_refresh = True
+
+    def set_spaceyard_lookup(self, lookup: Dict[str, bool]) -> None:
+        """Set the facade-projected ``instance_id -> has_spaceyard`` map.
+
+        PROJ-475 Phase 2 Task 2.6. Called by the window after fetching
+        ``facade.fleets.get(fleet_id)``; the spaceyard filter / sort / column
+        formatter read through :meth:`has_spaceyard`.
+        """
+        self._spaceyard_lookup = dict(lookup or {})
+        self._needs_refresh = True
+
+    def has_spaceyard(self, instance_id: str) -> bool:
+        """Whether the ship has a spaceyard, per the facade-projected lookup."""
+        return bool(self._spaceyard_lookup.get(instance_id, False))
 
     def toggle_filter(self, filter_id: str) -> bool:
         """Toggle a status filter on/off. For tri-state, use set_filter_state().
@@ -157,11 +178,16 @@ class FleetListViewModel:
 
     def _refresh(self) -> None:
         """Refresh the filtered/sorted ship list."""
-        filtered = filter_ships(self._ships, self.get_filter_state())
+        filtered = filter_ships(
+            self._ships,
+            self.get_filter_state(),
+            spaceyard_lookup=self._spaceyard_lookup,
+        )
         self._filtered_ships = sort_ships(
             filtered,
             self.sort_column_id,
-            self.sort_descending
+            self.sort_descending,
+            spaceyard_lookup=self._spaceyard_lookup,
         )
         self._needs_refresh = False
 
