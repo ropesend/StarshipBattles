@@ -235,9 +235,6 @@ class GalaxyModeHelper:
         else:
             self.galaxy_seed = random.randint(0, 2**31 - 1)
 
-        # Seed RNG
-        random.seed(self.galaxy_seed)
-
         # Get settings
         self.system_count = int(self.system_count_slider.get_current_value())
         self.galaxy_radius = int(self.galaxy_radius_slider.get_current_value())
@@ -248,7 +245,11 @@ class GalaxyModeHelper:
         # Create galaxy
         start_time = time.perf_counter()
 
-        self.galaxy = Galaxy(radius=self.galaxy_radius)
+        # PROJ-473 S8: seed the name shuffle from galaxy_seed (hazard H1).
+        self.galaxy = Galaxy(
+            radius=self.galaxy_radius,
+            name_rng=random.Random(self.galaxy_seed),
+        )
 
         # Get placement strategy based on type
         from game.strategy.generation.placement_strategies import (
@@ -258,7 +259,13 @@ class GalaxyModeHelper:
         from game.strategy.generation.loaders.galaxy_layouts_loader import GalaxyLayoutsLoader
         from game.strategy.generation.density.density_map import DensityMap
 
+        # PROJ-473 H7: placement rng (S1) + dedicated physics_rng (S4/S5) +
+        # independent image_rng (S6/S7), distinct instances. physics_rng is
+        # CONTINUED into warp generation below (not a fresh warp rng); image_rng
+        # uses a distinct seed so image draws never shift the physics/S9 stream.
         rng = random.Random(self.galaxy_seed)
+        physics_rng = random.Random(self.galaxy_seed)
+        image_rng = random.Random(self.galaxy_seed + 0x1A6E)
 
         t1 = time.perf_counter()
         if self.galaxy_type == "random":
@@ -278,13 +285,16 @@ class GalaxyModeHelper:
             count=self.system_count,
             min_dist=400,
             placement_strategy=strategy,
-            rng=rng
+            rng=rng,
+            physics_rng=physics_rng,
+            image_rng=image_rng,
         )
         t3 = time.perf_counter()
         logger.info(f"  System placement: {t3-t2:.3f}s")
 
-        # Generate warp lanes
-        self.galaxy.generate_warp_lanes()
+        # Generate warp lanes. PROJ-473 H7 S9/S10: continue the SAME physics_rng
+        # (not a fresh warp rng) so warp geometry matches the seeded sequence.
+        self.galaxy.generate_warp_lanes(rng=physics_rng)
         t4 = time.perf_counter()
         logger.info(f"  Warp lane generation: {t4-t3:.3f}s")
 

@@ -10,14 +10,28 @@ logger = logging.getLogger(__name__)
 class NameRegistry:
     """Registry for unique system names loaded from YAML files."""
 
-    def __init__(self, data_file_path: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        data_file_path: Optional[str] = None,
+        rng: Optional[random.Random] = None,
+    ) -> None:
         """Initialize the name registry.
 
         Args:
             data_file_path: Optional path to YAML file containing names.
+            rng: Optional seeded RNG for the load-time name shuffle (PROJ-473
+                S8). The shuffle happens at construction (load time), not at
+                ``get_system_name()`` time, so the rng must be supplied here.
+                When ``None`` an unseeded ``random.Random()`` is used so the
+                shuffle never touches global module state — names are simply
+                non-reproducible in that case (the production path injects a
+                seeded rng from the composition root). Hazard H1: this fixes
+                the previous bare ``random.shuffle`` that drew from the
+                unseeded global stream.
         """
         self.available_names: List[str] = []
         self.used_names: Set[str] = set()
+        self._rng: random.Random = rng if rng is not None else random.Random()
 
         if data_file_path:
             self.load_data(data_file_path)
@@ -38,8 +52,10 @@ class NameRegistry:
 
             if "names" in data and isinstance(data["names"], list):
                 self.available_names = data["names"]
-                # Default behavior: shuffle for random selection
-                random.shuffle(self.available_names)
+                # Default behavior: shuffle for random selection. Uses the
+                # injected seeded rng (PROJ-473 S8) so name order is
+                # reproducible for a fixed galaxy_seed.
+                self._rng.shuffle(self.available_names)
             else:
                 logger.warning(f"Invalid format in {file_path}: 'names' list missing.")
 

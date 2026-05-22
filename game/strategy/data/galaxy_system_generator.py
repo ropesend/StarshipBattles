@@ -55,6 +55,8 @@ class GalaxySystemGenerator:
         galaxy: 'Galaxy',
         system: 'StarSystem',
         rng: Optional[random.Random] = None,
+        physics_rng: Optional[random.Random] = None,
+        image_rng: Optional[random.Random] = None,
     ) -> None:
         """Generate planets for a system based on its star type.
 
@@ -62,13 +64,24 @@ class GalaxySystemGenerator:
             galaxy: Galaxy instance for planet registration.
             system: StarSystem to generate planets for.
             rng: Optional seeded RNG for deterministic intrinsic ability
-                rolls (PROJ-301/302). When None, uses unseeded Random()
+                rolls (PROJ-301/302, S3). When None, uses unseeded Random()
                 (back-compat with existing callers).
+            physics_rng: PROJ-473 H7 S5 — planet physics stream. When None,
+                physics draws fall back to module-level random.
+            image_rng: PROJ-473 H7 S7 — separate image stream. When None, the
+                image registry uses unseeded Random().
         """
         if not system.stars:
             return
 
-        system.planets = self._planet_gen.generate_system_bodies(system.name, system.stars)
+        # PROJ-473 Task 3.3: physics_rng=None -> a fresh per-instance Random()
+        # (NOT module-level random). The public Galaxy facade normalizes None at
+        # a single site; this internal fallback keeps direct callers off global
+        # state too (non-reproducible but no module-RNG leak).
+        body_rng = physics_rng if physics_rng is not None else random.Random()
+        system.planets = self._planet_gen.generate_system_bodies(
+            system.name, system.stars, rng=body_rng, image_rng=image_rng,
+        )
 
         # Sort by distance, then mass (descending) for consistent ordering
         system.planets.sort(key=lambda p: (p.orbit_distance, -p.mass))
@@ -108,7 +121,9 @@ class GalaxySystemGenerator:
         min_dist: int = 10,
         placement_strategy: Optional['ISystemPlacementStrategy'] = None,
         rng: Optional[random.Random] = None,
-        storm_blueprint_config: Optional[Dict[str, Any]] = None
+        storm_blueprint_config: Optional[Dict[str, Any]] = None,
+        physics_rng: Optional[random.Random] = None,
+        image_rng: Optional[random.Random] = None,
     ) -> List['StarSystem']:
         """Generate star systems ensuring minimum distance and assigning Star Types.
 
@@ -118,10 +133,23 @@ class GalaxySystemGenerator:
             min_dist: Minimum distance between systems in hex units.
             placement_strategy: Strategy for placing systems. If None, uses
                 RandomPlacementStrategy for uniform random placement.
-            rng: Random number generator for deterministic generation.
+            rng: Random number generator for deterministic generation (S1
+                placement; also yields the S2/S3 child-stream seeds).
                 If None, uses global random state.
             storm_blueprint_config: Optional blueprint config for storm generation.
                 If None and storm_generator is set, uses default config.
+            physics_rng: PROJ-473 H7 S4/S5 — dedicated star/planet physics
+                stream, a SEPARATE instance from ``rng`` (seeded with the same
+                galaxy_seed at the composition root). Threaded into the
+                star/planet pipeline. When None the physics draws fall back to
+                module-level random (pre-Phase-3 behavior).
+            image_rng: PROJ-473 H7 S6/S7 — SEPARATE seeded stream for star +
+                planet image_id / image_rotation, an INDEPENDENT instance (NOT
+                derived from physics_rng — pulling a seed from physics_rng
+                would consume a physics draw and shift the physics + S9 warp
+                geometry sequence off the golden baseline; verified). Kept
+                distinct so inserting image draws never perturbs class-(a).
+                When None the registries use unseeded Random().
 
         Returns:
             List of generated StarSystem objects.
@@ -188,13 +216,21 @@ class GalaxySystemGenerator:
             # Reset failure counter on success
             consecutive_failures = 0
 
-            # Create the system
+            # Create the system. PROJ-473: physics_rng drives star+planet
+            # PHYSICS (H7 S4/S5, star-then-planet order preserved); image_rng
+            # is a separate stream for image_id/rotation (H7 S6/S7).
             name = self._naming.get_system_name()
-            stars = self._star_gen.generate_system_stars(name)
+            stars = self._star_gen.generate_system_stars(
+                name, rng=physics_rng, image_rng=image_rng
+            )
 
             sys = StarSystem(name, coord, stars=stars)
-            # PROJ-301/302: thread seeded intrinsic RNG.
-            self.generate_planets(galaxy, sys, rng=intrinsic_rng)
+            # PROJ-301/302: intrinsic_rng for ability rolls (S3, distinct
+            # stream); physics_rng/image_rng for planet physics + images.
+            self.generate_planets(
+                galaxy, sys, rng=intrinsic_rng,
+                physics_rng=physics_rng, image_rng=image_rng,
+            )
 
             # Generate storms after planets (PROJ-189)
             if storm_blueprint_config is not None:

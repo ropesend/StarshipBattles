@@ -599,9 +599,13 @@ class TestStarGenerator:
                 'max': 2.0
             }
         }
-        random.seed(42)
-
-        stars = generator.generate_system_stars("Blueprint System", blueprint=blueprint)
+        # PROJ-473 Task 3.3: the no-rng path now normalizes to a fresh
+        # per-instance Random() (never module random), so seeding module random
+        # no longer controls the output. Pass an explicit seeded rng — same
+        # seed (42) that this test was written against — for a stable sequence.
+        stars = generator.generate_system_stars(
+            "Blueprint System", blueprint=blueprint, rng=random.Random(42)
+        )
 
         # Should have exactly 2 stars
         assert len(stars) == 2, f"Expected 2 stars, got {len(stars)}"

@@ -41,7 +41,9 @@ GASES = {
 }
 
 
-def calculate_radius_density_from_mass(mass: float) -> Tuple[float, float]:
+def calculate_radius_density_from_mass(
+    mass: float, rng: random.Random = random
+) -> Tuple[float, float]:
     """
     Calculate approximate radius and density from planetary mass.
 
@@ -52,16 +54,19 @@ def calculate_radius_density_from_mass(mass: float) -> Tuple[float, float]:
 
     Args:
         mass: Planetary mass in kg
+        rng: PROJ-473 H7 S5 — physics rng for the density draw. Defaults to
+            module-level ``random`` (back-compat; reproducible via the global
+            seed until Phase 3).
 
     Returns:
         Tuple of (radius in meters, density in kg/m^3)
     """
     if mass > 1e26:  # Gas Giant
-        density = random.uniform(900, 1600)
+        density = rng.uniform(900, 1600)
     elif mass > 5e24:  # Earth / Super Earth
-        density = random.uniform(4000, 6000)
+        density = rng.uniform(4000, 6000)
     else:  # Small rocky / icy
-        density = random.uniform(2000, 4500)
+        density = rng.uniform(2000, 4500)
 
     # Volume = Mass / Density
     volume = mass / density

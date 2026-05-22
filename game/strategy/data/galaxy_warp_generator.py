@@ -26,7 +26,9 @@ class GalaxyWarpGenerator:
     - Region-aware generation with inter-region link limits
     """
 
-    def _calculate_warp_distance(self, system: 'StarSystem') -> float:
+    def _calculate_warp_distance(
+        self, system: 'StarSystem', rng: random.Random,
+    ) -> float:
         """Calculate the distance for a warp point based on the primary star's size.
 
         Formula: Base (15) + (Star Radius * 3.0) + Random(-2 to 5)
@@ -34,6 +36,12 @@ class GalaxyWarpGenerator:
 
         Args:
             system: StarSystem to calculate warp distance for.
+            rng: PROJ-473 H7 S9 — the CONTINUED ``physics_rng`` (the same
+                instance threaded through stars/planets). Warp geometry already
+                continued the module stream right after the last planet-physics
+                draw on the baseline, so it MUST continue ``physics_rng`` (NOT a
+                fresh warp rng) to stay byte-for-byte identical to the golden
+                baseline.
 
         Returns:
             Distance in hex units for warp point placement.
@@ -44,7 +52,7 @@ class GalaxyWarpGenerator:
 
         base_dist = 15.0
         scaled_dist = base_dist + (star_radius * 3.0)  # radius * 3.0 preserves proportional relationship
-        jitter = random.uniform(-2.0, 5.0)
+        jitter = rng.uniform(-2.0, 5.0)
 
         total_dist = scaled_dist + jitter
         return max(10.0, total_dist)
@@ -83,12 +91,17 @@ class GalaxyWarpGenerator:
 
         return True
 
-    def create_warp_link(self, sys_a: 'StarSystem', sys_b: 'StarSystem') -> None:
+    def create_warp_link(
+        self, sys_a: 'StarSystem', sys_b: 'StarSystem',
+        rng: random.Random,
+    ) -> None:
         """Create a warp link between two systems.
 
         Args:
             sys_a: First system.
             sys_b: Second system.
+            rng: PROJ-473 H7 S9 — the continued ``physics_rng`` for warp-distance
+                jitter (forwarded to ``_calculate_warp_distance``).
         """
         for wp in sys_a.warp_points:
             if wp.destination_id == sys_b.name:
@@ -103,8 +116,8 @@ class GalaxyWarpGenerator:
 
         # 2. Place Warp Point at System Edge (Local Map)
 
-        dist_a = self._calculate_warp_distance(sys_a)
-        dist_b = self._calculate_warp_distance(sys_b)
+        dist_a = self._calculate_warp_distance(sys_a, rng)
+        dist_b = self._calculate_warp_distance(sys_b, rng)
 
         # hex_to_pixel(size=1) scales x by 1.5.
 
@@ -154,7 +167,8 @@ class GalaxyWarpGenerator:
     def _apply_mst_edges(
         self,
         systems: List['StarSystem'],
-        edges: List[tuple]
+        edges: List[tuple],
+        rng: random.Random,
     ) -> None:
         """Apply Kruskal's MST algorithm to ensure full connectivity.
 
@@ -183,7 +197,7 @@ class GalaxyWarpGenerator:
 
         for dist, i, j in edges:
             if union(i, j):
-                self.create_warp_link(systems[i], systems[j])
+                self.create_warp_link(systems[i], systems[j], rng)
 
     def _should_add_density_edge(
         self,
@@ -192,7 +206,8 @@ class GalaxyWarpGenerator:
         dist: float,
         region_classifier: 'Optional[RegionClassifier]',
         inter_region_mode: str,
-        inter_region_links: dict
+        inter_region_links: dict,
+        rng: random.Random,
     ) -> bool:
         """Evaluate whether a single density edge candidate should be added.
 
@@ -270,14 +285,15 @@ class GalaxyWarpGenerator:
             else:
                 base_chance *= 0.1  # Severe penalty
 
-        return random.random() < base_chance
+        return rng.random() < base_chance
 
     def _add_density_edges(
         self,
         systems: List['StarSystem'],
         edges: List[tuple],
         region_classifier: 'Optional[RegionClassifier]',
-        inter_region_mode: str
+        inter_region_mode: str,
+        rng: random.Random,
     ) -> None:
         """Add additional random edges beyond the MST to meet density targets.
 
@@ -299,9 +315,9 @@ class GalaxyWarpGenerator:
 
             if self._should_add_density_edge(
                 s_i, s_j, dist,
-                region_classifier, inter_region_mode, inter_region_links
+                region_classifier, inter_region_mode, inter_region_links, rng,
             ):
-                self.create_warp_link(s_i, s_j)
+                self.create_warp_link(s_i, s_j, rng)
 
                 # Track inter-region link
                 if region_classifier and inter_region_mode == 'limited':
@@ -339,14 +355,24 @@ class GalaxyWarpGenerator:
         if len(systems) < 2:
             return
 
+        # PROJ-473 H7 S9/S10: the warp draws (distance jitter, density-edge
+        # acceptance, type/intrinsic rolls) MUST continue the same seeded
+        # ``physics_rng`` the composition root threaded through stars/planets.
+        # Public callers (Galaxy.create_vars_link / dev tools) may pass rng=None;
+        # normalize once here to an unseeded stream so the back-compat facade
+        # contract holds. The production generation path (game_initializer,
+        # galaxy_mode) always supplies the continued physics_rng.
+        if rng is None:
+            rng = random.Random()
+
         # 1. Build sorted edge candidates over all unique system pairs.
         edges = self._build_edge_candidates(systems)
 
         # 2. Apply MST for guaranteed connectivity
-        self._apply_mst_edges(systems, edges)
+        self._apply_mst_edges(systems, edges, rng)
 
         # 3. Add density edges beyond MST
-        self._add_density_edges(systems, edges, region_classifier, inter_region_mode)
+        self._add_density_edges(systems, edges, region_classifier, inter_region_mode, rng)
 
         # 4. PROJ-303: roll warp_type + intrinsic abilities for each generated point.
         _apply_warp_point_intrinsic_abilities(systems, rng=rng)
@@ -396,7 +422,11 @@ def _apply_warp_point_intrinsic_abilities(systems, rng=None) -> None:
 
     Caller-supplied seeded RNG threads determinism through galaxy generation
     (PROJ-303 follow-up to skeptical-review RNG-determinism finding).
-    Defaults to unseeded Random() for back-compat.
+
+    PROJ-473 H7 S10: the production path supplies the continued ``physics_rng``
+    via ``generate_warp_lanes`` (which normalizes ``rng=None`` once at the
+    facade). The ``rng is None`` fallback here is a defensive last resort for
+    direct callers only — the seeded warp path never hits it.
     """
     import random as _random
     from game.strategy.services.ability_sources import roll_intrinsic_abilities

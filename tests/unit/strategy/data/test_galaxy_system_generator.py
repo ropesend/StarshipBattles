@@ -58,7 +58,8 @@ class _FakeStarGenerator:
     def __init__(self, stars=None):
         self._stars = stars if stars is not None else [_FakeStar()]
 
-    def generate_system_stars(self, system_name: str):
+    def generate_system_stars(self, system_name: str, **kwargs):
+        # **kwargs tolerates the PROJ-473 physics_rng / image_rng threading.
         # Return a fresh list per call to avoid shared mutation.
         return [_FakeStar(s.star_type.name) for s in self._stars]
 
@@ -69,7 +70,8 @@ class _FakePlanetGenerator:
     def __init__(self, planets_factory=None):
         self._factory = planets_factory or (lambda system_name, stars: [])
 
-    def generate_system_bodies(self, system_name: str, stars: list):
+    def generate_system_bodies(self, system_name: str, stars: list, **kwargs):
+        # **kwargs tolerates the PROJ-473 rng / physics_rng / image_rng threading.
         return self._factory(system_name, stars)
 
 

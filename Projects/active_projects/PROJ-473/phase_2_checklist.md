@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Depends on:** Phase 1 (per-system star/planet pipeline seeded on the dedicated
 `physics_rng`; Task 0.1 narrow GREEN guard green, full-snapshot xfail down to S10 warp
 type/intrinsic fields only)

@@ -29,12 +29,21 @@ from typing import List, Tuple
 import pytest
 
 
-# Layers covered by the determinism contract. Strategy is intentionally
-# excluded: PROJ-301-304 plumbs a separate seeded RNG through the strategy
-# layer's intrinsic rolls, and `ConflictResolutionEngine` owns its own
-# `Random` instance for empire-pairing decisions. That contract is
-# audited separately.
-GUARDED_DIRECTORIES = ("game/simulation", "game/engine", "game/ai")
+# Layers covered by the determinism contract.
+#   * game/simulation, game/engine, game/ai — PROJ-312 replay determinism.
+#   * game/strategy/generation, game/strategy/data — PROJ-473 threaded an
+#     explicit per-instance RNG (placement / physics / image / warp streams)
+#     through galaxy generation and removed the two global ``random.seed()``
+#     calls, so galaxy generation is now reproducible from injected seeded
+#     streams alone. Guarding these dirs catches a regression that reintroduces
+#     a bare module-level ``random.*`` draw on the generation path.
+GUARDED_DIRECTORIES = (
+    "game/simulation",
+    "game/engine",
+    "game/ai",
+    "game/strategy/generation",
+    "game/strategy/data",
+)
 
 # `random.Random(...)` is the constructor — produces a seedable instance.
 # Every other ``random.<NAME>(...)`` call reaches the module-level RNG.

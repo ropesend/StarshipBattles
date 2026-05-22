@@ -152,7 +152,7 @@ class TestWarpGeneratorHelpers:
         ]
         created = []
 
-        def record_link(sys_a, sys_b):
+        def record_link(sys_a, sys_b, rng):
             created.append((sys_a.name, sys_b.name))
 
         monkeypatch.setattr(generator, "create_warp_link", record_link)
@@ -164,6 +164,7 @@ class TestWarpGeneratorHelpers:
                 (2, 1, 2),
                 (3, 0, 2),
             ],
+            random.Random(0),
         )
 
         assert created == [("Alpha", "Beta"), ("Beta", "Gamma")]
@@ -178,11 +179,11 @@ class TestWarpGeneratorHelpers:
         monkeypatch.setattr(
             generator,
             "_calculate_warp_distance",
-            lambda _system: 12.0,
+            lambda _system, _rng: 12.0,
         )
 
-        generator.create_warp_link(alpha, beta)
-        generator.create_warp_link(alpha, beta)
+        generator.create_warp_link(alpha, beta, random.Random(0))
+        generator.create_warp_link(alpha, beta, random.Random(0))
 
         assert [wp.destination_id for wp in alpha.warp_points] == ["Beta"]
         assert [wp.destination_id for wp in beta.warp_points] == ["Alpha"]

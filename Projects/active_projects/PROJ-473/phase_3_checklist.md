@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Depends on:** Phases 0, 1, 2 (ALL generation draws now come from the seeded rng)
 **Goal mapping:** All tasks serve **G3** (remove the two global seeds; normalize the
 `rng is None` fallbacks; add the Pattern #18 guard).

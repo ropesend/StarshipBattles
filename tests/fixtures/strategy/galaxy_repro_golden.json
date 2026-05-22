@@ -1,0 +1,3551 @@
+{
+  "_doc": "PROJ-473 golden baseline of class-(a) already-seeded galaxy generation outputs, captured from the pre-change code. Do NOT regenerate after threading work begins \u2014 it is the immutable 'what current code generates' reference. Regenerate ONLY if the intended generated output legitimately changes (it must not for this project). See tests/fixtures/strategy/galaxy_repro_baseline.py.",
+  "configs": {
+    "multi": {
+      "systems": [
+        {
+          "archetype": null,
+          "global_location": {
+            "q": -272,
+            "r": -86
+          },
+          "intrinsic_abilities": null,
+          "planets": [
+            {
+              "atmosphere": {
+                "N2": 79000.0,
+                "O2": 21000.0
+              },
+              "density": 4563.512542916,
+              "deposits": {
+                "exotics": {
+                  "quality": 50.0,
+                  "quantity": 919561804
+                },
+                "metals": {
+                  "quality": 50.0,
+                  "quantity": 225371283
+                },
+                "organics": {
+                  "quality": 50.0,
+                  "quantity": 317635033
+                },
+                "radioactives": {
+                  "quality": 50.0,
+                  "quantity": 280614895
+                },
+                "vapors": {
+                  "quality": 50.0,
+                  "quantity": 1181235613
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 1.000334808,
+              "mass": 3.9503905912242375e+25,
+              "orbit_distance": 5,
+              "planet_type": "ICE_GIANT",
+              "radius": 12737495.985167056,
+              "surface_area": 2038815770597436.5,
+              "surface_gravity": 9.81,
+              "surface_pressure": 100000.0,
+              "surface_temperature": 293.0,
+              "surface_water": 0.5,
+              "tectonic_activity": 0.130860733
+            },
+            {
+              "atmosphere": {
+                "Ar": 4.846632798,
+                "CH4": 8.612549997,
+                "CO2": 56.154196213,
+                "H2O": 34.303131531,
+                "N2": 57.864615349,
+                "NH3": 10.50603635,
+                "O2": 0.56314214,
+                "SO2": 7.84613499
+              },
+              "density": 2696.193159911,
+              "deposits": {
+                "exotics": {
+                  "quality": 50.834722948,
+                  "quantity": 149793723
+                },
+                "metals": {
+                  "quality": 66.232918683,
+                  "quantity": 36900991
+                },
+                "organics": {
+                  "quality": 48.447634258,
+                  "quantity": 45085823
+                },
+                "radioactives": {
+                  "quality": 52.3769562,
+                  "quantity": 33721020
+                },
+                "vapors": {
+                  "quality": 70.647029361,
+                  "quantity": 190723736
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.205551138,
+              "mass": 2.6259052079341868e+23,
+              "orbit_distance": 5,
+              "planet_type": "CRYOPLANET",
+              "radius": 2854169.828427295,
+              "surface_area": 102369241586182.69,
+              "surface_gravity": 2.151419727,
+              "surface_pressure": 180.696439368,
+              "surface_temperature": 137.485432431,
+              "surface_water": 0.877453074,
+              "tectonic_activity": 0.070859513
+            },
+            {
+              "atmosphere": {
+                "Ar": 60449.563480689,
+                "CH4": 554806.827770615,
+                "CO2": 24421697.292338252,
+                "H2": 48861.762234953,
+                "H2O": 2113483.845401724,
+                "He": 523730.838554894,
+                "N2": 7007791.579498963,
+                "NH3": 63460.901797195,
+                "O2": 956.55096232,
+                "SO2": 153212.64928754
+              },
+              "density": 4366.976071574,
+              "deposits": {
+                "exotics": {
+                  "quality": 5.0,
+                  "quantity": 200103495
+                },
+                "metals": {
+                  "quality": 5.0,
+                  "quantity": 156604638
+                },
+                "organics": {
+                  "quality": 5.0,
+                  "quantity": 408094408
+                },
+                "radioactives": {
+                  "quality": 5.0,
+                  "quantity": 110979172
+                },
+                "vapors": {
+                  "quality": 5.0,
+                  "quantity": 472555714
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 1.222037627,
+              "mass": 5.142901924797626e+24,
+              "orbit_distance": 7,
+              "planet_type": "PELAGIC",
+              "radius": 6551080.563120218,
+              "surface_area": 539306611667243.44,
+              "surface_gravity": 7.998123125,
+              "surface_pressure": 34948451.811327145,
+              "surface_temperature": 293.516018185,
+              "surface_water": 0.878185355,
+              "tectonic_activity": 0.384489841
+            },
+            {
+              "atmosphere": {
+                "Ar": 6.767196737,
+                "CH4": 7.543575719,
+                "CO2": 499.620545906,
+                "H2O": 41.590706587,
+                "N2": 570.297949625,
+                "NH3": 14.244033054,
+                "O2": 2.120494352,
+                "SO2": 23.674726301
+              },
+              "density": 2178.506273946,
+              "deposits": {
+                "exotics": {
+                  "quality": 44.239231395,
+                  "quantity": 187273754
+                },
+                "metals": {
+                  "quality": 41.938741838,
+                  "quantity": 62124727
+                },
+                "organics": {
+                  "quality": 56.968485226,
+                  "quantity": 60570830
+                },
+                "radioactives": {
+                  "quality": 66.493578298,
+                  "quantity": 56972522
+                },
+                "vapors": {
+                  "quality": 46.331880003,
+                  "quantity": 217580235
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.410901297,
+              "mass": 4.4110021697103795e+23,
+              "orbit_distance": 7,
+              "planet_type": "CRYOPLANET",
+              "radius": 3642754.883049562,
+              "surface_area": 166751504919574.9,
+              "surface_gravity": 2.218620885,
+              "surface_pressure": 1165.85922828,
+              "surface_temperature": 131.676455952,
+              "surface_water": 0.824541221,
+              "tectonic_activity": 0.01118759
+            },
+            {
+              "atmosphere": {},
+              "density": 2349.075798814,
+              "deposits": {
+                "exotics": {
+                  "quality": 73.75907907,
+                  "quantity": 23728591
+                },
+                "metals": {
+                  "quality": 86.465606766,
+                  "quantity": 14650415
+                },
+                "organics": {
+                  "quality": 98.879392358,
+                  "quantity": 7529216
+                },
+                "radioactives": {
+                  "quality": 94.792706308,
+                  "quantity": 20004767
+                },
+                "vapors": {
+                  "quality": 83.765094065,
+                  "quantity": 19703314
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.269488645,
+              "mass": 9.39e+20,
+              "orbit_distance": 7,
+              "planet_type": "ICE_DWARF",
+              "radius": 456975.921683179,
+              "surface_area": 2624197388297.4595,
+              "surface_gravity": 0.300112912,
+              "surface_pressure": 0.0,
+              "surface_temperature": 116.686138135,
+              "surface_water": 0.77231243,
+              "tectonic_activity": 0.148997796
+            },
+            {
+              "atmosphere": {
+                "Ar": 2127947.826636736,
+                "CH4": 9238822.49841463,
+                "CO2": 20234020.672121216,
+                "H2": 3182860945.584322,
+                "H2O": 31223321.76776048,
+                "He": 1018515502.586983,
+                "N2": 2586926.314536894,
+                "NH3": 2481922.48132316,
+                "O2": 13308806.684846291,
+                "SO2": 39017085.23464315
+              },
+              "density": 5323.742623901,
+              "deposits": {
+                "exotics": {
+                  "quality": 5.0,
+                  "quantity": 910171465
+                },
+                "metals": {
+                  "quality": 5.0,
+                  "quantity": 222800081
+                },
+                "organics": {
+                  "quality": 5.0,
+                  "quantity": 304461733
+                },
+                "radioactives": {
+                  "quality": 5.0,
+                  "quantity": 269589666
+                },
+                "vapors": {
+                  "quality": 5.0,
+                  "quantity": 1163102534
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.58531937,
+              "mass": 3.9822793042022845e+25,
+              "orbit_distance": 12,
+              "planet_type": "ICE_GIANT",
+              "radius": 12132268.655276971,
+              "surface_area": 1849668503715001.0,
+              "surface_gravity": 18.057324517,
+              "surface_pressure": 4321595301.6515875,
+              "surface_temperature": 186.627812495,
+              "surface_water": 0.557045647,
+              "tectonic_activity": 0.471788295
+            },
+            {
+              "atmosphere": {
+                "Ar": 20.376489434,
+                "CH4": 12.720795653,
+                "CO2": 831.134407539,
+                "H2O": 162.193448589,
+                "N2": 627.636305094,
+                "NH3": 5.496004648,
+                "O2": 3.124775391,
+                "SO2": 3.80581373
+              },
+              "density": 4104.173370431,
+              "deposits": {
+                "exotics": {
+                  "quality": 50.790037125,
+                  "quantity": 162381717
+                },
+                "metals": {
+                  "quality": 38.223660216,
+                  "quantity": 68183683
+                },
+                "organics": {
+                  "quality": 33.360223892,
+                  "quantity": 59075773
+                },
+                "radioactives": {
+                  "quality": 46.978697529,
+                  "quantity": 86478989
+                },
+                "vapors": {
+                  "quality": 55.478210045,
+                  "quantity": 257125090
+                }
+              },
+              "intrinsic_abilities": {
+                "ThrustModifier": {
+                  "multiplier": 0.900162427,
+                  "scope": "sector"
+                }
+              },
+              "magnetic_field": 1.977982068,
+              "mass": 7.562615820252523e+23,
+              "orbit_distance": 12,
+              "planet_type": "CRYOPLANET",
+              "radius": 3530091.077448689,
+              "surface_area": 156596367954309.88,
+              "surface_gravity": 4.050474866,
+              "surface_pressure": 1666.488040078,
+              "surface_temperature": 110.206048657,
+              "surface_water": 0.826097324,
+              "tectonic_activity": 0.354086537
+            },
+            {
+              "atmosphere": {
+                "Ar": 17.082776021,
+                "CH4": 6.901001593,
+                "CO2": 605.008165724,
+                "H2O": 41.573400454,
+                "N2": 140.58645021,
+                "NH3": 17.723880467,
+                "O2": 0.346361216,
+                "SO2": 24.58589107
+              },
+              "density": 3643.432911181,
+              "deposits": {
+                "exotics": {
+                  "quality": 51.694468128,
+                  "quantity": 151848857
+                },
+                "metals": {
+                  "quality": 41.548368406,
+                  "quantity": 71364809
+                },
+                "organics": {
+                  "quality": 53.72547176,
+                  "quantity": 50172633
+                },
+                "radioactives": {
+                  "quality": 45.877463433,
+                  "quantity": 42409145
+                },
+                "vapors": {
+                  "quality": 49.019195987,
+                  "quantity": 149419926
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.004657728,
+              "mass": 4.847090909725e+23,
+              "orbit_distance": 12,
+              "planet_type": "CRYOPLANET",
+              "radius": 3166848.296848722,
+              "surface_area": 126027227812371.4,
+              "surface_gravity": 3.225762357,
+              "surface_pressure": 853.807926755,
+              "surface_temperature": 89.722982919,
+              "surface_water": 0.65904333,
+              "tectonic_activity": 0.187146857
+            },
+            {
+              "atmosphere": {},
+              "density": 3358.044905654,
+              "deposits": {
+                "exotics": {
+                  "quality": 70.329622599,
+                  "quantity": 112224132
+                },
+                "metals": {
+                  "quality": 85.702081418,
+                  "quantity": 21302798
+                },
+                "organics": {
+                  "quality": 93.618866489,
+                  "quantity": 13268756
+                },
+                "radioactives": {
+                  "quality": 92.357566516,
+                  "quantity": 10348989
+                },
+                "vapors": {
+                  "quality": 92.009994255,
+                  "quantity": 28248751
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.491926655,
+              "mass": 8.208567623636875e+21,
+              "orbit_distance": 12,
+              "planet_type": "ICE_DWARF",
+              "radius": 835662.198601442,
+              "surface_area": 8775490055224.777,
+              "surface_gravity": 0.784533675,
+              "surface_pressure": 0.0,
+              "surface_temperature": 89.722982919,
+              "surface_water": 0.826389949,
+              "tectonic_activity": 0.060503429
+            },
+            {
+              "atmosphere": {
+                "Ar": 261974147.62052834,
+                "CH4": 229474011.48291782,
+                "CO2": 44113372.12424636,
+                "H2": 28882169953.447514,
+                "H2O": 96818471.22681564,
+                "He": 9242294385.103205,
+                "N2": 213044858.09517667,
+                "NH3": 180243952.07585448,
+                "O2": 362925977.436608,
+                "SO2": 340728138.5263513
+              },
+              "density": 5360.962426993,
+              "deposits": {
+                "exotics": {
+                  "quality": 5.0,
+                  "quantity": 1317214551
+                },
+                "metals": {
+                  "quality": 5.0,
+                  "quantity": 297449145
+                },
+                "organics": {
+                  "quality": 5.0,
+                  "quantity": 435155193
+                },
+                "radioactives": {
+                  "quality": 5.0,
+                  "quantity": 386631057
+                },
+                "vapors": {
+                  "quality": 5.0,
+                  "quantity": 1695291387
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 1.652898099,
+              "mass": 9.67804463196345e+25,
+              "orbit_distance": 13,
+              "planet_type": "ICE_GIANT",
+              "radius": 16273666.661259912,
+              "surface_area": 3327979910104198.5,
+              "surface_gravity": 24.390601596,
+              "surface_pressure": 39853787267.13921,
+              "surface_temperature": 240.649621425,
+              "surface_water": 0.406157926,
+              "tectonic_activity": 0.62561446
+            },
+            {
+              "atmosphere": {
+                "Ar": 175659.495331433,
+                "CH4": 242929.348330943,
+                "CO2": 4882844.313073305,
+                "H2": 158636.370540075,
+                "H2O": 902070.513363613,
+                "He": 252200.074684863,
+                "N2": 3729006.644104348,
+                "NH3": 197516.866121513,
+                "O2": 10434.441975235,
+                "SO2": 235266.970474652
+              },
+              "density": 4367.121699262,
+              "deposits": {
+                "exotics": {
+                  "quality": 5.0,
+                  "quantity": 394875538
+                },
+                "metals": {
+                  "quality": 5.0,
+                  "quantity": 139860107
+                },
+                "organics": {
+                  "quality": 5.0,
+                  "quantity": 117849752
+                },
+                "radioactives": {
+                  "quality": 5.0,
+                  "quantity": 121640220
+                },
+                "vapors": {
+                  "quality": 5.0,
+                  "quantity": 486507816
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.87185842,
+              "mass": 4.849840973704134e+24,
+              "orbit_distance": 13,
+              "planet_type": "CRYOPLANET",
+              "radius": 6424133.115619588,
+              "surface_area": 518607659749171.9,
+              "surface_gravity": 7.843396301,
+              "surface_pressure": 10786565.037999982,
+              "surface_temperature": 204.886040786,
+              "surface_water": 0.157623307,
+              "tectonic_activity": 0.416040299
+            },
+            {
+              "atmosphere": {
+                "Ar": 2231950.23812707,
+                "CH4": 3122659.584995905,
+                "CO2": 59180804.272222295,
+                "H2": 139983.885140197,
+                "H2O": 667558.269539469,
+                "He": 1220337.778088654,
+                "N2": 23948789.74092417,
+                "NH3": 3253538.735064658,
+                "O2": 228259.505839218,
+                "SO2": 1873698.534139662
+              },
+              "density": 4738.431969024,
+              "deposits": {
+                "exotics": {
+                  "quality": 5.0,
+                  "quantity": 228318247
+                },
+                "metals": {
+                  "quality": 5.0,
+                  "quantity": 315309983
+                },
+                "organics": {
+                  "quality": 5.0,
+                  "quantity": 321700935
+                },
+                "radioactives": {
+                  "quality": 5.0,
+                  "quantity": 215533940
+                },
+                "vapors": {
+                  "quality": 5.0,
+                  "quantity": 172310317
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 1.960755534,
+              "mass": 5.157980473643767e+24,
+              "orbit_distance": 14,
+              "planet_type": "CONTINENTAL",
+              "radius": 6381441.782715482,
+              "surface_area": 511737787530404.06,
+              "surface_gravity": 8.453718735,
+              "surface_pressure": 95867580.5440813,
+              "surface_temperature": 278.929271487,
+              "surface_water": 0.77452985,
+              "tectonic_activity": 0.712298906
+            }
+          ],
+          "region_id": null,
+          "stars": [
+            {
+              "age": 2068492741.79782,
+              "color": [
+                255,
+                199,
+                155
+              ],
+              "intrinsic_abilities": {},
+              "luminosity": 0.042973909,
+              "mass": 0.406899449,
+              "radius_hexes": 1,
+              "spectrum": {
+                "blue": 0.011277983,
+                "gamma_ray": 0.0,
+                "green": 0.012925905,
+                "infrared": 0.001079554,
+                "microwave": 0.0,
+                "radio": 0.0,
+                "red": 0.012279054,
+                "ultraviolet": 0.003075483,
+                "xray": 1e-09
+              },
+              "star_type": "MAIN_SEQUENCE",
+              "temperature": 3769.501415253
+            }
+          ],
+          "storms": []
+        },
+        {
+          "archetype": null,
+          "global_location": {
+            "q": -411,
+            "r": 343
+          },
+          "intrinsic_abilities": null,
+          "planets": [
+            {
+              "atmosphere": {
+                "Ar": 97.87078025,
+                "CH4": 64.643429079,
+                "CO2": 11322.23538005,
+                "H2O": 5168.300606967,
+                "He": 688.418740885,
+                "N2": 20263.32658813,
+                "NH3": 294.531727401,
+                "O2": 87.990849371,
+                "SO2": 682.724265058
+              },
+              "density": 5961.855436648,
+              "deposits": {
+                "exotics": {
+                  "quality": 5.0,
+                  "quantity": 776255905
+                },
+                "metals": {
+                  "quality": 5.0,
+                  "quantity": 177928608
+                },
+                "organics": {
+                  "quality": 5.0,
+                  "quantity": 237145653
+                },
+                "radioactives": {
+                  "quality": 5.0,
+                  "quantity": 216850407
+                },
+                "vapors": {
+                  "quality": 5.0,
+                  "quantity": 918112513
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.575867766,
+              "mass": 2.093651762453863e+25,
+              "orbit_distance": 5,
+              "planet_type": "ICE_GIANT",
+              "radius": 9429271.316423493,
+              "surface_area": 1117290557634643.2,
+              "surface_gravity": 15.716430133,
+              "surface_pressure": 38670.04236719,
+              "surface_temperature": 664.849509694,
+              "surface_water": 0,
+              "tectonic_activity": 0.779765318
+            },
+            {
+              "atmosphere": {},
+              "density": 3647.257684198,
+              "deposits": {
+                "exotics": {
+                  "quality": 64.671393058,
+                  "quantity": 61503977
+                },
+                "metals": {
+                  "quality": 90.178980941,
+                  "quantity": 33890627
+                },
+                "organics": {
+                  "quality": 73.009586867,
+                  "quantity": 14846165
+                },
+                "radioactives": {
+                  "quality": 87.199381242,
+                  "quantity": 58424082
+                },
+                "vapors": {
+                  "quality": 81.593417735,
+                  "quantity": 8236061
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.321670342,
+              "mass": 4.2856859026151105e+22,
+              "orbit_distance": 6,
+              "planet_type": "PLANETOID",
+              "radius": 1410333.300204784,
+              "surface_area": 24995014028788.965,
+              "surface_gravity": 1.438078328,
+              "surface_pressure": 0.0,
+              "surface_temperature": 579.311937357,
+              "surface_water": 0,
+              "tectonic_activity": 0.060326066
+            },
+            {
+              "atmosphere": {},
+              "density": 3489.954087936,
+              "deposits": {
+                "exotics": {
+                  "quality": 49.925282077,
+                  "quantity": 80591836
+                },
+                "metals": {
+                  "quality": 65.658313277,
+                  "quantity": 190468209
+                },
+                "organics": {
+                  "quality": 52.749640008,
+                  "quantity": 18771385
+                },
+                "radioactives": {
+                  "quality": 73.104795605,
+                  "quantity": 99001906
+                },
+                "vapors": {
+                  "quality": 53.405946458,
+                  "quantity": 29446519
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.492014066,
+              "mass": 2.012391460702927e+23,
+              "orbit_distance": 7,
+              "planet_type": "BARREN",
+              "radius": 2396632.150097877,
+              "surface_area": 72179293351464.44,
+              "surface_gravity": 2.338381829,
+              "surface_pressure": 0.0,
+              "surface_temperature": 537.37309403,
+              "surface_water": 0,
+              "tectonic_activity": 0.055454969
+            },
+            {
+              "atmosphere": {},
+              "density": 2663.418770812,
+              "deposits": {
+                "exotics": {
+                  "quality": 86.971783182,
+                  "quantity": 101572658
+                },
+                "metals": {
+                  "quality": 61.615973689,
+                  "quantity": 43340226
+                },
+                "organics": {
+                  "quality": 70.570401759,
+                  "quantity": 10013003
+                },
+                "radioactives": {
+                  "quality": 78.162437633,
+                  "quantity": 42864319
+                },
+                "vapors": {
+                  "quality": 73.269395142,
+                  "quantity": 17779136
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.210480278,
+              "mass": 4.768203325299089e+22,
+              "orbit_distance": 11,
+              "planet_type": "PLANETOID",
+              "radius": 1622839.488871218,
+              "surface_area": 33094894264379.38,
+              "surface_gravity": 1.208396214,
+              "surface_pressure": 0.0,
+              "surface_temperature": 431.104224118,
+              "surface_water": 0,
+              "tectonic_activity": 0.025351709
+            },
+            {
+              "atmosphere": {},
+              "density": 3752.692913677,
+              "deposits": {
+                "exotics": {
+                  "quality": 83.357829999,
+                  "quantity": 113941975
+                },
+                "metals": {
+                  "quality": 63.579674096,
+                  "quantity": 28145629
+                },
+                "organics": {
+                  "quality": 65.946924671,
+                  "quantity": 15781257
+                },
+                "radioactives": {
+                  "quality": 73.593655714,
+                  "quantity": 48580835
+                },
+                "vapors": {
+                  "quality": 78.589708426,
+                  "quantity": 9225095
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.058337968,
+              "mass": 2.4920943475089534e+22,
+              "orbit_distance": 14,
+              "planet_type": "PLANETOID",
+              "radius": 1166033.285380868,
+              "surface_area": 17085660001537.678,
+              "surface_gravity": 1.223343188,
+              "surface_pressure": 0.0,
+              "surface_temperature": 383.286739999,
+              "surface_water": 0,
+              "tectonic_activity": 0.129847889
+            },
+            {
+              "atmosphere": {},
+              "density": 3350.481238572,
+              "deposits": {
+                "exotics": {
+                  "quality": 68.799250674,
+                  "quantity": 60626854
+                },
+                "metals": {
+                  "quality": 82.92946201,
+                  "quantity": 100373484
+                },
+                "organics": {
+                  "quality": 86.090261483,
+                  "quantity": 12886218
+                },
+                "radioactives": {
+                  "quality": 71.259545305,
+                  "quantity": 47070867
+                },
+                "vapors": {
+                  "quality": 78.627089424,
+                  "quantity": 12953454
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.363299575,
+              "mass": 6.667829778346301e+22,
+              "orbit_distance": 17,
+              "planet_type": "PLANETOID",
+              "radius": 1681110.399942967,
+              "surface_area": 35514224338789.22,
+              "surface_gravity": 1.574699749,
+              "surface_pressure": 0.0,
+              "surface_temperature": 348.672232991,
+              "surface_water": 0.896872406,
+              "tectonic_activity": 0.117468069
+            }
+          ],
+          "region_id": null,
+          "stars": [
+            {
+              "age": 845463672.976899,
+              "color": [
+                214,
+                225,
+                255
+              ],
+              "intrinsic_abilities": {},
+              "luminosity": 17.315449045,
+              "mass": 2.258594243,
+              "radius_hexes": 2,
+              "spectrum": {
+                "blue": 5.509505028,
+                "gamma_ray": 0.0,
+                "green": 5.224545174,
+                "infrared": 0.075283019,
+                "microwave": 0.0,
+                "radio": 0.0,
+                "red": 4.268438014,
+                "ultraviolet": 3.201480008,
+                "xray": 1.3094e-05
+              },
+              "star_type": "MAIN_SEQUENCE",
+              "temperature": 8508.454690348
+            }
+          ],
+          "storms": []
+        },
+        {
+          "archetype": null,
+          "global_location": {
+            "q": 192,
+            "r": 258
+          },
+          "intrinsic_abilities": null,
+          "planets": [
+            {
+              "atmosphere": {},
+              "density": 2202.968663667,
+              "deposits": {
+                "exotics": {
+                  "quality": 54.533322849,
+                  "quantity": 77836329
+                },
+                "metals": {
+                  "quality": 59.786135844,
+                  "quantity": 114582197
+                },
+                "organics": {
+                  "quality": 61.627983034,
+                  "quantity": 18200680
+                },
+                "radioactives": {
+                  "quality": 73.318810604,
+                  "quantity": 163186947
+                },
+                "vapors": {
+                  "quality": 56.173755352,
+                  "quantity": 24726247
+                }
+              },
+              "intrinsic_abilities": {
+                "EnvironmentalDamage": {
+                  "damage_type": "thermal",
+                  "rate": 0.181264274,
+                  "scope": "sector"
+                }
+              },
+              "magnetic_field": 0.275996123,
+              "mass": 2.4209524185912187e+23,
+              "orbit_distance": 8,
+              "planet_type": "MAGMA",
+              "radius": 2971413.610865726,
+              "surface_area": 110952241574301.5,
+              "surface_gravity": 1.830061821,
+              "surface_pressure": 0.0,
+              "surface_temperature": 2509.937064018,
+              "surface_water": 0,
+              "tectonic_activity": 0.047973036
+            },
+            {
+              "atmosphere": {
+                "CO2": 465.979438185,
+                "SO2": 10.822628522
+              },
+              "density": 4331.632649835,
+              "deposits": {
+                "exotics": {
+                  "quality": 15.90139028,
+                  "quantity": 278151898
+                },
+                "metals": {
+                  "quality": 5.0,
+                  "quantity": 346164666
+                },
+                "organics": {
+                  "quality": 14.658644472,
+                  "quantity": 40370624
+                },
+                "radioactives": {
+                  "quality": 17.902239506,
+                  "quantity": 532043824
+                },
+                "vapors": {
+                  "quality": 5.0,
+                  "quantity": 86283862
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 1.185179709,
+              "mass": 3.21430961908822e+24,
+              "orbit_distance": 9,
+              "planet_type": "MAGMA",
+              "radius": 5616285.283855584,
+              "surface_area": 396376760619243.9,
+              "surface_gravity": 6.801349799,
+              "surface_pressure": 476.802066706,
+              "surface_temperature": 2369.87793322,
+              "surface_water": 0,
+              "tectonic_activity": 0.430553847
+            },
+            {
+              "atmosphere": {
+                "Ar": 40201.558157529,
+                "CH4": 314748.174680137,
+                "CO2": 15370243.634393701,
+                "H2O": 1038136.803732756,
+                "N2": 968721.037973368,
+                "NH3": 252327.929232143,
+                "O2": 30723.637086099,
+                "SO2": 105719.594077826
+              },
+              "density": 4945.952500481,
+              "deposits": {
+                "exotics": {
+                  "quality": 5.0,
+                  "quantity": 1017740966
+                },
+                "metals": {
+                  "quality": 5.0,
+                  "quantity": 1317600736
+                },
+                "organics": {
+                  "quality": 5.0,
+                  "quantity": 47855792
+                },
+                "radioactives": {
+                  "quality": 5.0,
+                  "quantity": 1037767699
+                },
+                "vapors": {
+                  "quality": 5.0,
+                  "quantity": 106161154
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 1.767559135,
+              "mass": 3.379513695228502e+25,
+              "orbit_distance": 10,
+              "planet_type": "CHTHONIAN",
+              "radius": 11771682.863152353,
+              "surface_area": 1741353610998103.2,
+              "surface_gravity": 16.27731723,
+              "surface_pressure": 18120822.369333558,
+              "surface_temperature": 2427.523821409,
+              "surface_water": 0,
+              "tectonic_activity": 0.170255222
+            },
+            {
+              "atmosphere": {
+                "Ar": 118.26413162,
+                "CO2": 7830.706808099,
+                "N2": 3139.061015787,
+                "O2": 16.858165485,
+                "SO2": 35.954685857
+              },
+              "density": 5721.033745635,
+              "deposits": {
+                "exotics": {
+                  "quality": 5.0,
+                  "quantity": 327559764
+                },
+                "metals": {
+                  "quality": 5.0,
+                  "quantity": 458707960
+                },
+                "organics": {
+                  "quality": 5.0,
+                  "quantity": 47866668
+                },
+                "radioactives": {
+                  "quality": 5.0,
+                  "quantity": 593977754
+                },
+                "vapors": {
+                  "quality": 5.0,
+                  "quantity": 136533315
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 1.163344107,
+              "mass": 5.582913703394526e+24,
+              "orbit_distance": 10,
+              "planet_type": "MAGMA",
+              "radius": 6153174.97895703,
+              "surface_area": 475782424172672.4,
+              "surface_gravity": 9.841654344,
+              "surface_pressure": 11140.844806847,
+              "surface_temperature": 2280.256180442,
+              "surface_water": 0,
+              "tectonic_activity": 0.463274689
+            },
+            {
+              "atmosphere": {},
+              "density": 2200.788301449,
+              "deposits": {
+                "exotics": {
+                  "quality": 28.767690129,
+                  "quantity": 222662469
+                },
+                "metals": {
+                  "quality": 48.770507786,
+                  "quantity": 277804160
+                },
+                "organics": {
+                  "quality": 46.769480495,
+                  "quantity": 28959462
+                },
+                "radioactives": {
+                  "quality": 27.1894273,
+                  "quantity": 360515987
+                },
+                "vapors": {
+                  "quality": 36.376800388,
+                  "quantity": 68006133
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 1.511536243,
+              "mass": 1.2595082946805477e+24,
+              "orbit_distance": 10,
+              "planet_type": "MAGMA",
+              "radius": 5150444.574247375,
+              "surface_area": 333349109956045.94,
+              "surface_gravity": 3.168964104,
+              "surface_pressure": 0.0,
+              "surface_temperature": 2251.226542005,
+              "surface_water": 0,
+              "tectonic_activity": 0.329995912
+            },
+            {
+              "atmosphere": {},
+              "density": 2568.715701751,
+              "deposits": {
+                "exotics": {
+                  "quality": 50.368299926,
+                  "quantity": 136997583
+                },
+                "metals": {
+                  "quality": 58.56442117,
+                  "quantity": 233520083
+                },
+                "organics": {
+                  "quality": 42.438639892,
+                  "quantity": 15002205
+                },
+                "radioactives": {
+                  "quality": 39.131273133,
+                  "quantity": 222937392
+                },
+                "vapors": {
+                  "quality": 38.316113772,
+                  "quantity": 43799504
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.489168864,
+              "mass": 5.2040517778321656e+23,
+              "orbit_distance": 10,
+              "planet_type": "MAGMA",
+              "radius": 3643445.853702904,
+              "surface_area": 166814770951853.3,
+              "surface_gravity": 2.616511773,
+              "surface_pressure": 0.0,
+              "surface_temperature": 2251.226542005,
+              "surface_water": 0,
+              "tectonic_activity": 0.018075866
+            },
+            {
+              "atmosphere": {},
+              "density": 2610.49358046,
+              "deposits": {
+                "exotics": {
+                  "quality": 73.666290731,
+                  "quantity": 92556490
+                },
+                "metals": {
+                  "quality": 65.131256407,
+                  "quantity": 49104955
+                },
+                "organics": {
+                  "quality": 71.355504714,
+                  "quantity": 11981333
+                },
+                "radioactives": {
+                  "quality": 66.844829084,
+                  "quantity": 69888591
+                },
+                "vapors": {
+                  "quality": 74.809193326,
+                  "quantity": 19369797
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.340900186,
+              "mass": 4.60509040391402e+22,
+              "orbit_distance": 10,
+              "planet_type": "PLANETOID",
+              "radius": 1614887.627432983,
+              "surface_area": 32771361021823.39,
+              "surface_gravity": 1.17858055,
+              "surface_pressure": 0.0,
+              "surface_temperature": 2251.226542005,
+              "surface_water": 0,
+              "tectonic_activity": 0.08241035
+            },
+            {
+              "atmosphere": {},
+              "density": 3667.101793166,
+              "deposits": {
+                "exotics": {
+                  "quality": 72.300379118,
+                  "quantity": 64750857
+                },
+                "metals": {
+                  "quality": 79.63467313,
+                  "quantity": 48692724
+                },
+                "organics": {
+                  "quality": 91.59379805,
+                  "quantity": 3787352
+                },
+                "radioactives": {
+                  "quality": 83.946134376,
+                  "quantity": 90156533
+                },
+                "vapors": {
+                  "quality": 72.211356475,
+                  "quantity": 23025470
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.232626628,
+              "mass": 1.9934424810617024e+22,
+              "orbit_distance": 10,
+              "planet_type": "PLANETOID",
+              "radius": 1090763.787841954,
+              "surface_area": 14951035987369.385,
+              "surface_gravity": 1.118273439,
+              "surface_pressure": 0.0,
+              "surface_temperature": 2251.226542005,
+              "surface_water": 0,
+              "tectonic_activity": 0.179781706
+            },
+            {
+              "atmosphere": {},
+              "density": 4498.43391375,
+              "deposits": {
+                "exotics": {
+                  "quality": 92.308967491,
+                  "quantity": 85389473
+                },
+                "metals": {
+                  "quality": 79.728393745,
+                  "quantity": 39484164
+                },
+                "organics": {
+                  "quality": 89.937991404,
+                  "quantity": 4182753
+                },
+                "radioactives": {
+                  "quality": 69.202557991,
+                  "quantity": 32683771
+                },
+                "vapors": {
+                  "quality": 93.860745863,
+                  "quantity": 1074672
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.053326634,
+              "mass": 9.39e+20,
+              "orbit_distance": 10,
+              "planet_type": "PLANETOID",
+              "radius": 367992.142956061,
+              "surface_area": 1701715506243.5469,
+              "surface_gravity": 0.462800931,
+              "surface_pressure": 0.0,
+              "surface_temperature": 2251.226542005,
+              "surface_water": 0,
+              "tectonic_activity": 0.170667092
+            },
+            {
+              "atmosphere": {},
+              "density": 4434.00704207,
+              "deposits": {
+                "exotics": {
+                  "quality": 91.983742253,
+                  "quantity": 74998439
+                },
+                "metals": {
+                  "quality": 96.047666571,
+                  "quantity": 82330863
+                },
+                "organics": {
+                  "quality": 75.863170747,
+                  "quantity": 10254939
+                },
+                "radioactives": {
+                  "quality": 76.478423019,
+                  "quantity": 17068378
+                },
+                "vapors": {
+                  "quality": 75.529755186,
+                  "quantity": 15879534
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.372586077,
+              "mass": 9.39e+20,
+              "orbit_distance": 10,
+              "planet_type": "PLANETOID",
+              "radius": 369765.908799971,
+              "surface_area": 1718159984911.341,
+              "surface_gravity": 0.458371471,
+              "surface_pressure": 0.0,
+              "surface_temperature": 2251.226542005,
+              "surface_water": 0,
+              "tectonic_activity": 0.182123391
+            },
+            {
+              "atmosphere": {
+                "Ar": 23.631302625,
+                "CO2": 1225.748458518,
+                "O2": 1.649772078,
+                "SO2": 30.749577749
+              },
+              "density": 4027.855190688,
+              "deposits": {
+                "exotics": {
+                  "quality": 5.0,
+                  "quantity": 344564115
+                },
+                "metals": {
+                  "quality": 5.0,
+                  "quantity": 417893697
+                },
+                "organics": {
+                  "quality": 5.0,
+                  "quantity": 43453056
+                },
+                "radioactives": {
+                  "quality": 5.0,
+                  "quantity": 491029924
+                },
+                "vapors": {
+                  "quality": 8.648808698,
+                  "quantity": 96972130
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 1.862756566,
+              "mass": 4.419937098032087e+24,
+              "orbit_distance": 11,
+              "planet_type": "MAGMA",
+              "radius": 6398593.841583109,
+              "surface_area": 514492385271446.7,
+              "surface_gravity": 7.205310904,
+              "surface_pressure": 1281.77911097,
+              "surface_temperature": 2173.143365106,
+              "surface_water": 0,
+              "tectonic_activity": 0.366264618
+            },
+            {
+              "atmosphere": {},
+              "density": 3029.112724469,
+              "deposits": {
+                "exotics": {
+                  "quality": 25.630106783,
+                  "quantity": 218760572
+                },
+                "metals": {
+                  "quality": 48.410567921,
+                  "quantity": 237968327
+                },
+                "organics": {
+                  "quality": 28.237368543,
+                  "quantity": 19193928
+                },
+                "radioactives": {
+                  "quality": 51.542892281,
+                  "quantity": 356315958
+                },
+                "vapors": {
+                  "quality": 29.073222803,
+                  "quantity": 54808466
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 1.493875305,
+              "mass": 9.897547501509321e+23,
+              "orbit_distance": 11,
+              "planet_type": "MAGMA",
+              "radius": 4272753.612537973,
+              "surface_area": 229416982957483.4,
+              "surface_gravity": 3.618408695,
+              "surface_pressure": 0.0,
+              "surface_temperature": 2149.019055595,
+              "surface_water": 0,
+              "tectonic_activity": 0.446828315
+            },
+            {
+              "atmosphere": {},
+              "density": 3171.74492569,
+              "deposits": {
+                "exotics": {
+                  "quality": 81.561807433,
+                  "quantity": 49144009
+                },
+                "metals": {
+                  "quality": 77.532303296,
+                  "quantity": 53255414
+                },
+                "organics": {
+                  "quality": 79.273956279,
+                  "quantity": 9195094
+                },
+                "radioactives": {
+                  "quality": 62.10880319,
+                  "quantity": 67770373
+                },
+                "vapors": {
+                  "quality": 83.368874116,
+                  "quantity": 22365577
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.20125426,
+              "mass": 3.3316573830005846e+22,
+              "orbit_distance": 11,
+              "planet_type": "PLANETOID",
+              "radius": 1358598.581605612,
+              "surface_area": 23194882547569.14,
+              "surface_gravity": 1.204713407,
+              "surface_pressure": 0.0,
+              "surface_temperature": 2149.019055595,
+              "surface_water": 0,
+              "tectonic_activity": 0.060818238
+            },
+            {
+              "atmosphere": {},
+              "density": 4173.418710802,
+              "deposits": {
+                "exotics": {
+                  "quality": 83.500972926,
+                  "quantity": 86886983
+                },
+                "metals": {
+                  "quality": 87.638635196,
+                  "quantity": 52493125
+                },
+                "organics": {
+                  "quality": 82.22084769,
+                  "quantity": 6746685
+                },
+                "radioactives": {
+                  "quality": 77.600493368,
+                  "quantity": 12579898
+                },
+                "vapors": {
+                  "quality": 76.971306166,
+                  "quantity": 1637873
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.027102043,
+              "mass": 9.39e+20,
+              "orbit_distance": 11,
+              "planet_type": "PLANETOID",
+              "radius": 377307.126422439,
+              "surface_area": 1788956910586.936,
+              "surface_gravity": 0.440231688,
+              "surface_pressure": 0.0,
+              "surface_temperature": 2149.019055595,
+              "surface_water": 0,
+              "tectonic_activity": 0.092395269
+            },
+            {
+              "atmosphere": {},
+              "density": 2072.173606104,
+              "deposits": {
+                "exotics": {
+                  "quality": 73.578752751,
+                  "quantity": 64761380
+                },
+                "metals": {
+                  "quality": 78.28212317,
+                  "quantity": 70652362
+                },
+                "organics": {
+                  "quality": 81.199339637,
+                  "quantity": 611862
+                },
+                "radioactives": {
+                  "quality": 97.371441289,
+                  "quantity": 11247287
+                },
+                "vapors": {
+                  "quality": 94.201789466,
+                  "quantity": 4923235
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.399656867,
+              "mass": 9.39e+20,
+              "orbit_distance": 11,
+              "planet_type": "PLANETOID",
+              "radius": 476486.150247745,
+              "surface_area": 2853056863547.4365,
+              "surface_gravity": 0.276039195,
+              "surface_pressure": 0.0,
+              "surface_temperature": 2149.019055595,
+              "surface_water": 0,
+              "tectonic_activity": 0.126004455
+            },
+            {
+              "atmosphere": {
+                "SO2": 12339.996036394
+              },
+              "density": 2661.386564147,
+              "deposits": {
+                "exotics": {
+                  "quality": 12.270930903,
+                  "quantity": 311725921
+                },
+                "metals": {
+                  "quality": 5.0,
+                  "quantity": 327515271
+                },
+                "organics": {
+                  "quality": 5.0,
+                  "quantity": 33268095
+                },
+                "radioactives": {
+                  "quality": 23.823536483,
+                  "quantity": 467955264
+                },
+                "vapors": {
+                  "quality": 22.87518443,
+                  "quantity": 76653681
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.672164454,
+              "mass": 2.6426504279145315e+24,
+              "orbit_distance": 13,
+              "planet_type": "MAGMA",
+              "radius": 6188913.074486089,
+              "surface_area": 481325233127432.0,
+              "surface_gravity": 4.604862597,
+              "surface_pressure": 12339.996036394,
+              "surface_temperature": 1987.505517419,
+              "surface_water": 0,
+              "tectonic_activity": 0.23847345
+            },
+            {
+              "atmosphere": {
+                "Ar": 501.788326422,
+                "CO2": 32895.200343639,
+                "SO2": 339.533917228
+              },
+              "density": 2667.931657667,
+              "deposits": {
+                "exotics": {
+                  "quality": 5.0,
+                  "quantity": 307285988
+                },
+                "metals": {
+                  "quality": 5.0,
+                  "quantity": 454268561
+                },
+                "organics": {
+                  "quality": 11.275358741,
+                  "quantity": 47577752
+                },
+                "radioactives": {
+                  "quality": 10.867697524,
+                  "quantity": 507745428
+                },
+                "vapors": {
+                  "quality": 5.0,
+                  "quantity": 120460388
+                }
+              },
+              "intrinsic_abilities": {
+                "EnvironmentalDamage": {
+                  "damage_type": "thermal",
+                  "rate": 0.264923433,
+                  "scope": "sector"
+                }
+              },
+              "magnetic_field": 0.998659934,
+              "mass": 3.874876854382996e+24,
+              "orbit_distance": 14,
+              "planet_type": "MAGMA",
+              "radius": 7025299.846628187,
+              "surface_area": 620211185103271.0,
+              "surface_gravity": 5.240031509,
+              "surface_pressure": 33736.522587289,
+              "surface_temperature": 1957.805638394,
+              "surface_water": 0,
+              "tectonic_activity": 0.43903897
+            },
+            {
+              "atmosphere": {},
+              "density": 3702.137735455,
+              "deposits": {
+                "exotics": {
+                  "quality": 72.716779278,
+                  "quantity": 49894639
+                },
+                "metals": {
+                  "quality": 67.875612658,
+                  "quantity": 70009996
+                },
+                "organics": {
+                  "quality": 67.693871376,
+                  "quantity": 11373864
+                },
+                "radioactives": {
+                  "quality": 76.49450921,
+                  "quantity": 77431200
+                },
+                "vapors": {
+                  "quality": 70.635289631,
+                  "quantity": 9017705
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.048581965,
+              "mass": 4.97498838983033e+21,
+              "orbit_distance": 18,
+              "planet_type": "PLANETOID",
+              "radius": 684568.58171496,
+              "surface_area": 5889030324375.721,
+              "surface_gravity": 0.708539177,
+              "surface_pressure": 0.0,
+              "surface_temperature": 1690.339165302,
+              "surface_water": 0,
+              "tectonic_activity": 0.027355848
+            }
+          ],
+          "region_id": null,
+          "stars": [
+            {
+              "age": 6937032460.520577,
+              "color": [
+                165,
+                195,
+                255
+              ],
+              "intrinsic_abilities": {
+                "ShieldModifier": {
+                  "multiplier": 0.925791461,
+                  "scope": "system"
+                }
+              },
+              "luminosity": 11729.772785782,
+              "mass": 11.546473286,
+              "radius_hexes": 4,
+              "spectrum": {
+                "blue": 2445.785010959,
+                "gamma_ray": 0.0,
+                "green": 2391.865549848,
+                "infrared": 3.637248483,
+                "microwave": 0.0,
+                "radio": 0.0,
+                "red": 1649.92000648,
+                "ultraviolet": 4795.261001153,
+                "xray": 0.846722794
+              },
+              "star_type": "BLUE_GIANT",
+              "temperature": 23508.471079107
+            }
+          ],
+          "storms": [
+            {
+              "abilities": {
+                "EnvironmentalDamage": {
+                  "damage_type": "radiation",
+                  "rate": 0.8,
+                  "scope": "sector"
+                },
+                "FuelDrain": {
+                  "rate": 0.1,
+                  "scope": "sector"
+                }
+              },
+              "description": "Intense radiation zone causing gradual hull damage. Often found near gas giants.",
+              "hex_offsets": [
+                {
+                  "q": 0,
+                  "r": 1
+                },
+                {
+                  "q": -1,
+                  "r": 0
+                },
+                {
+                  "q": 0,
+                  "r": 0
+                },
+                {
+                  "q": -2,
+                  "r": 1
+                },
+                {
+                  "q": -2,
+                  "r": 2
+                }
+              ],
+              "image_variant": 4,
+              "intensity": 0.51698106,
+              "location": {
+                "q": -3,
+                "r": 23
+              },
+              "name": "Radiation Belt Alpha",
+              "storm_type": "radiation_belt"
+            }
+          ]
+        },
+        {
+          "archetype": null,
+          "global_location": {
+            "q": 254,
+            "r": -396
+          },
+          "intrinsic_abilities": null,
+          "planets": [
+            {
+              "atmosphere": {},
+              "density": 2675.205990969,
+              "deposits": {
+                "exotics": {
+                  "quality": 75.302638702,
+                  "quantity": 50471532
+                },
+                "metals": {
+                  "quality": 74.428619494,
+                  "quantity": 73213738
+                },
+                "organics": {
+                  "quality": 69.413250846,
+                  "quantity": 12894023
+                },
+                "radioactives": {
+                  "quality": 87.810320224,
+                  "quantity": 28442070
+                },
+                "vapors": {
+                  "quality": 86.283315271,
+                  "quantity": 21631767
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.269086453,
+              "mass": 3.3088490493645565e+22,
+              "orbit_distance": 5,
+              "planet_type": "PLANETOID",
+              "radius": 1434642.544604807,
+              "surface_area": 25864094332298.055,
+              "surface_gravity": 1.072988993,
+              "surface_pressure": 0.0,
+              "surface_temperature": 444.709095853,
+              "surface_water": 0,
+              "tectonic_activity": 0.161639844
+            },
+            {
+              "atmosphere": {
+                "Ar": 101616215.85223238,
+                "CH4": 100297775.60125378,
+                "CO2": 45080423.37256803,
+                "H2": 9737889074.84618,
+                "H2O": 77956556.05780932,
+                "He": 3116124503.9507775,
+                "N2": 15717610.607650684,
+                "NH3": 110400816.57784481,
+                "O2": 127740895.49285124,
+                "SO2": 55619967.66643907
+              },
+              "density": 5381.228831866,
+              "deposits": {
+                "exotics": {
+                  "quality": 5.0,
+                  "quantity": 1138344987
+                },
+                "metals": {
+                  "quality": 5.0,
+                  "quantity": 255895687
+                },
+                "organics": {
+                  "quality": 5.0,
+                  "quantity": 355598735
+                },
+                "radioactives": {
+                  "quality": 5.0,
+                  "quantity": 315369045
+                },
+                "vapors": {
+                  "quality": 5.0,
+                  "quantity": 1377640429
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 1.258941185,
+              "mass": 5.740222003542528e+25,
+              "orbit_distance": 7,
+              "planet_type": "ICE_GIANT",
+              "radius": 13655875.220484981,
+              "surface_area": 2343413586969540.0,
+              "surface_gravity": 20.544488507,
+              "surface_pressure": 13488443840.025606,
+              "surface_temperature": 510.894002411,
+              "surface_water": 0,
+              "tectonic_activity": 0.359399613
+            },
+            {
+              "atmosphere": {
+                "Ar": 344083862.3967513,
+                "CH4": 365905570.4975112,
+                "CO2": 187883783.4481574,
+                "H2": 54366293353.556526,
+                "H2O": 397143562.4945804,
+                "He": 17397213873.13809,
+                "N2": 650371719.194234,
+                "NH3": 602066228.4199244,
+                "O2": 539063865.6322237,
+                "SO2": 179220107.97475284
+              },
+              "density": 5190.904636939,
+              "deposits": {
+                "exotics": {
+                  "quality": 5.0,
+                  "quantity": 1332291667
+                },
+                "metals": {
+                  "quality": 5.0,
+                  "quantity": 306073682
+                },
+                "organics": {
+                  "quality": 5.0,
+                  "quantity": 438259565
+                },
+                "radioactives": {
+                  "quality": 5.0,
+                  "quantity": 379852663
+                },
+                "vapors": {
+                  "quality": 5.0,
+                  "quantity": 1633987319
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 1.648720526,
+              "mass": 9.693880655608169e+25,
+              "orbit_distance": 9,
+              "planet_type": "ICE_GIANT",
+              "radius": 16458440.040579783,
+              "surface_area": 3403981595632312.0,
+              "surface_gravity": 23.885044407,
+              "surface_pressure": 75029245926.75275,
+              "surface_temperature": 511.121740149,
+              "surface_water": 0,
+              "tectonic_activity": 0.546363006
+            },
+            {
+              "atmosphere": {
+                "Ar": 35.412531627,
+                "CH4": 32.898324623,
+                "CO2": 2108.465831678,
+                "H2O": 62.701485296,
+                "N2": 509.463105504,
+                "NH3": 25.208247127,
+                "O2": 5.486004206,
+                "SO2": 51.943364981
+              },
+              "density": 3766.047854236,
+              "deposits": {
+                "exotics": {
+                  "quality": 6.619105182,
+                  "quantity": 241526248
+                },
+                "metals": {
+                  "quality": 10.555708433,
+                  "quantity": 221992672
+                },
+                "organics": {
+                  "quality": 25.606382869,
+                  "quantity": 78117556
+                },
+                "radioactives": {
+                  "quality": 16.386913644,
+                  "quantity": 350850313
+                },
+                "vapors": {
+                  "quality": 12.573582831,
+                  "quantity": 62383473
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 1.070571543,
+              "mass": 2.5714165965769384e+24,
+              "orbit_distance": 9,
+              "planet_type": "ARID",
+              "radius": 5462599.153088668,
+              "surface_area": 374980367277635.4,
+              "surface_gravity": 5.751478494,
+              "surface_pressure": 2831.578895042,
+              "surface_temperature": 359.507479215,
+              "surface_water": 0,
+              "tectonic_activity": 0.635916203
+            },
+            {
+              "atmosphere": {
+                "Ar": 12.02658286,
+                "CO2": 245.466522517,
+                "N2": 199.966517211,
+                "O2": 2.020138366,
+                "SO2": 13.902732157
+              },
+              "density": 2548.554086554,
+              "deposits": {
+                "exotics": {
+                  "quality": 49.654013147,
+                  "quantity": 76980071
+                },
+                "metals": {
+                  "quality": 56.780398492,
+                  "quantity": 159332135
+                },
+                "organics": {
+                  "quality": 59.131128441,
+                  "quantity": 13060641
+                },
+                "radioactives": {
+                  "quality": 51.221754927,
+                  "quantity": 100154929
+                },
+                "vapors": {
+                  "quality": 53.699592322,
+                  "quantity": 21652226
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.31112848,
+              "mass": 4.442706832398919e+23,
+              "orbit_distance": 9,
+              "planet_type": "BARREN",
+              "radius": 3465413.507641169,
+              "surface_area": 150910685469666.8,
+              "surface_gravity": 2.469125994,
+              "surface_pressure": 473.38249311,
+              "surface_temperature": 333.910953811,
+              "surface_water": 0.124269807,
+              "tectonic_activity": 0.025525559
+            },
+            {
+              "atmosphere": {
+                "Ar": 0.599171764,
+                "CO2": 7.089764665,
+                "N2": 121.716144133,
+                "O2": 0.184545148,
+                "SO2": 3.946032575
+              },
+              "density": 3903.074269735,
+              "deposits": {
+                "exotics": {
+                  "quality": 58.063611124,
+                  "quantity": 103211660
+                },
+                "metals": {
+                  "quality": 60.697163323,
+                  "quantity": 198510358
+                },
+                "organics": {
+                  "quality": 69.632875647,
+                  "quantity": 21715054
+                },
+                "radioactives": {
+                  "quality": 44.931152912,
+                  "quantity": 105744916
+                },
+                "vapors": {
+                  "quality": 41.755924185,
+                  "quantity": 22040668
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.174980172,
+              "mass": 4.057636823018039e+23,
+              "orbit_distance": 9,
+              "planet_type": "BARREN",
+              "radius": 2916929.389017659,
+              "surface_area": 106920676106203.95,
+              "surface_gravity": 3.18292983,
+              "surface_pressure": 133.535658285,
+              "surface_temperature": 333.910953811,
+              "surface_water": 0.685129684,
+              "tectonic_activity": 0.199981566
+            },
+            {
+              "atmosphere": {
+                "CO2": 285.658564554,
+                "SO2": 15.433625643
+              },
+              "density": 2174.934527816,
+              "deposits": {
+                "exotics": {
+                  "quality": 56.771784276,
+                  "quantity": 85882035
+                },
+                "metals": {
+                  "quality": 59.815299651,
+                  "quantity": 130999641
+                },
+                "organics": {
+                  "quality": 51.561922011,
+                  "quantity": 13128949
+                },
+                "radioactives": {
+                  "quality": 74.827454411,
+                  "quantity": 134688402
+                },
+                "vapors": {
+                  "quality": 75.954198161,
+                  "quantity": 22062057
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.150161134,
+              "mass": 2.3738313071664386e+23,
+              "orbit_distance": 9,
+              "planet_type": "BARREN",
+              "radius": 2964638.097965602,
+              "surface_area": 110446824725190.34,
+              "surface_gravity": 1.802653293,
+              "surface_pressure": 301.092190197,
+              "surface_temperature": 333.910953811,
+              "surface_water": 0.378356196,
+              "tectonic_activity": 0.143950853
+            },
+            {
+              "atmosphere": {
+                "SO2": 445.273674547
+              },
+              "density": 2544.911352266,
+              "deposits": {
+                "exotics": {
+                  "quality": 55.537730115,
+                  "quantity": 120820902
+                },
+                "metals": {
+                  "quality": 82.199458971,
+                  "quantity": 130718094
+                },
+                "organics": {
+                  "quality": 54.028188545,
+                  "quantity": 8429628
+                },
+                "radioactives": {
+                  "quality": 65.157469025,
+                  "quantity": 115118045
+                },
+                "vapors": {
+                  "quality": 73.578254385,
+                  "quantity": 16513835
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.373962826,
+              "mass": 1.3160716879239487e+23,
+              "orbit_distance": 9,
+              "planet_type": "PLANETOID",
+              "radius": 2311210.096439653,
+              "surface_area": 67125682760607.93,
+              "surface_gravity": 1.644396024,
+              "surface_pressure": 445.273674547,
+              "surface_temperature": 333.910953811,
+              "surface_water": 0.203079584,
+              "tectonic_activity": 0.121449499
+            },
+            {
+              "atmosphere": {
+                "Ar": 768.817740065,
+                "CH4": 1305.942305238,
+                "CO2": 103365.00112994,
+                "H2O": 3063.41788758,
+                "He": 229.488547185,
+                "N2": 43885.544674204,
+                "NH3": 1984.449490411,
+                "O2": 155.782859954,
+                "SO2": 17.472239448
+              },
+              "density": 4398.259865453,
+              "deposits": {
+                "exotics": {
+                  "quality": 5.0,
+                  "quantity": 552706372
+                },
+                "metals": {
+                  "quality": 5.0,
+                  "quantity": 110380065
+                },
+                "organics": {
+                  "quality": 5.0,
+                  "quantity": 178555649
+                },
+                "radioactives": {
+                  "quality": 5.0,
+                  "quantity": 146850973
+                },
+                "vapors": {
+                  "quality": 5.0,
+                  "quantity": 617294778
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 1.655069283,
+              "mass": 9.129114393385804e+24,
+              "orbit_distance": 12,
+              "planet_type": "ICE_GIANT",
+              "radius": 7913216.564622465,
+              "surface_area": 786893516244222.9,
+              "surface_gravity": 9.730345694,
+              "surface_pressure": 154775.916874026,
+              "surface_temperature": 341.895939227,
+              "surface_water": 0.195928567,
+              "tectonic_activity": 0.625675134
+            },
+            {
+              "atmosphere": {
+                "Ar": 1.905456215,
+                "CO2": 67.665115797,
+                "SO2": 1.286862533
+              },
+              "density": 3369.843032839,
+              "deposits": {
+                "exotics": {
+                  "quality": 56.466472645,
+                  "quantity": 127983021
+                },
+                "metals": {
+                  "quality": 54.817994551,
+                  "quantity": 139677942
+                },
+                "organics": {
+                  "quality": 65.190812963,
+                  "quantity": 9623935
+                },
+                "radioactives": {
+                  "quality": 72.261396791,
+                  "quantity": 113442933
+                },
+                "vapors": {
+                  "quality": 59.782900328,
+                  "quantity": 24840128
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.236593093,
+              "mass": 1.9569723834032583e+23,
+              "orbit_distance": 15,
+              "planet_type": "PLANETOID",
+              "radius": 2402308.651080113,
+              "surface_area": 72521616268269.5,
+              "surface_gravity": 2.263251465,
+              "surface_pressure": 70.857434545,
+              "surface_temperature": 260.303136241,
+              "surface_water": 0.911062743,
+              "tectonic_activity": 0.04274028
+            }
+          ],
+          "region_id": null,
+          "stars": [
+            {
+              "age": 2306943117.337509,
+              "color": [
+                240,
+                240,
+                255
+              ],
+              "intrinsic_abilities": {},
+              "luminosity": 4.489710954,
+              "mass": 1.53584755,
+              "radius_hexes": 2,
+              "spectrum": {
+                "blue": 1.315786128,
+                "gamma_ray": 0.0,
+                "green": 1.207705682,
+                "infrared": 0.027297641,
+                "microwave": 0.0,
+                "radio": 0.0,
+                "red": 1.32740528,
+                "ultraviolet": 0.570260986,
+                "xray": 1.541e-06
+              },
+              "star_type": "MAIN_SEQUENCE",
+              "temperature": 7084.233859769
+            }
+          ],
+          "storms": [
+            {
+              "abilities": {
+                "StrategicSpeedModifier": {
+                  "multiplier": 0.5,
+                  "scope": "sector"
+                },
+                "ThrustModifier": {
+                  "multiplier": 0.6,
+                  "scope": "sector"
+                }
+              },
+              "description": "Spacetime distortion causing thrust inefficiency. Common in binary systems.",
+              "hex_offsets": [
+                {
+                  "q": 0,
+                  "r": -1
+                },
+                {
+                  "q": 1,
+                  "r": -1
+                },
+                {
+                  "q": 0,
+                  "r": 0
+                }
+              ],
+              "image_variant": 5,
+              "intensity": 0.352745808,
+              "location": {
+                "q": 19,
+                "r": 12
+              },
+              "name": "Gravitational Anomaly Alpha",
+              "storm_type": "gravitational_anomaly"
+            }
+          ]
+        },
+        {
+          "archetype": null,
+          "global_location": {
+            "q": 480,
+            "r": -156
+          },
+          "intrinsic_abilities": null,
+          "planets": [
+            {
+              "atmosphere": {
+                "N2": 79000.0,
+                "O2": 21000.0
+              },
+              "density": 2142.225127085,
+              "deposits": {
+                "exotics": {
+                  "quality": 50.0,
+                  "quantity": 315441495
+                },
+                "metals": {
+                  "quality": 50.0,
+                  "quantity": 139340939
+                },
+                "organics": {
+                  "quality": 50.0,
+                  "quantity": 93682805
+                },
+                "radioactives": {
+                  "quality": 50.0,
+                  "quantity": 101920821
+                },
+                "vapors": {
+                  "quality": 50.0,
+                  "quantity": 306178133
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.59281055,
+              "mass": 2.374280421173077e+24,
+              "orbit_distance": 5,
+              "planet_type": "CRYOPLANET",
+              "radius": 6419867.986353208,
+              "surface_area": 517919257316508.4,
+              "surface_gravity": 9.81,
+              "surface_pressure": 100000.0,
+              "surface_temperature": 293.0,
+              "surface_water": 0.5,
+              "tectonic_activity": 0.205602754
+            },
+            {
+              "atmosphere": {
+                "Ar": 97.194725905,
+                "CH4": 45.321962269,
+                "CO2": 3454.941546154,
+                "H2O": 515.907333096,
+                "He": 35.293679661,
+                "N2": 485.35755259,
+                "NH3": 1.067694802,
+                "O2": 5.251622511,
+                "SO2": 115.107206306
+              },
+              "density": 3498.312392361,
+              "deposits": {
+                "exotics": {
+                  "quality": 8.625919544,
+                  "quantity": 248477300
+                },
+                "metals": {
+                  "quality": 8.56246887,
+                  "quantity": 93402710
+                },
+                "organics": {
+                  "quality": 33.863523181,
+                  "quantity": 94518639
+                },
+                "radioactives": {
+                  "quality": 20.531041568,
+                  "quantity": 105387292
+                },
+                "vapors": {
+                  "quality": 25.202213199,
+                  "quantity": 334367737
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.608113245,
+              "mass": 1.9894603878111832e+24,
+              "orbit_distance": 5,
+              "planet_type": "CRYOPLANET",
+              "radius": 5139600.541130763,
+              "surface_area": 331946884076851.4,
+              "surface_gravity": 5.02669214,
+              "surface_pressure": 4755.443323294,
+              "surface_temperature": 119.928514179,
+              "surface_water": 0.875587926,
+              "tectonic_activity": 0.664340131
+            },
+            {
+              "atmosphere": {
+                "Ar": 42.635241957,
+                "CH4": 60.240033473,
+                "CO2": 1896.78714526,
+                "H2O": 31.903735905,
+                "N2": 1222.84090683,
+                "NH3": 66.592830538,
+                "O2": 1.761650972,
+                "SO2": 28.654154506
+              },
+              "density": 2811.920448614,
+              "deposits": {
+                "exotics": {
+                  "quality": 48.662604687,
+                  "quantity": 200727705
+                },
+                "metals": {
+                  "quality": 56.889037755,
+                  "quantity": 49410362
+                },
+                "organics": {
+                  "quality": 56.873101089,
+                  "quantity": 33581490
+                },
+                "radioactives": {
+                  "quality": 66.142997265,
+                  "quantity": 63581604
+                },
+                "vapors": {
+                  "quality": 52.055797183,
+                  "quantity": 234531329
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.169756641,
+              "mass": 3.933839232597653e+23,
+              "orbit_distance": 8,
+              "planet_type": "CRYOPLANET",
+              "radius": 3220388.911928696,
+              "surface_area": 130324632620240.73,
+              "surface_gravity": 2.531661782,
+              "surface_pressure": 3351.415699441,
+              "surface_temperature": 91.804634466,
+              "surface_water": 0.39976176,
+              "tectonic_activity": 0.062054912
+            },
+            {
+              "atmosphere": {
+                "Ar": 924780.178303479,
+                "CH4": 912478.258473415,
+                "CO2": 14909104.682748532,
+                "H2": 942278.104339752,
+                "H2O": 3582782.058636863,
+                "He": 1086538.859205978,
+                "N2": 585417.013719841,
+                "NH3": 684083.460778696,
+                "O2": 103585.214236232,
+                "SO2": 201148.998501648
+              },
+              "density": 3906.514079842,
+              "deposits": {
+                "exotics": {
+                  "quality": 23.954098047,
+                  "quantity": 123555123
+                },
+                "metals": {
+                  "quality": 37.45500443,
+                  "quantity": 148870176
+                },
+                "organics": {
+                  "quality": 23.382653554,
+                  "quantity": 239254335
+                },
+                "radioactives": {
+                  "quality": 33.742476094,
+                  "quantity": 125611823
+                },
+                "vapors": {
+                  "quality": 30.354283614,
+                  "quantity": 106118781
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.963477033,
+              "mass": 1.769387432490174e+24,
+              "orbit_distance": 9,
+              "planet_type": "CONTINENTAL",
+              "radius": 4764108.513866596,
+              "surface_area": 285215520058226.44,
+              "surface_gravity": 5.203138327,
+              "surface_pressure": 23932196.828944437,
+              "surface_temperature": 261.631641034,
+              "surface_water": 0.405842191,
+              "tectonic_activity": 0.591889141
+            },
+            {
+              "atmosphere": {
+                "Ar": 0.145699994,
+                "CH4": 0.183195128,
+                "CO2": 7.946841085,
+                "H2O": 0.100173804,
+                "N2": 0.248126643,
+                "NH3": 0.133851193,
+                "O2": 0.003712076,
+                "SO2": 0.064167906
+              },
+              "density": 2852.239954423,
+              "deposits": {
+                "exotics": {
+                  "quality": 67.075649059,
+                  "quantity": 68097863
+                },
+                "metals": {
+                  "quality": 77.866041487,
+                  "quantity": 24229237
+                },
+                "organics": {
+                  "quality": 68.115156178,
+                  "quantity": 11512967
+                },
+                "radioactives": {
+                  "quality": 75.231723939,
+                  "quantity": 24785722
+                },
+                "vapors": {
+                  "quality": 75.572334819,
+                  "quantity": 88373168
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.242830852,
+              "mass": 1.01579948622669e+23,
+              "orbit_distance": 9,
+              "planet_type": "ICE_DWARF",
+              "radius": 2041006.745721472,
+              "surface_area": 52347837335787.84,
+              "surface_gravity": 1.627514372,
+              "surface_pressure": 8.825767829,
+              "surface_temperature": 65.794447245,
+              "surface_water": 0.497839768,
+              "tectonic_activity": 0.132387739
+            },
+            {
+              "atmosphere": {
+                "Ar": 39830838.77679655,
+                "CH4": 77982132.12698823,
+                "CO2": 34038025.20895544,
+                "H2": 7055427470.798021,
+                "H2O": 64478558.277547486,
+                "He": 2257736790.655367,
+                "N2": 49519067.0614081,
+                "NH3": 69498281.55296206,
+                "O2": 60773083.56027224,
+                "SO2": 34110420.72777658
+              },
+              "density": 5583.323915727,
+              "deposits": {
+                "exotics": {
+                  "quality": 5.0,
+                  "quantity": 733115858
+                },
+                "metals": {
+                  "quality": 5.0,
+                  "quantity": 152857068
+                },
+                "organics": {
+                  "quality": 5.0,
+                  "quantity": 216048195
+                },
+                "radioactives": {
+                  "quality": 5.0,
+                  "quantity": 200074671
+                },
+                "vapors": {
+                  "quality": 5.0,
+                  "quantity": 890566666
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.821288992,
+              "mass": 1.7257336896553443e+25,
+              "orbit_distance": 10,
+              "planet_type": "ICE_GIANT",
+              "radius": 9036441.637416923,
+              "surface_area": 1026135612002873.2,
+              "surface_gravity": 14.105373976,
+              "surface_pressure": 9743394668.746096,
+              "surface_temperature": 189.872263337,
+              "surface_water": 0.952901441,
+              "tectonic_activity": 0.226184046
+            },
+            {
+              "atmosphere": {
+                "Ar": 0.234184056,
+                "CO2": 10.860641552,
+                "N2": 2.122386763,
+                "O2": 0.00457039,
+                "SO2": 0.227901926
+              },
+              "density": 2841.910929911,
+              "deposits": {
+                "exotics": {
+                  "quality": 73.916325051,
+                  "quantity": 145151752
+                },
+                "metals": {
+                  "quality": 66.971762943,
+                  "quantity": 32103911
+                },
+                "organics": {
+                  "quality": 68.393694877,
+                  "quantity": 14855689
+                },
+                "radioactives": {
+                  "quality": 69.129893796,
+                  "quantity": 22080532
+                },
+                "vapors": {
+                  "quality": 73.313695791,
+                  "quantity": 123793548
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.218836703,
+              "mass": 4.636835224178351e+22,
+              "orbit_distance": 10,
+              "planet_type": "ICE_DWARF",
+              "radius": 1573406.223952064,
+              "surface_area": 31109396886802.156,
+              "surface_gravity": 1.250102602,
+              "surface_pressure": 13.449684686,
+              "surface_temperature": 62.500352393,
+              "surface_water": 0.46977275,
+              "tectonic_activity": 0.033107833
+            },
+            {
+              "atmosphere": {
+                "Ar": 0.222585982,
+                "CO2": 15.372300351,
+                "O2": 0.016423924,
+                "SO2": 0.563218831
+              },
+              "density": 4087.783481814,
+              "deposits": {
+                "exotics": {
+                  "quality": 70.828473572,
+                  "quantity": 127587830
+                },
+                "metals": {
+                  "quality": 81.880105671,
+                  "quantity": 15664796
+                },
+                "organics": {
+                  "quality": 79.280956947,
+                  "quantity": 21245043
+                },
+                "radioactives": {
+                  "quality": 71.196625007,
+                  "quantity": 27745889
+                },
+                "vapors": {
+                  "quality": 88.021502887,
+                  "quantity": 39605132
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.400629612,
+              "mass": 2.369610916529846e+22,
+              "orbit_distance": 10,
+              "planet_type": "ICE_DWARF",
+              "radius": 1114380.531046334,
+              "surface_area": 15605471546781.598,
+              "surface_gravity": 1.273549218,
+              "surface_pressure": 16.174529088,
+              "surface_temperature": 62.500352393,
+              "surface_water": 0.224558681,
+              "tectonic_activity": 0.163378248
+            },
+            {
+              "atmosphere": {},
+              "density": 4263.265522446,
+              "deposits": {
+                "exotics": {
+                  "quality": 69.805245384,
+                  "quantity": 51829174
+                },
+                "metals": {
+                  "quality": 82.493458725,
+                  "quantity": 8121159
+                },
+                "organics": {
+                  "quality": 69.759724742,
+                  "quantity": 7293638
+                },
+                "radioactives": {
+                  "quality": 98.795379555,
+                  "quantity": 6844657
+                },
+                "vapors": {
+                  "quality": 84.019832459,
+                  "quantity": 10014591
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.21873628,
+              "mass": 9.39e+20,
+              "orbit_distance": 10,
+              "planet_type": "ICE_DWARF",
+              "radius": 374637.747552757,
+              "surface_area": 1763733367808.2935,
+              "surface_gravity": 0.446527539,
+              "surface_pressure": 0.0,
+              "surface_temperature": 62.500352393,
+              "surface_water": 0.951771937,
+              "tectonic_activity": 0.029469731
+            },
+            {
+              "atmosphere": {
+                "Ar": 116.397647047,
+                "CH4": 22.70084626,
+                "CO2": 3700.459158751,
+                "H2O": 684.460267752,
+                "He": 130.56005822,
+                "N2": 2296.725369545,
+                "NH3": 47.328667194,
+                "O2": 2.289768168,
+                "SO2": 0.866329961
+              },
+              "density": 4327.064761875,
+              "deposits": {
+                "exotics": {
+                  "quality": 53.338181616,
+                  "quantity": 205722038
+                },
+                "metals": {
+                  "quality": 61.441816676,
+                  "quantity": 69148134
+                },
+                "organics": {
+                  "quality": 42.960378926,
+                  "quantity": 48726161
+                },
+                "radioactives": {
+                  "quality": 52.219539429,
+                  "quantity": 40249008
+                },
+                "vapors": {
+                  "quality": 48.659308954,
+                  "quantity": 164577167
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.127961964,
+              "mass": 4.511058450199611e+23,
+              "orbit_distance": 11,
+              "planet_type": "CRYOPLANET",
+              "radius": 2919659.12585585,
+              "surface_area": 107120887929586.84,
+              "surface_gravity": 3.531993357,
+              "surface_pressure": 7001.788112898,
+              "surface_temperature": 87.211371642,
+              "surface_water": 0.851466789,
+              "tectonic_activity": 0.015845154
+            },
+            {
+              "atmosphere": {
+                "Ar": 23669.20501467,
+                "CH4": 65741.942598666,
+                "CO2": 3014320.374852578,
+                "H2": 28185.700025277,
+                "H2O": 27452.011375509,
+                "He": 49803.391741157,
+                "N2": 157445.326009347,
+                "NH3": 53919.994262452,
+                "O2": 5650.843143459,
+                "SO2": 54691.238672792
+              },
+              "density": 2932.129955253,
+              "deposits": {
+                "exotics": {
+                  "quality": 22.574062334,
+                  "quantity": 258190885
+                },
+                "metals": {
+                  "quality": 15.51653457,
+                  "quantity": 112505304
+                },
+                "organics": {
+                  "quality": 40.304578383,
+                  "quantity": 72992633
+                },
+                "radioactives": {
+                  "quality": 39.413749139,
+                  "quantity": 96900109
+                },
+                "vapors": {
+                  "quality": 23.032422683,
+                  "quantity": 336089351
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 1.809919493,
+              "mass": 1.7748102253817e+24,
+              "orbit_distance": 12,
+              "planet_type": "CRYOPLANET",
+              "radius": 5247591.654265701,
+              "surface_area": 346042889211668.06,
+              "surface_gravity": 4.301674851,
+              "surface_pressure": 3480880.027695907,
+              "surface_temperature": 176.483424808,
+              "surface_water": 0.400025832,
+              "tectonic_activity": 0.734439888
+            },
+            {
+              "atmosphere": {
+                "Ar": 17580.246227712,
+                "CH4": 6937.482946903,
+                "CO2": 1809608.949955721,
+                "H2": 29771.92152137,
+                "H2O": 96754.257493647,
+                "He": 25671.363009969,
+                "N2": 590919.494331407,
+                "NH3": 30266.653138657,
+                "O2": 2975.867888547,
+                "SO2": 22106.902049157
+              },
+              "density": 2366.110545694,
+              "deposits": {
+                "exotics": {
+                  "quality": 13.667683532,
+                  "quantity": 300663015
+                },
+                "metals": {
+                  "quality": 5.0,
+                  "quantity": 130955521
+                },
+                "organics": {
+                  "quality": 13.376509536,
+                  "quantity": 75858076
+                },
+                "radioactives": {
+                  "quality": 15.330374179,
+                  "quantity": 90569820
+                },
+                "vapors": {
+                  "quality": 8.350477645,
+                  "quantity": 333109916
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 1.436782669,
+              "mass": 2.563055929994069e+24,
+              "orbit_distance": 16,
+              "planet_type": "CRYOPLANET",
+              "radius": 6371056.858091632,
+              "surface_area": 510073576107525.9,
+              "surface_gravity": 4.214449411,
+              "surface_pressure": 2632593.13856309,
+              "surface_temperature": 143.13333571,
+              "surface_water": 0.877822187,
+              "tectonic_activity": 0.544708823
+            }
+          ],
+          "region_id": null,
+          "stars": [
+            {
+              "age": 8668373925.45289,
+              "color": [
+                255,
+                100,
+                100
+              ],
+              "intrinsic_abilities": {},
+              "luminosity": 0.006770359,
+              "mass": 0.239979848,
+              "radius_hexes": 1,
+              "spectrum": {
+                "blue": 0.001837438,
+                "gamma_ray": 0.0,
+                "green": 0.002188599,
+                "infrared": 0.000321448,
+                "microwave": 0.0,
+                "radio": 0.0,
+                "red": 0.002032642,
+                "ultraviolet": 0.000325567,
+                "xray": 0.0
+              },
+              "star_type": "RED_DWARF",
+              "temperature": 2933.327506201
+            }
+          ],
+          "storms": [
+            {
+              "abilities": {
+                "StrategicSpeedModifier": {
+                  "multiplier": 0.5,
+                  "scope": "sector"
+                },
+                "ThrustModifier": {
+                  "multiplier": 0.6,
+                  "scope": "sector"
+                }
+              },
+              "description": "Spacetime distortion causing thrust inefficiency. Common in binary systems.",
+              "hex_offsets": [
+                {
+                  "q": 1,
+                  "r": 0
+                },
+                {
+                  "q": 2,
+                  "r": 0
+                },
+                {
+                  "q": 2,
+                  "r": 1
+                },
+                {
+                  "q": 0,
+                  "r": 0
+                }
+              ],
+              "image_variant": 5,
+              "intensity": 0.911439691,
+              "location": {
+                "q": 10,
+                "r": 17
+              },
+              "name": "Gravitational Anomaly Alpha",
+              "storm_type": "gravitational_anomaly"
+            },
+            {
+              "abilities": {
+                "ShieldModifier": {
+                  "multiplier": 0.5,
+                  "scope": "sector"
+                },
+                "StrategicSpeedModifier": {
+                  "multiplier": 0.8,
+                  "scope": "sector"
+                }
+              },
+              "description": "Electromagnetic disturbance that disrupts shields and sensors. Common near active stars.",
+              "hex_offsets": [
+                {
+                  "q": -1,
+                  "r": 0
+                },
+                {
+                  "q": 0,
+                  "r": 0
+                }
+              ],
+              "image_variant": 2,
+              "intensity": 0.886550137,
+              "location": {
+                "q": 14,
+                "r": -11
+              },
+              "name": "Ion Storm Beta",
+              "storm_type": "ion_storm"
+            }
+          ]
+        }
+      ],
+      "warp_geometry": {
+        "HexCoord(-272, -86)->HexCoord(-411, 343)": "HexCoord(-7, 20)",
+        "HexCoord(-272, -86)->HexCoord(192, 258)": "HexCoord(13, 10)",
+        "HexCoord(-272, -86)->HexCoord(254, -396)": "HexCoord(17, -10)",
+        "HexCoord(-411, 343)->HexCoord(-272, -86)": "HexCoord(6, -19)",
+        "HexCoord(192, 258)->HexCoord(-272, -86)": "HexCoord(-14, -11)",
+        "HexCoord(192, 258)->HexCoord(480, -156)": "HexCoord(17, -25)",
+        "HexCoord(254, -396)->HexCoord(-272, -86)": "HexCoord(-22, 13)",
+        "HexCoord(254, -396)->HexCoord(480, -156)": "HexCoord(11, 12)",
+        "HexCoord(480, -156)->HexCoord(192, 258)": "HexCoord(-15, 22)",
+        "HexCoord(480, -156)->HexCoord(254, -396)": "HexCoord(-9, -9)"
+      }
+    },
+    "n1_retry": {
+      "systems": [
+        {
+          "archetype": "precursor_ruins",
+          "global_location": {
+            "q": -433,
+            "r": 308
+          },
+          "intrinsic_abilities": {
+            "ThrustModifier": {
+              "multiplier": 1.000620302,
+              "scope": "system"
+            }
+          },
+          "planets": [
+            {
+              "atmosphere": {
+                "N2": 79000.0,
+                "O2": 21000.0
+              },
+              "density": 3848.059439532,
+              "deposits": {
+                "exotics": {
+                  "quality": 62.144725205,
+                  "quantity": 76754146
+                },
+                "metals": {
+                  "quality": 50.0,
+                  "quantity": 53064645
+                },
+                "organics": {
+                  "quality": 50.0,
+                  "quantity": 139269951
+                },
+                "radioactives": {
+                  "quality": 69.349925433,
+                  "quantity": 50817750
+                },
+                "vapors": {
+                  "quality": 50.0,
+                  "quantity": 208816317
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.401981773,
+              "mass": 4.1994132351554565e+23,
+              "orbit_distance": 4,
+              "planet_type": "PELAGIC",
+              "radius": 2964508.799891467,
+              "surface_area": 110437191002727.64,
+              "surface_gravity": 9.81,
+              "surface_pressure": 100000.0,
+              "surface_temperature": 293.0,
+              "surface_water": 0.5,
+              "tectonic_activity": 0.074582651
+            },
+            {
+              "atmosphere": {
+                "N2": 79000.0,
+                "O2": 21000.0
+              },
+              "density": 4491.771503329,
+              "deposits": {
+                "exotics": {
+                  "quality": 72.205507496,
+                  "quantity": 118749230
+                },
+                "metals": {
+                  "quality": 59.203482132,
+                  "quantity": 125371696
+                },
+                "organics": {
+                  "quality": 58.464796661,
+                  "quantity": 13782316
+                },
+                "radioactives": {
+                  "quality": 67.522175118,
+                  "quantity": 104698322
+                },
+                "vapors": {
+                  "quality": 76.594833121,
+                  "quantity": 26518526
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.009132797,
+              "mass": 6.551559985709513e+22,
+              "orbit_distance": 5,
+              "planet_type": "PLANETOID",
+              "radius": 1515698.493526527,
+              "surface_area": 28869250035823.383,
+              "surface_gravity": 9.81,
+              "surface_pressure": 100000.0,
+              "surface_temperature": 293.0,
+              "surface_water": 0.5,
+              "tectonic_activity": 0.067682561
+            },
+            {
+              "atmosphere": {
+                "N2": 79000.0,
+                "O2": 21000.0
+              },
+              "density": 5808.554151437,
+              "deposits": {
+                "exotics": {
+                  "quality": 50.0,
+                  "quantity": 543741289
+                },
+                "metals": {
+                  "quality": 50.0,
+                  "quantity": 127689626
+                },
+                "organics": {
+                  "quality": 50.0,
+                  "quantity": 166404561
+                },
+                "radioactives": {
+                  "quality": 50.0,
+                  "quantity": 144396856
+                },
+                "vapors": {
+                  "quality": 50.0,
+                  "quantity": 703566245
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.895554217,
+              "mass": 9.977562361163419e+24,
+              "orbit_distance": 7,
+              "planet_type": "ICE_GIANT",
+              "radius": 7429437.490725179,
+              "surface_area": 693620196222527.8,
+              "surface_gravity": 9.81,
+              "surface_pressure": 100000.0,
+              "surface_temperature": 293.0,
+              "surface_water": 0.5,
+              "tectonic_activity": 0.620149264
+            },
+            {
+              "atmosphere": {
+                "N2": 79000.0,
+                "O2": 21000.0
+              },
+              "density": 5704.950512968,
+              "deposits": {
+                "exotics": {
+                  "quality": 50.0,
+                  "quantity": 552580623
+                },
+                "metals": {
+                  "quality": 50.0,
+                  "quantity": 110308098
+                },
+                "organics": {
+                  "quality": 50.0,
+                  "quantity": 169855000
+                },
+                "radioactives": {
+                  "quality": 50.0,
+                  "quantity": 133190079
+                },
+                "vapors": {
+                  "quality": 50.0,
+                  "quantity": 684571127
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 1.282190279,
+              "mass": 8.39384938504389e+24,
+              "orbit_distance": 8,
+              "planet_type": "ICE_GIANT",
+              "radius": 7055701.954268053,
+              "surface_area": 625590749496452.5,
+              "surface_gravity": 9.81,
+              "surface_pressure": 100000.0,
+              "surface_temperature": 293.0,
+              "surface_water": 0.5,
+              "tectonic_activity": 0.456884305
+            },
+            {
+              "atmosphere": {
+                "Ar": 869.591495943,
+                "CH4": 2316.647216838,
+                "CO2": 68434.99424253,
+                "H2O": 4769.297542013,
+                "He": 260.076259165,
+                "N2": 43038.851845299,
+                "NH3": 2053.827868959,
+                "O2": 258.571264028,
+                "SO2": 2097.131047529
+              },
+              "density": 2750.170456424,
+              "deposits": {
+                "exotics": {
+                  "quality": 5.0,
+                  "quantity": 391781160
+                },
+                "metals": {
+                  "quality": 5.0,
+                  "quantity": 156314033
+                },
+                "organics": {
+                  "quality": 5.0,
+                  "quantity": 99418244
+                },
+                "radioactives": {
+                  "quality": 5.0,
+                  "quantity": 136564913
+                },
+                "vapors": {
+                  "quality": 5.440587336,
+                  "quantity": 378070934
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.778500761,
+              "mass": 3.8502692040337525e+24,
+              "orbit_distance": 9,
+              "planet_type": "CRYOPLANET",
+              "radius": 6939810.707590606,
+              "surface_area": 605208631558258.2,
+              "surface_gravity": 5.335824908,
+              "surface_pressure": 124098.988782304,
+              "surface_temperature": 214.99953684,
+              "surface_water": 0.462901777,
+              "tectonic_activity": 0.40810822
+            },
+            {
+              "atmosphere": {
+                "Ar": 14.737103505,
+                "CH4": 6.841314224,
+                "CO2": 746.96298027,
+                "H2O": 72.472937058,
+                "N2": 165.073700765,
+                "NH3": 14.695772865,
+                "O2": 0.007965943,
+                "SO2": 15.634465644
+              },
+              "density": 2096.917498167,
+              "deposits": {
+                "exotics": {
+                  "quality": 40.796150412,
+                  "quantity": 253365831
+                },
+                "metals": {
+                  "quality": 38.427864852,
+                  "quantity": 80627454
+                },
+                "organics": {
+                  "quality": 35.785350369,
+                  "quantity": 52975903
+                },
+                "radioactives": {
+                  "quality": 59.197768472,
+                  "quantity": 88843697
+                },
+                "vapors": {
+                  "quality": 57.289136797,
+                  "quantity": 234988553
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 1.89687809,
+              "mass": 8.077003244559074e+23,
+              "orbit_distance": 9,
+              "planet_type": "CRYOPLANET",
+              "radius": 4513638.446555622,
+              "surface_area": 256013814342691.3,
+              "surface_gravity": 2.646076799,
+              "surface_pressure": 1036.426240274,
+              "surface_temperature": 188.876198386,
+              "surface_water": 0.176922279,
+              "tectonic_activity": 0.28623337
+            },
+            {
+              "atmosphere": {
+                "Ar": 1.609086775,
+                "CO2": 128.711612051,
+                "N2": 64.578444633,
+                "O2": 0.412343649,
+                "SO2": 0.502334901
+              },
+              "density": 4481.049044426,
+              "deposits": {
+                "exotics": {
+                  "quality": 62.242163507,
+                  "quantity": 117232516
+                },
+                "metals": {
+                  "quality": 57.903356357,
+                  "quantity": 29450946
+                },
+                "organics": {
+                  "quality": 71.280956833,
+                  "quantity": 23472077
+                },
+                "radioactives": {
+                  "quality": 76.198980897,
+                  "quantity": 16786138
+                },
+                "vapors": {
+                  "quality": 80.455143199,
+                  "quantity": 186494188
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.101009382,
+              "mass": 1.7785593000187444e+23,
+              "orbit_distance": 9,
+              "planet_type": "ICE_DWARF",
+              "radius": 2116086.164954595,
+              "surface_area": 56269953926932.36,
+              "surface_gravity": 2.650985657,
+              "surface_pressure": 195.813822009,
+              "surface_temperature": 167.00969064,
+              "surface_water": 0.265324313,
+              "tectonic_activity": 0.058887495
+            },
+            {
+              "atmosphere": {
+                "SO2": 13.165200562
+              },
+              "density": 2440.667047097,
+              "deposits": {
+                "exotics": {
+                  "quality": 82.133267143,
+                  "quantity": 90431768
+                },
+                "metals": {
+                  "quality": 77.647007719,
+                  "quantity": 19003640
+                },
+                "organics": {
+                  "quality": 69.455335768,
+                  "quantity": 11314591
+                },
+                "radioactives": {
+                  "quality": 85.907226681,
+                  "quantity": 23529041
+                },
+                "vapors": {
+                  "quality": 84.838379292,
+                  "quantity": 54463795
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.253014562,
+              "mass": 5.634595480738835e+22,
+              "orbit_distance": 9,
+              "planet_type": "ICE_DWARF",
+              "radius": 1766397.868245264,
+              "surface_area": 39209104892706.3,
+              "surface_gravity": 1.205289581,
+              "surface_pressure": 13.165200562,
+              "surface_temperature": 167.00969064,
+              "surface_water": 0.526112459,
+              "tectonic_activity": 0.011018439
+            },
+            {
+              "atmosphere": {},
+              "density": 3670.029645869,
+              "deposits": {
+                "exotics": {
+                  "quality": 70.115466648,
+                  "quantity": 103315595
+                },
+                "metals": {
+                  "quality": 74.223506848,
+                  "quantity": 17685968
+                },
+                "organics": {
+                  "quality": 85.962798334,
+                  "quantity": 9653672
+                },
+                "radioactives": {
+                  "quality": 83.686754172,
+                  "quantity": 17068769
+                },
+                "vapors": {
+                  "quality": 75.590836992,
+                  "quantity": 76058987
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.460721253,
+              "mass": 2.096687638254215e+22,
+              "orbit_distance": 9,
+              "planet_type": "ICE_DWARF",
+              "radius": 1108983.754748441,
+              "surface_area": 15454687669811.713,
+              "surface_gravity": 1.137860679,
+              "surface_pressure": 0.0,
+              "surface_temperature": 167.00969064,
+              "surface_water": 0.556045219,
+              "tectonic_activity": 0.009158558
+            },
+            {
+              "atmosphere": {},
+              "density": 3447.497903476,
+              "deposits": {
+                "exotics": {
+                  "quality": 77.968328988,
+                  "quantity": 72280114
+                },
+                "metals": {
+                  "quality": 77.121560457,
+                  "quantity": 33461286
+                },
+                "organics": {
+                  "quality": 70.890455125,
+                  "quantity": 22693283
+                },
+                "radioactives": {
+                  "quality": 65.664749889,
+                  "quantity": 8535468
+                },
+                "vapors": {
+                  "quality": 75.57378193,
+                  "quantity": 51239622
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.180865916,
+              "mass": 1.9076765832004938e+22,
+              "orbit_distance": 9,
+              "planet_type": "ICE_DWARF",
+              "radius": 1097246.092471571,
+              "surface_area": 15129269177005.402,
+              "surface_gravity": 1.057553597,
+              "surface_pressure": 0.0,
+              "surface_temperature": 167.00969064,
+              "surface_water": 0.869983902,
+              "tectonic_activity": 0.193522919
+            },
+            {
+              "atmosphere": {},
+              "density": 3485.716780745,
+              "deposits": {
+                "exotics": {
+                  "quality": 98.060200582,
+                  "quantity": 109129905
+                },
+                "metals": {
+                  "quality": 69.102522699,
+                  "quantity": 1174760
+                },
+                "organics": {
+                  "quality": 76.859237264,
+                  "quantity": 10264476
+                },
+                "radioactives": {
+                  "quality": 70.244795386,
+                  "quantity": 4490284
+                },
+                "vapors": {
+                  "quality": 93.750704319,
+                  "quantity": 117517467
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.282989503,
+              "mass": 9.39e+20,
+              "orbit_distance": 9,
+              "planet_type": "ICE_DWARF",
+              "radius": 400646.754102844,
+              "surface_area": 2017126436097.7148,
+              "surface_gravity": 0.390434385,
+              "surface_pressure": 0.0,
+              "surface_temperature": 167.00969064,
+              "surface_water": 0.576681383,
+              "tectonic_activity": 0.175424503
+            },
+            {
+              "atmosphere": {
+                "Ar": 28.449763155,
+                "CH4": 1.084591132,
+                "CO2": 1360.977178195,
+                "H2O": 140.434830895,
+                "N2": 195.420810663,
+                "NH3": 28.492052553,
+                "O2": 2.677725118,
+                "SO2": 3.615970741
+              },
+              "density": 4394.607307019,
+              "deposits": {
+                "exotics": {
+                  "quality": 46.837472434,
+                  "quantity": 208231779
+                },
+                "metals": {
+                  "quality": 47.150505614,
+                  "quantity": 77416260
+                },
+                "organics": {
+                  "quality": 23.463418235,
+                  "quantity": 64973286
+                },
+                "radioactives": {
+                  "quality": 36.923990111,
+                  "quantity": 71973574
+                },
+                "vapors": {
+                  "quality": 23.810320416,
+                  "quantity": 324923125
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 1.010977057,
+              "mass": 1.306772614391532e+24,
+              "orbit_distance": 12,
+              "planet_type": "CRYOPLANET",
+              "radius": 4140604.793640242,
+              "surface_area": 215445498883654.94,
+              "surface_gravity": 5.08719268,
+              "surface_pressure": 1761.152922452,
+              "surface_temperature": 170.396911214,
+              "surface_water": 0.231252497,
+              "tectonic_activity": 0.758963639
+            },
+            {
+              "atmosphere": {},
+              "density": 2114.186264447,
+              "deposits": {
+                "exotics": {
+                  "quality": 79.397660717,
+                  "quantity": 124034955
+                },
+                "metals": {
+                  "quality": 67.142167008,
+                  "quantity": 31045724
+                },
+                "organics": {
+                  "quality": 91.017271636,
+                  "quantity": 18750696
+                },
+                "radioactives": {
+                  "quality": 72.962404786,
+                  "quantity": 24981990
+                },
+                "vapors": {
+                  "quality": 80.041013049,
+                  "quantity": 113344727
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.01254962,
+              "mass": 7.6681307081718e+21,
+              "orbit_distance": 12,
+              "planet_type": "ICE_DWARF",
+              "radius": 953130.901990974,
+              "surface_area": 11416026403975.25,
+              "surface_gravity": 0.563365348,
+              "surface_pressure": 0.0,
+              "surface_temperature": 145.155680952,
+              "surface_water": 0.602007047,
+              "tectonic_activity": 0.100141549
+            },
+            {
+              "atmosphere": {},
+              "density": 2090.022196369,
+              "deposits": {
+                "exotics": {
+                  "quality": 67.632826836,
+                  "quantity": 111733929
+                },
+                "metals": {
+                  "quality": 80.826951607,
+                  "quantity": 13028684
+                },
+                "organics": {
+                  "quality": 83.489673072,
+                  "quantity": 18312950
+                },
+                "radioactives": {
+                  "quality": 94.775387036,
+                  "quantity": 10112737
+                },
+                "vapors": {
+                  "quality": 81.858348148,
+                  "quantity": 85647356
+                }
+              },
+              "intrinsic_abilities": {},
+              "magnetic_field": 0.349962537,
+              "mass": 6.920036890885886e+21,
+              "orbit_distance": 14,
+              "planet_type": "ICE_DWARF",
+              "radius": 924605.134151195,
+              "surface_area": 10742923059639.273,
+              "surface_gravity": 0.540258405,
+              "surface_pressure": 0.0,
+              "surface_temperature": 134.647246776,
+              "surface_water": 0.228063431,
+              "tectonic_activity": 0.091458092
+            }
+          ],
+          "region_id": null,
+          "stars": [
+            {
+              "age": 9631639692.652273,
+              "color": [
+                255,
+                225,
+                201
+              ],
+              "intrinsic_abilities": {},
+              "luminosity": 0.290355006,
+              "mass": 0.702346195,
+              "radius_hexes": 1,
+              "spectrum": {
+                "blue": 0.079412624,
+                "gamma_ray": 0.0,
+                "green": 0.08460363,
+                "infrared": 0.004166112,
+                "microwave": 0.0,
+                "radio": 0.0,
+                "red": 0.083165588,
+                "ultraviolet": 0.027041907,
+                "xray": 1.8e-08
+              },
+              "star_type": "MAIN_SEQUENCE",
+              "temperature": 4885.279024179
+            }
+          ],
+          "storms": [
+            {
+              "abilities": {
+                "EnvironmentalDamage": {
+                  "damage_type": "plasma",
+                  "rate": 0.5,
+                  "scope": "sector"
+                },
+                "ShieldModifier": {
+                  "multiplier": 0.7,
+                  "scope": "sector"
+                }
+              },
+              "description": "Superheated plasma ejected from stellar activity. Damages unshielded hulls.",
+              "hex_offsets": [
+                {
+                  "q": 1,
+                  "r": 0
+                },
+                {
+                  "q": 0,
+                  "r": -1
+                },
+                {
+                  "q": 0,
+                  "r": 0
+                }
+              ],
+              "image_variant": 4,
+              "intensity": 0.454815813,
+              "location": {
+                "q": -13,
+                "r": -9
+              },
+              "name": "Plasma Storm Alpha",
+              "storm_type": "plasma_storm"
+            }
+          ]
+        }
+      ],
+      "warp_geometry": {}
+    }
+  }
+}

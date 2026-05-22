@@ -40,9 +40,16 @@ def _get_planetary_ids() -> tuple[str, ...]:
     return tuple(d.id for d in ResourceCatalog.from_json().by_display_group("planetary"))
 
 
-def generate_surface_flags(mass: float, temp: float) -> tuple[float, float, float]:
+def generate_surface_flags(
+    mass: float, temp: float, rng: random.Random = random
+) -> tuple[float, float, float]:
     """
     Generate surface water, tectonic activity, and magnetic field.
+
+    Args:
+        mass: Planet mass in kg.
+        temp: Final surface temperature in K.
+        rng: PROJ-473 H7 S5 — physics rng for the surface draws.
     """
     from game.strategy.data.orbital_generation_config import get_orbital_generation_config
     cfg = get_orbital_generation_config()
@@ -52,17 +59,17 @@ def generate_surface_flags(mass: float, temp: float) -> tuple[float, float, floa
     water = 0.0
 
     if mass > MASS_MARS:
-        activity = random.uniform(cfg.active_body_activity_min, cfg.active_body_activity_max)
-        mag_field = random.uniform(cfg.active_body_mag_min, cfg.active_body_mag_max)
+        activity = rng.uniform(cfg.active_body_activity_min, cfg.active_body_activity_max)
+        mag_field = rng.uniform(cfg.active_body_mag_min, cfg.active_body_mag_max)
     else:
-        activity = random.uniform(cfg.small_body_activity_min, cfg.small_body_activity_max)
-        mag_field = random.uniform(cfg.small_body_mag_min, cfg.small_body_mag_max)
+        activity = rng.uniform(cfg.small_body_activity_min, cfg.small_body_activity_max)
+        mag_field = rng.uniform(cfg.small_body_mag_min, cfg.small_body_mag_max)
 
     # Water presence based on temperature
     if cfg.water_temp_min < temp < cfg.water_temp_max:
-        water = random.uniform(0.1, 1.0)
+        water = rng.uniform(0.1, 1.0)
     elif temp <= cfg.water_temp_min:
-        water = random.uniform(0.1, 1.0)  # Frozen
+        water = rng.uniform(0.1, 1.0)  # Frozen
     else:
         water = 0  # Boiled off
 
@@ -76,6 +83,7 @@ def determine_planet_type(
     water: float,
     atmosphere: dict,
     activity: float = 0.0,
+    rng: random.Random = random,
 ) -> "PlanetType":
     """
     Determine planet type based on physical properties.
@@ -98,7 +106,7 @@ def determine_planet_type(
                 cfg.chthonian_max_probability,
                 (temp - cfg.chthonian_strip_start_temp) / cfg.chthonian_strip_divisor,
             )
-            if random.random() < strip_chance:
+            if rng.random() < strip_chance:
                 return PlanetType.CHTHONIAN
 
         if mass > cfg.gas_giant_min:
@@ -157,7 +165,9 @@ def determine_planet_type(
     return PlanetType.BARREN
 
 
-def generate_resources(mass: float, planet_type: "PlanetType") -> dict:
+def generate_resources(
+    mass: float, planet_type: "PlanetType", rng: random.Random = random
+) -> dict:
     """
     Generate resources based on mass and planet type.
 
@@ -196,7 +206,7 @@ def generate_resources(mass: float, planet_type: "PlanetType") -> dict:
 
     for res in _get_planetary_ids():
         # Quantity: proportional to mass, calibrated so Earth-mass = baseline
-        r_qty = random.random()
+        r_qty = rng.random()
         qty_norm = (size_factor * cfg.qty_determinism) + (r_qty * cfg.qty_randomness)
         earth_qty_norm = earth_size_factor * cfg.qty_determinism + 0.5 * cfg.qty_randomness
         # Scale so that earth_qty_norm maps to earth_mass_baseline
@@ -214,7 +224,7 @@ def generate_resources(mass: float, planet_type: "PlanetType") -> dict:
 
         # Quality: inversely correlates with size
         qual_bias = 1.0 - size_factor
-        r_qual = random.random()
+        r_qual = rng.random()
         qual_norm = (qual_bias * cfg.qual_determinism) + (r_qual * cfg.qual_randomness)
         quality = qual_norm * cfg.max_quality
 

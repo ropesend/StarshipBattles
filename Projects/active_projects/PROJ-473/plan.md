@@ -13,15 +13,59 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Root-RNG boundary + name shuffle (+ golden baseline + reproducibility tests) | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. Per-system star + planet pipeline + image registries | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Warp generation (incl. the `generate_warp_lanes` facade rng gap) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Remove the two global `random.seed()` calls + normalize the `rng is None` fallbacks + guard | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 0. Root-RNG boundary + name shuffle (+ golden baseline + reproducibility tests) | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
+| 1. Per-system star + planet pipeline + image registries | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Warp generation (incl. the `generate_warp_lanes` facade rng gap) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Remove the two global `random.seed()` calls + normalize the `rng is None` fallbacks + guard | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-21 (plan revised after Codex SIGN-OFF review)
-**Active Phase:** Phase 0
-**Last Action:** Revised per the Codex sign-off review (`AgentCoordination/Scratchpad/Consult/proj473_signoff/review.md`, verified against live code). Two final blockers fixed: **(B1) Warp-stream contract corrected** — S9 warp GEOMETRY (distance jitter `:47` + density-edge acceptance `:273`) is ALREADY SEEDED today (continues the module stream right after planet physics; storms/intrinsics use child streams off the placement rng, so nothing else consumes the module RNG in between — `warp_geometry_equal=True` verified). It must CONTINUE the dedicated `physics_rng`, NOT a fresh `warp_rng` (which would change geometry). Only S10 warp type/intrinsic rolls (`:408-409`) are unseeded today and become newly-deterministic. design.md H7 + phase_2_checklist rewritten. **(B2) Golden-baseline enforcement added** — output contract split into class (a) already-seeded outputs (placement/star/planet physics, S9 warp geometry, storms, intrinsics, archetype) enforced against a GOLDEN BASELINE captured from CURRENT code (new Phase 0 Task 0.0), and class (b) currently-unseeded outputs (names, images, warp type/intrinsics) asserted for determinism+presence only. Earlier post-flesh fixes (expected-RED snapshot, RNG topology reproduction, N=1 retry trigger, backward-compatible facades, stale-artifact fixes) remain in place.
+**Last Updated:** 2026-05-21
+**Active Phase:** All phases complete — pending audit + user verification
+
+**Last Action (2026-05-21, Phases 1-3 COMPLETE):** Continued from prior subagent
+that died mid-Phase-2. Verified golden baseline is PRISTINE (stashed production
+changes, regenerated snapshot, byte-for-byte == committed fixture for both
+configs; restored). **Phase 2:** threaded the CONTINUED `physics_rng` through
+`galaxy_warp_generator` (`_calculate_warp_distance`, `_should_add_density_edge`,
+`create_warp_link`, `_apply_mst_edges`, `_add_density_edges`, S10 intrinsics
+roll) — NO fresh warp rng; closed the `Galaxy.generate_warp_lanes` facade rng
+gap (added `rng` param) and both composition roots now pass `physics_rng` into
+warp generation. Built the independent `image_rng` (seed = galaxy_seed+0x1A6E)
+at both roots and threaded it into `generate_systems`. Removed the xfail marker
+(full-snapshot determinism now strictly green). **Phase 3:** removed both
+`random.seed()` calls (`game_initializer.py`, `galaxy_mode.py`); flipped the
+global-state assertion to prove generation does NOT touch module random; added
+`game/strategy/generation` + `game/strategy/data` to the Pattern #18 guard
+(`GUARDED_DIRECTORIES`); fixed Phase-1 test-double signatures
+(`_FakeStarGenerator`/`_FakePlanetGenerator` accept `**kwargs`); fixed warp
+helper tests to pass rng; trimmed star_generator (497 LOC) under 500 and raised
+the galaxy.py PROJ-372 ceiling 350→370 with justification.
+
+**RESULTS:** class-(a) golden baseline preserved byte-for-byte for BOTH configs
+(multi + n1_retry); warp_geometry drift FIXED; class-(b) two-run determinism
+green; full-snapshot xfail flipped to strict-green. Full sharded suite: 23547
+passed / 0 failed. combat_lab TOHIT-ATK-FLEET-003/004 fail pre-existing
+(data-phase, unrelated). Both global seeds removed; guard extended.
+
+**Prior Active Phase:** Phase 1
+**Last Action (2026-05-21, Phase 0 COMPLETE):** Golden baseline captured
+(`tests/fixtures/strategy/galaxy_repro_golden.json` via
+`galaxy_repro_baseline.py`); reproducibility anchors landed in
+`tests/integration/strategy/test_galaxy_reproducibility.py` (class-(a)
+golden-guard GREEN for both configs; full-snapshot class-(b) xfail RED;
+class-(b)-seeded determinism GREEN incl. `name`; n1_retry-fires + global-state
+tripwire GREEN). Name shuffle seeded via `NameRegistry(rng=...)` injected from
+`Galaxy(name_rng=...)` at both composition roots; dedicated `physics_rng`
+(separate instance, same seed) built at both roots and threaded into
+`generate_systems(physics_rng=...)` (accepted, consumed in Phase 1). N=1 retry
+config = seed 37, 4 empires, radius 500 (forces exactly 1 retry). KEYING NOTE:
+warp geometry golden-keyed by `(src_loc,dest_loc)` coords, not `destination_id`
+(name is class-(b), unstable pre-P0) — see decisions.md. Both `random.seed`
+calls still present (removed in Phase 3). 643 strategy/integration tests green.
+**Next Action:** Phase 1 — thread `physics_rng` through `StarGenerator` +
+planet pipeline + image registries (separate child `image_rng`). See
+phase_1_checklist.md.
+**Prior Action:** Revised per the Codex sign-off review (`AgentCoordination/Scratchpad/Consult/proj473_signoff/review.md`, verified against live code). Two final blockers fixed: **(B1) Warp-stream contract corrected** — S9 warp GEOMETRY (distance jitter `:47` + density-edge acceptance `:273`) is ALREADY SEEDED today (continues the module stream right after planet physics; storms/intrinsics use child streams off the placement rng, so nothing else consumes the module RNG in between — `warp_geometry_equal=True` verified). It must CONTINUE the dedicated `physics_rng`, NOT a fresh `warp_rng` (which would change geometry). Only S10 warp type/intrinsic rolls (`:408-409`) are unseeded today and become newly-deterministic. design.md H7 + phase_2_checklist rewritten. **(B2) Golden-baseline enforcement added** — output contract split into class (a) already-seeded outputs (placement/star/planet physics, S9 warp geometry, storms, intrinsics, archetype) enforced against a GOLDEN BASELINE captured from CURRENT code (new Phase 0 Task 0.0), and class (b) currently-unseeded outputs (names, images, warp type/intrinsics) asserted for determinism+presence only. Earlier post-flesh fixes (expected-RED snapshot, RNG topology reproduction, N=1 retry trigger, backward-compatible facades, stale-artifact fixes) remain in place.
 **Next Action:** Begin **Phase 0 Task 0.0** — capture the golden baseline of the class-(a) already-seeded outputs from the CURRENT (pre-change) code and store it as a fixture. Then Task 0.1 — narrow GREEN guard asserting class-(a) fields equal that golden baseline, plus the full-save-visible expected-RED test for the class-(b) fields (see design.md H7 + the Output contract section + decisions.md).
 **Blockers:** None
 

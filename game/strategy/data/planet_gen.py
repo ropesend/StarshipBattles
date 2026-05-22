@@ -7,7 +7,7 @@ mass distribution, moons, atmospheres, and resources.
 import logging
 import random
 import math
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +45,9 @@ class PlanetGenerator:
         self,
         system_name: str,
         stars: List[Star],
-        blueprint: Dict = None
+        blueprint: Dict = None,
+        rng: random.Random = random,
+        image_rng: Optional[random.Random] = None,
     ) -> List[Planet]:
         """
         Generate all planetary bodies for a system.
@@ -54,6 +56,16 @@ class PlanetGenerator:
             system_name: Name of the star system
             stars: List of stars in the system
             blueprint: Optional blueprint dict with planet_count, planet_mass constraints
+            rng: PROJ-473 H7 S5 — physics rng for all planet physics draws
+                (orbital slots, moons, mass, radius/density, atmosphere,
+                surface, classification, resources). Defaults to module-level
+                ``random`` (back-compat; reproducible via the global seed until
+                Phase 3).
+            image_rng: PROJ-473 H7 S7 — SEPARATE child stream for planet
+                ``image_id`` + ``image_rotation``, kept distinct from ``rng``
+                so image draws never shift the physics sequence (which would
+                move S9 warp geometry). When None the registry uses an unseeded
+                ``Random()``.
 
         Returns:
             List of Planet objects with assigned names
@@ -61,7 +73,7 @@ class PlanetGenerator:
         bodies = []
 
         # Determine orbital slots and their masses using blueprint constraints
-        occupied_slots = self._generate_orbital_slots(stars, blueprint)
+        occupied_slots = self._generate_orbital_slots(stars, blueprint, rng=rng)
 
         # Generate moons for each primary body
         # If blueprint specifies max_planets, limit total body count
@@ -76,12 +88,12 @@ class PlanetGenerator:
             # Only generate moons if we have room for more bodies
             current_count = sum(len(masses) for masses in occupied_slots.values())
             if current_count < max_planets:
-                self._generate_moons(occupied_slots, max_total=max_planets)
+                self._generate_moons(occupied_slots, max_total=max_planets, rng=rng)
         else:
-            self._generate_moons(occupied_slots)
+            self._generate_moons(occupied_slots, rng=rng)
 
         # Create Planet objects for each mass
-        bodies = self._create_planet_objects(occupied_slots, stars)
+        bodies = self._create_planet_objects(occupied_slots, stars, rng=rng, image_rng=image_rng)
 
         # Assign names based on distance and mass
         assign_body_names(bodies, system_name)
@@ -91,7 +103,8 @@ class PlanetGenerator:
     def _generate_orbital_slots(
         self,
         stars: List[Star],
-        blueprint: Dict = None
+        blueprint: Dict = None,
+        rng: random.Random = random,
     ) -> Dict[HexCoord, List[float]]:
         """
         Generate primary orbital slots with masses.
@@ -118,9 +131,9 @@ class PlanetGenerator:
             elif isinstance(planet_count_spec, dict):
                 min_count = planet_count_spec.get("min", cfg.default_planet_min)
                 max_count = planet_count_spec.get("max", cfg.default_planet_max)
-                primary_count = random.randint(min_count, max_count)
+                primary_count = rng.randint(min_count, max_count)
             else:
-                primary_count = random.randint(cfg.default_planet_min, cfg.default_planet_max)
+                primary_count = rng.randint(cfg.default_planet_min, cfg.default_planet_max)
 
             # Apply orbital spacing factor if specified
             spacing_spec = blueprint.get("orbital_spacing", {})
@@ -129,7 +142,7 @@ class PlanetGenerator:
                 max_dist = int(max_dist * spacing_factor)
                 max_dist = max(safe_start + 2, max_dist)
         else:
-            primary_count = random.randint(cfg.default_planet_min, cfg.default_planet_max)
+            primary_count = rng.randint(cfg.default_planet_min, cfg.default_planet_max)
 
         # Handle 0 planet case
         if primary_count == 0:
@@ -153,27 +166,27 @@ class PlanetGenerator:
         for i in range(primary_count):
             for attempt in range(cfg.max_placement_attempts):
                 if hot_required and not hot_zone_placed and i == 0:
-                    dist = random.randint(safe_start, safe_start + 1)
+                    dist = rng.randint(safe_start, safe_start + 1)
                     dist = max(cfg.hot_jupiter_orbit_min, min(dist, cfg.hot_jupiter_orbit_max))
                 else:
                     mode = safe_start + (max_dist - safe_start) * cfg.orbital_distribution_mode
-                    dist = int(random.triangular(safe_start, max_dist, mode))
+                    dist = int(rng.triangular(safe_start, max_dist, mode))
 
                 ring_coords = hex_ring(dist)
                 if not ring_coords:
                     continue
-                loc = random.choice(ring_coords)
+                loc = rng.choice(ring_coords)
                 if loc not in occupied_locations:
                     occupied_locations.add(loc)
 
                     if hot_required and not hot_zone_placed and i == 0:
-                        hot_mass = 10 ** random.uniform(
+                        hot_mass = 10 ** rng.uniform(
                             cfg.hot_jupiter_log_mass_min, cfg.hot_jupiter_log_mass_max
                         )
                         occupied_slots[loc] = [hot_mass]
                         hot_zone_placed = True
                     else:
-                        mass = self._generate_mass_constrained(mass_min, mass_max, mass_bias)
+                        mass = self._generate_mass_constrained(mass_min, mass_max, mass_bias, rng=rng)
                         occupied_slots[loc] = [mass]
                     break
 
@@ -202,7 +215,8 @@ class PlanetGenerator:
         self,
         mass_min: float,
         mass_max: float,
-        bias: str = None
+        bias: str = None,
+        rng: random.Random = random,
     ) -> float:
         """
         Generate planet mass with constraints and optional bias.
@@ -232,17 +246,18 @@ class PlanetGenerator:
         log_max = math.log10(mass_max)
 
         for _ in range(cfg.mass_max_iterations):
-            log_val = random.gauss(log_mu, log_sigma)
+            log_val = rng.gauss(log_mu, log_sigma)
             if log_min <= log_val <= log_max:
                 return 10 ** log_val
 
         # Fallback: uniform in log space within constraints
-        return 10 ** random.uniform(log_min, log_max)
+        return 10 ** rng.uniform(log_min, log_max)
 
     def _generate_moons(
         self,
         occupied_slots: Dict[HexCoord, List[float]],
-        max_total: int = None
+        max_total: int = None,
+        rng: random.Random = random,
     ) -> None:
         """
         Generate moons/co-orbitals for each primary body.
@@ -263,7 +278,7 @@ class PlanetGenerator:
             # Keep rolling for additional moons
             from game.strategy.data.orbital_generation_config import get_orbital_generation_config
             cfg_moons = get_orbital_generation_config()
-            while random.random() < chance:
+            while rng.random() < chance:
                 if len(masses) > cfg_moons.max_moons_per_body:
                     break
 
@@ -273,7 +288,7 @@ class PlanetGenerator:
                     if current_total >= max_total:
                         return  # Stop all moon generation
 
-                moon_mass = self._generate_moon_mass(primary_mass)
+                moon_mass = self._generate_moon_mass(primary_mass, rng=rng)
                 masses.append(moon_mass)
 
     def _calculate_moon_chance(self, primary_mass: float) -> float:
@@ -310,7 +325,9 @@ class PlanetGenerator:
 
         return max(0.0, min(cfg.max_chance_cap, chance))
 
-    def _generate_moon_mass(self, primary_mass: float) -> float:
+    def _generate_moon_mass(
+        self, primary_mass: float, rng: random.Random = random
+    ) -> float:
         """
         Generate moon mass (log-uniform from 0.001% to 5% of primary).
 
@@ -324,7 +341,7 @@ class PlanetGenerator:
         log_min = math.log10(primary_mass * cfg.mass_ratio_min)
         log_max = math.log10(primary_mass * cfg.mass_ratio_max)
 
-        moon_mass = 10 ** random.uniform(log_min, log_max)
+        moon_mass = 10 ** rng.uniform(log_min, log_max)
 
         # Floor at dwarf planet size
         return max(moon_mass, MASS_CERES)
@@ -332,7 +349,9 @@ class PlanetGenerator:
     def _create_planet_objects(
         self,
         occupied_slots: Dict[HexCoord, List[float]],
-        stars: List[Star]
+        stars: List[Star],
+        rng: random.Random = random,
+        image_rng: Optional[random.Random] = None,
     ) -> List[Planet]:
         """
         Create Planet objects from mass distributions.
@@ -350,7 +369,8 @@ class PlanetGenerator:
 
             for mass in masses:
                 planet = self._create_single_planet(
-                    loc, orbit_dist, mass, base_temp, total_flux
+                    loc, orbit_dist, mass, base_temp, total_flux,
+                    rng=rng, image_rng=image_rng,
                 )
                 bodies.append(planet)
 
@@ -362,15 +382,21 @@ class PlanetGenerator:
         orbit_dist: int,
         mass: float,
         base_temp: float,
-        total_flux: float
+        total_flux: float,
+        rng: random.Random = random,
+        image_rng: Optional[random.Random] = None,
     ) -> Planet:
         """
         Create a single Planet object with all physical properties.
+
+        PROJ-473: physics draws use ``rng`` (H7 S5); image_id/image_rotation
+        use the SEPARATE ``image_rng`` (H7 S7) so the physics sequence — and S9
+        warp geometry — is not perturbed by inserting image draws.
         """
         from game.strategy.data.planet_physics import validate_planet_parameters
 
         # Physical properties
-        radius, density = calculate_radius_density_from_mass(mass)
+        radius, density = calculate_radius_density_from_mass(mass, rng=rng)
         gravity = calculate_surface_gravity(mass, radius)
         surface_area = calculate_surface_area(radius)
 
@@ -382,20 +408,20 @@ class PlanetGenerator:
         # Atmosphere
         escape_vel = calculate_escape_velocity(mass, radius)
         atmosphere, pressure, final_temp = generate_atmosphere(
-            mass, escape_vel, base_temp, total_flux
+            mass, escape_vel, base_temp, total_flux, rng=rng
         )
 
         # Surface conditions
-        water, activity, mag_field = generate_surface_flags(mass, final_temp)
+        water, activity, mag_field = generate_surface_flags(mass, final_temp, rng=rng)
 
         # Classification
         p_type = determine_planet_type(
-            mass, final_temp, pressure, water, atmosphere, activity
+            mass, final_temp, pressure, water, atmosphere, activity, rng=rng
         )
 
-        # Assign persistent image from registry
-        image_id = self._image_registry.get_random_image(p_type)
-        image_rotation = self._image_registry.get_random_rotation()
+        # Assign persistent image from registry (SEPARATE image_rng — H7 S7).
+        image_id = self._image_registry.get_random_image(p_type, rng=image_rng)
+        image_rotation = self._image_registry.get_random_rotation(rng=image_rng)
 
         return Planet(
             name="TEMP",  # Assigned later by naming pass
@@ -413,7 +439,7 @@ class PlanetGenerator:
             surface_water=water,
             tectonic_activity=activity,
             magnetic_field=mag_field,
-            deposits=generate_resources(mass, p_type),
+            deposits=generate_resources(mass, p_type, rng=rng),
             image_id=image_id,
             image_rotation=image_rotation
         )

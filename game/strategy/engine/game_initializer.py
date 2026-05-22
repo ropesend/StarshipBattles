@@ -81,7 +81,6 @@ class GameInitializer:
 
         last_error: Optional[_PlanetShortageError] = None
         for attempt in range(_PLANET_SHORTAGE_RETRY_ATTEMPTS):
-            galaxy = Galaxy(radius=config.galaxy_radius)
             attempt_config = config
             if attempt > 0 and config.galaxy_seed is not None:
                 # Perturb the seed deterministically so each retry rolls a
@@ -89,6 +88,18 @@ class GameInitializer:
                 # Use dataclasses.replace to keep all other fields intact.
                 from dataclasses import replace
                 attempt_config = replace(config, galaxy_seed=config.galaxy_seed + attempt)
+
+            # PROJ-473 S8: seed the load-time name shuffle from the
+            # attempt's galaxy_seed so system-name order is reproducible
+            # (hazard H1 — the shuffle fires in Galaxy.__init__ -> NameRegistry
+            # before _initialize_galaxy runs, so the rng must be supplied at
+            # Galaxy construction). A dedicated name stream, kept distinct from
+            # the placement rng (S1) and the dedicated physics_rng (S4/S5),
+            # so it never perturbs the class-(a) sequences.
+            name_rng: Optional[random.Random] = None
+            if attempt_config.galaxy_seed is not None:
+                name_rng = random.Random(attempt_config.galaxy_seed)
+            galaxy = Galaxy(radius=config.galaxy_radius, name_rng=name_rng)
 
             systems = GameInitializer._initialize_galaxy(galaxy, attempt_config)
 
@@ -242,12 +253,34 @@ class GameInitializer:
 
         logger.info(f"GameInitializer: Generating Galaxy (type={galaxy_type}, seed={galaxy_seed})...")
 
-        # Set up RNG for deterministic generation
+        # Set up RNG for deterministic generation.
+        #
+        # PROJ-473 H7 stream topology — these are MULTIPLE distinct streams
+        # seeded with the SAME galaxy_seed, NOT one consolidated root:
+        #   * placement rng (S1): system placement; also yields the storm (S2)
+        #     and intrinsic/archetype (S3) child-stream seeds inside
+        #     generate_systems.
+        #   * physics_rng (S4/S5): a DEDICATED separate instance for star +
+        #     planet physics, kept distinct from the placement rng (which has
+        #     already had two randint draws pulled for S2/S3). The SAME
+        #     physics_rng is CONTINUED into warp geometry (S9) and warp
+        #     type/intrinsics (S10) below — NOT a fresh warp rng (Blocker 1).
+        #   * image_rng (S6/S7): an INDEPENDENT seeded instance for images.
+        #   * name_rng (S8): built in initialize() at Galaxy construction.
+        # PROJ-473 Phase 3: the two load-bearing global random.seed() calls have
+        # been REMOVED — every generation draw now comes from these injected
+        # per-instance streams (Pattern #18; guarded by test_no_unseeded_random).
         rng: Optional[random.Random] = None
+        physics_rng: Optional[random.Random] = None
+        image_rng: Optional[random.Random] = None
         if galaxy_seed is not None:
             rng = random.Random(galaxy_seed)
-            # Also seed global random for star/planet generation
-            random.seed(galaxy_seed)
+            physics_rng = random.Random(galaxy_seed)
+            # image_rng (S6/S7): an INDEPENDENT seeded stream, NOT derived from
+            # physics_rng (deriving would consume a physics draw and shift the
+            # physics + S9 warp-geometry sequence off the golden baseline). A
+            # distinct seed keeps image draws from perturbing class-(a).
+            image_rng = random.Random(galaxy_seed + 0x1A6E)
 
         # Create placement strategy based on galaxy type
         if galaxy_type == "random":
@@ -261,14 +294,22 @@ class GameInitializer:
             density_map = DensityMap.from_config(layout_config, galaxy.radius)
             strategy = DensityBasedPlacementStrategy(density_map)
 
-        # Generate systems using the strategy
+        # Generate systems using the strategy. physics_rng is threaded for the
+        # Phase 1 star/planet pipeline (distinct from the placement rng).
         systems = galaxy.generate_systems(
             count=config.system_count,
             min_dist=400,
             placement_strategy=strategy,
-            rng=rng
+            rng=rng,
+            physics_rng=physics_rng,
+            image_rng=image_rng,
         )
-        galaxy.generate_warp_lanes()
+        # PROJ-473 H7 S9/S10: pass the CONTINUED physics_rng (the SAME instance
+        # threaded through stars/planets above) into warp generation — NOT a
+        # fresh warp rng. Warps are a second pass after generate_systems, so
+        # physics_rng continues right where the last planet-physics draw left
+        # off, preserving S9 warp geometry byte-for-byte (sign-off Blocker 1).
+        galaxy.generate_warp_lanes(rng=physics_rng)
 
         logger.info(f"GameInitializer: Generated {len(systems)} systems.")
         return systems

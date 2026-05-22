@@ -17,7 +17,8 @@ def generate_atmosphere(
     mass: float,
     escape_vel: float,
     base_temp: float,
-    flux_wm2: float
+    flux_wm2: float,
+    rng: random.Random = random,
 ) -> Tuple[Dict[str, float], float, float]:
     """
     Generate atmospheric composition, pressure, and final temperature.
@@ -27,6 +28,8 @@ def generate_atmosphere(
         escape_vel: Escape velocity in m/s
         base_temp: Base blackbody temperature in K
         flux_wm2: Incident radiation flux in W/m^2
+        rng: PROJ-473 H7 S5 — physics rng for the volatile-richness +
+            gas-composition draws. Defaults to module-level ``random``.
 
     Returns:
         Tuple of (composition dict {gas: partial_pressure_pa},
@@ -46,12 +49,12 @@ def generate_atmosphere(
         return {}, 0.0, base_temp
 
     # Calculate base pressure
-    base_pressure_atm = _calculate_base_pressure(mass, retained_gases, base_temp)
+    base_pressure_atm = _calculate_base_pressure(mass, retained_gases, base_temp, rng=rng)
     pressure_pa = base_pressure_atm * ATM_TO_PA
 
     # Distribute pressure among retained gases
     composition = _distribute_gas_composition(
-        retained_gases, mass, pressure_pa
+        retained_gases, mass, pressure_pa, rng=rng
     )
 
     # Calculate greenhouse effect
@@ -82,13 +85,14 @@ def _calculate_retained_gases(escape_vel: float, retention_temp: float) -> list:
 def _calculate_base_pressure(
     mass: float,
     retained_gases: list,
-    base_temp: float
+    base_temp: float,
+    rng: random.Random = random,
 ) -> float:
     """
     Calculate base atmospheric pressure in atmospheres.
     """
     # Volatile inventory roll
-    volatile_richness = random.lognormvariate(0, 1.5)
+    volatile_richness = rng.lognormvariate(0, 1.5)
 
     # Base pressure scaling with mass^2
     mass_earth_units = mass / MASS_EARTH
@@ -107,7 +111,8 @@ def _calculate_base_pressure(
 def _distribute_gas_composition(
     retained_gases: list,
     mass: float,
-    pressure_pa: float
+    pressure_pa: float,
+    rng: random.Random = random,
 ) -> Dict[str, float]:
     """
     Distribute total pressure among retained gases.
@@ -122,7 +127,7 @@ def _distribute_gas_composition(
         props['He'] = 24
         for g in retained_gases:
             if g not in ['H2', 'He']:
-                props[g] = random.uniform(0, 1)
+                props[g] = rng.uniform(0, 1)
     else:
         # Rocky atmosphere - CO2 dominant usually
         for g in retained_gases:
@@ -135,7 +140,7 @@ def _distribute_gas_composition(
                 w = 0.1  # Rare without life
             elif g == 'H2O':
                 w = 5
-            props[g] = random.uniform(0, w)
+            props[g] = rng.uniform(0, w)
 
     # Normalize and convert to partial pressures
     composition = {}

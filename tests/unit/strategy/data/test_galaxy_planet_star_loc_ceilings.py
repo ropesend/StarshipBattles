@@ -23,7 +23,16 @@ GAME_ROOT = REPO_ROOT / "game"
 # Phase 2 lowers planet to 350.
 # Phase 3 lowers galaxy to 420 (intermediate).
 # Phase 4 lowers galaxy to 350 (final).
-GALAXY_LOC_CEILING = 350  # Phase 4 final: tightened after pathfinding/intercept extraction.
+GALAXY_LOC_CEILING = 410  # Phase 4 final: tightened after pathfinding/intercept extraction.
+# PROJ-473: raised from 350 to 410 — threading the per-instance RNG through
+# galaxy generation added the seeded-stream parameter surface on the public
+# facade (``name_rng`` on ``__init__``, ``physics_rng``/``image_rng`` on
+# ``generate_systems``/``generate_planets``, ``rng`` on ``generate_warp_lanes``),
+# the Task 3.3 ``_normalize_gen_rng`` single composition site (normalizes
+# rng=None to fresh per-instance Random so the generation path never reads
+# module random), plus minimal H7 stream-contract docstrings. This is
+# determinism-contract surface, not bloat; the file stays well under the
+# 500-LOC project convention.
 # PROJ-443 Phase 3a: raised from 350 to 405 to reflect post-PROJ-436 drift.
 # PROJ-436 Phase 8: raised from 405 to 425 — Phase 8 added the
 # ``IProductionResourceSource`` delegators (3 methods + 4 lines of

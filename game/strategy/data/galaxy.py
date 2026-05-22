@@ -37,11 +37,22 @@ class Galaxy:
     etc.) are preserved via ``@property`` forwarders.
     """
 
-    def __init__(self, radius: int = 100):
+    def __init__(self, radius: int = 100, name_rng: Optional[random.Random] = None):
+        """Initialize a galaxy.
+
+        Args:
+            radius: Galaxy radius in hex units.
+            name_rng: Optional seeded RNG for the load-time system-name
+                shuffle (PROJ-473 S8). Supplied here because the shuffle fires
+                inside ``NameRegistry`` at construction (hazard H1); the
+                composition root builds it from ``galaxy_seed``. When ``None``
+                the shuffle uses an unseeded ``Random()`` without touching
+                global module state.
+        """
         self._state = GalaxyState(radius=radius)
 
         # Naming + image registries (heavy data loads — same as PROJ-173).
-        self.naming = NameRegistry(Paths.STAR_SYSTEM_NAMES_FILE)
+        self.naming = NameRegistry(Paths.STAR_SYSTEM_NAMES_FILE, rng=name_rng)
         self.star_image_registry = StarImageRegistry()
         self.star_generator = StarGenerator(image_registry=self.star_image_registry)
         self.image_registry = PlanetImageRegistry()
@@ -209,20 +220,65 @@ class Galaxy:
         """All (empire, fleet) at any hex within `system`."""
         return self._spatial.get_all_fleets_in_system(system, empires)
 
-    def generate_planets(self, system: 'StarSystem') -> None:
-        """Generate planets for `system` based on its star type."""
-        self._sys_gen.generate_planets(self, system)
+    def generate_planets(
+        self, system: 'StarSystem',
+        rng: Optional[random.Random] = None,
+        physics_rng: Optional[random.Random] = None,
+        image_rng: Optional[random.Random] = None,
+    ) -> None:
+        """Generate planets for `system` based on its star type.
+
+        PROJ-473 Task 3.3: backward-compatible facade — any ``None`` stream is
+        normalized to a fresh per-instance ``Random()`` so the generation path
+        never reads module-level ``random`` (no-rng callers are non-reproducible
+        but never touch global state).
+        """
+        rng, physics_rng, image_rng = self._normalize_gen_rng(
+            rng, physics_rng, image_rng
+        )
+        self._sys_gen.generate_planets(
+            self, system, rng=rng, physics_rng=physics_rng, image_rng=image_rng,
+        )
+
+    @staticmethod
+    def _normalize_gen_rng(
+        rng: Optional[random.Random],
+        physics_rng: Optional[random.Random],
+        image_rng: Optional[random.Random],
+    ) -> tuple[random.Random, random.Random, random.Random]:
+        """PROJ-473 Task 3.3 single composition site: fill any missing seeded
+        stream with a fresh per-instance ``Random()`` (distinct instances so
+        they stay independent, mirroring the seeded production topology). The
+        generation path therefore never falls back to module-level ``random``.
+        """
+        return (
+            rng if rng is not None else random.Random(),
+            physics_rng if physics_rng is not None else random.Random(),
+            image_rng if image_rng is not None else random.Random(),
+        )
 
     def generate_systems(
-        self,
-        count: int,
-        min_dist: int = 10,
+        self, count: int, min_dist: int = 10,
         placement_strategy: Optional['ISystemPlacementStrategy'] = None,
         rng: Optional[random.Random] = None,
+        physics_rng: Optional[random.Random] = None,
+        image_rng: Optional[random.Random] = None,
     ) -> List['StarSystem']:
-        """Generate `count` systems with min hex distance, returns the list."""
+        """Generate `count` systems with min hex distance, returns the list.
+
+        PROJ-473: ``physics_rng`` is the dedicated star/planet physics stream
+        (H7 S4/S5), distinct from placement ``rng`` (S1); ``image_rng`` is a
+        separate image_id/rotation stream (H7 S6/S7) — NOT derived from
+        physics_rng (that would shift the physics + S9 sequence). Task 3.3:
+        ``None`` streams are normalized to fresh per-instance ``Random()`` at
+        this single site so the generation path never reads module ``random``.
+        """
+        rng, physics_rng, image_rng = self._normalize_gen_rng(
+            rng, physics_rng, image_rng
+        )
         return self._sys_gen.generate_systems(
             self, count, min_dist, placement_strategy, rng,
+            physics_rng=physics_rng, image_rng=image_rng,
         )
 
     def create_vars_link(self, sys_a: 'StarSystem', sys_b: 'StarSystem') -> None:
@@ -230,7 +286,9 @@ class Galaxy:
         wp_count_a = len(sys_a.warp_points)
         wp_count_b = len(sys_b.warp_points)
 
-        self._warp_gen.create_warp_link(sys_a, sys_b)
+        # PROJ-473: runtime single-link seam (not the seeded generation path);
+        # an independent unseeded Random() is correct here.
+        self._warp_gen.create_warp_link(sys_a, sys_b, random.Random())
 
         # PROJ-179: index any newly created warp points.
         if len(sys_a.warp_points) > wp_count_a:
@@ -257,12 +315,21 @@ class Galaxy:
         self,
         region_classifier: 'Optional[RegionClassifier]' = None,
         inter_region_mode: str = 'normal',
+        rng: Optional[random.Random] = None,
     ) -> None:
-        """Generate warp lanes ensuring connectivity (MST) and adding density."""
+        """Generate warp lanes ensuring connectivity (MST) and adding density.
+
+        PROJ-473 H7 S9/S10: ``rng`` is the CONTINUED ``physics_rng`` (the same
+        instance threaded through stars/planets) so warp geometry (S9) stays
+        byte-for-byte identical to the golden baseline and warp type/intrinsics
+        (S10) become deterministic. Roots pass ``physics_rng`` — NOT a fresh
+        warp rng. ``rng=None`` is normalized inside the warp generator.
+        """
         self._warp_gen.generate_warp_lanes(
             self,
             region_classifier=region_classifier,
             inter_region_mode=inter_region_mode,
+            rng=rng,
         )
         # PROJ-204: rebuild warp point index after bulk generation.
         self._registry.rebuild_all_warp_point_indices()

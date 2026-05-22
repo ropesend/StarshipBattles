@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Goal mapping:** All tasks here serve **G0** (root-RNG boundary + names in the seeded
 stream + the baseline reproducibility anchor).
 **Objective:** Establish the seeded streams at each composition root (per design.md H7:
@@ -38,7 +38,7 @@ begins.
 **Test that must fail first / be authored first:** N/A for the capture itself (it produces a
 fixture); the consuming assertions live in Task 0.1.
 
-- [ ] Run `GameInitializer.initialize(config)` on the UNCHANGED baseline with one or more
+- [x] Run `GameInitializer.initialize(config)` on the UNCHANGED baseline with one or more
       fixed `GameConfig`s (at least: a multi-system config, e.g.
       `galaxy_seed=42, system_count=5, galaxy_radius=500`; AND the N=1-multi-empire
       retry-triggering config from Task 0.1) and snapshot ONLY the **class-(a)** already-
@@ -51,15 +51,15 @@ fixture); the consuming assertions live in Task 0.1.
       `surface_gravity`, `surface_pressure`, `surface_temperature`, `atmosphere`,
       `planet_type`, `surface_water`, `tectonic_activity`, `magnetic_field`, `deposits`) +
       planet `intrinsic_abilities`; storms.
-- [ ] **Exclude the class-(b) fields** from the golden fixture: system `name`, star/planet
+- [x] **Exclude the class-(b) fields** from the golden fixture: system `name`, star/planet
       `image_id` + `image_rotation`, warp `warp_type`, warp `intrinsic_abilities` — these are
       unseeded today and would differ run-to-run, so they CANNOT be golden-pinned. (Note: key
       warp geometry by `destination_id`, not by warp-point list index, so name/type drift
       does not perturb the geometry comparison.)
-- [ ] Store the snapshot as a committed fixture and document the exact config(s) + the field
+- [x] Store the snapshot as a committed fixture and document the exact config(s) + the field
       list inline in the fixture or its capture helper. This fixture is the immutable "what
       current code generates" reference for class (a).
-- [ ] Verify: the fixture is captured against the UNCHANGED baseline (no production edits yet)
+- [x] Verify: the fixture is captured against the UNCHANGED baseline (no production edits yet)
       and is stable across two captures (sanity check that the class-(a) fields are indeed
       reproducible today, including S9 warp geometry).
 
@@ -84,7 +84,7 @@ stars, planets, warp_points, storms, region_id, archetype, intrinsic_abilities).
 > is therefore an **expected-RED** characterization for the class-(b) fields that only turns
 > green after Phases 0–2 land. Do NOT try to make it green in Phase 0 and do NOT weaken it.
 
-- [ ] **GREEN golden-baseline guard (class-(a) already-seeded fields).** Run
+- [x] **GREEN golden-baseline guard (class-(a) already-seeded fields).** Run
       `GameInitializer.initialize(config)` (the SAME config(s) used to capture the golden
       baseline in Task 0.0) and assert deep equality of the class-(a) fields **against the
       Task 0.0 GOLDEN BASELINE fixture** — NOT merely two same-impl runs (a two-run check
@@ -102,7 +102,7 @@ stars, planets, warp_points, storms, region_id, archetype, intrinsic_abilities).
       preserve. (Do NOT include the class-(b) fields `name`, `image_id`, `image_rotation`,
       `warp_type`, or warp `intrinsic_abilities` in THIS guard — they are unseeded today and
       are NOT golden-pinned.)
-- [ ] **Expected-RED full-snapshot determinism test (class-(b) fields).** Author a deep-
+- [x] **Expected-RED full-snapshot determinism test (class-(b) fields).** Author a deep-
       equality test across TWO same-seed runs of the CURRENT code on the COMPLETE `to_dict()`
       snapshot — this is what is RED on baseline, because the class-(b) fields (`name`,
       `image_id`, `image_rotation`, `warp_type`, warp `intrinsic_abilities`) are unseeded
@@ -127,10 +127,10 @@ stars, planets, warp_points, storms, region_id, archetype, intrinsic_abilities).
       completes, drop `xfail` and the test must pass strictly as a two-run determinism check.
       (The class-(a)/S9 fields are simultaneously asserted against the golden baseline by the
       guard above, every phase.)
-- [ ] **Do NOT** reuse the golden-save image skiplist (`_build_galaxy_fixture.py:53-59`):
+- [x] **Do NOT** reuse the golden-save image skiplist (`_build_galaxy_fixture.py:53-59`):
       `image_id`/`image_rotation` are part of the full equality (after P1), not normalized
       away.
-- [ ] **N=1 retry case — must actually trigger a retry (hazard H2).** A bare "N=1 with ≥2
+- [x] **N=1 retry case — must actually trigger a retry (hazard H2).** A bare "N=1 with ≥2
       empires" config does NOT guarantee the seed-bump branch runs (retry only fires when
       `len(lone.planets) < num_empires`, `game_initializer.py:333`; seed bumped via
       `replace(config, galaxy_seed=config.galaxy_seed + attempt)`, `:86-91`). Either (a)
@@ -143,7 +143,7 @@ stars, planets, warp_points, storms, region_id, archetype, intrinsic_abilities).
       guard against it (physics + S9 geometry) so a retry-flipping draw shift is a real
       baseline regression; extend it into the full snapshot's class-(b) determinism checks as
       those fields go green.
-- [ ] **Global-state companion assertion (necessary but NOT sufficient — see note below).**
+- [x] **Global-state companion assertion (necessary but NOT sufficient — see note below).**
       Snapshot `random.getstate()` before and after `initialize()` and assert generation
       perturbs global `random` state today (this assertion FLIPS in Phase 3). **Caveat:**
       this is a weak proxy. Fresh unseeded `random.Random()` fallbacks (S6/S7/S10 at
@@ -152,7 +152,7 @@ stars, planets, warp_points, storms, region_id, archetype, intrinsic_abilities).
       can pass while determinism is still broken. The REAL proof of determinism is the
       full-save-visible equivalence test going green — not `getstate()`. Treat `getstate()`
       only as a coarse "did the global seed get removed" tripwire for Phase 3.
-- [ ] Verify: **the golden-baseline guard passes on the unchanged baseline** (class-(a)
+- [x] Verify: **the golden-baseline guard passes on the unchanged baseline** (class-(a)
       fields incl. S9 warp geometry equal the Task 0.0 golden fixture, incl. the N=1 retry
       case); the full-snapshot class-(b) determinism test is **xfail (expected-RED)** on
       baseline; the global-perturbation assertion passes (debt present). Record the baseline
@@ -168,15 +168,15 @@ built with the SAME injected `random.Random(seed)` produce the same `available_n
 order (fails before threading because the shuffle uses module-level `random`).
 **Run:** `pytest tests/ -k naming`; then `pytest tests/ --testmon`.
 
-- [ ] Constructor-inject `rng: random.Random | None` into `NameRegistry` (or add a
+- [x] Constructor-inject `rng: random.Random | None` into `NameRegistry` (or add a
       deferred seeded shuffle step) so the shuffle draws from the seeded stream rather than
       bare `random.shuffle`. Per consult §2, constructor injection is the cleaner fit since
       the random op happens at load time, not at `get_system_name()`.
-- [ ] Resolve the ordering hazard (H1): the rng must exist when `NameRegistry` shuffles.
+- [x] Resolve the ordering hazard (H1): the rng must exist when `NameRegistry` shuffles.
       Either (a) `Galaxy.__init__` accepts/builds the rng before constructing the registry,
       or (b) the shuffle is deferred to a post-seed call invoked from the composition root.
       Document the chosen shape in a code comment + note in Current State.
-- [ ] Verify: the new naming determinism test passes; Task 0.1 baseline equality still
+- [x] Verify: the new naming determinism test passes; Task 0.1 baseline equality still
       passes.
 
 ### Task 0.3: Establish the seeded root rng at both composition roots [Medium]
@@ -198,17 +198,17 @@ root rng feeds the registry.
 **Run:** `pytest tests/ -k "game_initializer or galaxy_mode or naming"`; then
 `pytest tests/ --testmon`.
 
-- [ ] In `game_initializer._initialize_galaxy`, ensure the seeded stream is the source for
+- [x] In `game_initializer._initialize_galaxy`, ensure the seeded stream is the source for
       the name shuffle (via the Task 0.2 mechanism), and construct the dedicated
       `physics_rng = random.Random(galaxy_seed)` (separate from the placement rng) reserved
       for Phase 1 — **do not** delete `random.seed(galaxy_seed)` yet (that is Phase 3;
       star/planet/warp still read global until their phases land).
-- [ ] Mirror the same wiring in `galaxy_mode.generate` (`:226-289`).
-- [ ] Keep the `Galaxy` facade signature changes minimal and forward-compatible with the
+- [x] Mirror the same wiring in `galaxy_mode.generate` (`:226-289`).
+- [x] Keep the `Galaxy` facade signature changes minimal and forward-compatible with the
       Phase 1/2 rng-threading (note the intended `generate_systems` physics-rng flow and that
       `generate_warp_lanes` will receive the SAME continued `physics_rng` in P2 — not a fresh
       warp rng — in a comment so later phases slot in cleanly).
-- [ ] Verify: name-order reproducibility holds for a fixed seed (the `name` portion of the
+- [x] Verify: name-order reproducibility holds for a fixed seed (the `name` portion of the
       full-snapshot class-(b) xfail test should now PASS — narrow the xfail tolerance to drop
       `name`); the golden-baseline guard (class-(a), incl. S9 geometry) still passes; no
       global `random.seed` removed yet.
@@ -217,11 +217,11 @@ root rng feeds the registry.
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Task 0.0 golden baseline fixture captured from the unchanged code and committed
-- [ ] `pytest tests/ --testmon` green; Task 0.1 golden-baseline guard passes (class-(a) incl.
+- [x] All task checkboxes above are checked
+- [x] Task 0.0 golden baseline fixture captured from the unchanged code and committed
+- [x] `pytest tests/ --testmon` green; Task 0.1 golden-baseline guard passes (class-(a) incl.
       S9 geometry == golden fixture); the full-snapshot class-(b) test is still xfail BUT
       names are now reproducible (its `name`-field tolerance dropped)
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 1
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 1

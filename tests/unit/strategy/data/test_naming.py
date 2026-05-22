@@ -8,6 +8,7 @@ Tests cover:
 - Error handling
 """
 import os
+import random
 import tempfile
 import pytest
 import yaml
@@ -93,6 +94,37 @@ class TestNameRegistryLoadData:
 
         # Should remain empty (error logged)
         assert registry.available_names == []
+
+
+class TestSeededShuffle:
+    """PROJ-473 Task 0.2: the load-time name shuffle must draw from an
+    injected seeded RNG so system-name order is reproducible for a fixed seed
+    (it was bare module-level ``random.shuffle`` before — hazard H1/S8)."""
+
+    def test_injected_rng_makes_shuffle_deterministic(self, tmp_path):
+        """Two registries built with the SAME injected ``random.Random(seed)``
+        produce the same ``available_names`` order."""
+        yaml_file = tmp_path / "names.yaml"
+        names = [f"Star{i}" for i in range(50)]
+        yaml_file.write_text(yaml.dump({"names": names}))
+
+        r1 = NameRegistry(str(yaml_file), rng=random.Random(123))
+        r2 = NameRegistry(str(yaml_file), rng=random.Random(123))
+
+        assert r1.available_names == r2.available_names
+        # And it actually shuffled (not just identity order).
+        assert r1.available_names != names
+
+    def test_different_seeds_differ(self, tmp_path):
+        """Different injected seeds yield different orders."""
+        yaml_file = tmp_path / "names.yaml"
+        names = [f"Star{i}" for i in range(50)]
+        yaml_file.write_text(yaml.dump({"names": names}))
+
+        r1 = NameRegistry(str(yaml_file), rng=random.Random(1))
+        r2 = NameRegistry(str(yaml_file), rng=random.Random(2))
+
+        assert r1.available_names != r2.available_names
 
 
 class TestGetSystemName:
