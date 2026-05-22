@@ -35,7 +35,7 @@ def test_get_empire_build_queues_threads_registries_and_returns_dtos(
     )
     state = SimpleNamespace(
         get_empire_by_id=Mock(return_value=empire),
-        session=SimpleNamespace(registries=registries),
+        _session=SimpleNamespace(registries=registries),
     )
 
     result = EmpireSlice(state).get_empire_build_queues(3)
@@ -55,7 +55,7 @@ def test_get_empire_build_queues_returns_empty_for_unknown_empire(
     )
     state = SimpleNamespace(
         get_empire_by_id=Mock(return_value=None),
-        session=SimpleNamespace(registries=object()),
+        _session=SimpleNamespace(registries=object()),
     )
 
     assert EmpireSlice(state).get_empire_build_queues(999) == []
@@ -82,7 +82,7 @@ def test_get_hex_build_queues_threads_hex_galaxy_empire_and_registries(
     )
     state = SimpleNamespace(
         get_empire_by_id=Mock(return_value=empire),
-        session=SimpleNamespace(galaxy=galaxy, registries=registries),
+        _session=SimpleNamespace(galaxy=galaxy, registries=registries),
     )
 
     result = EmpireSlice(state).get_hex_build_queues(4, hex_coord)
@@ -113,7 +113,7 @@ def test_get_hex_build_queues_returns_empty_for_unknown_empire(
     )
     state = SimpleNamespace(
         get_empire_by_id=Mock(return_value=None),
-        session=SimpleNamespace(galaxy=object(), registries=object()),
+        _session=SimpleNamespace(galaxy=object(), registries=object()),
     )
 
     assert EmpireSlice(state).get_hex_build_queues(404, HexCoord(0, 0)) == []
@@ -147,7 +147,7 @@ def test_get_hex_build_queues_resolves_fleet_owner_scalars(monkeypatch) -> None:
     )
     state = SimpleNamespace(
         get_empire_by_id=Mock(return_value=empire),
-        session=SimpleNamespace(galaxy=galaxy, registries=object()),
+        _session=SimpleNamespace(galaxy=galaxy, registries=object()),
     )
 
     [dto] = EmpireSlice(state).get_hex_build_queues(4, HexCoord(7, 2))

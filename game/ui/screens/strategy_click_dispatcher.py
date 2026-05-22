@@ -384,7 +384,7 @@ class ClickModeDispatcher:
             selected = self.scene.selected_object
             if selected is None:
                 return False
-            current_player_id = self.scene.human_player_ids[
+            current_player_id = self.scene.facade.session_meta.human_player_ids()[
                 self.scene.current_player_index
             ]
             if getattr(selected, "owner_id", None) != current_player_id:

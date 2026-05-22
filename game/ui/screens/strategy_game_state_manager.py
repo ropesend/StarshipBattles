@@ -85,7 +85,7 @@ class StrategyGameStateManager:
             that to trigger full-turn processing the same way the linear
             advance did.
         """
-        ids = self._screen.human_player_ids
+        ids = self._screen.facade.session_meta.human_player_ids()
         if not ids:
             return 0, False
         rolled = False
@@ -133,7 +133,7 @@ class StrategyGameStateManager:
             self._apply_turn_start_state(self._screen.current_empire)
         else:
             # Switch to next live human player's view.
-            next_player_id = self._screen.human_player_ids[next_index]
+            next_player_id = self._screen.facade.session_meta.human_player_ids()[next_index]
             logger.info(f"Player {next_player_id + 1}'s turn to give orders.")
             self._update_player_label()
             # BUG-125: push rotation into the session so command handlers
@@ -156,7 +156,7 @@ class StrategyGameStateManager:
         every command handler authorizes against the correct empire. Called
         from `advance_turn`.
         """
-        current_player_id = self._screen.human_player_ids[self._screen.current_player_index]
+        current_player_id = self._screen.facade.session_meta.human_player_ids()[self._screen.current_player_index]
         current_empire = next(
             (e for e in self._screen.empires if e.id == current_player_id), None
         )
@@ -191,7 +191,7 @@ class StrategyGameStateManager:
         ``current_player_index`` still identifies the player whose turn
         is ending.
         """
-        ids = self._screen.human_player_ids
+        ids = self._screen.facade.session_meta.human_player_ids()
         if not ids:
             return
         outgoing_id = ids[self._screen.current_player_index]

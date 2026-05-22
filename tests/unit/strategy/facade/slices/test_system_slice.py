@@ -19,7 +19,7 @@ def test_get_all_stars_uses_cache_until_turn_changes(monkeypatch) -> None:
         galaxy=SimpleNamespace(systems={"solar": system}),
     )
     state = SimpleNamespace(
-        session=session,
+        _session=session,
         all_stars_cache=None,
         all_stars_cache_turn=-1,
     )
@@ -47,7 +47,7 @@ def test_get_all_systems_returns_dtos_for_each_system(monkeypatch) -> None:
     alpha = SimpleNamespace(name="Alpha")
     beta = SimpleNamespace(name="Beta")
     galaxy = SimpleNamespace(systems={"alpha": alpha, "beta": beta})
-    state = SimpleNamespace(session=SimpleNamespace(galaxy=galaxy))
+    state = SimpleNamespace(_session=SimpleNamespace(galaxy=galaxy))
     monkeypatch.setattr(
         SystemInfo,
         "from_star_system",
@@ -64,7 +64,7 @@ def test_get_system_at_hex_converts_found_system_and_returns_none(monkeypatch) -
             system if hex_coord == HexCoord(2, 3) else None
         ),
     )
-    state = SimpleNamespace(session=SimpleNamespace(galaxy=galaxy))
+    state = SimpleNamespace(_session=SimpleNamespace(galaxy=galaxy))
     monkeypatch.setattr(
         SystemInfo,
         "from_star_system",
@@ -88,7 +88,7 @@ def test_get_system_containing_fleet_resolves_from_fleet_location(
         ),
     )
     state = SimpleNamespace(
-        session=SimpleNamespace(galaxy=galaxy),
+        _session=SimpleNamespace(galaxy=galaxy),
         get_fleet_by_id=lambda fleet_id: fleet,
     )
     monkeypatch.setattr(
@@ -115,7 +115,7 @@ def test_get_system_near_hex_returns_closest_system_within_distance(
         systems={"near": near, "far": far},
         get_system_at_location=lambda hex_coord: None,
     )
-    state = SimpleNamespace(session=SimpleNamespace(galaxy=galaxy))
+    state = SimpleNamespace(_session=SimpleNamespace(galaxy=galaxy))
     monkeypatch.setattr(
         SystemInfo,
         "from_star_system",
@@ -130,7 +130,7 @@ def test_get_system_near_hex_returns_none_when_no_system_is_close() -> None:
         systems={"far": SimpleNamespace(global_location=HexCoord(20, 0))},
         get_system_at_location=lambda hex_coord: None,
     )
-    state = SimpleNamespace(session=SimpleNamespace(galaxy=galaxy))
+    state = SimpleNamespace(_session=SimpleNamespace(galaxy=galaxy))
 
     assert SystemSlice(state).get_system_near_hex(HexCoord(0, 0), max_dist=8) is None
 
@@ -146,13 +146,13 @@ def test_get_storm_names_at_hex_filters_non_storm_zones() -> None:
     galaxy = SimpleNamespace(
         get_zones_at_global_hex=lambda hex_coord: [object(), storm]
     )
-    state = SimpleNamespace(session=SimpleNamespace(galaxy=galaxy))
+    state = SimpleNamespace(_session=SimpleNamespace(galaxy=galaxy))
 
     assert SystemSlice(state).get_storm_names_at_hex(HexCoord(4, 4)) == ["Ion Front"]
 
 
 def test_get_storm_names_at_hex_handles_galaxy_without_zone_index() -> None:
-    state = SimpleNamespace(session=SimpleNamespace(galaxy=SimpleNamespace()))
+    state = SimpleNamespace(_session=SimpleNamespace(galaxy=SimpleNamespace()))
 
     assert SystemSlice(state).get_storm_names_at_hex(HexCoord(4, 4)) == []
 
@@ -179,6 +179,6 @@ def test_get_storm_names_at_hex_excludes_abilities_carrying_non_storm() -> None:
     galaxy = SimpleNamespace(
         get_zones_at_global_hex=lambda hex_coord: [star_like_zone, storm]
     )
-    state = SimpleNamespace(session=SimpleNamespace(galaxy=galaxy))
+    state = SimpleNamespace(_session=SimpleNamespace(galaxy=galaxy))
 
     assert SystemSlice(state).get_storm_names_at_hex(HexCoord(4, 4)) == ["Ion Front"]

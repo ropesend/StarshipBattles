@@ -155,16 +155,19 @@ class TestBuilderIOIntegration:
         design_loader_adapter.load_ship_from_design_data.return_value = mock_ship
 
         # PROJ-434 Phase 2: select_target routes through the per-empire
-        # DesignCatalog resolved via context.facade_state. Wire a mock
-        # catalog into the catalogs_by_empire map.
+        # DesignCatalog resolved via context.facade_state. PROJ-475 Phase 4:
+        # the resolution now goes through the public
+        # ``FacadeSessionState.get_design_catalog_for_empire`` accessor (the
+        # live session is no longer reachable as ``facade_state.session``), so
+        # wire that method directly.
         mock_catalog = MagicMock()
         load_result = MagicMock()
         load_result.success = True
         load_result.data = {"design": "data"}
         mock_catalog.load_design_data.return_value = load_result
-        ship_io.context.facade_state.session.services.design_catalogs_by_empire = {
-            ship_io.context.empire_id: mock_catalog,
-        }
+        ship_io.context.facade_state.get_design_catalog_for_empire.return_value = (
+            mock_catalog
+        )
 
         with patch("game.ui.screens.workshop_ship_io.DesignSelectorWindow") as mock_window_cls:
             ship_io.select_target()

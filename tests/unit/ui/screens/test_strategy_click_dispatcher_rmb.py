@@ -89,18 +89,22 @@ def _scene(
     ui = MagicMock()
     fleet_ops = MagicMock()
     fleet_ops.handle_move_designation.return_value = None
+    # PROJ-475 Phase 3: the RMB selection-owner gate reads human-player ids via
+    # ``scene.facade.session_meta.human_player_ids()`` (pass-through retired).
+    facade = MagicMock()
+    facade.session_meta.human_player_ids.return_value = [current_player_id]
     return SimpleNamespace(
         camera=_IdentityCamera(hex_at=hex_at),
         hex_size=10,
         empires=empires or [],
         galaxy=None,
         ui=ui,
+        facade=facade,
         on_ui_selection=MagicMock(),
         selected_object=selected_object,
         selected_fleet=selected_fleet,
         last_selected_system=None,
         _fleet_ops=fleet_ops,
-        human_player_ids=[current_player_id],
         current_player_index=0,
         _get_system_at_hex=lambda _h: None,
     )

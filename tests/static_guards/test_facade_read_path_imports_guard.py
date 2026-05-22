@@ -169,6 +169,15 @@ _IMPORT_ALLOWLIST: frozenset[tuple[str, str, str]] = frozenset({
     ('game/ui/screens/battle_setup/fleet_hierarchy_editor.py', 'game.strategy.data.task_force', 'TaskForce'),
     ('game/ui/screens/battle_setup_state.py', 'game.strategy.data.fleet', 'Fleet'),
     ('game/ui/screens/battle_setup_state.py', 'game.strategy.data.ship_instance', 'ShipInstance'),
+    # PROJ-475 Phase 5 (audit Finding 1): the build-queue `compute_planet_production`
+    # tail (plan.md:140 "Owned by PROJ-475") is consciously KEPT allowlisted-with-reason.
+    # Both call sites (build_queue_panel_factory.py:247, build_queue_screen.py:321) render
+    # a LIVE `Planet`/`yard` the build-queue screen already holds and call a pure read-only
+    # production calculator with `facade.session_meta.registries()` — there is no `.session`
+    # leak. A clean facade `production_rates` projection requires the live-`Planet`→DTO
+    # bridge that is PROJ-477's render/read-model boundary work (PROJ-477 scopes
+    # build_queue_screen / build_queue_controller / strategy_build_queue_manager). Pinned by
+    # `test_build_queue_compute_planet_production_deferral_is_intentional`.
     ('game/ui/screens/build_queue_panel_factory.py', 'game.strategy.services.planet_economy_projector', 'compute_planet_production'),
     ('game/ui/screens/build_queue_screen.py', 'game.strategy.services.planet_economy_projector', 'compute_planet_production'),
     ('game/ui/screens/builder/right_panel.py', 'game.strategy.data.design_role_registry', 'get_default_design_role_registry'),
@@ -233,7 +242,10 @@ _IMPORT_ALLOWLIST: frozenset[tuple[str, str, str]] = frozenset({
     # facade.session_meta.save_current_game(); the UI no longer imports the service.
     ('game/ui/screens/strategy_render/cursor.py', 'game.strategy.services.cargo_transfer_service', 'project_fleet_position'),
     # Composition root: StrategyScreen rebuilds the facade from a concrete
-    # GameSession in its test-swap setter. Transitional; deprecation is PROJ-475.
+    # GameSession in its test-swap setter (the `session` SETTER). Transitional;
+    # the `session` GETTER + this import are deferred to PROJ-477 (the getter
+    # still has live consumers — system_tree_panel dynamic-getattr + Category B
+    # mutator write seams — per PROJ-475 post-flesh review B2).
     ('game/ui/screens/strategy_screen.py', 'game.strategy.engine.game_session', 'GameSession'),
     # PROJ-475 Phase 2 Task 2.4 REMOVED the SaveGameService import entry for
     # strategy_screen_lifecycle.py — manual save (on_save_game_click) now routes
@@ -660,3 +672,37 @@ def test_uisafe_symbol_matcher_is_symbol_level_not_module_level() -> None:
     assert "import FieldStatus" not in blob
     # Same module, different (live) member: STILL flagged.
     assert "import RaceDescriptionLLMController" in blob
+
+
+def test_build_queue_compute_planet_production_deferral_is_intentional() -> None:
+    """PROJ-475 Phase 5 (audit Finding 1): the build-queue
+    ``compute_planet_production`` import tail is a CONSCIOUS allowlist-with-reason,
+    deferred to PROJ-477, not an accidental leftover.
+
+    The plan (``plan.md:140``) assigned this tail to PROJ-475 with the explicit
+    option "allowlist-with-reason if no clean query exists". Both call sites render
+    a LIVE ``Planet``/``yard`` the build-queue screen already holds and call a pure
+    read-only production calculator with ``facade.session_meta.registries()`` — no
+    ``.session`` leak. A clean facade ``production_rates`` projection needs the
+    live-``Planet``→DTO bridge that is PROJ-477's render/read-model boundary work.
+
+    This pin fails if a future change silently drops or re-scopes these entries
+    without updating the rationale above them in ``_IMPORT_ALLOWLIST``.
+    """
+    expected = {
+        (
+            "game/ui/screens/build_queue_panel_factory.py",
+            "game.strategy.services.planet_economy_projector",
+            "compute_planet_production",
+        ),
+        (
+            "game/ui/screens/build_queue_screen.py",
+            "game.strategy.services.planet_economy_projector",
+            "compute_planet_production",
+        ),
+    }
+    missing = expected - _IMPORT_ALLOWLIST
+    assert not missing, (
+        "PROJ-475 Phase 5: the build-queue compute_planet_production deferral "
+        f"entries must stay allowlisted-with-reason (deferred to PROJ-477). Missing: {missing}"
+    )

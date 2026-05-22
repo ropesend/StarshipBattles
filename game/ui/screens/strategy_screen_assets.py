@@ -27,9 +27,20 @@ logger = logging.getLogger(__name__)
 
 
 def focus_on_player_home(screen: "StrategyScreen") -> None:
-    """Focus camera on player's home colony at startup."""
-    if screen.active_empire.colonies:
-        home_colony = screen.active_empire.colonies[0]
+    """Focus camera on player's home colony at startup.
+
+    PROJ-475 Phase 3: the ``screen.active_empire`` pass-through was retired.
+    The live home-colony focus needs the live ``Planet`` objects (it identity-
+    matches them against ``screen.systems[].planets``), so it resolves the
+    active empire from the raw ``screen.empires`` bus keyed by
+    ``screen.active_empire_id``. ``empires``/``systems`` remain the broad
+    raw-domain pass-through deferred to PROJ-477; this is consistent with the
+    rest of this asset-bootstrap module.
+    """
+    active_id = screen.active_empire_id
+    active_empire = next((e for e in screen.empires if e.id == active_id), None)
+    if active_empire is not None and active_empire.colonies:
+        home_colony = active_empire.colonies[0]
         home_sys = next(
             (s for s in screen.systems if home_colony in s.planets),
             None,

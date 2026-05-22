@@ -170,25 +170,6 @@ class StrategyScreen:
         return self._session.systems
 
     @property
-    def active_empire(self) -> Any:
-        """The empire whose turn it currently is.
-
-        BUG-125: renamed from `player_empire` (which never rotated and
-        silently broke authorization in hot-seat). Delegates to
-        `session.active_empire`, which is rotated by
-        `StrategyGameStateManager.advance_turn`.
-        """
-        return self._session.active_empire
-
-    @property
-    def enemy_empire(self) -> Any:
-        return self._session.enemy_empire
-
-    @property
-    def human_player_ids(self) -> Any:
-        return self._session.human_player_ids
-
-    @property
     def current_empire(self) -> Any:
         """Get the empire for the current player (supports N players).
 
@@ -198,13 +179,13 @@ class StrategyScreen:
         needed; reserve ``active_empire`` for turn-gated authorization
         decisions (command handlers, end-turn).
         """
-        empires = self.empires
+        empires = self._session.empires
         if not empires:
-            return self.active_empire
+            return self._session.active_empire
 
-        human_player_ids = self.human_player_ids
+        human_player_ids = self._session.human_player_ids
         if not human_player_ids:
-            return self.active_empire or empires[0]
+            return self._session.active_empire or empires[0]
 
         current_player_id = human_player_ids[self.current_player_index]
         return next((e for e in empires if e.id == current_player_id), empires[0])
@@ -226,12 +207,13 @@ class StrategyScreen:
         """Id of the empire whose turn it currently is, or ``None`` (PROJ-472 1C).
 
         Narrow scene accessor for render-hot consumers (hex outlines) that
-        need only the active-empire id, not the live empire object. Routes
-        through the screen's own ``active_empire`` pass-through (the single
-        legitimate composition-root session handle) so render code never
-        reads ``scene.session.active_empire`` directly.
+        need only the active-empire id, not the live empire object. Reads the
+        private composition-root ``_session.active_empire`` directly (PROJ-475
+        Phase 3 retired the public ``active_empire`` pass-through; the screen
+        IS the boundary, so this Category-A self-read stays allowlisted) so
+        render code never reads ``scene.session.active_empire`` directly.
         """
-        empire = self.active_empire
+        empire = self._session.active_empire
         return empire.id if empire is not None else None
 
     @property

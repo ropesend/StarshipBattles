@@ -59,7 +59,7 @@ class CommandDispatchSlice:
 
     def handle_command(self, command: "Command") -> "ValidationResult":
         """Execute a command against the game session."""
-        return self._state.session.handle_command(command)
+        return self._state._session.handle_command(command)
 
     # ------------------------------------------------------------------
     # Dispatch resolver (PROJ-363 Phase 4)

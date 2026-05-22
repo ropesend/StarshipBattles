@@ -79,6 +79,10 @@ def _dispatcher_with_handler(
 
 
 def _click_scene(*, selected_fleet: object | None = None) -> SimpleNamespace:
+    # PROJ-475 Phase 3: human-player ids read via the facade session_meta
+    # surface (the scene.human_player_ids pass-through was retired).
+    facade = MagicMock()
+    facade.session_meta.human_player_ids.return_value = [1]
     return SimpleNamespace(
         camera=_IdentityCamera(zoom=0.4),
         hex_size=10,
@@ -87,7 +91,7 @@ def _click_scene(*, selected_fleet: object | None = None) -> SimpleNamespace:
         _colonization=MagicMock(),
         _superweapons=MagicMock(),
         ui=MagicMock(),
-        facade=MagicMock(),
+        facade=facade,
         on_ui_selection=MagicMock(),
         complete_edit_move=MagicMock(),
         _get_system_at_hex=MagicMock(return_value=None),
@@ -96,7 +100,6 @@ def _click_scene(*, selected_fleet: object | None = None) -> SimpleNamespace:
         _edit_move_fleet=selected_fleet,
         # Issue #20: friendly-fleet check needs these to be empty/inert.
         empires=[],
-        human_player_ids=[1],
         current_player_index=0,
     )
 

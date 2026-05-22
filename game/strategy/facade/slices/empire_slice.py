@@ -41,7 +41,7 @@ class EmpireSlice:
         """Get information about all empires."""
         return [
             EmpireInfo.from_empire(empire)
-            for empire in self._state.session.empires
+            for empire in self._state._session.empires
         ]
 
     def get_empire(self, empire_id: int) -> Optional[EmpireInfo]:
@@ -92,7 +92,7 @@ class EmpireSlice:
         if empire is None:
             return []
         sources = collect_all_build_queues_for_empire(
-            empire, registries=self._state.session.registries
+            empire, registries=self._state._session.registries
         )
         return [self._project_build_queue_source(source) for source in sources]
 
@@ -107,9 +107,9 @@ class EmpireSlice:
             return []
         sources = collect_build_queues_at_hex(
             hex_coord,
-            self._state.session.galaxy,
+            self._state._session.galaxy,
             empire,
-            registries=self._state.session.registries,
+            registries=self._state._session.registries,
         )
         return [self._project_build_queue_source(source) for source in sources]
 
@@ -146,7 +146,7 @@ class EmpireSlice:
         owner = getattr(source, "owner_entity", None)
         if owner is None:
             return None, None
-        galaxy = getattr(self._state.session, "galaxy", None)
+        galaxy = getattr(self._state._session, "galaxy", None)
         context_type = getattr(source, "context_type", None)
 
         if context_type == "fleet":

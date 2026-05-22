@@ -15,13 +15,34 @@
 |-------|--------|-----------|
 | 1. New facade read surfaces (race-config, save, colony-yard, per-ship spaceyard) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Migrate the explicit `.session` reader tail onto facade (remove guard allowlist entries) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Retire the three narrow READ pass-throughs (`enemy_empire` / `human_player_ids` / `active_empire`) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Privatize `FacadeSessionState.session` (rename → `_session`, slice-internal accessor; `_facade_state` + 7 slices) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 3. Retire the three narrow READ pass-throughs (`enemy_empire` / `human_player_ids` / `active_empire`) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Privatize `FacadeSessionState.session` (rename → `_session`, slice-internal accessor; `_facade_state` + 7 slices) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. End-of-project Codex-audit remediation (build-queue tail deferral pin + defensive-branch coverage + comment retag) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-22
-**Active Phase:** Phase 3 (next). Phases 1 + 2 COMPLETE and validated.
-**Last Action:** Executed Phases 1 + 2.
+**Active Phase:** ALL PHASES COMPLETE (1-5). End-of-project Codex audit done + findings remediated.
+**Last Action:** Executed Phases 3 + 4 + 5 (audit remediation). Codex audit: 2 findings VERIFIED
+(Finding 1 Medium — build-queue compute_planet_production tail kept allowlisted-with-reason +
+pinned, clean migration deferred to PROJ-477; Finding 2 Low — stale import-guard comment retagged),
+test-gap notes addressed (3 defensive-branch degrade tests), 1 sub-finding REJECTED for 475
+(system_tree_panel string-getattr session = PROJ-477's deferred getter consumer). Both guards GREEN;
+full sharded suite GREEN.
+- **Phase 3** retired the 3 narrow READ pass-throughs. `enemy_empire` deleted (zero
+  consumers). `human_player_ids` external consumers (click_dispatcher, screen_selection,
+  game_state_manager x4) → `facade.session_meta.human_player_ids()`; property deleted.
+  `active_empire` external consumer (assets `focus_on_player_home`) → resolve live empire
+  from raw `screen.empires` bus keyed by `active_empire_id`; property deleted.
+  `active_empire_id`/`current_empire` rewired to `_session`. Getter+setter UNTOUCHED.
+  Allowlist: `_session.enemy_empire` REMOVED; `_session.human_player_ids` +
+  `_session.active_empire` kept as Category-A composition-root self-reads.
+- **Phase 4** privatized `FacadeSessionState.session` → `_session` across `_facade_state`
+  + 7 slices (slices read `_state._session` directly). Found + fixed a missed external
+  reader: `workshop_ship_io.py` `getattr(facade_state,"session")` → public
+  `get_design_catalog_for_empire`. Added runtime privatization pin. Cache holder stays
+  public (pin green). Both guards GREEN; full sharded suite GREEN.
+
+**HISTORICAL (Phases 1+2):**
 - **Phase 1** added the four facade read surfaces: `facade.empires.race_config(empire_id)`
   (raw `RaceConfig`), `facade.session_meta.save_current_game(save_name=None)`,
   `PlanetInfo.has_build_yard` (slice resolves planetary-yard with registries, ORed

@@ -64,7 +64,7 @@ class EconomySlice:
         in which case `get_default_economy_config` lazy-loads
         `data/economy.json`.
         """
-        economy = getattr(self._state.session, "economy_config", None)
+        economy = getattr(self._state._session, "economy_config", None)
         if economy is not None:
             return economy
         # PROJ-292 m6: surface the silent fallback so a session that's
@@ -116,7 +116,7 @@ class EconomySlice:
 
         race_registry = self.get_race_registry()
         economy = self.resolve_economy_config()
-        registries = getattr(self._state.session, "registries", None)
+        registries = getattr(self._state._session, "registries", None)
 
         projector = PlanetEconomyProjector(
             registries=registries,

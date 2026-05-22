@@ -77,18 +77,16 @@ class WorkshopShipIO:
         Build Queue sees the new design on the next read without a
         turn advance. Falls back to ``None`` if the session is not
         wired (legacy / partial-init paths).
+
+        PROJ-475 Phase 4: resolves through the public
+        ``FacadeSessionState.get_design_catalog_for_empire`` accessor
+        instead of reaching the now-private ``facade_state.session.services``
+        chain directly — the live session is no longer publicly reachable.
         """
         facade_state = self.context.facade_state
         if facade_state is None:
             return None
-        session = getattr(facade_state, "session", None)
-        if session is None:
-            return None
-        services = getattr(session, "services", None)
-        if services is None:
-            return None
-        catalogs = getattr(services, "design_catalogs_by_empire", None) or {}
-        return catalogs.get(self.context.empire_id)
+        return facade_state.get_design_catalog_for_empire(self.context.empire_id)
 
     @profile_action("Builder: Save Ship")
     def save_ship(self) -> None:

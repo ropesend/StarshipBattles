@@ -38,7 +38,7 @@ def on_ui_selection(screen: "StrategyScreen", obj) -> None:
             screen.last_selected_system = parent_sys
 
     # Update fleet selection - PROJ-40: protocol type guard
-    current_player_id = screen.human_player_ids[screen.current_player_index]
+    current_player_id = screen.facade.session_meta.human_player_ids()[screen.current_player_index]
     if is_fleet(obj) and obj.owner_id == current_player_id:
         screen.selected_fleet = obj
     elif not is_fleet(obj):

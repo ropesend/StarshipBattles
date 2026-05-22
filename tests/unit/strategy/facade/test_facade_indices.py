@@ -82,3 +82,46 @@ class TestFacadeStarCache:
 
         # Should be the same list object (cached)
         assert result1 is result2
+
+
+class TestFacadeStateSessionPrivate:
+    """PROJ-475 Phase 4: the live session is privatized on FacadeSessionState.
+
+    ``facade.facade_state.session`` must no longer resolve (the public
+    reachability of the live session via that attribute is the leak we close),
+    while the facade's own slice queries still function through the
+    slice-internal ``_session`` read path.
+    """
+
+    def _make_facade(self):
+        from game.strategy.facade.strategy_session_facade import StrategySessionFacade
+
+        session = MagicMock()
+        # A minimal galaxy/empire surface so the slice queries below run.
+        empire = MagicMock()
+        empire.id = 1
+        session.empires = [empire]
+        session.galaxy.systems = {}
+        session.turn_number = 1
+        session.get_empire = MagicMock(return_value=empire)
+        return StrategySessionFacade(session), session, empire
+
+    def test_facade_state_session_attribute_is_gone(self):
+        facade, _session, _empire = self._make_facade()
+        assert not hasattr(facade.facade_state, "session"), (
+            "PROJ-475 Phase 4: FacadeSessionState.session must be privatized "
+            "to _session so the live session is not publicly reachable via "
+            "facade.facade_state.session."
+        )
+
+    def test_facade_state_private_session_still_holds_live_session(self):
+        facade, session, _empire = self._make_facade()
+        assert facade.facade_state._session is session
+
+    def test_slices_still_function_through_private_session(self):
+        facade, _session, _empire = self._make_facade()
+        # systems.all() reads _state._session.galaxy.systems
+        assert facade.systems.all() == []
+        # empires.all() reads _state._session.empires
+        empires = facade.empires.all()
+        assert len(empires) == 1

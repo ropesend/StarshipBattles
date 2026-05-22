@@ -53,7 +53,7 @@ class TestPlanetSliceResolvesBuildYard:
         registries = object()
         session = SimpleNamespace(registries=registries)
         state = SimpleNamespace(
-            session=session,
+            _session=session,
             get_planet_by_id=Mock(return_value=planet),
         )
         seen = {}
@@ -77,12 +77,35 @@ class TestPlanetSliceResolvesBuildYard:
     def test_slice_false_when_no_yard_and_no_shipyard(self, monkeypatch) -> None:
         planet = _planet(7, has_space_shipyard=False)
         state = SimpleNamespace(
-            session=SimpleNamespace(registries=object()),
+            _session=SimpleNamespace(registries=object()),
             get_planet_by_id=Mock(return_value=planet),
         )
         monkeypatch.setattr(
             "game.strategy.data.build_queue_source.colony_has_planetary_yard",
             lambda colony, regs: False,
+        )
+
+        info = PlanetSlice(state).get_planet(7)
+
+        assert info.has_build_yard is False
+
+    def test_slice_degrades_to_false_when_resolver_raises(self, monkeypatch) -> None:
+        """PROJ-475 Phase 5 (audit Finding 3b): the planetary-yard resolver
+        catches ``(AttributeError, TypeError)`` from stub/bootstrap colonies and
+        degrades to ``False`` (the planet then has no build yard unless it has a
+        space shipyard) instead of propagating."""
+        planet = _planet(7, has_space_shipyard=False)
+        state = SimpleNamespace(
+            _session=SimpleNamespace(registries=object()),
+            get_planet_by_id=Mock(return_value=planet),
+        )
+
+        def _boom(colony, regs):
+            raise TypeError("bare Mock().facilities is not iterable")
+
+        monkeypatch.setattr(
+            "game.strategy.data.build_queue_source.colony_has_planetary_yard",
+            _boom,
         )
 
         info = PlanetSlice(state).get_planet(7)

@@ -65,16 +65,27 @@ _SESSION_ATTR_NAMES: frozenset[str] = frozenset({"session", "_session"})
 # The remaining allowlist is honestly NOT the full read path: pass-throughs +
 # the explicitly-deferred PROJ-475 readers + mutator write seams persist.
 _SESSION_READ_ALLOWLIST: frozenset[tuple[str, str]] = frozenset({
-    # --- Category A: StrategyScreen pass-through properties (transitional) ---
+    # --- Category A: StrategyScreen composition-root self-reads (transitional) ---
+    # ``galaxy``/``empires``/``systems`` are the broad raw-domain pass-through
+    # properties, DEFERRED to PROJ-477 (render/read-model boundary).
     ("game/ui/screens/strategy_screen.py", "_session.galaxy"),
     ("game/ui/screens/strategy_screen.py", "_session.empires"),
     ("game/ui/screens/strategy_screen.py", "_session.systems"),
+    # PROJ-475 Phase 3 RETIRED the public ``enemy_empire``/``human_player_ids``/
+    # ``active_empire`` READ pass-throughs (consumers migrated to the facade).
+    # ``_session.active_empire`` STAYS allowlisted: it now backs the screen's
+    # own ``active_empire_id``/``current_empire`` helpers (the screen IS the
+    # composition-root boundary and owns the only legitimate ``_session``).
     ("game/ui/screens/strategy_screen.py", "_session.active_empire"),
-    ("game/ui/screens/strategy_screen.py", "_session.enemy_empire"),
+    # ``current_empire`` (the screen's own viewing-empire helper) reads
+    # ``_session.human_player_ids`` directly — a Category-A composition-root
+    # self-read, distinct from the retired public ``human_player_ids``
+    # pass-through whose external consumers moved to the facade in Phase 3.
     ("game/ui/screens/strategy_screen.py", "_session.human_player_ids"),
     # The ``session`` property body returns the private handle wholesale;
-    # this IS the documented composition-root pass-through. PROJ-475 owns
-    # deprecating it.
+    # this IS the documented composition-root pass-through. Its GETTER
+    # retirement is DEFERRED to PROJ-477 (live consumers: system_tree_panel
+    # dynamic resolve + Category B mutator write seams). The setter stays.
     ("game/ui/screens/strategy_screen.py", "_session.__extract__"),
     # --- Category B: mutator / state-manager write seams (PROJ-475) ---
     ("game/ui/screens/strategy_game_state_manager.py", "session.active_empire"),
@@ -367,6 +378,36 @@ def test_session_guard_chained_read_reports_per_attribute_not_extract() -> None:
     assert ("session.registries") in {p for _, p in hits}
     assert "session.__extract__" not in {p for _, p in hits}, (
         "A chained `.session.<attr>` read must be reported once, per-attribute."
+    )
+
+
+def test_facade_state_session_attribute_is_privatized() -> None:
+    """PROJ-475 Phase 4: ``FacadeSessionState.session`` is privatized to
+    ``_session`` so the live session is NOT publicly reachable via
+    ``facade.facade_state.session`` from UI code.
+
+    The AST scan above catches the syntactic ``<expr>.facade_state.session``
+    chain, but a string-based ``getattr(facade_state, "session", ...)`` would
+    slip past it (this is exactly the live counterexample PROJ-475 Phase 4
+    found in ``workshop_ship_io.py`` and migrated to
+    ``get_design_catalog_for_empire``). This runtime pin makes the closure
+    explicit: the public ``session`` attribute must be gone while the
+    engine-internal ``_session`` still holds the live session.
+    """
+    from unittest.mock import MagicMock
+
+    from game.strategy.facade.slices._facade_state import FacadeSessionState
+
+    session = MagicMock()
+    state = FacadeSessionState(session)
+    assert not hasattr(state, "session"), (
+        "PROJ-475 Phase 4: FacadeSessionState.session must be privatized to "
+        "_session; the live session must not be publicly reachable via "
+        "facade.facade_state.session (incl. getattr-by-name)."
+    )
+    assert state._session is session, (
+        "The engine-internal _session must still hold the live session so the "
+        "facade's own slices keep functioning."
     )
 
 

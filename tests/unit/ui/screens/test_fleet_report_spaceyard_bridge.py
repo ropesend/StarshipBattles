@@ -96,6 +96,52 @@ class TestDataSourceFormatsFromLookup:
         assert ds._format_spaceyard(_ship("n1")) == "No"
 
 
+class TestBuildSpaceyardLookupDegrades:
+    """PROJ-475 Phase 5 (audit Finding 3b): ``_build_spaceyard_lookup`` degrades
+    to an empty map (every ship reads as no-spaceyard) on any facade/projection
+    failure instead of breaking the report window."""
+
+    def _call(self, scene):
+        from game.ui.screens.fleet_report_window import FleetReportWindow
+
+        stub = SimpleNamespace(
+            _window_manager=SimpleNamespace(scene=scene),
+            fleet=SimpleNamespace(id=7),
+        )
+        return FleetReportWindow._build_spaceyard_lookup(stub)
+
+    def test_no_facade_returns_empty(self) -> None:
+        assert self._call(SimpleNamespace(facade=None)) == {}
+
+    def test_no_scene_returns_empty(self) -> None:
+        assert self._call(None) == {}
+
+    def test_projection_raise_returns_empty(self) -> None:
+        def _boom(_fleet_id):
+            raise RuntimeError("projection blew up")
+
+        scene = SimpleNamespace(facade=SimpleNamespace(fleets=SimpleNamespace(get=_boom)))
+        assert self._call(scene) == {}
+
+    def test_none_info_returns_empty(self) -> None:
+        scene = SimpleNamespace(
+            facade=SimpleNamespace(fleets=SimpleNamespace(get=lambda _id: None))
+        )
+        assert self._call(scene) == {}
+
+    def test_success_builds_lookup(self) -> None:
+        info = SimpleNamespace(
+            ships=[
+                SimpleNamespace(instance_id="y1", has_spaceyard=True),
+                SimpleNamespace(instance_id="n1", has_spaceyard=False),
+            ]
+        )
+        scene = SimpleNamespace(
+            facade=SimpleNamespace(fleets=SimpleNamespace(get=lambda _id: info))
+        )
+        assert self._call(scene) == {"y1": True, "n1": False}
+
+
 def test_fleet_report_files_do_not_import_fleet_capability_calculator() -> None:
     """The three migrated readers must no longer import the calculator."""
     for rel in (

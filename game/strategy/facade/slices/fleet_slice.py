@@ -45,7 +45,7 @@ class FleetSlice:
     def build_fleet_hex_index(self) -> dict:
         """Build HexCoord -> [Fleet] lookup dict (PROJ-254)."""
         index: dict = {}
-        for empire in self._state.session.empires:
+        for empire in self._state._session.empires:
             for fleet in empire.fleets:
                 loc = fleet.location
                 if loc not in index:
@@ -70,7 +70,7 @@ class FleetSlice:
         PROJ-254: uses per-turn cached hex index for O(1) lookup.
         """
         state = self._state
-        current_turn = getattr(state.session, "turn_number", 0)
+        current_turn = getattr(state._session, "turn_number", 0)
         if (
             state.fleets_by_hex_cache is None
             or state.fleets_by_hex_turn != current_turn
@@ -91,7 +91,7 @@ class FleetSlice:
         fleet = self._state.get_fleet_by_id(fleet_id)
         if fleet is None:
             return None
-        return self._state.session.preview_fleet_path(fleet, target_hex)
+        return self._state._session.preview_fleet_path(fleet, target_hex)
 
     def get_fleet_path_projection(
         self, fleet_id: int, max_turns: int = 50
@@ -100,7 +100,7 @@ class FleetSlice:
         fleet = self._state.get_fleet_by_id(fleet_id)
         if fleet is None:
             return []
-        return self._state.session.get_fleet_path_projection(fleet, max_turns)
+        return self._state._session.get_fleet_path_projection(fleet, max_turns)
 
     # ------------------------------------------------------------------
     # Validation
@@ -112,7 +112,7 @@ class FleetSlice:
         if fleet is None:
             return ValidationResult.error("Fleet not found.")
 
-        path = self._state.session.preview_fleet_path(fleet, target_hex)
+        path = self._state._session.preview_fleet_path(fleet, target_hex)
         if path is None:
             return ValidationResult.error("No path to target hex.")
 

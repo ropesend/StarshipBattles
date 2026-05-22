@@ -24,15 +24,15 @@ class EventSlice:
 
     def get_human_player_ids(self) -> List[int]:
         """Get the empire IDs of human players."""
-        return list(self._state.session.human_player_ids)
+        return list(self._state._session.human_player_ids)
 
     def get_turn_number(self) -> int:
         """Get the current turn number (1-indexed)."""
-        return self._state.session.turn_number
+        return self._state._session.turn_number
 
     def get_save_path(self) -> Optional[str]:
         """Get the current save game file path, or None if not yet saved."""
-        return self._state.session.save_path
+        return self._state._session.save_path
 
     # ------------------------------------------------------------------
     # Event log queries (PROJ-77)
@@ -54,8 +54,8 @@ class EventSlice:
                 the prior call shape.
         """
         if turn is None:
-            turn = self._state.session.turn_number
-        log = self._state.session.event_log
+            turn = self._state._session.turn_number
+        log = self._state._session.event_log
         if empire_id is None:
             events = log.get_events_for_turn(turn)
         else:
@@ -70,7 +70,7 @@ class EventSlice:
                 view via ``EventLog.get_events_for_empire`` (broadcasts
                 on ``GLOBAL_EVENT_EMPIRE_ID`` (-1) included by default).
         """
-        log = self._state.session.event_log
+        log = self._state._session.event_log
         if empire_id is None:
             events = log.get_all_events()
         else:
@@ -88,7 +88,7 @@ class EventSlice:
                 included). When None the call is forwarded positionally
                 to preserve the prior call shape for existing tests.
         """
-        log = self._state.session.event_log
+        log = self._state._session.event_log
         if empire_id is None:
             events = log.get_events_by_category(category)
         else:

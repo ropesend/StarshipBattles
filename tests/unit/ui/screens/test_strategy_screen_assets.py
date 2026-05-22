@@ -12,11 +12,17 @@ from game.ui.screens import strategy_screen_assets as assets
 def _make_screen():
     screen = MagicMock()
     screen.empire_assets = {}
-    screen.empires = []
+    # PROJ-475 Phase 3: focus_on_player_home resolves the active empire from
+    # the raw ``screen.empires`` bus keyed by ``screen.active_empire_id`` (the
+    # ``screen.active_empire`` pass-through was retired).
+    active_empire = MagicMock()
+    active_empire.id = 0
+    active_empire.colonies = []
+    screen.active_empire_id = 0
+    screen.empires = [active_empire]
+    screen._active_empire = active_empire  # test handle
     screen._race_loader = MagicMock()
     screen.camera = MagicMock()
-    screen.active_empire = MagicMock()
-    screen.active_empire.colonies = []
     screen.systems = []
     return screen
 
@@ -24,7 +30,7 @@ def _make_screen():
 class TestFocusOnPlayerHome:
     def test_no_colonies_does_nothing(self):
         screen = _make_screen()
-        screen.active_empire.colonies = []
+        screen._active_empire.colonies = []
         assets.focus_on_player_home(screen)
         # No assignment occurred
         assert "position" not in screen.camera.__dict__ or True  # MagicMock no-op
@@ -32,7 +38,7 @@ class TestFocusOnPlayerHome:
     def test_no_owning_system_does_not_set_position(self):
         screen = _make_screen()
         colony = MagicMock(location=(0, 0))
-        screen.active_empire.colonies = [colony]
+        screen._active_empire.colonies = [colony]
         screen.systems = [MagicMock(planets=[])]  # colony not in any system
         # Should not raise; no exception path
         assets.focus_on_player_home(screen)
@@ -46,11 +52,17 @@ class TestFocusOnPlayerHome:
         sys_obj = MagicMock()
         sys_obj.planets = [colony]
         sys_obj.global_location = HexCoord(2, 3)
-        screen.active_empire.colonies = [colony]
+        screen._active_empire.colonies = [colony]
         screen.systems = [sys_obj]
         assets.focus_on_player_home(screen)
         # Position must be a Vector2
         assert isinstance(screen.camera.position, pygame.math.Vector2)
+
+    def test_no_active_empire_does_nothing(self):
+        """PROJ-475 Phase 3: when no empire matches active_empire_id, no crash."""
+        screen = _make_screen()
+        screen.active_empire_id = 99  # no matching empire
+        assets.focus_on_player_home(screen)
 
 
 class TestLoadAssets:

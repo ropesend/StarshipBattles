@@ -76,7 +76,7 @@ class PlanetSlice:
         """
         from game.strategy.data.build_queue_source import colony_has_planetary_yard
 
-        registries = getattr(self._state.session, "registries", None)
+        registries = getattr(self._state._session, "registries", None)
         try:
             return bool(colony_has_planetary_yard(planet, registries))
         except (AttributeError, TypeError):
@@ -94,7 +94,7 @@ class PlanetSlice:
         clicking an inner hex that isn't the system center).
         """
         # 1. Try strict lookup first (fast & correct for exact hits)
-        system = self._state.session.galaxy.get_system_at_location(hex_coord)
+        system = self._state._session.galaxy.get_system_at_location(hex_coord)
 
         # 2. If strict failed, try radius/ownership lookup (robust for area clicks)
         if system is None:
@@ -102,7 +102,7 @@ class PlanetSlice:
                 GalaxyPathfindingService,
             )
             system = GalaxyPathfindingService(
-                self._state.session.galaxy,
+                self._state._session.galaxy,
             ).get_system_at_hex(hex_coord, radius=50)
 
         if system is None:
@@ -165,8 +165,8 @@ class PlanetSlice:
             if planet is None:
                 return ValidationResult.error("Planet not found.")
 
-        return self._state.session.turn_engine.validate_colonize_order(
-            self._state.session.galaxy, fleet, planet
+        return self._state._session.turn_engine.validate_colonize_order(
+            self._state._session.galaxy, fleet, planet
         )
 
 

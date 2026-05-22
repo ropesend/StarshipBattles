@@ -77,3 +77,22 @@ class TestShipInfoHasSpaceyardField:
         info = FleetInfo.from_fleet(fleet)
 
         assert info.ships[0].has_spaceyard is False
+
+    def test_degrades_to_false_when_calculator_raises(self, monkeypatch) -> None:
+        """PROJ-475 Phase 5 (audit Finding 3b): the per-ship projection catches
+        ``(ValidationException, AttributeError)`` from the capability calculator
+        (atypical fixtures lacking a component registry) and degrades to ``False``
+        instead of propagating into projection."""
+        from game.core.exceptions import ValidationException
+        from game.strategy.data.fleet_capability_calculator import (
+            FleetCapabilityCalculator,
+        )
+
+        def _boom(ship):
+            raise ValidationException("no component registry")
+
+        monkeypatch.setattr(
+            FleetCapabilityCalculator, "ship_has_spaceyard", staticmethod(_boom)
+        )
+
+        assert FleetInfo._ship_has_spaceyard(MagicMock()) is False

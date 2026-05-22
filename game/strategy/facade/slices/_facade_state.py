@@ -62,7 +62,14 @@ class FacadeSessionState:
     """
 
     def __init__(self, session: "GameSession") -> None:
-        self.session = session
+        # PROJ-475 Phase 4: the live session is held privately as ``_session``
+        # so it is NOT publicly reachable via ``facade.facade_state.session``
+        # from UI code. The facade's own slices read it through
+        # ``_state._session`` (the engine-internal slice read path); UI code
+        # must go through the facade query surfaces. The constructor keyword
+        # stays ``session`` (a test-internal construction seam). The cache
+        # holder itself stays public (kept-by-design performance boundary).
+        self._session = session
         # PROJ-254: lazy index caches for O(1) lookups.
         self.planet_index: Optional[dict] = None  # id -> Planet
         self.empire_index: Optional[Dict[int, "Empire"]] = None  # F-A-031
@@ -111,18 +118,18 @@ class FacadeSessionState:
         Delegates to `GameSession._get_fleet_by_id()` for O(1) lookup with
         fallback.
         """
-        return self.session._get_fleet_by_id(fleet_id)
+        return self._session._get_fleet_by_id(fleet_id)
 
     def get_empire_by_id(self, empire_id: int) -> Optional["Empire"]:
         """Look up an empire by ID using the lazy empire-index (F-A-031)."""
         if self.empire_index is None:
-            self.empire_index = {e.id: e for e in self.session.empires}
+            self.empire_index = {e.id: e for e in self._session.empires}
         return self.empire_index.get(empire_id)
 
     def build_planet_index(self) -> dict:
         """Build planet-id -> Planet lookup dict (PROJ-254)."""
         index: dict = {}
-        for system in self.session.galaxy.systems.values():
+        for system in self._session.galaxy.systems.values():
             for planet in system.planets:
                 index[planet.id] = planet
         return index
@@ -150,7 +157,7 @@ class FacadeSessionState:
         Returns ``None`` when no catalog is wired for the empire (early
         bootstrap / tests).
         """
-        services = getattr(self.session, "services", None)
+        services = getattr(self._session, "services", None)
         if services is None:
             return None
         catalogs = getattr(services, "design_catalogs_by_empire", None) or {}
@@ -167,7 +174,7 @@ class FacadeSessionState:
         contract. Returns ``[]`` when no catalog is wired for the
         requested empire (early bootstrap / tests).
         """
-        services = getattr(self.session, "services", None)
+        services = getattr(self._session, "services", None)
         if services is None:
             return []
         catalogs = getattr(services, "design_catalogs_by_empire", None) or {}

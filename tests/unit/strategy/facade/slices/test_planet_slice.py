@@ -17,7 +17,7 @@ def test_get_planets_at_hex_returns_only_exact_global_matches(monkeypatch) -> No
     session = SimpleNamespace(
         galaxy=SimpleNamespace(get_system_at_location=Mock(return_value=system))
     )
-    state = SimpleNamespace(session=session)
+    state = SimpleNamespace(_session=session)
     monkeypatch.setattr(
         PlanetInfo,
         "from_planet",
@@ -35,7 +35,7 @@ def test_get_planets_at_hex_uses_radius_lookup_when_strict_lookup_misses(
     planet = SimpleNamespace(id=5, location=HexCoord(1, 0))
     system = SimpleNamespace(global_location=HexCoord(4, 4), planets=[planet])
     galaxy = SimpleNamespace(get_system_at_location=Mock(return_value=None))
-    state = SimpleNamespace(session=SimpleNamespace(galaxy=galaxy))
+    state = SimpleNamespace(_session=SimpleNamespace(galaxy=galaxy))
     radius_lookup = Mock(return_value=system)
     # PROJ-414: shim deleted; patch the canonical GPS method directly.
     monkeypatch.setattr(
@@ -65,7 +65,7 @@ def test_can_colonize_with_no_planet_target_delegates_with_none() -> None:
     )
     session = SimpleNamespace(galaxy=object(), turn_engine=turn_engine)
     state = SimpleNamespace(
-        session=session,
+        _session=session,
         get_fleet_by_id=Mock(return_value=fleet),
         get_planet_by_id=Mock(),
     )

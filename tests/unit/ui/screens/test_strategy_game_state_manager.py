@@ -51,6 +51,16 @@ def _make_game_state_manager():
     mock_screen.session.empires = [empire0, empire1]
     mock_screen.session.human_player_ids = [0, 1]
     mock_screen.human_player_ids = [0, 1]
+    # PROJ-475 Phase 3: the manager reads human-player ids through
+    # ``screen.facade.session_meta.human_player_ids()`` (the screen
+    # pass-through was retired). Many tests reassign ``screen.human_player_ids``
+    # after construction, so source the facade surface dynamically from that
+    # attribute (a test-helper shorthand) to keep both in lockstep. Both
+    # ``mock_screen.facade`` and ``mock_screen._facade`` are wired since they
+    # are distinct MagicMock children.
+    _hpi = lambda: mock_screen.human_player_ids
+    mock_screen._facade.session_meta.human_player_ids.side_effect = _hpi
+    mock_screen.facade.session_meta.human_player_ids.side_effect = _hpi
     mock_screen.active_empire = empire0
 
     # Property mock for current_empire — tracks current_player_index so
@@ -872,6 +882,10 @@ def _make_n_player_state_manager(n_players: int):
     ids = list(range(n_players))
     mock_screen.session.human_player_ids = ids
     mock_screen.human_player_ids = ids
+    # PROJ-475 Phase 3: facade-sourced human-player ids (see _make_game_state_manager).
+    _hpi = lambda: mock_screen.human_player_ids
+    mock_screen._facade.session_meta.human_player_ids.side_effect = _hpi
+    mock_screen.facade.session_meta.human_player_ids.side_effect = _hpi
     mock_screen.active_empire = empires[0]
 
     def _current_empire(self):

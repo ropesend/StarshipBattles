@@ -144,6 +144,13 @@ class _MockSession:
         return self
 
     @property
+    def _session(self):
+        # PROJ-475 Phase 4: FacadeSessionState.session was privatized to
+        # ``_session``; the EmpireSlice/FleetSlice projection now reads
+        # ``state._session.*``. This mock doubles as the state, so mirror it.
+        return self
+
+    @property
     def empires(self):
         from game.strategy.facade.slices.empire_slice import EmpireSlice
         slice_ = EmpireSlice(self)

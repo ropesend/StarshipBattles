@@ -28,7 +28,7 @@ class SystemSlice:
         """Get information about all star systems."""
         return [
             SystemInfo.from_star_system(system)
-            for system in self._state.session.galaxy.systems.values()
+            for system in self._state._session.galaxy.systems.values()
         ]
 
     def get_all_stars(self) -> List[StarInfo]:
@@ -40,7 +40,7 @@ class SystemSlice:
         PROJ-254: cached per turn — galaxy structure doesn't change mid-turn.
         """
         state = self._state
-        current_turn = getattr(state.session, "turn_number", 0)
+        current_turn = getattr(state._session, "turn_number", 0)
         if (
             state.all_stars_cache is not None
             and state.all_stars_cache_turn == current_turn
@@ -48,7 +48,7 @@ class SystemSlice:
             return state.all_stars_cache
 
         results: List[StarInfo] = []
-        for system in state.session.galaxy.systems.values():
+        for system in state._session.galaxy.systems.values():
             for star in system.stars:
                 results.append(StarInfo.from_star(
                     star,
@@ -66,7 +66,7 @@ class SystemSlice:
 
         ``hex_coord`` may be the system's global center or any hex inside it.
         """
-        system = self._state.session.galaxy.get_system_at_location(hex_coord)
+        system = self._state._session.galaxy.get_system_at_location(hex_coord)
         if system is None:
             return None
         return SystemInfo.from_star_system(system)
@@ -93,7 +93,7 @@ class SystemSlice:
         is in 'empty space' within a system.
         """
         # 1. Try strict lookup first
-        system = self._state.session.galaxy.get_system_at_location(hex_coord)
+        system = self._state._session.galaxy.get_system_at_location(hex_coord)
         if system:
             return SystemInfo.from_star_system(system)
 
@@ -102,7 +102,7 @@ class SystemSlice:
         closest_system = None
         min_dist = max_dist + 1
 
-        for sys in self._state.session.galaxy.systems.values():
+        for sys in self._state._session.galaxy.systems.values():
             dist = hex_distance(sys.global_location, hex_coord)
             if dist < min_dist:
                 min_dist = dist
@@ -131,7 +131,7 @@ class SystemSlice:
         the Pattern #2 Protocol+TypeGuard convention. Characterization test:
         ``test_get_storm_names_at_hex_excludes_abilities_carrying_non_storm``.
         """
-        galaxy = self._state.session.galaxy
+        galaxy = self._state._session.galaxy
         get_zones = getattr(galaxy, 'get_zones_at_global_hex', None)
         if get_zones is None:
             return []

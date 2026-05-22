@@ -14,7 +14,9 @@ def _make_screen():
     screen.selected_fleet = None
     screen.last_selected_system = None
     screen.systems = []
-    screen.human_player_ids = [0]
+    # PROJ-475 Phase 3: human-player ids read via the facade session_meta
+    # surface (the screen.human_player_ids pass-through was retired).
+    screen.facade.session_meta.human_player_ids.return_value = [0]
     screen.current_player_index = 0
     screen.session = MagicMock()
     screen.session.active_empire = MagicMock(id=0)

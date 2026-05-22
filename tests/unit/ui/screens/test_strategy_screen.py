@@ -54,6 +54,10 @@ def _make_strategy_screen():
 
     # Facade
     facade = MagicMock()
+    # PROJ-475 Phase 3: human_player_ids consumers read through
+    # ``facade.session_meta.human_player_ids()`` (the screen pass-through was
+    # retired). Source it from the same session list so existing assertions hold.
+    facade.session_meta.human_player_ids.side_effect = lambda: session.human_player_ids
     screen._facade = facade
 
     # Camera

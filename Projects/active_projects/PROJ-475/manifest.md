@@ -29,8 +29,11 @@
 | `game/app.py` | Production | 2 | Workshop open reads scalar `save_path` from context (was `game_session`) — `:448-486` |
 | `game/ui/screens/strategy_screen.py` | Production | 3 | Delete `enemy_empire`/`human_player_ids`/`active_empire` pass-throughs; rewire `active_empire_id`/`current_empire` to `_session`. Getter+setter UNTOUCHED (getter retirement deferred to PROJ-477 — post-flesh B2) |
 | `game/ui/screens/strategy_click_dispatcher.py` | Production | 3 | `human_player_ids` consumer → `facade.session_meta.human_player_ids()` |
-| `game/ui/screens/strategy_screen_assets.py` | Production | 3 | `active_empire` asset bootstrap → `active_empire_id` / facade |
-| `game/strategy/facade/slices/_facade_state.py` | Production | 4 | Rename `session` → `_session`; add slice-internal accessor |
+| `game/ui/screens/strategy_screen_assets.py` | Production | 3 | `active_empire` asset bootstrap → resolve live empire from `screen.empires` keyed by `active_empire_id` |
+| `game/ui/screens/strategy_screen_selection.py` | Production | 3 | `human_player_ids` consumer (`:41`) → `facade.session_meta.human_player_ids()` |
+| `game/ui/screens/strategy_game_state_manager.py` | Production | 3 | `human_player_ids` consumers (`:88/:136/:159/:194`) → `facade.session_meta.human_player_ids()`. Category B write seam (`:164`) UNTOUCHED |
+| `game/ui/screens/workshop_ship_io.py` | Production | 4 | `_design_catalog` was reading `getattr(facade_state, "session", None).services...` (string-getattr, AST-guard-missed) → `facade_state.get_design_catalog_for_empire(empire_id)`. Found during Phase 4. |
+| `game/strategy/facade/slices/_facade_state.py` | Production | 4 | Rename attr `self.session` → `self._session` (constructor kwarg stays `session`); update 5 helpers. Slices read `_state._session`. |
 | `game/strategy/facade/slices/system_slice.py` | Production | 4 | `_state.session` → internal accessor |
 | `game/strategy/facade/slices/planet_slice.py` | Production | 4 | same |
 | `game/strategy/facade/slices/fleet_slice.py` | Production | 4 | same |
@@ -61,6 +64,22 @@
 | `tests/unit/ui/screens/test_fleet_data_source.py` | Test | 2 | spaceyard column reads view-model lookup |
 | `tests/unit/ui/screens/strategy_windows/test_empire_panel_ctrl.py` | Test | 2 | stub `scene.registries` (was `scene.session.registries`) |
 | `tests/unit/strategy/engine/test_game_session_projection_boundary.py` | Test | 4 | Keep cache-boundary pin green |
+| `tests/unit/ui/screens/test_strategy_screen.py` | Test | 3 | Wire `facade.session_meta.human_player_ids()` (side_effect from session list) for migrated consumers |
+| `tests/unit/ui/screens/test_strategy_screen_assets.py` | Test | 3 | `active_empire_id` + `empires` lookup; add `test_no_active_empire_does_nothing` |
+| `tests/unit/ui/screens/test_strategy_click_dispatcher.py` | Test | 3 | Wire `facade.session_meta.human_player_ids()` on `_click_scene` |
+| `tests/unit/ui/screens/test_strategy_click_dispatcher_rmb.py` | Test | 3 | Wire `facade.session_meta.human_player_ids()` on `_scene` |
+| `tests/unit/ui/screens/test_strategy_game_state_manager.py` | Test | 3 | Wire `facade.session_meta.human_player_ids` (side_effect from `screen.human_player_ids`) on both fixtures |
+| `tests/unit/strategy/facade/test_facade_indices.py` | Test | 4 | NEW pin class `TestFacadeStateSessionPrivate` (3 cases) |
+| `tests/unit/strategy/facade/slices/test_system_slice.py` | Test | 4 | Fake-state seam `session=` → `_session=` |
+| `tests/unit/strategy/facade/slices/test_empire_slice.py` | Test | 4 | Fake-state seam `session=` → `_session=` |
+| `tests/unit/strategy/facade/slices/test_planet_slice.py` | Test | 4 | Fake-state seam `session=` → `_session=` |
+| `tests/unit/strategy/facade/test_planet_has_build_yard.py` | Test | 4 | Fake-state seam `session=` → `_session=` |
+| `tests/unit/builder/test_builder_io_integration.py` | Test | 4 | `facade_state.session.services...` write seam → `facade_state.get_design_catalog_for_empire.return_value` |
+| `tests/static_guards/test_facade_read_path_session_guard.py` | Test | 3,4 | Phase 3: removed `_session.enemy_empire`; re-purposed `_session.human_player_ids`/`_session.active_empire` comments. Phase 4: added `test_facade_state_session_attribute_is_privatized` runtime pin |
+| `tests/static_guards/test_facade_read_path_imports_guard.py` | Test | 5 | Phase 5 audit Finding 1: deferral comment + `test_build_queue_compute_planet_production_deferral_is_intentional` pin. Finding 2: retag StrategyScreen `GameSession` import comment → PROJ-477 |
+| `tests/unit/strategy/facade/test_planet_has_build_yard.py` | Test | 5 | Phase 5 audit Finding 3b: `test_slice_degrades_to_false_when_resolver_raises` |
+| `tests/unit/strategy/facade/test_ship_has_spaceyard.py` | Test | 5 | Phase 5 audit Finding 3b: `test_degrades_to_false_when_calculator_raises` |
+| `tests/unit/ui/screens/test_fleet_report_spaceyard_bridge.py` | Test | 5 | Phase 5 audit Finding 3b: `TestBuildSpaceyardLookupDegrades` (5 cases) |
 
 ## Conflict notes
 - Phase 4 touches 6 facade slice files mechanically; run isolated from other
