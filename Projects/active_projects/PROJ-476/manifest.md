@@ -15,6 +15,7 @@
 | `tests/static_guards/test_facade_read_path_imports_guard.py` | Test/Guard | **PRIMARY.** Add `_TOOLING_EXEMPTIONS` category + no-misfile invariant test + positive-control test; move tooling residue triples out of the `TAIL` comment block into it. Phase 2/3. |
 | `docs/02_PATTERNS.md` (Pattern #5) | Doc | Add the tooling-exemption policy paragraph (what qualifies, exact-triple scoping, no folder waivers). Phase 3. |
 | `tests/static_guards/test_facade_read_path_session_guard.py` | Test/Guard | **UNCHANGED** — verified zero tooling-dir session reads. Listed for explicit no-touch. |
+| `game/ui/screens/design_selector_window.py` | Production | **Phase 4 (Codex exec-audit F1).** ONLY production edit: moved the annotation-only `DesignCatalog` import under `TYPE_CHECKING` (PEP 563 — no runtime use) + docstring fix. Behavior-neutral; dropped its tooling-exemption triple. |
 
 ## Conflict map (overlap with sibling projects — all upstream, all must land first)
 
@@ -37,5 +38,5 @@
 | `game/ui/screens/race_setup/screen.py` | race-authoring | `RaceLibrary`, `RaceRandomizer` (test re-export seam) |
 | `game/ui/screens/race_setup/panel_factory.py` | race-authoring | `RaceCaptionLoader`, `RaceDescriptionLLMController` |
 | `game/ui/screens/builder/right_panel.py` | design-editor | `get_default_design_role_registry` |
-| `game/ui/screens/design_selector_window.py` | design-editor | `get_default_design_role_registry`, `DesignCatalog` |
+| `game/ui/screens/design_selector_window.py` | design-editor | `get_default_design_role_registry` (`DesignCatalog` moved to TYPE_CHECKING in Phase 4 — no exemption) |
 | `game/ui/screens/workshop_event_router.py` | design-editor | `get_default_design_role_registry` |

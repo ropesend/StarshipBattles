@@ -13,14 +13,34 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Re-inventory tooling imports against post-474/475/477 live code + reconcile the plan's triple set | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Add the machine-checkable `_TOOLING_EXEMPTIONS` category to the import guard (TDD) + move tooling residue out of `TAIL` into it | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Document the tooling-exemption policy in Pattern #5 + final guard/doc reconcile + full-suite verification | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. Re-inventory tooling imports against post-474/475/477 live code + reconcile the plan's triple set | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Add the machine-checkable `_TOOLING_EXEMPTIONS` category to the import guard (TDD) + move tooling residue out of `TAIL` into it | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Document the tooling-exemption policy in Pattern #5 + final guard/doc reconcile + full-suite verification | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Codex exec-audit remediation (2 VERIFIED findings: TC-only `DesignCatalog` + AST-liveness test) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-22
-**Active Phase:** Planned (execution-ready), pre-flesh + post-flesh Codex consults complete (live-code verified 2026-05-22).
-**Last Action:** Fleshed to execution-ready + revised per post-flesh review
+**Active Phase:** ALL PHASES COMPLETE — awaiting user `verified`. Phase 1
+re-inventory (gate cleared, zero session reads, no drift); Phase 2 added
+`_TOOLING_EXEMPTIONS` (30 5-tuples, 4 tags) + moved all 30 triples out of
+`TAIL` + no-misfile + positive-control tests; Phase 3 Pattern #5 doc paragraph
++ fenced 4-tag block + `test_tooling_exemption_tags_match_pattern5` parity test.
+**Phase 4 (Codex exec-audit remediation):** 2 findings VERIFIED + fixed via TDD.
+F1 — `DesignCatalog` in `design_selector_window.py` was annotation-only under
+PEP 563 (no runtime use); moved under `TYPE_CHECKING` (one-line production edit)
+and its tooling exemption dropped (29 triples now). F2 — added
+`test_tooling_exemptions_are_live_runtime_imports` (+ non-vacuity test) that
+AST-asserts every exemption triple is a live runtime import; this closes the
+drift gap that let the stale `DesignCatalog` entry exist.
+**Final verification:** guard module 352 passed; full static-guard suite 1754
+passed (all three read-path/bypass guards + 2 new liveness tests);
+`python Tools/test_sharded/test_sharded.py` **24659 passed, 0 failed/errors/skipped**.
+The only `game/ui/` production change is the F1 TYPE_CHECKING move (behavior-neutral).
+**Last Action:** Phase 4 complete (Codex exec-audit remediation) + full-suite GREEN.
+
+<details><summary>Prior planning state</summary>
+
+**Last Action (planning):** Fleshed to execution-ready + revised per post-flesh review
 (`AgentCoordination/Scratchpad/Consult/proj476_postflesh/advice.md` — verdict:
 ready, 1 in-plan fix, no user-decision blocker). Fixes: (Finding 1) the live
 build-queue `compute_planet_production` triples — out of 476, previously unowned
@@ -46,6 +66,8 @@ residue set in this plan is the 2026-05-22 snapshot and MUST be re-verified).
 knowable only after the live boundary is closed. The two read-path guards from
 PROJ-472 have landed (verified green 2026-05-22), so the PROJ-472 gate itself is
 cleared; the 474/475/477 gate is what remains.
+
+</details>
 
 ## Overview
 Last follow-on of **PROJ-472**, which closed the StrategySessionFacade read-path
@@ -221,13 +243,13 @@ immutable symbol nor a live-session read):
 - Post-flesh consult: `AgentCoordination/Scratchpad/Consult/proj476_postflesh/advice.md`
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] `python Tools/test_sharded/test_sharded.py` green (or targeted static-guard
-      + affected-tooling-screen runs)
-- [ ] `_TOOLING_EXEMPTIONS` is machine-checkable data; positive-control +
+- [x] All phase checklists complete
+- [x] `python Tools/test_sharded/test_sharded.py` green (24657 passed, 0 fail) —
+      plus targeted static-guard runs
+- [x] `_TOOLING_EXEMPTIONS` is machine-checkable data; positive-control +
       no-misfile invariant tests pass
-- [ ] No tooling residue left in the comment-only `TAIL` block; each tooling
+- [x] No tooling residue left in the comment-only `TAIL` block; each tooling
       import is classified exactly once (UISAFE | tooling-exemption | live-defer)
-- [ ] Pattern #5 documents the tooling-exemption category
-- [ ] Both read-path guards green; session-read guard unchanged
+- [x] Pattern #5 documents the tooling-exemption category
+- [x] Both read-path guards green; session-read guard unchanged
 - [ ] User verified

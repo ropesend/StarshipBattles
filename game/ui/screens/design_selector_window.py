@@ -6,7 +6,9 @@ library in integrated mode. It supports filtering by class, type, and obsolete
 status, as well as text search.
 
 Cross-layer imports (acceptable for UI):
-- DesignCatalog: Runtime - required for browsing and selecting designs
+- DesignCatalog: TYPE_CHECKING only - the live catalog is injected as
+  ``self.design_catalog``; the class name is used only in the parameter
+  annotation (a string under PEP 563), so the import is type-only.
 - DesignMetadata: TYPE_CHECKING only - used for type hints
 """
 from __future__ import annotations
@@ -18,7 +20,6 @@ from pygame_gui.elements import (
     UITextEntryLine, UIDropDownMenu, UIImage
 )
 from typing import Any, Optional, Callable, List, Dict, Set, TYPE_CHECKING
-from game.strategy.systems.design_catalog import DesignCatalog
 import logging
 from game.ui.screens.design_image_helper import load_portrait_thumbnail, load_topdown_thumbnail
 from game.ui.screens.strategy_modal_window import StrategyModalWindow
@@ -26,6 +27,13 @@ from game.ui.screens.strategy_modal_window import StrategyModalWindow
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    # PROJ-476 Phase 4 (Codex exec-audit F1): DesignCatalog is referenced only in
+    # the ``design_catalog: DesignCatalog`` parameter annotation, which is a
+    # string under ``from __future__ import annotations`` (PEP 563) and never
+    # evaluated at runtime. The live browse path uses the injected
+    # ``self.design_catalog`` instance, not the class. So this is a type-only
+    # import — not a runtime read-path bypass — and carries no tooling exemption.
+    from game.strategy.systems.design_catalog import DesignCatalog
     from game.strategy.data.design_metadata import DesignMetadata
     from game.ui.screens.strategy_window_manager import StrategyWindowManager
 

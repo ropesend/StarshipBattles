@@ -247,6 +247,46 @@ Convention:
   game.strategy.services.ability_metadata.abilities_with_kind_tag
   game.strategy.services.superweapon_registry.SUPERWEAPONS
   ```
+- **A tooling-exemption category covers detached editor/sandbox/authoring
+  imports.** Some tooling, editor, and sandbox screens import `game.strategy.*`
+  symbols that are neither facade-routed live reads nor pure UI-safe symbols:
+  they are detached pre-session editors that construct/mutate real domain
+  objects before any session exists (`battle_setup` holds real
+  `Fleet`/`ShipInstance`/`TaskForce`/`Squadron`), standalone sandbox harnesses
+  that build their OWN world for inspection (`galaxy_test` constructs its own
+  `Galaxy`/`StarSystem` via generation), pre-session authoring services
+  (`race_setup`'s `RaceLibrary`/`RaceRandomizer`/`RaceCaptionLoader`/
+  `RaceDescriptionLLMController`), and design-editor metadata/catalog loaders
+  (`get_default_design_role_registry`, browse-time `DesignCatalog`). None reads
+  a live `GameSession`, so facade migration is the wrong tool; but they are
+  **not** immutable pure symbols either (`RaceLibrary` orchestrates the
+  filesystem, `get_default_design_role_registry` lazy-loads a mutable
+  base/mod/user overlay, `RaceDescriptionLLMController` is a live state machine,
+  the battle-setup models are mutable real domain objects), so promoting them to
+  the UI-safe surface would silently widen the always-safe policy. They earn a
+  first-class, machine-checkable **`_TOOLING_EXEMPTIONS`** entry instead: an
+  exact `(file, module, member)` triple plus a `category_tag` and a one-line
+  reason (in `tests/static_guards/test_facade_read_path_imports_guard.py`). This
+  is **exact-triple scoped, NOT a folder/subpackage waiver** — the tooling dirs
+  mix promotable pure symbols with these genuine tooling imports, so the guard
+  stays active everywhere and a net-new live import in a tooling dir is still
+  flagged (a positive-control test pins this). The boundary: live-session /
+  service readers stay facade-routed (PROJ-475/477); pure value/enum/static
+  symbols are UI-safe (PROJ-474, the token list above); these detached tooling
+  imports are tooling-exempt. The four category tags are the machine-checked
+  source of truth (a doc<->guard parity test fails on drift):
+
+  <!-- PROJ-476 tooling-exemption canonical tag list: parsed by
+       tests/static_guards/test_facade_read_path_imports_guard.py
+       (test_tooling_exemption_tags_match_pattern5). One tag per line. Keep in
+       sync with the tags used in _TOOLING_EXEMPTIONS — the parity test fails on drift. -->
+  <!-- PROJ-476 tooling-exemption canonical tag list -->
+  ```
+  prebattle-editor
+  sandbox-harness
+  race-authoring
+  design-editor
+  ```
 - **Do NOT allowlist live session/domain traversal helpers** just because they
   are "read-only". The counterexamples — explicitly NON-allowlisted — are
   `BuildQueueSource`, `collect_build_queues_at_hex` /
@@ -277,8 +317,9 @@ keeps documented transitional pass-through properties — `galaxy`, `empires`,
 holds `session`. These remain **allowlisted-with-reason** as transitional read
 surfaces; deprecating them (plus the ~75-file `game/ui` tail) is follow-on work
 (PROJ-474 value/config allowlist consolidation, PROJ-475 remaining live readers +
-pass-through deprecation, PROJ-476 tooling/editor screens). Do not read the
-guards as evidence the read path is fully closed.
+pass-through deprecation, PROJ-476 tooling/editor screens — the latter now
+codified as the `_TOOLING_EXEMPTIONS` category above rather than parked in
+`TAIL`). Do not read the guards as evidence the read path is fully closed.
 
 ## 6. CQRS-lite Strategy Session
 
