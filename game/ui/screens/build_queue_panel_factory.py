@@ -25,7 +25,7 @@ from game.ui.screens.build_queue_queue_data_source import (
 )
 
 if TYPE_CHECKING:
-    from game.strategy.data.build_queue_source import BuildQueueSource
+    from game.strategy.facade.dto import BuildQueueSourceDTO as BuildQueueSource
     from game.ui.panels.build_queue_portraits import BuildQueuePortraitLoader
 
 logger = logging.getLogger(__name__)

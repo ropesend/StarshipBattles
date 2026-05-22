@@ -85,6 +85,28 @@ class MockSession:
                 return self._parent.get_registries() if hasattr(self._parent, "get_registries") else self._parent.registries
         return _SessionMetaNS(self)
 
+    # PROJ-472 Phase 1B: expose ``empires.hex_build_queues`` so BuildQueueScreen
+    # resolves build-queue *DTOs* off the mock, mirroring
+    # ``FacadeEmpireQueries.hex_build_queues`` (projects domain sources through
+    # ``BuildQueueSourceDTO.from_domain``).
+    @property
+    def empires(self):
+        from game.strategy.data.build_queue_source import collect_build_queues_at_hex
+        from game.strategy.facade.dto import BuildQueueSourceDTO
+
+        class _EmpiresNS:
+            def __init__(self, parent):
+                self._parent = parent
+            def hex_build_queues(self, empire_id, hex_coord):
+                sources = collect_build_queues_at_hex(
+                    hex_coord,
+                    self._parent.galaxy,
+                    self._parent.current_empire,
+                    registries=self._parent.get_registries(),
+                )
+                return [BuildQueueSourceDTO.from_domain(s) for s in sources]
+        return _EmpiresNS(self)
+
     def handle_command(self, cmd):
         """Mock command handler that executes AddToConstructionQueueCommand.
 
@@ -222,15 +244,18 @@ def test_add_to_queue(build_queue_screen):
 
 
 def test_queue_display_updates(build_queue_screen):
-    """Test that UI refreshes when queue changes."""
-    # Add item to queue
+    """Test that UI refreshes when the (domain) queue changes."""
+    # Add item to the live domain queue.
     build_queue_screen.build_context.construction_queue.append({
         "design_id": "frigate_mk1",
         "type": "ship",
         "turns_remaining": 10
     })
 
-    # Refresh display
+    # PROJ-472 Phase 1B: the active source is an immutable DTO snapshot; a
+    # domain mutation only surfaces after a facade re-projection (which the
+    # command-dispatch paths trigger). Re-sync, then refresh.
+    build_queue_screen._input_router._resync_sources_from_facade()
     build_queue_screen._input_router._refresh_queue_display()
 
     # PROJ-221: VirtualTable manages queue display - verify data source has correct count
@@ -475,16 +500,18 @@ def test_add_ship_to_queue_with_shipyard(mock_design_catalog, mock_design_loader
         bq_screen.queue_sources.index(shipyard_source)
     )
 
-    # Try to add a ship
-    initial_queue_len = len(shipyard_source.construction_queue)
+    # PROJ-472 Phase 1B: ``shipyard_source`` is a frozen DTO snapshot; the
+    # add command mutates the *domain* facility queue, so assert against the
+    # live facility queue (what the next facade re-query would project).
+    initial_queue_len = len(shipyard.construction_queue)
     bq_screen.controller.set_category("ship")
     bq_screen.controller.add_to_queue("test_frigate", turns=1)
 
     # Verify ship was added to shipyard queue
-    assert len(shipyard_source.construction_queue) == initial_queue_len + 1, \
+    assert len(shipyard.construction_queue) == initial_queue_len + 1, \
         "Ship should be added to shipyard queue when shipyard exists"
-    assert shipyard_source.construction_queue[-1]["type"] == "ship"
-    assert shipyard_source.construction_queue[-1]["design_id"] == "test_frigate"
+    assert shipyard.construction_queue[-1]["type"] == "ship"
+    assert shipyard.construction_queue[-1]["design_id"] == "test_frigate"
 
 
 def test_add_ship_fails_without_shipyard(build_queue_screen):

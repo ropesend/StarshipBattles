@@ -10,7 +10,9 @@ Verifies the empire-wide build queue window foundation:
 import pytest
 from unittest.mock import MagicMock, patch, call
 
-from game.strategy.data.build_queue_source import BuildQueueSource
+# PROJ-472 Phase 1B: the window consumes immutable BuildQueueSourceDTOs from
+# the facade, not domain BuildQueueSource objects.
+from game.strategy.facade.dto import BuildQueueSourceDTO as BuildQueueSource
 from game.ui.screens.empire_build_queue_window import BatchAddResult
 
 
@@ -21,20 +23,27 @@ from game.ui.screens.empire_build_queue_window import BatchAddResult
 def _make_source(queue_id="planet_1_base", display_name="Alpha - Base",
                  context_type="planet", can_build_ships=False,
                  can_build_complexes=True, queue_items=None,
-                 build_rate=None) -> BuildQueueSource:
-    """Create a BuildQueueSource for testing."""
+                 build_rate=None, entity_id=1, planet_id=None,
+                 owner_global_hex=None,
+                 owner_system_name=None) -> BuildQueueSource:
+    """Create a BuildQueueSourceDTO for testing (PROJ-472 1B)."""
     # Default to standard per-resource rates for testing
     if build_rate is None:
         build_rate = {"metals": 2000.0, "organics": 2000.0, "radioactives": 2000.0, "vapors": 2000.0, "exotics": 2000.0}
+    if planet_id is None and context_type == "planet":
+        planet_id = entity_id
     return BuildQueueSource(
         queue_id=queue_id,
         display_name=display_name,
-        owner_entity=MagicMock(),
+        entity_id=entity_id,
         construction_queue=queue_items or [],
         can_build_ships=can_build_ships,
         can_build_complexes=can_build_complexes,
         context_type=context_type,
         build_rate=build_rate,
+        planet_id=planet_id,
+        owner_global_hex=owner_global_hex,
+        owner_system_name=owner_system_name,
     )
 
 
@@ -108,7 +117,7 @@ def _make_window(sources=None, on_close=None, on_navigate=None):
     # in-place was deleted; the test facade mock simulates that behavior so
     # existing assertions on `source.construction_queue` keep working.
     def _fake_handle_command(cmd):
-        # Locate the source whose queue_id (or owner_entity.id for fleet/planet)
+        # Locate the source whose queue_id (or entity_id for fleet/planet)
         # matches the command, and append.
         from game.strategy.engine.commands import AddToConstructionQueueCommand
         if isinstance(cmd, AddToConstructionQueueCommand):
@@ -120,7 +129,7 @@ def _make_window(sources=None, on_close=None, on_navigate=None):
                         "target_planet_id": cmd.target_planet_id,
                     })
                     return MagicMock(is_valid=True)
-                if cmd.queue_id is None and getattr(src.owner_entity, "id", None) == cmd.entity_id:
+                if cmd.queue_id is None and getattr(src, "entity_id", None) == cmd.entity_id:
                     src.construction_queue.append({
                         "design_id": cmd.design_id,
                         "type": cmd.category,
@@ -237,16 +246,16 @@ class TestWindowInitialization:
             BuildEntityType,
         )
 
+        # PROJ-472 1B: entity type / id come from the DTO's context_type +
+        # entity_id scalars (a planet source -> BuildEntityType.PLANET).
         source = _make_source(
             queue_id="planet_1_base",
             display_name="Alpha - Base",
             can_build_ships=True,
             queue_items=[],
+            context_type="planet",
+            entity_id=42,
         )
-        # Give owner_entity a stable id and the planet_type marker the
-        # production code reads to choose BuildEntityType.PLANET.
-        source.owner_entity.id = 42
-        source.owner_entity.planet_type = "rocky"
 
         win = _make_window(sources=[source])
         item = {"design_id": "frigate-mk1", "target_planet_id": None}
@@ -1009,83 +1018,44 @@ class TestCombinedFilters:
 # =======================================================================
 
 class TestGetHexForSource:
-    """get_hex_for_source() should resolve hex coordinates."""
+    """get_hex_for_source() returns the projected owner_global_hex (1B)."""
 
-    def test_fleet_source_returns_fleet_location(self):
-        """Fleet source returns fleet.location as hex coordinate."""
+    def test_fleet_source_returns_owner_global_hex(self):
+        """Fleet source returns the DTO's projected owner_global_hex."""
         from game.core.hex_math import HexCoord
-        fleet_entity = MagicMock()
-        fleet_entity.location = HexCoord(5, 3)
-        source = BuildQueueSource(
+        source = _make_source(
             queue_id="fleet_1", display_name="Fleet Yard",
-            owner_entity=fleet_entity, construction_queue=[],
-            can_build_ships=True, can_build_complexes=True,
-            context_type="fleet",
+            context_type="fleet", can_build_ships=True,
+            owner_global_hex=HexCoord(5, 3),
         )
         win = _make_window(sources=[source])
-        result = win.get_hex_for_source(source)
-        assert result == HexCoord(5, 3)
+        assert win.get_hex_for_source(source) == HexCoord(5, 3)
 
-    def test_planet_source_returns_system_plus_planet_location(self):
-        """Planet source returns system.global_location + planet.location."""
+    def test_planet_source_returns_owner_global_hex(self):
+        """Planet source returns the DTO's projected owner_global_hex.
+
+        PROJ-472 1B: system.global_location + planet.location resolution
+        moved into the empire-slice projection; the window just reads the
+        resolved scalar.
+        """
         from game.core.hex_math import HexCoord
-        planet_entity = MagicMock()
-        planet_entity.location = HexCoord(1, 0)
-        system = MagicMock()
-        system.global_location = HexCoord(10, 20)
-        win = _make_window()
-        win.galaxy = MagicMock()
-        win.galaxy.get_system_of_planet.return_value = system
-        source = BuildQueueSource(
+        source = _make_source(
             queue_id="planet_1_base", display_name="Alpha - Base",
-            owner_entity=planet_entity, construction_queue=[],
-            can_build_ships=False, can_build_complexes=True,
-            context_type="planet",
-        )
-        result = win.get_hex_for_source(source)
-        assert result == HexCoord(11, 20)
-
-    def test_planet_source_no_system_returns_none(self):
-        """Planet source returns None when system not found."""
-        planet_entity = MagicMock()
-        planet_entity.location = (1, 0)
-        win = _make_window()
-        win.galaxy = MagicMock()
-        win.galaxy.get_system_of_planet.return_value = None
-        source = BuildQueueSource(
-            queue_id="planet_1_base", display_name="Alpha - Base",
-            owner_entity=planet_entity, construction_queue=[],
-            can_build_ships=False, can_build_complexes=True,
-            context_type="planet",
-        )
-        result = win.get_hex_for_source(source)
-        assert result is None
-
-    def test_fleet_source_no_location_returns_none(self):
-        """Fleet source returns None when fleet has no location."""
-        fleet_entity = MagicMock()
-        fleet_entity.location = None  # Explicit None location
-        source = BuildQueueSource(
-            queue_id="fleet_1", display_name="Fleet Yard",
-            owner_entity=fleet_entity, construction_queue=[],
-            can_build_ships=True, can_build_complexes=True,
-            context_type="fleet",
+            context_type="planet", can_build_complexes=True,
+            owner_global_hex=HexCoord(11, 20),
         )
         win = _make_window(sources=[source])
-        result = win.get_hex_for_source(source)
-        assert result is None
+        assert win.get_hex_for_source(source) == HexCoord(11, 20)
 
-    def test_unknown_context_type_returns_none(self):
-        """Unknown context_type returns None."""
-        source = BuildQueueSource(
-            queue_id="other_1", display_name="Other",
-            owner_entity=MagicMock(), construction_queue=[],
-            can_build_ships=False, can_build_complexes=False,
-            context_type="unknown",
+    def test_unresolved_hex_returns_none(self):
+        """A source whose owner_global_hex is None returns None."""
+        source = _make_source(
+            queue_id="planet_1_base", display_name="Alpha - Base",
+            context_type="planet", can_build_complexes=True,
+            owner_global_hex=None,
         )
         win = _make_window(sources=[source])
-        result = win.get_hex_for_source(source)
-        assert result is None
+        assert win.get_hex_for_source(source) is None
 
 
 class TestNavigateToSource:
@@ -1095,13 +1065,10 @@ class TestNavigateToSource:
         """navigate_to_source() calls on_navigate_to_hex with (hex, source)."""
         from game.core.hex_math import HexCoord
         nav_cb = MagicMock()
-        fleet_entity = MagicMock()
-        fleet_entity.location = HexCoord(5, 3)
-        source = BuildQueueSource(
+        source = _make_source(
             queue_id="fleet_1", display_name="Fleet Yard",
-            owner_entity=fleet_entity, construction_queue=[],
-            can_build_ships=True, can_build_complexes=True,
-            context_type="fleet",
+            context_type="fleet", can_build_ships=True,
+            owner_global_hex=HexCoord(5, 3),
         )
         win = _make_window(sources=[source], on_navigate=nav_cb)
         win.navigate_to_source(source)
@@ -1110,13 +1077,10 @@ class TestNavigateToSource:
     def test_navigate_no_callback_does_not_crash(self):
         """navigate_to_source() is safe when no callback is set."""
         from game.core.hex_math import HexCoord
-        fleet_entity = MagicMock()
-        fleet_entity.location = HexCoord(5, 3)
-        source = BuildQueueSource(
+        source = _make_source(
             queue_id="fleet_1", display_name="Fleet Yard",
-            owner_entity=fleet_entity, construction_queue=[],
-            can_build_ships=True, can_build_complexes=True,
-            context_type="fleet",
+            context_type="fleet", can_build_ships=True,
+            owner_global_hex=HexCoord(5, 3),
         )
         win = _make_window(sources=[source], on_navigate=None)
         win.navigate_to_source(source)  # Should not raise
@@ -1124,17 +1088,12 @@ class TestNavigateToSource:
     def test_navigate_no_hex_does_not_call_callback(self):
         """navigate_to_source() does not call callback when hex is None."""
         nav_cb = MagicMock()
-        planet_entity = MagicMock()
-        planet_entity.location = (1, 0)
-        source = BuildQueueSource(
+        source = _make_source(
             queue_id="planet_1_base", display_name="Alpha - Base",
-            owner_entity=planet_entity, construction_queue=[],
-            can_build_ships=False, can_build_complexes=True,
-            context_type="planet",
+            context_type="planet", can_build_complexes=True,
+            owner_global_hex=None,
         )
         win = _make_window(sources=[source], on_navigate=nav_cb)
-        win.galaxy = MagicMock()
-        win.galaxy.get_system_of_planet.return_value = None
         win.navigate_to_source(source)
         nav_cb.assert_not_called()
 
@@ -1142,13 +1101,10 @@ class TestNavigateToSource:
         """navigate_to_source() selects the source before calling callback."""
         from game.core.hex_math import HexCoord
         nav_cb = MagicMock()
-        fleet_entity = MagicMock()
-        fleet_entity.location = HexCoord(5, 3)
-        source = BuildQueueSource(
+        source = _make_source(
             queue_id="fleet_1", display_name="Fleet Yard",
-            owner_entity=fleet_entity, construction_queue=[],
-            can_build_ships=True, can_build_complexes=True,
-            context_type="fleet",
+            context_type="fleet", can_build_ships=True,
+            owner_global_hex=HexCoord(5, 3),
         )
         win = _make_window(sources=[source], on_navigate=nav_cb)
         win.navigate_to_source(source)
@@ -1162,13 +1118,10 @@ class TestDoubleClickNavigation:
         """Double-click on a list row calls navigate_to_source."""
         from game.core.hex_math import HexCoord
         nav_cb = MagicMock()
-        fleet_entity = MagicMock()
-        fleet_entity.location = HexCoord(5, 3)
-        source = BuildQueueSource(
+        source = _make_source(
             queue_id="fleet_1", display_name="Fleet Yard",
-            owner_entity=fleet_entity, construction_queue=[],
-            can_build_ships=True, can_build_complexes=True,
-            context_type="fleet",
+            context_type="fleet", can_build_ships=True,
+            owner_global_hex=HexCoord(5, 3),
         )
         win = _make_window(sources=[source], on_navigate=nav_cb)
 

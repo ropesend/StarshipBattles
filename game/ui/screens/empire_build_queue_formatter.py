@@ -1,19 +1,22 @@
 """Data formatting functions for empire build queue display.
 
 Pure data transform functions with no UI dependencies. These format
-BuildQueueSource data into human-readable strings for the
+``BuildQueueSourceDTO`` data into human-readable strings for the
 EmpireBuildQueueWindow display.
 
 Created as part of PROJ-89 Phase 2.
+PROJ-472 Phase 1B: consumes ``BuildQueueSourceDTO`` (facade projection)
+rather than the domain ``BuildQueueSource``; system/sector reads use the
+projected ``owner_system_name`` / ``owner_global_hex`` scalars.
 """
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from game.ui.utils.formatters import format_compact_number
 
 if TYPE_CHECKING:
-    from game.strategy.data.build_queue_source import BuildQueueSource
+    from game.strategy.facade.dto import BuildQueueSourceDTO as BuildQueueSource
 
 
 def get_queue_summary(source: BuildQueueSource) -> str:
@@ -66,51 +69,37 @@ def get_capabilities_text(source: BuildQueueSource) -> str:
     return "None"
 
 
-def get_system_name(source: BuildQueueSource, galaxy: Any) -> str:
+def get_system_name(source: BuildQueueSource) -> str:
     """Return the system name for a queue source.
 
+    PROJ-472 Phase 1B: reads the ``owner_system_name`` scalar projected by
+    the empire slice (``EmpireSlice._resolve_owner_scalars``) instead of a
+    live ``owner_entity`` + galaxy lookup. The galaxy parameter is gone —
+    resolution now lives behind the facade.
+
     Args:
-        source: The build queue source.
-        galaxy: Galaxy instance for system lookups.
+        source: The build queue source DTO.
 
     Returns:
         System name string, or dash if unavailable.
     """
-    entity = source.owner_entity
-    if source.context_type == "planet":
-        # Try galaxy lookup
-        if galaxy:
-            sys_obj = galaxy.get_system_of_planet(entity)
-            if sys_obj:
-                return sys_obj.name
-    elif source.context_type == "fleet":
-        location = entity.location
-        if location and galaxy:
-            sys_obj = galaxy.get_system_at_hex(location)
-            if sys_obj:
-                return sys_obj.name
-    return "-"
+    return source.owner_system_name or "-"
 
 
 def get_sector_text(source: BuildQueueSource) -> str:
     """Return sector/hex coordinate text for a queue source.
 
+    PROJ-472 Phase 1B: reads the ``owner_global_hex`` scalar projected by
+    the empire slice instead of a live ``owner_entity.location`` read.
+
     Args:
-        source: The build queue source.
+        source: The build queue source DTO.
 
     Returns:
         Hex coordinate string, or dash if unavailable.
     """
-    entity = source.owner_entity
-    if source.context_type == "fleet":
-        location = entity.location
-        if location is not None:
-            return str(location)
-    elif source.context_type == "planet":
-        # Planets have local location within their system
-        hex_loc = entity.location
-        if hex_loc is not None:
-            return str(hex_loc)
+    if source.owner_global_hex is not None:
+        return str(source.owner_global_hex)
     return "-"
 
 

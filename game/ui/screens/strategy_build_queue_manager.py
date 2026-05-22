@@ -28,8 +28,6 @@ from game.core.protocols import is_planet, is_fleet
 
 if TYPE_CHECKING:
     from game.ui.screens.strategy_screen import StrategyScreen
-    from game.strategy.data.fleet import Fleet
-    from game.core.protocols import IFleet
     from game.core.hex_math import HexCoord
 
 logger = logging.getLogger(__name__)
@@ -223,16 +221,18 @@ class StrategyBuildQueueManager:
         """
         logger.info("_on_build_queue_close() CALLED")
 
-        # PROJ-69: Handle fleet BUILD orders for all fleet-type queue sources
+        # PROJ-69: Handle fleet BUILD orders for all fleet-type queue sources.
+        # PROJ-472 Phase 1B: queue sources are ``BuildQueueSourceDTO`` — read
+        # the fleet id off ``entity_id`` and inspect BUILD-order state via the
+        # facade fleet query, never a live fleet object.
         queue_sources = self._screen.build_queue_screen.queue_sources
         processed_fleets = set()
         for source in queue_sources:
             if source.context_type == 'fleet':
-                fleet: IFleet = source.owner_entity
-                fleet_id = fleet.id  # IFleet.id is always present
+                fleet_id = source.entity_id
                 if fleet_id not in processed_fleets:
                     processed_fleets.add(fleet_id)
-                    self._handle_fleet_build_queue_close(fleet)
+                    self._handle_fleet_build_queue_close(fleet_id)
 
         # PROJ-376 Phase 2: do NOT null self._screen.build_queue_screen.
         # The cached instance is reused on the next click via open_for_yard().
@@ -250,30 +250,59 @@ class StrategyBuildQueueManager:
                 logger.warning(f"Could not refresh planet display after build queue close: {e}")
         logger.info("_on_build_queue_close() FINISHED")
 
-    def _handle_fleet_build_queue_close(self, fleet: "Fleet") -> None:
+    def _handle_fleet_build_queue_close(self, fleet_id: int) -> None:
         """Handle fleet build queue closing - auto-issue BUILD order if items in queue.
 
         PROJ-207 Phase 4: Routes BUILD orders through command pipeline.
+        PROJ-472 Phase 1B: BUILD-order state is read from the facade fleet
+        query (``facade.fleets.get(fleet_id)`` → ``FleetInfo``), not a live
+        fleet object. Commands stay id-based.
 
         Args:
-            fleet: Fleet that was building
+            fleet_id: Id of the fleet that was building.
         """
         from game.strategy.engine.commands import IssueBuildOrderCommand, RemoveBuildOrderCommand
 
-        if fleet.construction_queue:
+        info = self._screen.facade.fleets.get(fleet_id)
+        if info is None:
+            logger.warning(
+                "Fleet build-queue close: fleet id %s not found via facade", fleet_id
+            )
+            return
+
+        if info.construction_queue_size > 0:
             # Check if fleet already has BUILD order
             has_build_order = any(
-                order.type == OrderType.BUILD
-                for order in fleet.orders
+                order.order_type == OrderType.BUILD.name
+                for order in info.orders
             )
             if not has_build_order:
-                logger.info(f"Auto-issuing BUILD order to fleet {fleet.id} ({len(fleet.construction_queue)} items in queue)")
-                cmd = IssueBuildOrderCommand(fleet_id=fleet.id)
+                logger.info(
+                    f"Auto-issuing BUILD order to fleet {fleet_id} "
+                    f"({info.construction_queue_size} items in queue)"
+                )
+                cmd = IssueBuildOrderCommand(fleet_id=fleet_id)
                 self._screen.facade.handle_command(cmd)
         else:
             # Queue is empty - remove BUILD order if present via command pipeline
-            cmd = RemoveBuildOrderCommand(fleet_id=fleet.id)
+            cmd = RemoveBuildOrderCommand(fleet_id=fleet_id)
             self._screen.facade.handle_command(cmd)
+
+    def _resolve_live_yard(self, source) -> object | None:
+        """Resolve the live yard (Planet or Fleet) for a build-queue DTO.
+
+        PROJ-472 Phase 1B: the per-hex BuildQueueScreen's ``build_context``
+        must be a live domain object, but the empire-window navigation
+        callback now provides only a ``BuildQueueSourceDTO``. Resolve by id:
+        planets via the galaxy registry, fleets via the session lookup.
+        """
+        if source.context_type == "planet":
+            planet_id = source.planet_id if source.planet_id is not None else source.entity_id
+            return self._screen.galaxy.get_planet_by_id(planet_id)
+        if source.context_type == "fleet":
+            session = self._screen.facade.facade_state.session
+            return session._get_fleet_by_id(source.entity_id)
+        return None
 
     def on_navigate_to_hex_build(self, hex_coord, source) -> None:
         """Navigate to the build queue screen for a specific hex and source.
@@ -283,11 +312,20 @@ class StrategyBuildQueueManager:
 
         Args:
             hex_coord: The HexCoord of the source's location.
-            source: BuildQueueSource identifying the entity to open.
+            source: ``BuildQueueSourceDTO`` identifying the entity to open.
+
+        PROJ-472 Phase 1B: the empire-window callback now hands a
+        ``BuildQueueSourceDTO`` (DTO scalars), not a live ``BuildQueueSource``.
+        The per-hex build screen still needs a LIVE yard object as its
+        ``build_context``, so resolve it by id here (planet via galaxy,
+        fleet via session) from the DTO's ``context_type`` / ``entity_id``.
         """
-        entity = source.owner_entity
+        entity = self._resolve_live_yard(source)
         if entity is None:
-            logger.warning("on_navigate_to_hex_build: source has no owner_entity")
+            logger.warning(
+                "on_navigate_to_hex_build: could not resolve live yard for "
+                "%s id=%s", source.context_type, source.entity_id,
+            )
             return
 
         # Close the empire build queue window

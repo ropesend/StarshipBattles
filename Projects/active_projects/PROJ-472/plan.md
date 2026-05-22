@@ -13,16 +13,33 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1A. Policy doc (Pattern #5) + two read-path static guards | Not Started | [phase_1a_checklist.md](phase_1a_checklist.md) |
-| 1B. Build-queue cluster migration onto facade queries | Not Started | [phase_1b_checklist.md](phase_1b_checklist.md) |
+| 1A. Policy doc (Pattern #5) + two read-path static guards | Complete | [phase_1a_checklist.md](phase_1a_checklist.md) |
+| 1B. Build-queue cluster migration onto facade queries | Complete | [phase_1b_checklist.md](phase_1b_checklist.md) |
 | 1C. StrategyScreen.session read-consumer cleanup | Not Started | [phase_1c_checklist.md](phase_1c_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-21
-**Active Phase:** Planning complete; ready to execute Phase 1A
-**Last Action:** Plan fleshed to execution-ready against live code + Codex pre-flesh consult (`AgentCoordination/Scratchpad/Consult/proj472_preflesh/advice.md`). Policy = option (b); scope CAPPED at Phase 1A/1B/1C; tail deferred to PROJ-474/475/476.
-**Next Action:** Execute Phase 1A Task 1A.1 (write the read-path policy into Pattern #5) then 1A.2/1A.3 (the two guards, TDD: failing positive-controls first).
-**Blockers:** None. Guards land first (1A) so 1B/1C migrations are enforced as they land.
+**Active Phase:** Phase 1C (StrategyScreen.session read-consumer cleanup)
+**Last Action:** Phase 1B complete. Build-queue UI cluster migrated onto
+`facade.empires.hex_build_queues` returning `BuildQueueSourceDTO`; DTO enriched
+with `is_paused` / `owner_global_hex` / `owner_system_name` (slice-projected
+scalars, no live `owner_entity`). Found+fixed a data-flow bug: the input
+router's add/remove/pause command dispatch now re-projects DTOs from the facade
+(`_resync_sources_from_facade`) so the display reflects post-command domain
+state — DTO snapshots are immutable and were going stale. Test doubles given an
+`empires.hex_build_queues` namespace; the multi-queue controller fixture and
+several integration assertions tightened to DTO semantics (assert live backing
+queue, not the frozen snapshot). Full sharded suite GREEN modulo the two known
+pre-existing combat_lab failures (TOHIT-ATK-FLEET-003/004). 676 read-path guard
+tests pass. No codex audit this phase (runs after 1C).
+**Next Action:** Execute Phase 1C — migrate `StrategyScreen.session` /
+`facade_state.session` read consumers (incl. `strategy_build_queue_manager.py`'s
+deferred `:82-84` session read) per phase_1c_checklist.md.
+**Blockers:** None.
+**Note:** `validate_phase.py` only accepts integer phase numbers, so
+`validate_phase.py PROJ-472 1b` errors (`int('1b')`). The phase used letter
+sub-phases (1A/1B/1C); validation here is the green test suite + guards, not the
+integer-phase script.
 
 ## Overview
 The `StrategySessionFacade` enforces the strategy **write path** (commands route

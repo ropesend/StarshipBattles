@@ -12,7 +12,9 @@ from unittest.mock import MagicMock
 from typing import Optional
 
 from game.ui.panels.build_queue_controller import BuildQueueController
-from game.strategy.data.build_queue_source import BuildQueueSource, get_default_production_rates
+from game.strategy.data.build_queue_source import get_default_production_rates
+# PROJ-472 Phase 1B: controller consumes BuildQueueSourceDTO from the facade.
+from game.strategy.facade.dto import BuildQueueSourceDTO as BuildQueueSource
 from game.strategy.systems.design_repository import DesignLoadResult
 
 
@@ -107,11 +109,13 @@ def _make_source(
     planet_id: int = None,
     entity_registry: dict = None,
 ) -> BuildQueueSource:
-    """Create a BuildQueueSource with a real mutable queue.
+    """Create a BuildQueueSourceDTO with a real mutable queue.
 
-    PROJ-208: If entity_registry is provided, registers the owner_entity
-    so the command callback can find it. For planet sources, register
-    using planet_id as the key (matching _get_entity_info behavior).
+    PROJ-472 Phase 1B: the controller consumes the DTO, so this builds a
+    ``BuildQueueSourceDTO`` directly. ``entity_id`` is the owner id; planet
+    sources also carry ``planet_id``. The entity_registry contract is kept
+    (keyed by planet_id for planets / entity_id for fleets) to match
+    ``_get_entity_info``.
     """
     global _entity_id_counter
     _entity_id_counter += 1
@@ -119,10 +123,7 @@ def _make_source(
     actual_queue = queue if queue is not None else []
     actual_rate = build_rate if build_rate is not None else _default_build_rate()
 
-    # Create owner_entity with construction_queue and id
-    owner_entity = MagicMock()
-    owner_entity.construction_queue = actual_queue
-    owner_entity.id = _entity_id_counter
+    entity_id = _entity_id_counter
 
     # For planet sources, use planet_id or generated id
     effective_planet_id = planet_id if planet_id is not None else (
@@ -132,7 +133,7 @@ def _make_source(
     source = BuildQueueSource(
         queue_id=queue_id,
         display_name=display_name,
-        owner_entity=owner_entity,
+        entity_id=entity_id,
         construction_queue=actual_queue,
         can_build_ships=can_build_ships,
         can_build_complexes=can_build_complexes,
@@ -141,14 +142,17 @@ def _make_source(
         planet_id=effective_planet_id,
     )
 
-    # PROJ-208: Register entity for command callback resolution
-    # For planets, use planet_id; for fleets, use owner_entity.id
-    # This matches _get_entity_info behavior
+    # PROJ-208: Register a stand-in entity for command-callback resolution.
+    # For planets, key by planet_id; for fleets, key by entity_id —
+    # matching _get_entity_info behavior.
     if entity_registry is not None:
+        owner_entity = MagicMock()
+        owner_entity.construction_queue = actual_queue
+        owner_entity.id = entity_id
         if context_type == "planet":
             entity_registry[(context_type, effective_planet_id)] = owner_entity
         else:
-            entity_registry[(context_type, owner_entity.id)] = owner_entity
+            entity_registry[(context_type, entity_id)] = owner_entity
 
     return source
 
@@ -772,8 +776,6 @@ class TestPlanetSelectionForFleetComplexes:
         )
 
         source = _make_source(context_type="fleet")
-        source.context_type = "fleet"
-        source.planet_id = None
         controller.set_active_queue(source)
 
         result = controller._needs_planet_selection(source, "complex")
@@ -798,8 +800,6 @@ class TestPlanetSelectionForFleetComplexes:
         )
 
         source = _make_source(context_type="planet")
-        source.context_type = "planet"
-        source.planet_id = 10  # Has fixed planet
         controller.set_active_queue(source)
 
         result = controller._needs_planet_selection(source, "complex")
@@ -824,8 +824,6 @@ class TestPlanetSelectionForFleetComplexes:
         )
 
         source = _make_source(context_type="fleet")
-        source.context_type = "fleet"
-        source.planet_id = None
         controller.set_active_queue(source)
 
         result = controller._needs_planet_selection(source, "ship")
@@ -847,8 +845,6 @@ class TestPlanetSelectionForFleetComplexes:
         )
 
         source = _make_source(context_type="fleet")
-        source.context_type = "fleet"
-        source.planet_id = None
         controller.set_active_queue(source)
 
         result = controller._needs_planet_selection(source, "complex")
@@ -873,8 +869,6 @@ class TestPlanetSelectionForFleetComplexes:
         )
 
         source = _make_source(context_type="fleet")
-        source.context_type = "fleet"
-        source.planet_id = None
         controller.set_active_queue(source)
 
         controller.add_to_queue("factory", category="complex")
@@ -906,8 +900,6 @@ class TestPlanetSelectionForFleetComplexes:
         )
 
         source = _make_source(context_type="fleet", build_rate={"metals": 2000.0}, entity_registry=entity_registry)
-        source.context_type = "fleet"
-        source.planet_id = None
         controller.set_active_queue(source)
 
         controller.add_to_queue("factory", category="complex")
@@ -937,7 +929,6 @@ class TestPlanetSelectionForFleetComplexes:
         )
 
         source = _make_source(context_type="planet", build_rate={"metals": 2000.0}, entity_registry=entity_registry, planet_id=10)
-        source.context_type = "planet"
         controller.set_active_queue(source)
 
         controller.add_to_queue("factory", category="complex")

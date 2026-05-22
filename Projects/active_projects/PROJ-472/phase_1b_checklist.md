@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Migrate the ~13-file build-queue UI cluster off domain
 `BuildQueueSource` / `collect_build_queues_at_hex` onto the facade queries
 `empires.build_queues` / `empires.hex_build_queues`. Enrich `BuildQueueSourceDTO`
@@ -26,12 +26,12 @@ session read).
 **File:** `game/strategy/facade/dto/build_queue_dto.py`, `game/strategy/facade/slices/empire_slice.py`
 **Tests:** `pytest tests/unit/strategy/facade/ -k build_queue` (add a failing DTO test first)
 
-- [ ] Write a FAILING unit test asserting `BuildQueueSourceDTO.from_domain(...)`
+- [x] Write a FAILING unit test asserting `BuildQueueSourceDTO.from_domain(...)`
       exposes `is_paused` and the owner-derived SCALAR fields named below — confirm
       it fails (fields absent on the current DTO, `build_queue_dto.py:13-22`)
-- [ ] Add `is_paused: bool` to the frozen DTO and populate it in `from_domain`
+- [x] Add `is_paused: bool` to the frozen DTO and populate it in `from_domain`
       from `source.is_paused`
-- [ ] Add the **exact** owner-derived SCALAR fields below. Do NOT add a live
+- [x] Add the **exact** owner-derived SCALAR fields below. Do NOT add a live
       `owner_entity` reference — that re-leaks the mutable domain object the DTO
       exists to hide. `entity_id` / `empire_id` / `planet_id` / `context_type`
       already exist (`build_queue_dto.py:15,19,21-22`). New fields required by the
@@ -54,22 +54,22 @@ session read).
         reach the galaxy. Pass the resolved scalars (or the galaxy) into
         `from_domain`, OR resolve them in the slice and set them on the DTO. Pick
         one in the failing test and pin it.
-- [ ] Confirm the DTO stays `frozen=True` and keeps deep-copying
+- [x] Confirm the DTO stays `frozen=True` and keeps deep-copying
       `construction_queue` (`:34`) so no UI mutation of domain state is possible.
       `owner_global_hex` (HexCoord) and `owner_system_name` (str) are immutable
       value types — safe to hold directly.
-- [ ] Verify the new test passes; existing facade DTO tests stay green
+- [x] Verify the new test passes; existing facade DTO tests stay green
 
 ### Task 1B.2: Migrate per-hex + empire-wide build-queue entry screens [Complex]
 **File:** `game/ui/screens/build_queue_screen.py`, `game/ui/screens/empire_build_queue_window.py`
 **Tests:** `pytest tests/ --testmon` + `pytest tests/static_guards/test_facade_read_path_imports_guard.py`
 
-- [ ] Remove the runtime import `from game.strategy.data.build_queue_source import
+- [x] Remove the runtime import `from game.strategy.data.build_queue_source import
       BuildQueueSource, collect_build_queues_at_hex` (`build_queue_screen.py:23`)
-- [ ] Replace `collect_build_queues_at_hex(...)` calls (`:214-217`, `:333-336`)
+- [x] Replace `collect_build_queues_at_hex(...)` calls (`:214-217`, `:333-336`)
       with `facade.empires.hex_build_queues(empire_id, hex_coord)` returning
       `BuildQueueSourceDTO`
-- [ ] Migrate `empire_build_queue_window.py` `owner_entity` reads to the enriched
+- [x] Migrate `empire_build_queue_window.py` `owner_entity` reads to the enriched
       DTO fields. Verified live 2026-05-21:
       - `get_hex_for_source` (`:363-374`) reads `source.owner_entity` then resolves
         fleet `entity.location` / planet `system.global_location + entity.location`
@@ -81,19 +81,19 @@ session read).
         DTO: `context_type` ("planet"/"fleet") gives the entity type and
         `entity_id` gives the id — use those, do NOT re-fetch the live entity.
         (`:422` is a docstring reference to `source.construction_queue`, no code change.)
-- [ ] Remove these files' TEMPORARY allowlist entries from the 1A import guard
-- [ ] Verify the import guard now passes WITHOUT those allowlist entries
+- [x] Remove these files' TEMPORARY allowlist entries from the 1A import guard
+- [x] Verify the import guard now passes WITHOUT those allowlist entries
 
 ### Task 1B.3: Migrate the supporting cluster files [Complex]
 **File:** `build_queue_controller.py`, `build_queue_input_router.py`, `build_queue_selector.py`, `build_queue_panel_factory.py`, `build_queue_renderer.py`, `build_queue_viewmodel.py`, `empire_build_queue_data_source.py`, `empire_build_queue_formatter.py`, `empire_build_queue_filter_manager.py`, `empire_build_queue_viewmodel.py`, `strategy_build_queue_manager.py` (BQS usage only)
 **Tests:** `pytest tests/ --testmon` + the 1A import guard
 
-- [ ] `build_queue_controller.py`: migrate the live-`BuildQueueSource` class
+- [x] `build_queue_controller.py`: migrate the live-`BuildQueueSource` class
       coupling (`:66-79`,`:117-150`,`:421-522`) to the DTO; the TYPE_CHECKING
       imports (`:18-20`) become unnecessary once the class consumes DTOs — remove them
-- [ ] `build_queue_input_router.py`: `source.owner_entity` (`:128`,`:164`),
+- [x] `build_queue_input_router.py`: `source.owner_entity` (`:128`,`:164`),
       `source.is_paused` (`:174`), `source.construction_queue` (`:83-84`) → DTO fields
-- [ ] `empire_build_queue_formatter.py`: migrate the `owner_entity`-derived
+- [x] `empire_build_queue_formatter.py`: migrate the `owner_entity`-derived
       location/system reads (verified live 2026-05-21):
       - `get_system_name` (`:79-92`) → DTO `owner_system_name` (replaces both the
         planet `galaxy.get_system_of_planet(entity).name` and fleet
@@ -104,9 +104,9 @@ session read).
         `str(source.owner_global_hex) if source.owner_global_hex is not None else "-"`).
       - The `galaxy` parameter these helpers take becomes unused once resolution
         moves into the slice — drop it from the signatures and callers.
-- [ ] Migrate the remaining viewmodels/data-sources/selector/factory/
+- [x] Migrate the remaining viewmodels/data-sources/selector/factory/
       renderer to consume `BuildQueueSourceDTO` instead of domain `BuildQueueSource`
-- [ ] `strategy_build_queue_manager.py`: migrate ONLY its BQS-import usage here;
+- [x] `strategy_build_queue_manager.py`: migrate ONLY its BQS-import usage here;
       its `facade_state.session` read (`:82-84`) is a 1C task — leave that for 1C.
       Specifically the fleet closeout path (verified live 2026-05-21):
       - `_on_build_queue_close` (`:226-235`) iterates `queue_sources`, and for
@@ -133,8 +133,8 @@ session read).
         migration's read scope and is NOT part of 1B (it consumes the callback's
         `source`, not the queue-list DTO). Leave it unchanged in 1B; if it needs
         the DTO it is a follow-on.
-- [ ] Remove each migrated file's TEMPORARY 1A import-guard allowlist entry
-- [ ] Verify NO file in the cluster still imports domain `BuildQueueSource` /
+- [x] Remove each migrated file's TEMPORARY 1A import-guard allowlist entry
+- [x] Verify NO file in the cluster still imports domain `BuildQueueSource` /
       `collect_build_queues_at_hex` / `collect_all_build_queues_for_empire`
       (`rg` the cluster); guard passes without their allowlist entries
 
@@ -154,13 +154,13 @@ state). There is **no existing facade query** for a per-ship spaceyard check, an
 adding one is out of the build-queue cluster's scope. Migrating them piecemeal in
 a build-queue phase has low boundary value. Therefore:
 
-- [ ] Do NOT migrate these in 1B. Keep them as `FleetCapabilityCalculator`
+- [x] Do NOT migrate these in 1B. Keep them as `FleetCapabilityCalculator`
       late-imports.
-- [ ] Add/keep BOTH files on the 1A import-guard allowlist as
+- [x] Add/keep BOTH files on the 1A import-guard allowlist as
       **allowlisted-with-reason** (exact file + module/member:
       `game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator`),
       reason: "pure per-ship capability check; no facade query yet; deferred".
-- [ ] Record the deferral in PROJ-475's plan (remaining live-reader tail) so the
+- [x] Record the deferral in PROJ-475's plan (remaining live-reader tail) so the
       allowlist entry has a documented owner. Confirm the import guard passes
       WITH these two entries present (not removed).
 
@@ -168,14 +168,14 @@ a build-queue phase has low boundary value. Therefore:
 **File:** n/a
 **Tests:** `pytest tests/static_guards/ && pytest tests/ --testmon`
 
-- [ ] `pytest tests/ --testmon` green for touched files
-- [ ] Import guard passes with the build-queue CLUSTER allowlist entries REMOVED
+- [x] `pytest tests/ --testmon` green for touched files
+- [x] Import guard passes with the build-queue CLUSTER allowlist entries REMOVED
       (boundary now enforced for those files). EXCEPTION: `fleet_data_source.py`
       and `fleet_report_filters.py` `FleetCapabilityCalculator` entries STAY
       allowlisted-with-reason per 1B.4 (deferred), NOT removed.
-- [ ] No domain `BuildQueueSource`/collectors remain in the cluster; no mixed
+- [x] No domain `BuildQueueSource`/collectors remain in the cluster; no mixed
       domain+DTO representation left in the feature
-- [ ] Caller read-set fully satisfied by the enriched DTO. Verified against the
+- [x] Caller read-set fully satisfied by the enriched DTO. Verified against the
       ~13-caller set the review enumerated (2026-05-21):
       `queue_id`, `display_name`, `entity_id` (← `owner_entity.id`),
       `construction_queue`, `can_build_ships`, `can_build_complexes`,
@@ -187,15 +187,15 @@ a build-queue phase has low boundary value. Therefore:
       in `on_navigate_to_hex_build` which is explicitly out of 1B scope (1B.3).
       If implementation finds any caller still unsatisfied, STOP and pin the field
       before exposing a live object.
-- [ ] Determinism/save-compat unchanged (projection-only; no serialized changes)
+- [x] Determinism/save-compat unchanged (projection-only; no serialized changes)
 
 ---
 
 ## Phase Completion Checklist
-- [ ] All task checkboxes above are checked
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row 1B to `Complete`
-- [ ] Update plan.md Current State to point to Phase 1C
+- [x] All task checkboxes above are checked
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row 1B to `Complete`
+- [x] Update plan.md Current State to point to Phase 1C
 
 _Consult §3 (first slice = cluster), §4, and DTO-gap risk; verified 2026-05-21.
 Post-flesh Codex review Blocker 2: named the exact owner-derived replacement

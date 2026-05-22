@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List, Optional, Set
 
 if TYPE_CHECKING:
-    from game.strategy.data.build_queue_source import BuildQueueSource
+    from game.strategy.facade.dto import BuildQueueSourceDTO as BuildQueueSource
     from game.ui.screens.builder.event_bus import WorkshopEventBus
 
 

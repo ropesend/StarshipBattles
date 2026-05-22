@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.data.build_context import BuildContext
-    from game.strategy.data.build_queue_source import BuildQueueSource
+    from game.strategy.facade.dto import BuildQueueSourceDTO as BuildQueueSource
     from game.strategy.data.planet import Planet
     from game.strategy.data.fleet import Fleet
     from game.strategy.data.galaxy import Galaxy
@@ -508,17 +508,21 @@ class BuildQueueController:
 
         Returns:
             Tuple of (entity_id, entity_type, queue_id).
+
+        PROJ-472 Phase 1B: ``source`` is a ``BuildQueueSourceDTO``; the owner
+        id comes from the DTO's ``entity_id`` scalar (planet sources prefer
+        ``planet_id``), never a live ``owner_entity``.
         """
         entity_type = source.context_type
         queue_id = source.queue_id  # For multi-queue support (e.g., shipyard facilities)
         if entity_type == "planet":
-            # For planet sources, use the planet_id
+            # For planet sources, prefer the planet_id, falling back to the
+            # projected owner entity_id.
             entity_id = source.planet_id
             if entity_id is None:
-                # Fallback to owner_entity.id
-                entity_id = getattr(source.owner_entity, 'id', None)
+                entity_id = source.entity_id
         else:  # fleet
-            entity_id = getattr(source.owner_entity, 'id', None)
+            entity_id = source.entity_id
         return entity_id, entity_type, queue_id
 
     def _add_to_single_queue(

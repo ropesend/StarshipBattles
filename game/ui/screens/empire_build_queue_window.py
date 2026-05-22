@@ -25,10 +25,6 @@ from game.ui.screens.strategy_modal_window import StrategyModalWindow
 import logging
 
 logger = logging.getLogger(__name__)
-from game.strategy.data.build_queue_source import (
-    BuildQueueSource,
-    collect_all_build_queues_for_empire,
-)
 from game.ui.screens.builder.event_bus import WorkshopEventBus
 from game.ui.screens.empire_build_queue_viewmodel import (
     EmpireBuildQueueViewModel,
@@ -45,6 +41,7 @@ from game.ui.screens.empire_build_queue_formatter import (
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
+    from game.strategy.facade.dto import BuildQueueSourceDTO as BuildQueueSource
     from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 
@@ -98,8 +95,10 @@ class EmpireBuildQueueUiBuilder:
         )
 
         # --- VirtualTable components ---
+        # PROJ-472 Phase 1B: data source reads system/sector from DTO scalars,
+        # so no live galaxy is threaded in.
         screen._data_source = BuildQueueDataSource(
-            screen._viewmodel, screen._filter_mgr, screen.galaxy
+            screen._viewmodel, screen._filter_mgr
         )
         screen._column_manager = TableColumnManager(screen._filter_mgr.columns)
         screen._selection = MultiSelect()
@@ -193,9 +192,10 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
 
         # --- MVVM components --- (cheap; pure-python, no pygame_gui)
         self._event_bus = WorkshopEventBus()
-        sources = collect_all_build_queues_for_empire(
-            empire, registries=facade.session_meta.registries()
-        )
+        # PROJ-472 Phase 1B: build-queue sources come from the facade as
+        # immutable ``BuildQueueSourceDTO`` projections, not domain
+        # ``BuildQueueSource`` objects.
+        sources = facade.empires.build_queues(empire.id)
         self._viewmodel = EmpireBuildQueueViewModel(self._event_bus, sources)
 
         # --- Filter Manager (for column definitions) ---
@@ -361,17 +361,12 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
     # -----------------------------------------------------------------------
 
     def get_hex_for_source(self, source: BuildQueueSource) -> Any:
-        """Resolve the global hex coordinate for a build queue source."""
-        entity = source.owner_entity
-        if source.context_type == "fleet":
-            return entity.location
-        if source.context_type == "planet":
-            if self.galaxy:
-                system = self.galaxy.get_system_of_planet(entity)
-                if system is not None:
-                    return system.global_location + entity.location
-            return None
-        return None
+        """Resolve the global hex coordinate for a build queue source.
+
+        PROJ-472 Phase 1B: reads the DTO's ``owner_global_hex`` scalar
+        (resolved at slice projection time) instead of a live owner entity.
+        """
+        return source.owner_global_hex
 
     def navigate_to_source(self, source: BuildQueueSource) -> None:
         """Navigate to the hex build screen for a source."""
@@ -420,11 +415,16 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         PROJ-382 Phase 1: ``facade`` is required at construction; PROJ-393
         deletes the legacy "no facade injected" fallback that mutated
         ``source.construction_queue`` in-place.
+
+        PROJ-472 Phase 1B: entity type / id come from the DTO's
+        ``context_type`` and ``entity_id`` scalars — no live owner entity.
         """
         from game.strategy.engine.commands import AddToConstructionQueueCommand, BuildEntityType
-        entity = source.owner_entity
-        entity_type = BuildEntityType.PLANET if hasattr(entity, 'planet_type') else BuildEntityType.FLEET
-        entity_id = getattr(entity, 'id', 0)
+        entity_type = (
+            BuildEntityType.PLANET if source.context_type == "planet"
+            else BuildEntityType.FLEET
+        )
+        entity_id = source.entity_id
         design_id = item.get('design_id', '')
         cmd = AddToConstructionQueueCommand(
             entity_id=entity_id,
@@ -537,10 +537,12 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         return self._filter_mgr.get_visible_columns()
 
     def _get_column_value(self, source: BuildQueueSource, col_id: str) -> str:
-        """Return the display value for a column and source."""
-        # System and sector need galaxy reference
+        """Return the display value for a column and source.
+
+        PROJ-472 Phase 1B: system/sector read the DTO's projected scalars.
+        """
         if col_id == 'system':
-            return get_system_name(source, self.galaxy)
+            return get_system_name(source)
         if col_id == 'sector':
             return get_sector_text(source)
         # Delegate to ViewModel for other columns
@@ -674,7 +676,7 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
 
     def _get_system_name(self, source: BuildQueueSource) -> str:
         """Return the system name for a queue source."""
-        return get_system_name(source, self.galaxy)
+        return get_system_name(source)
 
     @staticmethod
     def _get_turns_left_text(source: BuildQueueSource) -> str:
@@ -705,11 +707,10 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         #28), so this method does not touch view-state itself.
         """
         # Empire change requires rebuilding the underlying source set.
+        # PROJ-472 Phase 1B: rebuild from the facade DTO projection.
         if empire is not self.empire:
             self.empire = empire
-            sources = collect_all_build_queues_for_empire(
-                empire, registries=self._facade.session_meta.registries()
-            )
+            sources = self._facade.empires.build_queues(empire.id)
             self._viewmodel.update_sources(sources)
         self.galaxy = galaxy
 

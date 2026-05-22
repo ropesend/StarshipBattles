@@ -22,8 +22,16 @@ def _make_source(
     can_build_complexes=False,
     context_type="planet",
     owner_entity=None,
+    owner_system_name=None,
+    owner_global_hex=None,
 ):
-    """Create a mock BuildQueueSource for testing."""
+    """Create a mock BuildQueueSourceDTO for testing.
+
+    PROJ-472 1B: the formatter now consumes the immutable DTO scalars
+    ``owner_system_name`` / ``owner_global_hex`` instead of a live
+    ``owner_entity`` + galaxy lookup. ``owner_entity`` is retained on the
+    stub only for unrelated capability/queue assertions that ignore it.
+    """
     source = MagicMock()
     source.construction_queue = construction_queue if construction_queue is not None else []
     source.can_build_ships = can_build_ships
@@ -32,6 +40,8 @@ def _make_source(
     source.owner_entity = owner_entity if owner_entity is not None else MagicMock()
     source.display_name = "Test Location"
     source.build_rate = {"metals": 10.0}
+    source.owner_system_name = owner_system_name
+    source.owner_global_hex = owner_global_hex
     return source
 
 
@@ -109,101 +119,49 @@ class TestGetCapabilitiesText:
 
 
 class TestGetSystemName:
-    """Tests for get_system_name function."""
+    """Tests for get_system_name function (PROJ-472 1B: DTO scalar)."""
 
-    def test_planet_with_galaxy_lookup(self):
-        """Planet with galaxy lookup returns system name."""
-        entity = MagicMock()
-        entity.system_name = None
-        del entity.system_name  # Remove the attribute entirely
+    def test_planet_system_name_from_dto_scalar(self):
+        """Planet source returns the projected ``owner_system_name``."""
+        source = _make_source(context_type="planet", owner_system_name="Sol")
+        assert get_system_name(source) == "Sol"
 
-        system_obj = MagicMock()
-        system_obj.name = "Sol"
+    def test_fleet_system_name_from_dto_scalar(self):
+        """Fleet source returns the projected ``owner_system_name``."""
+        source = _make_source(context_type="fleet", owner_system_name="Proxima")
+        assert get_system_name(source) == "Proxima"
 
-        galaxy = MagicMock()
-        galaxy.get_system_of_planet.return_value = system_obj
-
-        source = _make_source(context_type="planet", owner_entity=entity)
-
-        result = get_system_name(source, galaxy=galaxy)
-        assert result == "Sol"
-
-    def test_fleet_with_location_returns_system_name(self):
-        """Fleet with location returns system name from galaxy lookup."""
-        entity = MagicMock()
-        entity.location = MagicMock()  # Some hex coordinate
-
-        system_obj = MagicMock()
-        system_obj.name = "Proxima"
-
-        galaxy = MagicMock()
-        galaxy.get_system_at_hex.return_value = system_obj
-
-        source = _make_source(context_type="fleet", owner_entity=entity)
-
-        result = get_system_name(source, galaxy=galaxy)
-        assert result == "Proxima"
-
-    def test_no_system_found_returns_dash(self):
-        """No system found returns '-'."""
-        entity = MagicMock()
-        del entity.system_name  # Remove any attribute
-
-        galaxy = MagicMock()
-        galaxy.get_system_of_planet.return_value = None
-
-        source = _make_source(context_type="planet", owner_entity=entity)
-
-        result = get_system_name(source, galaxy=galaxy)
-        assert result == "-"
-
-    def test_no_galaxy_returns_dash(self):
-        """No galaxy provided returns '-' if no system_name attr."""
-        entity = MagicMock()
-        del entity.system_name
-
-        source = _make_source(context_type="planet", owner_entity=entity)
-
-        result = get_system_name(source, galaxy=None)
-        assert result == "-"
+    def test_none_system_name_returns_dash(self):
+        """Unresolved system name (None) returns '-'."""
+        source = _make_source(context_type="planet", owner_system_name=None)
+        assert get_system_name(source) == "-"
 
 
 class TestGetSectorText:
-    """Tests for get_sector_text function."""
+    """Tests for get_sector_text function (PROJ-472 1B: DTO scalar)."""
 
-    def test_fleet_with_location(self):
-        """Fleet with location returns str(location)."""
-        entity = MagicMock()
-        entity.location = MagicMock()
-        entity.location.__str__ = lambda self: "(5, 10)"
+    def test_fleet_global_hex_from_dto_scalar(self):
+        """Fleet source returns str(owner_global_hex)."""
+        from game.core.hex_math import HexCoord
 
-        source = _make_source(context_type="fleet", owner_entity=entity)
+        source = _make_source(
+            context_type="fleet", owner_global_hex=HexCoord(5, 10)
+        )
+        assert get_sector_text(source) == str(HexCoord(5, 10))
 
-        result = get_sector_text(source)
-        assert result == "(5, 10)"
+    def test_planet_global_hex_from_dto_scalar(self):
+        """Planet source returns str(owner_global_hex)."""
+        from game.core.hex_math import HexCoord
 
-    def test_planet_with_location(self):
-        """Planet with location returns str(location)."""
-        entity = MagicMock()
-        entity.global_hex = None
-        entity.location = MagicMock()
-        entity.location.__str__ = lambda self: "(3, 7)"
+        source = _make_source(
+            context_type="planet", owner_global_hex=HexCoord(3, 7)
+        )
+        assert get_sector_text(source) == str(HexCoord(3, 7))
 
-        source = _make_source(context_type="planet", owner_entity=entity)
-
-        result = get_sector_text(source)
-        assert result == "(3, 7)"
-
-    def test_no_location_returns_dash(self):
-        """No location returns '-'."""
-        entity = MagicMock()
-        entity.location = None
-        entity.global_hex = None
-
-        source = _make_source(context_type="fleet", owner_entity=entity)
-
-        result = get_sector_text(source)
-        assert result == "-"
+    def test_no_global_hex_returns_dash(self):
+        """Unresolved global hex (None) returns '-'."""
+        source = _make_source(context_type="fleet", owner_global_hex=None)
+        assert get_sector_text(source) == "-"
 
 
 class TestGetTurnsLeftText:

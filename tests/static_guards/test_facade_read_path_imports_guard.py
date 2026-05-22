@@ -105,13 +105,11 @@ _IMPORT_ALLOWLIST: frozenset[tuple[str, str, str]] = frozenset({
     ('game/ui/screens/strategy_fleet_command_router.py', 'game.strategy.data.component_activation_state', 'ActivationPhase'),
 
     # --- CLUSTER: build-queue live-domain imports; PROJ-472 1B migrates (TEMPORARY) ---
-    ('game/ui/screens/build_queue_input_router.py', 'game.strategy.data.build_queue_source', 'BuildQueueSource'),  # PROJ-472 1B will migrate
-    ('game/ui/screens/build_queue_input_router.py', 'game.strategy.data.build_queue_source', 'collect_build_queues_at_hex'),  # PROJ-472 1B will migrate
-    ('game/ui/screens/build_queue_screen.py', 'game.strategy.data.build_queue_source', 'BuildQueueSource'),  # PROJ-472 1B will migrate
-    ('game/ui/screens/build_queue_screen.py', 'game.strategy.data.build_queue_source', 'collect_build_queues_at_hex'),  # PROJ-472 1B will migrate
-    ('game/ui/screens/empire_build_queue_window.py', 'game.strategy.data.build_queue_source', 'BuildQueueSource'),  # PROJ-472 1B will migrate
-    ('game/ui/screens/empire_build_queue_window.py', 'game.strategy.data.build_queue_source', 'collect_all_build_queues_for_empire'),  # PROJ-472 1B will migrate
-    ('game/ui/screens/strategy_detail_formatter.py', 'game.strategy.data.build_queue_source', 'colony_has_planetary_yard'),  # PROJ-472 1B/1C will migrate
+    # PROJ-472 1B (2026-05-21): build_queue_input_router, build_queue_screen, and
+    # empire_build_queue_window migrated onto facade.empires.(hex_)build_queues +
+    # the enriched BuildQueueSourceDTO; their CLUSTER entries are removed so the
+    # guard now enforces the boundary for those files.
+    ('game/ui/screens/strategy_detail_formatter.py', 'game.strategy.data.build_queue_source', 'colony_has_planetary_yard'),  # PROJ-472 1C will migrate (session-consumer; not a 1B file)
 
     # --- FLEETCAP: FleetCapabilityCalculator late-imports; deferred to PROJ-475 ---
     ('game/ui/screens/fleet_data_source.py', 'game.strategy.data.fleet_capability_calculator', 'FleetCapabilityCalculator'),

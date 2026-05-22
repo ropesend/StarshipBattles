@@ -16,7 +16,7 @@ from game.ui.screens.empire_build_queue_formatter import (
 if TYPE_CHECKING:
     from game.ui.screens.empire_build_queue_viewmodel import EmpireBuildQueueViewModel
     from game.ui.screens.empire_build_queue_filter_manager import BuildQueueFilterManager
-    from game.strategy.data.build_queue_source import BuildQueueSource
+    from game.strategy.facade.dto import BuildQueueSourceDTO as BuildQueueSource
 
 
 class BuildQueueDataSource(ITableDataSource):
@@ -24,25 +24,26 @@ class BuildQueueDataSource(ITableDataSource):
 
     Wraps EmpireBuildQueueViewModel and provides cell values and column config.
     Delegates most value extraction to the viewmodel's get_column_value method,
-    with special handling for system and sector columns that need galaxy reference.
+    with special handling for system and sector columns.
+
+    PROJ-472 Phase 1B: system/sector values come from the
+    ``BuildQueueSourceDTO`` projected scalars, so this data source no longer
+    needs a live galaxy reference.
     """
 
     def __init__(
         self,
         viewmodel: "EmpireBuildQueueViewModel",
         filter_mgr: "BuildQueueFilterManager",
-        galaxy,
     ) -> None:
-        """Initialize with viewmodel, filter manager, and galaxy.
+        """Initialize with viewmodel and filter manager.
 
         Args:
             viewmodel: EmpireBuildQueueViewModel for filtered source access.
             filter_mgr: BuildQueueFilterManager for column definitions.
-            galaxy: Galaxy instance for system name lookups.
         """
         self._viewmodel = viewmodel
         self._filter_mgr = filter_mgr
-        self._galaxy = galaxy
 
     def get_row_count(self) -> int:
         """Return number of filtered sources.
@@ -93,19 +94,19 @@ class BuildQueueDataSource(ITableDataSource):
     def _get_column_value(self, source: "BuildQueueSource", col_id: str) -> str:
         """Get display value for a column.
 
-        Handles system and sector columns specially (need galaxy reference),
-        delegates all others to viewmodel.get_column_value().
+        Handles system and sector columns from the DTO's projected owner
+        scalars, delegates all others to viewmodel.get_column_value().
 
         Args:
-            source: Build queue source.
+            source: Build queue source DTO.
             col_id: Column identifier.
 
         Returns:
             String value to display.
         """
-        # System and sector need galaxy reference
+        # System and sector read the DTO's projected owner scalars.
         if col_id == "system":
-            return get_system_name(source, self._galaxy)
+            return get_system_name(source)
 
         if col_id == "sector":
             return get_sector_text(source)

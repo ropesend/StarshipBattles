@@ -137,6 +137,13 @@ class TestBuildQueueScreenHotkeys:
         screen.active_queue_source = MagicMock()
         screen.build_context = MagicMock()
         screen.facade = MagicMock()  # instance attr; not on the BuildQueueScreen spec
+        # PROJ-472 Phase 1B: remove/add/pause dispatch now re-projects build-queue
+        # DTOs from the facade, which reads hex_coord / empire and re-binds
+        # active_queue_source by queue_id. Provide instance attrs (not on the
+        # BuildQueueScreen spec) so _resync_sources_from_facade can run.
+        screen.hex_coord = MagicMock()
+        screen.empire = MagicMock()
+        screen.facade.empires.hex_build_queues.return_value = []
         router = BuildQueueInputRouter(screen)
         # Mock the internal router methods that _handle_keydown dispatches to.
         router._request_close = MagicMock()

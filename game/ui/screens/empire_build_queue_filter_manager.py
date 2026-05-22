@@ -15,7 +15,7 @@ from game.ui.filters.filter_state import FilterState
 from game.ui.filters.filter_state_manager import FilterStateManager
 
 if TYPE_CHECKING:
-    from game.strategy.data.build_queue_source import BuildQueueSource
+    from game.strategy.facade.dto import BuildQueueSourceDTO as BuildQueueSource
 
 
 # Columns that should use numeric sorting (parse to float)

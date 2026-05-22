@@ -20,7 +20,7 @@ from game.ui.screens.empire_build_queue_filter_manager import (
 
 @pytest.fixture
 def mock_source():
-    """Create a mock BuildQueueSource."""
+    """Create a mock BuildQueueSourceDTO (PROJ-472 1B)."""
     source = Mock()
     source.display_name = "Alpha Station"
     source.context_type = "planet"
@@ -31,16 +31,15 @@ def mock_source():
         {"name": "Factory", "type": "complex"},
     ]
     source.build_rate = {"metals": 100, "organics": 50}
-    source.owner_entity = Mock()
-    source.owner_entity.location = (2, 3)
-    # Ensure system_name is None so get_system_name uses galaxy lookup
-    source.owner_entity.system_name = None
+    # PROJ-472 1B: system/sector come from projected DTO scalars.
+    source.owner_system_name = "Sol System"
+    source.owner_global_hex = (2, 3)
     return source
 
 
 @pytest.fixture
 def mock_source_fleet():
-    """Create a mock BuildQueueSource for a fleet."""
+    """Create a mock BuildQueueSourceDTO for a fleet (PROJ-472 1B)."""
     source = Mock()
     source.display_name = "Fleet Yard Alpha"
     source.context_type = "fleet"
@@ -48,8 +47,8 @@ def mock_source_fleet():
     source.can_build_complexes = False
     source.construction_queue = []
     source.build_rate = {"metals": 50}
-    source.owner_entity = Mock()
-    source.owner_entity.location = (5, 6)
+    source.owner_system_name = "Sol System"
+    source.owner_global_hex = (5, 6)
     return source
 
 
@@ -96,45 +95,29 @@ def mock_viewmodel(mock_source, mock_source_fleet):
 
 
 @pytest.fixture
-def mock_galaxy():
-    """Create a mock Galaxy."""
-    galaxy = Mock()
-    system = Mock()
-    system.name = "Sol System"
-    galaxy.get_system_of_planet = Mock(return_value=system)
-    galaxy.get_system_at_hex = Mock(return_value=system)
-    return galaxy
-
-
-@pytest.fixture
 def filter_manager():
     """Create a BuildQueueFilterManager."""
     return BuildQueueFilterManager()
 
 
 @pytest.fixture
-def data_source(mock_viewmodel, filter_manager, mock_galaxy):
-    """Create a BuildQueueDataSource."""
-    return BuildQueueDataSource(mock_viewmodel, filter_manager, mock_galaxy)
+def data_source(mock_viewmodel, filter_manager):
+    """Create a BuildQueueDataSource (PROJ-472 1B: no galaxy)."""
+    return BuildQueueDataSource(mock_viewmodel, filter_manager)
 
 
 class TestBuildQueueDataSourceInit:
     """Tests for BuildQueueDataSource initialization."""
 
-    def test_init_stores_viewmodel(self, mock_viewmodel, filter_manager, mock_galaxy):
+    def test_init_stores_viewmodel(self, mock_viewmodel, filter_manager):
         """DataSource stores viewmodel reference."""
-        ds = BuildQueueDataSource(mock_viewmodel, filter_manager, mock_galaxy)
+        ds = BuildQueueDataSource(mock_viewmodel, filter_manager)
         assert ds._viewmodel is mock_viewmodel
 
-    def test_init_stores_filter_manager(self, mock_viewmodel, filter_manager, mock_galaxy):
+    def test_init_stores_filter_manager(self, mock_viewmodel, filter_manager):
         """DataSource stores filter manager reference."""
-        ds = BuildQueueDataSource(mock_viewmodel, filter_manager, mock_galaxy)
+        ds = BuildQueueDataSource(mock_viewmodel, filter_manager)
         assert ds._filter_mgr is filter_manager
-
-    def test_init_stores_galaxy(self, mock_viewmodel, filter_manager, mock_galaxy):
-        """DataSource stores galaxy reference."""
-        ds = BuildQueueDataSource(mock_viewmodel, filter_manager, mock_galaxy)
-        assert ds._galaxy is mock_galaxy
 
 
 class TestBuildQueueDataSourceRowCount:
@@ -144,10 +127,10 @@ class TestBuildQueueDataSourceRowCount:
         """get_row_count returns len(viewmodel.filtered_sources)."""
         assert data_source.get_row_count() == 2
 
-    def test_get_row_count_zero_when_empty(self, mock_viewmodel, filter_manager, mock_galaxy):
+    def test_get_row_count_zero_when_empty(self, mock_viewmodel, filter_manager):
         """get_row_count returns 0 when no sources."""
         mock_viewmodel.filtered_sources = []
-        ds = BuildQueueDataSource(mock_viewmodel, filter_manager, mock_galaxy)
+        ds = BuildQueueDataSource(mock_viewmodel, filter_manager)
         assert ds.get_row_count() == 0
 
 
@@ -267,19 +250,17 @@ class TestBuildQueueDataSourceGetSourceAtIndex:
 
 
 class TestBuildQueueDataSourceSystemName:
-    """Tests for system name lookup."""
+    """Tests for system name lookup (PROJ-472 1B: DTO scalar)."""
 
-    def test_system_name_for_planet(self, data_source, mock_galaxy):
-        """System name lookup works for planets."""
+    def test_system_name_for_planet(self, data_source):
+        """System column reads the projected ``owner_system_name`` scalar."""
         value = data_source.get_cell_value(0, "system")
         assert value == "Sol System"
-        mock_galaxy.get_system_of_planet.assert_called()
 
-    def test_system_name_for_fleet(self, data_source, mock_galaxy):
-        """System name lookup for fleets returns appropriate value."""
-        # For fleets, the behavior depends on get_system_name implementation
+    def test_system_name_for_fleet(self, data_source):
+        """System column reads the projected scalar for fleets too."""
         value = data_source.get_cell_value(1, "system")
-        assert isinstance(value, str)
+        assert value == "Sol System"
 
 
 class TestBuildQueueDataSourceSectorText:

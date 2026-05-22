@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     import pygame_gui
-    from game.strategy.data.build_queue_source import BuildQueueSource
+    from game.strategy.facade.dto import BuildQueueSourceDTO as BuildQueueSource
 
 
 class BuildQueueSelector:

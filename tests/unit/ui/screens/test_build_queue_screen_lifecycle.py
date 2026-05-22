@@ -47,6 +47,23 @@ class _MockGalaxy:
     def get_fleets_at_hex(self, hex_coord):
         return self._fleets_at_hex.get(hex_coord, [])
 
+    # PROJ-472 Phase 1B: the EmpireSlice projection resolves owner scalars
+    # against the galaxy. These minimal stubs return None so the projected
+    # ``owner_global_hex`` / ``owner_system_name`` are None for these tests
+    # (which assert queue-source counts/identity, not the owner scalars).
+    def get_system_of_planet(self, planet):
+        return None
+
+    def get_system_at_location(self, hex_coord):
+        return None
+
+    def get_planet_by_id(self, planet_id):
+        for planets in self._global_hex_planets.values():
+            for planet in planets:
+                if getattr(planet, "id", None) == planet_id:
+                    return planet
+        return None
+
 
 class _MockSession:
     """Doubles as both a session and a facade for these lifecycle tests
@@ -95,6 +112,61 @@ class _MockSession:
             def resolve_config(self):
                 return getattr(self._parent, "economy_config", None)
         return _EconomyNS(self)
+
+    # PROJ-472 Phase 1B: build-queue UI now reads through
+    # ``facade.empires.(hex_)build_queues`` (BuildQueueSourceDTO) and
+    # ``facade.fleets.get``. Expose those grouped namespaces on the mock by
+    # delegating to the production EmpireSlice / FleetSlice projection over
+    # this mock's galaxy/empire/registries.
+    def _empire_by_id(self, empire_id):
+        for emp in (self.current_empire, getattr(self, "active_empire", None)):
+            if emp is not None and getattr(emp, "id", None) == empire_id:
+                return emp
+        # Multi-empire lifecycle tests rebind ``screen.empire`` to an empire
+        # the session was not constructed with; synthesise a matching-id stub
+        # so the collector filters by the requested empire id (it reads only
+        # ``empire.id`` and ``empire.fleets``).
+        from types import SimpleNamespace
+        return SimpleNamespace(id=empire_id, fleets=[], colonies=[])
+
+    def get_empire_by_id(self, empire_id):
+        return self._empire_by_id(empire_id)
+
+    def _get_fleet_by_id(self, fleet_id):
+        for fleet in getattr(self.current_empire, "fleets", []) or []:
+            if getattr(fleet, "id", None) == fleet_id:
+                return fleet
+        return None
+
+    @property
+    def session(self):
+        # The EmpireSlice/FleetSlice projection reads ``state.session.*``.
+        return self
+
+    @property
+    def empires(self):
+        from game.strategy.facade.slices.empire_slice import EmpireSlice
+        slice_ = EmpireSlice(self)
+
+        class _EmpireNS:
+            def build_queues(_self, empire_id):
+                return slice_.get_empire_build_queues(empire_id)
+
+            def hex_build_queues(_self, empire_id, hex_coord):
+                return slice_.get_hex_build_queues(empire_id, hex_coord)
+
+        return _EmpireNS()
+
+    @property
+    def fleets(self):
+        from game.strategy.facade.slices.fleet_slice import FleetSlice
+        slice_ = FleetSlice(self)
+
+        class _FleetNS:
+            def get(_self, fleet_id):
+                return slice_.get_fleet(fleet_id)
+
+        return _FleetNS()
 
     @property
     def session_meta(self):

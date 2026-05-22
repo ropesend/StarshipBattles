@@ -243,17 +243,28 @@ class TestHandleFleetBuildQueueClose:
     PROJ-207 Phase 4: Tests now verify command dispatch instead of direct fleet manipulation.
     """
 
+    @staticmethod
+    def _fleet_info(fleet_id, *, queue_size, orders):
+        """Build a FleetInfo-shaped stub for the facade fleet query.
+
+        PROJ-472 1B: the manager reads BUILD-order state via
+        ``facade.fleets.get(fleet_id)`` → ``FleetInfo`` (orders is a tuple of
+        ``FleetOrderInfo`` with a string ``order_type``), not a live fleet.
+        """
+        info = MagicMock()
+        info.construction_queue_size = queue_size
+        info.orders = tuple(orders)
+        return info
+
     def test_dispatches_build_command_when_queue_has_items(self):
         """Should dispatch IssueBuildOrderCommand when construction queue is not empty."""
         from game.strategy.engine.commands import IssueBuildOrderCommand
         manager, screen = _make_build_queue_manager()
 
-        fleet = MagicMock()
-        fleet.id = 42
-        fleet.construction_queue = [MagicMock()]  # Non-empty queue
-        fleet.orders = []
+        info = self._fleet_info(42, queue_size=1, orders=[])
+        screen.facade.fleets.get = MagicMock(return_value=info)
 
-        manager._handle_fleet_build_queue_close(fleet)
+        manager._handle_fleet_build_queue_close(42)
 
         # Should have dispatched IssueBuildOrderCommand
         screen.facade.handle_command.assert_called_once()
@@ -266,14 +277,12 @@ class TestHandleFleetBuildQueueClose:
         from game.strategy.data.order_types import OrderType
         manager, screen = _make_build_queue_manager()
 
-        fleet = MagicMock()
-        fleet.id = 42
-        fleet.construction_queue = [MagicMock()]
-        existing_build_order = MagicMock()
-        existing_build_order.type = OrderType.BUILD
-        fleet.orders = [existing_build_order]
+        build_order = MagicMock()
+        build_order.order_type = OrderType.BUILD.name
+        info = self._fleet_info(42, queue_size=1, orders=[build_order])
+        screen.facade.fleets.get = MagicMock(return_value=info)
 
-        manager._handle_fleet_build_queue_close(fleet)
+        manager._handle_fleet_build_queue_close(42)
 
         # Should NOT dispatch command
         screen.facade.handle_command.assert_not_called()
@@ -283,12 +292,10 @@ class TestHandleFleetBuildQueueClose:
         from game.strategy.engine.commands import RemoveBuildOrderCommand
         manager, screen = _make_build_queue_manager()
 
-        fleet = MagicMock()
-        fleet.id = 99
-        fleet.construction_queue = []  # Empty queue
-        fleet.orders = []
+        info = self._fleet_info(99, queue_size=0, orders=[])
+        screen.facade.fleets.get = MagicMock(return_value=info)
 
-        manager._handle_fleet_build_queue_close(fleet)
+        manager._handle_fleet_build_queue_close(99)
 
         # Should have dispatched RemoveBuildOrderCommand
         screen.facade.handle_command.assert_called_once()
@@ -361,18 +368,28 @@ class TestOnFleetBuildClick:
 class TestOnNavigateToHexBuild:
     """Test on_navigate_to_hex_build() method."""
 
+    @staticmethod
+    def _planet_source(planet_id=7, display_name="Test Planet"):
+        """A BuildQueueSourceDTO-shaped planet source (PROJ-472 1B)."""
+        src = MagicMock()
+        src.context_type = "planet"
+        src.entity_id = planet_id
+        src.planet_id = planet_id
+        src.display_name = display_name
+        return src
+
     def test_reopens_when_build_queue_already_constructed(self):
         """PROJ-376 Phase 2: navigate reuses the cached instance via open_for_yard."""
         manager, screen = _make_build_queue_manager()
         screen._get_object_asset = MagicMock(return_value=None)
+        # PROJ-472 1B: the live yard is resolved by id from the galaxy.
+        screen.galaxy.get_planet_by_id = MagicMock(return_value=MagicMock())
 
         cached_screen = MagicMock()
         screen.build_queue_screen = cached_screen
 
         mock_hex = MagicMock()
-        mock_source = MagicMock()
-        mock_source.owner_entity = MagicMock()
-        mock_source.display_name = "Test"
+        mock_source = self._planet_source(display_name="Test")
 
         with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
              patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'), \
@@ -383,13 +400,13 @@ class TestOnNavigateToHexBuild:
         cached_screen.open_for_yard.assert_called_once()
         screen.ui.hide_ui.assert_called_once()
 
-    def test_ignores_source_with_no_entity(self):
-        """Should do nothing if source has no owner_entity."""
+    def test_ignores_source_when_live_yard_unresolved(self):
+        """PROJ-472 1B: do nothing if the live yard cannot be resolved by id."""
         manager, screen = _make_build_queue_manager()
+        screen.galaxy.get_planet_by_id = MagicMock(return_value=None)
 
         mock_hex = MagicMock()
-        mock_source = MagicMock()
-        mock_source.owner_entity = None
+        mock_source = self._planet_source()
 
         manager.on_navigate_to_hex_build(mock_hex, mock_source)
 
@@ -399,11 +416,10 @@ class TestOnNavigateToHexBuild:
         """Should open build queue for valid hex and source."""
         manager, screen = _make_build_queue_manager()
         screen._get_object_asset = MagicMock(return_value=None)
+        screen.galaxy.get_planet_by_id = MagicMock(return_value=MagicMock())
 
         mock_hex = MagicMock()
-        mock_source = MagicMock()
-        mock_source.owner_entity = MagicMock()
-        mock_source.display_name = "Test Planet"
+        mock_source = self._planet_source(display_name="Test Planet")
 
         with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
              patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'):

@@ -14,6 +14,7 @@ import pytest
 from unittest.mock import MagicMock, call
 from game.ui.panels.build_queue_controller import BuildQueueController
 from game.strategy.data.build_queue_source import BuildQueueSource
+from game.strategy.facade.dto import BuildQueueSourceDTO
 from typing import Optional
 
 
@@ -121,9 +122,17 @@ def controller(mock_dependencies):
 
 @pytest.fixture
 def queue_sources(mock_dependencies):
-    """Create test BuildQueueSource instances.
+    """Create test build queue sources as ``BuildQueueSourceDTO`` instances.
 
     PROJ-208: Set up owner_entity with IDs and register in entity_registry.
+    PROJ-472 Phase 1B: the controller now consumes immutable
+    ``BuildQueueSourceDTO`` projections (not live domain ``BuildQueueSource``
+    objects), so this fixture projects each domain source through
+    ``from_domain`` — exactly as ``EmpireSlice`` does in production. The DTO
+    holds a *detached copy* of the queue, so callback-driven mutations land on
+    the live domain queues (resolved via ``entity_registry``), NOT the DTO
+    snapshot. Tests assert against the live backing queues exposed on
+    ``mock_dependencies["backing_queues"]``.
     """
     base_queue = []
     shipyard_queue = []
@@ -132,11 +141,13 @@ def queue_sources(mock_dependencies):
     # Create owner entities with IDs
     planet_entity = MagicMock()
     planet_entity.id = 10
+    planet_entity.owner_id = 1
     planet_entity.construction_queue = base_queue
     planet_entity.facilities = []
 
     fleet_entity = MagicMock()
     fleet_entity.id = 20
+    fleet_entity.owner_id = 1
     fleet_entity.construction_queue = fleet_queue
     fleet_entity.facilities = []
 
@@ -183,90 +194,108 @@ def queue_sources(mock_dependencies):
         context_type="fleet",
     )
 
-    return base_source, shipyard_source, fleet_source
+    # Expose the live backing queues for assertions; the callback mutates these.
+    mock_dependencies["backing_queues"] = {
+        "base": base_queue,
+        "shipyard": shipyard_queue,
+        "fleet": fleet_queue,
+    }
+
+    # Project to DTOs — what the controller actually receives in production.
+    return (
+        BuildQueueSourceDTO.from_domain(base_source),
+        BuildQueueSourceDTO.from_domain(shipyard_source),
+        BuildQueueSourceDTO.from_domain(fleet_source),
+    )
 
 
 # --- Single-queue add tests ---
 
-def test_add_to_single_queue_source_with_index(controller, queue_sources):
+def test_add_to_single_queue_source_with_index(controller, mock_dependencies, queue_sources):
     """Test inserting at a specific position in the queue."""
     _, shipyard_source, _ = queue_sources
     controller.set_active_queue(shipyard_source)
+    shipyard_queue = mock_dependencies["backing_queues"]["shipyard"]
 
     # Add two items, then insert at position 0
     controller.add_to_queue("frigate_mk1", turns=3, category="ship")
     controller.add_to_queue("cruiser_mk1", turns=5, category="ship")
     controller.add_to_queue("destroyer_mk1", turns=2, category="ship", index=0)
 
-    assert shipyard_source.construction_queue[0]["design_id"] == "destroyer_mk1"
-    assert len(shipyard_source.construction_queue) == 3
+    assert shipyard_queue[0]["design_id"] == "destroyer_mk1"
+    assert len(shipyard_queue) == 3
 
 
-def test_add_to_single_queue_source(controller, queue_sources):
+def test_add_to_single_queue_source(controller, mock_dependencies, queue_sources):
     """Test adding to a single active queue source."""
     base_source, shipyard_source, _ = queue_sources
     controller.set_active_queue(shipyard_source)
+    shipyard_queue = mock_dependencies["backing_queues"]["shipyard"]
 
     controller.add_to_queue("frigate_mk1", turns=3, category="ship")
 
-    assert len(shipyard_source.construction_queue) == 1
-    assert shipyard_source.construction_queue[0]["design_id"] == "frigate_mk1"
+    assert len(shipyard_queue) == 1
+    assert shipyard_queue[0]["design_id"] == "frigate_mk1"
     # PROJ-208: Handler uses default 1.0 turns
-    assert shipyard_source.construction_queue[0]["turns_remaining"] == 1.0
+    assert shipyard_queue[0]["turns_remaining"] == 1.0
 
 
-def test_add_to_single_queue_source_complex(controller, queue_sources):
+def test_add_to_single_queue_source_complex(controller, mock_dependencies, queue_sources):
     """Test adding a complex to a base queue source."""
     base_source, _, _ = queue_sources
     controller.set_active_queue(base_source)
+    base_queue = mock_dependencies["backing_queues"]["base"]
 
     controller.add_to_queue("mining_complex_mk1", turns=5, category="complex")
 
-    assert len(base_source.construction_queue) == 1
-    assert base_source.construction_queue[0]["design_id"] == "mining_complex_mk1"
+    assert len(base_queue) == 1
+    assert base_queue[0]["design_id"] == "mining_complex_mk1"
 
 
 # --- Multi-queue add tests ---
 
-def test_add_to_multiple_queue_sources(controller, queue_sources):
+def test_add_to_multiple_queue_sources(controller, mock_dependencies, queue_sources):
     """Test adding to all selected queue sources in multi-select mode."""
     _, shipyard_source, fleet_source = queue_sources
     controller.set_selected_queues([shipyard_source, fleet_source])
+    backing = mock_dependencies["backing_queues"]
 
     controller.add_to_queue("frigate_mk1", turns=3, category="ship")
 
     # Both queues should have the item
-    assert len(shipyard_source.construction_queue) == 1
-    assert len(fleet_source.construction_queue) == 1
-    assert shipyard_source.construction_queue[0]["design_id"] == "frigate_mk1"
-    assert fleet_source.construction_queue[0]["design_id"] == "frigate_mk1"
+    assert len(backing["shipyard"]) == 1
+    assert len(backing["fleet"]) == 1
+    assert backing["shipyard"][0]["design_id"] == "frigate_mk1"
+    assert backing["fleet"][0]["design_id"] == "frigate_mk1"
 
 
-def test_multi_queue_add_skips_incompatible_queues(controller, queue_sources):
+def test_multi_queue_add_skips_incompatible_queues(controller, mock_dependencies, queue_sources):
     """Test that multi-queue add skips queues that can't build the selected type."""
     base_source, shipyard_source, _ = queue_sources
     # Base queue can't build ships
     controller.set_selected_queues([base_source, shipyard_source])
+    backing = mock_dependencies["backing_queues"]
 
     controller.add_to_queue("frigate_mk1", turns=3, category="ship")
 
     # Base queue should be skipped (can_build_ships=False)
-    assert len(base_source.construction_queue) == 0
+    assert len(backing["base"]) == 0
     # Shipyard should receive the item
-    assert len(shipyard_source.construction_queue) == 1
+    assert len(backing["shipyard"]) == 1
 
 
-def test_multi_queue_add_complexes_to_all(controller, queue_sources):
+def test_multi_queue_add_complexes_to_all(controller, mock_dependencies, queue_sources):
     """Test that all queues can receive complexes when they support it."""
     base_source, shipyard_source, fleet_source = queue_sources
     controller.set_selected_queues([base_source, shipyard_source, fleet_source])
+    backing = mock_dependencies["backing_queues"]
 
     controller.add_to_queue("mining_complex_mk1", turns=5, category="complex")
 
     # All sources can build complexes
-    assert len(base_source.construction_queue) == 1
-    assert len(shipyard_source.construction_queue) == 1
-    assert len(fleet_source.construction_queue) == 1
+    assert len(backing["base"]) == 1
+    assert len(backing["shipyard"]) == 1
+    assert len(backing["fleet"]) == 1
 
 
 def test_multi_queue_add_triggers_callback(controller, mock_dependencies, queue_sources):

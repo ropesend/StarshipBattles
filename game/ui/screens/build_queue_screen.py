@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 from game.ui.panels.build_queue_portraits import BuildQueuePortraitLoader
 from game.ui.panels.build_queue_drag_handler import BuildQueueDragHandler
 from game.ui.panels.build_queue_controller import BuildQueueController
-from game.strategy.data.build_queue_source import BuildQueueSource, collect_build_queues_at_hex
 from game.ui.screens.build_queue_helpers import format_empire_resources
 from game.ui.screens.build_queue_input_router import BuildQueueInputRouter
 from game.ui.screens.build_queue_panel_factory import BuildQueuePanelFactory
@@ -32,6 +31,7 @@ if TYPE_CHECKING:
     from game.core.hex_math import HexCoord
     from game.strategy.data.galaxy import Galaxy
     from game.strategy.data.empire import Empire
+    from game.strategy.facade.dto import BuildQueueSourceDTO as BuildQueueSource
     from game.strategy.systems.design_catalog import DesignCatalog
     from game.ui.services.design_loader_adapter import DesignLoaderAdapter
 
@@ -211,9 +211,8 @@ class BuildQueueScreen:
         factory = BuildQueuePanelFactory(
             manager=self.manager,
             build_context=yard,
-            queue_sources=collect_build_queues_at_hex(
-                hex_coord, self.galaxy, self.empire,
-                registries=self.facade.session_meta.registries(),
+            queue_sources=self.facade.empires.hex_build_queues(
+                self.empire.id, hex_coord
             ),
             portrait_loader=self.portrait_loader,
             on_queue_selection_changed=self._input_router._on_queue_selection_changed,
@@ -330,9 +329,8 @@ class BuildQueueScreen:
         self.hex_coord = hex_coord
         if portrait_surface is not None:
             self.portrait_surface = portrait_surface
-        self.queue_sources = collect_build_queues_at_hex(
-            hex_coord, self.galaxy, self.empire,
-            registries=self.facade.session_meta.registries(),
+        self.queue_sources = self.facade.empires.hex_build_queues(
+            self.empire.id, hex_coord
         )
         self.selected_queue_indices = {0} if self.queue_sources else set()
         self.active_queue_source = (

@@ -21,7 +21,7 @@ from game.ui.screens.empire_build_queue_formatter import (
 )
 
 if TYPE_CHECKING:
-    from game.strategy.data.build_queue_source import BuildQueueSource
+    from game.strategy.facade.dto import BuildQueueSourceDTO as BuildQueueSource
     from game.ui.screens.builder.event_bus import WorkshopEventBus
 
 

@@ -87,6 +87,28 @@ class MockSession:
                 return self._parent.get_registries() if hasattr(self._parent, "get_registries") else self._parent.registries
         return _SessionMetaNS(self)
 
+    # PROJ-472 Phase 1B: expose ``empires.hex_build_queues`` so BuildQueueScreen
+    # resolves build-queue *DTOs* off the mock, mirroring
+    # ``FacadeEmpireQueries.hex_build_queues`` (projects domain sources through
+    # ``BuildQueueSourceDTO.from_domain``).
+    @property
+    def empires(self):
+        from game.strategy.data.build_queue_source import collect_build_queues_at_hex
+        from game.strategy.facade.dto import BuildQueueSourceDTO
+
+        class _EmpiresNS:
+            def __init__(self, parent):
+                self._parent = parent
+            def hex_build_queues(self, empire_id, hex_coord):
+                sources = collect_build_queues_at_hex(
+                    hex_coord,
+                    self._parent.galaxy,
+                    self._parent.current_empire,
+                    registries=self._parent.get_registries(),
+                )
+                return [BuildQueueSourceDTO.from_domain(s) for s in sources]
+        return _EmpiresNS(self)
+
     def handle_command(self, cmd):
         """Mock command handler."""
         from game.core.validation import ValidationResult

@@ -30,13 +30,10 @@ import pygame
 import pygame_gui
 
 from game.core.input_actions import InputAction
-from game.strategy.data.build_queue_source import (
-    BuildQueueSource,
-    collect_build_queues_at_hex,
-)
 from game.ui.screens.planet_selection_window import PlanetSelectionWindow
 
 if TYPE_CHECKING:
+    from game.strategy.facade.dto import BuildQueueSourceDTO as BuildQueueSource
     from game.ui.screens.build_queue_screen import BuildQueueScreen
 
 
@@ -110,6 +107,9 @@ class BuildQueueInputRouter:
         )
         # PROJ-382 Phase 1: facade is required; no session fallback.
         self._screen.facade.handle_command(cmd)
+        # PROJ-472 Phase 1B: the command mutated the domain queue; re-project
+        # so the active source's snapshot reflects the new item.
+        self._resync_sources_from_facade()
 
     def _dispatch_remove_from_queue_command(self, item_index: int) -> None:
         """Dispatch RemoveFromConstructionQueueCommand through command pipeline."""
@@ -119,20 +119,27 @@ class BuildQueueInputRouter:
         )
 
         s = self._screen
-        # Determine entity from active queue source
+        # Determine entity from active queue source.
+        # PROJ-472 Phase 1B: the active queue source is a
+        # ``BuildQueueSourceDTO`` — read its ``context_type`` / ``entity_id``
+        # scalars rather than a live ``owner_entity``. The no-source fallback
+        # still uses the live ``build_context`` yard (not a BuildQueueSource).
         source = s.active_queue_source
         if source is None:
-            # Fallback to build_context
             entity = s.build_context
+            entity_type = (
+                BuildEntityType.PLANET if hasattr(entity, 'planet_type')
+                else BuildEntityType.FLEET
+            )
+            entity_id = getattr(entity, 'id', 0)
+            queue_id = None
         else:
-            entity = source.owner_entity
-
-        entity_type = (
-            BuildEntityType.PLANET if hasattr(entity, 'planet_type')
-            else BuildEntityType.FLEET
-        )
-        entity_id = getattr(entity, 'id', 0)
-        queue_id = getattr(source, 'queue_id', None) if source is not None else None
+            entity_type = (
+                BuildEntityType.PLANET if source.context_type == "planet"
+                else BuildEntityType.FLEET
+            )
+            entity_id = source.entity_id
+            queue_id = source.queue_id
 
         cmd = RemoveFromConstructionQueueCommand(
             entity_id=entity_id,
@@ -142,6 +149,9 @@ class BuildQueueInputRouter:
         )
         # PROJ-382 Phase 1: facade is required; no session fallback.
         s.facade.handle_command(cmd)
+        # PROJ-472 Phase 1B: re-project so the active source's snapshot drops
+        # the removed item.
+        self._resync_sources_from_facade()
 
     def _dispatch_toggle_pause_command(self) -> None:
         """FEAT-17 — flip the active queue source's paused flag.
@@ -161,12 +171,12 @@ class BuildQueueInputRouter:
             logger.warning("Pause toggle ignored — no active queue source")
             return
 
-        entity = source.owner_entity
+        # PROJ-472 Phase 1B: derive entity type / id from the DTO scalars.
         entity_type = (
-            BuildEntityType.PLANET if hasattr(entity, 'planet_type')
+            BuildEntityType.PLANET if source.context_type == "planet"
             else BuildEntityType.FLEET
         )
-        entity_id = getattr(entity, 'id', 0)
+        entity_id = source.entity_id
 
         cmd = SetBuildQueuePausedCommand(
             entity_id=entity_id,
@@ -177,20 +187,9 @@ class BuildQueueInputRouter:
         # PROJ-382 Phase 1: facade is required; no session fallback.
         s.facade.handle_command(cmd)
 
-        # Re-collect sources so the active source's `is_paused` reflects the
-        # new state, then refresh the button label + queue display.
-        # PROJ-382 Phase 1: registries pulled through facade rather than session.
-        s.queue_sources = collect_build_queues_at_hex(
-            s.hex_coord, s.galaxy, s.empire,
-            registries=s.facade.session_meta.registries(),
-        )
-        # Re-bind the active source by queue_id (same reference may not exist
-        # after re-collection — match by identifier).
-        for candidate in s.queue_sources:
-            if candidate.queue_id == source.queue_id:
-                s.active_queue_source = candidate
-                s.controller.set_active_queue(candidate)
-                break
+        # PROJ-472 Phase 1B: re-project + re-bind the active source so its
+        # ``is_paused`` reflects the new state, then refresh the display.
+        self._resync_sources_from_facade()
         self._refresh_queue_display()
 
     # -----------------------------------------------------------------------
@@ -209,8 +208,42 @@ class BuildQueueInputRouter:
                 roles_list, getattr(s.controller, 'selected_role', 'Any'),
             )
 
+    def _resync_sources_from_facade(self) -> None:
+        """Re-project ``queue_sources`` (and re-bind the active source) from the facade.
+
+        PROJ-472 Phase 1B: ``BuildQueueSourceDTO`` is an immutable *snapshot*
+        taken at projection time; its ``construction_queue`` is a detached
+        copy. After a command mutates the domain queue, the held DTO is stale.
+        Re-querying the facade rebuilds the DTOs from current domain state so
+        the queue display reflects adds / removes / pauses. The active source
+        is re-bound by ``queue_id`` (DTO identity changes across re-projection).
+        """
+        s = self._screen
+        if s.facade is None or s.hex_coord is None:
+            return
+        active_queue_id = (
+            s.active_queue_source.queue_id
+            if s.active_queue_source is not None
+            else None
+        )
+        s.queue_sources = s.facade.empires.hex_build_queues(
+            s.empire.id, s.hex_coord
+        )
+        if active_queue_id is not None:
+            for candidate in s.queue_sources:
+                if candidate.queue_id == active_queue_id:
+                    s.active_queue_source = candidate
+                    s.controller.set_active_queue(candidate)
+                    break
+
     def _refresh_queue_display(self) -> None:
-        """Refresh the build queue display via VirtualTable."""
+        """Refresh the build queue display via VirtualTable.
+
+        Reads the active source's queue snapshot. Callers that mutate the
+        domain queue (add / remove / pause commands) MUST call
+        ``_resync_sources_from_facade`` first so the snapshot is current —
+        the DTO held here is immutable and does not auto-update.
+        """
         s = self._screen
         is_multi = len(s.selected_queue_indices) > 1
         queue = self._get_active_queue() if not is_multi else []
