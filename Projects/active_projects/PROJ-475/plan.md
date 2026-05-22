@@ -133,6 +133,7 @@ write-path facade work (already guarded).
 | `fleet_report_filters.py:163`, `:302` | same (filter + sort key) | Phase 2 → same |
 | `strategy_detail_formatter.py:277` | `colony_has_planetary_yard(colony, registries)` (import) | Phase 2 → new colony `has_build_yard` projection |
 | `strategy_screen_lifecycle.py:155` (manual save, `on_save_game_click`) | `SaveGameService.save_game(screen.session)` | Phase 2 → `facade.session_meta.save_current_game()` (same Category E entry as `:51`) |
+| `build_queue_panel_factory.py:18` (`:247` call), `build_queue_screen.py:27` (`:211`,`:321` calls) | `compute_planet_production(...)` on the live build-queue screen | **Owned by PROJ-475** (live build-queue reader; PROJ-474 design.md `:118-119` defers `compute_planet_production` here; NOT PROJ-476 tooling per PROJ-476 post-flesh review Finding 1). Migrate onto a facade production-projection query or allowlist-with-reason if no clean query exists. Re-verify lines at execution. |
 
 ## Pass-through disposition (verified live 2026-05-22)
 | Property (`strategy_screen.py`) | External consumers | Disposition |
