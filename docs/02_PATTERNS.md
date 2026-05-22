@@ -165,6 +165,65 @@ Strategy data facade contract:
 
 Use when a class has multiple independent reasons to change. Keep facade methods delegating; put real logic in services/delegates.
 
+### Read-path policy (PROJ-472)
+
+The `StrategySessionFacade` enforces the **write** path (commands route through
+`facade.handle_command(...)` / `facade.commands.<verb>(...)`, guarded by
+`tests/static_guards/test_facade_bypass_guard.py`). The **read** path is governed
+by **option (b): a documented UI-safe read surface enforced by a static guard +
+an exact allowlist + convention** — NOT a blanket "all UI reads become facade
+DTOs" rule. The blanket rule does not fit: many `game/ui` imports of
+`game.strategy` are pre-session config/value/enum reads, render-hot reads, or
+editor surfaces that a DTO rule would churn without boundary value.
+
+Convention:
+
+- **Use the facade** for session-owned, mutation-adjacent, or
+  cross-screen-cached reads (build queues, fleet/colony state, registries,
+  turn number, path projections). The facade already exposes grouped read
+  namespaces and frozen DTOs for these (`empires.build_queues`,
+  `fleets.get`/`path_projection`, `FleetInfo`, `BuildQueueSourceDTO`, …).
+- **A documented UI-safe surface is allowed** for immutable-ish
+  config/value/enum/protocol types that exist before (or independent of) a live
+  `GameSession`. The UI-safe types are: `GameConfig` (and the `game_config`
+  scalars/`PlayerConfig`), `RaceConfig` (and its label tuples),
+  `EnvironmentalPreference`, `HabitabilityFactor` (and the `habitability_factors`
+  iterators), `ContainableKind`, `ActivationPhase`. This list is the **source of
+  truth for the guard allowlist** in
+  `tests/static_guards/test_facade_read_path_imports_guard.py`.
+- **Do NOT allowlist live session/domain traversal helpers** just because they
+  are "read-only". The counterexamples — explicitly NON-allowlisted — are
+  `BuildQueueSource`, `collect_build_queues_at_hex` /
+  `collect_all_build_queues_for_empire`, `FleetCapabilityCalculator`,
+  `GameSession`, strategy mutators, and `turn_engine`-shaped helpers. They return
+  mutable owner references / live queue lists, which is exactly what the facade
+  exists to hide.
+
+Two static guards enforce this over `game/ui/**/*.py` (both ignore
+`if TYPE_CHECKING:` imports):
+
+- `tests/static_guards/test_facade_read_path_imports_guard.py` — runtime-import
+  guard. Always allows `game.strategy.facade.*` and
+  `game.strategy.engine.commands` (the write path). Fails on any other runtime
+  `game.strategy.*` import not on an **exact** `(file, module, member)`
+  allowlist (no subpackage wildcards — the codebase is too mixed for
+  `game.strategy.data.*` to be blanket-safe).
+- `tests/static_guards/test_facade_read_path_session_guard.py` — session-read
+  guard. Matches `<expr>.session.<attr>`, `<expr>._session.<attr>`, and the full
+  `<expr>.facade_state.session.<attr>` chain. Allowlisted by
+  **file + attribute-path + reason**, not by bare attribute name.
+
+**Honest scope note (transitional surfaces, not yet closed):** Phase 1 tightens
+the read path (blocks net-new bypasses) but does NOT seal it. `StrategyScreen`
+keeps documented transitional pass-through properties — `galaxy`, `empires`,
+`systems`, `active_empire`, `enemy_empire`, `human_player_ids`
+(`game/ui/screens/strategy_screen.py`) — and `FacadeSessionState` still publicly
+holds `session`. These remain **allowlisted-with-reason** as transitional read
+surfaces; deprecating them (plus the ~75-file `game/ui` tail) is follow-on work
+(PROJ-474 value/config allowlist consolidation, PROJ-475 remaining live readers +
+pass-through deprecation, PROJ-476 tooling/editor screens). Do not read the
+guards as evidence the read path is fully closed.
+
 ## 6. CQRS-lite Strategy Session
 
 Where: `game/strategy/facade/`, DTOs under `game/strategy/facade/dto/`, commands under the `game/strategy/engine/commands/` package.
