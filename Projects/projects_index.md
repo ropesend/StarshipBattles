@@ -4,6 +4,9 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-476 | Facade read-path: tooling/editor screens (battle_setup, galaxy_test, race_setup) reader migration (follow-on from PROJ-472) | Planning | 2026-05-21 | 2026-05-21 |
+| PROJ-475 | Facade read-path: remaining live strategy-screen + render readers migration (follow-on from PROJ-472) | Planning | 2026-05-21 | 2026-05-21 |
+| PROJ-474 | Facade read-path: value/config UI-safe read-surface allowlist consolidation (follow-on from PROJ-472) | Planning | 2026-05-21 | 2026-05-21 |
 | PROJ-473 | Thread per-instance RNG through planet/star generation to enable global random.seed removal (deferred from PROJ-471) | Planning | 2026-05-20 | 2026-05-20 |
 | PROJ-472 | Facade read-path migration: route game/ui access through strategy facade DTOs (deferred from PROJ-470) | Planning | 2026-05-20 | 2026-05-20 |
 | PROJ-471 | State hygiene — singleton-divergence consolidation + collection/RNG hygiene (2026-05-20) | Planning | 2026-05-20 | 2026-05-20 |
