@@ -1,7 +1,13 @@
 """Hex occupancy outlines (PROJ-214) with turn-keyed cache.
 
 The ``HexOutlineLayer`` owns the ``_hex_outline_cache`` and rebuilds it
-only when ``scene.session.turn_number`` changes.
+only when the scene's turn number changes.
+
+PROJ-472 Phase 1C: the active-empire id and turn number are read through
+facade-fed scene accessors (``scene.active_empire_id`` /
+``scene.turn_number``) instead of the live-session ``scene.session.*``
+bypass. The active-empire id is read once per cache rebuild, exactly as
+before — no per-frame DTO allocation, the turn-keyed cache is unchanged.
 """
 from __future__ import annotations
 
@@ -27,7 +33,7 @@ class HexOutlineLayer:
         Returns:
             Dict mapping HexCoord -> (has_player_owned: bool, has_non_player: bool)
         """
-        player_id = r.scene.session.active_empire.id if r.scene.session.active_empire else None
+        player_id = r.scene.active_empire_id
         result = {}
 
         # 1. Planets (from spatial index)
@@ -73,7 +79,7 @@ class HexOutlineLayer:
 
     def get_data(self, r: Any) -> dict:
         """Get cached hex outline data, rebuilding if turn changed."""
-        current_turn = getattr(r.scene.session, 'turn_number', 0)
+        current_turn = getattr(r.scene, 'turn_number', 0)
         if self._hex_outline_cache is None or self._hex_outline_cache_turn != current_turn:
             self._hex_outline_cache = self.build_data(r)
             self._hex_outline_cache_turn = current_turn

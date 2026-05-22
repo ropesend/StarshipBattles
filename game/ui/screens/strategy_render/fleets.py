@@ -81,8 +81,16 @@ def draw_fleets(r: Any, screen: Any) -> None:
 
 
 def draw_fleet_path(r: Any, screen: Any, fleet: Any, fleet_screen_pos: Any) -> None:
-    """Draw the movement path for a fleet."""
-    segments = r.scene.session.get_fleet_path_projection(fleet, max_turns=50)
+    """Draw the movement path for a fleet.
+
+    PROJ-472 Phase 1C: path segments are read through the facade
+    (``facade.fleets.path_projection(fleet_id, max_turns=50)``) instead of
+    the live-session ``get_fleet_path_projection`` bypass. The facade returns
+    the same ``List[dict]`` segment shape, so this is a one-for-one swap with
+    no per-frame DTO allocation. NOTE the signature difference: the facade
+    takes a ``fleet_id`` (int), so pass ``fleet.id``, not the fleet object.
+    """
+    segments = r.scene.facade.fleets.path_projection(fleet.id, max_turns=50)
 
     start_screen = fleet_screen_pos
     font = None

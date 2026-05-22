@@ -63,7 +63,7 @@ class StrategyBuildQueueManager:
         self._last_active_empire_id: int | None = None
 
     def _design_catalog_for_empire(self, empire_id: int) -> DesignCatalog:
-        """Resolve the per-empire ``DesignCatalog`` from the live session.
+        """Resolve the per-empire ``DesignCatalog`` from the facade.
 
         PROJ-434 Phase 2: replaces the previous
         ``DesignLibrary(savegame_path, empire_id, facade_state=...)`` (legacy)
@@ -76,10 +76,20 @@ class StrategyBuildQueueManager:
         the same catalog instance — workshop saves invalidate the
         in-memory list view via ``catalog.upsert_design`` and the
         next ``catalog.scan_designs()`` sees the new entry.
+
+        PROJ-472 Phase 1C: route through
+        ``facade.facade_state.get_design_catalog_for_empire`` rather than
+        reaching ``facade_state.session.services.design_catalogs_by_empire``.
+        The accessor returns the same per-empire ``DesignCatalog`` object,
+        so the QA-Obs-3 cache contract above is unchanged. A ``KeyError``
+        (no catalog for the empire) is preserved as before.
         """
-        session = self._screen.facade.facade_state.session
-        catalogs = session.services.design_catalogs_by_empire
-        return catalogs[empire_id]
+        catalog = self._screen.facade.facade_state.get_design_catalog_for_empire(
+            empire_id
+        )
+        if catalog is None:
+            raise KeyError(empire_id)
+        return catalog
 
     def _active_theme_id(self) -> str:
         """Resolve the active empire's ``empire_theme_id`` (PROJ-396 MAJ-002).
@@ -300,8 +310,12 @@ class StrategyBuildQueueManager:
             planet_id = source.planet_id if source.planet_id is not None else source.entity_id
             return self._screen.galaxy.get_planet_by_id(planet_id)
         if source.context_type == "fleet":
-            session = self._screen.facade.facade_state.session
-            return session._get_fleet_by_id(source.entity_id)
+            # PROJ-472 1C: resolve the live fleet via the facade-state id
+            # lookup (cache-owning) rather than reaching
+            # ``facade_state.session._get_fleet_by_id`` directly.
+            return self._screen.facade.facade_state.get_fleet_by_id(
+                source.entity_id
+            )
         return None
 
     def on_navigate_to_hex_build(self, hex_coord, source) -> None:

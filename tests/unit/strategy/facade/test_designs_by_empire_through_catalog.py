@@ -99,3 +99,25 @@ def test_designs_by_empire_missing_catalog_returns_empty(tmp_path):
     session.services = SimpleNamespace(design_catalogs_by_empire={})
     state = FacadeSessionState(session=session)
     assert state.get_designs_for_empire(99) == []
+
+
+def test_get_design_catalog_for_empire_returns_catalog_object(tmp_path):
+    """PROJ-472 1C: the UI-facing accessor returns the live ``DesignCatalog``
+    object (not its list view) so build-queue writes hit the same instance."""
+    repo = DesignRepository(str(tmp_path), empire_id=0)
+    cat = DesignCatalog(empire_id=0)
+    cat.attach_repository(repo)
+
+    session = MagicMock()
+    _attach_catalog_to_session(session, empire_id=0, catalog=cat)
+    state = FacadeSessionState(session=session)
+
+    assert state.get_design_catalog_for_empire(0) is cat
+
+
+def test_get_design_catalog_for_empire_missing_returns_none(tmp_path):
+    """No catalog wired for the empire -> ``None`` (early bootstrap / tests)."""
+    session = MagicMock()
+    session.services = SimpleNamespace(design_catalogs_by_empire={})
+    state = FacadeSessionState(session=session)
+    assert state.get_design_catalog_for_empire(99) is None

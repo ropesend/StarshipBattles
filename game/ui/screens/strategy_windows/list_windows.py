@@ -66,8 +66,8 @@ class PlanetListRegistrar:
             window_manager=c,
             on_close_callback=self._on_closed,
             asset_resolver=c._asset_resolver,
-            empires=c.scene.session.empires,  # PROJ-198: Pass empires for owner name lookup
-            registries=c.scene.session.registries,  # PROJ-211: Pass registries for DI
+            empires=c.scene.empires,  # PROJ-198 owner-name lookup; PROJ-472 1C via scene pass-through
+            registries=c.scene.registries,  # PROJ-211 DI; PROJ-472 1C via facade-fed scene accessor
             on_navigate_callback=self._on_navigate,
             race_registry=race_registry,  # PROJ-290
             facade=facade,  # PROJ-292 H1: enables per-species sub-block on colonized planets

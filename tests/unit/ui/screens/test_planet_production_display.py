@@ -34,8 +34,9 @@ class TestComputePlanetProduction:
         """Create a minimal StrategyDetailFormatter for testing."""
         formatter = StrategyDetailFormatter.__new__(StrategyDetailFormatter)
         formatter.scene = MagicMock()
-        # PROJ-211: compute_planet_production now uses scene.session.registries
-        formatter.scene.session.registries = mock_registries
+        # PROJ-472 1C: compute_planet_production reads the facade-fed
+        # scene.registries accessor (was scene.session.registries).
+        formatter.scene.registries = mock_registries
         return formatter
 
     def test_returns_empty_for_unowned_planet(self, formatter):

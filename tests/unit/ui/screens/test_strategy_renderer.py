@@ -927,10 +927,14 @@ class TestCoordinateConversion:
 # ===========================================================================
 
 def _setup_outline_scene(mock_scene):
-    """Configure mock_scene with hex outline prerequisites."""
-    mock_scene.session = MagicMock()
-    mock_scene.session.active_empire = MagicMock(id=0)
-    mock_scene.session.turn_number = 1
+    """Configure mock_scene with hex outline prerequisites.
+
+    PROJ-472 1C: hex outlines read the active-empire id + turn through
+    facade-fed scene accessors (``scene.active_empire_id`` /
+    ``scene.turn_number``), not ``scene.session.*``.
+    """
+    mock_scene.active_empire_id = 0
+    mock_scene.turn_number = 1
     mock_scene.galaxy.state.global_hex_planets = {}
     mock_scene.galaxy.state.global_hex_zones = {}
     mock_scene.galaxy.state.global_hex_warp_points = {}
@@ -1053,7 +1057,7 @@ class TestHexOutlineCaching:
     def test_cache_invalidates_on_turn_change(self, renderer, mock_scene):
         _setup_outline_scene(mock_scene)
         data1 = renderer._get_hex_outline_data()
-        mock_scene.session.turn_number = 2
+        mock_scene.turn_number = 2
         data2 = renderer._get_hex_outline_data()
         assert data1 is not data2
 

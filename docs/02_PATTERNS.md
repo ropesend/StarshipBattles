@@ -188,9 +188,15 @@ Convention:
   `GameSession`. The UI-safe types are: `GameConfig` (and the `game_config`
   scalars/`PlayerConfig`), `RaceConfig` (and its label tuples),
   `EnvironmentalPreference`, `HabitabilityFactor` (and the `habitability_factors`
-  iterators), `ContainableKind`, `ActivationPhase`. This list is the **source of
+  iterators), `ContainableKind`, `ActivationPhase`, and the pre-session
+  race-setup helpers `RacePointBudget` (the cost authority shared with UI save
+  validation) and the `homeworld_presets` loaders/applicators
+  (`load_homeworld_presets`, `apply_preset_to_config`, `get_preset_for_planet_type`,
+  `get_preset_id_from_name`). All of these are edited/read by the race-setup and
+  new-game-setup UI before any session exists. This list is the **source of
   truth for the guard allowlist** in
-  `tests/static_guards/test_facade_read_path_imports_guard.py`.
+  `tests/static_guards/test_facade_read_path_imports_guard.py`; the guard's
+  `UISAFE` allowlist category must not drift from it.
 - **Do NOT allowlist live session/domain traversal helpers** just because they
   are "read-only". The counterexamples — explicitly NON-allowlisted — are
   `BuildQueueSource`, `collect_build_queues_at_hex` /

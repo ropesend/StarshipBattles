@@ -38,11 +38,14 @@ class MockScene:
         self.camera.zoom = 1.0
         self.current_empire = Empire(1, "Test Empire", (255, 0, 0))
         self.galaxy = MagicMock()
-        # PROJ-198: turn_engine is accessed via session
+        # PROJ-472 1C: the detail formatter reads registries via the
+        # facade-fed scene.registries accessor and the colonize check via
+        # facade.validation.can_colonize (was scene.session.turn_engine).
+        self.registries = MagicMock()
         self.session = MagicMock()
-        self.session.turn_engine = MagicMock()
-        # Ensure validate_colonize_order returns valid for owned fleet test
-        self.session.turn_engine.validate_colonize_order.return_value = MagicMock(is_valid=True)
+        self.facade = MagicMock()
+        # Colonize check returns valid for the owned-fleet test.
+        self.facade.validation.can_colonize.return_value = MagicMock(is_valid=True)
 
 @pytest.fixture
 def strategy_ui():

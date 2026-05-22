@@ -22,13 +22,13 @@ def _make_build_queue_manager():
     mock_screen.galaxy = MagicMock()  # PROJ-396 MAJ-004
     mock_screen.facade = MagicMock()  # PROJ-212: facade for command dispatch
     mock_screen.facade.session_meta.save_path = MagicMock(return_value="test_savegame")
-    # PROJ-434 Phase 2: manager pulls per-empire catalog through
-    # facade.facade_state.session.services.design_catalogs_by_empire.
+    # PROJ-472 1C: manager pulls the per-empire catalog through
+    # facade.facade_state.get_design_catalog_for_empire(empire_id) (was the
+    # facade_state.session.services.design_catalogs_by_empire bypass).
     mock_catalog = MagicMock()
-    mock_screen.facade.facade_state.session.services.design_catalogs_by_empire = {
-        0: mock_catalog,
-        1: mock_catalog,
-    }
+    mock_screen.facade.facade_state.get_design_catalog_for_empire = MagicMock(
+        return_value=mock_catalog
+    )
     mock_screen.ui = MagicMock()
     mock_screen.ui.manager = MagicMock()
     mock_screen.selected_object = None
@@ -56,6 +56,38 @@ class TestBuildQueueManagerInit:
         """Manager should store reference to parent screen."""
         manager, screen = _make_build_queue_manager()
         assert manager._screen is screen
+
+
+class TestProj472SessionConsumerCleanup:
+    """PROJ-472 1C: catalog + live-yard resolution route through the facade
+    state accessors, not the facade_state.session bypass."""
+
+    def test_design_catalog_routes_through_facade_state_accessor(self):
+        manager, screen = _make_build_queue_manager()
+        catalog = manager._design_catalog_for_empire(0)
+        screen.facade.facade_state.get_design_catalog_for_empire.assert_called_once_with(0)
+        assert catalog is screen.facade.facade_state.get_design_catalog_for_empire.return_value
+
+    def test_design_catalog_missing_raises_keyerror(self):
+        manager, screen = _make_build_queue_manager()
+        screen.facade.facade_state.get_design_catalog_for_empire = MagicMock(
+            return_value=None
+        )
+        with pytest.raises(KeyError):
+            manager._design_catalog_for_empire(5)
+
+    def test_resolve_live_fleet_uses_facade_state_id_lookup(self):
+        manager, screen = _make_build_queue_manager()
+        fleet = MagicMock()
+        screen.facade.facade_state.get_fleet_by_id = MagicMock(return_value=fleet)
+        source = MagicMock()
+        source.context_type = "fleet"
+        source.entity_id = 99
+
+        result = manager._resolve_live_yard(source)
+
+        screen.facade.facade_state.get_fleet_by_id.assert_called_once_with(99)
+        assert result is fleet
 
 
 class TestOnBuildYardClick:

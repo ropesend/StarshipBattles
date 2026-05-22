@@ -12,9 +12,9 @@ from game.ui.screens.strategy_render.hex_outlines import HexOutlineLayer
 
 
 def _renderer_context() -> SimpleNamespace:
-    active_empire = SimpleNamespace(id=1)
-    session = SimpleNamespace(active_empire=active_empire, turn_number=7)
-    scene = SimpleNamespace(session=session)
+    # PROJ-472 1C: hex outlines read the active-empire id + turn number
+    # through facade-fed scene accessors, not scene.session.*.
+    scene = SimpleNamespace(active_empire_id=1, turn_number=7)
     galaxy = SimpleNamespace(
         state=SimpleNamespace(
             global_hex_planets={},
@@ -71,7 +71,7 @@ def test_get_data_reuses_cache_until_turn_changes() -> None:
 
     first = layer.get_data(renderer)
     second = layer.get_data(renderer)
-    renderer.scene.session.turn_number = 8
+    renderer.scene.turn_number = 8
     third = layer.get_data(renderer)
 
     assert first == {"turn": 7}

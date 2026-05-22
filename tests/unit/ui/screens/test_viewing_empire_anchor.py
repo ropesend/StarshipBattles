@@ -145,13 +145,14 @@ class TestBuildQueueScansPlanetOwnersDesigns:
         screen.galaxy.get_system_of_planet.return_value = None
         screen.facade = MagicMock()
         screen.facade.session_meta.save_path = MagicMock(return_value="saves/test")
-        # PROJ-434 Phase 2: build queue pulls catalog via
-        # facade.facade_state.session.services.design_catalogs_by_empire.
+        # PROJ-472 1C: build queue pulls the catalog via
+        # facade.facade_state.get_design_catalog_for_empire(empire_id)
+        # (was facade_state.session.services.design_catalogs_by_empire).
         viewing_catalog = MagicMock(name="viewing_catalog")
         active_catalog = MagicMock(name="active_catalog")
         catalogs_by_empire = {0: viewing_catalog, 1: active_catalog}
-        screen.facade.facade_state.session.services.design_catalogs_by_empire = (
-            catalogs_by_empire
+        screen.facade.facade_state.get_design_catalog_for_empire = MagicMock(
+            side_effect=lambda empire_id: catalogs_by_empire.get(empire_id)
         )
         screen.ui = MagicMock()
         screen.ui.manager = MagicMock()

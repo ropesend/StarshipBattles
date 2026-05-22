@@ -15,26 +15,38 @@
 |-------|--------|-----------|
 | 1A. Policy doc (Pattern #5) + two read-path static guards | Complete | [phase_1a_checklist.md](phase_1a_checklist.md) |
 | 1B. Build-queue cluster migration onto facade queries | Complete | [phase_1b_checklist.md](phase_1b_checklist.md) |
-| 1C. StrategyScreen.session read-consumer cleanup | Not Started | [phase_1c_checklist.md](phase_1c_checklist.md) |
+| 1C. StrategyScreen.session read-consumer cleanup | Complete | [phase_1c_checklist.md](phase_1c_checklist.md) |
+| 1D. End-of-project Codex audit follow-ups (guard soundness + doc/allowlist reconcile) | Complete | [phase_1c_checklist.md](phase_1c_checklist.md) (§ Phase 1D) |
 
 ## Current State
 **Last Updated:** 2026-05-21
-**Active Phase:** Phase 1C (StrategyScreen.session read-consumer cleanup)
-**Last Action:** Phase 1B complete. Build-queue UI cluster migrated onto
-`facade.empires.hex_build_queues` returning `BuildQueueSourceDTO`; DTO enriched
-with `is_paused` / `owner_global_hex` / `owner_system_name` (slice-projected
-scalars, no live `owner_entity`). Found+fixed a data-flow bug: the input
-router's add/remove/pause command dispatch now re-projects DTOs from the facade
-(`_resync_sources_from_facade`) so the display reflects post-command domain
-state — DTO snapshots are immutable and were going stale. Test doubles given an
-`empires.hex_build_queues` namespace; the multi-queue controller fixture and
-several integration assertions tightened to DTO semantics (assert live backing
-queue, not the frozen snapshot). Full sharded suite GREEN modulo the two known
-pre-existing combat_lab failures (TOHIT-ATK-FLEET-003/004). 676 read-path guard
-tests pass. No codex audit this phase (runs after 1C).
-**Next Action:** Execute Phase 1C — migrate `StrategyScreen.session` /
-`facade_state.session` read consumers (incl. `strategy_build_queue_manager.py`'s
-deferred `:82-84` session read) per phase_1c_checklist.md.
+**Active Phase:** COMPLETE (Phase 1A+1B+1C+1D done; end-of-project audit done).
+Ready for user verification + handoff to PROJ-474/475/476.
+**Last Action:** Phase 1C complete — migrated the `StrategyScreen.session` /
+`facade_state.session` read consumers onto facade-fed accessors. Added narrow
+scene accessors on `StrategyScreen` (`registries` via
+`facade.session_meta.registries()`, `active_empire_id`, `turn_number` via
+`facade.session_meta.turn_number()`). Migrated `strategy_detail_formatter`
+(registries → `scene.registries`; colonize check → `facade.validation.can_colonize`),
+`list_windows` (empires/registries → scene accessors), `strategy_render/hex_outlines`
+(active-empire id + turn → scene accessors, turn-cache preserved),
+`strategy_render/fleets` (path projection → `facade.fleets.path_projection(fleet.id, 50)`),
+and `strategy_build_queue_manager` (design catalogs + live-fleet lookup →
+new `FacadeSessionState.get_design_catalog_for_empire` + existing
+`get_fleet_by_id` — both `facade_state.session` reads removed). The migrated
+files' TEMPORARY session-read-guard allowlist entries were removed; the
+deferred-to-PROJ-475 readers stay allowlisted-with-reason. The session-read
+guard's green state now honestly reflects reality: pass-throughs + the 4
+explicitly-deferred readers + mutator write seams + (1D) bare-session escape
+seams. Then ran the one-round end-of-project Codex audit (1D): all 4 findings
+VERIFIED and fixed via TDD — F1 import-guard `from game import strategy` gap,
+F2 session-guard aliased/bare-`.session`-extraction gap (the highest-value fix;
+caught 4 real live escape seams now allowlisted), F3 Pattern #5 / allowlist doc
+drift (`RacePointBudget` + `homeworld_presets`), F4 orphaned
+`colony_has_planetary_yard` CLUSTER entry (recorded in PROJ-475). Added a
+resync auto-trigger regression test (audit observation). Full sharded suite
+GREEN (24231 passed, 0 failed, 0 errors). 1399 static-guard tests pass.
+**Next Action:** User verification; then PROJ-474/475/476 (deferred tail).
 **Blockers:** None.
 **Note:** `validate_phase.py` only accepts integer phase numbers, so
 `validate_phase.py PROJ-472 1b` errors (`int('1b')`). The phase used letter

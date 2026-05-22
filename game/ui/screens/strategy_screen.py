@@ -210,6 +210,41 @@ class StrategyScreen:
         return next((e for e in empires if e.id == current_player_id), empires[0])
 
     @property
+    def registries(self) -> Any:
+        """Facade-fed session ``GameRegistries`` accessor (PROJ-472 1C).
+
+        Children (detail formatter, list windows) read registries through
+        this scene accessor — which sources from
+        ``facade.session_meta.registries()`` — instead of reaching
+        ``scene.session.registries`` directly. Same object the old session
+        read returned; no behavior change.
+        """
+        return self._facade.session_meta.registries()
+
+    @property
+    def active_empire_id(self) -> int | None:
+        """Id of the empire whose turn it currently is, or ``None`` (PROJ-472 1C).
+
+        Narrow scene accessor for render-hot consumers (hex outlines) that
+        need only the active-empire id, not the live empire object. Routes
+        through the screen's own ``active_empire`` pass-through (the single
+        legitimate composition-root session handle) so render code never
+        reads ``scene.session.active_empire`` directly.
+        """
+        empire = self.active_empire
+        return empire.id if empire is not None else None
+
+    @property
+    def turn_number(self) -> int:
+        """Facade-fed current turn number (PROJ-472 1C).
+
+        Render-hot cache keys (hex outlines) read the turn through
+        ``facade.session_meta.turn_number()`` rather than
+        ``scene.session.turn_number``.
+        """
+        return self._facade.session_meta.turn_number()
+
+    @property
     def viewing_empire_id(self) -> int | None:
         """Canonical anchor for 'whose data should this UI show'.
 

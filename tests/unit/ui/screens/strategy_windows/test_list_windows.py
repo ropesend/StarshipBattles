@@ -7,13 +7,14 @@ from game.ui.screens.strategy_windows import list_windows
 
 
 def _composer() -> SimpleNamespace:
+    # PROJ-472 1C: list windows read empires/registries through the
+    # facade-fed scene accessors (scene.empires / scene.registries), not
+    # scene.session.*.
     scene = SimpleNamespace(
         current_empire=MagicMock(name="empire"),
         galaxy=MagicMock(name="galaxy"),
-        session=SimpleNamespace(
-            empires=[MagicMock(name="empire_1")],
-            registries=MagicMock(name="registries"),
-        ),
+        empires=[MagicMock(name="empire_1")],
+        registries=MagicMock(name="registries"),
         facade=SimpleNamespace(
             economy=SimpleNamespace(race_registry=MagicMock(return_value=None)),
         ),
@@ -126,8 +127,8 @@ def test_planet_list_open_threads_detail_dependencies() -> None:
     assert window_cls.call_args.args[2] is composer.scene.galaxy
     assert window_cls.call_args.args[3] is composer.scene.current_empire
     assert window_cls.call_args.kwargs["asset_resolver"] is composer._asset_resolver
-    assert window_cls.call_args.kwargs["empires"] is composer.scene.session.empires
-    assert window_cls.call_args.kwargs["registries"] is composer.scene.session.registries
+    assert window_cls.call_args.kwargs["empires"] is composer.scene.empires
+    assert window_cls.call_args.kwargs["registries"] is composer.scene.registries
     assert window_cls.call_args.kwargs["race_registry"] is race_registry
     assert window_cls.call_args.kwargs["facade"] is composer.scene.facade
     assert window_cls.call_args.kwargs["on_navigate_callback"] == registrar._on_navigate

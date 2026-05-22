@@ -109,7 +109,7 @@ _IMPORT_ALLOWLIST: frozenset[tuple[str, str, str]] = frozenset({
     # empire_build_queue_window migrated onto facade.empires.(hex_)build_queues +
     # the enriched BuildQueueSourceDTO; their CLUSTER entries are removed so the
     # guard now enforces the boundary for those files.
-    ('game/ui/screens/strategy_detail_formatter.py', 'game.strategy.data.build_queue_source', 'colony_has_planetary_yard'),  # PROJ-472 1C will migrate (session-consumer; not a 1B file)
+    ('game/ui/screens/strategy_detail_formatter.py', 'game.strategy.data.build_queue_source', 'colony_has_planetary_yard'),  # DEFERRED to PROJ-475: pure read helper (colony, registries)->bool; no live-ref leak, but no facade query exists yet. NOT migrated by PROJ-472 1B/1C.
 
     # --- FLEETCAP: FleetCapabilityCalculator late-imports; deferred to PROJ-475 ---
     ('game/ui/screens/fleet_data_source.py', 'game.strategy.data.fleet_capability_calculator', 'FleetCapabilityCalculator'),
@@ -289,6 +289,18 @@ def _violations_in_file(rel: str, tree: ast.AST, tc_lines: set[int]) -> list[str
             if node.lineno in tc_lines:
                 continue
             mod = node.module
+            # PROJ-472 1D (Codex finding 1): ``from game import strategy``
+            # (module == 'game', member == 'strategy') re-exposes the whole
+            # strategy package as a bare runtime name. Treat the imported
+            # ``strategy`` member as a non-allowlisted bypass; other
+            # ``from game import <x>`` members are out of scope.
+            if mod == "game":
+                for alias in node.names:
+                    if alias.name == "strategy":
+                        violations.append(
+                            f"{rel}:{node.lineno} from game import strategy"
+                        )
+                continue
             if not (mod and mod.startswith("game.strategy")):
                 continue
             if _is_always_allowed_module(mod):
@@ -401,3 +413,48 @@ def test_matcher_flags_live_domain_imports_when_not_allowlisted() -> None:
     # The single TYPE_CHECKING import must not double-count: BuildQueueSource
     # appears once (the runtime import on line 3), not from the line-9 TC import.
     assert blob.count("build_queue_source import BuildQueueSource") == 1
+
+
+def test_matcher_flags_from_game_import_strategy_form() -> None:
+    """PROJ-472 1D (Codex finding 1): the runtime-import guard must also flag
+    the ``from game import strategy`` spelling, which re-exposes the whole
+    ``game.strategy`` package under a bare local name and lets UI code reach
+    ``strategy.data.build_queue_source.BuildQueueSource`` at runtime.
+
+    Before 1D the matcher only inspected ``ast.ImportFrom.module`` values
+    starting with ``game.strategy`` and ``ast.Import`` alias names starting
+    with ``game.strategy``, so ``from game import strategy`` (module=='game',
+    member=='strategy') slipped through unflagged.
+    """
+    src = (
+        "from game import strategy\n"
+        "v = strategy.data.build_queue_source.BuildQueueSource\n"
+    )
+    tree = ast.parse(src, filename="synthetic.py")
+    tc_lines = _type_checking_linenos(tree)
+    violations = _violations_in_file("synthetic_not_allowlisted.py", tree, tc_lines)
+    blob = "\n".join(violations)
+    assert "from game import strategy" in blob, (
+        "Guard must flag `from game import strategy` (re-exposes the whole "
+        "strategy package as a runtime read surface)."
+    )
+
+
+def test_matcher_does_not_flag_unrelated_from_game_imports() -> None:
+    """Negative control for the 1D ``from game import strategy`` rule: other
+    ``from game import <x>`` members (e.g. ``core``, ``ui``) must NOT be
+    flagged — only the ``strategy`` package re-export is a read-path bypass.
+    """
+    src = (
+        "from game import core\n"
+        "from game import ui as _ui\n"
+        "from game import strategy, core as _c\n"
+    )
+    tree = ast.parse(src, filename="synthetic.py")
+    tc_lines = _type_checking_linenos(tree)
+    violations = _violations_in_file("synthetic_not_allowlisted.py", tree, tc_lines)
+    blob = "\n".join(violations)
+    assert "import core" not in blob
+    assert "import ui" not in blob
+    # The mixed import line still flags `strategy` but not `core`.
+    assert "from game import strategy" in blob

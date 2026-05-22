@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from game.strategy.data.planet import Planet
     from game.strategy.data.design_metadata import DesignMetadata
     from game.strategy.engine.game_session import GameSession
+    from game.strategy.systems.design_catalog import DesignCatalog
     from game.strategy.facade.dto import StarInfo
 
 
@@ -135,6 +136,25 @@ class FacadeSessionState:
     # ------------------------------------------------------------------
     # Per-empire designs (PROJ-434 Phase 0)
     # ------------------------------------------------------------------
+
+    def get_design_catalog_for_empire(self, empire_id: int) -> "Optional[DesignCatalog]":
+        """Return the per-empire ``DesignCatalog`` object, or ``None``.
+
+        PROJ-472 Phase 1C: UI callers (the build-queue manager) need the
+        live ``DesignCatalog`` instance — not just its design list — because
+        the build-queue screen writes through ``catalog.save_design`` and
+        relies on the same instance's cache for the QA-Obs-3 contract.
+        Routing through this accessor keeps the UI off the
+        ``facade_state.session.services.design_catalogs_by_empire`` chain
+        while preserving the exact object the prior bypass returned.
+        Returns ``None`` when no catalog is wired for the empire (early
+        bootstrap / tests).
+        """
+        services = getattr(self.session, "services", None)
+        if services is None:
+            return None
+        catalogs = getattr(services, "design_catalogs_by_empire", None) or {}
+        return catalogs.get(empire_id)
 
     def get_designs_for_empire(self, empire_id: int) -> List["DesignMetadata"]:
         """Return the per-empire ``DesignMetadata`` list via the session's

@@ -51,8 +51,19 @@ _SESSION_ATTR_NAMES: frozenset[str] = frozenset({"session", "_session"})
 #   (transitional; deprecation is PROJ-475). The screen owns the only legitimate
 #   ``_session`` handle; these property bodies expose narrow reads to children.
 # Category B — mutator / state-manager WRITE seams (deferred to PROJ-475).
-# Category C — live session readers deferred to PROJ-475 (allowlisted-with-reason).
-# Category D — PROJ-472 Phase 1C migration targets (TEMPORARY; removed as 1C lands).
+# Category C — live session READERS deferred to PROJ-475 (allowlisted-with-reason).
+#
+# PROJ-472 Phase 1C (2026-05-21) MIGRATED and REMOVED the former Category D
+# TEMPORARY entries: strategy_detail_formatter (registries / turn_engine →
+# scene.registries + facade.validation.can_colonize), list_windows
+# (empires/registries → scene pass-throughs), hex_outlines (active_empire/turn →
+# scene.active_empire_id / scene.turn_number), strategy_render/fleets
+# (path projection → facade.fleets.path_projection), and
+# strategy_build_queue_manager (facade_state.session.services /
+# facade_state.session._get_fleet_by_id → facade_state.get_design_catalog_for_empire /
+# get_fleet_by_id). The guard now ENFORCES the boundary for those files.
+# The remaining allowlist is honestly NOT the full read path: pass-throughs +
+# the explicitly-deferred PROJ-475 readers + mutator write seams persist.
 _SESSION_READ_ALLOWLIST: frozenset[tuple[str, str]] = frozenset({
     # --- Category A: StrategyScreen pass-through properties (transitional) ---
     ("game/ui/screens/strategy_screen.py", "_session.galaxy"),
@@ -61,6 +72,10 @@ _SESSION_READ_ALLOWLIST: frozenset[tuple[str, str]] = frozenset({
     ("game/ui/screens/strategy_screen.py", "_session.active_empire"),
     ("game/ui/screens/strategy_screen.py", "_session.enemy_empire"),
     ("game/ui/screens/strategy_screen.py", "_session.human_player_ids"),
+    # The ``session`` property body returns the private handle wholesale;
+    # this IS the documented composition-root pass-through. PROJ-475 owns
+    # deprecating it.
+    ("game/ui/screens/strategy_screen.py", "_session.__extract__"),
     # --- Category B: mutator / state-manager write seams (PROJ-475) ---
     ("game/ui/screens/strategy_game_state_manager.py", "session.active_empire"),
     ("game/ui/screens/strategy_screen_order_editing.py", "session.fleet_mutator"),
@@ -69,14 +84,15 @@ _SESSION_READ_ALLOWLIST: frozenset[tuple[str, str]] = frozenset({
     ("game/ui/screens/strategy_screen_order_editing.py", "session.active_empire"),
     ("game/ui/screens/strategy_screen_selection.py", "session.active_empire"),
     ("game/ui/screens/strategy_windows/empire_panel_ctrl.py", "session.registries"),
-    # --- Category D: PROJ-472 Phase 1C migration targets (TEMPORARY) ---
-    ("game/ui/screens/strategy_detail_formatter.py", "session.registries"),  # PROJ-472 1C will migrate
-    ("game/ui/screens/strategy_detail_formatter.py", "session.turn_engine"),  # PROJ-472 1C will migrate
-    ("game/ui/screens/strategy_windows/list_windows.py", "session.empires"),  # PROJ-472 1C will migrate
-    ("game/ui/screens/strategy_windows/list_windows.py", "session.registries"),  # PROJ-472 1C will migrate
-    ("game/ui/screens/strategy_render/hex_outlines.py", "session.active_empire"),  # PROJ-472 1C will migrate
-    ("game/ui/screens/strategy_render/fleets.py", "session.get_fleet_path_projection"),  # PROJ-472 1C will migrate
-    ("game/ui/screens/strategy_build_queue_manager.py", "facade_state.session"),  # PROJ-472 1C will migrate
+    # --- Category E: bare-session ESCAPE seams surfaced by the PROJ-472 1D
+    #     hardened matcher (Codex finding 2). The live session object is
+    #     handed wholesale to a save service or aliased into a local. All are
+    #     pre-existing deferred-tail reads (NOT migrated by PROJ-472); they
+    #     stay allowlisted-with-reason and are recorded as deferred to
+    #     PROJ-475 (save seams) / PROJ-476 (transfer tooling tail). ---
+    ("game/ui/screens/strategy_game_state_manager.py", "session.__extract__"),  # SaveGameService.save_game(session) — save seam; PROJ-475
+    ("game/ui/screens/strategy_screen_lifecycle.py", "session.__extract__"),  # save/context seam (game_session context); PROJ-475
+    ("game/ui/screens/transfer_controller.py", "session.__extract__"),  # discover_pod_designs aliases session for per-empire catalog; PROJ-475/476 tail
 })
 
 
@@ -116,7 +132,25 @@ def _type_checking_linenos(tree: ast.AST) -> set[int]:
     return out
 
 
-def _matched_session_read(node: ast.Attribute) -> str | None:
+def _parent_map(tree: ast.AST) -> dict[int, ast.AST]:
+    """Map ``id(child_node) -> parent_node`` for every AST node.
+
+    Used so :func:`_matched_session_read` can tell whether a ``.session``
+    extraction is consumed by an immediate attribute read (a chained
+    ``.session.<attr>`` read) or is bare/aliased (assigned to a local,
+    passed as an argument, returned, …). The bare form is the bypass the
+    direct-chain matcher used to miss (Codex finding 2).
+    """
+    parents: dict[int, ast.AST] = {}
+    for parent in ast.walk(tree):
+        for child in ast.iter_child_nodes(parent):
+            parents[id(child)] = parent
+    return parents
+
+
+def _matched_session_read(
+    node: ast.Attribute, parents: dict[int, ast.AST] | None = None
+) -> str | None:
     """Return the matched attribute-path tail if ``node`` is a guarded session
     read, else None.
 
@@ -125,22 +159,52 @@ def _matched_session_read(node: ast.Attribute) -> str | None:
       * ``<expr>._session.<attr>``      -> "_session.<attr>"  (node is the OUTER attr)
       * ``<expr>.facade_state.session`` -> "facade_state.session" (node IS the
         ``.session`` access that extracts the live session out of
-        ``FacadeSessionState`` — e.g. ``...facade.facade_state.session`` in
-        ``strategy_build_queue_manager.py``; the subsequent ``.services`` read
-        happens off the resulting local, so we anchor on the extraction itself).
+        ``FacadeSessionState``; the subsequent read happens off the resulting
+        local, so we anchor on the extraction itself).
+      * bare/aliased ``<expr>.session`` / ``<expr>._session`` extraction
+        -> "session.__extract__" / "_session.__extract__" (PROJ-472 1D,
+        Codex finding 2). When the ``.session`` extraction is NOT immediately
+        consumed by an attribute read (i.e. it is assigned to a local, passed
+        as an argument, or returned), the live session object escapes wholesale
+        — a strictly worse leak than a single scalar read — and must be
+        flagged. ``parents`` lets us distinguish this from the chained form so
+        a chained read is reported once, per-attribute (not double-counted).
+
+    ``parents`` is the :func:`_parent_map` for the tree. When omitted (the
+    synthetic positive-control probes that test a single expression in
+    isolation), an extraction with no parent attribute access is treated as
+    bare.
     """
-    # Form 3: extracting the session out of facade_state.
-    # ``node`` itself is the ``.session`` attribute whose value is ``facade_state``.
-    if node.attr == "session":
-        parent = node.value
-        if isinstance(parent, ast.Attribute) and parent.attr == "facade_state":
-            return "facade_state.session"
-    inner = node.value
-    if not isinstance(inner, ast.Attribute):
-        return None
     # Forms 1 & 2: <expr>.session.<attr> / <expr>._session.<attr>
-    if inner.attr in _SESSION_ATTR_NAMES:
+    # (anchored on the OUTER attribute; reported per-attribute).
+    inner = node.value
+    if isinstance(inner, ast.Attribute) and inner.attr in _SESSION_ATTR_NAMES:
         return f"{inner.attr}.{node.attr}"
+
+    # ``node`` is itself a ``.session`` / ``._session`` extraction.
+    if node.attr in _SESSION_ATTR_NAMES or node.attr == "session":
+        # Form 3: extracting the session out of facade_state.
+        parent_attr = node.value
+        if (
+            node.attr == "session"
+            and isinstance(parent_attr, ast.Attribute)
+            and parent_attr.attr == "facade_state"
+        ):
+            return "facade_state.session"
+
+        if node.attr not in _SESSION_ATTR_NAMES:
+            return None
+
+        # Bare/aliased extraction: flag UNLESS this extraction is the
+        # ``.value`` of an outer attribute access (the chained
+        # ``.session.<attr>`` form, already reported by Forms 1 & 2 above on
+        # the OUTER node).
+        if parents is not None:
+            consumer = parents.get(id(node))
+            if isinstance(consumer, ast.Attribute) and consumer.value is node:
+                return None
+        return f"{node.attr}.__extract__"
+
     return None
 
 
@@ -161,12 +225,13 @@ def test_no_unallowlisted_session_reads_in_ui(path: Path) -> None:
     rel = str(path.relative_to(REPO_ROOT)).replace("\\", "/")
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     tc_lines = _type_checking_linenos(tree)
+    parents = _parent_map(tree)
     for node in ast.walk(tree):
         if not isinstance(node, ast.Attribute):
             continue
         if node.lineno in tc_lines:
             continue
-        attr_path = _matched_session_read(node)
+        attr_path = _matched_session_read(node, parents)
         if attr_path is None:
             continue
         if (rel, attr_path) in _SESSION_READ_ALLOWLIST:
@@ -230,12 +295,84 @@ def test_session_read_matcher_recognises_all_three_forms() -> None:
     )
 
 
-def test_facade_state_session_form_is_actually_present_in_ui() -> None:
-    """Negative-control safety: confirm the ``facade_state.session`` form the
-    guard's third clause targets is a real, currently-allowlisted bypass.
+def _violations_in_source(rel: str, src: str) -> list[tuple[int, str]]:
+    """Helper mirroring the directory-scan body for synthetic-source probes."""
+    tree = ast.parse(src, filename="synthetic.py")
+    tc_lines = _type_checking_linenos(tree)
+    parents = _parent_map(tree)
+    out: list[tuple[int, str]] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Attribute):
+            continue
+        if node.lineno in tc_lines:
+            continue
+        attr_path = _matched_session_read(node, parents)
+        if attr_path is None:
+            continue
+        out.append((node.lineno, attr_path))
+    return out
 
-    Pins the allowlist entry for ``strategy_build_queue_manager.py`` to the
-    live code so removing it during 1C forces a deliberate allowlist edit.
+
+def test_session_guard_catches_aliased_extraction() -> None:
+    """PROJ-472 1D (Codex finding 2): a net-new bypass that aliases the
+    session out (``sess = obj.session``) and reads off the alias, or passes
+    the bare session object as an argument, must be flagged.
+
+    Before 1D the matcher only anchored on the direct ``obj.session.<attr>``
+    chain, so ``sess = screen.session; sess.active_empire`` and
+    ``save_game(screen.session)`` slipped through unflagged — the live
+    counterexamples Codex found (``transfer_controller.py``,
+    ``strategy_game_state_manager.py``). The guard now flags the bare
+    ``.session`` / ``._session`` extraction itself.
+    """
+    aliased = _violations_in_source(
+        "synthetic.py", "sess = screen.session\nv = sess.active_empire\n"
+    )
+    assert any(p == "session.__extract__" for _, p in aliased), (
+        "Aliasing the session out must be flagged at the extraction site."
+    )
+
+    bare_arg = _violations_in_source(
+        "synthetic.py", "save_game(screen.session)\n"
+    )
+    assert any(p == "session.__extract__" for _, p in bare_arg), (
+        "Passing the bare session object as an argument must be flagged."
+    )
+
+    private = _violations_in_source(
+        "synthetic.py", "s = self._session\nv = s.galaxy\n"
+    )
+    assert any(p == "_session.__extract__" for _, p in private), (
+        "Aliasing the private `_session` out must be flagged too."
+    )
+
+
+def test_session_guard_chained_read_reports_per_attribute_not_extract() -> None:
+    """A direct chained read still reports the per-attribute key
+    (``session.<attr>``), NOT the coarse ``__extract__`` key — so existing
+    per-attribute allowlist granularity is preserved and a chained read does
+    not double-count.
+    """
+    hits = _violations_in_source(
+        "synthetic.py", "v = screen.session.registries\n"
+    )
+    assert ("session.registries") in {p for _, p in hits}
+    assert "session.__extract__" not in {p for _, p in hits}, (
+        "A chained `.session.<attr>` read must be reported once, per-attribute."
+    )
+
+
+def test_facade_state_session_form_no_longer_present_in_build_queue_manager() -> None:
+    """PROJ-472 1C migrated ``strategy_build_queue_manager.py`` off the
+    ``facade_state.session`` bypass.
+
+    Replaces the former negative-control pin (which asserted the bypass was
+    *present* and allowlisted). The migration routed both the design-catalog
+    read and the live-fleet lookup through facade-state accessors
+    (``get_design_catalog_for_empire`` / ``get_fleet_by_id``), so the
+    ``facade_state.session`` extraction must NOT reappear here. The matcher's
+    third-form coverage is still pinned synthetically by
+    ``test_session_read_matcher_recognises_all_three_forms``.
     """
     target = UI_DIR / "screens" / "strategy_build_queue_manager.py"
     tree = ast.parse(target.read_text(encoding="utf-8"), filename=str(target))
@@ -244,8 +381,8 @@ def test_facade_state_session_form_is_actually_present_in_ui() -> None:
         and _matched_session_read(node) == "facade_state.session"
         for node in ast.walk(tree)
     )
-    assert found, (
-        "Expected the `facade_state.session` extraction in "
-        "strategy_build_queue_manager.py. If 1C migrated it, remove this pin "
-        "and the matching _SESSION_READ_ALLOWLIST entry."
+    assert not found, (
+        "PROJ-472 1C migrated strategy_build_queue_manager.py off "
+        "`facade_state.session`; the bypass must not reappear. Route new "
+        "session reads through a facade-state accessor."
     )

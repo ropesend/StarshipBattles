@@ -109,7 +109,7 @@ class StrategyDetailFormatter:
         Returns:
             Dict mapping resource name to production rate per turn
         """
-        return compute_planet_production(planet, self.scene.session.registries)
+        return compute_planet_production(planet, self.scene.registries)
 
     # =========================================================================
     # Raw Data Popup
@@ -275,7 +275,7 @@ class StrategyDetailFormatter:
         # Show Build Yard button only if planet has PlanetaryYard or SpaceShipyard
         if obj.owner_id == current_empire_id:
             from game.strategy.data.build_queue_source import colony_has_planetary_yard
-            has_yard = colony_has_planetary_yard(obj, self.scene.session.registries) or obj.has_space_shipyard
+            has_yard = colony_has_planetary_yard(obj, self.scene.registries) or obj.has_space_shipyard
             if has_yard:
                 self.btn_build_yard.show()
             if self.btn_planet_orders:
@@ -305,8 +305,8 @@ class StrategyDetailFormatter:
         from game.strategy.services.component_abilities import extract_abilities_from_component
         from game.core.patterns.layer_iterator import iter_components
 
-        registries = getattr(self.scene, 'session', None)
-        registries = getattr(registries, 'registries', None) if registries else None
+        # PROJ-472 1C: registries via the facade-fed scene accessor.
+        registries = getattr(self.scene, 'registries', None)
 
         for facility in getattr(planet, 'facilities', []):
             if not getattr(facility, 'is_operational', True):
@@ -391,9 +391,16 @@ class StrategyDetailFormatter:
             if obj.capabilities.has_space_shipyard:
                 self.btn_build_fleet.show()
 
-            # Check if we can colonize (BUG FIX PROJ-198 Phase 4: turn_engine is on session, not scene)
-            if self.scene.session and self.scene.session.turn_engine:
-                res = self.scene.session.turn_engine.validate_colonize_order(self.scene.galaxy, obj, None)
+            # Check if we can colonize. PROJ-472 1C: route the colonize
+            # validation through the facade (``validation.can_colonize``)
+            # instead of reaching ``scene.session.turn_engine`` directly.
+            # The facade takes ids and resolves the fleet/planet itself; a
+            # ``None`` planet means "the fleet's current location" (same
+            # semantics as the old ``validate_colonize_order(galaxy, obj,
+            # None)`` call).
+            facade = getattr(self.scene, "facade", None)
+            if facade is not None:
+                res = facade.validation.can_colonize(obj.id, None)
                 if res.is_valid:
                     self.btn_colonize.show()
 
