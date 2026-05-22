@@ -366,7 +366,7 @@ def test_no_savegame_path_handled_gracefully(mock_design_catalog, mock_design_lo
         design_catalog=mock_design_catalog,
         design_loader=mock_design_loader,
         hex_coord=hex_coord,
-        galaxy=galaxy,
+        world=galaxy,  # PROJ-477 Phase 4
         empire=empire,
         facade=session,
         theme_id_supplier=lambda: "Federation",
@@ -481,7 +481,7 @@ def test_add_ship_to_queue_with_shipyard(mock_design_catalog, mock_design_loader
         design_catalog=mock_design_catalog,
         design_loader=mock_design_loader,
         hex_coord=hex_coord,
-        galaxy=galaxy,
+        world=galaxy,  # PROJ-477 Phase 4
         empire=empire,
         facade=session,
         theme_id_supplier=lambda: "Federation",

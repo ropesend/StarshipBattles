@@ -13,7 +13,14 @@ from game.strategy.systems.design_repository import DesignLoadResult
 
 
 class MockGalaxy:
-    """Minimal mock Galaxy for BuildQueueScreen tests."""
+    """Minimal mock Galaxy / scene.world for BuildQueueScreen tests.
+
+    PROJ-477 Phase 4: BuildQueueScreen/Controller now take the scene.world
+    live seam. This double exposes both the legacy galaxy methods and the
+    StrategyWorldAccess surface the build-queue chain uses
+    (``planets_at_exact_hex`` / ``planet_by_id`` / ``system_for_object`` /
+    ``iter_systems``).
+    """
     def __init__(self):
         self.systems = {}
         self._global_hex_planets = {}  # HexCoord -> List[Planet]
@@ -22,6 +29,26 @@ class MockGalaxy:
     def get_planets_at_global_hex(self, hex_coord):
         """Return planets at a given global hex coordinate."""
         return self._global_hex_planets.get(hex_coord, [])
+
+    # --- scene.world (StrategyWorldAccess) surface ---
+    def planets_at_exact_hex(self, hex_coord):
+        return self._global_hex_planets.get(hex_coord, [])
+
+    def planet_by_id(self, planet_id):
+        for planets in self._global_hex_planets.values():
+            for p in planets:
+                if getattr(p, "id", None) == planet_id:
+                    return p
+        return None
+
+    def system_for_object(self, obj):
+        for system in self.systems.values():
+            if obj in getattr(system, "planets", []):
+                return system
+        return None
+
+    def iter_systems(self):
+        return iter(self.systems.values())
 
 
 class MockSession:
@@ -295,7 +322,7 @@ def build_queue_screen(mock_design_catalog, mock_design_loader, mock_registries,
         design_catalog=mock_design_catalog,
         design_loader=mock_design_loader,
         hex_coord=hex_coord,
-        galaxy=galaxy,
+        world=galaxy,  # PROJ-477 Phase 4
         empire=empire,
         facade=session,
         theme_id_supplier=lambda: "Federation",

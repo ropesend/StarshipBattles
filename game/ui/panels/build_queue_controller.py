@@ -71,7 +71,7 @@ class BuildQueueController:
         design_report: 'DesignReportPanel',
         on_queue_changed: Callable[[], None],
         hex_coord: Optional['HexCoord'] = None,
-        galaxy: Optional['Galaxy'] = None,
+        world: Any = None,
         empire: Optional['Empire'] = None,
         on_planet_selection_needed: Optional[Callable] = None,
         add_to_queue_callback: Optional['AddToQueueCallback'] = None,
@@ -100,9 +100,9 @@ class BuildQueueController:
         self.design_report = design_report
         self.on_queue_changed = on_queue_changed
 
-        # PROJ-79: Galaxy context for planet selection
+        # PROJ-79 / PROJ-477 Phase 4: scene.world live seam for planet lookup.
         self.hex_coord = hex_coord
-        self.galaxy = galaxy
+        self.world = world
         self.empire = empire
         self.on_planet_selection_needed = on_planet_selection_needed
 
@@ -453,11 +453,12 @@ class BuildQueueController:
             return False
         if getattr(source, 'planet_id', None) is not None:
             return False  # Already has a fixed planet
-        if not self.hex_coord or not self.galaxy or not self.empire:
-            return False  # No galaxy context
+        if not self.hex_coord or not self.world or not self.empire:
+            return False  # No world context
 
+        # PROJ-477 Phase 4: EXACT planet membership via scene.world.
         planets = [
-            p for p in self.galaxy.get_planets_at_global_hex(self.hex_coord)
+            p for p in self.world.planets_at_exact_hex(self.hex_coord)
             if p.owner_id == self.empire.id
         ]
         return len(planets) > 1
@@ -488,9 +489,9 @@ class BuildQueueController:
             if getattr(source, 'planet_id', None) is not None:
                 return source.planet_id
 
-            if self.hex_coord and self.galaxy and self.empire:
+            if self.hex_coord and self.world and self.empire:
                 planets = [
-                    p for p in self.galaxy.get_planets_at_global_hex(self.hex_coord)
+                    p for p in self.world.planets_at_exact_hex(self.hex_coord)
                     if p.owner_id == self.empire.id
                 ]
                 if len(planets) == 1:
@@ -550,7 +551,7 @@ class BuildQueueController:
         if self._needs_planet_selection(source, category):
             if self.on_planet_selection_needed:
                 planets = [
-                    p for p in self.galaxy.get_planets_at_global_hex(self.hex_coord)
+                    p for p in self.world.planets_at_exact_hex(self.hex_coord)
                     if p.owner_id == self.empire.id
                 ]
 

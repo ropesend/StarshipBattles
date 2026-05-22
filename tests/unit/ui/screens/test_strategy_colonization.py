@@ -48,6 +48,10 @@ class TestColonizationSystemZone:
         mock_galaxy = MagicMock()
         mock_galaxy.get_zones_at_global_hex = MagicMock(return_value=[mock_dyson])
         mock_scene.galaxy = mock_galaxy
+        # PROJ-477 Phase 4: colonization reads live zones through
+        # scene.world.zones_at_hex (multi-hex aware) + iter_systems.
+        mock_scene.world.zones_at_hex.return_value = [mock_dyson]
+        mock_scene.world.iter_systems.side_effect = lambda: iter([mock_system])
 
         # Create mock facade
         mock_facade = MagicMock()
@@ -90,6 +94,9 @@ class TestColonizationSystemZone:
         mock_galaxy = MagicMock()
         mock_galaxy.get_zones_at_global_hex = MagicMock(return_value=[])
         mock_scene.galaxy = mock_galaxy
+        # PROJ-477 Phase 4: live zone/system reads via scene.world.
+        mock_scene.world.zones_at_hex.return_value = []
+        mock_scene.world.iter_systems.side_effect = lambda: iter([mock_system])
 
         mock_facade = MagicMock()
         mock_facade.fleets.remaining_pods.return_value = {}
@@ -123,6 +130,15 @@ class TestHandleColonizeDesignation:
         scene.camera = MagicMock()
         scene.galaxy = galaxy
         scene.hex_size = 10
+        # PROJ-477 Phase 4: designation reads live zones through
+        # scene.world.zones_at_hex; mirror the galaxy's zone registry (empty
+        # when no galaxy/zone index configured).
+        def _zones_at(h):
+            get_zones = getattr(galaxy, "get_zones_at_global_hex", None)
+            if get_zones is None:
+                return []
+            return get_zones(h) or []
+        scene.world.zones_at_hex.side_effect = _zones_at
         return scene
 
     def _make_system_under_test(self, scene, system_at_hex):

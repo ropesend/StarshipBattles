@@ -59,11 +59,13 @@ class EmpireBuildQueueRegistrar:
     def open(self) -> None:
         c = self._composer
         empire = c.scene.current_empire
-        galaxy = c.scene.galaxy
+        # PROJ-477 Phase 4: thread the scene.world live seam (the window stores
+        # it for system-name lookups; no raw galaxy bus read).
+        world = c.scene.world
 
         existing = c.empire_build_queue_window
         if existing is not None and existing.alive():
-            existing.open_for_empire(empire, galaxy)
+            existing.open_for_empire(empire, world)
             return
 
         w, h = int(c.width * 0.9), int(c.height * 0.9)
@@ -74,7 +76,7 @@ class EmpireBuildQueueRegistrar:
             rect,
             c.manager,
             empire,
-            galaxy,
+            world,
             window_manager=c,
             on_close_callback=self._on_closed,
             on_navigate_to_hex=c.scene.on_navigate_to_hex_build,

@@ -56,36 +56,37 @@ def _facility_has_ability(planet: Any, ability_name: str) -> bool:
     return False
 
 
-def _global_hex(planet: Any, galaxy: Any) -> Any:
+def _global_hex(planet: Any, world: Any) -> Any:
     """Best-effort resolve the planet's global hex.
 
     Uses ``planet.global_hex`` when present (tests set this directly);
-    otherwise reconstructs via galaxy lookup; otherwise falls back to
-    ``planet.location``.
+    otherwise reconstructs via the scene.world system traversal; otherwise
+    falls back to ``planet.location`` (PROJ-477 Phase 4).
     """
     gh = getattr(planet, "global_hex", None)
     if gh is not None:
         return gh
-    # Reconstruct from system the planet belongs to.
-    if galaxy is not None:
-        for system in getattr(galaxy, "systems", None) or []:
+    # Reconstruct from the system the planet belongs to.
+    if world is not None:
+        for system in world.iter_systems():
             if planet in getattr(system, "planets", []):
                 return system.global_location + planet.location
     return planet.location
 
 
 def _matching_deployed_group_at_hex(
-    planet: Any, galaxy: Any, group_cls: type,
+    planet: Any, world: Any, group_cls: type,
 ) -> bool:
     """True if any owner-owned deployed group of ``group_cls`` is at hex.
 
     PROJ-431 Phase 3: walks ``empire.deployed_groups`` and matches on
     the concrete :class:`DeployedGroup` subclass.
+    PROJ-477 Phase 4: empires iterated through the scene.world seam.
     """
-    if galaxy is None:
+    if world is None:
         return False
-    target_hex = _global_hex(planet, galaxy)
-    empires = getattr(galaxy, "empires", None) or []
+    target_hex = _global_hex(planet, world)
+    empires = list(world.iter_empires())
     for emp in empires:
         if emp.id != planet.owner_id:
             continue
@@ -99,7 +100,7 @@ def _matching_deployed_group_at_hex(
 
 def build_menu_items(
     planet: Any,
-    galaxy: Any,
+    world: Any,
     callbacks: dict[str, Callable[[], None]],
 ) -> list[PlanetMenuItem]:
     """Return the ordered list of planet-menu rows.
@@ -130,14 +131,14 @@ def build_menu_items(
             "Recover Fighters",
             "recover_fighters",
             _facility_has_ability(planet, "RecoverFighters")
-            and _matching_deployed_group_at_hex(planet, galaxy, FighterWing),
+            and _matching_deployed_group_at_hex(planet, world, FighterWing),
         ),
         (
             "Recover Satellites",
             "recover_satellites",
             _facility_has_ability(planet, "RecoverSatellites")
             and _matching_deployed_group_at_hex(
-                planet, galaxy, SatelliteConstellation,
+                planet, world, SatelliteConstellation,
             ),
         ),
     ]

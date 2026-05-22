@@ -86,7 +86,12 @@ def _galaxy_with_groups(
         SimpleNamespace(id=oid, fleets=[], deployed_groups=gs)
         for oid, gs in by_empire.items()
     ]
-    return SimpleNamespace(empires=empires, systems=[])
+    # PROJ-477 Phase 4: planet menu builder takes the scene.world live seam
+    # (iter_empires + iter_systems), not a raw galaxy.
+    return SimpleNamespace(
+        iter_empires=lambda: iter(empires),
+        iter_systems=lambda: iter(()),
+    )
 
 
 def _all_callbacks() -> tuple[dict[str, Callable[[], None]], dict[str, int]]:

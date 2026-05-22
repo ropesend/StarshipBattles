@@ -71,14 +71,16 @@ class TestStrategyRendererPublicApi:
         assert params[1].name == "screen"
 
     def test_property_accessors_present(self) -> None:
-        """The composer keeps property accessors that delegate to scene."""
+        """The composer keeps property accessors that delegate to scene.
+
+        PROJ-477 Phase 6: the ``galaxy``/``systems``/``empires`` re-exporters
+        were DELETED — render modules read through the ``world`` seam instead.
+        """
         from game.ui.screens.strategy_renderer import StrategyRenderer
 
         for name in (
             "camera",
-            "galaxy",
-            "systems",
-            "empires",
+            "world",
             "hex_size",
             "screen_width",
             "screen_height",
@@ -89,4 +91,10 @@ class TestStrategyRendererPublicApi:
             attr = getattr(StrategyRenderer, name, None)
             assert isinstance(attr, property), (
                 f"{name} should be a property on StrategyRenderer"
+            )
+
+        # The deleted re-exporters must NOT reappear.
+        for gone in ("galaxy", "systems", "empires"):
+            assert not hasattr(StrategyRenderer, gone), (
+                f"PROJ-477 Phase 6: the {gone!r} re-exporter must stay deleted."
             )

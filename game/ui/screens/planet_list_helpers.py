@@ -185,8 +185,11 @@ class PlanetListUiBuilder:
         screen.column_manager.sort_column_id = 'owner'
         screen.column_manager.sort_descending = False
 
+        # PROJ-477 Phase 4: PlanetDataSource takes the scene.world seam for
+        # context (the stored handle is unused for traversal; owner lookup uses
+        # the precomputed empires list on the columns).
         screen.data_source = PlanetDataSource(
-            screen.columns, screen.galaxy, screen.empire
+            screen.columns, screen.world, screen.empire
         )
         screen.selection = SingleSelect()
 

@@ -122,16 +122,19 @@ class StrategyRenderer:
         return self.scene.camera
 
     @property
-    def galaxy(self) -> Any:
-        return self.scene.galaxy
+    def world(self) -> Any:
+        """Scene-owned live raw-domain seam (PROJ-477 Phase 5).
 
-    @property
-    def systems(self) -> Any:
-        return self.scene.systems
+        Render modules read galaxy/empires/systems through ``r.world.iter_*`` /
+        the ``global_hex_*`` accessors — live collections, NO per-frame DTOs.
+        Replaces the ``r.galaxy`` / ``r.empires`` / ``r.systems`` re-exporters
+        (deleted in Phase 6).
+        """
+        return self.scene.world
 
-    @property
-    def empires(self) -> Any:
-        return self.scene.empires
+    # PROJ-477 Phase 6: the ``galaxy`` / ``systems`` / ``empires`` re-exporter
+    # properties were DELETED — all render modules read through ``r.world``
+    # (the scene-owned live seam). The boundary is now closed.
 
     @property
     def hex_size(self) -> Any:

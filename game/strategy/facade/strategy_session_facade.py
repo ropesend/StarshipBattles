@@ -9,14 +9,16 @@ Post-TD-08 surface:
 - 2 top-level callables: :meth:`handle_command`, :meth:`process_turn`.
 - 1 public attribute for the per-turn cache holder:
   :attr:`facade_state`.
-- 9 grouped namespace accessors, each returning a
+- 10 grouped namespace accessors, each returning a
   :class:`~game.strategy.facade.grouped_namespaces.*` wrapper around the
   corresponding slice: :attr:`commands`, :attr:`fleets`, :attr:`planets`,
-  :attr:`systems`, :attr:`empires`, :attr:`events`, :attr:`session_meta`,
-  :attr:`economy`, :attr:`validation`.
+  :attr:`systems`, :attr:`spatial`, :attr:`empires`, :attr:`events`,
+  :attr:`session_meta`, :attr:`economy`, :attr:`validation`. (:attr:`spatial`
+  is the PROJ-477 hex-contents read surface.)
 
-The class composes seven slices (PROJ-309 sub-phase 3.7):
-command-dispatch, fleet, planet, system, empire, economy, and event. The
+The class composes eight slices (PROJ-309 sub-phase 3.7; PROJ-477 added the
+spatial slice): command-dispatch, fleet, planet, system, spatial, empire,
+economy, and event. The
 slices share a :class:`FacadeSessionState` and never reach across to each
 other. Callers MUST NOT depend on the slice layout — slices are an
 implementation detail; the grouped namespace wrappers are the stable
@@ -40,6 +42,7 @@ from game.strategy.facade.grouped_namespaces import (
     FacadeFleetQueries,
     FacadePlanetQueries,
     FacadeSessionInfo,
+    FacadeSpatialQueries,
     FacadeSystemQueries,
     FacadeValidation,
 )
@@ -50,6 +53,7 @@ from game.strategy.facade.slices.empire_slice import EmpireSlice
 from game.strategy.facade.slices.event_slice import EventSlice
 from game.strategy.facade.slices.fleet_slice import FleetSlice
 from game.strategy.facade.slices.planet_slice import PlanetSlice
+from game.strategy.facade.slices.spatial_slice import SpatialSlice
 from game.strategy.facade.slices.system_slice import SystemSlice
 
 if TYPE_CHECKING:
@@ -93,6 +97,7 @@ class StrategySessionFacade:
         self._fleet_slice = FleetSlice(self._state)
         self._planet_slice = PlanetSlice(self._state)
         self._system_slice = SystemSlice(self._state)
+        self._spatial_slice = SpatialSlice(self._state)
         self._empire_slice = EmpireSlice(self._state)
         self._economy_slice = EconomySlice(self._state)
         self._event_slice = EventSlice(self._state)
@@ -117,6 +122,7 @@ class StrategySessionFacade:
         self._fleets = FacadeFleetQueries(self._fleet_slice)
         self._planets = FacadePlanetQueries(self._planet_slice)
         self._systems = FacadeSystemQueries(self._system_slice)
+        self._spatial = FacadeSpatialQueries(self._spatial_slice)
         self._empires = FacadeEmpireQueries(self._empire_slice)
         self._events = FacadeEventQueries(self._event_slice)
         self._session_meta = FacadeSessionInfo(self._event_slice, session)
@@ -152,6 +158,11 @@ class StrategySessionFacade:
     def systems(self) -> FacadeSystemQueries:
         """Grouped system / star / storm read surface (PROJ-430)."""
         return self._systems
+
+    @property
+    def spatial(self) -> FacadeSpatialQueries:
+        """Grouped spatial / hex-contents read surface (PROJ-477 Phase 2)."""
+        return self._spatial
 
     @property
     def empires(self) -> FacadeEmpireQueries:

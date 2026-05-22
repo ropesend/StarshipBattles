@@ -41,7 +41,7 @@ class MockStarListWindowUiBuilder:
     """
 
     def build(self, screen: "StarListWindow") -> None:
-        for required in ("galaxy", "all_stars", "columns", "preset_manager"):
+        for required in ("world", "all_stars", "columns", "preset_manager"):
             if not hasattr(screen, required):
                 raise AssertionError(
                     f"MockStarListWindowUiBuilder.build: screen has "

@@ -19,6 +19,10 @@ def mock_scene():
     scene.current_empire = Mock()
     scene.current_empire.id = 1
     scene.galaxy = Mock()
+    # PROJ-477 Phase 4: list windows take scene.world; iter_empires must yield
+    # a real (empty) sequence for the owner-name lookup list.
+    scene.world.iter_empires.side_effect = lambda: iter(())
+    scene.world.iter_systems.side_effect = lambda: iter(())
     scene._facade = Mock()
     scene._facade.events.all = Mock(return_value=[])
     scene.on_navigate_to_hex_build = Mock()
@@ -126,8 +130,8 @@ class TestPlanetListWindow:
         assert isinstance(rect, pygame.Rect)
         # Check manager is passed (second positional arg)
         assert call_args[0][1] is window_manager.manager
-        # Check galaxy is passed (third positional arg)
-        assert call_args[0][2] is window_manager.scene.galaxy
+        # PROJ-477 Phase 4: the third positional arg is now scene.world.
+        assert call_args[0][2] is window_manager.scene.world
         # Check empire is passed (fourth positional arg)
         assert call_args[0][3] is window_manager.scene.current_empire
 

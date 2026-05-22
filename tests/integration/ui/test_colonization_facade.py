@@ -73,6 +73,9 @@ class TestOnColonizeClick:
 
         mock_scene = Mock()
         mock_scene.systems = []
+        # PROJ-477 Phase 4: live system/zone reads via scene.world.
+        mock_scene.world.iter_systems.side_effect = lambda _s=[]: iter(_s)
+        mock_scene.world.zones_at_hex.return_value = []
 
         mock_facade = Mock()
         mock_facade.validation.can_colonize.return_value = ValidationResult()
@@ -463,6 +466,9 @@ class TestOnColonizeClickPodFiltering:
 
         mock_scene = Mock()
         mock_scene.systems = [mock_star_system]
+        # PROJ-477 Phase 4: live system/zone reads via scene.world.
+        mock_scene.world.iter_systems.side_effect = lambda _s=[mock_star_system]: iter(_s)
+        mock_scene.world.zones_at_hex.return_value = []
 
         mock_facade = Mock()
         mock_facade.validation.can_colonize.return_value = ValidationResult()
@@ -509,6 +515,9 @@ class TestOnColonizeClickPodFiltering:
 
         mock_scene = Mock()
         mock_scene.systems = [mock_star_system]
+        # PROJ-477 Phase 4: live system/zone reads via scene.world.
+        mock_scene.world.iter_systems.side_effect = lambda _s=[mock_star_system]: iter(_s)
+        mock_scene.world.zones_at_hex.return_value = []
 
         mock_facade = Mock()
         mock_facade.validation.can_colonize.return_value = ValidationResult()
@@ -543,6 +552,9 @@ class TestOnColonizeClickPodFiltering:
 
         mock_scene = Mock()
         mock_scene.systems = [mock_star_system]
+        # PROJ-477 Phase 4: live system/zone reads via scene.world.
+        mock_scene.world.iter_systems.side_effect = lambda _s=[mock_star_system]: iter(_s)
+        mock_scene.world.zones_at_hex.return_value = []
 
         mock_facade = Mock()
         mock_facade.validation.can_colonize.return_value = ValidationResult()
@@ -591,7 +603,12 @@ class TestHandleColonizeDesignationPodFiltering:
         mock_scene.camera = mock_camera
         mock_scene.hex_size = 32
         mock_scene.systems = [mock_system]
+        # PROJ-477 Phase 4: live system/zone reads via scene.world.
+        mock_scene.world.iter_systems.side_effect = lambda _s=[mock_system]: iter(_s)
+        mock_scene.world.zones_at_hex.return_value = []
         mock_scene.galaxy = None  # No zone lookup
+        # PROJ-477 Phase 4: live zone reads via scene.world (no zones here).
+        mock_scene.world.zones_at_hex.return_value = []
 
         mock_facade = Mock()
         # Fleet has no pods
@@ -643,7 +660,12 @@ class TestHandleColonizeDesignationPodFiltering:
         mock_scene.camera = mock_camera
         mock_scene.hex_size = 32
         mock_scene.systems = [mock_system]
+        # PROJ-477 Phase 4: live system/zone reads via scene.world.
+        mock_scene.world.iter_systems.side_effect = lambda _s=[mock_system]: iter(_s)
+        mock_scene.world.zones_at_hex.return_value = []
         mock_scene.galaxy = None
+        # PROJ-477 Phase 4: live zone reads via scene.world (no zones here).
+        mock_scene.world.zones_at_hex.return_value = []
 
         mock_facade = Mock()
         # Fleet has ICE_DWARF pod - matches planet
@@ -692,7 +714,12 @@ class TestHandleColonizeDesignationPodFiltering:
         mock_scene.camera = mock_camera
         mock_scene.hex_size = 32
         mock_scene.systems = [mock_system]
+        # PROJ-477 Phase 4: live system/zone reads via scene.world.
+        mock_scene.world.iter_systems.side_effect = lambda _s=[mock_system]: iter(_s)
+        mock_scene.world.zones_at_hex.return_value = []
         mock_scene.galaxy = None
+        # PROJ-477 Phase 4: live zone reads via scene.world (no zones here).
+        mock_scene.world.zones_at_hex.return_value = []
 
         mock_facade = Mock()
         # Fleet has NO pods
@@ -751,7 +778,12 @@ class TestHandleColonizeDesignationPodFiltering:
         mock_scene.camera = mock_camera
         mock_scene.hex_size = 32
         mock_scene.systems = [mock_system]
+        # PROJ-477 Phase 4: live system/zone reads via scene.world.
+        mock_scene.world.iter_systems.side_effect = lambda _s=[mock_system]: iter(_s)
+        mock_scene.world.zones_at_hex.return_value = []
         mock_scene.galaxy = None
+        # PROJ-477 Phase 4: live zone reads via scene.world (no zones here).
+        mock_scene.world.zones_at_hex.return_value = []
 
         mock_facade = Mock()
         # Fleet has only CONTINENTAL pod
@@ -810,6 +842,9 @@ class TestPlanetTypeDisplay:
 
         mock_scene = Mock()
         mock_scene.systems = [mock_star_system]
+        # PROJ-477 Phase 4: live system/zone reads via scene.world.
+        mock_scene.world.iter_systems.side_effect = lambda _s=[mock_star_system]: iter(_s)
+        mock_scene.world.zones_at_hex.return_value = []
 
         mock_facade = Mock()
         mock_facade.validation.can_colonize.return_value = ValidationResult()

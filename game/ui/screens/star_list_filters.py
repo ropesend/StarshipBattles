@@ -18,14 +18,17 @@ if TYPE_CHECKING:
 
 @profile_action("Panel: StarRegistry.gather_stars")
 def gather_stars(
-    galaxy,
+    world,
     *,
     facade_state: "Optional[FacadeSessionState]" = None,
 ) -> Any:
     """Collect all stars from the galaxy with pre-computed filter values.
 
+    PROJ-477 Phase 4: takes the scene-owned ``StrategyWorldAccess`` seam
+    (``world.iter_systems()``) instead of a raw galaxy.
+
     Args:
-        galaxy: The galaxy object containing systems and stars
+        world: The scene.world live-traversal seam (``iter_systems()``).
         facade_state: PROJ-411 Phase 1. Optional reference to the session's
             ``FacadeSessionState``. When supplied, the resulting list is
             cached at ``facade_state.stars_cache_new`` for the rest of
@@ -42,10 +45,10 @@ def gather_stars(
 
     stars = []
 
-    if not galaxy or not galaxy.systems:
+    if world is None:
         return stars
 
-    for system in galaxy.systems.values():
+    for system in world.iter_systems():
         star_count = len(system.stars)
         planet_count = len(system.planets)
 

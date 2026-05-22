@@ -60,6 +60,9 @@ def mock_galaxy():
     system.planets = [planet1, planet2, planet3]
 
     galaxy.systems = {"Sol": system}
+    # PROJ-477 Phase 4: gather_planets takes the scene.world seam; wire
+    # iter_systems to yield the same systems this fixture builds.
+    galaxy.iter_systems.side_effect = lambda: iter(galaxy.systems.values())
     galaxy.get_empire = Mock(return_value=Mock(name="Enemy Empire"))
 
     return galaxy

@@ -159,6 +159,14 @@ def test_resolve_click_target_returns_raw_hex_when_zoom_too_low() -> None:
     dispatcher._hit_test_planets.assert_not_called()
 
 
+def _picking_world(empires=(), zones=()):
+    """PROJ-477 Phase 4: click picking reads empires/zones through scene.world."""
+    return SimpleNamespace(
+        iter_empires=lambda: iter(empires),
+        zones_at_hex=lambda _h: list(zones),
+    )
+
+
 def test_handle_picking_prioritizes_hit_tested_planet_in_shared_hex() -> None:
     first_planet = _planet("First", HexCoord(0, 0))
     hit_planet = _planet("Hit", HexCoord(0, 0))
@@ -169,6 +177,7 @@ def test_handle_picking_prioritizes_hit_tested_planet_in_shared_hex() -> None:
         _get_system_at_hex=MagicMock(return_value=system),
         empires=[],
         galaxy=None,
+        world=_picking_world(),
         ui=MagicMock(),
         on_ui_selection=MagicMock(),
         selected_object=None,
@@ -195,6 +204,7 @@ def test_handle_picking_clears_detail_for_empty_space() -> None:
         _get_system_at_hex=MagicMock(return_value=None),
         empires=[],
         galaxy=None,
+        world=_picking_world(),
         ui=MagicMock(),
         on_ui_selection=MagicMock(),
         selected_object=object(),

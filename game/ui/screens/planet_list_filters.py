@@ -36,15 +36,18 @@ from game.ui.screens.list_filter_utils import make_attr_sort_key
 
 @profile_action("Panel: PlanetRegistry.gather_planets")
 def gather_planets(
-    galaxy,
+    world,
     empire,
     *,
     facade_state: "Optional[FacadeSessionState]" = None,
 ) -> Any:
     """Collect all planets from the galaxy with pre-computed filter values.
 
+    PROJ-477 Phase 4: takes the scene-owned ``StrategyWorldAccess`` seam
+    (``world.iter_systems()``) instead of a raw galaxy.
+
     Args:
-        galaxy: The galaxy object containing systems and planets
+        world: The scene.world live-traversal seam (``iter_systems()``).
         empire: The current player's empire for context
         facade_state: PROJ-411 Phase 1. Optional reference to the session's
             ``FacadeSessionState``. When supplied, the resulting list is
@@ -66,8 +69,8 @@ def gather_planets(
     m_earth_const = EARTH_MASS
     g_const = 9.81
 
-    if galaxy and galaxy.systems:
-        for s in galaxy.systems.values():
+    if world is not None:
+        for s in world.iter_systems():
             for p in s.planets:
                 # Pre-compute expensive filter values (avoids per-filter-iteration cost)
                 p._cached_gravity_g = p.surface_gravity / g_const

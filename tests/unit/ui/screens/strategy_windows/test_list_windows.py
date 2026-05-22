@@ -10,10 +10,17 @@ def _composer() -> SimpleNamespace:
     # PROJ-472 1C: list windows read empires/registries through the
     # facade-fed scene accessors (scene.empires / scene.registries), not
     # scene.session.*.
+    empires = [MagicMock(name="empire_1")]
+    # PROJ-477 Phase 4: list windows take the scene.world live seam.
+    world = SimpleNamespace(
+        iter_empires=lambda: iter(empires),
+        iter_systems=lambda: iter(()),
+    )
     scene = SimpleNamespace(
         current_empire=MagicMock(name="empire"),
         galaxy=MagicMock(name="galaxy"),
-        empires=[MagicMock(name="empire_1")],
+        world=world,
+        empires=empires,
         registries=MagicMock(name="registries"),
         facade=SimpleNamespace(
             economy=SimpleNamespace(race_registry=MagicMock(return_value=None)),
@@ -57,7 +64,7 @@ def test_star_list_open_creates_centered_window() -> None:
     assert rect.topleft == (50, 40)
     assert rect.size == (900, 720)
     assert window_cls.call_args.args[1] is composer.manager
-    assert window_cls.call_args.args[2] is composer.scene.galaxy
+    assert window_cls.call_args.args[2] is composer.scene.world
     assert window_cls.call_args.kwargs["window_manager"] is composer
     assert window_cls.call_args.kwargs["on_close_callback"] == registrar._on_closed
     assert window_cls.call_args.kwargs["on_navigate_callback"] == registrar._on_navigate
@@ -78,7 +85,7 @@ def test_star_list_open_reuses_alive_existing_window() -> None:
     existing.kill.assert_not_called()
     window_cls.assert_not_called()
     existing.open_for_galaxy.assert_called_once_with(
-        composer.scene.galaxy, composer.scene.current_empire
+        composer.scene.world, composer.scene.current_empire
     )
 
 
@@ -124,10 +131,11 @@ def test_planet_list_open_threads_detail_dependencies() -> None:
     with patch.object(list_windows, "PlanetListWindow") as window_cls:
         registrar.open()
 
-    assert window_cls.call_args.args[2] is composer.scene.galaxy
+    assert window_cls.call_args.args[2] is composer.scene.world
     assert window_cls.call_args.args[3] is composer.scene.current_empire
     assert window_cls.call_args.kwargs["asset_resolver"] is composer._asset_resolver
-    assert window_cls.call_args.kwargs["empires"] is composer.scene.empires
+    # PROJ-477 Phase 4: empires now sourced from scene.world.iter_empires().
+    assert window_cls.call_args.kwargs["empires"] == composer.scene.empires
     assert window_cls.call_args.kwargs["registries"] is composer.scene.registries
     assert window_cls.call_args.kwargs["race_registry"] is race_registry
     assert window_cls.call_args.kwargs["facade"] is composer.scene.facade

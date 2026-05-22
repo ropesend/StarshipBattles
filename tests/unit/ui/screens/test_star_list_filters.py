@@ -32,10 +32,11 @@ def _make_star(name="Sol", star_type=StarType.MAIN_SEQUENCE, mass=1.0,
 
 
 def _make_galaxy(systems_dict):
-    """Create a mock galaxy with the given systems dict."""
-    galaxy = MagicMock()
-    galaxy.systems = systems_dict
-    return galaxy
+    """Create a scene.world stub yielding the given systems (PROJ-477 Phase 4:
+    gather_stars takes the world seam's ``iter_systems()``)."""
+    world = MagicMock()
+    world.iter_systems.side_effect = lambda: iter(systems_dict.values())
+    return world
 
 
 def _make_system(name, stars, planets=None, location=None):

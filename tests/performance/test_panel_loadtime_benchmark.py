@@ -69,15 +69,17 @@ def test_benchmark_open_paths_legacy_uncached(
     from game.strategy.systems.design_repository import DesignRepository
 
     session, galaxy, empires = smoke_turn1_scenario
+    from game.ui.screens.strategy_world_access import StrategyWorldAccess
+    _w = StrategyWorldAccess(lambda: session)  # PROJ-477 Phase 4
     empire = empires[0]
 
     with tempfile.TemporaryDirectory() as tmpdir:
         os.makedirs(os.path.join(tmpdir, "designs", "empire_0"), exist_ok=True)
         for _ in range(_ITERATIONS):
-            planets = list(gather_planets(galaxy, empire))
+            planets = list(gather_planets(_w, empire))
             keys = compute_planet_effect_keys(planets)
             build_effect_columns(keys)
-            stars = list(gather_stars(galaxy))
+            stars = list(gather_stars(_w))
             compute_star_ranges(stars)
             load_resource_icons()
             # PROJ-434 Phase 2: BEFORE-state measurement now uses
@@ -111,6 +113,8 @@ def test_benchmark_open_paths_with_facade_cache(
     from game.strategy.facade.slices._facade_state import FacadeSessionState
 
     session, galaxy, empires = smoke_turn1_scenario
+    from game.ui.screens.strategy_world_access import StrategyWorldAccess
+    _w = StrategyWorldAccess(lambda: session)  # PROJ-477 Phase 4
     empire = empires[0]
     state = FacadeSessionState(session=session)
 
@@ -122,10 +126,10 @@ def test_benchmark_open_paths_with_facade_cache(
         catalog = DesignCatalog(empire_id=0)
         catalog.repopulate_from(DesignRepository(tmpdir, empire_id=0))
         for _ in range(_ITERATIONS):
-            planets = list(gather_planets(galaxy, empire, facade_state=state))
+            planets = list(gather_planets(_w, empire, facade_state=state))
             keys = compute_planet_effect_keys(planets)
             build_effect_columns(keys)
-            stars = list(gather_stars(galaxy, facade_state=state))
+            stars = list(gather_stars(_w, facade_state=state))
             compute_star_ranges(stars)
             load_resource_icons()
             catalog.scan_designs()

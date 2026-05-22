@@ -97,3 +97,65 @@ class TestFacadeSystemProximity:
         # Test far miss
         result = facade.systems.near_hex(HexCoord(100, 100))
         assert result is None
+
+    def test_systems_by_name(self, facade, mock_session):
+        """PROJ-477 Phase 2: ``facade.systems.by_name`` projects the named
+        system to a ``SystemInfo``; ``None`` for an unknown name."""
+        system = MagicMock(spec=StarSystem)
+        system.global_location = HexCoord(5, 5)
+        system.name = "Sol"
+        system.planets = []
+        system.warp_points = []
+        system.stars = []
+        system.primary_star = None
+
+        mock_session.galaxy.get_system_by_name.side_effect = (
+            lambda name: system if name == "Sol" else None
+        )
+
+        result = facade.systems.by_name("Sol")
+        assert result is not None and result.name == "Sol"
+        assert facade.systems.by_name("Nowhere") is None
+
+    def test_systems_of_object(self, facade, mock_session):
+        """PROJ-477 Phase 2: ``facade.systems.of_object`` projects the
+        containing system to a ``SystemInfo``."""
+        planet = object()
+        system = MagicMock(spec=StarSystem)
+        system.global_location = HexCoord(5, 5)
+        system.name = "Home"
+        system.planets = []
+        system.warp_points = []
+        system.stars = []
+        system.primary_star = None
+
+        mock_session.galaxy.get_system_of_object.side_effect = (
+            lambda obj: system if obj is planet else None
+        )
+
+        result = facade.systems.of_object(planet)
+        assert result is not None and result.name == "Home"
+        assert facade.systems.of_object(object()) is None
+
+    def test_systems_at_map_hex_radius_50_semantics(self, facade, mock_session):
+        """PROJ-477 Phase 2: ``facade.systems.at_map_hex`` routes through the
+        pathfinder at radius=50 (NOT near_hex max_dist=8)."""
+        system = MagicMock(spec=StarSystem)
+        system.global_location = HexCoord(10, 10)
+        system.name = "Owner"
+        system.planets = []
+        system.warp_points = []
+        system.stars = []
+        system.primary_star = None
+
+        captured = {}
+
+        def at_hex(hex_c, radius):
+            captured["radius"] = radius
+            return system
+
+        mock_session.galaxy._pathfinder.get_system_at_hex.side_effect = at_hex
+
+        result = facade.systems.at_map_hex(HexCoord(0, 0))
+        assert result is not None and result.name == "Owner"
+        assert captured["radius"] == 50

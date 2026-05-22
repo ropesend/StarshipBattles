@@ -9,6 +9,28 @@ from game.core.hex_math import HexCoord, hex_to_pixel
 from game.ui.screens.strategy_camera_nav import CameraNavigator, ZOOM_KEYBOARD_STEP
 
 
+def _stub_world(systems):
+    """PROJ-477 Phase 4: CameraNavigator reads systems through ``scene.world``
+    (live traversal seam). This stub mirrors the StrategyWorldAccess surface the
+    navigator uses: ``iter_systems()`` + ``system_for_object(obj)``."""
+
+    def _system_for_object(obj):
+        return next(
+            (
+                s
+                for s in systems
+                if obj in getattr(s, "planets", [])
+                or obj in getattr(s, "warp_points", [])
+            ),
+            None,
+        )
+
+    return SimpleNamespace(
+        iter_systems=lambda: iter(systems),
+        system_for_object=_system_for_object,
+    )
+
+
 class MockScene:
     """Mock scene providing camera and hex_size for CameraNavigator."""
 
@@ -19,6 +41,7 @@ class MockScene:
         self.camera.position.y = 0.0
         self.hex_size = hex_size
         self.systems = []
+        self.world = _stub_world(self.systems)
 
 
 class TestCenterOnHex:
@@ -63,6 +86,7 @@ class _ZoomScene:
         self.camera = camera
         self.hex_size = 50
         self.systems = []
+        self.world = _stub_world(self.systems)
 
 
 class TestZoomInStep:
@@ -160,7 +184,7 @@ class TestCenterOnObjects:
         planet = _planet(HexCoord(2, -1))
         system = _system("Sol", HexCoord(10, 4))
         system.planets = [planet]
-        scene = SimpleNamespace(camera=_Camera(), hex_size=50, systems=[system])
+        scene = SimpleNamespace(camera=_Camera(), hex_size=50, systems=[system], world=_stub_world([system]))
         nav = CameraNavigator(scene)
 
         nav.center_on(planet)
@@ -171,7 +195,7 @@ class TestCenterOnObjects:
 
     def test_center_on_fleet_uses_global_location(self):
         fleet = _fleet(HexCoord(-3, 8))
-        scene = SimpleNamespace(camera=_Camera(), hex_size=50, systems=[])
+        scene = SimpleNamespace(camera=_Camera(), hex_size=50, systems=[], world=_stub_world([]))
         nav = CameraNavigator(scene)
 
         nav.center_on(fleet)
@@ -181,7 +205,7 @@ class TestCenterOnObjects:
         assert scene.camera.position.y == expected_y
 
     def test_center_on_unknown_object_leaves_camera_position(self):
-        scene = SimpleNamespace(camera=_Camera(), hex_size=50, systems=[])
+        scene = SimpleNamespace(camera=_Camera(), hex_size=50, systems=[], world=_stub_world([]))
         scene.camera.position.x = 123.0
         scene.camera.position.y = 456.0
         nav = CameraNavigator(scene)
@@ -195,7 +219,7 @@ class TestCenterOnObjects:
 class TestZoomToGalaxy:
     def test_camera_zoom_to_galaxy_bounds_clamps(self):
         systems = [_system("A", HexCoord(-100, 0)), _system("B", HexCoord(100, 0))]
-        scene = SimpleNamespace(camera=_Camera(width=100, height=100), hex_size=50, systems=systems)
+        scene = SimpleNamespace(camera=_Camera(width=100, height=100), hex_size=50, systems=systems, world=_stub_world(systems))
         nav = CameraNavigator(scene)
 
         nav.zoom_to_galaxy()
@@ -205,7 +229,7 @@ class TestZoomToGalaxy:
 
     def test_zoom_to_galaxy_centers_between_system_positions(self):
         systems = [_system("A", HexCoord(0, 0)), _system("B", HexCoord(4, 0))]
-        scene = SimpleNamespace(camera=_Camera(width=4000, height=4000), hex_size=50, systems=systems)
+        scene = SimpleNamespace(camera=_Camera(width=4000, height=4000), hex_size=50, systems=systems, world=_stub_world(systems))
         nav = CameraNavigator(scene)
 
         nav.zoom_to_galaxy()
@@ -217,7 +241,7 @@ class TestZoomToGalaxy:
         assert scene.camera.min_zoom <= scene.camera.zoom <= scene.camera.max_zoom
 
     def test_zoom_to_galaxy_no_systems_is_noop(self):
-        scene = SimpleNamespace(camera=_Camera(), hex_size=50, systems=[])
+        scene = SimpleNamespace(camera=_Camera(), hex_size=50, systems=[], world=_stub_world([]))
         scene.camera.position.x = 12.0
         scene.camera.zoom = 1.25
         nav = CameraNavigator(scene)
@@ -235,6 +259,7 @@ class TestZoomToSystem:
             camera=_Camera(),
             hex_size=50,
             systems=[system],
+            world=_stub_world([system]),
             last_selected_system=system,
             selected_object=None,
         )
@@ -256,6 +281,7 @@ class TestZoomToSystem:
             camera=_Camera(),
             hex_size=50,
             systems=[system],
+            world=_stub_world([system]),
             last_selected_system=None,
             selected_object=planet,
         )
@@ -273,6 +299,7 @@ class TestZoomToSystem:
             camera=_Camera(),
             hex_size=50,
             systems=[],
+            world=_stub_world([]),
             last_selected_system=None,
             selected_object=None,
         )
@@ -294,6 +321,7 @@ class TestCycleSelection:
             camera=_Camera(),
             hex_size=50,
             systems=[],
+            world=_stub_world([]),
             selected_object=None,
             current_empire=SimpleNamespace(colonies=[first, second], fleets=[]),
         )
@@ -308,6 +336,7 @@ class TestCycleSelection:
             camera=_Camera(),
             hex_size=50,
             systems=[],
+            world=_stub_world([]),
             selected_object=first,
             current_empire=SimpleNamespace(colonies=[], fleets=[first, second]),
         )
@@ -320,6 +349,7 @@ class TestCycleSelection:
             camera=_Camera(),
             hex_size=50,
             systems=[],
+            world=_stub_world([]),
             selected_object=None,
             current_empire=SimpleNamespace(colonies=[object()], fleets=[object()]),
         )

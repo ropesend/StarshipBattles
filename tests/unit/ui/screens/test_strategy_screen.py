@@ -52,6 +52,22 @@ def _make_strategy_screen():
     session.human_player_ids = [0]
     screen.session = session
 
+    # PROJ-477 Phase 4/5: scene.world live seam + order_writes handle. The
+    # bypass-init helper wires a stub world resolving from session.systems /
+    # session.empires (the MagicMock galaxy is not a real traversable graph).
+    world = MagicMock()
+    world.iter_systems.side_effect = lambda: iter(session.systems)
+    world.iter_empires.side_effect = lambda: iter(session.empires)
+    world.system_for_object.side_effect = lambda obj: next(
+        (
+            s
+            for s in session.systems
+            if obj in getattr(s, "planets", []) or obj in getattr(s, "warp_points", [])
+        ),
+        None,
+    )
+    screen._world = world
+
     # Facade
     facade = MagicMock()
     # PROJ-475 Phase 3: human_player_ids consumers read through
@@ -289,7 +305,9 @@ class TestOnUiSelection:
         screen, _ = _make_strategy_screen()
         mock_fleet = MagicMock()
         mock_fleet.owner_id = 0  # Current player's ID
-        screen.session.human_player_ids = [0]
+        # PROJ-477 Phase 3: the public session getter is retired; configure the
+        # composition-root private handle directly in bypass-init tests.
+        screen._session.human_player_ids = [0]
         screen._get_object_asset = MagicMock(return_value=None)
 
         with patch('game.ui.screens.strategy_screen_selection.is_fleet', return_value=True), \
@@ -627,25 +645,18 @@ class TestNavigation:
 class TestProperties:
     """Test property accessors."""
 
-    def test_galaxy_property_delegates_to_session(self):
-        """galaxy property should return session.galaxy."""
-        screen, mocks = _make_strategy_screen()
-        expected = MagicMock()
-        mocks['session'].galaxy = expected
-
-        assert screen.galaxy is expected
-
-    def test_empires_property_delegates_to_session(self):
-        """empires property should return session.empires."""
-        screen, mocks = _make_strategy_screen()
-
-        assert screen.empires is mocks['session'].empires
-
-    def test_systems_property_delegates_to_session(self):
-        """systems property should return session.systems."""
-        screen, mocks = _make_strategy_screen()
-
-        assert screen.systems is mocks['session'].systems
+    def test_broad_passthrough_properties_are_deleted(self):
+        """PROJ-477 Phase 6: the broad ``galaxy``/``empires``/``systems``
+        raw-domain pass-through properties were DELETED. Consumers read live
+        galaxy/empires/systems through the scene-owned ``world`` seam (or the
+        facade); the screen's own helpers read ``_session`` directly."""
+        assert not hasattr(type(StrategyScreen := __import__(
+            "game.ui.screens.strategy_screen", fromlist=["StrategyScreen"]
+        ).StrategyScreen), "galaxy")
+        assert not hasattr(StrategyScreen, "empires")
+        assert not hasattr(StrategyScreen, "systems")
+        # The replacement seam is present.
+        assert isinstance(getattr(StrategyScreen, "world", None), property)
 
     def test_input_mode_property_delegates_to_input(self):
         """input_mode property should delegate to input handler."""
@@ -776,7 +787,7 @@ class TestErrorHandlingPaths:
         """advance_turn() should delegate to game_state manager (which handles edge cases)."""
         screen, mocks = _make_strategy_screen()
         screen.current_player_index = 0
-        screen.session.human_player_ids = []  # Empty list
+        screen._session.human_player_ids = []  # Empty list (PROJ-477: private handle)
 
         # Should delegate to game_state manager
         screen.advance_turn()
@@ -787,9 +798,9 @@ class TestErrorHandlingPaths:
     def test_current_empire_with_empty_human_player_ids_returns_active_empire(self):
         """current_empire should not index into an empty human player list."""
         screen, _ = _make_strategy_screen()
-        active_empire = screen.session.empires[1]
-        screen.session.active_empire = active_empire
-        screen.session.human_player_ids = []
+        active_empire = screen._session.empires[1]
+        screen._session.active_empire = active_empire
+        screen._session.human_player_ids = []
 
         assert screen.current_empire is active_empire
 
@@ -822,20 +833,26 @@ class TestEdgeCases:
     """Test boundary values and edge cases."""
 
     def test_strategy_screen_with_zero_systems(self):
-        """StrategyScreen should handle galaxy with zero systems."""
+        """StrategyScreen should handle galaxy with zero systems.
+
+        PROJ-477 Phase 6: the ``systems`` pass-through was deleted; consumers
+        iterate via the scene-owned ``world`` seam.
+        """
         screen, mocks = _make_strategy_screen()
         mocks['session'].systems = []
-        screen.session.systems = []
 
-        assert len(screen.systems) == 0
+        assert len(list(screen.world.iter_systems())) == 0
 
     def test_strategy_screen_with_zero_empires(self):
-        """StrategyScreen should handle game with zero empires (edge case)."""
+        """StrategyScreen should handle game with zero empires (edge case).
+
+        PROJ-477 Phase 6: the ``empires`` pass-through was deleted; consumers
+        iterate via the scene-owned ``world`` seam.
+        """
         screen, mocks = _make_strategy_screen()
         mocks['session'].empires = []
-        screen.session.empires = []
 
-        assert len(screen.empires) == 0
+        assert len(list(screen.world.iter_empires())) == 0
 
     def test_handle_resize_minimum_dimensions(self):
         """handle_resize() should handle minimum usable dimensions (800x600)."""
@@ -885,7 +902,7 @@ class TestEdgeCases:
     def test_current_player_index_wrapping(self):
         """advance_turn() should delegate to game_state manager for player wrapping."""
         screen, mocks = _make_strategy_screen()
-        screen.session.human_player_ids = [0, 1, 2]
+        screen._session.human_player_ids = [0, 1, 2]  # PROJ-477: private handle
 
         # Start at 0, advance 3 times
         screen.current_player_index = 0
@@ -1010,6 +1027,43 @@ class TestSessionSetterFacadeRebuild:
     split-brain state where commands dispatched through the stale facade
     while reads (galaxy/empires/active_empire) came from the new session.
     """
+
+    def test_session_getter_raises_attribute_error(self) -> None:
+        """PROJ-477 Phase 3 Task 3.4: the public ``session`` GETTER is retired —
+        reading ``screen.session`` raises ``AttributeError`` pointing at the
+        right surfaces. The SETTER stays (split-brain guard / test swap)."""
+        import pytest
+
+        from game.ui.screens.strategy_screen import StrategyScreen
+
+        screen = StrategyScreen.__new__(StrategyScreen)
+        screen._session = MagicMock(name="session")
+
+        with pytest.raises(AttributeError) as exc:
+            _ = screen.session
+
+        msg = str(exc.value)
+        # Message points the reader at the right replacement surfaces.
+        assert "facade" in msg or "active_empire_id" in msg or "world" in msg
+
+    def test_session_setter_still_works_after_getter_retired(self) -> None:
+        """PROJ-477 Phase 3 Task 3.4: ``screen.session = mock`` STILL works and
+        rebuilds the facade in lockstep, even though the getter raises."""
+        from game.ui.screens.strategy_screen import StrategyScreen
+
+        screen = StrategyScreen.__new__(StrategyScreen)
+        screen._session = MagicMock(name="original")
+
+        with patch(
+            "game.ui.screens.strategy_screen.StrategySessionFacade",
+        ) as facade_cls:
+            new_facade = MagicMock(name="new_facade")
+            facade_cls.return_value = new_facade
+            new_session = MagicMock(name="new_session")
+            screen.session = new_session
+
+        assert screen._session is new_session
+        assert screen._facade is new_facade
 
     def test_session_setter_rebuilds_facade_around_new_session(self) -> None:
         from game.ui.screens.strategy_screen import StrategyScreen

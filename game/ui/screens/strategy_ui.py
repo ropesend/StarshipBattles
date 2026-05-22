@@ -195,8 +195,9 @@ class StrategyUI:
         self.close_fleet_context_menu()  # one-at-a-time
 
         callbacks = self._build_fleet_menu_callbacks(fleet)
+        # PROJ-477 Phase 4: menu builders take the scene.world live seam.
         items = build_menu_items(
-            fleet, self.scene.galaxy, self._mapper, callbacks=callbacks,
+            fleet, self.scene.world, self._mapper, callbacks=callbacks,
         )
         if not items:
             # AC bullet 9 guarantees Move/Join are unconditional, so this
@@ -234,7 +235,8 @@ class StrategyUI:
         """
         self.close_planet_context_menu()
         callbacks = self._build_planet_menu_callbacks(planet)
-        items = build_planet_menu_items(planet, self.scene.galaxy, callbacks)
+        # PROJ-477 Phase 4: menu builders take the scene.world live seam.
+        items = build_planet_menu_items(planet, self.scene.world, callbacks)
         if not items:
             return
         height = PlanetContextMenu.required_height(len(items))

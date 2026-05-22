@@ -4,7 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-477 | Facade read-path: delete galaxy/empires/systems StrategyScreen pass-throughs + renderer/read-model boundary (deferred from PROJ-475) | Planning | 2026-05-22 | 2026-05-22 |
+| PROJ-477 | Facade read-path: delete galaxy/empires/systems StrategyScreen pass-throughs + renderer/read-model boundary (deferred from PROJ-475) | Awaiting Verification | 2026-05-22 | 2026-05-22 |
 | PROJ-476 | Facade read-path: tooling/editor screens (battle_setup, galaxy_test, race_setup) reader migration (follow-on from PROJ-472) | Planning | 2026-05-21 | 2026-05-21 |
 | PROJ-475 | Facade read-path: remaining live strategy-screen + render readers migration (follow-on from PROJ-472) | Planning | 2026-05-21 | 2026-05-21 |
 | PROJ-474 | Facade read-path: value/config UI-safe read-surface allowlist consolidation (follow-on from PROJ-472) | Planning | 2026-05-21 | 2026-05-21 |

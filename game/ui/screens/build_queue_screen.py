@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 import pygame
 import pygame_gui
-from typing import TYPE_CHECKING, List, Optional, Callable, Set, Union
+from typing import TYPE_CHECKING, Any, List, Optional, Callable, Set, Union
 
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
@@ -54,7 +54,7 @@ class BuildQueueScreen:
         design_catalog: 'DesignCatalog' = None,
         design_loader: 'DesignLoaderAdapter' = None,
         hex_coord: 'HexCoord' = None,
-        galaxy: 'Galaxy' = None,
+        world: Any = None,
         empire: 'Empire' = None,
         input_mapper: Optional['InputMapper'] = None,
         *,
@@ -86,7 +86,7 @@ class BuildQueueScreen:
         effective_initial_yard = initial_yard
 
         # Validate required parameters (relaxed when no yard is provided).
-        self._validate_params(hex_coord, galaxy, empire, effective_initial_yard)
+        self._validate_params(hex_coord, world, empire, effective_initial_yard)
 
         # ---- Shell block: DI / always-present state. ----------------------
         self.manager = manager
@@ -108,7 +108,8 @@ class BuildQueueScreen:
         # only construction has a defined attribute surface).
         self.design_catalog = design_catalog
         self.design_loader = design_loader
-        self.galaxy = galaxy
+        # PROJ-477 Phase 4: scene.world live seam (was raw galaxy).
+        self.world = world
         self.empire = empire
 
         # Yard-specific state (initialized to "no yard" defaults; ``open_for_yard``
@@ -154,19 +155,20 @@ class BuildQueueScreen:
                 portrait_surface=portrait_surface,
             )
 
-    def _validate_params(self, hex_coord, galaxy, empire, build_context) -> None:
+    def _validate_params(self, hex_coord, world, empire, build_context) -> None:
         """Validate required constructor parameters.
 
         PROJ-376: When ``build_context`` is None (shell-only construction),
-        ``hex_coord`` may also be None. ``galaxy`` and ``empire`` remain
+        ``hex_coord`` may also be None. ``world`` and ``empire`` remain
         required because they're shell-level dependencies (the screen routes
         commands through them regardless of the active yard).
+        PROJ-477 Phase 4: ``world`` is the scene.world live seam (was galaxy).
         """
-        if galaxy is None:
+        if world is None:
             raise ValidationException(
-                "BuildQueueScreen requires galaxy parameter",
+                "BuildQueueScreen requires world parameter",
                 code=ErrorCode.MISSING_DEPENDENCY.value,
-                context={"screen": "BuildQueueScreen", "missing_param": "galaxy"}
+                context={"screen": "BuildQueueScreen", "missing_param": "world"}
             )
         if empire is None:
             raise ValidationException(
@@ -234,7 +236,7 @@ class BuildQueueScreen:
             design_report=self.panels.design_report,
             on_queue_changed=self._input_router._refresh_queue_display,
             hex_coord=hex_coord,
-            galaxy=self.galaxy,
+            world=self.world,
             empire=self.empire,
             on_planet_selection_needed=self._input_router._prompt_target_planet,
             add_to_queue_callback=self._input_router._dispatch_add_to_queue_command,
@@ -354,7 +356,7 @@ class BuildQueueScreen:
         # Update controller for the new yard.
         self.controller.build_context = yard
         self.controller.hex_coord = hex_coord
-        self.controller.galaxy = self.galaxy
+        self.controller.world = self.world
         self.controller.empire = self.empire
         if self.active_queue_source is not None:
             self.controller.set_active_queue(self.active_queue_source)

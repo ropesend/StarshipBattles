@@ -82,14 +82,20 @@ _SESSION_READ_ALLOWLIST: frozenset[tuple[str, str]] = frozenset({
     # self-read, distinct from the retired public ``human_player_ids``
     # pass-through whose external consumers moved to the facade in Phase 3.
     ("game/ui/screens/strategy_screen.py", "_session.human_player_ids"),
-    # The ``session`` property body returns the private handle wholesale;
-    # this IS the documented composition-root pass-through. Its GETTER
-    # retirement is DEFERRED to PROJ-477 (live consumers: system_tree_panel
-    # dynamic resolve + Category B mutator write seams). The setter stays.
+    # PROJ-477 Phase 3 Task 3.4 RETIRED the public ``session`` GETTER (it now
+    # raises ``AttributeError`` — it no longer extracts ``_session`` wholesale).
+    # The single remaining ``_session.__extract__`` match in this file is the
+    # SETTER's ``self._session = value`` STORE target (the matcher anchors on
+    # the bare ``_session`` extraction regardless of Load/Store context). That
+    # is the composition root assigning its own private handle — the legitimate
+    # write seam tests use via ``screen.session = mock`` — so it stays
+    # allowlisted-with-reason.
     ("game/ui/screens/strategy_screen.py", "_session.__extract__"),
-    # --- Category B: mutator / state-manager write seams (PROJ-475) ---
-    ("game/ui/screens/strategy_game_state_manager.py", "session.active_empire"),
-    ("game/ui/screens/strategy_screen_order_editing.py", "session.fleet_mutator"),
+    # --- Category B: mutator / state-manager write seams ---
+    # PROJ-477 Phase 3 Task 3.2 MIGRATED + REMOVED these: the three Category B
+    # writes (set-active-empire / set-fleet-path / pop-fleet-order) now route
+    # through the narrow ``screen.order_writes`` composition-root handle
+    # (backed by ``_session``) instead of the public ``session`` getter.
     # --- Category C: live session readers deferred to PROJ-475 ---
     # PROJ-475 Phase 2 MIGRATED + REMOVED the former Category C readers:
     #   strategy_event_router (session.get_empire → facade.empires.race_config),
@@ -112,6 +118,13 @@ _SESSION_READ_ALLOWLIST: frozenset[tuple[str, str]] = frozenset({
     # save_path handoff. Task 2.5 MIGRATED + REMOVED the transfer_controller
     # entry (discover_pod_designs now uses
     # facade.facade_state.get_design_catalog_for_empire(viewing_empire_id)).
+    # --- Category F: DYNAMIC getattr-by-name session extraction (PROJ-477 1.2) ---
+    # (none) — PROJ-477 Phase 3 Task 3.1 rewired
+    # ``system_tree_panel._get_empire_context`` to scene.active_empire_id +
+    # scene.registries, so the former ``getattr(scene, 'session')`` extraction
+    # is gone and its allowlist entry was removed. The getattr matcher stays
+    # (pinned by ``test_session_guard_catches_dynamic_getattr_extraction``) to
+    # block net-new getattr-by-name bypasses.
 })
 
 
@@ -227,6 +240,29 @@ def _matched_session_read(
     return None
 
 
+def _matched_getattr_session(node: ast.Call) -> str | None:
+    """Return ``"getattr.session"`` / ``"getattr.{_session}"`` if ``node`` is a
+    ``getattr(<expr>, "session")`` / ``getattr(<expr>, "_session")`` call, else
+    None.
+
+    PROJ-477 Task 1.2: ``system_tree_panel.py:418-425`` extracts the live
+    session via ``getattr(scene, "session")`` — a string-keyed lookup that the
+    attribute-chain matcher (:func:`_matched_session_read`) never sees, because
+    the resulting object is read off a LOCAL, not a ``.session`` attribute node.
+    This sibling matcher closes that hole: the second positional argument being
+    the literal ``"session"``/``"_session"`` is the bypass shape.
+    """
+    func = node.func
+    if not (isinstance(func, ast.Name) and func.id == "getattr"):
+        return None
+    if len(node.args) < 2:
+        return None
+    key = node.args[1]
+    if isinstance(key, ast.Constant) and key.value in _SESSION_ATTR_NAMES:
+        return f"getattr.{key.value}" if key.value != "session" else "getattr.session"
+    return None
+
+
 @pytest.mark.parametrize(
     "path",
     _ui_python_files(),
@@ -246,11 +282,14 @@ def test_no_unallowlisted_session_reads_in_ui(path: Path) -> None:
     tc_lines = _type_checking_linenos(tree)
     parents = _parent_map(tree)
     for node in ast.walk(tree):
-        if not isinstance(node, ast.Attribute):
+        if isinstance(node, ast.Attribute):
+            attr_path = _matched_session_read(node, parents)
+        elif isinstance(node, ast.Call):
+            attr_path = _matched_getattr_session(node)
+        else:
             continue
         if node.lineno in tc_lines:
             continue
-        attr_path = _matched_session_read(node, parents)
         if attr_path is None:
             continue
         if (rel, attr_path) in _SESSION_READ_ALLOWLIST:
@@ -321,11 +360,14 @@ def _violations_in_source(rel: str, src: str) -> list[tuple[int, str]]:
     parents = _parent_map(tree)
     out: list[tuple[int, str]] = []
     for node in ast.walk(tree):
-        if not isinstance(node, ast.Attribute):
+        if isinstance(node, ast.Attribute):
+            attr_path = _matched_session_read(node, parents)
+        elif isinstance(node, ast.Call):
+            attr_path = _matched_getattr_session(node)
+        else:
             continue
         if node.lineno in tc_lines:
             continue
-        attr_path = _matched_session_read(node, parents)
         if attr_path is None:
             continue
         out.append((node.lineno, attr_path))
@@ -378,6 +420,51 @@ def test_session_guard_chained_read_reports_per_attribute_not_extract() -> None:
     assert ("session.registries") in {p for _, p in hits}
     assert "session.__extract__" not in {p for _, p in hits}, (
         "A chained `.session.<attr>` read must be reported once, per-attribute."
+    )
+
+
+def test_session_guard_catches_dynamic_getattr_extraction() -> None:
+    """PROJ-477 Task 1.2: a ``getattr(scene, "session")`` string-keyed
+    extraction must be flagged.
+
+    ``system_tree_panel.py:418-425`` resolves the live session via
+    ``getattr(scene, 'session')`` then reads ``.active_empire``/``.registries``
+    off the LOCAL result — the AST attribute matcher never sees a ``.session``
+    node, so without the ``getattr`` sibling matcher this bypass slips through.
+    The existing chained / aliased forms must still match too.
+    """
+    getattr_hits = _violations_in_source(
+        "synthetic.py", "s = getattr(scene, 'session')\nv = s.active_empire\n"
+    )
+    assert any(p == "getattr.session" for _, p in getattr_hits), (
+        "Dynamic getattr(scene, 'session') extraction must be flagged."
+    )
+
+    getattr_private = _violations_in_source(
+        "synthetic.py", "s = getattr(obj, '_session')\n"
+    )
+    assert any(p == "getattr._session" for _, p in getattr_private), (
+        "Dynamic getattr(obj, '_session') extraction must be flagged."
+    )
+
+    # The default-valued form ``getattr(scene, 'session', None)`` (the live shape
+    # in system_tree_panel) must still match — extra args do not hide it.
+    with_default = _violations_in_source(
+        "synthetic.py", "s = getattr(scene, 'session', None)\n"
+    )
+    assert any(p == "getattr.session" for _, p in with_default), (
+        "getattr(scene, 'session', None) with a default must still be flagged."
+    )
+
+    # NEGATIVE: an unrelated getattr key is not flagged.
+    assert _violations_in_source("synthetic.py", "v = getattr(obj, 'name')\n") == []
+
+    # The pre-existing aliased ``.session`` extraction still matches (no regression).
+    aliased = _violations_in_source(
+        "synthetic.py", "sess = screen.session\nv = sess.active_empire\n"
+    )
+    assert any(p == "session.__extract__" for _, p in aliased), (
+        "PROJ-472 1D aliased extraction must still be flagged."
     )
 
 

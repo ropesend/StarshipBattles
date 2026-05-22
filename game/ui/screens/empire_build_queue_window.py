@@ -162,7 +162,7 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         rect: pygame.Rect,
         manager: Any,
         empire: Empire,
-        galaxy: Any,
+        world: Any,
         *,
         window_manager: "StrategyWindowManager",
         on_close_callback: Optional[Callable] = None,
@@ -179,7 +179,9 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         """
         # ---- Stage 1: cheap state ----
         self.empire = empire
-        self.galaxy = galaxy
+        # PROJ-477 Phase 4: scene.world live seam (stored for system-name
+        # lookups; not a raw galaxy traversal bus).
+        self.world = world
         self.on_close_callback = on_close_callback
         self.on_navigate_to_hex = on_navigate_to_hex
         # PROJ-208 / PROJ-382 Phase 1: command dispatch through facade only.
@@ -698,7 +700,7 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
         """Esc-key close hides for reuse instead of killing."""
         self.hide()
 
-    def open_for_empire(self, empire: Empire, galaxy: Any) -> None:
+    def open_for_empire(self, empire: Empire, world: Any) -> None:
         """Rebind context + reset selection + refresh + show.
 
         Called by ``EmpireBuildQueueRegistrar.open()`` on slot reuse.
@@ -712,7 +714,8 @@ class EmpireBuildQueueWindow(StrategyModalWindow):
             self.empire = empire
             sources = self._facade.empires.build_queues(empire.id)
             self._viewmodel.update_sources(sources)
-        self.galaxy = galaxy
+        # PROJ-477 Phase 4: scene.world live seam (was raw galaxy).
+        self.world = world
 
         self.show()
         self._refresh_list()

@@ -86,10 +86,11 @@ def _has_self_destruct_ships(fleet: Any) -> bool:
     return bool(caps.ships_with_ability("SelfDestruct"))
 
 
-def _at_colonisable_hex(fleet: Any, galaxy: Any) -> bool:
-    if galaxy is None:
+def _at_colonisable_hex(fleet: Any, world: Any) -> bool:
+    # PROJ-477 Phase 4: live planet membership via the scene.world seam.
+    if world is None:
         return False
-    planets = galaxy.get_planets_at_global_hex(fleet.location) or []
+    planets = world.planets_at_exact_hex(fleet.location) or []
     for p in planets:
         if getattr(p, "owner_id", None) is None:
             return True
@@ -117,21 +118,22 @@ def _fleet_has_carried_vehicle(fleet: Any, vehicle_type: str) -> bool:
 
 
 def _matching_deployed_group_at_fleet_hex(
-    fleet: Any, galaxy: Any, group_cls: type,
+    fleet: Any, world: Any, group_cls: type,
 ) -> bool:
     """True if a same-empire deployed group of ``group_cls`` sits at hex.
 
     PROJ-431 Phase 3: dispatch on the concrete
     :class:`DeployedGroup` subclass (FighterWing / SatelliteConstellation).
-    Falls back to ``False`` on mocks that lack ``empires``.
+    PROJ-477 Phase 4: empires iterated through the scene.world seam.
+    Falls back to ``False`` when ``world`` is None.
     """
-    if galaxy is None:
+    if world is None:
         return False
     owner_id = getattr(fleet, "owner_id", None)
     if owner_id is None:
         return False
     target_hex = fleet.location
-    empires = getattr(galaxy, "empires", None) or []
+    empires = list(world.iter_empires())
     for emp in empires:
         if getattr(emp, "id", None) != owner_id:
             continue
@@ -145,7 +147,7 @@ def _matching_deployed_group_at_fleet_hex(
 
 def build_menu_items(
     fleet: Any,
-    galaxy: Any,
+    world: Any,
     mapper: _MapperLike,
     callbacks: Optional[dict[str, Callable[[], None]]] = None,
 ) -> list[FleetMenuItem]:
@@ -171,7 +173,7 @@ def build_menu_items(
         (
             "Colonize",
             InputAction.FLEET_COLONIZE,
-            _has(fleet, "ColonizePlanet") and _at_colonisable_hex(fleet, galaxy),
+            _has(fleet, "ColonizePlanet") and _at_colonisable_hex(fleet, world),
         ),
         ("Transfer Cargo", InputAction.FLEET_TRANSFER, _has(fleet, "CargoStorage")),
         ("Drop Cargo", InputAction.FLEET_DROP_CARGO, _has(fleet, "CargoStorage")),
@@ -247,7 +249,7 @@ def build_menu_items(
                 "recover_fighters",
                 _has(fleet, "RecoverFighters")
                 and _matching_deployed_group_at_fleet_hex(
-                    fleet, galaxy, FighterWing,
+                    fleet, world, FighterWing,
                 ),
             ),
             (
@@ -255,7 +257,7 @@ def build_menu_items(
                 "recover_satellites",
                 _has(fleet, "RecoverSatellites")
                 and _matching_deployed_group_at_fleet_hex(
-                    fleet, galaxy, SatelliteConstellation,
+                    fleet, world, SatelliteConstellation,
                 ),
             ),
         ]

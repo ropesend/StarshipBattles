@@ -25,6 +25,9 @@ def _make_composer(*, existing_window=None):
     composer.planet_list_window = existing_window
     composer.scene = MagicMock(name="scene")
     composer.scene.galaxy = MagicMock(name="galaxy")
+    # PROJ-477 Phase 4: list windows take scene.world; iter_empires must yield
+    # a real (empty) sequence for the owner-name lookup list.
+    composer.scene.world.iter_empires.side_effect = lambda: iter(())
     composer.scene.current_empire = MagicMock(name="empire")
     composer.scene.session = MagicMock(name="session")
     composer.scene.session.empires = []
@@ -59,9 +62,9 @@ def test_open_reuses_alive_window_via_open_for_galaxy():
         registrar.open()
     mock_cls.assert_not_called()
     alive_window.open_for_galaxy.assert_called_once()
-    # Galaxy + empire + facade should be threaded through.
+    # PROJ-477 Phase 4: world + empire + facade should be threaded through.
     args, kwargs = alive_window.open_for_galaxy.call_args
-    assert args[0] is composer.scene.galaxy
+    assert args[0] is composer.scene.world
     assert args[1] is composer.scene.current_empire
     assert kwargs.get("facade") is composer.scene.facade
 

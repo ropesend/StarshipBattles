@@ -41,10 +41,6 @@ class CameraNavigator:
         return self.scene.camera
 
     @property
-    def systems(self) -> Any:
-        return self.scene.systems
-
-    @property
     def hex_size(self) -> Any:
         return self.scene.hex_size
 
@@ -88,7 +84,8 @@ class CameraNavigator:
         """
         # Planet: location is local to system
         if is_planet(obj):
-            sys = next((s for s in self.systems if obj in s.planets), None)
+            # PROJ-477 Phase 4: live system via scene.world (reads sys.global_location).
+            sys = self.scene.world.system_for_object(obj)
             if sys:
                 return sys.global_location + obj.location
         # Fleet: location is global
@@ -105,11 +102,9 @@ class CameraNavigator:
 
         Calculates bounds of all systems and sets zoom to fit them all.
         """
-        if not self.systems:
-            return
-
+        # PROJ-477 Phase 4: iterate live systems through scene.world.
         all_positions = []
-        for sys in self.systems:
+        for sys in self.scene.world.iter_systems():
             px, py = hex_to_pixel(sys.global_location, self.hex_size)
             all_positions.append((px, py))
 
@@ -156,12 +151,10 @@ class CameraNavigator:
             if is_star_system(self.scene.selected_object):
                 target_sys = self.scene.selected_object
             elif is_planet(self.scene.selected_object) or is_warp_point(self.scene.selected_object):
-                # Planets and warp points have location - find their containing system
-                target_sys = next(
-                    (s for s in self.systems
-                     if self.scene.selected_object in s.planets
-                     or self.scene.selected_object in s.warp_points),
-                    None
+                # Planets and warp points have location - find their containing
+                # system via the live scene.world spatial lookup (PROJ-477 Phase 4).
+                target_sys = self.scene.world.system_for_object(
+                    self.scene.selected_object
                 )
 
         if not target_sys:

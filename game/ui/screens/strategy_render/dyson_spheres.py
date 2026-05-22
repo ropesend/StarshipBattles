@@ -89,9 +89,9 @@ def draw_dyson_spheres(r: Any, screen: Any, sys: Any, sys_world_pos: Any) -> Non
                                (int(center_screen.x), int(center_screen.y)),
                                screen_radius)
 
-        # Draw owner marker if colonized
+        # Draw owner marker if colonized. PROJ-477 Phase 5: live empires via scene.world.
         if planet.owner_id is not None:
-            owner_emp = next((e for e in r.empires if e.id == planet.owner_id), None)
+            owner_emp = next((e for e in r.world.iter_empires() if e.id == planet.owner_id), None)
             if owner_emp:
                 marker_offset = screen_radius * 0.8
                 marker_pos = (int(center_screen.x + marker_offset), int(center_screen.y - marker_offset))

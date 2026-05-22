@@ -145,7 +145,7 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
     # open path including pygame_gui widget construction, VirtualTable
     # build, sidebar / main panel layout, etc.
     @profile_action("Panel: StarRegistry.window_init")
-    def __init__(self, rect, manager, galaxy, *,
+    def __init__(self, rect, manager, world, *,
                  window_manager: "StrategyWindowManager",
                  on_close_callback=None, on_navigate_callback=None,
                  ui_builder: Optional[StarListWindowUiBuilder] = None,
@@ -184,8 +184,9 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
         self.selection = None
 
         # Cheap state previously set after super().__init__: hoisted up
-        # so the builder (and bypass branch) sees it.
-        self.galaxy = galaxy
+        # so the builder (and bypass branch) sees it. PROJ-477 Phase 4: the
+        # scene.world live seam replaces the raw galaxy.
+        self.world = world
         self.on_close_callback = on_close_callback
         self.on_navigate_callback = on_navigate_callback
 
@@ -197,7 +198,7 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
         # --- State ---
         # PROJ-411 Phase 1: thread facade_state through gather_stars so
         # the per-turn cache short-circuits the galaxy walk on re-opens.
-        self.all_stars = gather_stars(galaxy, facade_state=facade_state)
+        self.all_stars = gather_stars(world, facade_state=facade_state)
         self.filtered_stars = []
 
         # Preset manager
@@ -504,8 +505,8 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
             vt.force_update()
             vt.update_visible_rows()
 
-    def open_for_galaxy(self, galaxy, empire=None) -> None:
-        """Rebind galaxy + empire, reset selection, show, refresh.
+    def open_for_galaxy(self, world, empire=None) -> None:
+        """Rebind world + empire, reset selection, show, refresh.
 
         Used by ``StarListRegistrar.open()`` on slot-reuse path: ~5 s
         widget construction → <500 ms re-open.
@@ -514,7 +515,7 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
         was removed from this method. It is now handled centrally by
         ``StrategyGameStateManager`` at turn rotation.
         """
-        self.galaxy = galaxy
+        self.world = world
         if empire is not None:
             self.empire = empire
         self.selected_star = None

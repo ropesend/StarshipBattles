@@ -196,7 +196,7 @@ def build_queue_screen(ui_manager, mock_design_catalog, mock_design_loader, mock
         design_catalog=mock_design_catalog,
         design_loader=mock_design_loader,
         hex_coord=hex_coord,
-        galaxy=galaxy,
+        world=galaxy,  # PROJ-477 Phase 4
         empire=empire,
         facade=session,
         theme_id_supplier=lambda: "Federation",

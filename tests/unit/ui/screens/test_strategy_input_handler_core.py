@@ -43,6 +43,13 @@ def mock_scene():
     scene.screen_width = 1920
     scene.TOP_BAR_HEIGHT = 50
     scene.empires = []
+    # PROJ-477 Phase 4: click picking reads live empires/zones through
+    # scene.world. Wire the seam to delegate to the mock galaxy/empires the
+    # zone-selection tests configure on the scene.
+    scene.world.zones_at_hex.side_effect = (
+        lambda h: scene.galaxy.get_zones_at_global_hex(h) or []
+    )
+    scene.world.iter_empires.side_effect = lambda: iter(scene.empires)
     return scene
 
 

@@ -30,9 +30,9 @@ def draw_planet_sprite(r: Any, screen: Any, planet: Any, center_pos: Any, size: 
         # Fallback: gray circle if no image_id (should not happen for new planets)
         pygame.draw.circle(screen, PLANET_FALLBACK, (int(center_pos.x), int(center_pos.y)), size)
 
-    # Owner Marker (Colony Flag)
+    # Owner Marker (Colony Flag). PROJ-477 Phase 5: live empires via scene.world.
     if planet.owner_id is not None:
-        owner_emp = next((e for e in r.empires if e.id == planet.owner_id), None)
+        owner_emp = next((e for e in r.world.iter_empires() if e.id == planet.owner_id), None)
 
         if owner_emp:
             flag_offset = size * 0.8

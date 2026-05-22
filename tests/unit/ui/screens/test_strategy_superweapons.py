@@ -20,7 +20,6 @@ from unittest.mock import Mock, MagicMock, patch, call
 def mock_scene():
     """Create mock scene with required attributes."""
     scene = Mock()
-    scene.systems = [Mock()]
     scene.camera = Mock()
     scene.camera.screen_to_world = Mock(return_value=Mock(x=100, y=200))
     # PROJ-380 DUP-X-08: superweapon handlers now call camera.hex_at_screen
@@ -29,6 +28,19 @@ def mock_scene():
     scene.galaxy = Mock()
     scene.ui = Mock()
     scene.on_ui_selection = Mock()
+    # PROJ-477 Phase 4: superweapons reads galaxy/systems through scene.world
+    # (the live traversal seam). Wire a stub backed by the same mock galaxy so
+    # iter_systems / planets_at_exact_hex / system_at_map_hex reflect the data
+    # tests configure on ``scene.galaxy``.
+    scene.world.iter_systems.side_effect = lambda: iter(
+        scene.galaxy.systems.values()
+    )
+    scene.world.planets_at_exact_hex.side_effect = (
+        lambda h: scene.galaxy.get_planets_at_global_hex(h)
+    )
+    scene.world.system_at_map_hex.side_effect = (
+        lambda h, radius=50: scene.galaxy._pathfinder.get_system_at_hex(h, radius)
+    )
     return scene
 
 
@@ -77,13 +89,12 @@ class TestSuperweaponOperationsInit:
 
 
 class TestPropertyAccessors:
-    """Tests for property accessors."""
+    """Tests for property accessors.
 
-    def test_systems_property(self, superweapon_ops, mock_scene):
-        """Test systems property delegates to scene."""
-        result = superweapon_ops.systems
-
-        assert result is mock_scene.systems
+    PROJ-477 Phase 4: the ``systems`` and ``galaxy`` pass-through properties
+    were removed (superweapons now reads through ``scene.world``); only the
+    ``camera`` / ``hex_size`` proxies remain.
+    """
 
     def test_camera_property(self, superweapon_ops, mock_scene):
         """Test camera property delegates to scene."""
@@ -96,12 +107,6 @@ class TestPropertyAccessors:
         result = superweapon_ops.hex_size
 
         assert result == mock_scene.hex_size
-
-    def test_galaxy_property(self, superweapon_ops, mock_scene):
-        """Test galaxy property delegates to scene."""
-        result = superweapon_ops.galaxy
-
-        assert result is mock_scene.galaxy
 
 
 # =============================================================================
@@ -162,7 +167,7 @@ class TestPlanetImploderWorkflow:
 
     def test_no_planet_at_location_returns_error(self, superweapon_ops, mock_fleet):
         """Test no planet at target returns error."""
-        superweapon_ops.galaxy.get_planets_at_global_hex = Mock(return_value=[])
+        superweapon_ops.scene.galaxy.get_planets_at_global_hex = Mock(return_value=[])
 
         result = superweapon_ops.handle_implode_planet_designation(100, 200, mock_fleet)
 
@@ -174,7 +179,7 @@ class TestPlanetImploderWorkflow:
         planet = Mock()
         planet.id = "planet-1"
         planet.name = "Target Planet"
-        superweapon_ops.galaxy.get_planets_at_global_hex = Mock(return_value=[planet])
+        superweapon_ops.scene.galaxy.get_planets_at_global_hex = Mock(return_value=[planet])
         mock_scene.ui.show_confirmation_dialog = Mock()
 
         result = superweapon_ops.handle_implode_planet_designation(100, 200, mock_fleet)
@@ -185,7 +190,7 @@ class TestPlanetImploderWorkflow:
     def test_multiple_planets_prompts_selection(self, superweapon_ops, mock_fleet, mock_scene):
         """Test multiple planets prompts selection."""
         planets = [Mock(id="p1"), Mock(id="p2")]
-        superweapon_ops.galaxy.get_planets_at_global_hex = Mock(return_value=planets)
+        superweapon_ops.scene.galaxy.get_planets_at_global_hex = Mock(return_value=planets)
         mock_scene.ui.prompt_planet_selection = Mock()
 
         result = superweapon_ops.handle_implode_planet_designation(100, 200, mock_fleet)
@@ -477,7 +482,7 @@ class TestErrorHandling:
         superweapon_ops.scene.camera.hex_at_screen = Mock(return_value=None)
 
         # Should not raise exception
-        superweapon_ops.galaxy.get_planets_at_global_hex = Mock(return_value=[])
+        superweapon_ops.scene.galaxy.get_planets_at_global_hex = Mock(return_value=[])
         result = superweapon_ops.handle_implode_planet_designation(100, 200, mock_fleet)
 
         assert result['type'] == 'error'
@@ -490,20 +495,22 @@ class TestErrorHandling:
 class TestHelperMethods:
     """Tests for helper methods."""
 
-    def test_get_system_at_hex(self, superweapon_ops):
-        """Test _get_system_at_hex delegates correctly."""
-        with patch(
-            'game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.get_system_at_hex',
-        ) as mock_get:
-            mock_get.return_value = Mock()
-            hex_coord = (5, 5)
+    def test_get_system_at_hex(self, superweapon_ops, mock_scene):
+        """Test _get_system_at_hex delegates to scene.world.system_at_map_hex.
 
-            result = superweapon_ops._get_system_at_hex(hex_coord)
+        PROJ-477 Phase 4: the live system-ownership lookup routes through the
+        scene-owned world seam (radius=50 pathfinder semantics) instead of
+        constructing a GalaxyPathfindingService directly.
+        """
+        expected = Mock(name="resolved_system")
+        mock_scene.world.system_at_map_hex.side_effect = None
+        mock_scene.world.system_at_map_hex.return_value = expected
+        hex_coord = (5, 5)
 
-            # PROJ-414: patched on the GPS class -> the call args are (hex_coord,)
-            # (the `self` GPS instance is the implicit first arg the descriptor
-            # protocol swallows when MagicMock replaces the class attribute).
-            mock_get.assert_called_once_with(hex_coord)
+        result = superweapon_ops._get_system_at_hex(hex_coord)
+
+        assert result is expected
+        mock_scene.world.system_at_map_hex.assert_called_once_with(hex_coord)
 
     def test_get_warp_point_at_hex_no_system(self, superweapon_ops):
         """Test _get_warp_point_at_hex returns None when no system."""
@@ -548,7 +555,7 @@ class TestCommandDispatch:
         planet = Mock()
         planet.id = "planet-1"
         planet.name = "Target Planet"
-        superweapon_ops.galaxy.get_planets_at_global_hex = Mock(return_value=[planet])
+        superweapon_ops.scene.galaxy.get_planets_at_global_hex = Mock(return_value=[planet])
 
         # Capture the confirmation callback
         confirm_callback = None

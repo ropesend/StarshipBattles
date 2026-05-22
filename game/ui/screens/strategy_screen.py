@@ -32,6 +32,8 @@ from game.ui.screens.strategy_screen_composition import (
     StrategyScreenCompositionFactory,
 )
 from game.ui.colors import BG_BATTLE
+from game.ui.screens.strategy_world_access import StrategyWorldAccess
+from game.ui.screens.strategy_world_writes import StrategyOrderWrites
 
 
 class StrategyScreen:
@@ -91,6 +93,20 @@ class StrategyScreen:
 
         # Create facade for UI-to-engine communication
         self._facade = StrategySessionFacade(self._session)
+
+        # PROJ-477 Phase 2: narrow composition-root write handle for the
+        # Category B mutator seams (set-active-empire / set-fleet-path /
+        # pop-fleet-order). Reads the CURRENT ``_session`` lazily so a
+        # test-swapped session is honoured. Replaces the Category B reads that
+        # used to go through the (Phase-3-retired) public ``session`` getter.
+        self._order_writes = StrategyOrderWrites(lambda: self._session)
+
+        # PROJ-477 Phase 5: scene-owned live raw-domain traversal seam. The
+        # SINGLE seam the renderer + raw-window handoffs read galaxy/empires/
+        # systems through (replacing the broad pass-through bus). Hands back
+        # live collections / O(1) lookups — NO per-frame DTO allocation. Reads
+        # the CURRENT ``_session`` lazily so a test-swapped session is honoured.
+        self._world = StrategyWorldAccess(lambda: self._session)
 
         # Camera
         self.camera = Camera(
@@ -157,17 +173,12 @@ class StrategyScreen:
     # External callers should use the facade for cross-layer communication.
     # =========================================================================
 
-    @property
-    def galaxy(self) -> Any:
-        return self._session.galaxy
-
-    @property
-    def empires(self) -> Any:
-        return self._session.empires
-
-    @property
-    def systems(self) -> Any:
-        return self._session.systems
+    # PROJ-477 Phase 6: the broad ``galaxy`` / ``empires`` / ``systems``
+    # raw-domain pass-through properties were DELETED. Render-hot + raw-window
+    # consumers read live galaxy/empires/systems through the scene-owned
+    # ``self.world`` (StrategyWorldAccess) seam; cold callers use the facade
+    # queries. The screen's own pathfinder helpers + ``current_empire`` read the
+    # composition-root ``self._session`` directly (the screen IS the boundary).
 
     @property
     def current_empire(self) -> Any:
@@ -257,21 +268,51 @@ class StrategyScreen:
         return self._facade
 
     @property
-    def session(self) -> Any:
-        """Audit-residue delegate for legacy ``c.scene.session.<x>`` reads.
+    def world(self) -> StrategyWorldAccess:
+        """Scene-owned live raw-domain traversal seam (PROJ-477 Phase 5).
 
-        PROJ-382 Phase 1: ``self._session`` is the private composition-root
-        handle. The facade is the canonical UI-to-engine boundary; the AST
-        guard at ``tests/static_guards/test_facade_bypass_guard.py`` blocks
-        any new ``<expr>.session.handle_command(...)`` regression. Existing
-        registries / galaxy / active_empire reads still resolve through this
-        delegate while deferred PROJs (U1/U2/U3) cover the broader migration.
-
-        The setter exists solely so tests may swap in a mock session via
-        ``screen.session = ...``; production code never reassigns the
-        session post-init.
+        The single seam the renderer and raw-window handoffs read
+        galaxy/empires/systems through, replacing the broad ``galaxy`` /
+        ``empires`` / ``systems`` pass-through properties. Hands back live
+        collections / O(1) lookups — NO per-frame DTO allocation.
         """
-        return self._session
+        return self._world
+
+    @property
+    def order_writes(self) -> StrategyOrderWrites:
+        """Narrow composition-root write handle (PROJ-477 Phase 2).
+
+        Exposes exactly the three Category B mutator seams (set-active-empire,
+        set-fleet-path, pop-fleet-order) so order-editing / turn-rotation code
+        never reaches the live session through the (Phase-3-retired) ``session``
+        getter. Backed by ``self._session``.
+        """
+        return self._order_writes
+
+    @property
+    def session(self) -> Any:
+        """RETIRED getter (PROJ-477 Phase 3 Task 3.4) — raises ``AttributeError``.
+
+        The public ``session`` getter was the last broad read-path bypass: it
+        handed the live ``GameSession`` to any UI caller. All former readers
+        migrated — read session-owned state through the proper surfaces:
+
+        - ``screen.facade`` — DTO/scalar read + command write boundary.
+        - ``screen.world`` — live raw-domain traversal (galaxy/empires/systems).
+        - ``screen.active_empire_id`` / ``screen.registries`` — scene accessors.
+        - ``screen.order_writes`` — the narrow Category B mutator write seam.
+
+        The SETTER is intentionally KEPT: tests swap a mock session via
+        ``screen.session = ...`` and the setter rebuilds the facade in lockstep
+        (split-brain guard, PROJ-396 MAJ-001). Production never reassigns it.
+        """
+        raise AttributeError(
+            "StrategyScreen.session getter is retired (PROJ-477). Read "
+            "session-owned state through screen.facade / screen.world / "
+            "screen.active_empire_id / screen.registries, or mutate through "
+            "screen.order_writes. The setter (screen.session = ...) is kept "
+            "for test session swaps only."
+        )
 
     @session.setter
     def session(self, value: Any) -> None:
@@ -525,16 +566,20 @@ class StrategyScreen:
     # =========================================================================
 
     def calculate_hybrid_path(self, start_hex, end_hex) -> Any:
-        """Calculate path combining local hex movement and warp jumps."""
-        return self.galaxy._pathfinder.find_hybrid_path(start_hex, end_hex)
+        """Calculate path combining local hex movement and warp jumps.
+
+        PROJ-477 Phase 6: reads the live pathfinder through the screen's own
+        composition-root ``_session`` (the ``galaxy`` pass-through was deleted).
+        """
+        return self._session.galaxy._pathfinder.find_hybrid_path(start_hex, end_hex)
 
     def _get_system_at_hex(self, hex_c) -> Any:
         """Find which system owns this hex."""
-        return self.galaxy._pathfinder.get_system_at_hex(hex_c)
+        return self._session.galaxy._pathfinder.get_system_at_hex(hex_c)
 
     def _find_nearest_system(self, hex_c) -> Any:
         """Find the nearest system to a hex coordinate."""
-        return self.galaxy._pathfinder.find_nearest_system(hex_c)
+        return self._session.galaxy._pathfinder.find_nearest_system(hex_c)
 
     # =========================================================================
     # Private Helpers

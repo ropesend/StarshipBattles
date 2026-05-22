@@ -49,6 +49,9 @@ def _make_game_state_manager():
     empire1.is_eliminated = MagicMock(return_value=False)
     mock_screen.empires = [empire0, empire1]
     mock_screen.session.empires = [empire0, empire1]
+    # PROJ-477 Phase 4: the manager iterates next/current empires through
+    # scene.world.iter_empires; mirror the same list tests configure.
+    mock_screen.world.iter_empires.side_effect = lambda: iter(mock_screen.empires)
     mock_screen.session.human_player_ids = [0, 1]
     mock_screen.human_player_ids = [0, 1]
     # PROJ-475 Phase 3: the manager reads human-player ids through
@@ -879,6 +882,8 @@ def _make_n_player_state_manager(n_players: int):
 
     mock_screen.empires = empires
     mock_screen.session.empires = empires
+    # PROJ-477 Phase 4: manager iterates empires via scene.world.iter_empires.
+    mock_screen.world.iter_empires.side_effect = lambda: iter(mock_screen.empires)
     ids = list(range(n_players))
     mock_screen.session.human_player_ids = ids
     mock_screen.human_player_ids = ids

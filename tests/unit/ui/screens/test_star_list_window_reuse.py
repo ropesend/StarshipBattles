@@ -20,7 +20,9 @@ def reusable_window():
     with bypass_init(StarListWindow):
         rect = pygame.Rect(0, 0, 1600, 800)
         manager = MagicMock(name="ui_manager")
-        galaxy = MagicMock(name="galaxy_v1")
+        galaxy = MagicMock(name="world_v1")
+        # PROJ-477 Phase 4: StarListWindow takes the scene.world seam.
+        galaxy.iter_systems.side_effect = lambda: iter(())
         window_manager = MagicMock(name="window_manager")
         window = StarListWindow(
             rect, manager, galaxy, window_manager=window_manager
@@ -59,11 +61,12 @@ def test_show_sets_is_blocking_true_and_registers(reusable_window):
 
 
 def test_open_for_galaxy_rebinds_galaxy(reusable_window):
-    new_galaxy = MagicMock(name="galaxy_v2")
+    new_galaxy = MagicMock(name="world_v2")
+    new_galaxy.iter_systems.side_effect = lambda: iter(())
     with patch.object(reusable_window, "show"), \
          patch.object(reusable_window, "refresh_list"):
         reusable_window.open_for_galaxy(new_galaxy)
-    assert reusable_window.galaxy is new_galaxy
+    assert reusable_window.world is new_galaxy
 
 
 def test_open_for_galaxy_resets_selection(reusable_window):

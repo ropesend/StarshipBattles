@@ -53,13 +53,16 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
     SNAPSHOT_SLOT: str = "planet_list"
 
     @profile_action("Panel: PlanetRegistry.window_init")
-    def __init__(self, rect, manager, galaxy, empire, *,
+    def __init__(self, rect, manager, world, empire, *,
                  window_manager: "StrategyWindowManager",
                  on_close_callback=None, asset_resolver=None, empires=None,
                  registries=None, on_navigate_callback=None,
                  race_registry=None, facade=None,
                  ui_builder: Optional[PlanetListUiBuilder] = None,
                  controller: Optional[PlanetListController] = None):
+        # PROJ-477 Phase 4: ``world`` is the scene.world live-traversal seam
+        # (replaces the raw galaxy). Stored as ``self.world``; ``gather_planets``
+        # and the data source read systems through it.
         # ---- Stage 1: cheap state + delegates (no facade I/O) ----
         # State that set_dimensions() may depend on must exist before the
         # super().__init__() call, since UIWindow.__init__ can trigger
@@ -87,7 +90,7 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
         # colonized planets via ``get_colony_demographic_view(planet.id)``.
         self._facade = facade
 
-        self.galaxy = galaxy
+        self.world = world
         self.empire = empire  # Current player empire
         self.empires = empires or []  # PROJ-198: all empires for owner lookup
         self.on_close_callback = on_close_callback
@@ -108,7 +111,7 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
         # per-turn cache short-circuits the galaxy walk on re-opens.
         # Use getattr to tolerate test stubs that lack `facade_state`.
         _proj411_state = getattr(facade, "facade_state", None) if facade is not None else None
-        self.all_planets = gather_planets(galaxy, empire, facade_state=_proj411_state)
+        self.all_planets = gather_planets(world, empire, facade_state=_proj411_state)
         self.filtered_planets: list = []
         self.preset_manager = PresetManager()
         self._filter_mgr = PlanetListFilterManager()
@@ -362,7 +365,7 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
 
     def open_for_galaxy(
         self,
-        galaxy,
+        world,
         empire,
         *,
         facade=None,
@@ -380,7 +383,7 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
         restores). Same-turn re-opens preserve in-place state because
         the central swap only runs at turn boundaries.
         """
-        self.galaxy = galaxy
+        self.world = world
         self.empire = empire
         self._facade = facade
         self.selected_planet = None

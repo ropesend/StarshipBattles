@@ -33,6 +33,7 @@ from game.strategy.facade.dto import (
     EmpireInfo,
     FleetInfo,
     FleetSummary,
+    HexContentsInfo,
     PlanetInfo,
     StarInfo,
     SystemInfo,
@@ -53,6 +54,7 @@ if TYPE_CHECKING:
     from game.strategy.facade.slices.fleet_slice import FleetSlice
     from game.strategy.facade.slices.planet_slice import PlanetSlice
     from game.strategy.facade.slices.system_slice import SystemSlice
+    from game.strategy.facade.slices.spatial_slice import SpatialSlice
 
 
 # ---------------------------------------------------------------------------
@@ -219,9 +221,55 @@ class FacadeSystemQueries:
         """System at or near a hex coordinate."""
         return self._slice.get_system_near_hex(hex_coord, max_dist)
 
+    def by_name(self, name: str) -> Optional[SystemInfo]:
+        """System with the given name, or ``None`` (PROJ-477 Phase 2)."""
+        return self._slice.get_system_by_name(name)
+
+    def of_object(self, obj: object) -> Optional[SystemInfo]:
+        """System containing an object, or ``None`` (PROJ-477 Phase 2).
+
+        Summary surface only — callers needing the LIVE system use
+        ``scene.world.system_for_object`` (POST-FLESH B2).
+        """
+        return self._slice.get_system_of_object(obj)
+
+    def at_map_hex(
+        self, hex_coord: HexCoord, radius: int = 50
+    ) -> Optional[SystemInfo]:
+        """System OWNING a map hex (pathfinder system-radius, default 50).
+
+        PROJ-477 Phase 2 — DISTINCT from ``near_hex(max_dist=8)`` (design.md
+        risk 2). Summary surface only; live-system callers use
+        ``scene.world.system_at_map_hex``.
+        """
+        return self._slice.get_system_at_map_hex(hex_coord, radius)
+
     def storm_names_at_hex(self, hex_coord: HexCoord) -> List[str]:
         """Storm names affecting a global hex coordinate."""
         return self._slice.get_storm_names_at_hex(hex_coord)
+
+
+# ---------------------------------------------------------------------------
+# Spatial / hex contents (PROJ-477 Phase 2)
+# ---------------------------------------------------------------------------
+
+
+class FacadeSpatialQueries:
+    """Grouped spatial / hex-contents read surface.
+
+    Zones and warp points fit neither ``planets`` nor ``systems``; this
+    namespace owns the multi-hex-aware ``contents_at_hex`` summary read.
+    """
+
+    __slots__ = ("_slice",)
+
+    def __init__(self, slice_: "SpatialSlice") -> None:
+        self._slice = slice_
+
+    def contents_at_hex(self, hex_coord: HexCoord) -> HexContentsInfo:
+        """Grouped planet / zone / warp-point membership at a global hex,
+        preserving multi-hex zone membership (PROJ-477 Phase 2)."""
+        return self._slice.contents_at_hex(hex_coord)
 
 
 # ---------------------------------------------------------------------------

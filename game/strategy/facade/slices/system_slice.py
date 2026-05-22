@@ -71,6 +71,55 @@ class SystemSlice:
             return None
         return SystemInfo.from_star_system(system)
 
+    def get_system_by_name(self, name: str) -> Optional[SystemInfo]:
+        """Get the system with the given name (O(1) name-map lookup).
+
+        PROJ-477 Phase 2: summary read surface for cold callers; delegates to
+        ``galaxy.get_system_by_name`` (``galaxy.py:130``). Returns ``None`` for
+        an unknown name.
+        """
+        system = self._state._session.galaxy.get_system_by_name(name)
+        if system is None:
+            return None
+        return SystemInfo.from_star_system(system)
+
+    def get_system_of_object(self, obj: object) -> Optional[SystemInfo]:
+        """Get the system containing an object with a global location.
+
+        PROJ-477 Phase 2: summary read surface for cold callers; delegates to
+        ``galaxy.get_system_of_object`` (``galaxy.py:134``). Returns ``None``
+        when the object resolves to no system. Callers that need the LIVE
+        ``StarSystem`` (e.g. to iterate its ``.planets``) use the scene-owned
+        ``StrategyWorldAccess.system_for_object`` instead (POST-FLESH B2).
+        """
+        system = self._state._session.galaxy.get_system_of_object(obj)
+        if system is None:
+            return None
+        return SystemInfo.from_star_system(system)
+
+    def get_system_at_map_hex(
+        self, hex_coord: HexCoord, radius: int = 50
+    ) -> Optional[SystemInfo]:
+        """Get the system OWNING a map hex, using pathfinder system-radius
+        semantics (default 50).
+
+        PROJ-477 Phase 2: this is the system-ownership query (delegating to
+        ``GalaxyPathfindingService.get_system_at_hex(hex, radius)`` via
+        ``galaxy._pathfinder``, ``galaxy_pathfinding_service.py:113``). It is
+        DISTINCT from ``near_hex(max_dist=8)`` — different ownership semantics
+        (design.md risk 2 / decisions.md). Do NOT alias the two.
+
+        Callers that need the LIVE ``StarSystem`` (to read ``.planets`` /
+        ``.warp_points``) use ``StrategyWorldAccess.system_at_map_hex`` instead
+        (POST-FLESH B2); this summary surface is for summary-only callers.
+        """
+        system = self._state._session.galaxy._pathfinder.get_system_at_hex(
+            hex_coord, radius
+        )
+        if system is None:
+            return None
+        return SystemInfo.from_star_system(system)
+
     def get_system_containing_fleet(self, fleet_id: int) -> Optional[SystemInfo]:
         """Get the system containing (or closest to) the fleet.
 

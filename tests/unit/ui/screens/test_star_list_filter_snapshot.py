@@ -21,7 +21,9 @@ def window():
     with bypass_init(StarListWindow):
         rect = pygame.Rect(0, 0, 1600, 800)
         manager = MagicMock(name="ui_manager")
-        galaxy = MagicMock(name="galaxy")
+        galaxy = MagicMock(name="world")
+        # PROJ-477 Phase 4: StarListWindow takes the scene.world seam.
+        galaxy.iter_systems.side_effect = lambda: iter(())
         empire = MagicMock(name="empire")
         empire.id = 0
         wm = MagicMock(name="window_manager")
@@ -90,7 +92,7 @@ class TestOpenForGalaxyNoLongerHandlesSnapshots:
         ) as mock_apply, patch.object(window, "show"), patch.object(
             window, "refresh_list"
         ):
-            window.open_for_galaxy(window.galaxy, empire_b)
+            window.open_for_galaxy(window.world, empire_b)
         mock_capture.assert_not_called()
         mock_apply.assert_not_called()
 

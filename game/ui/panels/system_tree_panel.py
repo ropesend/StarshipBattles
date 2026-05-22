@@ -412,17 +412,19 @@ class SystemTreePanel:
         self.layout()
 
     def _get_empire_context(self, scene_interface) -> tuple[object | None, object | None]:
-        """Extract empire_id and registries from the scene interface."""
-        empire_id = None
-        registries = None
-        session = getattr(scene_interface, 'scene', None)
-        if session:
-            session = getattr(session, 'session', None)
-        if session:
-            active_empire = getattr(session, 'active_empire', None)
-            if active_empire:
-                empire_id = active_empire.id
-            registries = getattr(session, 'registries', None)
+        """Extract empire_id and registries from the scene interface.
+
+        PROJ-477 Phase 3: reads the scene's ``active_empire_id`` + ``registries``
+        accessors directly instead of resolving the live session via
+        ``getattr(scene, 'session')`` (the dynamic-getattr hole the session
+        guard now flags). The acting-empire id + registries are exactly what
+        the hazard-hint collector needs.
+        """
+        scene = getattr(scene_interface, 'scene', None)
+        if scene is None:
+            return None, None
+        empire_id = getattr(scene, 'active_empire_id', None)
+        registries = getattr(scene, 'registries', None)
         return empire_id, registries
 
     def _add_system_hazard_hint(self, system_obj, scene_interface) -> None:

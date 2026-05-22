@@ -23,10 +23,14 @@ from tests.fixtures.ui_widget_factory import bypass_init
 
 
 def _galaxy(num_systems: int = 0):
-    """Build a minimal galaxy mock; no systems by default."""
-    galaxy = MagicMock(name="Galaxy")
-    galaxy.systems = {}
-    return galaxy
+    """Build a minimal scene.world stub; no systems by default.
+
+    PROJ-477 Phase 4: StarListWindow takes the scene.world live seam
+    (``iter_systems()``) instead of a raw galaxy.
+    """
+    world = MagicMock(name="World")
+    world.iter_systems.side_effect = lambda: iter(())
+    return world
 
 
 def _make_window(
@@ -59,9 +63,9 @@ class TestStarListWindowStageOneState:
     """Stage-1 cheap state survives bypass_init."""
 
     def test_stores_galaxy_reference(self):
-        galaxy = _galaxy()
-        window = _make_window(galaxy)
-        assert window.galaxy is galaxy
+        world = _galaxy()
+        window = _make_window(world)
+        assert window.world is world
 
     def test_stores_close_callback(self):
         cb = MagicMock()

@@ -32,7 +32,7 @@ class TestPlanetListFilters:
         # Mock system structure
         system = MagicMock()
         system.planets = [p1, p2]
-        galaxy.systems = {'Sys1': system}
+        galaxy.iter_systems.side_effect = lambda d={'Sys1': system}: iter(d.values())  # PROJ-477: world seam
         
         planets = gather_planets(galaxy, empire)
         
@@ -97,7 +97,7 @@ class TestGatherPlanetsCachesSystemLocation:
         system.name = "Solar"
         system.global_location = HexCoord(10, 20)
         system.planets = [p1]
-        galaxy.systems = {'Solar': system}
+        galaxy.iter_systems.side_effect = lambda d={'Solar': system}: iter(d.values())  # PROJ-477: world seam
 
         planets = gather_planets(galaxy, empire)
         assert len(planets) == 1
@@ -130,7 +130,7 @@ class TestGatherPlanetsCachesSystemLocation:
         sys2.global_location = HexCoord(50, 50)
         sys2.planets = [p2]
 
-        galaxy.systems = {'Alpha': sys1, 'Beta': sys2}
+        galaxy.iter_systems.side_effect = lambda d={'Alpha': sys1, 'Beta': sys2}: iter(d.values())  # PROJ-477: world seam
 
         planets = gather_planets(galaxy, empire)
         assert p1._cached_system_global_location == HexCoord(5, 5)

@@ -144,6 +144,9 @@ class TestBuildQueueScansPlanetOwnersDesigns:
         screen = MagicMock()
         screen.galaxy = MagicMock()
         screen.galaxy.get_system_of_planet.return_value = None
+        # PROJ-477 Phase 4: build-queue manager resolves the parent system via
+        # scene.world.system_for_object (was galaxy.get_system_of_planet).
+        screen.world.system_for_object.return_value = None
         screen.facade = MagicMock()
         screen.facade.session_meta.save_path = MagicMock(return_value="saves/test")
         # PROJ-472 1C: build queue pulls the catalog via
@@ -227,4 +230,5 @@ class TestViewingEmpireIdProperty:
         screen.current_player_index = 0
 
         assert screen.viewing_empire_id == 0
-        assert screen.viewing_empire_id != screen.session.active_empire.id
+        # PROJ-477: public session getter retired; read the private handle.
+        assert screen.viewing_empire_id != screen._session.active_empire.id

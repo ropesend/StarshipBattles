@@ -115,6 +115,31 @@ class WarpPointInfo:
 
 
 @dataclass(frozen=True)
+class HexContentsInfo:
+    """Immutable summary of what occupies a single global map hex (PROJ-477).
+
+    Grouped planet / zone / warp-point membership at a hex, INCLUDING multi-hex
+    zones (Dyson Spheres) whose center is elsewhere but which occupy this hex —
+    distinct from ``planets.at_hex`` exact-center semantics. Projection to names
+    is acceptable here because this is a cold, summary-only read surface; callers
+    needing the LIVE domain objects use ``scene.world.zones_at_hex`` /
+    ``planets_at_exact_hex`` instead.
+
+    Attributes:
+        hex: The queried global hex coordinate.
+        planet_names: Names of planets occupying the hex.
+        zone_names: Names of multi-hex zone objects (storms / Dyson Spheres /
+            stars) registered as occupying the hex.
+        warp_point_names: Destination names of warp points at the hex.
+    """
+
+    hex: HexCoord
+    planet_names: Tuple[str, ...] = ()
+    zone_names: Tuple[str, ...] = ()
+    warp_point_names: Tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class SystemInfo:
     """Immutable DTO representing a star system.
 

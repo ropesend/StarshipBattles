@@ -8,6 +8,7 @@ import pytest
 from game.core.hex_math import HexCoord
 from game.strategy.data.order_types import OrderType
 from game.ui.screens import strategy_screen_order_editing as order_edit
+from game.ui.screens.strategy_world_writes import StrategyOrderWrites
 
 
 def _make_screen():
@@ -37,6 +38,9 @@ def _make_screen():
 
     screen.session.fleet_mutator.pop_order.side_effect = _pop_order
     screen.session.fleet_mutator.set_path.side_effect = _set_path
+    # PROJ-477 Phase 3: order editing routes writes through the scene write
+    # handle, backed by the screen's session.
+    screen.order_writes = StrategyOrderWrites(lambda: screen.session)
     return screen
 
 

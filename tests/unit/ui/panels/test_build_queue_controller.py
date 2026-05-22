@@ -740,8 +740,8 @@ class TestPlanetSelectionForFleetComplexes:
         on_changed = MagicMock()
         on_planet_selection = MagicMock()
 
-        # Mock galaxy.get_planets_at_global_hex
-        galaxy.get_planets_at_global_hex.return_value = planets_at_hex
+        # PROJ-477 Phase 4: controller reads world.planets_at_exact_hex.
+        galaxy.planets_at_exact_hex.return_value = planets_at_hex
 
         controller = BuildQueueController(
             build_context=build_context,
@@ -750,7 +750,7 @@ class TestPlanetSelectionForFleetComplexes:
             design_report=mock_report,
             on_queue_changed=on_changed,
             hex_coord=hex_coord,
-            galaxy=galaxy,
+            world=galaxy,  # PROJ-477 Phase 4
             empire=empire,
             on_planet_selection_needed=on_planet_selection,
             add_to_queue_callback=_make_add_callback(entity_registry),

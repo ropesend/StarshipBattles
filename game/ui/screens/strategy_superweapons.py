@@ -70,20 +70,12 @@ class SuperweaponOperations:
         self.facade = facade
 
     @property
-    def systems(self) -> Any:
-        return self.scene.systems
-
-    @property
     def camera(self) -> Any:
         return self.scene.camera
 
     @property
     def hex_size(self) -> Any:
         return self.scene.hex_size
-
-    @property
-    def galaxy(self) -> Any:
-        return self.scene.galaxy
 
     def handle_implode_planet_designation(self, mx: int, my: int, fleet: 'Fleet') -> Optional[dict]:
         """
@@ -105,8 +97,10 @@ class SuperweaponOperations:
 
         target_hex = self.camera.hex_at_screen(mx, my, self.hex_size)
 
-        # Find planets at hex
-        planets = self.galaxy.get_planets_at_global_hex(target_hex)
+        # Find planets at hex. PROJ-477 Phase 4 (POST-FLESH B5): EXACT planet
+        # membership via scene.world.planets_at_exact_hex — NOT the multi-hex
+        # contents_at_hex, which would start matching Dyson-Sphere edge hexes.
+        planets = self.scene.world.planets_at_exact_hex(target_hex)
         if not planets:
             logger.debug("No planet at target location.")
             return {'type': 'error', 'message': 'No planet at target location'}
@@ -209,8 +203,8 @@ class SuperweaponOperations:
             logger.debug("No star system at target location.")
             return {'type': 'error', 'message': 'No star system at target location'}
 
-        # Get all systems for selection
-        all_systems = list(self.galaxy.systems.values())
+        # Get all systems for selection (PROJ-477 Phase 4: live via scene.world).
+        all_systems = list(self.scene.world.iter_systems())
 
         # Issue #19: exclude only the current system. Duplicate warp points
         # between the same pair of systems are allowed by design — the previous
@@ -360,11 +354,12 @@ class SuperweaponOperations:
     # =========================================================================
 
     def _get_system_at_hex(self, hex_coord) -> Any:
-        """Find system at hex coordinate."""
-        from game.strategy.services.galaxy_pathfinding_service import (
-            GalaxyPathfindingService,
-        )
-        return GalaxyPathfindingService(self.galaxy).get_system_at_hex(hex_coord)
+        """Find system at hex coordinate.
+
+        PROJ-477 Phase 4: live system-ownership lookup via scene.world
+        (radius=50 pathfinder semantics); callers read the live .warp_points.
+        """
+        return self.scene.world.system_at_map_hex(hex_coord)
 
     def _get_warp_point_at_hex(self, hex_coord) -> Any:
         """Find warp point at the given global hex coordinate."""

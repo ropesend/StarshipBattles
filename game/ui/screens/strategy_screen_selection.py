@@ -30,10 +30,8 @@ def on_ui_selection(screen: "StrategyScreen", obj) -> None:
         screen.last_selected_system = obj
     elif is_planet(obj) or is_warp_point(obj):
         # Planets and warp points have location - find their containing system
-        parent_sys = next(
-            (s for s in screen.systems if obj in s.planets or obj in s.warp_points),
-            None,
-        )
+        # via the live scene.world spatial lookup (PROJ-477 Phase 4).
+        parent_sys = screen.world.system_for_object(obj)
         if parent_sys:
             screen.last_selected_system = parent_sys
 
@@ -76,8 +74,9 @@ def on_colonize_planet_selected(screen: "StrategyScreen", planet) -> None:
     result = screen._colonization.issue_colonize_order(fleet, planet)
     if result and result.get("type") == "success":
         # Find planet's global hex for the drop transfer dialog
+        # (PROJ-477 Phase 4: live systems via scene.world).
         planet_global_hex = None
-        for sys in screen.systems:
+        for sys in screen.world.iter_systems():
             if planet in sys.planets:
                 planet_global_hex = sys.global_location + planet.location
                 break

@@ -73,11 +73,15 @@ def _make_renderer(*, active_empire_id: int = 1, selected_object=None):
     active_empire = SimpleNamespace(id=active_empire_id)
     session = SimpleNamespace(active_empire=active_empire)
     scene = SimpleNamespace(session=session, selected_object=selected_object)
+    empires: list = []
+    # PROJ-477 Phase 5: render reads owners through r.world.iter_empires().
+    world = SimpleNamespace(iter_empires=lambda: iter(empires))
     return SimpleNamespace(
         scene=scene,
         camera=camera,
         hex_size=10,
-        empires=[],
+        empires=empires,
+        world=world,
         empire_assets={},
         _asset_manager=asset_manager,
         _draw_inner_hex=MagicMock(),

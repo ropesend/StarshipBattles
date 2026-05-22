@@ -378,11 +378,10 @@ class StrategyEventRouter:
         # Find Uncolonized Planets at Fleet Location
         from game.core.hex_math import hex_distance  # noqa: F401
 
-        if not ui.scene.galaxy:
-            return
-
-        # Find System
-        system = ui.scene.galaxy.get_system_of_object(obj)
+        # Find System (PROJ-477 Phase 4: live system via scene.world; the
+        # caller iterates the resolved system's LIVE .planets, so this needs
+        # the live StarSystem, NOT a SystemInfo summary — POST-FLESH B2).
+        system = ui.scene.world.system_for_object(obj)
         if not system:
             logger.debug("Colonize: Fleet not in system?")
             return

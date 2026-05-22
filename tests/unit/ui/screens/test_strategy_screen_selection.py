@@ -14,6 +14,17 @@ def _make_screen():
     screen.selected_fleet = None
     screen.last_selected_system = None
     screen.systems = []
+    # PROJ-477 Phase 4: selection reads live systems through scene.world.
+    # Wire the seam to resolve from the same ``screen.systems`` list tests set.
+    screen.world.iter_systems.side_effect = lambda: iter(screen.systems)
+    screen.world.system_for_object.side_effect = lambda obj: next(
+        (
+            s
+            for s in screen.systems
+            if obj in getattr(s, "planets", []) or obj in getattr(s, "warp_points", [])
+        ),
+        None,
+    )
     # PROJ-475 Phase 3: human-player ids read via the facade session_meta
     # surface (the screen.human_player_ids pass-through was retired).
     screen.facade.session_meta.human_player_ids.return_value = [0]

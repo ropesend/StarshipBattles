@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 
 def draw_fleets(r: Any, screen: Any) -> None:
     """Draw all fleets and their movement paths."""
-    for emp in r.empires:
+    # PROJ-477 Phase 5: live empires via the scene.world seam (no per-frame DTOs).
+    for emp in r.world.iter_empires():
         for f in emp.fleets:
             if f.location is None:
                 logger.warning(f"Skipping render for Fleet {f.id} (Owner {f.owner_id}): Location is None")

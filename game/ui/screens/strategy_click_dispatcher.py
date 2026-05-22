@@ -556,8 +556,8 @@ class ClickModeDispatcher:
         clicked_system = self.scene._get_system_at_hex(hex_clicked)
         sector_contents = []
 
-        # Check Fleets (All Empires)
-        for emp in self.scene.empires:
+        # Check Fleets (All Empires) — PROJ-477 Phase 4: live via scene.world.
+        for emp in self.scene.world.iter_empires():
             for f in emp.fleets:
                 if f.location == hex_clicked:
                     sector_contents.append(f)
@@ -589,13 +589,13 @@ class ClickModeDispatcher:
 
             # Always include Environmental Data (Radiation)
 
-        # PROJ-139: Check zone registry for multi-hex objects (stars, Dyson Spheres)
-        # Zone objects may be found even without a clicked_system match
-        if self.scene.galaxy:
-            zone_objects = self.scene.galaxy.get_zones_at_global_hex(hex_clicked)
-            for zone_obj in zone_objects:
-                if zone_obj not in sector_contents:
-                    sector_contents.append(zone_obj)
+        # PROJ-139: Check zone registry for multi-hex objects (stars, Dyson
+        # Spheres). Zone objects may be found even without a clicked_system
+        # match. PROJ-477 Phase 4: live zone objects via scene.world (they are
+        # appended to sector_contents as live domain objects + identity-compared).
+        for zone_obj in self.scene.world.zones_at_hex(hex_clicked):
+            if zone_obj not in sector_contents:
+                sector_contents.append(zone_obj)
 
         if clicked_system:
             from game.strategy.data.physics import SectorEnvironment

@@ -142,7 +142,8 @@ class StrategyGameStateManager:
             # Issue #9: same per-player turn-start state for players 2..N
             # within one full-turn cycle.
             next_empire = next(
-                (e for e in self._screen.empires if e.id == next_player_id),
+                # PROJ-477 Phase 4: live empires via scene.world.
+                (e for e in self._screen.world.iter_empires() if e.id == next_player_id),
                 None,
             )
             if next_empire is not None:
@@ -158,10 +159,13 @@ class StrategyGameStateManager:
         """
         current_player_id = self._screen.facade.session_meta.human_player_ids()[self._screen.current_player_index]
         current_empire = next(
-            (e for e in self._screen.empires if e.id == current_player_id), None
+            # PROJ-477 Phase 4: live empires via scene.world.
+            (e for e in self._screen.world.iter_empires() if e.id == current_player_id),
+            None,
         )
         if current_empire is not None:
-            self._screen.session.active_empire = current_empire
+            # PROJ-477 Phase 3: through the scene write handle, not the getter.
+            self._screen.order_writes.set_active_empire(current_empire)
 
     def _iter_snapshot_windows(self):
         """Yield each opt-in window participating in the per-player UI snapshot.

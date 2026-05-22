@@ -37,10 +37,6 @@ class ColonizationSystem:
         self.facade = facade
 
     @property
-    def systems(self) -> Any:
-        return self.scene.systems
-
-    @property
     def camera(self) -> Any:
         return self.scene.camera
 
@@ -79,16 +75,17 @@ class ColonizationSystem:
                 if p.location == loc_local:
                     potential_planets.append(p)
 
-            # PROJ-139: Also check zone registry for multi-hex planets (Dyson Spheres)
-            if self.scene.galaxy:
-                zone_objects = self.scene.galaxy.get_zones_at_global_hex(fleet.location)
-                if isinstance(zone_objects, list):
-                    for zone_obj in zone_objects:
-                        if is_planet(zone_obj) and zone_obj not in potential_planets:
-                            potential_planets.append(zone_obj)
+            # PROJ-139: Also check zone registry for multi-hex planets (Dyson
+            # Spheres). PROJ-477 Phase 4: live zone objects via scene.world
+            # (these are consumed as live domain objects — is_planet protocol
+            # check + id round-trip into can_colonize — so NOT the DTO query).
+            zone_objects = self.scene.world.zones_at_hex(fleet.location)
+            for zone_obj in zone_objects:
+                if is_planet(zone_obj) and zone_obj not in potential_planets:
+                    potential_planets.append(zone_obj)
         else:
             # Full scan (rare - fleet in deep space)
-            for sys in self.systems:
+            for sys in self.scene.world.iter_systems():
                 loc_local = fleet.location - sys.global_location
                 for p in sys.planets:
                     if p.location == loc_local:
@@ -166,14 +163,13 @@ class ColonizationSystem:
         candidates = [p for p in target_system.planets
                       if p.owner_id is None and p.location == local_hex]
 
-        # PROJ-139: Also check zone registry for multi-hex planets
-        if self.scene.galaxy:
-            zone_objects = self.scene.galaxy.get_zones_at_global_hex(target_hex)
-            if isinstance(zone_objects, list):
-                for zone_obj in zone_objects:
-                    if is_planet(zone_obj) and zone_obj not in candidates:
-                        if zone_obj.owner_id is None:
-                            candidates.append(zone_obj)
+        # PROJ-139: Also check zone registry for multi-hex planets.
+        # PROJ-477 Phase 4: live zone objects via scene.world (consumed as live
+        # domain objects — is_planet + owner_id + id round-trip).
+        for zone_obj in self.scene.world.zones_at_hex(target_hex):
+            if is_planet(zone_obj) and zone_obj not in candidates:
+                if zone_obj.owner_id is None:
+                    candidates.append(zone_obj)
 
         if not candidates:
             logger.debug(f"No colonizable planets at hex {target_hex}.")
@@ -253,8 +249,9 @@ class ColonizationSystem:
         Returns:
             StarSystem or None
         """
-        # Access galaxy through scene (read-only for internal lookups)
-        return self.scene.galaxy._pathfinder.get_system_at_hex(hex_coord)
+        # PROJ-477 Phase 4: live system-ownership lookup via scene.world
+        # (radius=50 pathfinder semantics). Caller reads the live .planets.
+        return self.scene.world.system_at_map_hex(hex_coord)
 
     def _resolve_planet_global_hex(self, planet) -> Any:
         """
@@ -266,8 +263,8 @@ class ColonizationSystem:
         Returns:
             HexCoord or None
         """
-        # Access galaxy through scene (read-only for internal lookups)
-        for sys in self.scene.galaxy.systems.values():
+        # PROJ-477 Phase 4: iterate live systems through scene.world.
+        for sys in self.scene.world.iter_systems():
             if planet in sys.planets:
                 return sys.global_location + planet.location
         return None

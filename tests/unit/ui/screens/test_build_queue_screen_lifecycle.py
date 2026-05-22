@@ -331,7 +331,7 @@ def test_init_with_no_yard_constructs_ui_shell_only(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=None,
-        galaxy=galaxy_with_planet,
+        world=galaxy_with_planet,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=None,
     )
@@ -363,7 +363,7 @@ def test_open_for_yard_populates_state_for_planet(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=None,
-        galaxy=galaxy_with_planet,
+        world=galaxy_with_planet,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=None,
     )
@@ -404,7 +404,7 @@ def test_open_for_yard_initial_yard_kwarg_matches_post_open_state(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
-        galaxy=galaxy_with_planet,
+        world=galaxy_with_planet,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=planet_a,
     )
@@ -417,7 +417,7 @@ def test_open_for_yard_initial_yard_kwarg_matches_post_open_state(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=None,
-        galaxy=galaxy_with_planet,
+        world=galaxy_with_planet,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=None,
     )
@@ -454,7 +454,7 @@ def test_open_for_yard_planet_to_fleet_rebuilds_panels(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
-        galaxy=galaxy_with_planet,
+        world=galaxy_with_planet,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=planet_a,
     )
@@ -492,7 +492,7 @@ def test_open_for_yard_planet_to_planet_does_not_rebuild_panels(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
-        galaxy=galaxy_with_planet,
+        world=galaxy_with_planet,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=planet_a,
     )
@@ -541,7 +541,7 @@ def test_obs2_open_for_yard_planet_to_planet_refreshes_planet_report(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
-        galaxy=galaxy_with_planet,
+        world=galaxy_with_planet,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=planet_a,
     )
@@ -583,7 +583,7 @@ def test_obs2_open_for_yard_fleet_to_planet_rebuilds_panels(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_b,
-        galaxy=galaxy_with_planet,
+        world=galaxy_with_planet,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=fleet,
     )
@@ -622,7 +622,7 @@ def test_obs2_open_for_yard_planet_to_fleet_round_trip_back_to_planet(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
-        galaxy=galaxy_with_planet,
+        world=galaxy_with_planet,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=planet_a,
     )
@@ -675,7 +675,7 @@ def test_obs_p2_design_catalog_open_for_yard_rebinds_controller_design_catalog(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
-        galaxy=galaxy_with_planet,
+        world=galaxy_with_planet,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=planet_a,
     )
@@ -749,7 +749,7 @@ def test_hide_makes_panels_invisible_but_alive(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
-        galaxy=galaxy_with_planet,
+        world=galaxy_with_planet,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=planet_a,
     )
@@ -774,7 +774,7 @@ def test_show_after_hide_makes_panels_visible(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
-        galaxy=galaxy_with_planet,
+        world=galaxy_with_planet,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=planet_a,
     )
@@ -800,7 +800,7 @@ def test_is_visible_reflects_panel_visibility(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=None,
-        galaxy=galaxy_with_planet,
+        world=galaxy_with_planet,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=None,
     )
@@ -830,7 +830,7 @@ def test_hide_kills_planet_selection_window_if_open(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
-        galaxy=galaxy_with_planet,
+        world=galaxy_with_planet,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=planet_a,
     )
@@ -868,7 +868,7 @@ def test_request_close_hides_and_invokes_on_close(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
-        galaxy=galaxy_with_planet,
+        world=galaxy_with_planet,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=planet_a,
     )
@@ -990,7 +990,7 @@ def test_PROJ410_task_1_2_yard_switch_invalidates_widget_caches(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
-        galaxy=galaxy_with_planet,
+        world=galaxy_with_planet,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=planet_a,
     )
@@ -1029,7 +1029,7 @@ def test_PROJ410_task_1_3_close_and_reopen_invalidates_cache(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
-        galaxy=galaxy_with_planet,
+        world=galaxy_with_planet,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=planet_a,
     )
@@ -1076,7 +1076,7 @@ def test_PROJ410_task_1_5_ship_yard_to_planetary_yard_invalidates(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
-        galaxy=galaxy,
+        world=galaxy,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=planet,
     )
@@ -1146,7 +1146,7 @@ def test_PROJ410_task_1_7_yard_selector_renders_for_second_empire(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
-        galaxy=galaxy,
+        world=galaxy,  # PROJ-477 Phase 4
         empire=empire_1,
         initial_yard=planet_1,
     )
@@ -1225,7 +1225,7 @@ def test_PROJ410_task_1_9_zero_source_yard_clears_controller_queue_refs(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
-        galaxy=galaxy,
+        world=galaxy,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=planet_with_yard,
     )
@@ -1268,7 +1268,7 @@ def test_request_close_can_be_re_opened(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
-        galaxy=galaxy_with_planet,
+        world=galaxy_with_planet,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=planet_a,
     )
@@ -1332,7 +1332,7 @@ def test_issue17_open_for_yard_invokes_update_queue_header(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
-        galaxy=galaxy_with_planet,
+        world=galaxy_with_planet,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=planet_a,
     )
@@ -1387,7 +1387,7 @@ def test_issue17_reopen_after_yard_switch_clears_stale_label_text(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
-        galaxy=galaxy,
+        world=galaxy,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=planet,
     )
@@ -1513,7 +1513,7 @@ def test_issue17_show_reasserts_row_visibility_after_panel_show(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
-        galaxy=galaxy,
+        world=galaxy,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=planet,
     )
@@ -1591,7 +1591,7 @@ def test_issue17_show_reasserts_child_widget_visibility_after_panel_show(
         design_catalog=design_catalog_mock,
         design_loader=design_loader_mock,
         hex_coord=hex_a,
-        galaxy=galaxy,
+        world=galaxy,  # PROJ-477 Phase 4
         empire=empire,
         initial_yard=planet,
     )

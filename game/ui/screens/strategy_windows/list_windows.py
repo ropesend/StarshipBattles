@@ -39,7 +39,8 @@ class PlanetListRegistrar:
         rect = pygame.Rect((c.width - w) / 2, (c.height - h) / 2, w, h)
 
         empire = c.scene.current_empire
-        galaxy = c.scene.galaxy
+        # PROJ-477 Phase 4: list windows take the scene.world live seam.
+        world = c.scene.world
 
         # PROJ-290: thread the session race_registry so the planet detail
         # panel can render uncolonized-planet habitability for the
@@ -55,18 +56,18 @@ class PlanetListRegistrar:
         # re-shows. ~4.4 s widget construction → <500 ms re-open.
         existing = c.planet_list_window
         if existing is not None and existing.alive():
-            existing.open_for_galaxy(galaxy, empire, facade=facade)
+            existing.open_for_galaxy(world, empire, facade=facade)
             return
 
         c.planet_list_window = PlanetListWindow(
             rect,
             c.manager,
-            galaxy,
+            world,
             empire,
             window_manager=c,
             on_close_callback=self._on_closed,
             asset_resolver=c._asset_resolver,
-            empires=c.scene.empires,  # PROJ-198 owner-name lookup; PROJ-472 1C via scene pass-through
+            empires=list(world.iter_empires()),  # PROJ-477: owner-name lookup via scene.world
             registries=c.scene.registries,  # PROJ-211 DI; PROJ-472 1C via facade-fed scene accessor
             on_navigate_callback=self._on_navigate,
             race_registry=race_registry,  # PROJ-290
@@ -100,7 +101,7 @@ class StarListRegistrar:
         current_empire = c.scene.current_empire
         existing = c.star_list_window
         if existing is not None and existing.alive():
-            existing.open_for_galaxy(c.scene.galaxy, current_empire)
+            existing.open_for_galaxy(c.scene.world, current_empire)
             return
 
         w, h = c.width * 0.9, c.height * 0.9
@@ -114,7 +115,7 @@ class StarListRegistrar:
         c.star_list_window = StarListWindow(
             rect,
             c.manager,
-            c.scene.galaxy,
+            c.scene.world,
             window_manager=c,
             on_close_callback=self._on_closed,
             on_navigate_callback=self._on_navigate,

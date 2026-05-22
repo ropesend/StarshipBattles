@@ -79,6 +79,8 @@ class TestRaceFlagLoading:
 
         scene = MagicMock(spec=StrategyScreen)
         scene.empires = [empire]
+        # PROJ-477 Phase 4: load_assets iterates scene.world.iter_empires.
+        scene.world.iter_empires.side_effect = lambda: iter(scene.empires)
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
@@ -107,6 +109,8 @@ class TestRaceFlagLoading:
 
         scene = MagicMock(spec=StrategyScreen)
         scene.empires = [empire]
+        # PROJ-477 Phase 4: load_assets iterates scene.world.iter_empires.
+        scene.world.iter_empires.side_effect = lambda: iter(scene.empires)
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
@@ -130,6 +134,8 @@ class TestRaceFlagLoading:
 
         scene = MagicMock(spec=StrategyScreen)
         scene.empires = [empire]
+        # PROJ-477 Phase 4: load_assets iterates scene.world.iter_empires.
+        scene.world.iter_empires.side_effect = lambda: iter(scene.empires)
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
@@ -162,6 +168,8 @@ class TestThemeFlagLoading:
 
         scene = MagicMock(spec=StrategyScreen)
         scene.empires = [empire]
+        # PROJ-477 Phase 4: load_assets iterates scene.world.iter_empires.
+        scene.world.iter_empires.side_effect = lambda: iter(scene.empires)
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
@@ -186,6 +194,8 @@ class TestThemeFlagLoading:
 
         scene = MagicMock(spec=StrategyScreen)
         scene.empires = [empire]
+        # PROJ-477 Phase 4: load_assets iterates scene.world.iter_empires.
+        scene.world.iter_empires.side_effect = lambda: iter(scene.empires)
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
@@ -223,6 +233,8 @@ class TestFlagPrecedence:
 
         scene = MagicMock(spec=StrategyScreen)
         scene.empires = [empire]
+        # PROJ-477 Phase 4: load_assets iterates scene.world.iter_empires.
+        scene.world.iter_empires.side_effect = lambda: iter(scene.empires)
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
@@ -249,6 +261,8 @@ class TestFlagPrecedence:
 
         scene = MagicMock(spec=StrategyScreen)
         scene.empires = [empire]
+        # PROJ-477 Phase 4: load_assets iterates scene.world.iter_empires.
+        scene.world.iter_empires.side_effect = lambda: iter(scene.empires)
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
@@ -279,6 +293,8 @@ class TestMissingAssets:
 
         scene = MagicMock(spec=StrategyScreen)
         scene.empires = [empire]
+        # PROJ-477 Phase 4: load_assets iterates scene.world.iter_empires.
+        scene.world.iter_empires.side_effect = lambda: iter(scene.empires)
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
@@ -304,6 +320,8 @@ class TestMissingAssets:
 
         scene = MagicMock(spec=StrategyScreen)
         scene.empires = [empire]
+        # PROJ-477 Phase 4: load_assets iterates scene.world.iter_empires.
+        scene.world.iter_empires.side_effect = lambda: iter(scene.empires)
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
@@ -349,6 +367,8 @@ class TestMultipleEmpires:
 
         scene = MagicMock(spec=StrategyScreen)
         scene.empires = [empire1, empire2]
+        # PROJ-477 Phase 4: load_assets iterates scene.world.iter_empires.
+        scene.world.iter_empires.side_effect = lambda: iter(scene.empires)
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 

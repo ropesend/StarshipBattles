@@ -19,9 +19,9 @@ System documentation for the turn-based strategy layer.
 
 CQRS-lite boundary between UI and `GameSession`. Post-TD-08 the facade
 exposes a deliberately narrow top-level surface: two callables
-(`handle_command`, `process_turn`) plus `facade_state` and 9 grouped
-namespace accessors. Every other public verb lives inside the appropriate
-domain group.
+(`handle_command`, `process_turn`) plus `facade_state` and 10 grouped
+namespace accessors (`spatial` added by PROJ-477). Every other public verb
+lives inside the appropriate domain group.
 
 ### Top-level surface
 
@@ -30,7 +30,7 @@ domain group.
 | `handle_command(command)` | callable | The single write entry point. Delegates to `GameSession.handle_command()` and `CommandHandlerRegistry`. Returns `ValidationResult`. |
 | `process_turn(*, progress_callback=None)` | callable | Turn advance. Delegates to `GameSession.process_turn()`, converts `EnginePhaseError` to `TurnFailedError`, invalidates per-turn caches. |
 | `facade_state` | attribute | `FacadeSessionState` per-turn cache holder. UI collaborators (`DesignCatalog`, etc.) share this so per-turn caches stick across opens. Engine-side code must NOT read this — caches are irrelevant inside the turn loop. |
-| `commands` / `fleets` / `planets` / `systems` / `empires` / `events` / `session_meta` / `economy` / `validation` | attributes | Nine grouped namespace accessors. See per-group breakdown below. |
+| `commands` / `fleets` / `planets` / `systems` / `spatial` / `empires` / `events` / `session_meta` / `economy` / `validation` | attributes | Ten grouped namespace accessors (`spatial` added by PROJ-477). See per-group breakdown below. |
 
 ### Grouped namespaces (`game/strategy/facade/grouped_namespaces.py`)
 
@@ -39,7 +39,8 @@ domain group.
 | `commands` | All `dispatch_*` helpers reachable as `commands.<verb>` with the `dispatch_` prefix stripped (e.g. `facade.commands.issue_move(fleet_id=..., target_hex=...)`). Registry-driven — adding a `CommandSpec.facade_helper_name` automatically grows this namespace. |
 | `fleets` | `get(id)`, `at_hex(hex)`, `path_preview(id, hex)`, `path_projection(id, max_turns)`, `remaining_pods(id)` |
 | `planets` | `get(id)`, `at_hex(hex)` |
-| `systems` | `all()`, `all_stars()`, `at_hex(hex)`, `containing_fleet(id)`, `near_hex(hex, max_dist=8)`, `storm_names_at_hex(hex)` |
+| `systems` | `all()`, `all_stars()`, `at_hex(hex)`, `containing_fleet(id)`, `near_hex(hex, max_dist=8)`, `by_name(name)`, `of_object(obj)`, `at_map_hex(hex, radius=50)`, `storm_names_at_hex(hex)` (`by_name`/`of_object`/`at_map_hex` added by PROJ-477) |
+| `spatial` | `contents_at_hex(hex)` — grouped planet/zone/warp-point membership at a hex, multi-hex-aware (PROJ-477) |
 | `empires` | `all()`, `get(id)`, `colonies(id)`, `fleets(id)`, `build_queues(id)`, `hex_build_queues(id, hex)` |
 | `events` | `turn_events(turn=None, *, empire_id=None)`, `all(*, empire_id=None)`, `by_category(category, *, empire_id=None)` |
 | `session_meta` | `turn_number()`, `save_path()`, `human_player_ids()`, `registries()` |
@@ -80,6 +81,7 @@ Slices are implementation detail; external callers go through the grouped namesp
 | `FleetSlice` | `fleet_slice.py` | Fleet queries, movement validation, pod state |
 | `PlanetSlice` | `planet_slice.py` | Planet queries and colonization validation |
 | `SystemSlice` | `system_slice.py` | System/map queries and storm names |
+| `SpatialSlice` | `spatial_slice.py` | Hex-contents membership (planets/zones/warp points), multi-hex-aware (PROJ-477) |
 | `EmpireSlice` | `empire_slice.py` | Empire queries and build-queue aggregation |
 | `EconomySlice` | `economy_slice.py` | Demographic/economy snapshots, lazy race registry, economy config resolver |
 | `EventSlice` | `event_slice.py` | Event-log queries and plain session-state reads |

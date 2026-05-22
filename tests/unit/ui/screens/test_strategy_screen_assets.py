@@ -24,6 +24,10 @@ def _make_screen():
     screen._race_loader = MagicMock()
     screen.camera = MagicMock()
     screen.systems = []
+    # PROJ-477 Phase 4: assets bootstrap iterates scene.world.iter_empires /
+    # iter_systems; wire the seam to the same lists tests configure.
+    screen.world.iter_empires.side_effect = lambda: iter(screen.empires)
+    screen.world.iter_systems.side_effect = lambda: iter(screen.systems)
     return screen
 
 

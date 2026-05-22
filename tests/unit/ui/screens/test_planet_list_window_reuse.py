@@ -29,7 +29,9 @@ def reusable_window():
     with bypass_init(PlanetListWindow):
         rect = pygame.Rect(0, 0, 1600, 800)
         manager = MagicMock(name="ui_manager")
-        galaxy = MagicMock(name="galaxy_v1")
+        galaxy = MagicMock(name="world_v1")
+        # PROJ-477 Phase 4: PlanetListWindow takes the scene.world seam.
+        galaxy.iter_systems.side_effect = lambda: iter(())
         empire = MagicMock(name="empire_v1")
         empire.id = 0
         window_manager = MagicMock(name="window_manager")
@@ -87,7 +89,8 @@ def test_show_sets_is_blocking_true_and_registers(reusable_window):
 
 def test_open_for_galaxy_rebinds_context(reusable_window):
     """``open_for_galaxy`` rebinds galaxy/empire/facade."""
-    new_galaxy = MagicMock(name="galaxy_v2")
+    new_galaxy = MagicMock(name="world_v2")
+    new_galaxy.iter_systems.side_effect = lambda: iter(())
     new_empire = MagicMock(name="empire_v2")
     new_empire.id = 1
     new_facade = MagicMock(name="facade_v2")
@@ -96,7 +99,7 @@ def test_open_for_galaxy_rebinds_context(reusable_window):
         reusable_window.open_for_galaxy(
             new_galaxy, new_empire, facade=new_facade
         )
-    assert reusable_window.galaxy is new_galaxy
+    assert reusable_window.world is new_galaxy
     assert reusable_window.empire is new_empire
     assert reusable_window._facade is new_facade
 

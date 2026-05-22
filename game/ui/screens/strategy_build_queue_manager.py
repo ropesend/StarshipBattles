@@ -138,7 +138,7 @@ class StrategyBuildQueueManager:
                 design_catalog=design_catalog,
                 design_loader=design_loader,
                 hex_coord=None,
-                galaxy=self._screen.galaxy,
+                world=self._screen.world,
                 empire=current_empire,
                 input_mapper=self._screen.input_mapper,
                 facade=self._screen.facade,
@@ -178,7 +178,7 @@ class StrategyBuildQueueManager:
         # display symptoms (collect_build_queues_at_hex filters by empire.id
         # at build_queue_source.py:412-416).
         self._screen.build_queue_screen.empire = current_empire
-        self._screen.build_queue_screen.galaxy = self._screen.galaxy
+        self._screen.build_queue_screen.world = self._screen.world
         self._screen.build_queue_screen.facade = self._screen.facade
 
         self._screen.build_queue_screen.open_for_yard(
@@ -207,8 +207,9 @@ class StrategyBuildQueueManager:
                 # PROJ-211: Pass registries explicitly
                 design_loader = DesignLoaderAdapter(registry_provider=get_cached_registries())
 
-                # PROJ-69: Calculate hex coord for multi-queue discovery
-                parent_sys = self._screen.galaxy.get_system_of_planet(planet)
+                # PROJ-69: Calculate hex coord for multi-queue discovery.
+                # PROJ-477 Phase 4: live system via scene.world.
+                parent_sys = self._screen.world.system_for_object(planet)
                 hex_coord = parent_sys.global_location + planet.location if parent_sys else None
 
                 self._open_build_queue(
@@ -308,7 +309,8 @@ class StrategyBuildQueueManager:
         """
         if source.context_type == "planet":
             planet_id = source.planet_id if source.planet_id is not None else source.entity_id
-            return self._screen.galaxy.get_planet_by_id(planet_id)
+            # PROJ-477 Phase 4 (POST-FLESH B3): live planet-by-id via scene.world.
+            return self._screen.world.planet_by_id(planet_id)
         if source.context_type == "fleet":
             # PROJ-472 1C: resolve the live fleet via the facade-state id
             # lookup (cache-owning) rather than reaching

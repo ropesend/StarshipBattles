@@ -135,6 +135,84 @@ def test_get_system_near_hex_returns_none_when_no_system_is_close() -> None:
     assert SystemSlice(state).get_system_near_hex(HexCoord(0, 0), max_dist=8) is None
 
 
+def test_get_system_by_name_resolves_and_returns_none(monkeypatch) -> None:
+    """PROJ-477 Phase 2: ``get_system_by_name`` delegates to the galaxy's O(1)
+    name map and projects to ``SystemInfo``; ``None`` for an unknown name."""
+    sol = SimpleNamespace(name="Sol")
+    galaxy = SimpleNamespace(
+        get_system_by_name=lambda name: (sol if name == "Sol" else None),
+    )
+    state = SimpleNamespace(_session=SimpleNamespace(galaxy=galaxy))
+    monkeypatch.setattr(
+        SystemInfo, "from_star_system", staticmethod(lambda system: system.name)
+    )
+    system_slice = SystemSlice(state)
+
+    assert system_slice.get_system_by_name("Sol") == "Sol"
+    assert system_slice.get_system_by_name("Nowhere") is None
+
+
+def test_get_system_of_object_resolves_and_returns_none(monkeypatch) -> None:
+    """PROJ-477 Phase 2: ``get_system_of_object`` delegates to
+    ``galaxy.get_system_of_object`` and projects to ``SystemInfo``."""
+    planet = object()
+    home = SimpleNamespace(name="Home")
+    galaxy = SimpleNamespace(
+        get_system_of_object=lambda obj: (home if obj is planet else None),
+    )
+    state = SimpleNamespace(_session=SimpleNamespace(galaxy=galaxy))
+    monkeypatch.setattr(
+        SystemInfo, "from_star_system", staticmethod(lambda system: system.name)
+    )
+    system_slice = SystemSlice(state)
+
+    assert system_slice.get_system_of_object(planet) == "Home"
+    assert system_slice.get_system_of_object(object()) is None
+
+
+def test_get_system_at_map_hex_uses_pathfinder_radius_50(monkeypatch) -> None:
+    """PROJ-477 Phase 2: ``get_system_at_map_hex`` uses the pathfinder's
+    system-radius (default 50) ownership semantics — distinct from
+    ``near_hex(max_dist=8)``.
+
+    A system 12 hexes away is OWNED at radius=50 (``at_map_hex`` resolves it)
+    but is NOT within ``near_hex``'s default max_dist=8 — proving the two
+    queries have different semantics and ``at_map_hex`` is not a ``near_hex``
+    alias (design.md risk 2 / decisions.md).
+    """
+    near = SimpleNamespace(name="Near", global_location=HexCoord(12, 0))
+    captured: dict = {}
+
+    def fake_get_system_at_hex(hex_c, radius):
+        captured["hex"] = hex_c
+        captured["radius"] = radius
+        from game.core.hex_math import hex_distance
+        return near if hex_distance(hex_c, near.global_location) < radius else None
+
+    pathfinder = SimpleNamespace(get_system_at_hex=fake_get_system_at_hex)
+    galaxy = SimpleNamespace(
+        _pathfinder=pathfinder,
+        systems={"near": near},
+        get_system_at_location=lambda h: None,
+    )
+    state = SimpleNamespace(_session=SimpleNamespace(galaxy=galaxy))
+    monkeypatch.setattr(
+        SystemInfo, "from_star_system", staticmethod(lambda system: system.name)
+    )
+    system_slice = SystemSlice(state)
+
+    # Default radius 50: the 12-hex-away system IS owned.
+    assert system_slice.get_system_at_map_hex(HexCoord(0, 0)) == "Near"
+    assert captured["radius"] == 50
+
+    # near_hex(max_dist=8) does NOT resolve the same system → different semantics.
+    assert system_slice.get_system_near_hex(HexCoord(0, 0), max_dist=8) is None
+
+    # Explicit radius is honoured; a too-small radius yields None.
+    assert system_slice.get_system_at_map_hex(HexCoord(0, 0), radius=5) is None
+    assert captured["radius"] == 5
+
+
 def test_get_storm_names_at_hex_filters_non_storm_zones() -> None:
     storm = Storm(
         name="Ion Front",

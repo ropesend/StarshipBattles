@@ -25,7 +25,7 @@ class PlanetDataSource(ListDataSource):
     def __init__(
         self,
         columns: List[Dict[str, Any]],
-        galaxy,
+        world,
         empire,
     ) -> None:
         """Initialize with column definitions and context references.
@@ -40,11 +40,12 @@ class PlanetDataSource(ListDataSource):
                 - attr: str (optional) - attribute path for value extraction
                 - func: callable (optional) - function(planet) for value extraction
                 - fmt: str (optional) - format string for numeric values
-            galaxy: Galaxy object for context (owner lookup, etc.)
+            world: Scene.world live seam for context (PROJ-477; currently
+                unused for traversal — owner lookup uses the columns' empires).
             empire: Current player's empire for context.
         """
         super().__init__(columns)
-        self._galaxy = galaxy
+        self._world = world
         self._empire = empire
 
     # Backwards-compatible alias for callers that still use the planet-specific

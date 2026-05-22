@@ -13,17 +13,64 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Guard #3 scaffold (ratchet from day one) + session-guard dynamic-`getattr` hardening | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. New cold read surfaces (`facade.systems.by_name`/`of_object`/`at_map_hex`, `facade.spatial.contents_at_hex`) + narrow scene write handle | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Retire the `StrategyScreen.session` GETTER (migrate readers + route writes through the handle; keep SETTER) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Migrate the COLD broad-property consumers + the raw-domain fan-out handoffs onto facade queries / `StrategyWorldAccess` | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Introduce `StrategyWorldAccess` + migrate render-hot stack (`StrategyRenderer` + `strategy_render/*`) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Delete renderer re-exporters + the `galaxy`/`empires`/`systems` pass-throughs; ratchet guard #3 to end-state | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 1. Guard #3 scaffold (ratchet from day one) + session-guard dynamic-`getattr` hardening | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. New cold read surfaces (`facade.systems.by_name`/`of_object`/`at_map_hex`, `facade.spatial.contents_at_hex`) + narrow scene write handle | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Retire the `StrategyScreen.session` GETTER (migrate readers + route writes through the handle; keep SETTER) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Migrate the COLD broad-property consumers + the raw-domain fan-out handoffs onto facade queries / `StrategyWorldAccess` | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Introduce `StrategyWorldAccess` + migrate render-hot stack (`StrategyRenderer` + `strategy_render/*`) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Delete renderer re-exporters + the `galaxy`/`empires`/`systems` pass-throughs; ratchet guard #3 to end-state | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-22
-**Active Phase:** Planned (execution-ready). Pre-flesh + post-flesh Codex consults complete.
-**Last Action:** Fleshed to execution-ready + revised per post-flesh review. Pre-flesh consult
+**Active Phase:** ALL 6 PHASES COMPLETE (green) + Codex audit PASSED. Boundary CLOSED. Awaiting USER verification.
+**GATE STATUS — RESOLVED:** PROJ-475 HAS LANDED (commit `e2af24373` "PROJ-475 Phases 3-5: retire
+narrow pass-throughs + privatize FacadeSessionState.session"). The plan's gate-evidence was stale:
+`_facade_state.py` moved to `game/strategy/facade/slices/_facade_state.py` and now holds
+`self._session` (privatized); `strategy_screen.py` comments confirm "PROJ-475 Phase 3 retired the
+public active_empire pass-through". Consumer inventory RE-SCANNED against post-475 live code — the
+plan's inventory is accurate (line numbers shifted slightly; session getter now at :260-294,
+pass-throughs at :160-170, pathfinder helpers at :529-537). Several Phase-3 getter readers
+(event_router, lifecycle, transfer_controller, empire_panel_ctrl) were already migrated by PROJ-475,
+so the Phase-3 getter tail is now just `system_tree_panel` (getattr) + the Category B write seams.
+**Phase 1 result:** Guard #3 added at `tests/static_guards/test_facade_read_path_property_guard.py`
+(green, full current allowlist, positive controls incl. nested `c.scene.galaxy`). Session guard
+hardened for `getattr(obj,'session')` via sibling `_matched_getattr_session` matcher + `getattr.session`
+allowlist entry for `system_tree_panel.py` (Category F). All 3 read-path guards green; full sharded
+suite 24617 passed / 0 failed.
+**Phase 2 result:** Added `facade.systems.by_name/of_object/at_map_hex` (system_slice + grouped_namespaces),
+new `facade.spatial.contents_at_hex` namespace (`spatial_slice.py` + `HexContentsInfo` DTO, multi-hex aware),
+and the narrow `screen.order_writes` handle (`strategy_world_writes.py`, lazy `_session` provider). Public-API
+pin + docs (`03_CONVENTIONS.md`, `systems/strategy_layer.md`) updated to 10 grouped accessors. Full sharded
+suite 24638 passed / 0 failed.
+**Task 5.1 result (PREREQUISITE, done before Phase 3/4):** `StrategyWorldAccess` (`strategy_world_access.py`,
+lazy `_session` provider, all live/O(1), no DTOs) exposed as `scene.world`; `r.world` accessor added on
+`StrategyRenderer`. 11 unit tests.
+**Phase 3 result:** `system_tree_panel._get_empire_context` rewired to `scene.active_empire_id` +
+`scene.registries` (getattr hole closed); the 3 Category B writes routed through `screen.order_writes`;
+`StrategyScreen.session` GETTER now raises `AttributeError` (setter kept). Session guard: removed the
+`getattr.session` + 2 Category B entries; kept `_session.__extract__` (now the setter's STORE target only).
+Updated bypass-init tests writing `screen.session.X` → `screen._session.X`. Full sharded suite 24660 passed.
+**Phase 4 result:** ALL cold consumers + the transitive fan-out migrated onto `scene.world` / cold facade
+queries. 4.1 object→system (event_router/camera_nav→`system_for_object`/`iter_systems`); 4.2 spatial
+(colonization/superweapons/click_dispatcher→`zones_at_hex`/`planets_at_exact_hex`/`system_at_map_hex`/
+`iter_*`; B5 EXACT membership preserved); 4.3 menu builders (`fleet_menu_items`/`planet_menu_items` take a
+`world` handle); 4.4 list windows (`PlanetListWindow`/`StarListWindow` + `gather_planets`/`gather_stars` +
+filters + `PlanetDataSource` take `world`); 4.5 build-queue chain (`build_queue_windows`→`manager`→
+`BuildQueueScreen`→`BuildQueueController` take `world`; `_resolve_live_yard`→`world.planet_by_id`); 4.6
+assets/selection/state-manager (→`iter_empires`/`iter_systems`/`system_for_object`), `strategy_fleet_ops`
+dead `empires` wrapper deleted, `current_empire` already on `_session`. Many helper proxy properties
+(`camera_nav.systems`, `colonization.systems`, `superweapons.systems`/`galaxy`) removed. Guard #3 allowlist
+shrunk to render-hot only (renderer re-exporters + render modules + `strategy_screen.py` pathfinder helpers).
+Full sharded suite 24658 passed / 0 failed; all 3 read-path guards green.
+**Phase 6 result (BOUNDARY CLOSED):** Deleted the renderer `galaxy`/`systems`/`empires` re-exporters
+(`strategy_renderer.py`) and the three broad `StrategyScreen` pass-throughs `galaxy`/`empires`/`systems`.
+Repointed the screen's pathfinder helpers to `self._session.galaxy._pathfinder` (composition root).
+Ratcheted guard #3 to its END-STATE: the `_PROPERTY_READ_ALLOWLIST` is now EMPTY. Verified zero live
+`scene.galaxy|empires|systems` / `r.*` / `_screen.*` reads remain under `game/ui/` (only docstring mentions).
+All three read-path guards green; the session GETTER raises `AttributeError` (setter kept); full sharded
+suite 24654 passed / 0 failed. Render-perf: pure live-collection / O(1) source-swap, NO per-frame DTOs.
+**Next Action:** USER verification (Codex audit PASSED — see Audit Log). After verification, close/archive.
+**Historical planning note (superseded by gate resolution above):** Fleshed to execution-ready + revised per post-flesh review. Pre-flesh consult
 (`AgentCoordination/Scratchpad/Consult/proj477_preflesh/advice.md`) confirmed and
 EXTENDED the deferred consumer set (stub undercounted — adds `strategy_build_queue_manager`,
 `strategy_game_state_manager`, `strategy_screen_assets`, `strategy_screen_selection`,
@@ -41,10 +88,9 @@ Task 5.1 promoted to a hard prerequisite (B1/B4). Verdict on cap: keep WHOLE.
 **Next Action:** **Do NOT start until PROJ-475 lands.** Then RE-RUN the consumer
 inventory against post-475 live code (the session-getter tail shrinks once PROJ-475
 migrates its readers) before executing Phase 1.
-**Blockers:** **GATED on PROJ-475** (planned, not executed — `_facade_state.py:65` still
-reads `self.session = session`, i.e. the privatization has not landed; the session-guard
-Category A allowlist still lists `_session.galaxy/empires/systems`). Confirm scope/cap with
-the user (this is a large single project — see Capping).
+**Blockers:** None
+**Gate note (resolved):** the historical PROJ-475 gate is satisfied — PROJ-475 landed at commit
+`e2af24373`; all 6 phases executed WHOLE (option A), green. See the EXECUTION decisions-log entries.
 
 ## Overview
 Deferred tail of **PROJ-475**. This project actually CLOSES the facade read-path boundary:
@@ -146,15 +192,25 @@ the Phase 4/5 boundary if needed. **Confirm A-vs-B with the user before executin
 - Post-flesh consult: `AgentCoordination/Scratchpad/Consult/proj477_postflesh/advice.md`
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] `python Tools/test_sharded/test_sharded.py` green
-- [ ] All THREE read-path guards green; guard #3 ratcheted to end-state (only `StrategyWorldAccess`
-      internals + the screen's own pathfinder helpers allowlisted)
-- [ ] `scene.galaxy` / `scene.empires` / `scene.systems` pass-throughs gone; `r.galaxy`/etc.
-      re-exporters gone; no consumer references them
-- [ ] `StrategyScreen.session` getter raises `AttributeError` (setter still works for test swap)
-- [ ] Render-perf: no per-frame DTO allocation introduced (render reads `scene.world` live
-      collections); spot-check `draw_systems`/`draw_fleets`/`hex_outlines` unchanged in shape
-- [ ] No system/hex-ownership SEMANTIC drift (`at_map_hex` radius=50 ≠ `near_hex` max_dist=8;
-      `contents_at_hex` preserves multi-hex zone membership)
+- [x] All phase checklists complete
+- [x] `python Tools/test_sharded/test_sharded.py` green (24654 passed / 0 failed)
+- [x] All THREE read-path guards green; guard #3 ratcheted to end-state (`_PROPERTY_READ_ALLOWLIST`
+      EMPTY — `StrategyWorldAccess`/pathfinder `_session` reads are caught by the SESSION guard, not this one)
+- [x] `scene.galaxy` / `scene.empires` / `scene.systems` pass-throughs gone; `r.galaxy`/etc.
+      re-exporters gone; no consumer references them (verified: only docstring mentions remain)
+- [x] `StrategyScreen.session` getter raises `AttributeError` (setter still works for test swap)
+- [x] Render-perf: no per-frame DTO allocation introduced (render reads `scene.world` live
+      collections / O(1) map lookups by reference; `draw_systems`/`draw_fleets`/`hex_outlines` iteration
+      shape unchanged — pure source-swap, no `from_*`/list-comp DTO build in the draw path)
+- [x] No system/hex-ownership SEMANTIC drift (`at_map_hex` radius=50 ≠ `near_hex` max_dist=8;
+      live zone reads via `world.zones_at_hex` preserve multi-hex membership; `superweapons:109` kept
+      EXACT membership via `planets_at_exact_hex` per B5)
+- [x] Codex end-of-project audit PASSED (all 4 asks clean; 1 pre-existing out-of-scope finding logged)
 - [ ] User verified
+
+## Audit Log
+| Cycle | Date | Findings | Resolution |
+|-------|------|----------|------------|
+| 1 (Codex, file-pointer) | 2026-05-22 | `exit_status: ok`. All 4 explicit asks CLEAN: (1) render-perf — no per-frame DTO allocation on the draw path (live iterators / by-reference maps; no `from_*`/`HexContentsInfo` in render); (2) semantic drift — `superweapons` implode keeps EXACT `planets_at_exact_hex`; live-`StarSystem` consumers use `scene.world`; `at_map_hex` radius=50 ≠ `near_hex` max_dist=8; (3) no surviving `scene.*`/`r.*` raw-domain reads or live session-getter readers (only docstring mentions); (4) guard #3 EMPTY allowlist genuinely closed, positive controls still pin the matcher. ONE Medium finding: the kept `session` SETTER rebuilds `_facade` but not the sub-object (`_fleet_ops`/`_colonization`/`_superweapons`) facade captures (split-brain on test swap). | Medium finding is PRE-EXISTING (predates PROJ-477; setter rebinding untouched here) + test-seam-scoped (production never reassigns `session`). Logged as discovered issue **DI-2026-05-22-001**; decisions.md split-brain claim softened with an AUDIT NOTE. NOT fixed in-project (scope creep). The two Minor risks (no test rerun under `allow_tests:false`; guard special-cases only `self.galaxy` in strategy_screen.py) are advisory — full suite + 3 guards already verified green. Audit PASSED. |
+
+Codex response artifact: `AgentCoordination/Scratchpad/Consult/20260522T172957Z_proj477_audit/response.md`

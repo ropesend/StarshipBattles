@@ -34,7 +34,8 @@ def draw_systems(r: Any, screen: Any) -> None:
     min_x, max_x = min(tl.x, br.x) - margin, max(tl.x, br.x) + margin
     min_y, max_y = min(tl.y, br.y) - margin, max(tl.y, br.y) + margin
 
-    for sys in r.galaxy.systems.values():
+    # PROJ-477 Phase 5: live systems via the scene.world seam (no per-frame DTOs).
+    for sys in r.world.iter_systems():
         hx, hy = hex_to_pixel(sys.global_location, r.hex_size)
         world_pos = pygame.math.Vector2(hx, hy)
 
@@ -98,7 +99,7 @@ def draw_colony_marker(r: Any, screen: Any, sys: Any, world_pos: Any) -> None:
         return
 
     first_owner_id = owned_planets[0].owner_id
-    owner_emp = next((e for e in r.empires if e.id == first_owner_id), None)
+    owner_emp = next((e for e in r.world.iter_empires() if e.id == first_owner_id), None)
     if not owner_emp:
         return
 

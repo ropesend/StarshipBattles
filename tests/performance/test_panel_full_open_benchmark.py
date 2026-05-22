@@ -83,26 +83,28 @@ def _print_span_medians(profiler: Profiler, label: str) -> None:
         )
 
 
-def _build_planet_list_window(ui_manager, galaxy, empire, *, facade_state):
+def _build_planet_list_window(ui_manager, world, empire, *, facade_state):
     from game.ui.screens.planet_list_window import PlanetListWindow
 
     rect = pygame.Rect(100, 100, 1600, 800)
     facade = MagicMock()
     facade.facade_state = facade_state
+    # PROJ-477 Phase 4: PlanetListWindow takes the scene.world live seam.
     window = PlanetListWindow(
-        rect, ui_manager, galaxy, empire,
+        rect, ui_manager, world, empire,
         window_manager=None,
         facade=facade,
     )
     return window
 
 
-def _build_star_list_window(ui_manager, galaxy, *, facade_state):
+def _build_star_list_window(ui_manager, world, *, facade_state):
     from game.ui.screens.star_list_window import StarListWindow
 
     rect = pygame.Rect(100, 100, 1600, 800)
+    # PROJ-477 Phase 4: StarListWindow takes the scene.world live seam.
     window = StarListWindow(
-        rect, ui_manager, galaxy,
+        rect, ui_manager, world,
         window_manager=None,
         facade_state=facade_state,
     )
@@ -138,14 +140,16 @@ def test_full_window_open_uncached(
     smoke_turn1_scenario, ui_manager, active_profiler
 ):
     """BEFORE state: ``facade_state=None`` — every open does full work."""
+    from game.ui.screens.strategy_world_access import StrategyWorldAccess
     session, galaxy, empires = smoke_turn1_scenario
     empire = empires[0]
     registries = session.registries
+    world = StrategyWorldAccess(lambda: session)  # PROJ-477 Phase 4
 
     for _ in range(_OPEN_ITERATIONS):
-        w = _build_planet_list_window(ui_manager, galaxy, empire, facade_state=None)
+        w = _build_planet_list_window(ui_manager, world, empire, facade_state=None)
         w.kill()
-        w = _build_star_list_window(ui_manager, galaxy, facade_state=None)
+        w = _build_star_list_window(ui_manager, world, facade_state=None)
         w.kill()
         w = _build_empire_window(ui_manager, empire, registries, facade_state=None)
         w.kill()
@@ -161,15 +165,17 @@ def test_full_window_open_with_cache(
     """AFTER state: ``facade_state`` supplied — caches active across opens."""
     from game.strategy.facade.slices._facade_state import FacadeSessionState
 
+    from game.ui.screens.strategy_world_access import StrategyWorldAccess
     session, galaxy, empires = smoke_turn1_scenario
     empire = empires[0]
     registries = session.registries
     state = FacadeSessionState(session=session)
+    world = StrategyWorldAccess(lambda: session)  # PROJ-477 Phase 4
 
     for _ in range(_OPEN_ITERATIONS):
-        w = _build_planet_list_window(ui_manager, galaxy, empire, facade_state=state)
+        w = _build_planet_list_window(ui_manager, world, empire, facade_state=state)
         w.kill()
-        w = _build_star_list_window(ui_manager, galaxy, facade_state=state)
+        w = _build_star_list_window(ui_manager, world, facade_state=state)
         w.kill()
         w = _build_empire_window(ui_manager, empire, registries, facade_state=state)
         w.kill()

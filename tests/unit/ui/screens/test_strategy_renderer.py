@@ -9,6 +9,39 @@ from unittest.mock import MagicMock, patch, PropertyMock
 import pygame
 
 
+class _StubWorld:
+    """PROJ-477 Phase 5: scene.world live-seam stub for renderer tests.
+
+    Reads through to the scene's mock galaxy/empires DYNAMICALLY so tests that
+    reassign ``scene.galaxy.state.global_hex_*`` or ``scene.empires`` after
+    fixture setup are reflected (the render modules read these per draw).
+    """
+
+    def __init__(self, scene):
+        self._scene = scene
+
+    def iter_systems(self):
+        return iter(self._scene.galaxy.systems.values())
+
+    def iter_empires(self):
+        return iter(self._scene.empires)
+
+    def system_by_name(self, name):
+        return self._scene.galaxy.get_system_by_name(name)
+
+    @property
+    def global_hex_planets(self):
+        return self._scene.galaxy.state.global_hex_planets
+
+    @property
+    def global_hex_zones(self):
+        return self._scene.galaxy.state.global_hex_zones
+
+    @property
+    def global_hex_warp_points(self):
+        return self._scene.galaxy.state.global_hex_warp_points
+
+
 # ===========================================================================
 # Fixtures
 # ===========================================================================
@@ -40,11 +73,19 @@ def mock_scene():
     # Galaxy
     galaxy = MagicMock()
     galaxy.systems = {}
+    galaxy.state.global_hex_planets = {}
+    galaxy.state.global_hex_zones = {}
+    galaxy.state.global_hex_warp_points = {}
     scene.galaxy = galaxy
 
     # Empire assets
     scene.empire_assets = {}
     scene.empires = []
+
+    # PROJ-477 Phase 5: render modules read galaxy/empires/systems through
+    # scene.world (the live seam). The stub reads through dynamically so tests
+    # that reassign scene.galaxy.state.* / scene.empires are reflected.
+    scene.world = _StubWorld(scene)
 
     return scene
 
@@ -113,18 +154,13 @@ class TestPropertyAccessors:
         """camera property should return scene.camera."""
         assert renderer.camera is mock_scene.camera
 
-    def test_galaxy_property(self, renderer, mock_scene):
-        """galaxy property should return scene.galaxy."""
-        assert renderer.galaxy is mock_scene.galaxy
-
-    def test_systems_property(self, renderer, mock_scene):
-        """systems property should return scene.systems."""
-        mock_scene.systems = [MagicMock()]
-        assert renderer.systems is mock_scene.systems
-
-    def test_empires_property(self, renderer, mock_scene):
-        """empires property should return scene.empires."""
-        assert renderer.empires is mock_scene.empires
+    def test_world_property(self, renderer, mock_scene):
+        """PROJ-477 Phase 6: the galaxy/systems/empires re-exporters were
+        deleted; render modules read through ``r.world`` (the scene seam)."""
+        assert renderer.world is mock_scene.world
+        assert not hasattr(type(renderer), "galaxy")
+        assert not hasattr(type(renderer), "systems")
+        assert not hasattr(type(renderer), "empires")
 
     def test_hex_size_property(self, renderer, mock_scene):
         """hex_size property should return scene.hex_size."""

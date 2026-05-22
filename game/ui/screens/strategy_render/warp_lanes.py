@@ -21,12 +21,13 @@ def draw_warp_lanes(r: Any, screen: Any) -> None:
         return -margin <= scr_pos.x <= screen_w + margin and -margin <= scr_pos.y <= screen_h + margin
 
     drawn_pairs = set()
-    for sys in r.galaxy.systems.values():
+    # PROJ-477 Phase 5: live systems via the scene.world seam (no per-frame DTOs).
+    for sys in r.world.iter_systems():
         sx, sy = hex_to_pixel(sys.global_location, r.hex_size)
 
         for wp in sys.warp_points:
             target_id = wp.destination_id
-            target_sys = r.galaxy.get_system_by_name(target_id)
+            target_sys = r.world.system_by_name(target_id)
 
             if target_sys:
                 reciprocal_wp = next((w for w in target_sys.warp_points if w.destination_id == sys.name), None)

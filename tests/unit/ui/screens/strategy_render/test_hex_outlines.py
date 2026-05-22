@@ -11,6 +11,32 @@ from game.ui.colors import HEX_OUTLINE_OCCUPIED, HEX_OUTLINE_PLAYER_OWNED
 from game.ui.screens.strategy_render.hex_outlines import HexOutlineLayer
 
 
+class _StubWorld:
+    """PROJ-477 Phase 5: scene.world live-seam stub for hex-outline tests.
+
+    Reads through to the renderer's galaxy-state maps + empires DYNAMICALLY so
+    tests that reassign ``renderer.galaxy.state.*`` / ``renderer.empires`` after
+    construction are reflected (the render path reads these per build)."""
+
+    def __init__(self, renderer):
+        self._r = renderer
+
+    def iter_empires(self):
+        return iter(self._r.empires)
+
+    @property
+    def global_hex_planets(self):
+        return self._r.galaxy.state.global_hex_planets
+
+    @property
+    def global_hex_zones(self):
+        return self._r.galaxy.state.global_hex_zones
+
+    @property
+    def global_hex_warp_points(self):
+        return self._r.galaxy.state.global_hex_warp_points
+
+
 def _renderer_context() -> SimpleNamespace:
     # PROJ-472 1C: hex outlines read the active-empire id + turn number
     # through facade-fed scene accessors, not scene.session.*.
@@ -25,7 +51,7 @@ def _renderer_context() -> SimpleNamespace:
     camera = SimpleNamespace(
         world_to_screen=lambda pos: pygame.math.Vector2(pos.x, pos.y),
     )
-    return SimpleNamespace(
+    renderer = SimpleNamespace(
         scene=scene,
         galaxy=galaxy,
         empires=[],
@@ -35,6 +61,10 @@ def _renderer_context() -> SimpleNamespace:
         screen_height=600,
         _draw_inner_hex=MagicMock(),
     )
+    # PROJ-477 Phase 5: hex outlines read galaxy-state maps + empires through
+    # r.world (the live seam, dynamic read-through).
+    renderer.world = _StubWorld(renderer)
+    return renderer
 
 
 def test_build_data_combines_player_and_non_player_occupancy() -> None:

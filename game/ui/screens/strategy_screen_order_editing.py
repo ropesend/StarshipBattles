@@ -63,8 +63,9 @@ def complete_edit_move(screen: "StrategyScreen", new_hex) -> None:
         order.target = new_hex
         # Invalidate path if editing the active (first) order.
         # PROJ-370 Phase 2: route through IFleetMutator.
+        # PROJ-477 Phase 3: through the scene write handle, not the session getter.
         if idx == 0:
-            screen.session.fleet_mutator.set_path(fleet, [])
+            screen.order_writes.set_fleet_path(fleet, [])
     # Clear edit state
     screen._edit_move_ghost_hex = None
     screen._edit_move_order_index = None
@@ -89,6 +90,7 @@ def start_edit_transfer(screen: "StrategyScreen", fleet, order_index, order) -> 
 
     # Delete the old order, then open transfer dialog at the resolved hex.
     # PROJ-370 Phase 2: route through IFleetMutator.
+    # PROJ-477 Phase 3: through the scene write handle, not the session getter.
     if 0 <= order_index < len(fleet.orders):
-        screen.session.fleet_mutator.pop_order(fleet, index=order_index)
+        screen.order_writes.pop_fleet_order(fleet, index=order_index)
     screen.ui.open_transfer_dialog(fleet, transfer_hex)

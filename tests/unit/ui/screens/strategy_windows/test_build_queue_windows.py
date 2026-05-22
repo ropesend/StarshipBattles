@@ -10,6 +10,7 @@ def _composer() -> SimpleNamespace:
     scene = SimpleNamespace(
         current_empire=MagicMock(name="empire"),
         galaxy=MagicMock(name="galaxy"),
+        world=MagicMock(name="world"),  # PROJ-477 Phase 4: scene.world live seam
         on_navigate_to_hex_build=MagicMock(name="on_navigate_to_hex_build"),
         session=SimpleNamespace(
             registries=MagicMock(name="registries"),
@@ -79,7 +80,7 @@ def test_empire_build_queue_open_wires_scene_dependencies() -> None:
     assert rect.size == (900, 720)
     assert window_cls.call_args.args[1] is composer.manager
     assert window_cls.call_args.args[2] is composer.scene.current_empire
-    assert window_cls.call_args.args[3] is composer.scene.galaxy
+    assert window_cls.call_args.args[3] is composer.scene.world
     assert window_cls.call_args.kwargs["window_manager"] is composer
     assert window_cls.call_args.kwargs["on_close_callback"] == registrar._on_closed
     assert (
@@ -105,7 +106,7 @@ def test_empire_build_queue_open_reuses_existing_alive_window() -> None:
         registrar.open()
 
     existing.open_for_empire.assert_called_once_with(
-        composer.scene.current_empire, composer.scene.galaxy
+        composer.scene.current_empire, composer.scene.world
     )
     existing.kill.assert_not_called()
     window_cls.assert_not_called()

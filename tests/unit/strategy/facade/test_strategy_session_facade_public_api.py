@@ -45,6 +45,7 @@ PUBLIC_GROUP_ACCESSORS: frozenset[str] = frozenset({
     "commands",
     "fleets",
     "systems",
+    "spatial",  # PROJ-477 Phase 2: hex-contents read surface
     "planets",
     "empires",
     "events",
@@ -74,7 +75,13 @@ GROUP_CONTRACT: dict[str, frozenset[str]] = {
         "at_hex",
         "containing_fleet",
         "near_hex",
+        "by_name",  # PROJ-477 Phase 2
+        "of_object",  # PROJ-477 Phase 2
+        "at_map_hex",  # PROJ-477 Phase 2
         "storm_names_at_hex",
+    }),
+    "spatial": frozenset({
+        "contents_at_hex",  # PROJ-477 Phase 2
     }),
     "empires": frozenset({
         "all",

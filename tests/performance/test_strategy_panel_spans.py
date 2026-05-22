@@ -171,13 +171,15 @@ def test_module_level_spans_fire_under_smoke(smoke_turn1_scenario, _active_profi
     from game.strategy.systems.design_repository import DesignRepository
 
     session, galaxy, empires = smoke_turn1_scenario
+    from game.ui.screens.strategy_world_access import StrategyWorldAccess
+    _w = StrategyWorldAccess(lambda: session)  # PROJ-477 Phase 4
     empire = empires[0]
 
-    planets = list(gather_planets(galaxy, empire))
+    planets = list(gather_planets(_w, empire))
     keys = compute_planet_effect_keys(planets)
     build_effect_columns(keys)
 
-    stars = list(gather_stars(galaxy))
+    stars = list(gather_stars(_w))
     compute_star_ranges(stars)
 
     load_resource_icons()

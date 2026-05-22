@@ -36,8 +36,9 @@ class HexOutlineLayer:
         player_id = r.scene.active_empire_id
         result = {}
 
-        # 1. Planets (from spatial index)
-        for global_hex, planets in r.galaxy.state.global_hex_planets.items():
+        # 1. Planets (from spatial index). PROJ-477 Phase 5: live galaxy-state
+        # maps via the scene.world seam (by reference; no per-frame allocation).
+        for global_hex, planets in r.world.global_hex_planets.items():
             has_player = False
             has_non_player = False
             for planet in planets:
@@ -48,7 +49,7 @@ class HexOutlineLayer:
             result[global_hex] = (has_player, has_non_player)
 
         # 2. Zones (stars, Dyson Spheres, storms)
-        for global_hex, zones in r.galaxy.state.global_hex_zones.items():
+        for global_hex, zones in r.world.global_hex_zones.items():
             entry = result.get(global_hex, (False, False))
             zone_has_player = entry[0]
             zone_has_non_player = entry[1]
@@ -60,12 +61,12 @@ class HexOutlineLayer:
             result[global_hex] = (zone_has_player, zone_has_non_player)
 
         # 3. Warp points (always non-player)
-        for global_hex in r.galaxy.state.global_hex_warp_points:
+        for global_hex in r.world.global_hex_warp_points:
             entry = result.get(global_hex, (False, False))
             result[global_hex] = (entry[0], True)
 
         # 4. Fleets (check ownership per fleet)
-        for empire in r.empires:
+        for empire in r.world.iter_empires():
             for fleet in empire.fleets:
                 if fleet.location is None:
                     continue

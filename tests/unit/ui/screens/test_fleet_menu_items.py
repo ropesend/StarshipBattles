@@ -66,13 +66,21 @@ def _make_fleet(
 
 
 def _make_galaxy(unowned_planets_at: list[object] | None = None) -> SimpleNamespace:
-    """Galaxy that returns the given planet list at the fleet's location."""
+    """World seam stub returning the given planet list at the fleet's location.
+
+    PROJ-477 Phase 4: the menu builder takes the ``scene.world`` live seam, so
+    this stub mirrors ``StrategyWorldAccess`` (``planets_at_exact_hex`` +
+    ``iter_empires``) rather than a raw galaxy.
+    """
     planets = list(unowned_planets_at or ())
 
-    def get_planets_at_global_hex(_hex: object) -> list[object]:
+    def planets_at_exact_hex(_hex: object) -> list[object]:
         return list(planets)
 
-    return SimpleNamespace(get_planets_at_global_hex=get_planets_at_global_hex)
+    return SimpleNamespace(
+        planets_at_exact_hex=planets_at_exact_hex,
+        iter_empires=lambda: iter(()),
+    )
 
 
 def _planet(*, owner_id: int | None) -> SimpleNamespace:
@@ -358,7 +366,7 @@ def _make_galaxy_with_groups(
     )
     items = list(groups_at_hex or ())
 
-    def get_planets_at_global_hex(_h: object) -> list[object]:
+    def planets_at_exact_hex(_h: object) -> list[object]:
         return []
 
     by_empire: dict[int, list[object]] = {}
@@ -374,9 +382,10 @@ def _make_galaxy_with_groups(
         SimpleNamespace(id=oid, fleets=[], deployed_groups=gs)
         for oid, gs in by_empire.items()
     ]
+    # PROJ-477 Phase 4: world seam stub (planets_at_exact_hex + iter_empires).
     return SimpleNamespace(
-        get_planets_at_global_hex=get_planets_at_global_hex,
-        empires=empires,
+        planets_at_exact_hex=planets_at_exact_hex,
+        iter_empires=lambda: iter(empires),
     )
 
 

@@ -108,7 +108,7 @@ class TestOnBuildYardClick:
         mock_planet.name = "Test Planet"
         screen.selected_object = mock_planet
         screen._get_object_asset = MagicMock(return_value=None)
-        screen.galaxy.get_system_of_planet.return_value = None
+        screen.world.system_for_object.return_value = None
 
         # Pre-populate the cached screen — simulate a prior open.
         cached_screen = MagicMock()
@@ -153,7 +153,7 @@ class TestOnBuildYardClick:
         mock_planet.name = "Test Planet"
         screen.selected_object = mock_planet
         screen._get_object_asset = MagicMock(return_value=None)
-        screen.galaxy.get_system_of_planet.return_value = None
+        screen.world.system_for_object.return_value = None
 
         # PROJ-208: is_planet uses Protocol isinstance, need to patch it for mocks
         with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
@@ -176,7 +176,7 @@ class TestOnBuildYardClick:
         mock_planet.name = "Test Planet"
         screen.selected_object = mock_planet
         screen._get_object_asset = MagicMock(return_value=None)
-        screen.galaxy.get_system_of_planet.return_value = None
+        screen.world.system_for_object.return_value = None
 
         with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
              patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'), \
@@ -415,7 +415,7 @@ class TestOnNavigateToHexBuild:
         manager, screen = _make_build_queue_manager()
         screen._get_object_asset = MagicMock(return_value=None)
         # PROJ-472 1B: the live yard is resolved by id from the galaxy.
-        screen.galaxy.get_planet_by_id = MagicMock(return_value=MagicMock())
+        screen.world.planet_by_id = MagicMock(return_value=MagicMock())
 
         cached_screen = MagicMock()
         screen.build_queue_screen = cached_screen
@@ -435,7 +435,7 @@ class TestOnNavigateToHexBuild:
     def test_ignores_source_when_live_yard_unresolved(self):
         """PROJ-472 1B: do nothing if the live yard cannot be resolved by id."""
         manager, screen = _make_build_queue_manager()
-        screen.galaxy.get_planet_by_id = MagicMock(return_value=None)
+        screen.world.planet_by_id = MagicMock(return_value=None)
 
         mock_hex = MagicMock()
         mock_source = self._planet_source()
@@ -448,7 +448,7 @@ class TestOnNavigateToHexBuild:
         """Should open build queue for valid hex and source."""
         manager, screen = _make_build_queue_manager()
         screen._get_object_asset = MagicMock(return_value=None)
-        screen.galaxy.get_planet_by_id = MagicMock(return_value=MagicMock())
+        screen.world.planet_by_id = MagicMock(return_value=MagicMock())
 
         mock_hex = MagicMock()
         mock_source = self._planet_source(display_name="Test Planet")
@@ -536,7 +536,7 @@ class TestProj410TurnBoundaryRebind:
         planet_e1.name = "Empire 1 Planet"
         screen.selected_object = planet_e1
         screen._get_object_asset = MagicMock(return_value=None)
-        screen.galaxy.get_system_of_planet.return_value = None
+        screen.world.system_for_object.return_value = None
 
         with patch("game.ui.screens.strategy_build_queue_manager.BuildQueueScreen"), \
              patch("game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader"), \
@@ -581,7 +581,7 @@ class TestProj410TurnBoundaryRebind:
         planet_e2.name = "Empire 2 Planet"
         screen.selected_object = planet_e2
         screen._get_object_asset = MagicMock(return_value=None)
-        screen.galaxy.get_system_of_planet.return_value = None
+        screen.world.system_for_object.return_value = None
 
         with patch("game.ui.screens.strategy_build_queue_manager.BuildQueueScreen"), \
              patch("game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader"), \
@@ -595,9 +595,9 @@ class TestProj410TurnBoundaryRebind:
             f"PROJ-410 Phase 4 Task 4.2: cached_screen.empire must be rebound "
             f"to current empire (empire_2). Got {cached_screen.empire!r}."
         )
-        assert cached_screen.galaxy is screen.galaxy, (
-            "PROJ-410 Phase 4 Task 4.2: cached_screen.galaxy must be rebound "
-            "to current screen.galaxy."
+        assert cached_screen.world is screen.world, (
+            "PROJ-410 Phase 4 Task 4.2: cached_screen.world must be rebound "
+            "to current screen.world."
         )
         assert cached_screen.facade is screen.facade, (
             "PROJ-410 Phase 4 Task 4.2: cached_screen.facade must be rebound "
@@ -623,7 +623,7 @@ class TestProj410TurnBoundaryRebind:
         planet_e1.name = "Empire 1 Planet"
         screen.selected_object = planet_e1
         screen._get_object_asset = MagicMock(return_value=None)
-        screen.galaxy.get_system_of_planet.return_value = None
+        screen.world.system_for_object.return_value = None
 
         with patch("game.ui.screens.strategy_build_queue_manager.BuildQueueScreen"), \
              patch("game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader"), \
@@ -663,7 +663,7 @@ class TestProj410TurnBoundaryRebind:
         planet_e1.name = "Empire 1 Planet"
         screen.selected_object = planet_e1
         screen._get_object_asset = MagicMock(return_value=None)
-        screen.galaxy.get_system_of_planet.return_value = None
+        screen.world.system_for_object.return_value = None
 
         with patch("game.ui.screens.strategy_build_queue_manager.BuildQueueScreen"), \
              patch("game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader"), \

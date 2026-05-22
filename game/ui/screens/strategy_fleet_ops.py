@@ -61,9 +61,8 @@ class FleetOperations:
     def camera(self) -> Any:
         return self.scene.camera
 
-    @property
-    def empires(self) -> Any:
-        return self.scene.empires
+    # PROJ-477 Phase 4: the unused ``empires`` wrapper property (delegated to
+    # the scene.empires pass-through) was deleted — it had no consumer.
 
     @property
     def hex_size(self) -> Any:
