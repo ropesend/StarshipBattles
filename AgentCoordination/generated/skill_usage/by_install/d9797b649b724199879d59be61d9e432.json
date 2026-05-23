@@ -11,10 +11,10 @@
     },
     "claude-consult": {
       "agents": {
-        "claude": 8
+        "claude": 9
       },
-      "count": 8,
-      "last_used": "2026-05-22T17:29:18Z"
+      "count": 9,
+      "last_used": "2026-05-23T01:00:03Z"
     },
     "claude-di-log": {
       "agents": {
@@ -109,10 +109,10 @@
     },
     "codex-starship-consult-respond": {
       "agents": {
-        "codex": 27
+        "codex": 29
       },
-      "count": 27,
-      "last_used": "2026-05-22T17:55:11Z"
+      "count": 29,
+      "last_used": "2026-05-23T01:39:23Z"
     },
     "codex-starship-performance-profiling": {
       "agents": {

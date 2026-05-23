@@ -1,0 +1,106 @@
+BATCH 3 ORCHESTRATOR — Cluster C (4 projects, serial)
+
+You are the orchestrator for Batch 3 of a 3-batch parallel execution. The other two batches are running CONCURRENTLY on the working tree (Batch 1 = 7 test-review + UI-type + legacy-cleanup projects; Batch 2 = PROJ-483 + PROJ-482 type-narrowings). Their file scopes were verified disjoint from yours via Codex consult and an independent subagent reviewer on 2026-05-22.
+
+Your 4 projects MUST run in this exact serial order. Do NOT parallelize within the batch.
+
+================================================================
+PROJECT ORDER (run one at a time, in this sequence)
+================================================================
+
+1. PROJ-484 — Legacy dead re-export sweep
+   - game/simulation/combat/combat_events.py:62 (delete `from game.core.combat_types import DamageContext  # noqa: F401`)
+   - game/simulation/entities/ship.py:22 (delete `from game.simulation.physics_constants import DEFAULT_MAX_MASS`)
+   - game/simulation/entities/ship.py:23 (delete `from game.core.constants import CombatConstants`)
+   - game/ui/services/image/__init__.py:37 (delete `from game.ui.services.image import null_provider as _null_provider`)
+   - tests/unit/simulation/combat/test_combat_events.py:14 and tests/unit/entities/test_ship.py:472 (migrate to canonical imports)
+
+2. PROJ-485 — Legacy dead CarrierAIController methods
+   - game/ai/carrier_controller.py — delete `_find_tactical_launch_ability` (lines 358-390), `_pop_fighter_cvs` (lines 255-263), `_pop_cvs` (lines 265-300). ~83 LOC total.
+   - tests/unit/ai/ — migrate any test callers to `_sum_launch_rate` / `_pop_cvs_within_budget`.
+
+3. PROJ-486 — Legacy dead BattleController.load_state
+   - game/simulation/battle_controller.py:612-698 — delete ~87 LOC.
+   - tests/unit/simulation/battle_controller/test_state.py:90,128,245,268 — reconcile 4 test callers.
+
+4. PROJ-490 — Legacy stale-comment cleanup
+   - 9 comments across 7 prod files: game/strategy/data/ship_instance.py, game/strategy/data/ship_instance_serializer.py, game/ui/screens/strategy_detail_fmt.py, game/strategy/services/mine_group_service.py, game/simulation/entities/ship_stat_querier.py, game/strategy/data/build_context.py, game/strategy/data/design_metadata.py.
+
+Why this order (do not change):
+- All 4 projects are isolated (no internal dependencies between them per Codex consult 2026-05-22).
+- Picked smallest-to-larger-to-cleanup: 484 (4 small line deletions) → 485 (3 method deletions in one file) → 486 (1 method + 4 test callers) → 490 (9 comment edits across 7 files).
+- This ordering minimizes blast radius early; comment cleanup last lets it operate on stable code.
+
+================================================================
+PER-PROJECT WORKFLOW (apply this loop to each project, in order)
+================================================================
+
+For project PROJ-NNN, execute the following steps in sequence:
+
+STEP A — IMPLEMENT
+  Spawn a single subagent via the Agent tool with subagent_type "general-purpose" and the prompt:
+    "Run /claude-proj-continue PROJ-NNN. Implement every phase listed in plan.md per the protocol at Projects/protocols/. Mark each phase Complete in plan.md and the phase checklist when its checkboxes are all checked. Do not commit. When all phases are done, report back with a list of files you modified and a one-line summary of behavioral changes."
+
+  Wait for the subagent's reply.
+
+STEP B — CODEX AUDIT (mid-project review)
+  Use the Skill tool to invoke:
+    Skill: claude-consult
+    args: --with codex --mode mid-project-review --slug audit-PROJ-NNN --question "Audit the just-completed PROJ-NNN. The implementer reported the file set <files>. The project's plan is at Projects/active_projects/PROJ-NNN/plan.md, decisions at decisions.md, manifest at manifest.md. Read the git diff against main for these files and report: (1) any deviation from the project's stated Goals or Scope in plan.md, (2) any introduced regression, layer-violation, or convention violation per docs/01-03, (3) any callers of the deleted symbols still surviving in the repo (run targeted greps), (4) for PROJ-490 specifically: any comment edit that incorrectly altered live code, (5) any test that was DELETED that should have been REWRITTEN instead. Be specific (file:line). Do NOT propose new features."
+
+  The consult will write a response.md you can read.
+
+STEP C — VERIFY CODEX FINDINGS
+  For EACH finding:
+    1. Open the cited file:line and confirm the finding is real.
+    2. Decide:
+       - VERIFIED + IN-SCOPE: real issue, belongs in this project's scope.
+       - VERIFIED + OUT-OF-SCOPE: real issue but outside Scope — log via /claude-di-log with link back to PROJ-NNN.
+       - REJECTED: false positive (contrary evidence in the cited file). Record rationale.
+
+  Write your verification table to Projects/active_projects/PROJ-NNN/findings/audit_verification.md.
+
+STEP D — REMEDIATE (if verified in-scope findings exist)
+  If any finding is VERIFIED + IN-SCOPE:
+    1. Determine next phase number N.
+    2. Create Projects/active_projects/PROJ-NNN/phase_N_checklist.md using the PHASE_TEMPLATE format. Title "Phase N: Audit remediation (Codex consult <date>)". Add one task per finding.
+    3. Update plan.md Quick Status and Current State.
+    4. Spawn ANOTHER subagent to execute the new phase.
+    5. Wait for completion.
+    6. Do NOT re-audit. One round only.
+
+  If remediation > ~15 minutes of LLM time, STOP and surface to the user.
+
+STEP E — VERIFY DONE
+  Confirm all phases (incl. any added Phase N) are marked Complete. Move to the next project.
+
+================================================================
+PARALLEL-BATCH AWARENESS
+================================================================
+
+Your batch is the smallest blast-radius batch — 4 isolated small legacy removals. The conflict analysis on 2026-05-22 confirmed:
+- None of your files overlap with Batch 1's scope (PROJ-481/478/479/487/480/488/489).
+- None of your files overlap with Batch 2's scope (PROJ-483/482). Specifically, PROJ-483 Phase 4 explicitly defers simulation/strategy/UI strict adoption (per Projects/active_projects/PROJ-483/phase_4_checklist.md:8-10,76-80), so it will NOT touch game/ai/carrier_controller.py (PROJ-485's file) or game/simulation/battle_controller.py (PROJ-486's file) or any of PROJ-490's 7 files.
+
+If you discover that Batch 2's PROJ-483 Phase 4 has spilled out of its declared layers and is now editing one of your files, STOP and surface to the user — that violates PROJ-483's own checklist.
+
+If you discover that Batch 1's PROJ-488 (MASS_EARTH alias removal) has reached into any of your files (game/ai/carrier_controller.py, game/simulation/battle_controller.py, or PROJ-490's 7 files), STOP and surface — Codex confirmed via grep that MASS_EARTH callers are not in your scope, so an unexpected edit is a scope drift.
+
+================================================================
+COMMIT POLICY
+================================================================
+
+Do NOT commit. The user will inspect the working tree after all 3 batches converge.
+
+================================================================
+WHEN ALL 4 PROJECTS COMPLETE
+================================================================
+
+Produce a final report for the user with:
+- Each project's status (Complete / Blocked / Partial).
+- Files modified across the batch.
+- Any added Phase N's (per Codex audit remediation) with link to the new checklist.
+- Any /claude-di-log entries you filed.
+- Any user-escalations or stops.
+
+DO NOT proceed to Batch 1 or Batch 2 work.

@@ -1,0 +1,106 @@
+BATCH 2 ORCHESTRATOR — Cluster B (2 projects, serial)
+
+You are the orchestrator for Batch 2 of a 3-batch parallel execution. The other two batches are running CONCURRENTLY on the working tree (Batch 1 = 7 test-review + UI-type + legacy-cleanup projects; Batch 3 = 4 small legacy removals in game/ai/, game/simulation/, game/strategy/data/). Their file scopes were verified disjoint from yours via Codex consult and an independent subagent reviewer on 2026-05-22.
+
+Your 2 projects MUST run in this exact serial order. Do NOT parallelize within the batch.
+
+================================================================
+PROJECT ORDER (run one at a time, in this sequence)
+================================================================
+
+1. PROJ-483 — Type narrowing simulation/core layer
+   Scope per Projects/active_projects/PROJ-483/manifest.md:
+   - Phase 1-3: game/simulation/entities/stat_contributors/registry.py, attack_processor.py, fighter_reboard.py, core/registry.py, component_stats_calculator.py, ai/interfaces/controllable.py, ai/protocols.py, core/protocols/{strategy_entities, ui, strategy_domain, strategy_mutators}.py, simulation/interfaces/entity_protocols.py.
+   - Phase 4: mypy.ini per-module strict overrides for game/research/, game/services/llm/deepseek.py, game/assets/, game/engine/, game/ai/, game/core/, and docs/03_CONVENTIONS.md.
+   - Phase 4 explicitly DEFERS simulation/strategy/UI strict adoption per phase_4_checklist.md:8-10,76-80.
+
+2. PROJ-482 — Type narrowing strategy engine
+   Scope per Projects/active_projects/PROJ-482/manifest.md:
+   - game/strategy/engine/{game_session, order_metadata_view, superweapon_order_processor, harvesting_engine, environmental_hazard_engine, planet_modifier_effect_engine, production_spawner, game_initializer, atmosphere_engine, ...}.py
+   - game/strategy/services/{planet_write_service, replay_verification_coordinator, ability_sources/fleet}.py
+   - game/strategy/data/{star_system, deployed_group}.py
+   - game/strategy/systems/design_catalog.py
+   - game/strategy/adapters/simulation_adapter.py
+   - game/strategy/engine/superweapon_handlers/{open_warp_point, stellerate_star, close_warp_point, create_dyson_sphere, implode_planet}.py
+   - game/strategy/engine/handlers/{base, construction_queue}.py
+   - game/strategy/engine/order_handlers/base.py
+   - game/app_bootstrap.py
+
+Why this order (do not change):
+- PROJ-483 owns the protocols (IPlanetMutator.pop_construction_item in game/core/protocols/strategy_mutators.py per PROJ-483/manifest.md:20). PROJ-482 implements pop_construction_item on game/strategy/services/planet_write_service.py per PROJ-482/manifest.md:29. Protocol narrowing must land before consumer narrowing.
+
+================================================================
+PER-PROJECT WORKFLOW (apply this loop to each project, in order)
+================================================================
+
+For project PROJ-NNN, execute the following steps in sequence:
+
+STEP A — IMPLEMENT
+  Spawn a single subagent via the Agent tool with subagent_type "general-purpose" and the prompt:
+    "Run /claude-proj-continue PROJ-NNN. Implement every phase listed in plan.md per the protocol at Projects/protocols/. Mark each phase Complete in plan.md and the phase checklist when its checkboxes are all checked. Do not commit. When all phases are done, report back with a list of files you modified and a one-line summary of behavioral changes (or 'annotations only' as applicable)."
+
+  Wait for the subagent's reply.
+
+STEP B — CODEX AUDIT (mid-project review)
+  Use the Skill tool to invoke:
+    Skill: claude-consult
+    args: --with codex --mode mid-project-review --slug audit-PROJ-NNN --question "Audit the just-completed PROJ-NNN. The implementer reported the file set <files>. The project's plan is at Projects/active_projects/PROJ-NNN/plan.md, decisions at decisions.md, manifest at manifest.md. Read the git diff against main for these files and report: (1) any deviation from the project's stated Goals or Scope in plan.md, (2) any introduced regression, layer-violation, or convention violation per docs/01-03, (3) any over-broad type narrowing that loses information or breaks downstream consumers, (4) for PROJ-483 specifically: did Phase 4's strict-mode work expand OUTSIDE its declared layers (research, services/llm/deepseek.py, assets, engine, ai, core)? Phase 4 explicitly forbids spillover into simulation/strategy/UI per phase_4_checklist.md:8-10. Be specific (file:line). Do NOT propose new features."
+
+  The consult will write a response.md you can read.
+
+STEP C — VERIFY CODEX FINDINGS
+  For EACH finding:
+    1. Open the cited file:line and confirm the finding is real.
+    2. Decide:
+       - VERIFIED + IN-SCOPE: real issue, belongs in this project's scope.
+       - VERIFIED + OUT-OF-SCOPE: real issue but outside Scope — log via /claude-di-log with link back to PROJ-NNN.
+       - VERIFIED + SCOPE-CREEP (PROJ-483 ONLY): if Phase 4 strict adoption spilled into simulation/strategy/UI files, this is a CRITICAL finding. STOP and surface to the user immediately — Batch 1 and Batch 3 may have collided with the spillover.
+       - REJECTED: false positive.
+
+  Write your verification table to Projects/active_projects/PROJ-NNN/findings/audit_verification.md.
+
+STEP D — REMEDIATE (if verified in-scope findings exist)
+  If any finding is VERIFIED + IN-SCOPE:
+    1. Determine next phase number N.
+    2. Create Projects/active_projects/PROJ-NNN/phase_N_checklist.md using the PHASE_TEMPLATE format. Title it "Phase N: Audit remediation (Codex consult <date>)". Add one task per finding.
+    3. Update plan.md Quick Status and Current State.
+    4. Spawn ANOTHER subagent to execute the new phase.
+    5. Wait for completion.
+    6. Do NOT re-audit. One round only.
+
+  If remediation > ~15 minutes of LLM time, STOP and surface to the user.
+
+STEP E — VERIFY DONE
+  Confirm all phases (incl. any added Phase N) are marked Complete. Move to the next project.
+
+================================================================
+PARALLEL-BATCH AWARENESS — CRITICAL FOR THIS BATCH
+================================================================
+
+Your batch (PROJ-483, PROJ-482) does TYPE NARROWING. This is fundamentally additive — annotations don't change runtime behavior. That makes you relatively safe to run alongside Batch 1 and Batch 3.
+
+BUT:
+- PROJ-483 Phase 3 narrows protocols in game/core/protocols/*.py. If Batch 1's PROJ-487 (fuel-wrapper migration on game/strategy/engine/resupply_engine.py) or Batch 1's PROJ-489 (ModifierService consolidation) imports from these protocols, they will type-check against the new narrower types. If their tests fail due to mypy strict on the narrower protocol, that's a downstream-cascade issue. The cascade does NOT modify their files concurrently — it just makes their tests fail. They will need to resolve those errors in-scope; you do nothing.
+
+- PROJ-483 Phase 4 publishes mypy.ini per-module strict overrides. This is a CONFIG change — it can flip already-passing files into failing files. If Batch 1 or Batch 3 sees new mypy errors after Phase 4 lands, those batches will resolve them in scope. Coordinate by running PROJ-483 to completion FIRST (it's first in your order anyway), then PROJ-482 (which doesn't change mypy.ini).
+
+- Do NOT scope-creep PROJ-483 Phase 4 into UI/strategy/simulation. The checklist at phase_4_checklist.md:8-10,76-80 forbids this. If a strict-mode error in research/services/assets/engine/ai/core can only be fixed by editing a file in simulation/strategy/UI, STOP and surface to the user. Do NOT silently expand scope.
+
+================================================================
+COMMIT POLICY
+================================================================
+
+Do NOT commit. The user will inspect the working tree after all 3 batches converge.
+
+================================================================
+WHEN ALL 2 PROJECTS COMPLETE
+================================================================
+
+Produce a final report for the user with:
+- Each project's status.
+- Files modified.
+- Any added Phase N's.
+- Any /claude-di-log entries.
+- Any scope-creep escalations.
+
+DO NOT proceed to Batch 1 or Batch 3 work.
