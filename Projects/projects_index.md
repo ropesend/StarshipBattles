@@ -4,6 +4,19 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-490 | Legacy removal — stale-comment cleanup sweep (2026-05-20) | Planning | 2026-05-22 | 2026-05-22 |
+| PROJ-489 | Legacy removal — ModifierService consolidation (2026-05-20) | Planning | 2026-05-22 | 2026-05-22 |
+| PROJ-488 | Legacy removal — MASS_EARTH alias (2026-05-20) | Planning | 2026-05-22 | 2026-05-22 |
+| PROJ-487 | Legacy removal — fuel wrappers to consumable API (2026-05-20) | Planning | 2026-05-22 | 2026-05-22 |
+| PROJ-486 | Legacy removal — dead BattleController.load_state (2026-05-20) | Planning | 2026-05-22 | 2026-05-22 |
+| PROJ-485 | Legacy removal — dead CarrierAIController methods (2026-05-20) | Planning | 2026-05-22 | 2026-05-22 |
+| PROJ-484 | Legacy removal — dead re-export sweep (2026-05-20) | Planning | 2026-05-22 | 2026-05-22 |
+| PROJ-483 | Type cleanup — Foundation + strict quick wins (2026-05-20) | Planning | 2026-05-22 | 2026-05-22 |
+| PROJ-482 | Type cleanup — Strategy per-finding (2026-05-20) | Planning | 2026-05-22 | 2026-05-22 |
+| PROJ-481 | Type cleanup — UI per-finding (2026-05-20) | Planning | 2026-05-22 | 2026-05-22 |
+| PROJ-480 | Test review P2 opportunistic polish 2026-05-20 | Planning | 2026-05-22 | 2026-05-22 |
+| PROJ-479 | Test review P1 brittle-bloated remediation 2026-05-20 | Planning | 2026-05-22 | 2026-05-22 |
+| PROJ-478 | Test review P0 dead-trivial cleanup 2026-05-20 | Planning | 2026-05-22 | 2026-05-22 |
 | PROJ-477 | Facade read-path: delete galaxy/empires/systems StrategyScreen pass-throughs + renderer/read-model boundary (deferred from PROJ-475) | Awaiting Verification | 2026-05-22 | 2026-05-22 |
 | PROJ-476 | Facade read-path: tooling/editor screens (battle_setup, galaxy_test, race_setup) reader migration (follow-on from PROJ-472) | Planning | 2026-05-21 | 2026-05-21 |
 | PROJ-475 | Facade read-path: remaining live strategy-screen + render readers migration (follow-on from PROJ-472) | Planning | 2026-05-21 | 2026-05-21 |

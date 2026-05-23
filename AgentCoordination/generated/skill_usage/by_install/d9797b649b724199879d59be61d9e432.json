@@ -51,6 +51,27 @@
       "count": 1,
       "last_used": "2026-05-18T04:12:33Z"
     },
+    "claude-proj-from-legacy-audit": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-22T23:56:37Z"
+    },
+    "claude-proj-from-test-review": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-22T23:58:25Z"
+    },
+    "claude-proj-from-type-audit": {
+      "agents": {
+        "claude": 1
+      },
+      "count": 1,
+      "last_used": "2026-05-22T23:57:42Z"
+    },
     "codex-discuss-continue": {
       "agents": {
         "codex": 2
