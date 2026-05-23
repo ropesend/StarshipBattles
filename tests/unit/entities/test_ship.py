@@ -469,7 +469,7 @@ class TestDefaultMaxMass:
 
     def test_ship_uses_constant_for_unknown_class(self, fresh_registries):
         """Ship with unknown class uses DEFAULT_MAX_MASS."""
-        from game.simulation.entities.ship import DEFAULT_MAX_MASS
+        from game.simulation.physics_constants import DEFAULT_MAX_MASS
         fresh_registries.vehicle_classes["Unknown"] = {
             "layers": [{"type": "CORE", "radius_pct": 0.5, "max_mass_pct": 1.0}]
         }

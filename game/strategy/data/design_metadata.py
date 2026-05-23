@@ -250,8 +250,6 @@ class DesignMetadata:
         For accurate costs, use _calculate_construction_cost_from_ship() with a
         loaded Ship object, or DesignCostCalculator.calculate_total_cost()
         which uses Ship loading.
-
-        PROJ-218: Fixed field name from 'cost' to 'resource_cost' for consistency.
         """
         from game.core.patterns.layer_iterator import iter_components
 

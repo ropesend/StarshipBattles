@@ -13,13 +13,14 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Delete `load_state` + migrate 4 test callers | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Delete `load_state` + retire 4 test callers | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Audit remediation (Codex consult 2026-05-23) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-22
-**Active Phase:** Phase 1
-**Last Action:** Project created from `Reviews/results/2026-05-20_210635_legacy-audit/` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Last Updated:** 2026-05-23
+**Active Phase:** Complete
+**Last Action:** Deleted `BattleController.load_state` (~87 LOC) and retired 4 dead test callers in `test_state.py` (test_load_state_restores_battle, test_load_state_handles_error, and the entire TestBattleControllerLoadStateProjectiles class with its 2 tests + helper). Removed unused `BattleConfig` import from test file. Renamed `TestBattleControllerStateSaveLoad` class to `TestBattleControllerStateSave` since only save tests remain. 97/97 tests in tests/unit/simulation/battle_controller/ pass.
+**Next Action:** User verification, then commit.
 **Blockers:** None
 
 ## Overview

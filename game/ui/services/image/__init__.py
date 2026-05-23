@@ -34,7 +34,6 @@ from game.ui.services.image.provider import ImageProvider
 from game.ui.services.image.types import ImageResult
 
 # Side-effect imports: register concrete providers at package import time.
-from game.ui.services.image import null_provider as _null_provider  # noqa: F401
 from game.ui.services.image import openai_provider  # noqa: F401
 
 # null_provider is also registered with the factory so tests can

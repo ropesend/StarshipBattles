@@ -10,7 +10,7 @@ Provides unified interface for:
 Handles:
 - Battle setup and configuration
 - Running visual or headless
-- Mid-battle save/load
+- Mid-battle state capture via save_state()
 - Retreat and reinforcement mechanics
 - Result collection and state extraction
 """
@@ -47,7 +47,7 @@ class BattleController:
     Provides unified interface for:
     - Starting battles with ships in any state
     - Running visual or headless
-    - Mid-battle save/load
+    - Mid-battle state capture via save_state()
     - Retreat and reinforcement handling
     - Result collection and state extraction
     """
@@ -68,7 +68,7 @@ class BattleController:
                        to maintain proper layer dependencies (AI depends on simulation,
                        not vice versa).
             registries: Optional GameRegistries used when rebuilding ships from
-                       serialized battle state. Required for load/resume flows.
+                       serialized battle state (e.g. `add_ships_from_state`).
         """
         self._service = service or BattleService()
         self._ai_factory = ai_factory
@@ -505,93 +505,6 @@ class BattleController:
             self._service.get_engine(),
             self._config
         )
-
-    def load_state(self, state: BattleState) -> BattleServiceResult:  # noqa: C901
-        # PROJ-270 Phase 10 note: `load_state` has zero production callers
-        # (grep-verified). It exists only for test coverage + the internal
-        # `save_state()` symmetry. Because saves are disposable per
-        # CLAUDE.md, the boundary defaults to `UnboundedRegion` on restore
-        # (edge retreat disabled). If a future feature persists + restores
-        # battles in production, it must thread `BattleState.boundary`
-        # through — not rely on this fallback.
-        """
-        Restore battle from saved state (uses BattleStateManager for config restoration).
-
-        Args:
-            state: BattleState to restore from
-
-        Returns:
-            BattleResult indicating success/failure
-        """
-        try:
-            # Recreate config from state using manager
-            self._config = self._state_manager.restore_config_from_state(state)
-
-            # PROJ-270 Task 5.4: load_state has no spec in hand, and
-            # saves are disposable (CLAUDE.md) — default boundary to
-            # `UnboundedRegion`, which disables edge retreat but keeps
-            # warp retreat working on restore.
-            from game.simulation.combat.boundary import UnboundedRegion  # noqa: PLC0415
-            self._retreat_manager = RetreatManager(boundary=UnboundedRegion())
-
-            # Create new battle
-            self._service.create_battle(seed=state.seed, ai_factory=self._ai_factory)
-
-            # Restore ships from state
-            registries = self._require_registries_for_state_restore(
-                state_count=len(state.ships)
-            )
-            ships, id_map = self._state_manager.extract_ships_from_state(
-                state,
-                registries=registries
-            )
-            for ship in ships:
-                ship_id = id_map[ship.id]
-                team_id = state.ships[ship_id].team_id
-                self._service.add_ship(ship, team_id)
-            self._ship_id_map.update(id_map)
-
-            # Start battle
-            self._service.start_battle(
-                end_condition=self._config.end_condition,
-                absolute_max_ticks=self._config.absolute_max_ticks
-            )
-
-            # Set tick counter to match saved state
-            engine = self._service.get_engine()
-            if engine:
-                engine.tick_counter = state.tick_count
-
-            self._is_configured = True
-            self._is_started = True
-
-            # Restore projectiles
-            if engine and state.projectiles:
-                # Build ship_id -> Ship lookup for owner/target resolution
-                ship_lookup: Dict[str, 'Ship'] = {}
-                for ship in engine.ships:
-                    ship_id = self._ship_id_map.get(ship.id)
-                    if ship_id:
-                        ship_lookup[ship_id] = ship
-
-                # Restore each projectile.  PROJ-405: forward the engine's
-                # session EventBus so restored seekers emit SEEKER_EXPIRE
-                # on the same bus as freshly-spawned ones.
-                event_bus = getattr(engine, "event_bus", None)
-                for proj_state in state.projectiles:
-                    if proj_state.is_alive:
-                        proj = proj_state.to_projectile(ship_lookup, event_bus=event_bus)
-                        engine.projectiles.append(proj)
-
-                logger.info(f"Restored {len(state.projectiles)} projectiles")
-
-            logger.info(f"Battle state restored at tick {state.tick_count}")
-
-            return BattleServiceResult(success=True, engine=engine)
-
-        except (TypeError, ValueError, KeyError, AttributeError, ValidationException, StateException) as e:
-            logger.warning(f"Failed to load battle state: {e}")
-            return BattleServiceResult(success=False, errors=[str(e)])
 
     def _require_registries_for_state_restore(
         self,

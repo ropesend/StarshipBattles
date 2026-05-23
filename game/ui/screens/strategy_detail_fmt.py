@@ -558,10 +558,9 @@ def _format_cargo_summary(fleet: IFleet) -> str:
         for cargo_type, amount in s._cargo_mgr.get_all_cargo().items():
             if amount > 0:
                 totals[cargo_type] = totals.get(cargo_type, 0) + amount
-        # PROJ-431 Phase 1e: read through the typed bay_inventory
-        # substrate. Design-backed carried vehicles get their name from
-        # ``design_data``; drop pods get it from ``payload`` (set by the
-        # legacy projection).
+        # Read through the typed bay_inventory substrate.
+        # Design-backed carried vehicles get their name from
+        # ``design_data``; drop pods get it from ``payload``.
         inventory = getattr(s, 'bay_inventory', None)
         if inventory is not None:
             for cv in getattr(inventory, 'bay', None) or ():

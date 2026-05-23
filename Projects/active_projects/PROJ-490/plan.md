@@ -13,13 +13,14 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Remove / tighten 9 stale comments | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Remove / tighten 9 stale comments | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Audit remediation (Codex consult 2026-05-23) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-22
-**Active Phase:** Phase 1
-**Last Action:** Project created from `Reviews/results/2026-05-20_210635_legacy-audit/` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Last Updated:** 2026-05-23
+**Active Phase:** Complete
+**Last Action:** All 9 stale comments updated across 7 files. Pure comment edits — no behavioral changes. Smoke imports clean; targeted tests green.
+**Next Action:** User verification, then commit.
 **Blockers:** None
 
 ## Overview

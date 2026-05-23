@@ -253,53 +253,6 @@ class CarrierAIController(AIController):
         return False
 
     @staticmethod
-    def _pop_fighter_cvs(carrier: Any, max_count: int) -> List[CarriedVehicle]:
-        """Pop up to ``max_count`` fighter ``CarriedVehicle``s from the carrier.
-
-        Legacy fighter-only count-based helper, retained for the
-        pre-QA-C integration tests. New code should use
-        :meth:`_pop_cvs_within_budget`.
-        """
-        return CarrierAIController._pop_cvs(carrier, "fighter", max_count)
-
-    @staticmethod
-    def _pop_cvs(
-        carrier: Any, vehicle_type: str, max_count: int,
-    ) -> List[CarriedVehicle]:
-        """Pop up to ``max_count`` ``CarriedVehicle``s of ``vehicle_type``.
-
-        Count-based pop, retained for the pre-QA-C tests and the
-        fighter-recovery-test setup paths. New tactical launches go
-        through :meth:`_pop_cvs_within_budget`. Reads through
-        ``carrier.bay_inventory.bay`` (homogeneous ``list[CarriedVehicle]``)
-        and writes back via ``carrier.set_bay_inventory(...)``.
-        """
-        from game.strategy.data.bay_inventory import BayInventory
-
-        inventory = getattr(carrier, "bay_inventory", None)
-        if inventory is None or not getattr(inventory, "bay", None):
-            return []
-        popped: List[CarriedVehicle] = []
-        remaining: List[CarriedVehicle] = []
-        vt = vehicle_type.lower()
-        for cv in inventory.bay:
-            if len(popped) >= max_count:
-                remaining.append(cv)
-                continue
-            if cv.vehicle_type != vt:
-                remaining.append(cv)
-                continue
-            popped.append(cv)
-        if popped:
-            try:
-                carrier.set_bay_inventory(
-                    BayInventory(bay=remaining, pods=list(inventory.pods))
-                )
-            except Exception:  # Intentional broad catch: stubs may not implement set_bay_inventory; ignore and let the next tick retry.
-                pass
-        return popped
-
-    @staticmethod
     def _pop_cvs_within_budget(
         carrier: Any, vehicle_type: str, budget: float,
     ) -> tuple[List[CarriedVehicle], float]:
@@ -353,41 +306,6 @@ class CarrierAIController(AIController):
             except Exception:  # Intentional broad catch: stubs may not implement set_bay_inventory; ignore and let the next tick retry.
                 pass
         return popped, residual
-
-    # ------------------------------------------------------------------
-    # Legacy ability-lookup helper (kept for test fixtures)
-    # ------------------------------------------------------------------
-
-    def _find_tactical_launch_ability(
-        self, ability_name: str = "TacticalFighterLaunch",
-    ) -> Optional[Any]:
-        """Return the first active tactical-launch ability, or None.
-
-        Retained for tests that introspect the controller's ability
-        lookup path. Production launch decisions now use
-        :meth:`_sum_launch_rate` to aggregate across all active launch
-        components of the same kind.
-        """
-        carrier = self._unwrap_ship()
-        if carrier is None:
-            return None
-        iter_components = getattr(carrier, "iter_components", None)
-        if iter_components is None:
-            return None
-        try:
-            for _layer, comp in iter_components():
-                if not getattr(comp, "is_active", True):
-                    continue
-                if not getattr(comp, "is_operational", True):
-                    continue
-                if not comp.has_ability(ability_name):
-                    continue
-                ab = comp.get_ability(ability_name)
-                if ab is not None:
-                    return ab
-        except Exception:  # Intentional broad catch: component-iter on minimal stubs raises across many shapes; treat as "no launch ability".
-            return None
-        return None
 
     # ------------------------------------------------------------------
     # Helpers

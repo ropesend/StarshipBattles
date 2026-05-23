@@ -166,18 +166,10 @@ class ShipInstance:
     # PROJ-436 Phase 3f: see comment on ``_consumable_levels`` above.
     _cargo_contents: Dict[str, int] = field(default_factory=dict)
 
-    # PROJ-431 Phase 1f: typed two-slot carried inventory replaces the
-    # legacy ``carried_items: List[Dict[str, Any]]`` mixed-shape list.
-    #
+    # Typed two-slot carried inventory.
     # ``bay_inventory.bay`` holds homogeneous ``CarriedVehicle`` entries
-    # (mines / fighters / satellites). ``bay_inventory.pods`` holds
-    # ``DropPod`` entries. The previous runtime
-    # ``CarriedVehicle.from_any(...)`` discriminator was needed only to
-    # walk the mixed-shape list and is now removed.
-    #
-    # A backward-compatible ``carried_items`` *property* (NOT a dataclass
-    # field) is kept below for test infrastructure that still pokes the
-    # legacy dict-list shape — see ``carried_items`` property.
+    # (mines / fighters / satellites); ``bay_inventory.pods`` holds
+    # ``DropPod`` entries.
     bay_inventory: BayInventory = field(default_factory=BayInventory)
 
     # Status
@@ -540,27 +532,20 @@ class ShipInstance:
         return c
 
     # ------------------------------------------------------------------
-    # PROJ-431 Phase 1f: bay_inventory IS the canonical storage.
+    # bay_inventory: canonical typed storage for carried entities.
     # ------------------------------------------------------------------
-    #
     # The typed :class:`BayInventory` (``bay: list[CarriedVehicle]`` +
-    # ``pods: list[DropPod]``) is now a real dataclass field on this
-    # entity, not a projection over the legacy mixed-shape list. The
-    # earlier ``carried_items`` field was removed; what remains here is
-    # a backward-compatible property/setter exposing the legacy
-    # dict-list shape exclusively for **test infrastructure** that still
-    # pokes ``ship.carried_items.append({...})`` directly. Production
-    # code uses :attr:`bay_inventory` and :meth:`set_bay_inventory`.
+    # ``pods: list[DropPod]``) is a dataclass field on this entity.
+    # Callers route through ``bay_inventory.bay`` / ``bay_inventory.pods``
+    # / :meth:`set_bay_inventory` directly.
 
     def set_bay_inventory(self, bay_inventory: 'BayInventory') -> None:
         """Replace this ship's typed bay inventory wholesale.
 
-        Phase 1f: this is a thin attribute setter retained as a stable
-        write surface for callers that produced a new
-        :class:`BayInventory` value (e.g. ``ShipCargoManager`` loaders /
-        unloaders, FMS handlers). Callers that just mutate the lists in
-        place do not need to call this — the underlying field is now
-        owned by this entity directly.
+        Thin attribute setter as a stable write surface for callers that
+        produced a new :class:`BayInventory` value (e.g. ``ShipCargoManager``
+        loaders / unloaders, FMS handlers). Callers that just mutate the
+        lists in place do not need to call this.
         """
         if not isinstance(bay_inventory, BayInventory):
             raise TypeError(
@@ -568,10 +553,6 @@ class ShipInstance:
                 f"{type(bay_inventory).__name__}"
             )
         self.bay_inventory = bay_inventory
-
-    # PROJ-436 Phase 9: ``carried_items`` property + ``_CarriedItemsProxy``
-    # test shim deleted. Callers route through ``bay_inventory.bay`` /
-    # ``bay_inventory.pods`` / ``set_bay_inventory(...)`` directly.
 
     @property
     def bay_capacity_mass(self) -> float:

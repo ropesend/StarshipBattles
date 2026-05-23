@@ -125,9 +125,11 @@ class MineGroupService:
 
         # Drop the mine_group entirely if empty.
         if not remaining:
-            # PROJ-431 Phase 2: prefer the typed ``deployed_groups``
-            # collection. Fall back gracefully if the host empire is a
-            # legacy test stub that still uses ``fleets``.
+            # Prefer the typed ``deployed_groups`` collection. The
+            # ``fleets`` fallback covers empire-shaped fixtures that omit
+            # ``deployed_groups`` (e.g. minimal Mocks used in older
+            # tests). TODO 2026-05-23: audit + drop the ``fleets`` arm
+            # once all empire fixtures expose ``deployed_groups``.
             for attr in ("deployed_groups", "fleets"):
                 container = getattr(empire, attr, None)
                 if container is None:

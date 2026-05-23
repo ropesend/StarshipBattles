@@ -58,9 +58,8 @@ class ShipInstanceSerializer:
         cargo_snapshot = ship._cargo_mgr.get_all_cargo()
         if cargo_snapshot:
             data['cargo_contents'] = cargo_snapshot
-        # PROJ-431 Phase 1f: emit the typed bay_inventory substrate. The
-        # legacy ``carried_items`` dict-list shape is no longer the
-        # storage surface; the typed BayInventory.to_dict() schema is
+        # Emit the typed bay_inventory substrate. The
+        # BayInventory.to_dict() schema is
         # ``{"bay": [CarriedVehicle.to_dict()...], "pods": [DropPod.to_dict()...]}``.
         if not ship.bay_inventory.is_empty():
             data['bay_inventory'] = ship.bay_inventory.to_dict()

@@ -13,13 +13,14 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Delete dead methods + migrate tests | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Delete dead methods + migrate tests | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Audit remediation (Codex consult 2026-05-23) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-22
-**Active Phase:** Phase 1
-**Last Action:** Project created from `Reviews/results/2026-05-20_210635_legacy-audit/` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Last Updated:** 2026-05-23
+**Active Phase:** Complete
+**Last Action:** Deleted `_find_tactical_launch_ability`, `_pop_fighter_cvs`, `_pop_cvs` from `game/ai/carrier_controller.py` (~83 LOC). No test callers existed; no test migrations required. `pytest tests/unit/ai/` 419 passed.
+**Next Action:** User verification, then commit.
 **Blockers:** None
 
 ## Overview

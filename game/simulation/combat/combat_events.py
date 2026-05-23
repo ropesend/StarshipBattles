@@ -28,6 +28,7 @@ from typing import Any, Dict, List, Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
     from game.simulation.components.component import Component
+    from game.core.combat_types import DamageContext
 
 logger = logging.getLogger(__name__)
 
@@ -57,10 +58,6 @@ class EventDetailLevel(Enum):
 # Data Classes
 # ============================================================================
 
-# DamageContext lives in Core so Engine can import it without cross-layer violation.
-# Re-exported here for backward compatibility.
-from game.core.combat_types import DamageContext  # noqa: F401
-
 
 @dataclass(frozen=True, slots=True)
 class CombatEvent:
@@ -79,7 +76,7 @@ class CombatEvent:
     event_type: CombatEventType
     target_ship: Any
     damage_amount: float = 0.0
-    context: Optional[DamageContext] = None
+    context: Optional["DamageContext"] = None
     component: Optional[Any] = None
     layer_type: Optional[Any] = None
     shield_remaining: float = 0.0

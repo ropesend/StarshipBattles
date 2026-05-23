@@ -11,9 +11,9 @@ from game.simulation.combat.combat_events import (
     CombatEventBus,
     CombatEvent,
     CombatEventType,
-    DamageContext,
     EventDetailLevel,
 )
+from game.core.combat_types import DamageContext
 
 
 # ============================================================================

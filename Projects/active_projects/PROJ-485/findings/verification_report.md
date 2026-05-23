@@ -31,5 +31,5 @@
 
 ## Notes
 
-- All three deletions ship as one PR. Production grep across `game/` confirmed zero call sites; test callers exist and must be migrated to `_sum_launch_rate` / `_pop_cvs_within_budget` in the same PR.
+- All three deletions ship as one PR. Production grep across `game/` confirmed zero call sites. **2026-05-23 update during execution:** the original verifier note speculated test callers would exist; in fact `rg` across `tests/`, `combat_lab/`, and `Tools/` returned zero matches for all three method names. No test migration was required. The deletion was pure code removal.
 - The audit's Quick Wins section explicitly calls out this cluster as a quick deletion (Rank 3, ~83 LOC).

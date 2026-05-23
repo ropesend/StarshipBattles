@@ -140,6 +140,3 @@ class ShipStatQuerier:
                     max_rng = rng
 
         return max_rng if max_rng > 0 else 0.0
-
-    # PROJ-225: Removed redundant cached_summary property (DUP-SIM-007).
-    # Use Ship.cached_summary instead.
