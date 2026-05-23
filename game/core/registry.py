@@ -42,7 +42,7 @@ __all__ = [
 ]
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Dict, Any, Iterator, Optional, TYPE_CHECKING
+from typing import Callable, Dict, Any, Iterator, Optional, TYPE_CHECKING
 
 from game.core.exceptions import FrozenStateException
 from game.core.error_codes import ErrorCode
@@ -83,7 +83,7 @@ class GameRegistries:
     resources: Dict[str, Any]
     resource_catalog: Optional['ResourceCatalog'] = field(default=None)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Ensure resource_catalog is never None — default to empty catalog."""
         if self.resource_catalog is None:
             from game.core.resources import ResourceCatalog
@@ -140,13 +140,13 @@ class RegistryManager:
         vehicle_classes: Dict of vehicle class definitions keyed by name
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the RegistryManager."""
         self.components: Dict[str, Any] = {}
         self.modifiers: Dict[str, Any] = {}
         self.vehicle_classes: Dict[str, Any] = {}
         self.resources: Dict[str, Any] = {}
-        self._validator: Any = None
+        self._validator: Optional[Callable[..., Any]] = None
         self._frozen: bool = False
 
     def freeze(self) -> None:
@@ -245,7 +245,7 @@ class RegistryManager:
         self.resources.clear()
         self._validator = None
 
-    def get_validator(self) -> Any:
+    def get_validator(self) -> Optional[Callable[..., Any]]:
         """Get the ship design validator (may be None if not initialized)."""
         return self._validator
 
@@ -324,7 +324,7 @@ def freeze_registry() -> None:
     get_default_registry_manager().freeze()
 
 
-def set_validator(validator) -> None:
+def set_validator(validator: Callable[..., Any]) -> None:
     """Set the ship design validator.
 
     Args:
@@ -336,7 +336,7 @@ def set_validator(validator) -> None:
     get_default_registry_manager().set_validator(validator)
 
 
-def get_validator() -> Any:
+def get_validator() -> Optional[Callable[..., Any]]:
     """Get the ship design validator.
 
     Returns:

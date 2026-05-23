@@ -65,12 +65,12 @@ class PolicyManager:
     """
     _data_lock = threading.Lock()
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the PolicyManager."""
         self.targeting_policies: Dict[str, Any] = {}
         self.movement_policies: Dict[str, Any] = {}
         self._loaded = False
-        self.defaults = {
+        self.defaults: Dict[str, Dict[str, Any]] = {
             'targeting': {'name': 'Default', 'rules': [{'type': 'nearest', 'weight': 100}]},
             'movement': {'behavior': 'kite', 'engage_distance': 'max_range', 'retreat_hp_threshold': 0.1, 'avoid_collisions': True},
         }
@@ -121,9 +121,15 @@ class PolicyManager:
     def get_targeting_policy(self, policy_id: str) -> Dict[str, Any]:
         """Get a targeting policy by ID. Triggers lazy loading if needed."""
         self.ensure_loaded()
-        return self.targeting_policies.get(policy_id, self.defaults['targeting'])
+        result: Dict[str, Any] = self.targeting_policies.get(
+            policy_id, self.defaults['targeting']
+        )
+        return result
 
     def get_movement_policy(self, policy_id: str) -> Dict[str, Any]:
         """Get a movement policy by ID. Triggers lazy loading if needed."""
         self.ensure_loaded()
-        return self.movement_policies.get(policy_id, self.defaults['movement'])
+        result: Dict[str, Any] = self.movement_policies.get(
+            policy_id, self.defaults['movement']
+        )
+        return result

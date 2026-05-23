@@ -33,6 +33,7 @@ Design Notes
 - All helpers include context dicts for detailed error information
 - Exception chaining preserves original cause with `raise from`
 """
+from enum import Enum
 from typing import Any, Callable, TypeVar
 
 from game.core.exceptions import PersistenceException
@@ -40,9 +41,10 @@ from game.core.error_codes import ErrorCode
 
 
 T = TypeVar('T')
+EnumT = TypeVar('EnumT', bound=Enum)
 
 
-def require_keys(data: dict, keys: list[str], context: str) -> None:
+def require_keys(data: dict[str, Any], keys: list[str], context: str) -> None:
     """Verify all required keys are present in data dict.
 
     Args:
@@ -66,7 +68,7 @@ def require_keys(data: dict, keys: list[str], context: str) -> None:
         )
 
 
-def validate_enum(value: str, enum_class: type[T], field_name: str, context: str) -> T:
+def validate_enum(value: str, enum_class: type[EnumT], field_name: str, context: str) -> EnumT:
     """Validate and return an enum member by name.
 
     Args:
@@ -180,8 +182,8 @@ def validate_range(
 
 
 def safe_from_dict(
-    from_dict_fn: Callable[[dict], T],
-    data: dict,
+    from_dict_fn: Callable[[dict[str, Any]], T],
+    data: dict[str, Any],
     context: str
 ) -> T:
     """Wrap a from_dict call to convert common exceptions to PersistenceException.

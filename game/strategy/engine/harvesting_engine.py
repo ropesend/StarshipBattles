@@ -41,6 +41,8 @@ if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
     from game.strategy.data.planet import Planet
     from game.strategy.data.planetary_facility import PlanetaryFacility
+    from game.strategy.services.empire_write_service import EmpireWriteService
+    from game.strategy.services.planet_write_service import PlanetWriteService
 
 
 def _get_ability_info(
@@ -193,7 +195,7 @@ class HarvestingEngine(IHarvestingEngine):
             'booster_misses_dirty': 0,
         }
 
-    def _get_planet_mutator(self) -> Any:
+    def _get_planet_mutator(self) -> "PlanetWriteService":
         """Lazy-default the planet mutator (PROJ-370)."""
         if self._planet_mutator is None:
             from game.strategy.services.planet_write_service import (
@@ -202,7 +204,7 @@ class HarvestingEngine(IHarvestingEngine):
             self._planet_mutator = PlanetWriteService()
         return self._planet_mutator
 
-    def _get_empire_mutator(self) -> Any:
+    def _get_empire_mutator(self) -> "EmpireWriteService":
         """Lazy-default the empire mutator (PROJ-370)."""
         if self._empire_mutator is None:
             from game.strategy.services.empire_write_service import (

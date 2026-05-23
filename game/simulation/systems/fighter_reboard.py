@@ -31,6 +31,10 @@ from typing import Any, Dict, List, Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
     from game.simulation.systems.battle_engine import BattleEngine
+    from game.strategy.data.deployed_group import (
+        FighterWing,
+        SatelliteConstellation,
+    )
     from game.strategy.data.fleet import Fleet
 
 
@@ -291,7 +295,9 @@ def _resolve_sector_hex(fleets: List["Fleet"]) -> Optional[Any]:
     return None
 
 
-def _ensure_overflow_fighter_group(*, empire: Any, sector_hex: Any) -> Any:
+def _ensure_overflow_fighter_group(
+    *, empire: Any, sector_hex: Any,
+) -> "FighterWing | SatelliteConstellation":
     """Backwards-compat alias of :func:`_ensure_overflow_group` for fighters."""
     return _ensure_overflow_group(
         empire=empire, sector_hex=sector_hex, vehicle_type="fighter",
@@ -300,7 +306,7 @@ def _ensure_overflow_fighter_group(*, empire: Any, sector_hex: Any) -> Any:
 
 def _ensure_overflow_group(
     *, empire: Any, sector_hex: Any, vehicle_type: str,
-) -> Any:
+) -> "FighterWing | SatelliteConstellation":
     """Look up or mint an overflow deployed-group at ``sector_hex``.
 
     PROJ-431 Phase 3: returns a :class:`FighterWing` /
@@ -317,8 +323,9 @@ def _ensure_overflow_group(
     )
 
     vt = vehicle_type.lower()
+    target_cls: "type[FighterWing] | type[SatelliteConstellation]"
     if vt == "satellite":
-        target_cls: type = SatelliteConstellation
+        target_cls = SatelliteConstellation
         display_name_template = "Satellite Group"
         base_id = 300000
     else:

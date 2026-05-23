@@ -23,7 +23,7 @@ per CLAUDE.md "old saves are disposable" — no migration shim.
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.carried_vehicle import CarriedVehicle
@@ -45,8 +45,8 @@ __all__ = [
 _TYPE_REGISTRY: Dict[str, type] = {}
 
 
-def _register_type(type_name: str):
-    def deco(cls):
+def _register_type(type_name: str) -> Callable[[type], type]:
+    def deco(cls: type) -> type:
         _TYPE_REGISTRY[type_name] = cls
         cls._type_name = type_name  # type: ignore[attr-defined]
         return cls

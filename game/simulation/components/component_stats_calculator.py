@@ -302,7 +302,9 @@ class ComponentStatsCalculator:
         # to evaluate at runtime (e.g., damage formulas with range_to_target).
         _RUNTIME_VARIABLES = {'range_to_target', 'target_mass', 'target_speed'}
 
-        def evaluate_recursive(obj, ctx) -> Any:
+        def evaluate_recursive(
+            obj: Any, ctx: Dict[str, Any]
+        ) -> "str | dict[str, Any] | list[Any] | float | int":
             """Recursively evaluate formulas in nested structures."""
             if isinstance(obj, str) and obj.startswith("="):
                 # Preserve formulas that reference runtime variables

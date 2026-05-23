@@ -87,7 +87,7 @@ Design Notes
 - Exception chaining preserves original cause with `raise from`
 - See docs/05_ERROR_HANDLING.md for complete usage guide
 """
-from typing import Optional
+from typing import Any, Optional
 
 
 class GameException(Exception):
@@ -102,7 +102,7 @@ class GameException(Exception):
         self,
         message: str,
         code: Optional[str] = None,
-        context: Optional[dict] = None
+        context: Optional[dict[str, Any]] = None
     ):
         """Initialize GameException.
 
@@ -252,27 +252,32 @@ class TurnFailedError(StrategyException):
     @property
     def phase_name(self) -> str:
         """Failed phase name, or 'unknown' if missing from context."""
-        return self.context.get("phase_name", "unknown")
+        result: str = self.context.get("phase_name", "unknown")
+        return result
 
     @property
     def tick(self) -> int | str:
         """1-based tick within the failed phase, or '?' if missing."""
-        return self.context.get("tick", "?")
+        result: int | str = self.context.get("tick", "?")
+        return result
 
     @property
     def turn_number(self) -> int | str:
         """Game turn number when the failure occurred, or '?' if missing."""
-        return self.context.get("turn_number", "?")
+        result: int | str = self.context.get("turn_number", "?")
+        return result
 
     @property
     def save_path(self) -> str | None:
         """Pre-turn snapshot save path used for rollback, or None."""
-        return self.context.get("save_path")
+        result: str | None = self.context.get("save_path")
+        return result
 
     @property
     def original_type(self) -> str:
         """Class name of the wrapped exception, or 'Exception' if missing."""
-        return self.context.get("original_type", "Exception")
+        result: str = self.context.get("original_type", "Exception")
+        return result
 
     @property
     def recoverable(self) -> bool:

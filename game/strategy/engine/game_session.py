@@ -48,14 +48,16 @@ from __future__ import annotations
 from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from game.core.event_logging import EventBus
     from game.core.hex_math import HexCoord
     from game.core.protocols import IRaceRegistry
-    from game.strategy.data.fleet import Fleet
+    from game.core.protocols.strategy_mutators import IEmpireMutator, IFleetMutator, IPlanetMutator, IShipInstanceMutator
+    from game.core.validation import ValidationResult
     from game.strategy.data.empire import Empire
+    from game.strategy.data.fleet import Fleet
     from game.strategy.data.planet import Planet
-    from game.strategy.engine.session.runtime_services import (
-        SessionBootstrapState,
-    )
+    from game.strategy.engine.commands.registry import CommandRegistry
+    from game.strategy.engine.session.runtime_services import SessionBootstrapState
 
 import logging
 
@@ -199,7 +201,7 @@ class GameSession:
         return self._services.event_log
 
     @property
-    def _event_bus(self):  # type: ignore[no-untyped-def]
+    def _event_bus(self) -> "EventBus":
         """Backwards-compatible attribute alias for `services.event_bus`."""
         return self._services.event_bus
 
@@ -214,7 +216,7 @@ class GameSession:
         return self._services.registries
 
     @property
-    def fleet_mutator(self):  # type: ignore[no-untyped-def]
+    def fleet_mutator(self) -> "IFleetMutator":
         """The session's IFleetMutator (PROJ-370).
 
         Routed through ``FleetWriteService`` (composed with
@@ -224,38 +226,38 @@ class GameSession:
         return self._services.fleet_mutator
 
     @property
-    def _fleet_mutator(self):  # type: ignore[no-untyped-def]
+    def _fleet_mutator(self) -> "IFleetMutator":
         return self._services.fleet_mutator
 
     @property
-    def planet_mutator(self):  # type: ignore[no-untyped-def]
+    def planet_mutator(self) -> "IPlanetMutator":
         """The session's IPlanetMutator (PROJ-370)."""
         return self._services.planet_mutator
 
     @property
-    def _planet_mutator(self):  # type: ignore[no-untyped-def]
+    def _planet_mutator(self) -> "IPlanetMutator":
         return self._services.planet_mutator
 
     @property
-    def empire_mutator(self):  # type: ignore[no-untyped-def]
+    def empire_mutator(self) -> "IEmpireMutator":
         """The session's IEmpireMutator (PROJ-370)."""
         return self._services.empire_mutator
 
     @property
-    def _empire_mutator(self):  # type: ignore[no-untyped-def]
+    def _empire_mutator(self) -> "IEmpireMutator":
         return self._services.empire_mutator
 
     @property
-    def ship_mutator(self):  # type: ignore[no-untyped-def]
+    def ship_mutator(self) -> "IShipInstanceMutator":
         """The session's IShipInstanceMutator (PROJ-370)."""
         return self._services.ship_mutator
 
     @property
-    def _ship_mutator(self):  # type: ignore[no-untyped-def]
+    def _ship_mutator(self) -> "IShipInstanceMutator":
         return self._services.ship_mutator
 
     @property
-    def _command_registry(self):  # type: ignore[no-untyped-def]
+    def _command_registry(self) -> "CommandRegistry":
         return self._services.command_registry
 
     @property
@@ -400,7 +402,7 @@ class GameSession:
         from game.strategy.services.intercept_calculator import project_fleet_path
         return project_fleet_path(fleet, self.galaxy, max_turns)
 
-    def handle_command(self, command: Any) -> Any:
+    def handle_command(self, command: Any) -> "ValidationResult":
         """
         Execute a user command via the command registry.
 

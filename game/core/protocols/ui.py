@@ -1,8 +1,12 @@
 """UI-layer protocols (PROJ-65 / PROJ-106)."""
+from __future__ import annotations
 
-from typing import Any, Protocol, TypeGuard, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, TypeGuard, runtime_checkable
 
 from game.core.protocols.common import _has_attrs
+
+if TYPE_CHECKING:
+    from game.core.math import Vector2
 
 
 @runtime_checkable
@@ -59,11 +63,11 @@ class ICamera(Protocol):
         ...
 
     @property
-    def position(self) -> Any:
+    def position(self) -> Vector2:
         """Camera world position (center of viewport). Returns Vector2-like object."""
         ...
 
-    def world_to_screen(self, world_pos: Any) -> Any:
+    def world_to_screen(self, world_pos: Vector2) -> Vector2:
         """
         Convert world coordinates to screen coordinates.
 
@@ -75,7 +79,7 @@ class ICamera(Protocol):
         """
         ...
 
-    def screen_to_world(self, screen_pos: Any) -> Any:
+    def screen_to_world(self, screen_pos: Vector2) -> Vector2:
         """
         Convert screen coordinates to world coordinates.
 
@@ -96,7 +100,7 @@ class ICamera(Protocol):
         """
         ...
 
-    def update_input(self, dt: float, events: list) -> None:
+    def update_input(self, dt: float, events: list[Any]) -> None:
         """
         Process input events for camera control.
 

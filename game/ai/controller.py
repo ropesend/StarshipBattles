@@ -58,12 +58,12 @@ logger = logging.getLogger(__name__)
 
 from game.core.math import Vector2, angle_diff, angle_from_vector
 from game.core.config import AIConfig, BattleTuning
-from game.ai.behaviors import (RamBehavior, FleeBehavior, KiteBehavior, AttackRunBehavior,
+from game.ai.behaviors import (AIBehavior, RamBehavior, FleeBehavior, KiteBehavior, AttackRunBehavior,
                           DoNothingBehavior, StraightLineBehavior,
                           RotateOnlyBehavior, ErraticBehavior, OrbitBehavior, StationaryFireBehavior)
 from game.core.constants import AttackType, CombatConstants
 from game.core.protocols import is_combatant
-from game.ai.protocols import is_projectile, IGridEntity
+from game.ai.protocols import is_projectile, IGridEntity, is_grid_entity
 from game.simulation.interfaces.entity_protocols import is_combat_ship
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.ai.target_evaluator import TargetEvaluator
@@ -118,7 +118,7 @@ class AIController:
             'erratic': ErraticBehavior(self, rng=self._rng),
             'orbit': OrbitBehavior(self)
         }
-        self.current_behavior = None
+        self.current_behavior: Optional[AIBehavior] = None
 
     def get_resolved_policies(self) -> Dict[str, Any]:
         """Get the resolved targeting and movement policies for this ship."""
@@ -128,7 +128,7 @@ class AIController:
             'movement': pm.get_movement_policy(self.ship.get_movement_policy()),
         }
 
-    def get_engage_distance_multiplier(self, policy) -> float:
+    def get_engage_distance_multiplier(self, policy: Dict[str, Any]) -> float:
         """Helper to get engage distance multiplier from policy."""
         val = policy.get('engage_distance', 'max_range')
         if val == 'max_range':
@@ -396,7 +396,7 @@ class AIController:
         if hp_pct <= retreat_threshold and retreat_threshold > 0:
             return 'flee'
 
-        return movement_policy.get('behavior', 'kite')
+        return str(movement_policy.get('behavior', 'kite'))
 
     # -- Stage 4: Behavior execution --------------------------------------
 
@@ -432,11 +432,12 @@ class AIController:
                 continue
             if not obj.is_alive:
                 continue
-            if not is_combatant(obj):
+            if not is_grid_entity(obj):
                 continue
 
             d = self.ship.get_position().distance_to(obj.position)
-            # IGridEntity guarantees .radius attribute
+            # is_grid_entity guard above narrows obj to IGridEntity, which
+            # provides .position and .radius.
             thresh = self.ship.get_radius() + obj.radius + BattleTuning.COLLISION_BUFFER
 
             if d < thresh:
@@ -448,10 +449,14 @@ class AIController:
             vec = self.ship.get_position() - closest.position
             if vec.length() == 0:
                 vec = Vector2(1, 0)
-            return self.ship.get_position() + vec.normalize() * BattleTuning.AVOIDANCE_TARGET_DISTANCE
+            avoid: Vector2 = (
+                self.ship.get_position()
+                + vec.normalize() * BattleTuning.AVOIDANCE_TARGET_DISTANCE
+            )
+            return avoid
         return None
 
-    def navigate_to(self, target_pos, stop_dist: float = 0) -> None:
+    def navigate_to(self, target_pos: Vector2, stop_dist: float = 0) -> None:
         """Navigate ship toward target position using rotation and thrust."""
         ship_pos = self.ship.get_position()
         distance = ship_pos.distance_to(target_pos)

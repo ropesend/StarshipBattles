@@ -32,6 +32,10 @@ if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
     from game.strategy.data.galaxy import Galaxy
     from game.strategy.data.ship_instance import ShipInstance
+    from game.strategy.services.planet_write_service import PlanetWriteService
+    from game.strategy.services.ship_instance_write_service import (
+        ShipInstanceWriteService,
+    )
 
 
 @dataclass
@@ -141,7 +145,7 @@ class BaseOrderHandler:
         self._planet_mutator = planet_mutator
         self._ship_mutator = ship_mutator
 
-    def _get_planet_mutator(self) -> Any:
+    def _get_planet_mutator(self) -> "PlanetWriteService":
         """Lazy-default the planet mutator (PROJ-370)."""
         if self._planet_mutator is None:
             from game.strategy.services.planet_write_service import (
@@ -150,7 +154,7 @@ class BaseOrderHandler:
             self._planet_mutator = PlanetWriteService()
         return self._planet_mutator
 
-    def _get_ship_mutator(self) -> Any:
+    def _get_ship_mutator(self) -> "ShipInstanceWriteService":
         """Lazy-default the ship instance mutator (PROJ-370)."""
         if self._ship_mutator is None:
             from game.strategy.services.ship_instance_write_service import (

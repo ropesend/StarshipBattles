@@ -53,7 +53,7 @@ class AIControllerFactory:
     configured once the engine's grid and per-battle RNG are available.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Create an AI controller factory (without grid or rng)."""
         self._grid: Optional['SpatialGrid'] = None
         self._rng: Optional[random.Random] = None

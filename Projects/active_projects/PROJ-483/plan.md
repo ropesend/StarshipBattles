@@ -13,16 +13,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Critical Foundation missing return | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Major Foundation narrowings | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Minor narrowings + AI protos + Protocol narrowings | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Strict-mode adoption — clean & near-clean layers | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 1. Critical Foundation missing return | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Major Foundation narrowings | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Minor narrowings + AI protos + Protocol narrowings | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Strict-mode adoption — clean & near-clean layers | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Audit remediation (Codex consult 2026-05-23) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-22 17:30
-**Active Phase:** Phase 1
-**Last Action:** Project created from `Reviews/results/2026-05-20_210540_type-audit/` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Last Updated:** 2026-05-23
+**Active Phase:** All phases complete — Phase 5 closed (audit remediation done).
+**Last Action:** Executed all 5 Phase 5 tasks. (1) `game/engine/collision.py` — replaced silent `if beam_ab is not None:` guard with an assertion + cast; added regression test `test_beam_missing_ability_raises_assertion` in `tests/unit/engine/collision_edge_cases/test_beam_ramming.py`. (2) `game/ai/controller.py` — swapped `is_combatant` guard to `is_grid_entity` and dropped the `# type: ignore[attr-defined]`; updated 4 avoidance tests in `tests/unit/ai/test_ai_controller_unit.py` to patch the new symbol. (3) `game/simulation/interfaces/entity_protocols.py` — declared `get_components_by_layer` on `ICombatShip`; dropped the `# type: ignore` in `game/ai/target_evaluator.py`. (4) `game/simulation/entities/ship.py` — added class-level `layers: Dict[LayerType, "LayerData"]`; dropped the `# type: ignore` in `game/ai/interfaces/controllable.py`; widened abstract `IControllable.get_layers` to `Dict[Any, Any]` to keep adapter override Liskov-compatible. (5) `game/strategy/data/empire.py` — coerced `data['color']` list→tuple in `Empire.from_dict` to satisfy `IEmpire.color` protocol. Cross-cutting: `mypy game/research/ game/services/ game/assets/ game/engine/ game/ai/ game/core/` → 0 errors across 83 source files; `pytest tests/unit/engine/ tests/unit/ai/ tests/unit/simulation/interfaces/` → 493 passed.
+**Next Action:** Project ready for user verification / archival.
 **Blockers:** None
 
 ## Overview

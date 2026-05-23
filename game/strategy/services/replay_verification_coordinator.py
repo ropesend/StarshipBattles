@@ -101,7 +101,7 @@ def shutdown_all_coordinators(timeout: float = 5.0) -> None:
 _WORKER_IDLE_POLL_SECONDS = 0.05
 
 
-def _json_safe(value: Any) -> Any:
+def _json_safe(value: Any) -> "str | int | float | bool | list[Any] | dict[str, Any] | None":
     """PROJ-354B audit (CJ-04) — coerce diff payloads to JSON-safe types.
 
     The verifier's :class:`Difference` carries ``expected`` and

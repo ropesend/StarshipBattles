@@ -66,7 +66,7 @@ def get_entity_id(entity: Any) -> str:
     """
     # Ships have .name attribute; Projectiles and other entities may not
     if hasattr(entity, 'name'):
-        return entity.name
+        return str(entity.name)
     return str(id(entity))
 
 
@@ -78,11 +78,11 @@ def get_capability_cache_key(entity: Any) -> Optional[str]:
     """
     entity_id = getattr(entity, 'id', None)
     if entity_id is not None:
-        return entity_id
+        return str(entity_id)
 
     entity_name = getattr(entity, 'name', None)
     if entity_name is not None:
-        return entity_name
+        return str(entity_name)
 
     return None
 
@@ -142,7 +142,8 @@ def get_all_components(entity: Any) -> List[Any]:
     # This is acceptable - we're checking for a specific method, not duck typing properties
     method = getattr(entity, 'get_all_components', None)
     if callable(method):
-        return method()
+        result: List[Any] = method()
+        return result
     return []
 
 

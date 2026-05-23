@@ -501,17 +501,23 @@ class TestCheckAvoidance:
         assert result is None
 
     def test_avoidance_skips_non_combatants(self, mock_ship, mock_grid, mock_policy_manager):
-        """Non-combatant objects are skipped."""
+        """Non-grid-entity objects are skipped.
+
+        PROJ-483 Phase 5 (Task 5.2): avoidance now narrows via
+        is_grid_entity (which is what actually guarantees .radius), not
+        is_combatant. The behavior — skip objects that don't satisfy the
+        spatial protocol — is preserved.
+        """
         from game.ai.controller import AIController
 
-        non_combatant = Mock()
-        non_combatant.is_alive = True
-        non_combatant.position = Vector2(110.0, 100.0)
+        non_grid_entity = Mock()
+        non_grid_entity.is_alive = True
+        non_grid_entity.position = Vector2(110.0, 100.0)
 
-        mock_grid.query_radius.return_value = [non_combatant]
-        mock_grid.query_radius_exact.return_value = [non_combatant]
+        mock_grid.query_radius.return_value = [non_grid_entity]
+        mock_grid.query_radius_exact.return_value = [non_grid_entity]
 
-        with patch('game.ai.controller.is_combatant', return_value=False):
+        with patch('game.ai.controller.is_grid_entity', return_value=False):
             controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
             result = controller.check_avoidance()
 
@@ -533,7 +539,7 @@ class TestCheckAvoidance:
         mock_grid.query_radius.return_value = [close_ship]
         mock_grid.query_radius_exact.return_value = [close_ship]
 
-        with patch('game.ai.controller.is_combatant', return_value=True):
+        with patch('game.ai.controller.is_grid_entity', return_value=True):
             controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
             result = controller.check_avoidance()
 
@@ -557,7 +563,7 @@ class TestCheckAvoidance:
         mock_grid.query_radius.return_value = [threat]
         mock_grid.query_radius_exact.return_value = [threat]
 
-        with patch('game.ai.controller.is_combatant', return_value=True):
+        with patch('game.ai.controller.is_grid_entity', return_value=True):
             controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
             result = controller.check_avoidance()
 
@@ -582,7 +588,7 @@ class TestCheckAvoidance:
         mock_grid.query_radius.return_value = [threat]
         mock_grid.query_radius_exact.return_value = [threat]
 
-        with patch('game.ai.controller.is_combatant', return_value=True):
+        with patch('game.ai.controller.is_grid_entity', return_value=True):
             controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
             result = controller.check_avoidance()
 
@@ -610,7 +616,7 @@ class TestCheckAvoidance:
         mock_grid.query_radius.return_value = [far_threat, close_threat]
         mock_grid.query_radius_exact.return_value = [far_threat, close_threat]
 
-        with patch('game.ai.controller.is_combatant', return_value=True):
+        with patch('game.ai.controller.is_grid_entity', return_value=True):
             controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
             result = controller.check_avoidance()
 

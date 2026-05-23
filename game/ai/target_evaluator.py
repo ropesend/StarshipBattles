@@ -38,7 +38,12 @@ class TargetEvaluator:
     """Helper to evaluate targets based on rules."""
 
     @staticmethod
-    def _eval_distance_rule(ship, candidate, rule, distance_cache) -> tuple[float, bool]:
+    def _eval_distance_rule(
+        ship: Any,
+        candidate: Any,
+        rule: Dict[str, Any],
+        distance_cache: Optional[Dict[Any, float]],
+    ) -> tuple[float, bool]:
         """Evaluate distance-based rules: nearest, farthest, distance.
 
         Args:
@@ -78,7 +83,7 @@ class TargetEvaluator:
         return (val, True)
 
     @staticmethod
-    def _eval_mass_rule(candidate, rule) -> tuple[float, bool]:
+    def _eval_mass_rule(candidate: Any, rule: Dict[str, Any]) -> tuple[float, bool]:
         """Evaluate mass/size-based rules: mass, largest, smallest, strongest, weakest.
 
         Args:
@@ -110,7 +115,7 @@ class TargetEvaluator:
         return (val, True)
 
     @staticmethod
-    def _eval_speed_rule(candidate, rule) -> tuple[float, bool]:
+    def _eval_speed_rule(candidate: Any, rule: Dict[str, Any]) -> tuple[float, bool]:
         """Evaluate speed-based rules: fastest, slowest.
 
         Args:
@@ -134,7 +139,9 @@ class TargetEvaluator:
         return (val, True)
 
     @staticmethod
-    def _eval_damage_rule(candidate, rule, stat_helpers) -> tuple[float, bool]:
+    def _eval_damage_rule(
+        candidate: Any, rule: Dict[str, Any], stat_helpers: Dict[str, Any],
+    ) -> tuple[float, bool]:
         """Evaluate damage-based rules: most_damaged, least_damaged.
 
         Args:
@@ -166,7 +173,11 @@ class TargetEvaluator:
         return (val, True)
 
     @staticmethod
-    def _eval_has_weapons_rule(candidate, rule, ship_capabilities_cache) -> tuple[float, bool]:
+    def _eval_has_weapons_rule(
+        candidate: Any,
+        rule: Dict[str, Any],
+        ship_capabilities_cache: Optional[Dict[str, Dict[str, Any]]],
+    ) -> tuple[float, bool]:
         """Evaluate has_weapons rule.
 
         PROJ-272 Phase 3: projectile candidates (missiles) have no
@@ -194,7 +205,7 @@ class TargetEvaluator:
         return (0, not required)
 
     @staticmethod
-    def _eval_least_armor_rule(candidate, rule) -> tuple[float, bool]:
+    def _eval_least_armor_rule(candidate: Any, rule: Dict[str, Any]) -> tuple[float, bool]:
         """Evaluate least_armor rule.
 
         PROJ-272 Phase 3: projectile candidates have no armor layer —
@@ -215,7 +226,12 @@ class TargetEvaluator:
         return (val, True)
 
     @staticmethod
-    def _eval_pdc_arc_rule(ship, candidate, rule, stat_helpers) -> tuple[float, bool]:
+    def _eval_pdc_arc_rule(
+        ship: Any,
+        candidate: Any,
+        rule: Dict[str, Any],
+        stat_helpers: Dict[str, Any],
+    ) -> tuple[float, bool]:
         """Evaluate pdc_arc/missiles_in_pdc_arc rule."""
         weight = rule.get('weight', 0)
         required = rule.get('required', False)
@@ -238,7 +254,13 @@ class TargetEvaluator:
         return (-999999, False)
 
     @staticmethod
-    def _eval_capability_rule(ship, candidate, rule, stat_helpers, ship_capabilities_cache) -> tuple[float, bool]:
+    def _eval_capability_rule(
+        ship: Any,
+        candidate: Any,
+        rule: Dict[str, Any],
+        stat_helpers: Dict[str, Any],
+        ship_capabilities_cache: Optional[Dict[str, Dict[str, Any]]],
+    ) -> tuple[float, bool]:
         """Evaluate capability-based rules: has_weapons, least_armor, pdc_arc/missiles_in_pdc_arc.
 
         Args:
@@ -289,7 +311,7 @@ class TargetEvaluator:
         Returns:
             Score for this target (higher is better), or -inf if required rule fails
         """
-        score = 0
+        score: float = 0.0
 
         # Use provided helpers or defaults from combat_utils
         if stat_helpers is None:
@@ -301,7 +323,7 @@ class TargetEvaluator:
         for rule in rules:
             r_type = rule.get('type')
             required = rule.get('required', False)
-            val = 0
+            val: float = 0.0
             match = True
 
             if r_type in ('nearest', 'farthest', 'distance'):

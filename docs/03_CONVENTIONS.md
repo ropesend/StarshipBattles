@@ -1,6 +1,6 @@
 # Conventions
 
-> **Last verified:** 2026-05-20 - PROJ-469 cross-doc fix: corrected the `IIssuerAdapter` cross-reference from Pattern #40 to Pattern #41 (Polymorphic Order Issuer; #40 is the Named Pre-Tick Setup Registry) per `docs/02_PATTERNS.md:74-75`. Earlier (2026-05-20): PROJ-467 foundation doc-drift sweep: corrected the `get_system_at_hex()` path to `game/strategy/services/galaxy_pathfinding_service.py` and removed a hardcoded `C:/Users/rossr/...` checkout path that violated the doc's own no-checkout-path convention. Earlier (2026-05-17): Round 4 doc-audit fixes: corrected `markers.py` listing (removed retired `VehicleLaunchAbility`), added the "polymorphic FMS commands (`planet_id` rule)" convention, the right-click context-menu triple convention, and the "Capability validation is hard, not soft" convention.
+> **Last verified:** 2026-05-22 - PROJ-483 Phase 4: added mypy `--strict` coverage section under Type Hints noting the 6 strict Foundation layers (research/services/assets/engine/ai/core) and the 3 deferred heavy layers (simulation/strategy/ui). Earlier (2026-05-20): PROJ-469 cross-doc fix: corrected the `IIssuerAdapter` cross-reference from Pattern #40 to Pattern #41 (Polymorphic Order Issuer; #40 is the Named Pre-Tick Setup Registry) per `docs/02_PATTERNS.md:74-75`. Earlier (2026-05-20): PROJ-467 foundation doc-drift sweep: corrected the `get_system_at_hex()` path to `game/strategy/services/galaxy_pathfinding_service.py` and removed a hardcoded `C:/Users/rossr/...` checkout path that violated the doc's own no-checkout-path convention. Earlier (2026-05-17): Round 4 doc-audit fixes: corrected `markers.py` listing (removed retired `VehicleLaunchAbility`), added the "polymorphic FMS commands (`planet_id` rule)" convention, the right-click context-menu triple convention, and the "Capability validation is hard, not soft" convention.
 
 Compact convention reference for Starship Battles. Use this with `docs/01_ARCHITECTURE.md` and `docs/02_PATTERNS.md` before coding.
 
@@ -402,6 +402,16 @@ Test-specific Combat Lab data lives in `combat_lab/data/`:
 - Public APIs need docstrings.
 - Trivial getters/setters and test functions usually do not need docstrings.
 - Constructors and hot-path engine/controller methods should have full annotations.
+
+#### mypy `--strict` coverage (PROJ-483 Phase 4)
+
+The following Foundation layers are under `mypy --strict` per per-module
+overrides in `mypy.ini`: `game.research.*`, `game.services.*`, `game.assets.*`,
+`game.engine.*`, `game.ai.*`, `game.core.*`. New code in these layers must
+type-check clean under strict mode. The heavier layers (`game.simulation`,
+`game.strategy`, `game.ui`) remain non-strict pending a future dedicated
+project — touching those layers does not require strict-clean status, but
+prefer annotated signatures where practical.
 
 ### Function Shape
 

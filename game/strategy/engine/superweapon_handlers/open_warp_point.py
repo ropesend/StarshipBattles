@@ -35,7 +35,7 @@ def process_open_warp_point(
 
     spec = find_superweapon_spec(OrderType.OPEN_WARP_POINT)
 
-    def _precheck(*, fleet, empire, galaxy, empires, order, component_registry):
+    def _precheck(*, fleet, empire, galaxy, empires, order, component_registry) -> "SuperweaponResult | None":
         if processor._get_system_at_hex(galaxy, fleet.location) is None:
             return SuperweaponResult(
                 success=False, message="Fleet not at a star system"
@@ -51,7 +51,7 @@ def process_open_warp_point(
             )
         return None
 
-    def _effect(*, fleet, empire, galaxy, empires, order, ship, component_registry):
+    def _effect(*, fleet, empire, galaxy, empires, order, ship, component_registry) -> dict[str, str]:
         params = order.target  # dispatcher already validated isinstance(dict)
         target_system_name = params.get("target_system_name", "")
 

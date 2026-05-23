@@ -36,7 +36,7 @@ def process_implode_planet(
     """
     spec = find_superweapon_spec(OrderType.IMPLODE_PLANET)
 
-    def _effect(*, fleet, empire, galaxy, empires, order, ship, component_registry):
+    def _effect(*, fleet, empire, galaxy, empires, order, ship, component_registry) -> "dict[str, Any]":
         target_planet = order.target
         # Remove planet from colony list if owned (iterate all empires
         # to catch enemy planets).

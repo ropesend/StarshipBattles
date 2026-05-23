@@ -14,7 +14,7 @@ instances at the new hex, so the per-instance cache is the correct
 granularity.
 """
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Generator, List, Optional
 from game.core.protocols import SourceKind
 
 
@@ -126,7 +126,9 @@ def _is_hidden(fleet: Any) -> bool:
     return bool(getattr(fleet, 'is_hidden', False))
 
 
-def _walk_strategic_abilities(design_data: Dict[str, Any], registries: Any):
+def _walk_strategic_abilities(
+    design_data: Dict[str, Any], registries: Any
+) -> Generator[tuple[str, dict[str, Any]], None, None]:
     """Yield (ability_name, ability_data) pairs for strategic-scope abilities.
 
     Walks every component in the design's layers and extracts each ability

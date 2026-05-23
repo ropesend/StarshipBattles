@@ -363,10 +363,16 @@ class Empire:
         if 'race_config' in data:
             race_config = safe_from_dict(RaceConfig.from_dict, data['race_config'], 'Empire.race_config')
 
+        # PROJ-483 Phase 5 (Task 5.5): coerce JSON-loaded color (list[int]) to
+        # tuple[int, int, int] to satisfy IEmpire.color's narrower protocol.
+        # Deserialization is the right boundary for this fix.
+        raw_color = data['color']
+        color = tuple(raw_color) if not isinstance(raw_color, tuple) else raw_color
+
         empire = cls(
             empire_id=data['id'],
             name=data['name'],
-            color=data['color'],
+            color=color,
             theme_path=data.get('theme_path'),
             empire_theme_id=data.get('empire_theme_id', 'Federation'),
             flag_id=data.get('flag_id', ''),

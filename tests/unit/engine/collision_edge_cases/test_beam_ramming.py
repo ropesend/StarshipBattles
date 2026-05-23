@@ -210,6 +210,43 @@ class TestBeamRaycastingEdgeCases:
         target.combat_engine.take_damage.assert_called_once()
         assert target.combat_engine.take_damage.call_args[0][0] == 15
 
+    def test_beam_missing_ability_raises_assertion(self, collision_system):
+        """PROJ-483 Phase 5 (Task 5.1): missing BeamWeaponAbility is a hard error.
+
+        Regression guard for the "no bandaids" remediation. BeamResolution is
+        only built from an AttackRequest that already carries a live
+        weapon_ability (see game/simulation/combat/families/_beam_common.py and
+        game/simulation/combat/attack_contract.py). If the firing component
+        somehow lacks BeamWeaponAbility when collision processing runs, that
+        is a programming-error invariant break and must fail loudly rather
+        than silently drop the hit and damage.
+        """
+        target = MagicMock()
+        target.position = Vector2(100, 0)
+        target.radius = 20
+        target.is_alive = True
+        target.total_defense_score = 0.0
+
+        # Component with no BeamWeaponAbility — invariant violation.
+        mock_component = MagicMock()
+        mock_component.name = "broken_beam"
+        mock_component.get_ability.return_value = None
+
+        recent_beams: list = []
+        attack = _beam(
+            origin=Vector2(0, 0),
+            direction=Vector2(1, 0),
+            range=300,
+            target=target,
+            component=mock_component,
+        )
+
+        with pytest.raises(AssertionError, match="BeamResolution invariant"):
+            collision_system.process_beam_attack(attack, recent_beams)
+
+        # No damage should be dispatched when the invariant fails.
+        target.combat_engine.take_damage.assert_not_called()
+
     def test_beam_weapon_target_behind_origin(self, collision_system):
         """Test edge case: target behind ray origin (negative t values).
 

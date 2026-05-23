@@ -33,7 +33,7 @@ class BattleLineBehavior(SpatialBehavior):
         self,
         ship: Any,
         group_ships: List[Any],
-        **kwargs,
+        **kwargs: Any,
     ) -> Optional[Vector2]:
         """Compute slot position in the battle line.
 

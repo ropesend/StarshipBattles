@@ -88,7 +88,7 @@ class ValidationResult:
     warnings: List[str] = field(default_factory=list)
     error_code: Optional[str] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Ensure mutable defaults are properly initialized."""
         # Dataclass field(default_factory=list) handles this, but be explicit
         if self.errors is None:
