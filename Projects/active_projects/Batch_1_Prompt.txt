@@ -2,6 +2,8 @@ BATCH 1 ORCHESTRATOR — Cluster A (7 projects, serial)
 
 You are the orchestrator for Batch 1 of a 3-batch parallel execution. The other two batches are running CONCURRENTLY on the working tree (Batch 2 = PROJ-483, PROJ-482 type-narrowings; Batch 3 = PROJ-484, PROJ-485, PROJ-486, PROJ-490 small legacy removals). Their file scopes were verified disjoint from yours via Codex consult and an independent subagent reviewer on 2026-05-22.
 
+> **Post-merge re-verification (2026-05-22 after `67116932d`):** the original disjoint analysis was done pre-merge. After the Group B + Group C parallel-batch merge landed, a four-subagent review of all 13 planned projects confirmed batch scopes remain disjoint. Specific updates made: PROJ-488 caller count corrected from ~25 to ~67 (12 files); PROJ-479 audit set extended with 6 new bypass_init-pattern tests added by the merge (PROJ-458/470); PROJ-486 line range refreshed (612-698 → 509-595, same size). No batch needs re-ordering; no project is rendered obsolete. PROJ-487 (this batch) now operates on the post-PROJ-466 state of `planetary_facility.py` and `resupply_engine.py` — wrappers still present at the original lines.
+
 Your 7 projects MUST run in this exact serial order. Do NOT parallelize within the batch — every project's workflow must complete before the next begins.
 
 ================================================================
@@ -13,7 +15,7 @@ PROJECT ORDER (run one at a time, in this sequence)
 3. PROJ-479 — Test review CAT-4/5/6/7 + DUP/HLP fixture consolidation
 4. PROJ-487 — Legacy fuel wrappers → consumable API (planetary_facility.py + resupply_engine.py + several test files)
 5. PROJ-480 — Test review CAT-8/9/10/11/12 (parametrize/simplify/fragile-assertion/logic-heavy)
-6. PROJ-488 — Legacy MASS_EARTH alias removal (planet_physics.py + ~25 callers)
+6. PROJ-488 — Legacy MASS_EARTH alias removal (planet_physics.py + ~67 references across 12 files; also updates the static-guard fixture at tests/static_guards/test_facade_read_path_imports_guard.py:208)
 7. PROJ-489 — Legacy ModifierService consolidation (4 implementations → 1 canonical)
 
 Why this order (do not change without re-running conflict analysis):

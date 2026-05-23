@@ -24,7 +24,7 @@
 **File:** `tests/unit/ui/screens/test_strategy_renderer_public_api.py`
 **Tests:** `pytest tests/unit/ui/screens/test_strategy_renderer_public_api.py`
 
-- [ ] Delete the 7 structural tests (lines 16-91) — isclass / constant isinstance / signature checks / hasattr+signature / property loop. All pass on any import success.
+- [ ] Delete the 7 structural tests (lines 16-100) — isclass / constant isinstance / signature checks / hasattr+signature / property loop. All pass on any import success.
 - [ ] Verify: `pytest tests/unit/ui/screens/test_strategy_renderer_public_api.py` passes; LOC delta ≈ -75.
 
 ### Task 1.3: test_role.py

@@ -2,6 +2,8 @@ BATCH 3 ORCHESTRATOR — Cluster C (4 projects, serial)
 
 You are the orchestrator for Batch 3 of a 3-batch parallel execution. The other two batches are running CONCURRENTLY on the working tree (Batch 1 = 7 test-review + UI-type + legacy-cleanup projects; Batch 2 = PROJ-483 + PROJ-482 type-narrowings). Their file scopes were verified disjoint from yours via Codex consult and an independent subagent reviewer on 2026-05-22.
 
+> **Post-merge re-verification (2026-05-22 after `67116932d`):** the original disjoint analysis was done pre-merge. After the Group B + Group C parallel-batch merge landed, a four-subagent review of all 13 planned projects confirmed batch scopes remain disjoint. Specific notes for this batch: PROJ-484 / PROJ-485 / PROJ-490 — all target files untouched by the merge; line refs verified accurate. PROJ-486 — `battle_controller.py` had `start_from_spec` extracted to a sibling module (PROJ-460), shifting `load_state` upward; the line range above is refreshed (509-595, same size). Test caller lines in `test_state.py` (90, 128, 245, 268) are unchanged.
+
 Your 4 projects MUST run in this exact serial order. Do NOT parallelize within the batch.
 
 ================================================================
@@ -20,8 +22,8 @@ PROJECT ORDER (run one at a time, in this sequence)
    - tests/unit/ai/ — migrate any test callers to `_sum_launch_rate` / `_pop_cvs_within_budget`.
 
 3. PROJ-486 — Legacy dead BattleController.load_state
-   - game/simulation/battle_controller.py:612-698 — delete ~87 LOC.
-   - tests/unit/simulation/battle_controller/test_state.py:90,128,245,268 — reconcile 4 test callers.
+   - game/simulation/battle_controller.py:509-595 — delete ~87 LOC. (Refreshed 2026-05-22 post-merge `67116932d`; was 612-698 before PROJ-460 Phase 2 extracted `start_from_spec` to a sibling module.)
+   - tests/unit/simulation/battle_controller/test_state.py:90,128,245,268 — reconcile 4 test callers (lines unchanged).
 
 4. PROJ-490 — Legacy stale-comment cleanup
    - 9 comments across 7 prod files: game/strategy/data/ship_instance.py, game/strategy/data/ship_instance_serializer.py, game/ui/screens/strategy_detail_fmt.py, game/strategy/services/mine_group_service.py, game/simulation/entities/ship_stat_querier.py, game/strategy/data/build_context.py, game/strategy/data/design_metadata.py.

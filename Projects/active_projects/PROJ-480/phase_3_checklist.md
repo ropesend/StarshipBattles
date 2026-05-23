@@ -72,7 +72,7 @@
 **File:** `tests/unit/simulation/ship_combat_engine/test_cooldowns.py`
 **Tests:** `pytest tests/unit/simulation/ship_combat_engine/test_cooldowns.py`
 
-- [ ] Parametrize the 5 shield-regen tests (lines 58-140) on `(initial_shields, max, regen_rate, ticks, expected_shields)`.
+- [ ] Parametrize the 5 shield-regen tests (lines 58-145) on `(initial_shields, max, regen_rate, ticks, expected_shields)`.
 - [ ] Verify: passes; LOC delta ≈ -50.
 
 ### Task 3.10: test_formula_exceptions.py — 7 repeated FormulaEvaluator imports
@@ -100,14 +100,14 @@
 **File:** `tests/unit/ui/screens/test_planet_menu_items.py`
 **Tests:** `pytest tests/unit/ui/screens/test_planet_menu_items.py`
 
-- [ ] Parametrize 5+ TestPlanetMenuCapabilityMatrix tests (lines 136-198).
+- [ ] Parametrize 5+ TestPlanetMenuCapabilityMatrix tests (lines 141-203).
 - [ ] Verify: passes; LOC delta ≈ -50.
 
 ### Task 3.14: test_fleet_menu_items.py — 10+ FMS row tests
 **File:** `tests/unit/ui/screens/test_fleet_menu_items.py`
 **Tests:** `pytest tests/unit/ui/screens/test_fleet_menu_items.py`
 
-- [ ] Parametrize the 10+ FMS row tests (lines 400-572) on `(ability, label, condition)`.
+- [ ] Parametrize the 10+ FMS row tests (lines 409-624) on `(ability, label, condition)`.
 - [ ] Verify: passes; LOC delta ≈ -150.
 
 ### Task 3.15: test_strategy_input_handler_core.py — 4 escape-returns-to-select tests
@@ -121,7 +121,7 @@
 **File:** `tests/unit/ui/screens/test_empire_build_queue_window.py`
 **Tests:** `pytest tests/unit/ui/screens/test_empire_build_queue_window.py`
 
-- [ ] Parametrize `test_toggle_column_hides_visible_column` (lines 644-663, 2 defs — first is shadowed by second per Python rules) on `column_id` ∈ ["location", "build_rate"]; rename to `test_toggle_column_hides_any_column`.
+- [ ] Parametrize `test_toggle_column_hides_visible_column` (lines 653-672, 2 defs — first is shadowed by second per Python rules) on `column_id` ∈ ["location", "build_rate"]; rename to `test_toggle_column_hides_any_column`.
 - [ ] Verify: passes; LOC delta ≈ -10.
 
 ### Task 3.17: test_ship_fleet_attrs.py — 2 test pairs
@@ -221,7 +221,7 @@
 **File:** `tests/unit/ui/screens/test_fleet_report_filters.py`
 **Tests:** `pytest tests/unit/ui/screens/test_fleet_report_filters.py`
 
-- [ ] Parametrize the 3 warp filter tests (lines 388-448) and 8+ sort tests (lines 451-628).
+- [ ] Parametrize the 3 warp filter tests (lines 392-452) and 8+ sort tests (lines 455-635).
 - [ ] Verify: passes; LOC delta ≈ -100.
 
 ### Task 3.31: test_deterministic_generation.py — 4 deterministic-gen tests
@@ -356,7 +356,7 @@
 **File:** `tests/unit/strategy/engine/test_base_command_handler.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_base_command_handler.py`
 
-- [ ] Parametrize the 2 tests (lines 18-43) on `(fleet_setup_func, expected_error_substring)`.
+- [ ] Parametrize the 2 tests (lines 44-68) on `(fleet_setup_func, expected_error_substring)`.
 - [ ] Verify: passes; LOC delta ≈ -10.
 
 ### Task 3.50: test_superweapons.py — 10 .keys() parametrize matrix

@@ -25,6 +25,7 @@
 **Last Action:** Project created from `2026-05-20_210550_test-review` after independent verification
 **Next Action:** Begin Phase 1 tasks
 **Blockers:** None
+**Line refs refreshed 2026-05-22 post-merge `67116932d`.**
 
 ## Overview
 P2 tier of the 2026-05-20 test-review. Lowest-priority polish work — readability and maintainability improvements that don't change test fidelity. Dominated by **CAT-10 parametrization (88 verified findings, ~3,000 LOC reducible)**: clusters of structurally identical tests where the per-test setup is genuinely redundant. After verification, ~145 items entered the plan (~1,900 LOC reclaimable). This project is sequenced lowest-risk first (simplification, then complexity reduction, then parametrize, then assertion/logic polish).

@@ -2,6 +2,8 @@ BATCH 2 ORCHESTRATOR — Cluster B (2 projects, serial)
 
 You are the orchestrator for Batch 2 of a 3-batch parallel execution. The other two batches are running CONCURRENTLY on the working tree (Batch 1 = 7 test-review + UI-type + legacy-cleanup projects; Batch 3 = 4 small legacy removals in game/ai/, game/simulation/, game/strategy/data/). Their file scopes were verified disjoint from yours via Codex consult and an independent subagent reviewer on 2026-05-22.
 
+> **Post-merge re-verification (2026-05-22 after `67116932d`):** the original disjoint analysis was done pre-merge. After the Group B + Group C parallel-batch merge landed, a four-subagent review of all 13 planned projects confirmed batch scopes remain disjoint. Specific notes for this batch: PROJ-470 already narrowed `IAbilitySource.source_kind` → `SourceKind` (StrEnum) at `game/core/protocols/strategy_entities.py:395`, so PROJ-483's Phase 3 item count effectively drops from 12 to ~11 — verify during implementation, don't re-narrow. PROJ-473 added RNG threading to `game/strategy/engine/game_initializer.py` around lines 81-95 and 253+ — PROJ-482's nested-generator narrowings unaffected, re-verify line refs. PROJ-465 lifted `_from_dict_payload` up to `_ShipBearingDeployedGroup` in `deployed_group.py` around lines 306-328 — PROJ-482's `_register_type` target unaffected. `game/strategy/data/fleet_serde.py` (new sibling, PROJ-459) is explicitly OUT of PROJ-482's scope. Type narrowing is additive, so this batch remains the safest to run alongside others.
+
 Your 2 projects MUST run in this exact serial order. Do NOT parallelize within the batch.
 
 ================================================================

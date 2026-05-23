@@ -124,7 +124,7 @@
 **File:** `tests/unit/ui/screens/test_fleet_report_filters.py`
 **Tests:** `pytest tests/unit/ui/screens/test_fleet_report_filters.py`
 
-- [ ] Move `make_mock_ship()` (12 params, 98 LOC at lines 12-109) to a shared fixture in `tests/fixtures/ship_mocks.py`.
+- [ ] Move `make_mock_ship()` (12 params, ~102 LOC at lines 12-113) to a shared fixture in `tests/fixtures/ship_mocks.py`.
 - [ ] Verify: passes; LOC delta ≈ -90 (or shared between files).
 
 ### Task 2.17: test_race_summary_panel.py — _refresh_with_mocked_uilabel
@@ -160,7 +160,7 @@
 **File:** `tests/unit/ui/screens/test_strategy_screen.py`
 **Tests:** `pytest tests/unit/ui/screens/test_strategy_screen.py`
 
-- [ ] Use `patch.multiple` to collapse the 7-patch with-block in `test_init_with_injected_composition_wires_slots` (lines 178-231). _(NEEDS_REWORK: severity downgraded to MINOR — patch count reflects constructor DI count, not test design flaw.)_
+- [ ] Use `patch.multiple` to collapse the 7-patch with-block in `test_init_with_injected_composition_wires_slots` (lines 198-216, test body lines 134-252). _(NEEDS_REWORK: severity downgraded to MINOR — patch count reflects constructor DI count, not test design flaw.)_
 - [ ] Verify: passes; LOC delta ≈ -15.
 
 ### Task 2.22: test_structure_visibility.py — 8-patch with-statement
@@ -205,7 +205,7 @@
 **File:** `tests/unit/ui/screens/test_strategy_screen_selection.py`
 **Tests:** `pytest tests/unit/ui/screens/test_strategy_screen_selection.py`
 
-- [ ] Extract `patcher_selection` fixture returning dict of 4 patchers; yield `patchers.start()` so tests reference via fixture instead of inline (lines 33-104).
+- [ ] Extract `patcher_selection` fixture returning dict of 4 patchers; yield `patchers.start()` so tests reference via fixture instead of inline (lines 48-122).
 - [ ] Verify: passes; LOC delta ≈ -30.
 
 ### Task 2.29: test_tech_preset_loader.py — identical patch wrapper

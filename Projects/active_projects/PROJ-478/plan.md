@@ -23,6 +23,7 @@
 **Last Action:** Project created from `2026-05-20_210550_test-review` after independent verification
 **Next Action:** Begin Phase 1 tasks
 **Blockers:** None
+**Line refs refreshed 2026-05-22 post-merge `67116932d`.**
 
 ## Overview
 P0 tier of the 2026-05-20 test-review. OpenCode's 16-shard test audit confirmed 322 findings across 13 categories; this project covers the highest-severity findings (CAT-1 Trivial Pass, CAT-2 Tests Nothing Real, CAT-3 Dead Test Code). After Claude's independent third-pass verification, 44 findings entered the plan (~430 LOC reclaimable). The remaining CAT-13 CRITICAL deletion-guard items (10) were correctly reclassified as intentional regression guards during verification and excluded.

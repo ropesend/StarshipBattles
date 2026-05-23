@@ -15,7 +15,7 @@
 |-------|--------|-----------|
 | 1. CAT-4 Duplicate Testing | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. CAT-5 Fixture Bloat | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. CAT-6 Mocking Brittleness | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. CAT-6 Mocking Brittleness (+ Task 3.34: post-merge bypass_init verification, 6 files) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. CAT-7 Sleep/Latency | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. DUP cluster consolidation | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. HLP helper consolidation | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |

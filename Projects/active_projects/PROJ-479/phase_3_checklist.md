@@ -245,6 +245,25 @@
 - [ ] Replace 6 TestScreenLifecycle tests (lines 433-482) asserting only mock method calls with integration-level tests that assert observable state changes.
 - [ ] Verify: `pytest tests/unit/ui/screens/test_strategy_screen.py` passes.
 
+### Task 3.34: post-merge additions — verify canonical bypass_init use (6 files)
+**Files:**
+- `tests/unit/ui/screens/test_settings_window.py`
+- `tests/unit/ui/screens/test_settings_window_modal.py`
+- `tests/unit/ui/screens/test_atmosphere_target_editor.py`
+- `tests/unit/ui/screens/test_gravity_target_editor.py`
+- `tests/unit/ui/screens/test_radiation_shield_editor.py`
+- `tests/unit/ui/screens/test_water_target_editor.py`
+
+**Background:** Added to the audit set 2026-05-22 after merge `67116932d` landed PROJ-458 (Pattern #33 retrofit for 5 windows) and PROJ-470 (SettingsWindow StrategyModalWindow conformance). Each file already uses `tests/fixtures/ui_widget_factory.py:bypass_init` plus real assertions, so the expected outcome is no-op (verify only). If a file uses ad-hoc `__new__` wiring or shadows the canonical fixture, fix it under the existing CAT-6 contract.
+
+**Tests:** `pytest tests/unit/ui/screens/test_settings_window.py tests/unit/ui/screens/test_settings_window_modal.py tests/unit/ui/screens/test_atmosphere_target_editor.py tests/unit/ui/screens/test_gravity_target_editor.py tests/unit/ui/screens/test_radiation_shield_editor.py tests/unit/ui/screens/test_water_target_editor.py`
+
+- [ ] For each of the 6 files: confirm it imports `bypass_init` from `tests/fixtures/ui_widget_factory.py` (not a local `__new__` shim).
+- [ ] For each: confirm Stage-1 cheap-state assertions exist under bypass (e.g. `_settings`, `_ui_builder` populated; widget handles NOT populated).
+- [ ] For each: confirm Stage-2 production-path assertions exist (real widget construction observable via injected builder mock, not via patching widget element classes).
+- [ ] If any violation is found, file a remediation task under the matching CAT-6 entry above. Otherwise mark complete with note "canonical pattern confirmed".
+- [ ] Verify: pytest above all passes.
+
 ---
 
 ## Phase Completion Checklist

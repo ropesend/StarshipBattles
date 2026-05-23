@@ -23,14 +23,14 @@
 **Blockers:** None
 
 ## Overview
-`game/strategy/data/planet_physics.py:24-25` declares `MASS_EARTH = EARTH_MASS  # Backward-compatible alias` where `EARTH_MASS` is the canonical name imported from `game.core.constants`. The verifier confirmed ~25 callers across `tests/`, `Tools/`, and diagnostics — none in active `game/` production code that cannot be cleanly migrated. Migrate all callers to `EARTH_MASS` and delete the alias.
+`game/strategy/data/planet_physics.py:24-25` declares `MASS_EARTH = EARTH_MASS  # Backward-compatible alias` where `EARTH_MASS` is the canonical name imported from `game.core.constants`. A 2026-05-22 re-verification (post-merge `67116932d`) found **~67 references across 12 files** — substantially more than the original audit's "~25" estimate. The split is: 3 production `game/` callers (`game/strategy/data/planet_atmosphere.py`, `game/strategy/data/planet_gen_surface.py`, `game/ui/screens/galaxy_test/system_mode.py`), plus `tests/`, `Tools/`, and diagnostics. All are cleanly migratable name-rebindings. Migrate all callers to `EARTH_MASS` and delete the alias. The Phase 1 deletion must also update the static-guard fixture entry at `tests/static_guards/test_facade_read_path_imports_guard.py:208` which enshrines `MASS_EARTH` as the canonical import for `system_mode.py` — change it to `EARTH_MASS`.
 
 ## Goals
 - Migrate all `MASS_EARTH` references to the canonical `EARTH_MASS`.
 - Delete the `MASS_EARTH` alias declaration and its `# Backward-compatible alias` comment.
 
 ## Scope
-**In:** `MASS_EARTH` declaration at `planet_physics.py:24-25` and all ~25 caller sites.
+**In:** `MASS_EARTH` declaration at `planet_physics.py:24-25`, all ~67 caller sites across 12 files, and the static-guard fixture entry at `tests/static_guards/test_facade_read_path_imports_guard.py:208`.
 **Out:**
 - `EARTH_MASS` itself (the canonical) — kept.
 - The import chain into `planet_physics.py` from `game.core.constants` — kept (other constants flow through this module).

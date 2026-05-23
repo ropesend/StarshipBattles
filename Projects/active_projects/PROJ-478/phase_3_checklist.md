@@ -27,7 +27,7 @@
   - `test_issue17_on_active_player_changed_triggers_flush` (calls `_spy_invalidate` helper)
   - 2 other tests that call `_spy_invalidate` (per verification report)
   - `test_issue17_show_reasserts_row_visibility_after_panel_show` (direct call at line 1534)
-- [ ] _(verification note: the helper `_spy_invalidate` at lines 877-891 asserts `hasattr(..., 'invalidate_widget_caches')`. Until PROJ-410 Phase 2 ships the helper, these tests will raise. Skipping preserves the TDD guard intent.)_
+- [ ] _(verification note: the helper `_spy_invalidate` at lines 956-970 asserts `hasattr(..., 'invalidate_widget_caches')`. Until PROJ-410 Phase 2 ships the helper, these tests will raise. Skipping preserves the TDD guard intent.)_
 - [ ] Verify: `pytest tests/unit/ui/screens/test_build_queue_screen_lifecycle.py` passes with 4 skipped; LOC delta ≈ +8 (skip decorators only).
 
 ---

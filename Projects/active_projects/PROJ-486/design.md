@@ -12,7 +12,7 @@
 - **Severity breakdown:** 0 CRITICAL, 1 MAJOR, 0 MINOR
 
 ## Initial Analysis
-`BattleController.load_state` at `game/simulation/battle_controller.py:612-698` is ~87 LOC of dead code. The audit's verifier confirmed 0 production callers; the inline note at line 613 ("`load_state` has zero production callers (grep-verified)") corroborates. Independent re-verification by this skill confirmed 0 production callers BUT discovered 4 test callers the audit's verifier missed:
+`BattleController.load_state` at `game/simulation/battle_controller.py:509-595` (line refs refreshed 2026-05-22 after merge `67116932d` shifted them upward from 612-698) is ~87 LOC of dead code. The audit's verifier confirmed 0 production callers; the inline note at line 510 ("`load_state` has zero production callers (grep-verified)") corroborates. Independent re-verification by this skill confirmed 0 production callers BUT discovered 4 test callers the audit's verifier missed:
 
 - `tests/unit/simulation/battle_controller/test_state.py:90`
 - `tests/unit/simulation/battle_controller/test_state.py:128`

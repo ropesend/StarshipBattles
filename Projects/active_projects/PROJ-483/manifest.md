@@ -15,6 +15,9 @@
 | game/ai/interfaces/controllable.py | Production | Phase 3: 3 narrowings |
 | game/ai/protocols.py | Production | Phase 3: 2 narrowings |
 | game/core/protocols/strategy_entities.py | Production | Phase 3: bulk TYPE_CHECKING narrowings (up to 12) |
+
+> Note: 2026-05-22 post-merge note: PROJ-470 (commit `97b427097`) already narrowed `IAbilitySource.source_kind` from `str` → `SourceKind` (StrEnum) at `game/core/protocols/strategy_entities.py:395`. Item count effectively drops from 12 to ~11. Verify during Phase 3 implementation; don't re-narrow.
+
 | game/core/protocols/ui.py | Production | Phase 3: 3 `ICamera` narrowings |
 | game/core/protocols/strategy_domain.py | Production | Phase 3: 2 `IEmpire` narrowings |
 | game/core/protocols/strategy_mutators.py | Production | Phase 3: `IPlanetMutator.pop_construction_item` (coordinate w/ PROJ-482) |

@@ -16,8 +16,8 @@
 **File:** various
 **Tests:** `pytest tests/ --testmon`
 
-- [ ] Run `grep -rn "MASS_EARTH" .` and record the full caller list (verifier counted ~25; confirm exact count)
-- [ ] Group callers by directory: `game/`, `tests/`, `Tools/`, diagnostics
+- [ ] Run `grep -rn "MASS_EARTH" .` and record the full caller list (post-merge re-verification 2026-05-22 counted ~67 references across 12 files; confirm exact count)
+- [ ] Group callers by directory: `game/` (3 prod files: `planet_atmosphere.py`, `planet_gen_surface.py`, `ui/screens/galaxy_test/system_mode.py`), `tests/`, `Tools/`, diagnostics
 
 ### Task 1.2: Migrate all callers to `EARTH_MASS`
 **File:** all caller files
@@ -33,6 +33,13 @@
 
 - [ ] Delete `MASS_EARTH = EARTH_MASS  # Backward-compatible alias` at line 25 (and the surrounding blank line at 24 if it becomes orphan)
 - [ ] If line 25 was the last reason for the import of `EARTH_MASS` into `planet_physics.py`, also remove the now-unused import; otherwise keep it
+
+### Task 1.4: Update the static-guard fixture
+**File:** `tests/static_guards/test_facade_read_path_imports_guard.py`
+**Tests:** `pytest tests/static_guards/test_facade_read_path_imports_guard.py`
+
+- [ ] Line 208 currently enshrines `MASS_EARTH` as the canonical import for `game/ui/screens/galaxy_test/system_mode.py` (entry tuple ends with `"MASS_EARTH"`). After Task 1.2 migrates that file to `EARTH_MASS`, update the fixture entry's symbol from `"MASS_EARTH"` to `"EARTH_MASS"` and its module-path argument from `game.strategy.data.planet_physics` to `game.core.constants` (the canonical home of `EARTH_MASS`). Without this update the fixture will flag `system_mode.py` as a guard violation post-migration.
+- [ ] Verify: `pytest tests/static_guards/test_facade_read_path_imports_guard.py` passes.
 
 ### Phase Verification
 - [ ] `pytest tests/ --testmon` passes

@@ -30,7 +30,7 @@
 **File:** `tests/unit/ui/screens/test_fleet_menu_items.py`
 **Tests:** `pytest tests/unit/ui/screens/test_fleet_menu_items.py`
 
-- [ ] Extract shared `_make_fleet` / `_make_galaxy` / `_mapper` helpers (currently re-called with the same defaults in TestCapabilityMatrix + TestFMSRows, lines 100-262, 400-615).
+- [ ] Extract shared `_make_fleet` / `_make_galaxy` / `_mapper` helpers (currently re-called with the same defaults in TestCapabilityMatrix + TestFMSRows, lines 109-202, 409-624).
 - [ ] _(coordination note: also touches HLP-004 in PROJ-479 Phase 6. Keep helpers in this file local unless cross-shard sweep absorbs them.)_
 - [ ] Verify: passes; LOC delta ≈ -40.
 
@@ -73,7 +73,7 @@
 **File:** `tests/unit/ui/screens/test_empire_build_queue_formatter.py`
 **Tests:** `pytest tests/unit/ui/screens/test_empire_build_queue_formatter.py`
 
-- [ ] Move `get_resource_rate_text` and `get_resource_total_text` imports to module level; remove from 5+ method bodies in TestGetResourceRateText and TestGetResourceTotalText (lines 235-270).
+- [ ] Move `get_resource_rate_text` and `get_resource_total_text` imports to module level; remove from 5+ method bodies in TestGetResourceRateText and TestGetResourceTotalText (lines 193-258).
 - [ ] Verify: passes; LOC delta ≈ -10.
 
 ### Task 1.10: test_engine_validation.py — 12 near-identical engine classes

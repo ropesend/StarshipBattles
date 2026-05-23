@@ -72,7 +72,7 @@
 **File:** `tests/unit/ui/screens/strategy_windows/test_list_windows.py`
 **Tests:** `pytest tests/unit/ui/screens/strategy_windows/test_list_windows.py`
 
-- [ ] Replace `rect.topleft == (50, 40)` / `rect.size == (900, 720)` (lines 55-57) with assertions against named layout constants or shape (`topleft[0] > 0`).
+- [ ] Replace `rect.topleft == (50, 40)` / `rect.size == (900, 720)` (lines 64-65) with assertions against named layout constants or shape (`topleft[0] > 0`).
 - [ ] Verify: passes; LOC delta ≈ 0.
 
 ### Task 4.10: test_order_processor_colonize.py — exact resource dict

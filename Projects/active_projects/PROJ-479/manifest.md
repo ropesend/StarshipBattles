@@ -87,6 +87,18 @@
 | tests/unit/strategy/engine/test_action_execution_engine.py | Test | DI ActionTimeResolver |
 | tests/unit/ui/screens/test_strategy_screen.py | Test | Integration tests for 6 lifecycle methods |
 
+### Phase 3 (continued) — Post-merge additions (verify-only, no fix expected)
+> Added 2026-05-22 after merge `67116932d` introduced 6 new UI-window tests via PROJ-458 (Pattern #33 retrofit) and PROJ-470 (StrategyModalWindow conformance). These tests already use `tests/fixtures/ui_widget_factory.py:bypass_init` plus real assertions — the canonical pattern documented in `design.md:38,45`. The pass is a confirmation, not a fix. If any of them is found to use ad-hoc `__new__` wiring instead of the fixture, escalate to Phase 3 CAT-6 fix.
+
+| File | Type | Notes |
+|------|------|-------|
+| tests/unit/ui/screens/test_settings_window.py | Test | PROJ-458 retrofit characterization; verify canonical bypass_init use |
+| tests/unit/ui/screens/test_settings_window_modal.py | Test | PROJ-470 StrategyModalWindow conformance; verify canonical bypass_init use |
+| tests/unit/ui/screens/test_atmosphere_target_editor.py | Test | PROJ-458 retrofit characterization; verify canonical bypass_init use |
+| tests/unit/ui/screens/test_gravity_target_editor.py | Test | PROJ-458 retrofit characterization; verify canonical bypass_init use |
+| tests/unit/ui/screens/test_radiation_shield_editor.py | Test | PROJ-458 retrofit characterization; verify canonical bypass_init use |
+| tests/unit/ui/screens/test_water_target_editor.py | Test | PROJ-458 retrofit characterization; verify canonical bypass_init use |
+
 ### Phase 4 — CAT-7 Sleep/Latency
 | File | Type | Notes |
 |------|------|-------|

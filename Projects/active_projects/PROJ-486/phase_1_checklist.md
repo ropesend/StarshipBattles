@@ -24,8 +24,8 @@
 **File:** `game/simulation/battle_controller.py`
 **Tests:** `pytest tests/unit/simulation/`
 
-- [ ] Delete `BattleController.load_state` at `game/simulation/battle_controller.py:612-698` (~87 LOC)
-- [ ] Also delete the inline note at line 613 if it references zero callers
+- [ ] Delete `BattleController.load_state` at `game/simulation/battle_controller.py:509-595` (~87 LOC) — line refs refreshed post-merge `67116932d`
+- [ ] Also delete the inline note at line 510 if it references zero callers
 - [ ] If `save_state` documents anything about `load_state`-side reconstruction (e.g. in its docstring), update that docstring to reflect that `load_state` is gone
 
 ### Phase Verification

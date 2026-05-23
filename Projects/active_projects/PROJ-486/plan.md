@@ -23,14 +23,16 @@
 **Blockers:** None
 
 ## Overview
-`BattleController.load_state` (~87 LOC at `game/simulation/battle_controller.py:612-698`) has zero production callers — its own inline comment at line 613 records this. The independent verifier confirmed 0 production callers but discovered 4 test callers in `tests/unit/simulation/battle_controller/test_state.py` (lines 90, 128, 245, 268) that the audit's verifier missed. Delete `load_state` and migrate/retire the 4 test callers.
+`BattleController.load_state` (~87 LOC at `game/simulation/battle_controller.py:509-595`) has zero production callers — its own inline comment at line 510 records this. The independent verifier confirmed 0 production callers but discovered 4 test callers in `tests/unit/simulation/battle_controller/test_state.py` (lines 90, 128, 245, 268) that the audit's verifier missed. Delete `load_state` and migrate/retire the 4 test callers.
+
+> Note: line refs refreshed 2026-05-22 after merge `67116932d` (PROJ-460 Phase 2 extracted `start_from_spec` to a sibling module, shifting `load_state` upward from 612-698 to 509-595; same size, still dead).
 
 ## Goals
 - Delete the `load_state` method (~87 LOC).
 - Migrate or retire the 4 test callers in `tests/unit/simulation/battle_controller/test_state.py`.
 
 ## Scope
-**In:** `BattleController.load_state` (lines 612-698) and the 4 test callers in `test_state.py`.
+**In:** `BattleController.load_state` (lines 509-595) and the 4 test callers in `test_state.py`.
 **Out:**
 - `save_state` — keep. The inline note says `load_state` exists "for test coverage + internal `save_state()` symmetry," but `save_state` itself may have production usage and is not in scope here. If it turns out `save_state` is also dead, surface as a separate finding.
 - The save/restore *contract documentation* — if the only purpose of `load_state` was to specify the save format, capture that as a docstring on `save_state` or a separate document before deletion.
