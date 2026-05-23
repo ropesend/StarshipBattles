@@ -24,7 +24,7 @@ from game.core.exceptions import (
 
 class TestReplaySerializationBoundaries:
     def test_boundary_to_dict_unknown_subtype_raises_persistence(self):
-        from game.simulation.replay.replay_serialization import boundary_to_dict
+        from game.simulation.replay.replay_capture_serde import boundary_to_dict
 
         class WeirdBoundary:
             pass
@@ -34,7 +34,7 @@ class TestReplaySerializationBoundaries:
         assert ei.value.code == ErrorCode.CORRUPT_DATA.value
 
     def test_boundary_from_dict_unknown_type_raises_persistence(self):
-        from game.simulation.replay.replay_serialization import boundary_from_dict
+        from game.simulation.replay.replay_capture_serde import boundary_from_dict
 
         with pytest.raises(PersistenceException) as ei:
             boundary_from_dict({"type": "hyperbolic", "exit_policy": "none"})
