@@ -41,7 +41,7 @@ class WorkshopEventRouter:
         """
         self.gui = gui
 
-    def _get_vehicle_classes(self) -> Any:
+    def _get_vehicle_classes(self) -> dict[str, Any]:
         """PROJ-50: Get vehicle_classes from context registries (required)."""
         return self.gui.context.registries.vehicle_classes
 

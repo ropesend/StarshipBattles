@@ -207,73 +207,39 @@ class TestGetSystemName:
 class TestToRoman:
     """Tests for to_roman static method."""
 
-    def test_one(self):
-        """1 -> I"""
-        assert NameRegistry.to_roman(1) == "I"
-
-    def test_two(self):
-        """2 -> II"""
-        assert NameRegistry.to_roman(2) == "II"
-
-    def test_three(self):
-        """3 -> III"""
-        assert NameRegistry.to_roman(3) == "III"
-
-    def test_four(self):
-        """4 -> IV (subtractive)"""
-        assert NameRegistry.to_roman(4) == "IV"
-
-    def test_five(self):
-        """5 -> V"""
-        assert NameRegistry.to_roman(5) == "V"
-
-    def test_nine(self):
-        """9 -> IX (subtractive)"""
-        assert NameRegistry.to_roman(9) == "IX"
-
-    def test_ten(self):
-        """10 -> X"""
-        assert NameRegistry.to_roman(10) == "X"
-
-    def test_forty(self):
-        """40 -> XL (subtractive)"""
-        assert NameRegistry.to_roman(40) == "XL"
-
-    def test_fifty(self):
-        """50 -> L"""
-        assert NameRegistry.to_roman(50) == "L"
-
-    def test_ninety(self):
-        """90 -> XC (subtractive)"""
-        assert NameRegistry.to_roman(90) == "XC"
-
-    def test_hundred(self):
-        """100 -> C"""
-        assert NameRegistry.to_roman(100) == "C"
-
-    def test_four_hundred(self):
-        """400 -> CD (subtractive)"""
-        assert NameRegistry.to_roman(400) == "CD"
-
-    def test_five_hundred(self):
-        """500 -> D"""
-        assert NameRegistry.to_roman(500) == "D"
-
-    def test_nine_hundred(self):
-        """900 -> CM (subtractive)"""
-        assert NameRegistry.to_roman(900) == "CM"
-
-    def test_thousand(self):
-        """1000 -> M"""
-        assert NameRegistry.to_roman(1000) == "M"
-
-    def test_complex_number_1994(self):
-        """1994 -> MCMXCIV"""
-        assert NameRegistry.to_roman(1994) == "MCMXCIV"
-
-    def test_complex_number_3999(self):
-        """3999 -> MMMCMXCIX (maximum standard)"""
-        assert NameRegistry.to_roman(3999) == "MMMCMXCIX"
+    # PROJ-480 Task 3.40: parametrize the 16 to_roman tests.
+    # Ids name the original test for failure-id continuity.
+    @pytest.mark.parametrize(
+        "num, roman",
+        [
+            (1, "I"),
+            (2, "II"),
+            (3, "III"),
+            (4, "IV"),
+            (5, "V"),
+            (9, "IX"),
+            (10, "X"),
+            (40, "XL"),
+            (50, "L"),
+            (90, "XC"),
+            (100, "C"),
+            (400, "CD"),
+            (500, "D"),
+            (900, "CM"),
+            (1000, "M"),
+            (1994, "MCMXCIV"),
+            (3999, "MMMCMXCIX"),
+        ],
+        ids=[
+            "one", "two", "three", "four_subtractive", "five",
+            "nine_subtractive", "ten", "forty_subtractive", "fifty",
+            "ninety_subtractive", "hundred", "four_hundred_subtractive",
+            "five_hundred", "nine_hundred_subtractive", "thousand",
+            "complex_1994", "complex_3999_max_standard",
+        ],
+    )
+    def test_to_roman(self, num, roman):
+        assert NameRegistry.to_roman(num) == roman
 
     def test_sequential_1_to_10(self):
         """Test sequential numerals 1-10."""

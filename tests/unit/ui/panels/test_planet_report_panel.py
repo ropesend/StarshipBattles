@@ -85,17 +85,6 @@ class TestNumberFormatting:
 class TestResourceGrid:
     """Tests for resource grid functionality."""
 
-    def test_resource_grid_items_list_exists(self):
-        """_resource_grid_items is a list."""
-        from game.ui.panels.planet_report_panel import PlanetReportPanel
-
-        with patch.object(PlanetReportPanel, '__init__', lambda self, *a, **kw: None):
-            panel = PlanetReportPanel.__new__(PlanetReportPanel)
-
-        panel._resource_grid_items = []
-
-        assert isinstance(panel._resource_grid_items, list)
-
     def test_update_resource_grid_calls_build(self):
         """_update_resource_grid calls _build_resource_grid."""
         from game.ui.panels.planet_report_panel import PlanetReportPanel

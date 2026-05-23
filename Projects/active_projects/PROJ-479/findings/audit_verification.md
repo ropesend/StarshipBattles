@@ -1,0 +1,14 @@
+# PROJ-479 Audit Verification
+
+**Audit:** Codex consult 2026-05-23, leaf `AgentCoordination/Scratchpad/Consult/20260523T050411Z_audit-PROJ-479/`
+**Verifier:** Claude orchestrator (Batch 1)
+
+| id | finding | verdict | evidence | action |
+|----|---------|---------|----------|--------|
+| F1 | Project marked "All 6 phases complete / Blockers: None" while Phase 2 = 6/18, Phase 3 = 7/34, Phase 6 = 4/6 — ~41 NEEDS_REWORK tasks. Phase 6 internal Status: Complete despite Task 6.2 PARTIAL, 6.4 PARTIAL, 6.5 NEEDS_REWORK. Violates `Projects/protocols/03a_continue_working.md:35-48` and `03c_phase_aware_execution.md:348`. | VERIFIED + IN-SCOPE (status hygiene) | `plan.md:23-35`; `phase_6_checklist.md:8,28,45,52` | Phase 7: fix Phase 6 internal status; relabel plan.md Phase 2/3/6 as "Partial"; rewrite Current State to be explicit; log Task 3.32 miss as DI. **Will NOT redo 41 deferred tasks — over 15-min budget; surface to user in batch report.** |
+| F2 | Phase 3 Task 3.32 deferred citing "needs injectable ActionTimeResolver param in production" — but production already has it. `ActionExecutionEngine.__init__(order_processor, action_time_resolver=None)` at `game/strategy/engine/action_execution_engine.py:55-68`; `_process_fleet_action_tick` prefers injected resolver at `:183-192`. Tests still patch the static method (`tests/unit/strategy/engine/test_action_execution_engine.py:132,187,430`). | VERIFIED + IN-SCOPE (but reclassify) | Lines confirmed by direct read | Log as DI with specific test rewrite candidate. NOT redoing in Phase 7 (test rewrite of 3+ test methods is its own work) — but evidence makes it clear this deferral was wrong. |
+| F2b | Paired SuperweaponValidator defer IS credible | REJECTED (audit-self-confirmation) | `superweapon_order_processor.py:276` static call; constructor has no validator dep at `:58-62` | None |
+| F3 | `make_mock_empire` not byte-identical with all source sites — canonical assigns `id` and `fleets`, deleted helper in `test_planet_energy_engine.py` (main) only assigned `colonies`. No failing assertion sampled. | INFORMATIONAL | `tests/unit/strategy/engine/conftest.py:21,42,45` vs `main:tests/unit/strategy/engine/test_planet_energy_engine.py:64` | No action — 3089 tests pass; canonical helper being more complete is generally safer. Note in PROJ-479 handoff. |
+| F4 | CAT-5 mutation-isolation rationale credible | REJECTED (audit-self-confirmation) | Codex verified `test_theme_discovery.py`, `test_ai.py`, `test_combat.py` all mutate live state between tests | None |
+| F5 | No duplicate deletion removed unique edge-case coverage | REJECTED (audit-self-confirmation) | Codex sampled 3 deletions, all covered elsewhere | None |
+| F6 | No import-path collection breaks in migrated files | REJECTED (audit-self-confirmation) | Codex verified pytest config + import resolution | None |

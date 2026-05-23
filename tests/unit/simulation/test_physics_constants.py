@@ -91,18 +91,20 @@ class TestTurnFormula:
 class TestFormulaDocumentation:
     """Tests that formula documentation strings exist."""
 
-    def test_formula_max_speed_documented(self):
-        """FORMULA_MAX_SPEED contains expected documentation."""
-        assert "max_speed" in FORMULA_MAX_SPEED
-        assert "K_SPEED" in FORMULA_MAX_SPEED
-        assert "mass" in FORMULA_MAX_SPEED
-
-    def test_formula_acceleration_documented(self):
-        """FORMULA_ACCELERATION contains expected documentation."""
-        assert "acceleration" in FORMULA_ACCELERATION
-        assert "K_THRUST" in FORMULA_ACCELERATION
-
-    def test_formula_turn_speed_documented(self):
-        """FORMULA_TURN_SPEED contains expected documentation."""
-        assert "turn_speed" in FORMULA_TURN_SPEED
-        assert "K_TURN" in FORMULA_TURN_SPEED
+    # PROJ-480 Task 1.4: parametrize the 3 docstring-substring assertions.
+    # Each formula has its own non-overlapping set of required substrings;
+    # they are kept distinct so a missing substring fails its own param case.
+    @pytest.mark.parametrize(
+        "formula, expected_substrings",
+        [
+            (FORMULA_MAX_SPEED, ("max_speed", "K_SPEED", "mass")),
+            (FORMULA_ACCELERATION, ("acceleration", "K_THRUST")),
+            (FORMULA_TURN_SPEED, ("turn_speed", "K_TURN")),
+        ],
+        ids=["max_speed", "acceleration", "turn_speed"],
+    )
+    def test_formula_documented(self, formula, expected_substrings):
+        for substring in expected_substrings:
+            assert substring in formula, (
+                f"Expected '{substring}' in formula docstring"
+            )

@@ -58,7 +58,7 @@ class TestRunCard:
 
         self.is_hovered = False
 
-    def get_height(self) -> Any:
+    def get_height(self) -> int:
         """Get card height (always collapsed)."""
         return self.card_height
 

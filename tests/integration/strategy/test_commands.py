@@ -14,9 +14,9 @@ from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.galaxy import Galaxy, Planet
 from game.strategy.data.star_system import StarSystem
-# PROJ-55: Mock planet type enum for tests
-class MockPlanetType(Enum):
-    CONTINENTAL = "CONTINENTAL"
+# PROJ-479 Task 6.2 (HLP-002): MockPlanetType moved to
+# tests/fixtures/colonization_fixtures.py.
+from tests.fixtures.colonization_fixtures import MockPlanetType  # noqa: F401, E402
 
 
 def create_mock_fleet_with_colony_pod(fleet_id, location, planet_type_str="CONTINENTAL"):

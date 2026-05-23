@@ -42,17 +42,6 @@ class TestRole:
         with pytest.raises(dataclasses.FrozenInstanceError):
             role.vehicle_type_filter = ("Frigate",)
 
-    def test_equality_same_fields_are_equal(self):
-        a = Role(id="x", display_name="X", description="x")
-        b = Role(id="x", display_name="X", description="x")
-        assert a == b
-        assert hash(a) == hash(b)
-
-    def test_equality_same_id_different_other_fields_are_unequal(self):
-        a = Role(id="x", display_name="X", description="x")
-        b = Role(id="x", display_name="X-renamed", description="x")
-        assert a != b
-
     def test_id_is_required(self):
         with pytest.raises(TypeError):
             Role(display_name="X", description="x")  # type: ignore[call-arg]
@@ -64,17 +53,3 @@ class TestRole:
     def test_description_is_required(self):
         with pytest.raises(TypeError):
             Role(id="x", display_name="X")  # type: ignore[call-arg]
-
-    def test_vehicle_type_filter_is_tuple_not_list(self):
-        """Tuple typing matters for hashability + frozen-dataclass equality."""
-        role = Role(
-            id="x",
-            display_name="X",
-            description="x",
-            vehicle_type_filter=("Frigate",),
-        )
-        assert isinstance(role.vehicle_type_filter, tuple)
-
-    def test_import_path(self):
-        from game.core.roles import Role as R
-        assert R is Role

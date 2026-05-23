@@ -5,6 +5,9 @@ PROJ-45 Phase 3: Test that formula errors raise FormulaException instead of retu
 """
 import pytest
 from game.core.exceptions import FormulaException
+# PROJ-480 Task 3.10: lift FormulaEvaluator to module level (was
+# re-imported in 14 method bodies).
+from game.core.formula_evaluator import FormulaEvaluator
 
 
 class TestFormulaExceptionRaising:
@@ -12,7 +15,6 @@ class TestFormulaExceptionRaising:
 
     def test_syntax_error_raises_formula_exception(self):
         """Syntax errors should raise FormulaException."""
-        from game.core.formula_evaluator import FormulaEvaluator
 
         with pytest.raises(FormulaException) as exc_info:
             FormulaEvaluator.evaluate("1 +* 2", {})
@@ -22,7 +24,6 @@ class TestFormulaExceptionRaising:
 
     def test_undefined_variable_raises_formula_exception(self):
         """Undefined variable should raise FormulaException."""
-        from game.core.formula_evaluator import FormulaEvaluator
 
         with pytest.raises(FormulaException) as exc_info:
             FormulaEvaluator.evaluate("undefined_var * 2", {"x": 1})
@@ -32,7 +33,6 @@ class TestFormulaExceptionRaising:
 
     def test_division_by_zero_raises_formula_exception(self):
         """Division by zero should raise FormulaException."""
-        from game.core.formula_evaluator import FormulaEvaluator
 
         with pytest.raises(FormulaException) as exc_info:
             FormulaEvaluator.evaluate("1 / 0", {})
@@ -41,7 +41,6 @@ class TestFormulaExceptionRaising:
 
     def test_dangerous_function_raises_formula_exception(self):
         """Dangerous functions should raise FormulaException."""
-        from game.core.formula_evaluator import FormulaEvaluator
 
         with pytest.raises(FormulaException) as exc_info:
             FormulaEvaluator.evaluate("__import__('os')", {})
@@ -51,7 +50,6 @@ class TestFormulaExceptionRaising:
 
     def test_exception_includes_context_variables(self):
         """FormulaException should include available context variables."""
-        from game.core.formula_evaluator import FormulaEvaluator
 
         context = {"x": 10, "y": 5}
         with pytest.raises(FormulaException) as exc_info:
@@ -62,7 +60,6 @@ class TestFormulaExceptionRaising:
 
     def test_exception_preserves_original_error(self):
         """FormulaException should chain from the original error."""
-        from game.core.formula_evaluator import FormulaEvaluator
 
         with pytest.raises(FormulaException) as exc_info:
             FormulaEvaluator.evaluate("1 / 0", {})
@@ -72,7 +69,6 @@ class TestFormulaExceptionRaising:
 
     def test_valid_formula_does_not_raise(self):
         """Valid formulas should not raise exceptions."""
-        from game.core.formula_evaluator import FormulaEvaluator
 
         # These should all succeed
         assert FormulaEvaluator.evaluate("1 + 1", {}) == 2
@@ -86,7 +82,6 @@ class TestFormulaExceptionErrorCodes:
 
     def test_syntax_error_has_code(self):
         """Syntax errors should have error code."""
-        from game.core.formula_evaluator import FormulaEvaluator
 
         with pytest.raises(FormulaException) as exc_info:
             FormulaEvaluator.evaluate("((( malformed", {})
@@ -96,7 +91,6 @@ class TestFormulaExceptionErrorCodes:
 
     def test_undefined_variable_has_code(self):
         """Undefined variable errors should have error code."""
-        from game.core.formula_evaluator import FormulaEvaluator
 
         with pytest.raises(FormulaException) as exc_info:
             FormulaEvaluator.evaluate("missing_var", {})
@@ -105,7 +99,6 @@ class TestFormulaExceptionErrorCodes:
 
     def test_runtime_error_has_code(self):
         """Runtime errors should have error code."""
-        from game.core.formula_evaluator import FormulaEvaluator
 
         with pytest.raises(FormulaException) as exc_info:
             FormulaEvaluator.evaluate("1 / 0", {})
@@ -118,7 +111,6 @@ class TestValidateFormulaDetailedErrors:
 
     def test_validate_returns_error_details(self):
         """FormulaEvaluator.validate should return detailed error info."""
-        from game.core.formula_evaluator import FormulaEvaluator
 
         errors = FormulaEvaluator.validate("undefined_var + x", ["x"])
 
@@ -128,7 +120,6 @@ class TestValidateFormulaDetailedErrors:
 
     def test_validate_multiple_errors(self):
         """FormulaEvaluator.validate should catch multiple undefined variables."""
-        from game.core.formula_evaluator import FormulaEvaluator
 
         errors = FormulaEvaluator.validate("a + b + c", ["c"])
 
@@ -143,21 +134,18 @@ class TestSafeEvaluate:
 
     def test_safe_evaluate_returns_default_on_error(self):
         """FormulaEvaluator.safe_evaluate should return default on error."""
-        from game.core.formula_evaluator import FormulaEvaluator
 
         result = FormulaEvaluator.safe_evaluate("1 / 0", {}, default=0)
         assert result == 0
 
     def test_safe_evaluate_returns_custom_default(self):
         """FormulaEvaluator.safe_evaluate should return specified default."""
-        from game.core.formula_evaluator import FormulaEvaluator
 
         result = FormulaEvaluator.safe_evaluate("undefined", {}, default=-1)
         assert result == -1
 
     def test_safe_evaluate_success_returns_value(self):
         """FormulaEvaluator.safe_evaluate should return computed value on success."""
-        from game.core.formula_evaluator import FormulaEvaluator
 
         result = FormulaEvaluator.safe_evaluate("2 + 3", {}, default=0)
         assert result == 5
@@ -165,7 +153,6 @@ class TestSafeEvaluate:
     def test_safe_evaluate_logs_warning(self, caplog):
         """FormulaEvaluator.safe_evaluate should log warning on error."""
         import logging
-        from game.core.formula_evaluator import FormulaEvaluator
 
         with caplog.at_level(logging.WARNING):
             FormulaEvaluator.safe_evaluate("bad syntax ??", {}, default=0)

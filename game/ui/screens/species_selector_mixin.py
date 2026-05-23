@@ -7,7 +7,10 @@ gravity, water, and radiation editors.
 from __future__ import annotations
 
 import logging
-from typing import List, Optional, Any
+from typing import List, Optional, Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game.strategy.data.race_config import RaceConfig
 
 import pygame
 import pygame_gui
@@ -144,7 +147,7 @@ class RaceConfigResolverMixin:
         used as a final fallback.
     """
 
-    def _get_active_race_config(self) -> Any:
+    def _get_active_race_config(self) -> "RaceConfig | None":
         """Resolve the race config for the currently selected species.
 
         Resolution order: dropdown selection -> default_race_id -> race_config.

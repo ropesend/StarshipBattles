@@ -180,7 +180,7 @@ class TabbedShipPanel:
         if self.selected_tab < len(self.viewers):
             self.viewers[self.selected_tab].draw(surface)
 
-    def get_selected_ship_info(self) -> Any:
+    def get_selected_ship_info(self) -> dict | None:
         """Get the currently selected ship's info."""
         if self.selected_tab < len(self.ships_info):
             return self.ships_info[self.selected_tab]

@@ -20,6 +20,7 @@ from game.core.protocols import is_fleet, is_planet
 
 if TYPE_CHECKING:
     from game.ui.screens.strategy_ui import StrategyUI
+    from game.strategy.data.race_config import RaceConfig
 
 
 class StrategyEventRouter:
@@ -325,7 +326,7 @@ class StrategyEventRouter:
         except Exception:  # Intentional broad catch: registry provider may be uninitialized; food editor opens without resource catalog
             pass
 
-        def resolve_race(race_id) -> Any:
+        def resolve_race(race_id) -> "RaceConfig | None":
             # Prefer empire's own race_config when race_ids match.
             empire_race = self._get_race_config(planet)
             if empire_race is not None and getattr(empire_race, "race_id", None) == race_id:
@@ -352,7 +353,7 @@ class StrategyEventRouter:
             on_apply_callback=on_apply,
         )
 
-    def _get_race_config(self, planet) -> Any:
+    def _get_race_config(self, planet) -> "RaceConfig | None":
         """Get the race config for the planet's owning empire (PROJ-475: via facade)."""
         ui = self.ui
         scene = ui.scene

@@ -275,7 +275,7 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
     # -----------------------------------------------------------------------
 
     @property
-    def filter_types(self) -> Any:
+    def filter_types(self) -> dict[str, bool]:
         return self._filter_mgr.filter_types
 
     @filter_types.setter
@@ -283,7 +283,7 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
         self._filter_mgr.filter_types = value
 
     @property
-    def filter_ranges(self) -> Any:
+    def filter_ranges(self) -> dict[str, list[float]]:
         return self._filter_mgr.filter_ranges
 
     @filter_ranges.setter
@@ -446,7 +446,7 @@ class StarListWindow(DataListWindowMixin, StrategyModalWindow):
 
     # `_toggle_column` and `_save_preset` provided by DataListWindowMixin.
 
-    def _capture_current_state(self) -> Any:
+    def _capture_current_state(self) -> dict[str, Any]:
         """Serialize current filters and column config."""
         return capture_star_list_state(
             self.columns, self.txt_name_filter,

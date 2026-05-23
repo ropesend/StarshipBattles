@@ -719,7 +719,6 @@ class TestHexRandomCluster:
 
     def test_cluster_returns_target_size(self):
         """Cluster returns target_size hexes when space available."""
-        from game.core.hex_math import hex_random_cluster
         import random
 
         rng = random.Random(42)
@@ -732,7 +731,6 @@ class TestHexRandomCluster:
 
     def test_cluster_contains_center(self):
         """Cluster always contains the center hex (as offset 0,0)."""
-        from game.core.hex_math import hex_random_cluster
         import random
 
         rng = random.Random(123)
@@ -744,7 +742,6 @@ class TestHexRandomCluster:
 
     def test_single_hex_cluster(self):
         """target_size=1 returns just {HexCoord(0,0)}."""
-        from game.core.hex_math import hex_random_cluster
         import random
 
         rng = random.Random(0)
@@ -754,7 +751,7 @@ class TestHexRandomCluster:
 
     def test_cluster_is_connected(self):
         """All hexes in cluster are connected (form contiguous region)."""
-        from game.core.hex_math import hex_random_cluster, hex_distance
+        from game.core.hex_math import hex_distance
         import random
 
         rng = random.Random(999)
@@ -780,7 +777,6 @@ class TestHexRandomCluster:
 
     def test_cluster_avoids_excluded_hexes(self):
         """Cluster does not include hexes in avoid set."""
-        from game.core.hex_math import hex_random_cluster
         import random
 
         rng = random.Random(42)
@@ -801,7 +797,6 @@ class TestHexRandomCluster:
 
     def test_cluster_deterministic_with_seeded_rng(self):
         """Same seed produces same cluster."""
-        from game.core.hex_math import hex_random_cluster
         import random
 
         center = HexCoord(0, 0)
@@ -816,7 +811,7 @@ class TestHexRandomCluster:
 
     def test_cluster_returns_smaller_when_constrained(self):
         """When frontier runs out, returns smaller cluster than requested."""
-        from game.core.hex_math import hex_random_cluster, hex_circle_filled
+        from game.core.hex_math import hex_circle_filled
         import random
 
         rng = random.Random(42)
@@ -838,7 +833,6 @@ class TestHexRandomCluster:
 
     def test_cluster_returns_frozenset(self):
         """hex_random_cluster returns a frozenset."""
-        from game.core.hex_math import hex_random_cluster
         import random
 
         rng = random.Random(0)
@@ -848,7 +842,6 @@ class TestHexRandomCluster:
 
     def test_cluster_with_offset_center(self):
         """Cluster works correctly with non-origin center."""
-        from game.core.hex_math import hex_random_cluster
         import random
 
         rng = random.Random(42)

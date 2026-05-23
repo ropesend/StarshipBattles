@@ -4,9 +4,7 @@ Tests initialization, context modes, event routing, ship I/O operations,
 data reloading, and view model delegation. Uses bypass-init pattern.
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
-import pygame
+from unittest.mock import MagicMock, patch
 
 
 # --- Helpers ---
@@ -230,105 +228,44 @@ class TestWorkshopContextInitialization:
 # Task 6.1: Event Routing Tests
 # ===========================================================================
 
-class TestWorkshopEventRouting:
-    """Test event handling delegation."""
-
-    def test_handle_event_delegates_to_event_router(self):
-        """handle_event should delegate to WorkshopEventRouter."""
-        from game.ui.screens.workshop_screen import DesignWorkshopScreen
-
-        screen, mocks = _make_workshop_screen()
-        event = MagicMock()
-
-        # Call the actual method
-        screen.handle_event = lambda e: screen.event_router.handle_event(e)
-        screen.handle_event(event)
-
-        mocks['event_router'].handle_event.assert_called_once_with(event)
-
-    def test_event_bus_subscription_supported(self):
-        """EventBus should support subscriptions."""
-        screen, mocks = _make_workshop_screen()
-
-        # EventBus should have emit method
-        assert hasattr(mocks['event_bus'], 'emit')
-
-
-# ===========================================================================
-# Task 6.1: View Model Tests
-# ===========================================================================
-
-class TestWorkshopViewModelIntegration:
-    """Test view model interaction."""
-
-    def test_ship_property_returns_viewmodel_ship(self):
-        """ship property should return viewmodel.ship."""
-        from game.ui.screens.workshop_screen import DesignWorkshopScreen
-
-        screen, mocks = _make_workshop_screen()
-        # Set up property delegation (normally done in __init__)
-        type(screen).ship = property(lambda self: self.viewmodel.ship)
-
-        assert screen.ship is mocks['viewmodel'].ship
-
-    def test_selected_components_returns_viewmodel_selection(self):
-        """selected_components should return viewmodel.selected_components."""
-        from game.ui.screens.workshop_screen import DesignWorkshopScreen
-
-        screen, mocks = _make_workshop_screen()
-        type(screen).selected_components = property(lambda self: self.viewmodel.selected_components)
-
-        assert screen.selected_components is mocks['viewmodel'].selected_components
-
-    def test_available_components_returns_viewmodel_available(self):
-        """available_components should return viewmodel.available_components."""
-        from game.ui.screens.workshop_screen import DesignWorkshopScreen
-
-        screen, mocks = _make_workshop_screen()
-        type(screen).available_components = property(lambda self: self.viewmodel.available_components)
-
-        assert screen.available_components is mocks['viewmodel'].available_components
-
-
 # ===========================================================================
 # Task 6.1: Ship I/O Operations Tests
 # ===========================================================================
 
 class TestWorkshopShipIO:
-    """Test ship I/O delegation."""
+    """Test ship I/O delegation — exercises the real production methods, not
+    test-author lambdas. The original tests in this class patched phantom
+    ``_save_ship`` / ``_load_ship`` / ``_on_select_target_pressed`` names that
+    do not exist in production (the real methods have no leading underscore)
+    and so degenerated to "lambda calls lambda" tautologies (CAT-2). Rewritten
+    by PROJ-478 Phase 2 to bind production methods to the bypass-init instance
+    and exercise the real delegation path through ``ship_io``.
+    """
 
     def test_save_ship_delegates_to_ship_io(self):
-        """_save_ship should delegate to ship_io.save_ship."""
         from game.ui.screens.workshop_screen import DesignWorkshopScreen
 
         screen, mocks = _make_workshop_screen()
-        screen._save_ship = lambda: screen.ship_io.save_ship()
+        # Bind the real production method to the bypass-init instance.
+        DesignWorkshopScreen.save_ship(screen)
 
-        screen._save_ship()
-
-        mocks['ship_io'].save_ship.assert_called_once()
+        mocks['ship_io'].save_ship.assert_called_once_with()
 
     def test_load_ship_delegates_to_ship_io(self):
-        """_load_ship should delegate to ship_io.load_ship."""
         from game.ui.screens.workshop_screen import DesignWorkshopScreen
 
         screen, mocks = _make_workshop_screen()
-        screen._load_ship = lambda: screen.ship_io.load_ship()
+        DesignWorkshopScreen.load_ship(screen)
 
-        screen._load_ship()
+        mocks['ship_io'].load_ship.assert_called_once_with()
 
-        mocks['ship_io'].load_ship.assert_called_once()
-
-    def test_select_target_delegates_to_ship_io(self):
-        """_on_select_target_pressed should delegate to ship_io.select_target."""
+    def test_on_select_target_pressed_delegates_to_ship_io(self):
         from game.ui.screens.workshop_screen import DesignWorkshopScreen
 
         screen, mocks = _make_workshop_screen()
-        screen._on_select_target_pressed = lambda: screen.ship_io.select_target()
+        DesignWorkshopScreen.on_select_target_pressed(screen)
 
-        screen._on_select_target_pressed()
-
-        mocks['ship_io'].select_target.assert_called_once()
+        mocks['ship_io'].select_target.assert_called_once_with()
 
 
 # ===========================================================================
@@ -389,83 +326,6 @@ class TestWorkshopErrorHandling:
 # ===========================================================================
 # Task 6.1: Selection Handling Tests
 # ===========================================================================
-
-class TestWorkshopSelection:
-    """Test component selection handling."""
-
-    def test_selected_component_property_delegates_to_controller(self):
-        """selected_component property should delegate to controller."""
-        from game.ui.screens.workshop_screen import DesignWorkshopScreen
-
-        screen, mocks = _make_workshop_screen()
-
-        # Set up property delegation
-        type(screen).selected_component = property(
-            lambda self: self.controller.selected_component,
-            lambda self, v: setattr(self.controller, 'selected_component', v)
-        )
-
-        # Test getter
-        mocks['controller'].selected_component = ('layer', 0, MagicMock())
-        assert screen.selected_component == ('layer', 0, mocks['controller'].selected_component[2])
-
-    def test_dragged_item_property_delegates_to_controller(self):
-        """dragged_item property should delegate to controller."""
-        from game.ui.screens.workshop_screen import DesignWorkshopScreen
-
-        screen, mocks = _make_workshop_screen()
-
-        type(screen).dragged_item = property(
-            lambda self: self.controller.dragged_item,
-            lambda self, v: setattr(self.controller, 'dragged_item', v)
-        )
-
-        comp = MagicMock()
-        mocks['controller'].dragged_item = comp
-        assert screen.dragged_item is comp
-
-
-# ===========================================================================
-# Task 6.1: Lifecycle Tests
-# ===========================================================================
-
-class TestWorkshopLifecycle:
-    """Test screen lifecycle methods."""
-
-    def test_cleanup_clears_ui_manager(self):
-        """cleanup should clear the UI manager."""
-        from game.ui.screens.workshop_screen import DesignWorkshopScreen
-
-        screen, mocks = _make_workshop_screen()
-
-        # Test cleanup implementation
-        def mock_cleanup():
-            if hasattr(screen, 'ui_manager') and screen.ui_manager:
-                screen.ui_manager.clear_and_reset()
-
-        screen.cleanup = mock_cleanup
-        screen.cleanup()
-
-        mocks['ui_manager'].clear_and_reset.assert_called_once()
-
-    def test_handle_resize_updates_dimensions(self):
-        """handle_resize should update width and height."""
-        from game.ui.screens.workshop_screen import DesignWorkshopScreen
-
-        screen, mocks = _make_workshop_screen()
-
-        def mock_handle_resize(width, height):
-            screen.width = width
-            screen.height = height
-            screen.ui_manager.set_window_resolution((width, height))
-
-        screen.handle_resize = mock_handle_resize
-        screen.handle_resize(2560, 1440)
-
-        assert screen.width == 2560
-        assert screen.height == 1440
-        mocks['ui_manager'].set_window_resolution.assert_called_with((2560, 1440))
-
 
 # ===========================================================================
 # Task 6.1: Button Definitions Tests
@@ -578,21 +438,6 @@ class TestWorkshopUpdateLoop:
 class TestWorkshopClearDesign:
     """Test clear design functionality."""
 
-    def test_clear_design_delegates_to_viewmodel(self):
-        """_clear_design should delegate to viewmodel.clear_design."""
-        screen, mocks = _make_workshop_screen()
-
-        def mock_clear_design():
-            screen.viewmodel.clear_design()
-            screen.right_panel.refresh_controls()
-            screen.controller.selected_component = None
-
-        screen._clear_design = mock_clear_design
-        screen._clear_design()
-
-        mocks['viewmodel'].clear_design.assert_called_once()
-        screen.right_panel.refresh_controls.assert_called_once()
-
     def test_show_clear_confirmation_sets_pending_action(self):
         """_show_clear_confirmation should set pending_action."""
         screen, _ = _make_workshop_screen()
@@ -604,31 +449,3 @@ class TestWorkshopClearDesign:
         screen._show_clear_confirmation()
 
         assert screen.pending_action == ('clear_design', None)
-
-
-# ===========================================================================
-# Task 6.1: Apply Loaded Ship Tests
-# ===========================================================================
-
-class TestWorkshopApplyLoadedShip:
-    """Test applying loaded ships."""
-
-    def test_apply_loaded_ship_updates_viewmodel(self):
-        """_apply_loaded_ship should update viewmodel.ship."""
-        screen, mocks = _make_workshop_screen()
-
-        new_ship = MagicMock()
-        new_ship.name = "New Ship"
-
-        def mock_apply_loaded_ship(ship, message):
-            screen.viewmodel.ship = ship
-            screen.right_panel.refresh_controls()
-            screen.layer_panel.rebuild()
-            screen.left_panel.update_component_list()
-
-        screen._apply_loaded_ship = mock_apply_loaded_ship
-        screen._apply_loaded_ship(new_ship, "Ship loaded")
-
-        assert mocks['viewmodel'].ship is new_ship
-        screen.right_panel.refresh_controls.assert_called_once()
-        screen.layer_panel.rebuild.assert_called_once()

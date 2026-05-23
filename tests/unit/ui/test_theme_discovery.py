@@ -19,6 +19,19 @@ from game.ui.assets import (
 )
 
 
+# PROJ-479 Task 2.1: class-scoped pygame display init shared across all
+# tests in a class. The per-test setup_teardown fixtures below still
+# reset the ShipThemeManager singleton per-test (necessary because tests
+# mutate manager state); only the heavy pygame.display.set_mode call is
+# class-scoped now.
+@pytest.fixture(scope="class", autouse=True)
+def _shared_pygame_display():
+    os.environ['SDL_VIDEODRIVER'] = 'dummy'
+    if not pygame.display.get_surface():
+        pygame.display.set_mode((1, 1), pygame.NOFRAME)
+    yield
+
+
 class TestNewThemes:
     """Smoke tests against the real assets/ShipThemes/ directory."""
 
@@ -237,7 +250,8 @@ class TestShipThemeManagerSingletonLifecycle:
     @pytest.fixture(autouse=True)
     def setup_teardown(self):
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.display.set_mode((1, 1), pygame.NOFRAME)
+        if not pygame.display.get_surface():
+            pygame.display.set_mode((1, 1), pygame.NOFRAME)
         set_default_ship_theme_manager(ShipThemeManager())
         yield
         set_default_ship_theme_manager(ShipThemeManager())
@@ -278,7 +292,8 @@ class TestShipThemeManagerErrorPaths:
     @pytest.fixture(autouse=True)
     def setup_teardown(self):
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.display.set_mode((1, 1), pygame.NOFRAME)
+        if not pygame.display.get_surface():
+            pygame.display.set_mode((1, 1), pygame.NOFRAME)
         set_default_ship_theme_manager(ShipThemeManager())
         yield
         set_default_ship_theme_manager(ShipThemeManager())
@@ -360,7 +375,8 @@ class TestShipThemeManagerCaching:
     @pytest.fixture(autouse=True)
     def setup_teardown(self):
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.display.set_mode((1, 1), pygame.NOFRAME)
+        if not pygame.display.get_surface():
+            pygame.display.set_mode((1, 1), pygame.NOFRAME)
         set_default_ship_theme_manager(ShipThemeManager())
         yield
         set_default_ship_theme_manager(ShipThemeManager())
@@ -400,7 +416,8 @@ class TestShipThemeManagerMetrics:
     @pytest.fixture(autouse=True)
     def setup_teardown(self):
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.display.set_mode((1, 1), pygame.NOFRAME)
+        if not pygame.display.get_surface():
+            pygame.display.set_mode((1, 1), pygame.NOFRAME)
         set_default_ship_theme_manager(ShipThemeManager())
         yield
         set_default_ship_theme_manager(ShipThemeManager())
@@ -445,7 +462,8 @@ class TestShipThemeManagerThreadSafety:
     @pytest.fixture(autouse=True)
     def setup_teardown(self):
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.display.set_mode((1, 1), pygame.NOFRAME)
+        if not pygame.display.get_surface():
+            pygame.display.set_mode((1, 1), pygame.NOFRAME)
         set_default_ship_theme_manager(ShipThemeManager())
         yield
         set_default_ship_theme_manager(ShipThemeManager())
@@ -527,7 +545,8 @@ class TestShipThemeManagerManualScale:
     @pytest.fixture(autouse=True)
     def setup_teardown(self):
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.display.set_mode((1, 1), pygame.NOFRAME)
+        if not pygame.display.get_surface():
+            pygame.display.set_mode((1, 1), pygame.NOFRAME)
         set_default_ship_theme_manager(ShipThemeManager())
         yield
         set_default_ship_theme_manager(ShipThemeManager())

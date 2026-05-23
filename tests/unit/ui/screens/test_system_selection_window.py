@@ -47,40 +47,37 @@ class TestSystemSelectionWindow:
         """Create the current system for distance calculation."""
         return mock_system("Current", 0, 0)
 
-    def test_init_creates_window(self, ui_manager, systems, current_system):
+    @pytest.fixture
+    def make_window(self, ui_manager, systems, current_system):
+        """Factory for SystemSelectionWindow with shared defaults.
+
+        PROJ-480 Task 1.2: collapse the 6 repeated constructions that share
+        `Rect(100,100,450,500)` + identical systems/current_system.
+        """
+        def _make(callback=None, _systems=None, _current=None):
+            from game.ui.screens.system_selection_window import SystemSelectionWindow
+            return SystemSelectionWindow(
+                rect=pygame.Rect(100, 100, 450, 500),
+                manager=ui_manager,
+                systems=_systems if _systems is not None else systems,
+                current_system=_current if _current is not None else current_system,
+                on_selection_callback=callback if callback is not None else Mock(),
+                window_manager=None,
+            )
+        return _make
+
+    def test_init_creates_window(self, make_window):
         """Test that SystemSelectionWindow initializes without error."""
-        from game.ui.screens.system_selection_window import SystemSelectionWindow
-
-        callback = Mock()
-        rect = pygame.Rect(100, 100, 450, 500)
-
-        window = SystemSelectionWindow(
-            rect=rect,
-            manager=ui_manager,
-            systems=systems,
-            current_system=current_system,
-            on_selection_callback=callback, window_manager=None
-        )
+        window = make_window()
 
         assert window is not None
         assert window.selection_list is not None
         assert window.btn_confirm is not None
         assert window.btn_cancel is not None
 
-    def test_systems_sorted_alphabetically(self, ui_manager, systems, current_system):
+    def test_systems_sorted_alphabetically(self, make_window):
         """Test that systems are displayed in alphabetical order."""
-        from game.ui.screens.system_selection_window import SystemSelectionWindow
-
-        callback = Mock()
-        rect = pygame.Rect(100, 100, 450, 500)
-
-        window = SystemSelectionWindow(
-            rect=rect,
-            manager=ui_manager,
-            systems=systems,
-            current_system=current_system,
-            on_selection_callback=callback, window_manager=None
-        )
+        window = make_window()
 
         # Get the item list from the selection list
         item_list = window.selection_list.item_list
@@ -89,20 +86,9 @@ class TestSystemSelectionWindow:
 
         assert names == ["Alpha Centauri", "Betelgeuse", "Zeta Prime"]
 
-    def test_display_format_includes_distance(self, ui_manager, systems, current_system):
+    def test_display_format_includes_distance(self, make_window):
         """Test that display strings include distance in format 'Name (dist: N)'."""
-        from game.ui.screens.system_selection_window import SystemSelectionWindow
-
-        callback = Mock()
-        rect = pygame.Rect(100, 100, 450, 500)
-
-        window = SystemSelectionWindow(
-            rect=rect,
-            manager=ui_manager,
-            systems=systems,
-            current_system=current_system,
-            on_selection_callback=callback, window_manager=None
-        )
+        window = make_window()
 
         # Check format of display strings
         item_list = window.selection_list.item_list
@@ -111,20 +97,10 @@ class TestSystemSelectionWindow:
             assert "(dist:" in text, f"Missing distance in '{text}'"
             assert text.endswith(")"), f"Should end with ')': '{text}'"
 
-    def test_confirm_calls_callback_with_system_name(self, ui_manager, systems, current_system):
+    def test_confirm_calls_callback_with_system_name(self, make_window):
         """Test that confirm button calls callback with actual system name (not display string)."""
-        from game.ui.screens.system_selection_window import SystemSelectionWindow
-
         callback = Mock()
-        rect = pygame.Rect(100, 100, 450, 500)
-
-        window = SystemSelectionWindow(
-            rect=rect,
-            manager=ui_manager,
-            systems=systems,
-            current_system=current_system,
-            on_selection_callback=callback, window_manager=None
-        )
+        window = make_window(callback=callback)
 
         # Simulate selection of Betelgeuse
         # Find the display string for Betelgeuse
@@ -147,20 +123,10 @@ class TestSystemSelectionWindow:
         # Callback should be called with the actual system name, not the display string
         callback.assert_called_once_with("Betelgeuse")
 
-    def test_cancel_does_not_call_callback(self, ui_manager, systems, current_system):
+    def test_cancel_does_not_call_callback(self, make_window):
         """Test that cancel button does not call the callback."""
-        from game.ui.screens.system_selection_window import SystemSelectionWindow
-
         callback = Mock()
-        rect = pygame.Rect(100, 100, 450, 500)
-
-        window = SystemSelectionWindow(
-            rect=rect,
-            manager=ui_manager,
-            systems=systems,
-            current_system=current_system,
-            on_selection_callback=callback, window_manager=None
-        )
+        window = make_window(callback=callback)
 
         # Mock button presses
         window.btn_confirm.check_pressed = Mock(return_value=False)
@@ -172,20 +138,10 @@ class TestSystemSelectionWindow:
         callback.assert_not_called()
         window.kill.assert_called_once()
 
-    def test_confirm_without_selection_does_nothing(self, ui_manager, systems, current_system):
+    def test_confirm_without_selection_does_nothing(self, make_window):
         """Test that confirm with no selection does not call callback or crash."""
-        from game.ui.screens.system_selection_window import SystemSelectionWindow
-
         callback = Mock()
-        rect = pygame.Rect(100, 100, 450, 500)
-
-        window = SystemSelectionWindow(
-            rect=rect,
-            manager=ui_manager,
-            systems=systems,
-            current_system=current_system,
-            on_selection_callback=callback, window_manager=None
-        )
+        window = make_window(callback=callback)
 
         # No selection made
         window.selection_list.get_single_selection = Mock(return_value=None)

@@ -31,7 +31,7 @@ SHIP_CARD_PADDING = 8
 SCROLL_SPEED = 30
 
 
-def _hp_color(percent: float) -> Any:
+def _hp_color(percent: float) -> tuple[int, int, int]:
     """Get HP bar color based on percentage."""
     if percent <= 0:
         return HP_DESTROYED

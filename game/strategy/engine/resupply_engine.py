@@ -132,7 +132,7 @@ class ResupplyEngine(IResupplyEngine):
         tick_generation = fuel_gen_rate / 100.0
 
         # Add fuel respecting max capacity
-        overflow = facility.add_fuel(tick_generation, self._registries)
+        overflow = facility.add_consumable("fuel", tick_generation, self._registries)
         actual_generated = tick_generation - overflow
 
         if actual_generated <= 0:
@@ -205,7 +205,7 @@ class ResupplyEngine(IResupplyEngine):
                         if not facility.is_operational:
                             continue
 
-                        available = facility.get_fuel_storage()
+                        available = facility.get_consumable_storage("fuel")
                         if available <= 0:
                             continue
 
@@ -290,5 +290,5 @@ class ResupplyEngine(IResupplyEngine):
             transferred = ship.resupply("fuel", actual)
             total_transferred += transferred
 
-        facility.withdraw_fuel(total_transferred)
+        facility.withdraw_consumable("fuel", total_transferred)
         return total_transferred

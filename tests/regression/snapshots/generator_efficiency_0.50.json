@@ -2,18 +2,18 @@
   "component": {
     "id": "generator",
     "name": "Generator",
-    "mass": 100.0,
+    "mass": 50.0,
     "base_mass": 50,
     "max_hp": 80,
     "base_max_hp": 80,
     "cost": 0,
     "type_str": "Generator",
     "stats": {
-      "mass_mult": 2.0,
+      "mass_mult": 1.0,
       "hp_mult": 1.0,
       "damage_mult": 1.0,
       "range_mult": 1.0,
-      "cost_mult": 2.0,
+      "cost_mult": 1.0,
       "thrust_mult": 1.0,
       "turn_mult": 1.0,
       "strategic_mult": 1.0,
@@ -22,25 +22,24 @@
       "shield_capacity_mult": 1.0,
       "crew_capacity_mult": 1.0,
       "life_support_capacity_mult": 1.0,
-      "consumption_mult": 0.5,
+      "consumption_mult": 1.0,
       "reload_mult": 1.0,
       "endurance_mult": 1.0,
       "projectile_hp_mult": 1.0,
       "projectile_damage_mult": 1.0,
       "crew_req_mult": 1.0,
+      "launch_rate_mult": 1.0,
+      "recovery_rate_mult": 1.0,
+      "bay_capacity_mult": 1.0,
       "mass_add": 0.0,
       "arc_add": 0.0,
       "accuracy_add": 0.0,
       "projectile_stealth_level": 0.0,
+      "shield_bonus_add": 0.0,
       "arc_set": null,
       "properties": {}
     },
-    "modifiers": [
-      {
-        "id": "efficiency_mount",
-        "value": 0.5
-      }
-    ]
+    "modifiers": []
   },
   "abilities": [
     {
@@ -55,7 +54,7 @@
     {
       "class_name": "RequiresMaintenance",
       "tags": [],
-      "amount": 2,
+      "amount": 1,
       "base_amount": 1
     },
     {

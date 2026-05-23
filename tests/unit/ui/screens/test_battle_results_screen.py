@@ -18,29 +18,26 @@ import pygame
 class TestHpColor:
     """Tests for the _hp_color() color mapping function."""
 
-    def test_zero_hp_returns_destroyed(self):
-        from game.ui.screens.battle_results_screen import _hp_color, HP_DESTROYED
-        assert _hp_color(0) == HP_DESTROYED
-
-    def test_negative_hp_returns_destroyed(self):
-        from game.ui.screens.battle_results_screen import _hp_color, HP_DESTROYED
-        assert _hp_color(-5) == HP_DESTROYED
-
-    def test_low_hp_returns_critical(self):
-        from game.ui.screens.battle_results_screen import _hp_color, HP_CRITICAL
-        assert _hp_color(10) == HP_CRITICAL
-
-    def test_medium_hp_returns_damaged(self):
-        from game.ui.screens.battle_results_screen import _hp_color, HP_DAMAGED
-        assert _hp_color(30) == HP_DAMAGED
-
-    def test_high_hp_returns_healthy(self):
-        from game.ui.screens.battle_results_screen import _hp_color, HP_HEALTHY
-        assert _hp_color(80) == HP_HEALTHY
-
-    def test_full_hp_returns_healthy(self):
-        from game.ui.screens.battle_results_screen import _hp_color, HP_HEALTHY
-        assert _hp_color(100) == HP_HEALTHY
+    # PROJ-480 Task 3.34: parametrize 6 _hp_color band tests on
+    # (hp, expected_color_constant_name). The constants are imported
+    # inside the test body to keep the original lazy-import pattern.
+    @pytest.mark.parametrize(
+        "hp, color_constant",
+        [
+            (0, "HP_DESTROYED"),
+            (-5, "HP_DESTROYED"),
+            (10, "HP_CRITICAL"),
+            (30, "HP_DAMAGED"),
+            (80, "HP_HEALTHY"),
+            (100, "HP_HEALTHY"),
+        ],
+        ids=["zero", "negative", "low_critical", "medium_damaged",
+             "high_healthy", "full_healthy"],
+    )
+    def test_hp_color_band(self, hp, color_constant):
+        from game.ui.screens import battle_results_screen as brs
+        expected = getattr(brs, color_constant)
+        assert brs._hp_color(hp) == expected
 
 
 # =============================================================================

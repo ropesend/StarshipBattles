@@ -185,77 +185,59 @@ class TestLoadPreset:
 # =============================================================================
 
 
-class TestGetAvailableComponents:
-    """Tests for TechPresetLoader.get_available_components()."""
+class TestGetAvailableComponentsAndModifiers:
+    """Parametrized tests for the get_available_{components,modifiers}() pair
+    (PROJ-479 Task 1.18 consolidation)."""
 
-    def test_get_components_returns_list(self, temp_presets_dir, create_preset, sample_preset_data):
-        """get_available_components returns the component list."""
+    @pytest.mark.parametrize(
+        "getter_name,sample_expected",
+        [
+            ("get_available_components", ["hull_escort", "laser_cannon", "basic_engine"]),
+            ("get_available_modifiers", ["simple_size_mount", "basic_armor_mod"]),
+        ],
+        ids=["components", "modifiers"],
+    )
+    def test_get_returns_list(
+        self, temp_presets_dir, create_preset, sample_preset_data,
+        getter_name, sample_expected
+    ):
         create_preset("test_preset", sample_preset_data)
-
         with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            result = TechPresetLoader.get_available_components("test_preset")
+            result = getattr(TechPresetLoader, getter_name)("test_preset")
+        assert result == sample_expected
 
-        assert result == ["hull_escort", "laser_cannon", "basic_engine"]
-
-    def test_get_components_returns_empty_when_missing(self, temp_presets_dir, create_preset, minimal_preset_data):
-        """get_available_components returns empty list when key is missing."""
+    @pytest.mark.parametrize(
+        "getter_name",
+        ["get_available_components", "get_available_modifiers"],
+        ids=["components", "modifiers"],
+    )
+    def test_get_returns_empty_when_missing(
+        self, temp_presets_dir, create_preset, minimal_preset_data, getter_name
+    ):
         create_preset("minimal", minimal_preset_data)
-
         with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            result = TechPresetLoader.get_available_components("minimal")
-
+            result = getattr(TechPresetLoader, getter_name)("minimal")
         assert result == []
 
-    def test_get_components_wildcard(self, temp_presets_dir, create_preset, wildcard_preset_data):
-        """get_available_components returns ['*'] for wildcard preset."""
+    @pytest.mark.parametrize(
+        "getter_name",
+        ["get_available_components", "get_available_modifiers"],
+        ids=["components", "modifiers"],
+    )
+    def test_get_wildcard(
+        self, temp_presets_dir, create_preset, wildcard_preset_data, getter_name
+    ):
         create_preset("wildcard", wildcard_preset_data)
-
         with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            result = TechPresetLoader.get_available_components("wildcard")
-
+            result = getattr(TechPresetLoader, getter_name)("wildcard")
         assert result == ["*"]
 
     def test_get_components_raises_for_missing_preset(self, temp_presets_dir):
-        """get_available_components raises FileNotFoundError for missing preset."""
+        """get_available_components raises FileNotFoundError for missing preset
+        (components-only — modifiers has no equivalent test in the original)."""
         with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
             with pytest.raises(FileNotFoundError):
                 TechPresetLoader.get_available_components("nonexistent")
-
-
-# =============================================================================
-# Test: get_available_modifiers
-# =============================================================================
-
-
-class TestGetAvailableModifiers:
-    """Tests for TechPresetLoader.get_available_modifiers()."""
-
-    def test_get_modifiers_returns_list(self, temp_presets_dir, create_preset, sample_preset_data):
-        """get_available_modifiers returns the modifier list."""
-        create_preset("test_preset", sample_preset_data)
-
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            result = TechPresetLoader.get_available_modifiers("test_preset")
-
-        assert result == ["simple_size_mount", "basic_armor_mod"]
-
-    def test_get_modifiers_returns_empty_when_missing(self, temp_presets_dir, create_preset, minimal_preset_data):
-        """get_available_modifiers returns empty list when key is missing."""
-        create_preset("minimal", minimal_preset_data)
-
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            result = TechPresetLoader.get_available_modifiers("minimal")
-
-        assert result == []
-
-    def test_get_modifiers_wildcard(self, temp_presets_dir, create_preset, wildcard_preset_data):
-        """get_available_modifiers returns ['*'] for wildcard preset."""
-        create_preset("wildcard", wildcard_preset_data)
-
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            result = TechPresetLoader.get_available_modifiers("wildcard")
-
-        assert result == ["*"]
 
 
 # =============================================================================

@@ -450,7 +450,7 @@ class BuilderLeftPanel:
         
         return None
 
-    def get_add_count(self) -> Any:
+    def get_add_count(self) -> int:
         """Return the current value of the bulk add counter."""
         try:
             val = int(self.count_entry.get_text())

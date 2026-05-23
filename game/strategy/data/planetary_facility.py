@@ -136,14 +136,11 @@ class PlanetaryFacility:
         self.component_states[component_key] = state.to_dict()
 
     # ------------------------------------------------------------------
-    # Generic consumable API (F-A-012)
+    # Generic consumable API
     # ------------------------------------------------------------------
     #
     # ``consumable_levels`` stores per-resource amounts; the four
     # ``*_consumable`` methods below are the canonical entry points.
-    # The ``*_fuel`` methods are thin deprecated wrappers retained while
-    # ``resupply_engine.py`` and a number of tests still call them by
-    # name. New code SHOULD prefer the generic API.
 
     def _validate_resource_id(self, resource_id: str) -> None:
         from game.core.resources import ResourceCatalog
@@ -197,30 +194,6 @@ class PlanetaryFacility:
         withdrawn = min(amount, current)
         self.consumable_levels[resource_id] = current - withdrawn
         return withdrawn
-
-    # ------------------------------------------------------------------
-    # Deprecated fuel-specific wrappers (F-A-012)
-    # ------------------------------------------------------------------
-    #
-    # Retained for source-compat with ``resupply_engine`` (PROJ-445
-    # territory) and a number of tests still asserting on the fuel
-    # name. Prefer the generic ``*_consumable`` API above for new code.
-
-    def get_fuel_storage(self) -> float:
-        """Deprecated: prefer ``get_consumable_storage('fuel')``."""
-        return self.get_consumable_storage("fuel")
-
-    def get_max_fuel_storage(self, registries) -> float:
-        """Deprecated: prefer ``get_max_consumable_storage('fuel', ...)``."""
-        return self.get_max_consumable_storage("fuel", registries)
-
-    def add_fuel(self, amount: float, registries) -> float:
-        """Deprecated: prefer ``add_consumable('fuel', ...)``."""
-        return self.add_consumable("fuel", amount, registries)
-
-    def withdraw_fuel(self, amount: float) -> float:
-        """Deprecated: prefer ``withdraw_consumable('fuel', ...)``."""
-        return self.withdraw_consumable("fuel", amount)
 
     @property
     def is_shipyard(self) -> bool:

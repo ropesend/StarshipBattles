@@ -29,6 +29,7 @@ from game.ui.filters.filter_state import FilterState
 
 if TYPE_CHECKING:
     from game.strategy.facade.slices._facade_state import FacadeSessionState
+    from game.strategy.data.planet import Planet
 from game.ui.utils.formatters import format_compact_number
 from game.strategy.services.system_effects_collector import make_group_key
 from game.ui.screens.list_filter_utils import make_attr_sort_key
@@ -40,7 +41,7 @@ def gather_planets(
     empire,
     *,
     facade_state: "Optional[FacadeSessionState]" = None,
-) -> Any:
+) -> list["Planet"]:
     """Collect all planets from the galaxy with pre-computed filter values.
 
     PROJ-477 Phase 4: takes the scene-owned ``StrategyWorldAccess`` seam
@@ -185,7 +186,7 @@ def filter_planets(
     empire=None,
     *,
     filter_effects: Dict[str, FilterState] | None = None,
-) -> Any:
+) -> list["Planet"]:
     """Filter planets via the predicate-list pipeline.
 
     Args:
@@ -215,7 +216,7 @@ def filter_planets(
     return [p for p in planets if all(pred(p) for pred in predicates)]
 
 
-def sort_planets(planets, sort_column_id, sort_descending, columns) -> Any:
+def sort_planets(planets, sort_column_id, sort_descending, columns) -> list["Planet"]:
     """Sort planets by the specified column.
 
     Args:
@@ -252,7 +253,7 @@ def sort_planets(planets, sort_column_id, sort_descending, columns) -> Any:
     return planets
 
 
-def get_column_value(planet, col) -> Any:
+def get_column_value(planet, col) -> str:
     """Get the display value for a planet in a given column.
 
     Args:
@@ -280,7 +281,7 @@ def get_column_value(planet, col) -> Any:
     return ""
 
 
-def compute_planet_ranges(all_planets) -> Any:
+def compute_planet_ranges(all_planets) -> dict[str, tuple[float, float]]:
     """Compute min/max ranges for filter sliders from actual planet data.
 
     Args:
@@ -333,7 +334,7 @@ def compute_planet_ranges(all_planets) -> Any:
     return ranges
 
 
-def get_system_name(planet) -> Any:
+def get_system_name(planet) -> str:
     """Get the system name for a planet.
 
     Uses cached system name attached during gather_planets().
@@ -348,7 +349,7 @@ def get_system_name(planet) -> Any:
     return getattr(planet, '_cached_system_name', "?")
 
 
-def get_owner_name(planet, empires, empire) -> Any:
+def get_owner_name(planet, empires, empire) -> str:
     """Get the owner name for a planet, with proper empire lookup.
 
     PROJ-198 Phase 4: Changed signature from (planet, galaxy, empire) to (planet, empires, empire)

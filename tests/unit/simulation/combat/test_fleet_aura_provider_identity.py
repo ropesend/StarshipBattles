@@ -12,6 +12,8 @@ identity so these tests pass.
 """
 from unittest.mock import MagicMock
 
+import pytest
+
 from game.simulation.combat.fleet_aura_manager import FleetAuraManager
 from game.simulation.components.abilities.base import AbilityScope
 
@@ -124,15 +126,20 @@ class TestSingleProviderCharacterization:
 class TestSameClassMultiProviderIdentity:
     """Two same-class providers on one ship — disabling one must remove only that."""
 
-    def test_same_class_multi_provider_disable(self):
+    @pytest.mark.parametrize(
+        "disabled_component,expected",
+        [("A", 5.0), ("B", 10.0)],
+        ids=["disable_A_leaves_B", "disable_B_leaves_A"],
+    )
+    def test_same_class_multi_provider_disable(self, disabled_component, expected):
         """
         Ship has ShieldProjection A(value=10, group='alpha') and
         B(value=5, group='beta'). Distinct stack groups → SUM (15).
-        Disable A. Expected: B remains operational, contribution = 5.
+        Disabling either provider leaves only the other's contribution.
 
-        Pre-fix on main: `_recalculate` walks the ship looking for
-        ANY same-class operational ability and treats both providers
-        as live, yielding 15 instead of 5.
+        Pre-fix on main: `_recalculate` walked the ship looking for ANY
+        same-class operational ability and treated both providers as live,
+        yielding 15 regardless of which was disabled.
         """
         ab_a = _make_ability("ShieldProjection", 10.0, stack_group="alpha")
         ab_b = _make_ability("ShieldProjection", 5.0, stack_group="beta")
@@ -145,38 +152,14 @@ class TestSameClassMultiProviderIdentity:
 
         manager = FleetAuraManager()
         manager.initialize([provider_ship, teammate])
-
-        # Distinct stack groups SUM: 10 + 5 = 15
         assert manager._team_bonuses[0]["ShieldProjection"] == 15.0
 
-        # Disable component A only
-        comp_a.is_operational = False
+        target = comp_a if disabled_component == "A" else comp_b
+        target.is_operational = False
         manager._providers_dirty = True
         manager._recalculate([provider_ship, teammate])
 
-        # Only B remains: contribution should be 5 (NOT 15)
-        assert manager._team_bonuses[0]["ShieldProjection"] == 5.0
-
-    def test_same_class_multi_provider_disable_other(self):
-        """Symmetric: disable B instead of A. Expected contribution = 10."""
-        ab_a = _make_ability("ShieldProjection", 10.0, stack_group="alpha")
-        ab_b = _make_ability("ShieldProjection", 5.0, stack_group="beta")
-        comp_a = _make_component("ShieldProjector_A", [ab_a])
-        comp_b = _make_component("ShieldProjector_B", [ab_b])
-        provider_ship = _make_ship(
-            team_id=0, name="Provider", components=[comp_a, comp_b]
-        )
-        teammate = _make_ship(team_id=0, name="Teammate")
-
-        manager = FleetAuraManager()
-        manager.initialize([provider_ship, teammate])
-        assert manager._team_bonuses[0]["ShieldProjection"] == 15.0
-
-        comp_b.is_operational = False
-        manager._providers_dirty = True
-        manager._recalculate([provider_ship, teammate])
-
-        assert manager._team_bonuses[0]["ShieldProjection"] == 10.0
+        assert manager._team_bonuses[0]["ShieldProjection"] == expected
 
     def test_same_class_multi_provider_same_stack_group_max(self):
         """

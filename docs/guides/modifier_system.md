@@ -1,6 +1,6 @@
 # Modifier System Compact Reference
 
-> **Last verified:** 2026-05-08 - Compared `docs/guides/modifier_system.md` with `AgentCoordination/Scratchpad/reports/guides_modifier_system_ALT_compact.md` and checked the live source files listed below.
+> **Last verified:** 2026-05-23 - Updated `ModifierManager.add_modifier()` restriction-enforcement notes to reflect PROJ-489 consolidation (now enforces `allow_types`, `deny_types`, and `allow_abilities` via delegation to `ModifierService`); previously (2026-05-08) compared with the compact alternate and checked live source files.
 
 Modifiers are data-driven stat adjustments. Abilities are behavior classes that consume the adjusted stats.
 
@@ -95,7 +95,7 @@ Effect fields:
 - Optional: `operation` (`multiply`, `add`, `add_to_mult`, `set`; default `multiply`), `target_ability`, `depends_on`.
 - `target_ability` writes into `component.ability_stats[target_ability]`; untargeted effects write into `component.stats`.
 
-Restrictions caveat: `modifier_schema.py` validates `allow_abilities`, `deny_abilities`, and `require_mode`, but the current runtime service checks only `allow_types`, `deny_types`, and `allow_abilities`. `ModifierManager.add_modifier()` checks only type restrictions. Do not assume `deny_abilities` or `require_mode` are enforced without adding tests and implementation.
+Restrictions caveat: `modifier_schema.py` validates `allow_abilities`, `deny_abilities`, and `require_mode`, but the current runtime service checks only `allow_types`, `deny_types`, and `allow_abilities`. `ModifierManager.add_modifier()` enforces `allow_types`, `deny_types`, AND `allow_abilities` (delegates to `ModifierService.is_modifier_allowed`). Do not assume `deny_abilities` or `require_mode` are enforced without adding tests and implementation.
 
 ## ModifierEffect
 
@@ -282,7 +282,7 @@ Important current behavior:
 - `get_mandatory_modifiers()` currently returns every allowed modifier in the registry, not only the four ids in `MANDATORY_MODIFIERS`.
 - Special neutral initial values: `simple_size_mount`, `hardened_mount`, and `efficiency_mount` -> `1.0`; `range_mount`, `facing`, and `precision_mount` -> `0.0`.
 - Any modifier with an `arc_set` effect defaults to the component base firing arc and clamps local minimum to that base arc.
-- `Component.add_modifier()` delegates to `ModifierManager`, which replaces same-id modifiers and recalculates stats. It does not run full ability restriction enforcement; use `ModifierService` or `ComponentService` for UI/application validation.
+- `Component.add_modifier()` delegates to `ModifierManager`, which replaces same-id modifiers and recalculates stats. `ModifierManager.add_modifier()` enforces `allow_types`, `deny_types`, AND `allow_abilities` (delegates to `ModifierService.is_modifier_allowed`); `deny_abilities` and `require_mode` are not enforced. Use `ModifierService` or `ComponentService` for UI/application validation of the broader rule set.
 
 `ModifierIntrospection` owns UI summary logic:
 

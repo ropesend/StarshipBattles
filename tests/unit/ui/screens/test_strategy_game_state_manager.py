@@ -3,6 +3,8 @@
 Tests the extracted turn processing and game state management functionality.
 """
 
+import contextlib
+
 import pytest
 from unittest.mock import MagicMock, patch
 
@@ -533,46 +535,88 @@ class TestApplyTurnStartState:
         )
 
 
+@pytest.mark.parametrize(
+    "human_player_ids,expected_next_id,need_display_patch",
+    [
+        ([0, 1], 1, False),  # per-player switch (else branch)
+        ([0], 0, True),       # full-turn rollover branch
+    ],
+    ids=["per_player_switch", "rollover_branch"],
+)
+def test_advance_turn_helper_invocation(
+    human_player_ids, expected_next_id, need_display_patch
+):
+    """Parametrized (PROJ-479 Task 1.10): the turn-start helper is
+    invoked with the correct next empire on BOTH the per-player-switch
+    (else) branch and the full-turn-rollover branch."""
+    manager, screen = _make_game_state_manager()
+    screen.current_player_index = 0
+    screen.human_player_ids = human_player_ids
+    screen._facade.events.turn_events.return_value = []
+
+    contexts = [patch.object(manager, "_apply_turn_start_state")]
+    if need_display_patch:
+        contexts.append(patch("pygame.display.get_surface", return_value=None))
+    with contextlib.ExitStack() as stack:
+        mock_helper = stack.enter_context(contexts[0])
+        for ctx in contexts[1:]:
+            stack.enter_context(ctx)
+        manager.advance_turn()
+
+    mock_helper.assert_called_once()
+    called_empire = mock_helper.call_args[0][0]
+    assert called_empire.id == expected_next_id
+
+
+@pytest.mark.parametrize(
+    "human_player_ids,need_display_patch",
+    [
+        ([0, 1], False),
+        ([0], True),
+    ],
+    ids=["per_player_switch", "rollover_branch"],
+)
+def test_advance_turn_runs_helper_after_sync_active_empire(
+    human_player_ids, need_display_patch
+):
+    """Parametrized (PROJ-479 Task 1.10): on BOTH branches,
+    ``_sync_active_empire`` must run BEFORE ``_apply_turn_start_state``
+    so event-log scoping reads the just-rotated empire (BUG-125)."""
+    manager, screen = _make_game_state_manager()
+    screen.current_player_index = 0
+    screen.human_player_ids = human_player_ids
+    screen._facade.events.turn_events.return_value = []
+    call_order = []
+
+    def record_sync():
+        call_order.append("sync")
+
+    def record_helper(empire):
+        call_order.append("helper")
+
+    contexts = [
+        patch.object(manager, "_sync_active_empire", side_effect=record_sync),
+        patch.object(manager, "_apply_turn_start_state",
+                     side_effect=record_helper),
+    ]
+    if need_display_patch:
+        contexts.append(patch("pygame.display.get_surface", return_value=None))
+    with contextlib.ExitStack() as stack:
+        for ctx in contexts:
+            stack.enter_context(ctx)
+        manager.advance_turn()
+
+    assert call_order == ["sync", "helper"]
+
+
 class TestAdvanceTurnPerPlayerSwitch:
     """Issue #9: per-player switch (else branch of ``advance_turn``)
-    invokes the turn-start helper for the next empire."""
+    invokes the turn-start helper for the next empire.
 
-    def test_else_branch_applies_turn_start_state_to_next_empire(self):
-        """When player N hands off to player N+1, the helper runs with
-        the next empire."""
-        manager, screen = _make_game_state_manager()
-        screen.current_player_index = 0
-        screen.human_player_ids = [0, 1]
-
-        with patch.object(manager, "_apply_turn_start_state") as mock_helper:
-            manager.advance_turn()
-
-        # Next empire is empire1 (id=1).
-        mock_helper.assert_called_once()
-        called_empire = mock_helper.call_args[0][0]
-        assert called_empire.id == 1
-
-    def test_else_branch_runs_helper_after_sync_active_empire(self):
-        """BUG-125: ``session.active_empire`` must be rotated BEFORE the
-        helper queries turn events / opens the log, otherwise event-log
-        scoping reads the wrong empire."""
-        manager, screen = _make_game_state_manager()
-        screen.current_player_index = 0
-        screen.human_player_ids = [0, 1]
-        call_order = []
-
-        def record_sync():
-            call_order.append("sync")
-
-        def record_helper(empire):
-            call_order.append("helper")
-
-        with patch.object(manager, "_sync_active_empire", side_effect=record_sync), \
-             patch.object(manager, "_apply_turn_start_state",
-                          side_effect=record_helper):
-            manager.advance_turn()
-
-        assert call_order == ["sync", "helper"]
+    Note: the 2 structurally identical tests
+    (`applies_turn_start_state`, `runs_helper_after_sync_active_empire`)
+    were parametrized at module scope above per PROJ-479 Task 1.10. The
+    branch-specific behavior tests remain here."""
 
     def test_else_branch_clears_selection_end_to_end(self):
         """Acceptance criterion: ``selected_fleet`` / ``selected_object`` /
@@ -630,46 +674,11 @@ class TestAdvanceTurnPerPlayerSwitch:
 
 class TestAdvanceTurnRolloverBranch:
     """Issue #9: full-turn rollover branch (after ``process_full_turn``)
-    also invokes the turn-start helper for player 1."""
+    also invokes the turn-start helper for player 1.
 
-    def test_rollover_applies_helper_for_player_1(self):
-        """After the full turn processes, player 1 receives the same
-        turn-start treatment via the helper (single source of truth)."""
-        manager, screen = _make_game_state_manager()
-        screen.current_player_index = 0
-        screen.human_player_ids = [0]
-        screen._facade.events.turn_events.return_value = []
-
-        with patch.object(manager, "_apply_turn_start_state") as mock_helper, \
-             patch("pygame.display.get_surface", return_value=None):
-            manager.advance_turn()
-
-        mock_helper.assert_called_once()
-        called_empire = mock_helper.call_args[0][0]
-        assert called_empire.id == 0
-
-    def test_rollover_runs_helper_after_sync_active_empire(self):
-        """``session.active_empire`` must be rotated before the helper
-        queries events for the rollover empire."""
-        manager, screen = _make_game_state_manager()
-        screen.current_player_index = 0
-        screen.human_player_ids = [0]
-        screen._facade.events.turn_events.return_value = []
-        call_order = []
-
-        def record_sync():
-            call_order.append("sync")
-
-        def record_helper(empire):
-            call_order.append("helper")
-
-        with patch.object(manager, "_sync_active_empire", side_effect=record_sync), \
-             patch.object(manager, "_apply_turn_start_state",
-                          side_effect=record_helper), \
-             patch("pygame.display.get_surface", return_value=None):
-            manager.advance_turn()
-
-        assert call_order == ["sync", "helper"]
+    Note: the 2 structurally identical tests
+    (`applies_helper_for_player_1`, `runs_helper_after_sync_active_empire`)
+    were parametrized at module scope above per PROJ-479 Task 1.10."""
 
     def test_rollover_no_double_fire_of_event_log(self):
         """``process_full_turn`` no longer opens the log directly; the

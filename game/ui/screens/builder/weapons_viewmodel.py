@@ -15,6 +15,7 @@ from typing import List, Dict, Any, Optional, Tuple, TYPE_CHECKING
 if TYPE_CHECKING:
     from game.ui.screens.builder.event_bus import WorkshopEventBus
     from game.core.protocols import ICombatShip
+    from game.simulation.components.component import Component
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +108,7 @@ class WeaponsViewModel:
         return self._max_range
 
     @property
-    def hovered_weapon(self) -> Any:
+    def hovered_weapon(self) -> "Component | None":
         """Currently hovered weapon (for firing arc display)."""
         return self._hovered_weapon
 
@@ -389,7 +390,7 @@ class WeaponsViewModel:
             clamped = max(-20.0, min(20.0, net_score))
             return 1.0 / (1.0 + math.exp(-clamped))
 
-        def calc_damage_at_range(r) -> Any:
+        def calc_damage_at_range(r) -> float:
             return ab.get_damage(r)
 
         # 1. Add range percentage breakpoints

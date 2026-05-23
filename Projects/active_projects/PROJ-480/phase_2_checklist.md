@@ -16,8 +16,8 @@
 **File:** `tests/unit/ui/screens/test_workshop_screen.py`
 **Tests:** `pytest tests/unit/ui/screens/test_workshop_screen.py`
 
-- [ ] _(Subsumed by PROJ-478 Phase 2 deletion of CAT-2 cluster — once those tests are removed, this CAT-8 finding evaporates.)_
-- [ ] Verify: re-check after PROJ-478 Phase 2.
+- [x] _(Subsumed by PROJ-478 Phase 2 deletion of CAT-2 cluster — once those tests are removed, this CAT-8 finding evaporates.)_
+- [x] Verify: re-check after PROJ-478 Phase 2. — PROJ-478 already ran (16 tests pass).
 
 ### Task 2.2: test_resource_pipeline.py — monolithic integration test
 **File:** `tests/integration/resource_system/test_resource_pipeline.py`
@@ -181,25 +181,25 @@
 **File:** `tests/unit/test_app_public_api.py`
 **Tests:** `pytest tests/unit/test_app_public_api.py`
 
-- [ ] _(verification: VERIFIED but already-optimally parametrized. No action required — task retained for traceability.)_
+- [x] _(verification: VERIFIED but already-optimally parametrized. No action required — task retained for traceability.)_
 
 ### Task 2.25: test_app_public_api.py — inspect.signature
 **File:** `tests/unit/test_app_public_api.py`
 **Tests:** `pytest tests/unit/test_app_public_api.py`
 
-- [ ] _(coordination note: addressed via Task 3.24 in PROJ-479 Phase 3 CAT-6.)_
+- [x] _(coordination note: addressed via Task 3.24 in PROJ-479 Phase 3 CAT-6.)_
 
 ### Task 2.26: test_scenarios.py fixture — 88-line shared fixture
 **File:** `tests/fixtures/test_scenarios.py`
 **Tests:** `pytest tests/fixtures/`
 
-- [ ] _(verification: VERIFIED but acceptable as a shared fixture utility. No action required.)_
+- [x] _(verification: VERIFIED but acceptable as a shared fixture utility. No action required.)_
 
 ### Task 2.27: test_renderer.py — bypass + isinstance smoke
 **File:** `tests/unit/ui/screens/battle_setup/test_renderer.py`
 **Tests:** `pytest tests/unit/ui/screens/battle_setup/test_renderer.py`
 
-- [ ] _(verification: VERIFIED but accepted as low-value contract guard per review's own recommendation. No action required.)_
+- [x] _(verification: VERIFIED but accepted as low-value contract guard per review's own recommendation. No action required.)_
 
 ### Task 2.28: test_strategy_screen_selection.py — 4 patch.object × 6 methods
 **File:** `tests/unit/ui/screens/test_strategy_screen_selection.py`

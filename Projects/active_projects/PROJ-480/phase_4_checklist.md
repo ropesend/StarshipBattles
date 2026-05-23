@@ -23,8 +23,8 @@
 **File:** `tests/unit/strategy/data/test_caption_schemas_validate.py`
 **Tests:** `pytest tests/unit/strategy/data/test_caption_schemas_validate.py`
 
-- [ ] Replace exact set equality (lines 59, 74, 90) for Flag / Portrait / Theme schemas with `issuperset()` so new fields don't break the test.
-- [ ] Verify: passes; LOC delta ≈ 0.
+- [x] Replace exact set equality (lines 59, 74, 90) for Flag / Portrait / Theme schemas with `issuperset()` so new fields don't break the test. Actual path: `tests/regression/test_caption_schemas_validate.py`.
+- [x] Verify: passes; LOC delta ≈ 0. — 15 tests pass.
 
 ### Task 4.3: test_join_fleet_handler.py — exact 7-key dict equality
 **File:** `tests/unit/strategy/engine/order_handlers/test_join_fleet_handler.py`
@@ -37,8 +37,8 @@
 **File:** `tests/unit/ui/screens/test_design_selector_window.py`
 **Tests:** `pytest tests/unit/ui/screens/test_design_selector_window.py`
 
-- [ ] Replace ~4 `call_args[1]` positional kwargs accesses (lines 189, 202, 215, 813-814) with `call_args.kwargs` (~130 LOC across file).
-- [ ] Verify: passes; LOC delta ≈ 0 (style only).
+- [x] Replace ~4 `call_args[1]` positional kwargs accesses (lines 189, 202, 215, 813-814) with `call_args.kwargs` (~130 LOC across file). Replaced 10 occurrences (plan undercounted).
+- [x] Verify: passes; LOC delta ≈ 0 (style only). — 39 tests pass.
 
 ### Task 4.5: test_design_report_panel.py — magic number 750
 **File:** `tests/unit/ui/panels/test_design_report_panel.py`
@@ -79,8 +79,8 @@
 **File:** `tests/unit/strategy/engine/test_order_processor_colonize.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_order_processor_colonize.py`
 
-- [ ] Replace `assert add_calls == {"metals": 50.0, "organics": 25.0}` exact dict (lines 247-248) with `assert add_calls.get("metals") == 50.0 and add_calls.get("organics") == 25.0`.
-- [ ] Verify: passes; LOC delta ≈ +2.
+- [x] Replace `assert add_calls == {"metals": 50.0, "organics": 25.0}` exact dict (lines 247-248) with `assert add_calls.get("metals") == 50.0 and add_calls.get("organics") == 25.0`.
+- [x] Verify: passes; LOC delta ≈ +2. — 10 tests pass.
 
 ### Task 4.11: test_bug_regressions_2026_01.py — opaque formula result
 **File:** `tests/unit/regression/test_bug_regressions_2026_01.py`

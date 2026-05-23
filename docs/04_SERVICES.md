@@ -1,6 +1,6 @@
 # Service Layer Architecture
 
-> **Last verified:** 2026-05-20 - Reconciled component-inspector/effect-ability-metadata references against current service files (PROJ-468): removed the deleted `component_inspector.py` shim claim and stale `effect_ability_metadata.py` references; canonical paths are `component_abilities.py`, `component_layers.py`, and `ability_metadata.py`.
+> **Last verified:** 2026-05-23 - Updated `ModifierLogicService` section to reflect PROJ-489 consolidation: thin facade over `ModifierService` with `calculate_snap_value` as its only non-delegated method; previously (2026-05-20) reconciled component-inspector/effect-ability-metadata references against current service files (PROJ-468).
 
 Compact reference for service responsibilities, contracts, DI rules, APIs,
 invariants, extension points, warnings, and tests. This removes release-note
@@ -266,15 +266,19 @@ Stats panel extension:
 `ModifierService` in `game/simulation/services/modifier_service.py` owns
 low-level modifier rules and requires `modifier_registry: dict[str, Any]`.
 
-`ModifierLogicService` in `game/ui/screens/builder/modifier_logic.py` owns
-builder-specific modifier logic: validation, mandatory modifiers, initial
-values, component constraints such as turret arc limits, and step-button
-snapping. It requires `IRegistryProvider` and creates `ComponentService`
-internally.
+`ModifierLogicService` in `game/ui/screens/builder/modifier_logic.py` is a
+thin UI facade over `ModifierService` (post-PROJ-489 consolidation). It takes
+a `ModifierService` instance via constructor injection (no longer an
+`IRegistryProvider`, and no longer constructs `ComponentService` internally).
+All modifier-allowance, mandatory-modifier, initial-value, and local
+min/max queries delegate directly to the injected `ModifierService`.
 
 Key `ModifierLogicService` API: `is_modifier_allowed`,
 `get_mandatory_modifiers`, `is_modifier_mandatory`, `get_initial_value`,
-`ensure_mandatory_modifiers`, `get_local_min_max`, `calculate_snap_value`.
+`ensure_mandatory_modifiers`, `get_local_min_max` (all delegated to
+`ModifierService`), and `calculate_snap_value` — the only non-delegated
+method, owning UI-only step-button snapping logic with no simulation
+equivalent.
 
 Warning: the deprecated static `ModifierLogic` wrapper remains for transition.
 New code should use `ModifierLogicService` instances.
@@ -846,7 +850,7 @@ Services needing registries use constructor injection with no fallback:
 
 ```python
 VehicleDesignService(registries=game_registries)
-ModifierLogicService(registry_provider=game_registries)
+ModifierLogicService(ModifierService(modifier_registry=game_registries.modifiers))
 SimulationDesignLoader(registries=game_registries)
 PlanetEconomyProjector(
     registries=game_registries,

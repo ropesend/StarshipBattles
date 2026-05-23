@@ -97,25 +97,22 @@ class TestEventLogColumns:
 class TestCategoryIcons:
     """Test CATEGORY_ICONS constant."""
 
-    def test_combat_icon(self):
-        """Combat category should have icon."""
-        assert "combat" in CATEGORY_ICONS
-        assert "[Combat]" in CATEGORY_ICONS["combat"]
-
-    def test_production_icon(self):
-        """Production category should have icon."""
-        assert "production" in CATEGORY_ICONS
-        assert "[Prod]" in CATEGORY_ICONS["production"]
-
-    def test_colonies_icon(self):
-        """Colonies category should have icon."""
-        assert "colonies" in CATEGORY_ICONS
-        assert "[Colony]" in CATEGORY_ICONS["colonies"]
-
-    def test_fleet_operations_icon(self):
-        """Fleet operations category should have icon."""
-        assert "fleet_operations" in CATEGORY_ICONS
-        assert "[FleetOps]" in CATEGORY_ICONS["fleet_operations"]
+    # PROJ-480 Task 3.32: parametrize 4 category-icon presence tests on
+    # (category, icon_token). Each parametrize id names the category so
+    # missing icons fail in their own test row.
+    @pytest.mark.parametrize(
+        "category, icon_token",
+        [
+            ("combat", "[Combat]"),
+            ("production", "[Prod]"),
+            ("colonies", "[Colony]"),
+            ("fleet_operations", "[FleetOps]"),
+        ],
+        ids=["combat", "production", "colonies", "fleet_operations"],
+    )
+    def test_category_has_icon(self, category, icon_token):
+        assert category in CATEGORY_ICONS
+        assert icon_token in CATEGORY_ICONS[category]
 
 
 # ---------------------------------------------------------------------------

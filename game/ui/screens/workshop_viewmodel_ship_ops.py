@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
     from game.simulation.services.vehicle_design_service import (
         DesignResult,
+        ValidationResult,
         VehicleDesignService,
     )
     from game.ui.screens.workshop_viewmodel import WorkshopViewModel
@@ -204,7 +205,7 @@ class WorkshopShipOps:
             logger.warning(f"Failed to change class: {result.errors}")
             return False
 
-    def validate_design(self) -> Any:
+    def validate_design(self) -> "ValidationResult | None":
         """Validate the current ship design using the service.
 
         Returns:

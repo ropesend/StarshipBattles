@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 
 import pygame
 import pygame_gui
+from pygame_gui.elements import UIButton
 
 from game.ui.screens.strategy_modal_window import DismissableModalDialog
 
@@ -79,8 +80,9 @@ class DefeatDialog(DismissableModalDialog):
             window_manager=window_manager,
         )
 
+        self._dismiss_button: UIButton | None = None
+
         if getattr(self, "_window_init_bypassed", False):
-            self._dismiss_button = None  # type: ignore[assignment]
             return
 
         body_rect = pygame.Rect(10, 10, _DIALOG_WIDTH - 30, _DIALOG_HEIGHT - 90)

@@ -10,9 +10,14 @@ Cross-layer imports (acceptable for UI):
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TYPE_CHECKING
 import pygame
 import logging
+
+if TYPE_CHECKING:
+    from game.ui.renderer.camera import Camera
+    from game.strategy.data.planet import Planet
+    from game.strategy.data.fleet import Fleet
 
 logger = logging.getLogger(__name__)
 from game.core.hex_math import hex_to_pixel, HexCoord
@@ -37,11 +42,11 @@ class CameraNavigator:
         self.scene = scene
 
     @property
-    def camera(self) -> Any:
+    def camera(self) -> "Camera":
         return self.scene.camera
 
     @property
-    def hex_size(self) -> Any:
+    def hex_size(self) -> float:
         return self.scene.hex_size
 
     def center_on(self, obj) -> None:
@@ -72,7 +77,7 @@ class CameraNavigator:
         self.camera.position.y = fy
         logger.debug(f"Camera centered on hex {hex_coord}")
 
-    def _resolve_global_hex(self, obj) -> Any:
+    def _resolve_global_hex(self, obj) -> "HexCoord | None":
         """
         Resolve object to its global hex coordinate.
 
@@ -194,7 +199,7 @@ class CameraNavigator:
         cam.target_zoom = max(cam.min_zoom, cam.target_zoom / ZOOM_KEYBOARD_STEP)
         logger.debug(f"Keyboard zoom out: target_zoom={cam.target_zoom:.3f}")
 
-    def cycle_selection(self, obj_type, direction) -> Any:
+    def cycle_selection(self, obj_type, direction) -> "Planet | Fleet | None":
         """
         Cycle through colonies or fleets.
 

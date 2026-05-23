@@ -30,11 +30,9 @@ from game.strategy.validation.colonize_validator import ColonizeValidator
 # Test Fixtures
 # =============================================================================
 
-class MockPlanetType(Enum):
-    """Mock planet types for testing."""
-    ICE_DWARF = "ICE_DWARF"
-    CONTINENTAL = "CONTINENTAL"
-    ARID = "ARID"
+# PROJ-479 Task 6.2 (HLP-002): MockPlanetType moved to
+# tests/fixtures/colonization_fixtures.py.
+from tests.fixtures.colonization_fixtures import MockPlanetType  # noqa: F401, E402
 
 
 class MockPlanet:
@@ -171,15 +169,9 @@ def make_combat_ship(name: str, owner_id: int, registries=None) -> ShipInstance:
 @pytest.fixture
 def component_registry():
     """Component registry with colony pod definitions for all planet types."""
+    # PROJ-480 Task 1.27: removed 2 duplicate 'colony_pod' keys (dict
+    # last-wins semantics meant the surviving entry was always the third).
     return {
-        'colony_pod': {
-            'id': 'colony_pod',
-            'abilities': {'ColonizePlanet': True}
-        },
-        'colony_pod': {
-            'id': 'colony_pod',
-            'abilities': {'ColonizePlanet': True}
-        },
         'colony_pod': {
             'id': 'colony_pod',
             'abilities': {'ColonizePlanet': True}
@@ -635,28 +627,10 @@ class TestUIFiltering:
 class TestEdgeCases:
     """Edge case tests for colonization system."""
 
-    def test_fleet_with_no_pods_succeeds_at_command_time(
-        self, galaxy_with_ice_planet, component_registry
-    ):
-        """
-        Fleet without colony pods succeeds at validation — pod check deferred to execution.
-        """
-        galaxy, ice_planet = galaxy_with_ice_planet
-
-        # Fleet with only combat ships (no colony pods)
-        combat_ship = make_combat_ship("Combat Ship", 1)
-
-        fleet = Fleet(1, 1, HexCoord(10, 10))
-        fleet.ships.append(combat_ship)
-
-        # Validate - pod check deferred to execution time
-        result = ColonizeValidator.validate(
-            galaxy, fleet, ice_planet,
-            component_registry=component_registry
-        )
-
-        # Pod availability is checked at execution time, not validation time
-        assert result.is_valid is True
+    # PROJ-479 Task 1.9: deleted duplicate
+    # `test_fleet_with_no_pods_succeeds_at_command_time` — coverage is now
+    # carried by `TestColonizeWithWrongPod
+    # ::test_colonize_without_drop_pod_succeeds_at_command_time` above.
 
     def test_empty_fleet_succeeds_at_command_time(
         self, galaxy_with_ice_planet, component_registry

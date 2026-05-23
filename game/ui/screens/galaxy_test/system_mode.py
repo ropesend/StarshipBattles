@@ -405,10 +405,10 @@ class SystemModeHelper:
 
     def _format_planet_info(self, planet) -> list:
         """Format planet properties for display with physics derivation."""
+        from game.core.constants import EARTH_MASS
         from game.strategy.data.planet_physics import (
             calculate_escape_velocity,
             calculate_surface_gravity,
-            MASS_EARTH
         )
 
         lines = [
@@ -417,7 +417,7 @@ class SystemModeHelper:
             "",
             "=== Physical Properties ===",
             f"Mass: {planet.mass:.2e} kg",
-            f"  ({planet.mass/MASS_EARTH:.3f} M⊕)",
+            f"  ({planet.mass/EARTH_MASS:.3f} M⊕)",
             f"Radius: {planet.radius:.2e} m",
             f"  ({planet.radius/6.371e6:.3f} R⊕)",
             f"Density: {planet.density:.0f} kg/m³",

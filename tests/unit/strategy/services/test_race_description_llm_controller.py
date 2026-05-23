@@ -322,7 +322,8 @@ class TestCancel:
             caption_loader=caption_loader, on_change=lambda: None,
         )
         controller.generate_bio()
-        time.sleep(0.02)  # let worker enter blocking state
+        # PROJ-479 Task 4.3: deterministic wait for worker to enter RUNNING.
+        _wait_until(lambda: (controller.update(), controller.bio_status == FieldStatus.RUNNING)[1])
         controller.cancel_bio()
         _wait_until(lambda: (controller.update(), True)[1] and controller.bio_status == FieldStatus.CANCELLED)
         # Original (empty) bio_description preserved
@@ -340,7 +341,12 @@ class TestCancel:
         )
         controller.generate_bio()
         controller.generate_socio()
-        time.sleep(0.02)
+        # PROJ-479 Task 4.3: deterministic wait for both workers to enter RUNNING.
+        _wait_until(lambda: (
+            controller.update(),
+            controller.bio_status == FieldStatus.RUNNING
+            and controller.socio_status == FieldStatus.RUNNING,
+        )[1])
         controller.cancel_all()
         _wait_until(lambda: (
             controller.update(),
@@ -361,7 +367,8 @@ class TestCancel:
             caption_loader=caption_loader, on_change=lambda: None,
         )
         controller.generate_socio()
-        time.sleep(0.02)
+        # PROJ-479 Task 4.3: deterministic wait for worker to enter RUNNING.
+        _wait_until(lambda: (controller.update(), controller.socio_status == FieldStatus.RUNNING)[1])
         controller.cancel_socio()
 
         assert _wait_until(

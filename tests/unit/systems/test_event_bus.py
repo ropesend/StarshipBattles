@@ -40,28 +40,28 @@ class TestEventBus:
 class TestEventBusValidation:
     """Tests for callback validation."""
 
-    def test_subscribe_non_callable_raises_validation_exception(self):
-        """Subscribing with non-callable raises ValidationException."""
+    # PROJ-480 Task 3.4: parametrize the 3 ValidationException tests.
+    # The "non_callable_string" case retains its extra assertions about
+    # the error message contents — the other 2 only check that the
+    # exception is raised.
+    @pytest.mark.parametrize(
+        "value, extra_message_checks",
+        [
+            ("not a callback", ("callable", "str")),
+            (None, ()),
+            (42, ()),
+        ],
+        ids=["string", "none", "integer"],
+    )
+    def test_subscribe_non_callable_raises_validation_exception(
+        self, value, extra_message_checks
+    ):
         from game.core.exceptions import ValidationException
         bus = WorkshopEventBus()
         with pytest.raises(ValidationException) as exc_info:
-            bus.subscribe("TEST", "not a callback")
-        assert "callable" in str(exc_info.value)
-        assert "str" in str(exc_info.value)
-
-    def test_subscribe_none_raises_validation_exception(self):
-        """Subscribing with None raises ValidationException."""
-        from game.core.exceptions import ValidationException
-        bus = WorkshopEventBus()
-        with pytest.raises(ValidationException):
-            bus.subscribe("TEST", None)
-
-    def test_subscribe_integer_raises_validation_exception(self):
-        """Subscribing with integer raises ValidationException."""
-        from game.core.exceptions import ValidationException
-        bus = WorkshopEventBus()
-        with pytest.raises(ValidationException):
-            bus.subscribe("TEST", 42)
+            bus.subscribe("TEST", value)
+        for substring in extra_message_checks:
+            assert substring in str(exc_info.value)
 
     def test_subscribe_callable_class_instance_works(self):
         """Subscribing with callable class instance works."""

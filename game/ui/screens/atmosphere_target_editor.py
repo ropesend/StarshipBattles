@@ -267,7 +267,7 @@ class AtmosphereTargetEditor(PlanetTargetEditor):
                 val = slider.get_current_value()
                 self.value_labels[gas].set_text(f"{val:.0f} Pa")
 
-    def _button_handlers(self):
+    def _button_handlers(self) -> dict[UIButton, Callable[[], None]]:
         return {
             self.btn_apply: self._on_apply,
             self.btn_species_ideal: self._set_species_ideal,

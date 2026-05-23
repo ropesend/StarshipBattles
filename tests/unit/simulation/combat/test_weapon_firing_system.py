@@ -801,7 +801,14 @@ class TestPointDefenseWeapons:
 
         assert result is selected_target
         targeting.find_valid_target.assert_called_once()
-        secondary_targets = targeting.find_valid_target.call_args.args[2]
+        # PROJ-479 Task 3.27: prefer kwargs over positional .args[N] indexing
+        # so a refactor that reorders positional params doesn't silently
+        # mis-extract the wrong argument.
+        call_args = targeting.find_valid_target.call_args
+        if "secondary_targets" in call_args.kwargs:
+            secondary_targets = call_args.kwargs["secondary_targets"]
+        else:
+            secondary_targets = call_args.args[2]
         assert secondary_targets == [valid_enemy_missile]
 
 

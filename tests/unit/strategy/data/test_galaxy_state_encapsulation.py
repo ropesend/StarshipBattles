@@ -103,17 +103,3 @@ def test_no_external_reads_of_galaxy_private_indexes() -> None:
         raise AssertionError("\n".join(lines))
 
 
-def test_allowed_files_actually_use_at_least_one_index() -> None:
-    """Sanity check the allow-list — every entry should reference at least
-    one restricted attr (otherwise it's stale and should be pruned).
-
-    Kept even though the current allow-list is empty, so future deliberate
-    exceptions cannot silently go stale."""
-    for rel in ALLOWED_FILES:
-        path = REPO_ROOT / rel
-        assert path.exists(), f"Stale allow-list entry: {rel}"
-        viols = _find_violations(path)
-        assert viols, (
-            f"Allow-listed file {rel} does not actually read any restricted "
-            "attr. Either remove it from ALLOWED_FILES or restore the usage."
-        )

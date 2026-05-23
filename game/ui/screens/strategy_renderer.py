@@ -19,9 +19,12 @@ for back-compat with ``test_strategy_renderer_animation.py``.
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 import pygame
+
+if TYPE_CHECKING:
+    from game.ui.renderer.camera import Camera
 
 from game.ui.config import UIConfig
 from game.ui.colors import COLORS
@@ -112,13 +115,13 @@ class StrategyRenderer:
         """
         self._elapsed_time += dt
 
-    def _get_font(self, size, bold=False) -> Any:
+    def _get_font(self, size, bold=False) -> pygame.font.Font:
         """Get a cached font by size and style (uses central font cache)."""
         return get_font(size, bold=bold)
 
     # --- Property Accessors (delegate to scene) ---
     @property
-    def camera(self) -> Any:
+    def camera(self) -> "Camera":
         return self.scene.camera
 
     @property
@@ -137,27 +140,27 @@ class StrategyRenderer:
     # (the scene-owned live seam). The boundary is now closed.
 
     @property
-    def hex_size(self) -> Any:
+    def hex_size(self) -> float:
         return self.scene.hex_size
 
     @property
-    def screen_width(self) -> Any:
+    def screen_width(self) -> int:
         return self.scene.screen_width
 
     @property
-    def screen_height(self) -> Any:
+    def screen_height(self) -> int:
         return self.scene.screen_height
 
     @property
-    def SIDEBAR_WIDTH(self) -> Any:
+    def SIDEBAR_WIDTH(self) -> int:
         return UIConfig.STRATEGY_SIDEBAR_WIDTH
 
     @property
-    def TOP_BAR_HEIGHT(self) -> Any:
+    def TOP_BAR_HEIGHT(self) -> int:
         return self.scene.TOP_BAR_HEIGHT
 
     @property
-    def empire_assets(self) -> Any:
+    def empire_assets(self) -> dict[int, Any]:
         return self.scene.empire_assets
 
     def _hex_radius_to_screen(self, radius_hexes: float) -> int:

@@ -411,15 +411,10 @@ class TestProjectPath:
     def service(self):
         return FleetNavigationService()
 
-    def test_project_path_zero_speed(self, service):
-        """project_path with zero speed should return empty list."""
-        fleet = _make_mock_fleet(path=[HexCoord(1, 0)], speed=0.0)
-        galaxy = MagicMock()
-        assert service.project_path(fleet, galaxy) == []
-
-    def test_project_path_negative_speed(self, service):
-        """project_path with negative speed should return empty list."""
-        fleet = _make_mock_fleet(path=[HexCoord(1, 0)], speed=-5.0)
+    @pytest.mark.parametrize("speed", [0.0, -5.0], ids=["zero", "negative"])
+    def test_project_path_non_positive_speed_returns_empty(self, service, speed):
+        """project_path with zero or negative speed should return empty list."""
+        fleet = _make_mock_fleet(path=[HexCoord(1, 0)], speed=speed)
         galaxy = MagicMock()
         assert service.project_path(fleet, galaxy) == []
 

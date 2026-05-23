@@ -98,16 +98,26 @@ def _build_handler_command_pairs():
         IssueSelfDestructCommand,
     )
 
+    # PROJ-479 Task 1.12: SelfDestruct added with ships preload flag so the
+    # dedicated `TestSelfDestructCommandHandler::test_execute_returns_valid_*`
+    # test is subsumed. The trailing bool controls per-case preload.
+    from game.strategy.engine.superweapon_command_handlers import (
+        SelfDestructCommandHandler,
+    )
+    from game.strategy.engine.commands import IssueSelfDestructCommand
+
     return [
         (
             ImplodePlanetCommandHandler,
             IssueImplodePlanetCommand(fleet_id=1, planet_id=100),
             'validate_implode_planet',
+            False,
         ),
         (
             StellerateStarCommandHandler,
             IssueStellerateStarCommand(fleet_id=1),
             'validate_stellerate_star',
+            False,
         ),
         (
             OpenWarpPointCommandHandler,
@@ -117,29 +127,40 @@ def _build_handler_command_pairs():
                 target_system_name="Target System",
             ),
             'validate_open_warp_point',
+            False,
         ),
         (
             CloseWarpPointCommandHandler,
             IssueCloseWarpPointCommand(fleet_id=1, warp_point_destination_id="Alpha Centauri"),
             'validate_close_warp_point',
+            False,
         ),
         (
             CreateDysonSphereCommandHandler,
             IssueCreateDysonSphereCommand(fleet_id=1),
             'validate_create_dyson_sphere',
+            False,
         ),
-        # SelfDestruct needs ships pre-populated; handled in its own test.
+        (
+            SelfDestructCommandHandler,
+            IssueSelfDestructCommand(fleet_id=1, ship_ids=[1, 2]),
+            'validate_self_destruct',
+            True,
+        ),
     ]
 
 
 @pytest.mark.parametrize(
-    "handler_cls,cmd,validator_attr",
+    "handler_cls,cmd,validator_attr,needs_ships",
     [pytest.param(*case, id=case[0].__name__) for case in _build_handler_command_pairs()],
 )
 def test_handler_execute_returns_valid_when_validation_passes(
-    mock_session, mock_fleet, mock_planet, handler_cls, cmd, validator_attr,
+    mock_session, mock_fleet, mock_planet,
+    handler_cls, cmd, validator_attr, needs_ships,
 ):
     """All direct superweapon handlers return a valid result when validation succeeds."""
+    if needs_ships:
+        mock_fleet.ships = [Mock(id=1), Mock(id=2)]
     handler = handler_cls()
 
     with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
@@ -335,22 +356,11 @@ class TestCreateDysonSphereCommandHandler:
 # =============================================================================
 
 class TestSelfDestructCommandHandler:
-    """Tests for SelfDestructCommandHandler."""
+    """Tests for SelfDestructCommandHandler.
 
-    def test_execute_returns_valid_when_validation_passes(self, mock_session, mock_fleet):
-        """Handler returns valid result when validation passes."""
-        from game.strategy.engine.superweapon_command_handlers import SelfDestructCommandHandler
-        from game.strategy.engine.commands import IssueSelfDestructCommand
-
-        mock_fleet.ships = [Mock(id=1), Mock(id=2)]
-        cmd = IssueSelfDestructCommand(fleet_id=1, ship_ids=[1, 2])
-        handler = SelfDestructCommandHandler()
-
-        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_self_destruct.return_value = ValidationResult()
-            result = handler.execute(mock_session, cmd)
-
-        assert result.is_valid
+    `test_execute_returns_valid_when_validation_passes` was subsumed by the
+    parametrized `test_handler_execute_returns_valid_when_validation_passes`
+    above (PROJ-479 Task 1.12)."""
 
     def test_execute_adds_order_with_ship_ids(self, mock_session, mock_fleet):
         """Handler adds SELF_DESTRUCT order with ship IDs list."""

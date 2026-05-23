@@ -86,50 +86,12 @@ class TestResolveAfter:
         assert empire_a._booster_dirty is True
         assert empire_b._booster_dirty is False
 
-    def test_resolve_after_threads_registries_into_minefield_resolver(self):
-        """The resolver must be invoked with
-        ``registries=engine._registries`` (call-contract byte-for-byte
-        match with the pre-refactor _derive_moved_fleet_ids).
-        """
-        captured: dict = {}
-
-        moved_fleet = SimpleNamespace(
-            id=1,
-            location='B',
-            ships=[SimpleNamespace(instance_id="s1", is_alive=True)],
-        )
-        empire = SimpleNamespace(id=1, fleets=[moved_fleet], _booster_dirty=False)
-        ctx = TickContext(
-            tick=5,
-            empires=[empire],
-            galaxy=object(),
-            pre_movement_locations={1: 'A'},
-        )
-
-        sentinel_registries = object()
-        engine = SimpleNamespace(_registries=sentinel_registries)
-
-        from game.strategy.engine import minefield_resolver as _mr_mod
-
-        class _CaptureResolver:
-            def __init__(self, *args, **kwargs) -> None:
-                pass
-
-            def resolve_minefield_entry(self, **kwargs):
-                captured.update(kwargs)
-                return _mr_mod.MinefieldResolutionResult()
-
-        original = _mr_mod.MinefieldResolver
-        _mr_mod.MinefieldResolver = _CaptureResolver
-        try:
-            collab = MovementPhaseCollaborator()
-            collab.resolve_after(engine, ctx)
-        finally:
-            _mr_mod.MinefieldResolver = original
-
-        assert captured.get("registries") is sentinel_registries
-        assert captured.get("fleet") is moved_fleet
-        assert captured.get("galaxy") is ctx.galaxy
+    # Resolver-capture coverage (registries / fleet / galaxy threading)
+    # is exercised canonically at the public-hook level in
+    # `tests/unit/strategy/turn_engine/test_tick_phase_descriptors.py
+    # ::test_derive_moved_fleet_ids_threads_registries_to_minefield_resolver`
+    # which goes through the same `MovementPhaseCollaborator.resolve_after`
+    # path. See PROJ-479 Task 1.3 for the consolidation rationale.
 
     def test_resolve_after_prunes_emptied_fleets_from_empire(self):
         ship = SimpleNamespace(instance_id='s1', is_alive=True)

@@ -15,9 +15,11 @@ class TestWeaponsReportLayout:
 
     @pytest.fixture(autouse=True)
     def setup(self):
-        """Set up pygame and test dependencies."""
-        # Headless mode if possible, but UIManager needs a surface usually
-        # We can set SDL_VIDEODRIVER to dummy
+        """Set up pygame and test dependencies.
+
+        PROJ-479 Task 2.4: explicit teardown added so pygame_gui state and
+        pygame display do not leak between tests / test files.
+        """
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         self.surface = pygame.display.set_mode((800, 600))
@@ -34,6 +36,13 @@ class TestWeaponsReportLayout:
         self.rect = pygame.Rect(10, 400, 800, 200)
 
         yield
+
+        # PROJ-479 Task 2.4 teardown
+        try:
+            self.manager.clear_and_reset()
+        except Exception:  # Intentional broad catch: pygame_gui state may already be torn down by another test
+            pass
+        pygame.quit()
 
     def test_button_creation_widths(self):
         """Verify buttons are created with updated widths and positions."""

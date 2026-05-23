@@ -206,9 +206,13 @@ LEGACY_CACHE_ATTRS: frozenset[str] = frozenset({
 # Fixtures
 # ---------------------------------------------------------------------------
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def fresh_facade() -> StrategySessionFacade:
-    """Return a fresh facade instance over a minimal mocked session."""
+    """Return a fresh facade instance over a minimal mocked session.
+
+    PROJ-479 Task 2.14: scope=module — these are read-only contract checks
+    of the facade's public API; no test mutates the underlying session.
+    """
     from unittest.mock import MagicMock
 
     session = MagicMock()

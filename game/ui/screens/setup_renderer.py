@@ -32,7 +32,7 @@ def draw_title(screen, sw) -> None:
     screen.blit(title, (sw // 2 - title.get_width() // 2, 30))
 
 
-def draw_available_ships(screen, col_x, available_designs, available_formations, label_font, item_font) -> Any:
+def draw_available_ships(screen, col_x, available_designs, available_formations, label_font, item_font) -> int:
     """
     Draw the available ships and formations list.
 

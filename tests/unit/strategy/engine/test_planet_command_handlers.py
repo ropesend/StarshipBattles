@@ -53,6 +53,115 @@ def _session_with_planet(session, planet):
 
 
 # =============================================================================
+# Parametrized planet_not_found + wrong_owner (PROJ-479 Task 1.17)
+# =============================================================================
+#
+# Every PlanetCommandHandler subclass returns an "is_valid=False" result
+# when (a) the planet cannot be resolved, or (b) the resolved planet is
+# owned by another empire. Rather than duplicate the same two tests in
+# each of the 8 handler classes, the cases are enumerated here and run as
+# a single parametrized matrix. Per-handler success / validation tests
+# remain in the individual classes because they carry handler-specific
+# assertions.
+
+
+def _activate_cmd_factory():
+    return _activate_cmd()
+
+
+def _deactivate_cmd_factory():
+    return _deactivate_cmd()
+
+
+def _planet_id_only_cmd_factory():
+    cmd = MagicMock()
+    cmd.planet_id = 100
+    return cmd
+
+
+def _delete_order_cmd_factory():
+    cmd = MagicMock()
+    cmd.planet_id = 100
+    cmd.order_index = 0
+    return cmd
+
+
+def _atmosphere_cmd_factory():
+    cmd = MagicMock()
+    cmd.planet_id = 100
+    cmd.atmosphere_target = {'O2': 0.21}
+    return cmd
+
+
+def _gravity_cmd_factory():
+    cmd = MagicMock()
+    cmd.planet_id = 100
+    cmd.gravity_target = 5.0
+    return cmd
+
+
+def _water_cmd_factory():
+    cmd = MagicMock()
+    cmd.planet_id = 100
+    cmd.water_target = 0.5
+    return cmd
+
+
+def _radiation_cmd_factory():
+    cmd = MagicMock()
+    cmd.planet_id = 100
+    cmd.shielding_target = 1.0
+    return cmd
+
+
+_HANDLER_CASES = [
+    ("ActivatePlanetAbilityCommandHandler", _activate_cmd_factory),
+    ("DeactivatePlanetAbilityCommandHandler", _deactivate_cmd_factory),
+    ("ClearPlanetOrdersCommandHandler", _planet_id_only_cmd_factory),
+    ("DeletePlanetOrderCommandHandler", _delete_order_cmd_factory),
+    ("SetAtmosphereTargetCommandHandler", _atmosphere_cmd_factory),
+    ("SetGravityTargetCommandHandler", _gravity_cmd_factory),
+    ("SetWaterTargetCommandHandler", _water_cmd_factory),
+    ("SetRadiationShieldTargetCommandHandler", _radiation_cmd_factory),
+]
+
+
+@pytest.mark.parametrize(
+    "handler_name,cmd_factory",
+    _HANDLER_CASES,
+    ids=[h[0] for h in _HANDLER_CASES],
+)
+def test_planet_not_found_returns_invalid(handler_name, cmd_factory, mock_session):
+    """Every planet command handler returns is_valid=False when the
+    target planet cannot be resolved (PROJ-479 Task 1.17 consolidation)."""
+    from game.strategy.engine import planet_command_handlers as _mod
+
+    handler_cls = getattr(_mod, handler_name)
+    result = handler_cls().execute(mock_session, cmd_factory())
+    assert not result.is_valid
+
+
+@pytest.mark.parametrize(
+    "handler_name,cmd_factory",
+    _HANDLER_CASES,
+    ids=[h[0] for h in _HANDLER_CASES],
+)
+def test_wrong_owner_returns_invalid(
+    handler_name, cmd_factory, mock_session, mock_planet
+):
+    """Every planet command handler returns is_valid=False when the
+    resolved planet is owned by a different empire (PROJ-479 Task 1.17
+    consolidation)."""
+    from game.strategy.engine import planet_command_handlers as _mod
+
+    mock_planet.owner_id = 99
+    _session_with_planet(mock_session, mock_planet)
+    handler_cls = getattr(_mod, handler_name)
+    result = handler_cls().execute(mock_session, cmd_factory())
+    assert not result.is_valid
+
+
+# =============================================================================
 # ActivatePlanetAbilityCommandHandler Tests (PROJ-438 Phase 5)
 # =============================================================================
 
@@ -80,7 +189,12 @@ def _deactivate_cmd(**overrides):
 class TestActivatePlanetAbilityCommandHandler:
     """Tests for ActivatePlanetAbilityCommandHandler.execute() (Phase 5)."""
 
-    def test_planet_not_found(self, mock_session):
+    # test_planet_not_found + test_wrong_owner now run under the
+    # parametrized matrix at module scope (PROJ-479 Task 1.17). The
+    # ActivatePlanetAbility-specific message-substring assertions
+    # ("not found" / "does not belong") are preserved here as a
+    # narrower companion test so the message contract is still pinned.
+    def test_planet_not_found_message(self, mock_session):
         from game.strategy.engine.planet_command_handlers import (
             ActivatePlanetAbilityCommandHandler,
         )
@@ -88,10 +202,9 @@ class TestActivatePlanetAbilityCommandHandler:
         result = ActivatePlanetAbilityCommandHandler().execute(
             mock_session, _activate_cmd()
         )
-        assert not result.is_valid
         assert "not found" in result.message.lower()
 
-    def test_wrong_owner(self, mock_session, mock_planet):
+    def test_wrong_owner_message(self, mock_session, mock_planet):
         from game.strategy.engine.planet_command_handlers import (
             ActivatePlanetAbilityCommandHandler,
         )
@@ -102,7 +215,6 @@ class TestActivatePlanetAbilityCommandHandler:
         result = ActivatePlanetAbilityCommandHandler().execute(
             mock_session, _activate_cmd()
         )
-        assert not result.is_valid
         assert "does not belong" in result.message.lower()
 
     def test_validation_failure(self, mock_session, mock_planet):
@@ -158,7 +270,10 @@ class TestActivatePlanetAbilityCommandHandler:
 class TestDeactivatePlanetAbilityCommandHandler:
     """Tests for DeactivatePlanetAbilityCommandHandler.execute() (Phase 5)."""
 
-    def test_planet_not_found(self, mock_session):
+    # See PROJ-479 Task 1.17: planet-not-found + wrong-owner moved to the
+    # parametrized matrix at module scope. Message-substring assertion
+    # retained below.
+    def test_planet_not_found_message(self, mock_session):
         from game.strategy.engine.planet_command_handlers import (
             DeactivatePlanetAbilityCommandHandler,
         )
@@ -166,10 +281,9 @@ class TestDeactivatePlanetAbilityCommandHandler:
         result = DeactivatePlanetAbilityCommandHandler().execute(
             mock_session, _deactivate_cmd()
         )
-        assert not result.is_valid
         assert "not found" in result.message.lower()
 
-    def test_wrong_owner(self, mock_session, mock_planet):
+    def test_wrong_owner_message(self, mock_session, mock_planet):
         from game.strategy.engine.planet_command_handlers import (
             DeactivatePlanetAbilityCommandHandler,
         )
@@ -180,7 +294,6 @@ class TestDeactivatePlanetAbilityCommandHandler:
         result = DeactivatePlanetAbilityCommandHandler().execute(
             mock_session, _deactivate_cmd()
         )
-        assert not result.is_valid
         assert "does not belong" in result.message.lower()
 
     def test_validation_failure(self, mock_session, mock_planet):
@@ -246,26 +359,8 @@ class TestClearPlanetOrdersCommandHandler:
         cmd.planet_id = planet_id
         return cmd
 
-    def test_planet_not_found(self, mock_session):
-        """Returns error when planet is not found."""
-        from game.strategy.engine.planet_command_handlers import ClearPlanetOrdersCommandHandler
-
-        handler = ClearPlanetOrdersCommandHandler()
-        result = handler.execute(mock_session, self._make_cmd())
-
-        assert not result.is_valid
-
-    def test_wrong_owner(self, mock_session, mock_planet):
-        """Returns error when planet owned by different empire."""
-        from game.strategy.engine.planet_command_handlers import ClearPlanetOrdersCommandHandler
-
-        mock_planet.owner_id = 99
-        _session_with_planet(mock_session, mock_planet)
-
-        handler = ClearPlanetOrdersCommandHandler()
-        result = handler.execute(mock_session, self._make_cmd())
-
-        assert not result.is_valid
+    # PROJ-479 Task 1.17: test_planet_not_found + test_wrong_owner moved
+    # to the parametrized matrix at module scope.
 
     def test_success_clears_orders(self, mock_session, mock_planet):
         """Success calls planet.clear_orders()."""
@@ -294,26 +389,8 @@ class TestDeletePlanetOrderCommandHandler:
         cmd.order_index = order_index
         return cmd
 
-    def test_planet_not_found(self, mock_session):
-        """Returns error when planet is not found."""
-        from game.strategy.engine.planet_command_handlers import DeletePlanetOrderCommandHandler
-
-        handler = DeletePlanetOrderCommandHandler()
-        result = handler.execute(mock_session, self._make_cmd())
-
-        assert not result.is_valid
-
-    def test_wrong_owner(self, mock_session, mock_planet):
-        """Returns error when planet owned by different empire."""
-        from game.strategy.engine.planet_command_handlers import DeletePlanetOrderCommandHandler
-
-        mock_planet.owner_id = 99
-        _session_with_planet(mock_session, mock_planet)
-
-        handler = DeletePlanetOrderCommandHandler()
-        result = handler.execute(mock_session, self._make_cmd())
-
-        assert not result.is_valid
+    # PROJ-479 Task 1.17: test_planet_not_found + test_wrong_owner moved
+    # to the parametrized matrix at module scope.
 
     def test_index_negative(self, mock_session, mock_planet):
         """Returns error for negative index."""
@@ -375,26 +452,8 @@ class TestSetAtmosphereTargetCommandHandler:
         cmd.atmosphere_target = atmosphere_target if atmosphere_target is not None else {'O2': 0.21}
         return cmd
 
-    def test_planet_not_found(self, mock_session):
-        """Returns error when planet not found."""
-        from game.strategy.engine.planet_command_handlers import SetAtmosphereTargetCommandHandler
-
-        handler = SetAtmosphereTargetCommandHandler()
-        result = handler.execute(mock_session, self._make_cmd())
-
-        assert not result.is_valid
-
-    def test_wrong_owner(self, mock_session, mock_planet):
-        """Returns error when wrong owner."""
-        from game.strategy.engine.planet_command_handlers import SetAtmosphereTargetCommandHandler
-
-        mock_planet.owner_id = 99
-        _session_with_planet(mock_session, mock_planet)
-
-        handler = SetAtmosphereTargetCommandHandler()
-        result = handler.execute(mock_session, self._make_cmd())
-
-        assert not result.is_valid
+    # PROJ-479 Task 1.17: test_planet_not_found + test_wrong_owner moved
+    # to the parametrized matrix at module scope.
 
     def test_success_sets_atmosphere_target(self, mock_session, mock_planet):
         """Success sets atmosphere_target on planet."""
@@ -437,19 +496,8 @@ class TestSetGravityTargetCommandHandler:
         cmd.gravity_target = gravity_target
         return cmd
 
-    def test_planet_not_found(self, mock_session):
-        from game.strategy.engine.planet_command_handlers import SetGravityTargetCommandHandler
-        handler = SetGravityTargetCommandHandler()
-        result = handler.execute(mock_session, self._make_cmd())
-        assert not result.is_valid
-
-    def test_wrong_owner(self, mock_session, mock_planet):
-        from game.strategy.engine.planet_command_handlers import SetGravityTargetCommandHandler
-        mock_planet.owner_id = 99
-        _session_with_planet(mock_session, mock_planet)
-        handler = SetGravityTargetCommandHandler()
-        result = handler.execute(mock_session, self._make_cmd())
-        assert not result.is_valid
+    # PROJ-479 Task 1.17: test_planet_not_found + test_wrong_owner moved
+    # to the parametrized matrix at module scope.
 
     def test_success_sets_gravity_target(self, mock_session, mock_planet):
         from game.strategy.engine.planet_command_handlers import SetGravityTargetCommandHandler
@@ -483,19 +531,8 @@ class TestSetWaterTargetCommandHandler:
         cmd.water_target = water_target
         return cmd
 
-    def test_planet_not_found(self, mock_session):
-        from game.strategy.engine.planet_command_handlers import SetWaterTargetCommandHandler
-        handler = SetWaterTargetCommandHandler()
-        result = handler.execute(mock_session, self._make_cmd())
-        assert not result.is_valid
-
-    def test_wrong_owner(self, mock_session, mock_planet):
-        from game.strategy.engine.planet_command_handlers import SetWaterTargetCommandHandler
-        mock_planet.owner_id = 99
-        _session_with_planet(mock_session, mock_planet)
-        handler = SetWaterTargetCommandHandler()
-        result = handler.execute(mock_session, self._make_cmd())
-        assert not result.is_valid
+    # PROJ-479 Task 1.17: test_planet_not_found + test_wrong_owner moved
+    # to the parametrized matrix at module scope.
 
     def test_success_sets_water_target(self, mock_session, mock_planet):
         from game.strategy.engine.planet_command_handlers import SetWaterTargetCommandHandler
@@ -529,19 +566,8 @@ class TestSetRadiationShieldTargetCommandHandler:
         cmd.shielding_target = shielding_target
         return cmd
 
-    def test_planet_not_found(self, mock_session):
-        from game.strategy.engine.planet_command_handlers import SetRadiationShieldTargetCommandHandler
-        handler = SetRadiationShieldTargetCommandHandler()
-        result = handler.execute(mock_session, self._make_cmd())
-        assert not result.is_valid
-
-    def test_wrong_owner(self, mock_session, mock_planet):
-        from game.strategy.engine.planet_command_handlers import SetRadiationShieldTargetCommandHandler
-        mock_planet.owner_id = 99
-        _session_with_planet(mock_session, mock_planet)
-        handler = SetRadiationShieldTargetCommandHandler()
-        result = handler.execute(mock_session, self._make_cmd())
-        assert not result.is_valid
+    # PROJ-479 Task 1.17: test_planet_not_found + test_wrong_owner moved
+    # to the parametrized matrix at module scope.
 
     def test_success_sets_shielding_target(self, mock_session, mock_planet):
         from game.strategy.engine.planet_command_handlers import SetRadiationShieldTargetCommandHandler

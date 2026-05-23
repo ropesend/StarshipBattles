@@ -2,6 +2,17 @@
 
 Tests the ship detail panel widget for displaying ship instance information
 with damage tracking and resource display.
+
+# Coupling note (PROJ-479 Task 3.19):
+# The 23-test cluster in `TestShipDetailPanelInit` uses the
+# `patch.object(ShipDetailPanel, '__init__', lambda ...)` + `__new__` +
+# manual-attribute pattern. This is the documented PROJ-211 / DI-compliance
+# bypass pattern for testing widget state in isolation from pygame_gui
+# UIPanel construction. The pattern is accepted in this file because
+# (1) the production __init__ is a thin pygame_gui delegate and
+# (2) per-attribute tests catch real regressions in attribute wiring.
+# Per PROJ-479 verification report this pattern is the accepted convention;
+# do NOT migrate to bypass_init here without confirming a behavior win.
 """
 
 import pytest

@@ -13,6 +13,8 @@ import pygame
 
 if TYPE_CHECKING:
     from game.ui.screens.strategy_input_handler import StrategyInputHandler
+    from game.ui.screens.strategy_screen import StrategyScreen
+    from game.core.hex_math import HexCoord
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +52,7 @@ class ClickModeDispatcher:
         }
 
     @property
-    def scene(self) -> Any:
+    def scene(self) -> "StrategyScreen":
         """Access scene through handler."""
         return self._handler.scene
 
@@ -514,7 +516,7 @@ class ClickModeDispatcher:
 
         return None
 
-    def _resolve_click_target(self, mx: int, my: int) -> Any:
+    def _resolve_click_target(self, mx: int, my: int) -> "HexCoord":
         """Smartly resolve the hex coordinate from a mouse click.
 
         Handles visual offsets of planets when zoomed in, ensuring we return

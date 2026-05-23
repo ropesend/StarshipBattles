@@ -13,15 +13,16 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Critical UI narrowings | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Major UI narrowings | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Minor UI narrowings + ignore cleanup | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. Critical UI narrowings | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Major UI narrowings | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Minor UI narrowings + ignore cleanup | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Audit remediation (Codex consult 2026-05-22) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-22 17:30
-**Active Phase:** Phase 1
-**Last Action:** Project created from `Reviews/results/2026-05-20_210540_type-audit/` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Last Updated:** 2026-05-22
+**Active Phase:** All 4 phases complete
+**Last Action:** Phase 4 audit remediation complete — 3 mechanical type-syntax fixes (workshop_screen.py dragged_item narrowed to Component | None; defeat_dialog.py + turn_failed_dialog.py Optional[UIButton] → UIButton | None with Optional import dropped; ship_theme_manager.py Optional[Sequence[int]] → Sequence[int] | None). Targeted tests pass: 33 workshop_screen + 16 defeat_dialog/turn_failed + 69 ship_theme = 118 passed. Not committed.
+**Next Action:** Awaiting user verification / commit.
 **Blockers:** None
 
 ## Overview

@@ -17,26 +17,8 @@ from game.strategy.data.empire import Empire
 from game.strategy.data.ship_instance import ShipInstance
 
 
-def make_mock_ship_instance(name="Test Ship", owner_id=0, registries=None):
-    """Create a mock ShipInstance for testing.
-
-    PROJ-211: Added registries parameter for DI compliance.
-    Required when ship is added to fleet (triggers speed calc).
-    """
-    ship = ShipInstance(
-        instance_id=f"test-{name.lower().replace(' ', '-')}-{id(name)}",
-        design_id=name,
-        name=name,
-        owner_id=owner_id,
-        design_data={
-            'name': name,
-            'vehicle_type': 'Ship',
-            'stats': {'mass': 100}
-        },
-    )
-    if registries is not None:
-        ship._registries = registries
-    return ship
+# PROJ-479 Task 6.3 (HLP-003): make_mock_ship_instance moved to tests/conftest.py.
+from tests.conftest import make_mock_ship_instance  # noqa: F401, E402
 
 
 @pytest.fixture

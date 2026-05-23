@@ -72,16 +72,8 @@ class _NonDestructiveResolver(IBattleResolver):
         )
 
 
-def _make_fleet(fleet_id: int, owner_id: int, location, speed: float):
-    fleet = MagicMock()
-    fleet.id = fleet_id
-    fleet.owner_id = owner_id
-    fleet.location = location
-    fleet.speed = float(speed)
-    fleet.ships = [MagicMock()]
-    fleet.task_forces = []
-    fleet.orders = []
-    return fleet
+# PROJ-479 Task 5.1 (DUP-001): _make_fleet moved to tests/conftest.py.
+from tests.conftest import _make_mock_fleet as _make_fleet  # noqa: E402
 
 
 def _make_empire(empire_id: int, fleets):

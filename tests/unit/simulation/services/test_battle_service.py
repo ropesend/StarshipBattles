@@ -81,6 +81,67 @@ def started_battle(service, team0_ship, team1_ship):
 
 
 # =============================================================================
+# PROJ-479 Task 1.19: parametrized service-error pairs
+# add_ship/remove_ship × no_active_battle/after_battle_started
+# =============================================================================
+
+
+def _call_with_method(service, method_name, ship):
+    """Call add_ship or remove_ship uniformly (add_ship needs team_id kwarg)."""
+    if method_name == "add_ship":
+        return service.add_ship(ship, team_id=0)
+    return service.remove_ship(ship)
+
+
+@pytest.mark.parametrize(
+    "method_name,expected_error",
+    [
+        ("add_ship", "No active battle"),
+        ("remove_ship", "No active battle"),
+    ],
+    ids=["add_ship_no_active_battle", "remove_ship_no_active_battle"],
+)
+def test_method_returns_no_active_battle_error(
+    service, team0_ship, method_name, expected_error
+):
+    """add_ship/remove_ship return BattleServiceResult.success=False with
+    a 'No active battle' error when no battle exists."""
+    result = _call_with_method(service, method_name, team0_ship)
+    assert result.success is False
+    assert expected_error in result.errors[0]
+
+
+@pytest.mark.parametrize(
+    "method_name,expected_error",
+    [
+        ("add_ship", "Cannot add ships after battle has started"),
+        ("remove_ship", "Cannot remove ships after battle has started"),
+    ],
+    ids=["add_ship_after_battle_started", "remove_ship_after_battle_started"],
+)
+def test_method_after_battle_started_returns_error(
+    started_battle, fresh_registries, team0_ship, method_name, expected_error
+):
+    """add_ship/remove_ship return success=False with the proper error
+    after the battle has been started."""
+    if method_name == "add_ship":
+        ship = Ship(
+            name="Late Ship",
+            x=200,
+            y=200,
+            color=(255, 255, 0),
+            team_id=0,
+            ship_class="Escort",
+            registries=fresh_registries,
+        )
+    else:
+        ship = team0_ship
+    result = _call_with_method(started_battle, method_name, ship)
+    assert result.success is False
+    assert expected_error in result.errors[0]
+
+
+# =============================================================================
 # BattleServiceResult Tests
 # =============================================================================
 
@@ -239,29 +300,10 @@ class TestBattleServiceAddShip:
 
         assert team0_ship.team_id == 1
 
-    def test_add_ship_no_active_battle(self, service, team0_ship):
-        """add_ship() fails gracefully when no battle exists."""
-        result = service.add_ship(team0_ship, team_id=0)
+    # PROJ-479 Task 1.19: `no_active_battle` and `after_battle_started`
+    # patterns are parametrized at module scope below across (add, remove)
+    # so they cover both methods in one matrix.
 
-        assert result.success is False
-        assert "No active battle" in result.errors[0]
-
-    def test_add_ship_after_battle_started(self, started_battle, fresh_registries):
-        """add_ship() fails after battle has started."""
-        new_ship = Ship(
-            name="Late Ship",
-            x=200,
-            y=200,
-            color=(255, 255, 0),
-            team_id=0,
-            ship_class="Escort",
-            registries=fresh_registries
-        )
-
-        result = started_battle.add_ship(new_ship, team_id=0)
-
-        assert result.success is False
-        assert "Cannot add ships after battle has started" in result.errors[0]
 
     def test_add_multiple_ships_to_same_team(self, service, team0_ship, fresh_registries):
         """add_ship() can add multiple ships to same team."""
@@ -314,19 +356,9 @@ class TestBattleServiceRemoveShip:
         state = service.get_battle_state()
         assert team1_ship not in state['team_1_ships']
 
-    def test_remove_ship_no_active_battle(self, service, team0_ship):
-        """remove_ship() fails when no battle exists."""
-        result = service.remove_ship(team0_ship)
+    # PROJ-479 Task 1.19: `no_active_battle` and `after_battle_started`
+    # patterns are parametrized at module scope below.
 
-        assert result.success is False
-        assert "No active battle" in result.errors[0]
-
-    def test_remove_ship_after_battle_started(self, started_battle, team0_ship):
-        """remove_ship() fails after battle has started."""
-        result = started_battle.remove_ship(team0_ship)
-
-        assert result.success is False
-        assert "Cannot remove ships after battle has started" in result.errors[0]
 
     def test_remove_ship_not_found(self, service, team0_ship, team1_ship):
         """remove_ship() fails when ship not in battle."""

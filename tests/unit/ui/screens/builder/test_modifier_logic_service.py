@@ -1,65 +1,70 @@
-"""Tests for ModifierLogicService — the instance-based replacement for ModifierLogic.
+"""Tests for ModifierLogicService — UI facade delegating to ModifierService.
 
-Phase 2 of the Design Workshop tech debt plan. Tests written FIRST (TDD).
+PROJ-489: ``ModifierLogicService`` now takes a ``ModifierService`` directly
+and delegates every shared method. Tests here pin the facade surface; the
+underlying behavior is covered by ``tests/unit/simulation/services/test_modifier_service.py``.
+
+Historical context: this file originally covered behavior implemented in
+``ModifierLogicService``; that implementation has since been collapsed onto
+``ModifierService`` (PROJ-489 / cluster ``modifier_service_canon``).
 """
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
+
+from game.simulation.components.component_constants import Modifier
+
+
+def _make_service(modifier_registry):
+    """Build a ``ModifierLogicService`` backed by a real ``ModifierService``."""
+    from game.simulation.services.modifier_service import ModifierService
+    from game.ui.screens.builder.modifier_logic import ModifierLogicService
+
+    return ModifierLogicService(ModifierService(modifier_registry=modifier_registry))
 
 
 class TestModifierLogicServiceConstruction:
     """Constructor injection must follow codebase DI pattern."""
 
-    def test_requires_registry_provider(self):
+    def test_requires_modifier_service(self):
         """Passing None raises ValidationException."""
         from game.ui.screens.builder.modifier_logic import ModifierLogicService
 
         with pytest.raises(Exception):
-            ModifierLogicService(registry_provider=None)
+            ModifierLogicService(None)
 
-    def test_accepts_valid_provider(self):
-        """Valid provider creates a usable service instance."""
+    def test_accepts_valid_modifier_service(self):
+        """Valid ModifierService creates a usable facade instance."""
+        from game.simulation.services.modifier_service import ModifierService
         from game.ui.screens.builder.modifier_logic import ModifierLogicService
 
-        provider = MagicMock()
-        provider.get_modifiers.return_value = {}
-        provider.get_components.return_value = {}
-
-        service = ModifierLogicService(registry_provider=provider)
+        service = ModifierLogicService(ModifierService(modifier_registry={}))
         assert service is not None
 
 
 class TestGetBaseFiringArc:
     """Base firing arc extraction is verified through the public API.
 
-    PROJ-322 Task 3.17 / 5.27: rewritten to use ``get_initial_value`` and
-    ``get_local_min_max`` with the ``turret_mount`` mod_id (which is the
-    only public surface that actually consumes the arc) instead of calling
-    the private ``_get_base_firing_arc`` helper directly. The public path
-    exercises the same lookup logic — root-level ``firing_arc`` takes
-    precedence over ``abilities`` nested values; missing arc falls back to
-    the modifier's ``min_val``.
+    PROJ-489: the underlying implementation now lives in ``ModifierService``
+    and uses ``_has_arc_set_effect`` + generic ability iteration. These tests
+    pin the facade surface; equivalent (and more exhaustive) tests live in
+    ``test_modifier_service.py``.
     """
 
     @pytest.fixture
     def service(self):
-        from game.ui.screens.builder.modifier_logic import ModifierLogicService
-
-        provider = MagicMock()
-        # turret_mount is the only modifier that consumes the firing arc;
-        # the public path uses its mod_def for the fallback min_val.
-        turret_def = MagicMock()
-        turret_def.min_val = 0.0
-        turret_def.max_val = 360.0
-        turret_def.default_val = 50.0
-        provider.get_modifiers.return_value = {'turret_mount': turret_def}
-        provider.get_components.return_value = {}
-        return ModifierLogicService(registry_provider=provider)
+        turret_def = Modifier({
+            'id': 'turret_mount',
+            'name': 'Turret Mount',
+            'param': {'min': 0.0, 'max': 360.0, 'default': 50.0},
+            'restrictions': {},
+            'effects': [{'stat': 'arc_set', 'formula': 'param', 'operation': 'set'}],
+        })
+        return _make_service({'turret_mount': turret_def})
 
     def test_arc_at_root_level(self, service):
         """Finds firing_arc directly on component.data via public API."""
         comp = MagicMock()
         comp.data = {'firing_arc': 90}
-        # get_initial_value('turret_mount', comp) returns the arc when present.
         assert service.get_initial_value('turret_mount', comp) == 90.0
 
     def test_arc_in_projectile_ability(self, service):
@@ -86,8 +91,6 @@ class TestGetBaseFiringArc:
         """No arc found -> public API returns the modifier's min_val (0.0)."""
         comp = MagicMock()
         comp.data = {'abilities': {'SomeOtherAbility': {}}}
-        # When _get_base_firing_arc returned None internally, get_initial_value
-        # falls back to mod_def.min_val per the production contract.
         assert service.get_initial_value('turret_mount', comp) == 0.0
 
     def test_root_arc_takes_precedence(self, service):
@@ -103,22 +106,48 @@ class TestGetBaseFiringArc:
 
 
 class TestGetInitialValue:
-    """Initial value dispatch should use dict lookup, not hardcoded if chain."""
+    """Initial value dispatch should match the canonical service."""
 
     @pytest.fixture
     def service(self):
-        from game.ui.screens.builder.modifier_logic import ModifierLogicService
-
-        provider = MagicMock()
-        mod_def = MagicMock()
-        mod_def.min_val = 0.0
-        mod_def.max_val = 360.0
-        mod_def.default_val = 50.0
-        provider.get_modifiers.return_value = {'test_mod': mod_def, 'simple_size_mount': mod_def,
-                                                'range_mount': mod_def, 'facing': mod_def,
-                                                'precision_mount': mod_def, 'turret_mount': mod_def}
-        provider.get_components.return_value = {}
-        return ModifierLogicService(registry_provider=provider)
+        registry = {
+            'simple_size_mount': Modifier({
+                'id': 'simple_size_mount',
+                'name': 'Size',
+                'param': {'min': 1.0, 'max': 1024.0, 'default': 1.0},
+                'restrictions': {},
+                'effects': [],
+            }),
+            'range_mount': Modifier({
+                'id': 'range_mount',
+                'name': 'Range',
+                'param': {'min': 0.0, 'max': 3.0, 'default': 0.0},
+                'restrictions': {},
+                'effects': [],
+            }),
+            'facing': Modifier({
+                'id': 'facing',
+                'name': 'Facing',
+                'param': {'min': 0.0, 'max': 359.0, 'default': 0.0},
+                'restrictions': {},
+                'effects': [],
+            }),
+            'precision_mount': Modifier({
+                'id': 'precision_mount',
+                'name': 'Precision',
+                'param': {'min': 0.0, 'max': 5.0, 'default': 0.0},
+                'restrictions': {},
+                'effects': [],
+            }),
+            'turret_mount': Modifier({
+                'id': 'turret_mount',
+                'name': 'Turret Mount',
+                'param': {'min': 0.0, 'max': 360.0, 'default': 50.0},
+                'restrictions': {},
+                'effects': [{'stat': 'arc_set', 'formula': 'param', 'operation': 'set'}],
+            }),
+        }
+        return _make_service(registry)
 
     def test_simple_size_mount_returns_1(self, service):
         comp = MagicMock()
@@ -146,18 +175,19 @@ class TestGetInitialValue:
         comp.data = {'abilities': {}}
         assert service.get_initial_value('turret_mount', comp) == 0.0
 
-    def test_unknown_modifier_returns_default_val(self, service):
+    def test_unknown_modifier_returns_default_val(self):
         """Modifiers not in dispatch dict use mod_def.default_val."""
+        registry = {
+            'unknown_mod': Modifier({
+                'id': 'unknown_mod',
+                'name': 'Unknown',
+                'param': {'min': 0.0, 'max': 100.0, 'default': 42.0},
+                'restrictions': {},
+                'effects': [],
+            })
+        }
+        svc = _make_service(registry)
         comp = MagicMock()
-        # Need a provider that has 'unknown_mod' definition
-        provider = MagicMock()
-        mod_def = MagicMock()
-        mod_def.default_val = 42.0
-        provider.get_modifiers.return_value = {'unknown_mod': mod_def}
-        provider.get_components.return_value = {}
-
-        from game.ui.screens.builder.modifier_logic import ModifierLogicService
-        svc = ModifierLogicService(registry_provider=provider)
         assert svc.get_initial_value('unknown_mod', comp) == 42.0
 
     def test_missing_modifier_returns_0(self, service):
@@ -167,27 +197,27 @@ class TestGetInitialValue:
 
 
 class TestGetLocalMinMax:
-    """Min/max calculation should use extracted firing arc helper."""
+    """Min/max calculation should use the canonical arc_set detection."""
 
     @pytest.fixture
     def service(self):
-        from game.ui.screens.builder.modifier_logic import ModifierLogicService
-
-        provider = MagicMock()
-        turret_def = MagicMock()
-        turret_def.min_val = 0.0
-        turret_def.max_val = 360.0
-
-        other_def = MagicMock()
-        other_def.min_val = 0.0
-        other_def.max_val = 100.0
-
-        provider.get_modifiers.return_value = {
-            'turret_mount': turret_def,
-            'range_mount': other_def,
+        registry = {
+            'turret_mount': Modifier({
+                'id': 'turret_mount',
+                'name': 'Turret Mount',
+                'param': {'min': 0.0, 'max': 360.0, 'default': 50.0},
+                'restrictions': {},
+                'effects': [{'stat': 'arc_set', 'formula': 'param', 'operation': 'set'}],
+            }),
+            'range_mount': Modifier({
+                'id': 'range_mount',
+                'name': 'Range',
+                'param': {'min': 0.0, 'max': 100.0, 'default': 0.0},
+                'restrictions': {},
+                'effects': [],
+            }),
         }
-        provider.get_components.return_value = {}
-        return ModifierLogicService(registry_provider=provider)
+        return _make_service(registry)
 
     def test_turret_mount_min_is_base_arc(self, service):
         """turret_mount min should be the component's base firing arc."""
@@ -211,7 +241,7 @@ class TestGetLocalMinMax:
 
 
 class TestCalculateSnapValue:
-    """Snap calculation is a pure function — should remain static."""
+    """Snap calculation is a pure UI function — retained on ModifierLogicService."""
 
     def test_decrement_from_exact_multiple(self):
         from game.ui.screens.builder.modifier_logic import ModifierLogicService
@@ -237,21 +267,27 @@ class TestCalculateSnapValue:
 
 
 class TestIsModifierMandatory:
-    """Mandatory check delegates correctly."""
+    """Mandatory check delegates correctly to the canonical service."""
 
     @pytest.fixture
     def service(self):
-        from game.ui.screens.builder.modifier_logic import ModifierLogicService
-
-        provider = MagicMock()
-        mod_a = MagicMock()
-        mod_a.restrictions = {}  # No restrictions = allowed for everything
-        mod_b = MagicMock()
-        mod_b.restrictions = {'allow_types': ['weapon']}
-
-        provider.get_modifiers.return_value = {'mod_a': mod_a, 'mod_b': mod_b}
-        provider.get_components.return_value = {}
-        return ModifierLogicService(registry_provider=provider)
+        registry = {
+            'mod_a': Modifier({
+                'id': 'mod_a',
+                'name': 'A',
+                'param': {'min': 0, 'max': 10, 'default': 0},
+                'restrictions': {},  # No restrictions = allowed for everything
+                'effects': [],
+            }),
+            'mod_b': Modifier({
+                'id': 'mod_b',
+                'name': 'B',
+                'param': {'min': 0, 'max': 10, 'default': 0},
+                'restrictions': {'allow_types': ['weapon']},
+                'effects': [],
+            }),
+        }
+        return _make_service(registry)
 
     def test_unrestricted_modifier_is_mandatory(self, service):
         """Modifier with no restrictions is mandatory (allowed = mandatory in this system)."""

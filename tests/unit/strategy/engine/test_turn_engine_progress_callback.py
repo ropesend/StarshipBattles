@@ -58,9 +58,18 @@ def test_progress_callback_fires_on_cadence(engine_inputs):
 
     engine.process_turn(empires, galaxy, save_path=None, progress_callback=cb)
 
+    # PROJ-479 Task 3.18: relaxed call_args_list equality — extract just
+    # the (tick, total) positional tuple and compare against the expected
+    # sequence. Avoids spurious failures if mock-call internals (kwargs
+    # ordering, _Call repr) change.
     assert cb.call_count == len(_EXPECTED_CALLBACK_TICKS)
-    expected = [((tick, TICKS_PER_TURN), {}) for tick in _EXPECTED_CALLBACK_TICKS]
-    assert cb.call_args_list == expected
+    actual_tick_calls = [
+        (call.args[0], call.args[1]) for call in cb.call_args_list
+    ]
+    expected_tick_calls = [
+        (tick, TICKS_PER_TURN) for tick in _EXPECTED_CALLBACK_TICKS
+    ]
+    assert actual_tick_calls == expected_tick_calls
 
 
 def test_progress_callback_always_fires_at_tick_1_and_last(engine_inputs):

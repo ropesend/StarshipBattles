@@ -212,31 +212,48 @@ class TestCycleDetectionCall:
     """
 
     def test_detect_cycles_called_during_init(self):
-        """detect_cycles() should be called during scene initialization.
+        """detect_cycles() should be called as an ``__init__`` side effect.
 
-        PROJ-40/NEW-RES-005: Scene should validate for cycles.
+        PROJ-40/NEW-RES-005: Scene should validate for cycles on construction.
+
+        PROJ-478 Phase 2: rewritten. The previous version called
+        ``mock_tree.detect_cycles()`` itself then asserted it was called
+        (CAT-2 tautology). Now constructs a real ``ResearchTreeScene`` and
+        asserts ``detect_cycles`` fires as an ``__init__`` side effect via
+        the patched ``TechTree.load_from_json``.
         """
-        # Mock the dependencies
         mock_tree = MagicMock()
-        mock_tree.nodes = {'test': MagicMock()}
+        mock_tree.nodes = {}
         mock_tree.validate_requirements.return_value = []
-        mock_tree.detect_cycles.return_value = []  # No cycles
+        mock_tree.detect_cycles.return_value = []
+        mock_tree.resolve_all_requirements = MagicMock()
 
-        with patch('game.ui.research.research_scene.TechTree', return_value=mock_tree):
-            with patch('game.ui.research.research_scene.StarshipUIManager'):
-                with patch('game.ui.research.research_scene.ResearchControlPanel'):
-                    from game.ui.research.research_scene import ResearchTreeScene
+        # Patch the entry points that ResearchTreeScene.__init__ pulls
+        # through. ``TechTree.load_from_json`` is the seam that returns the
+        # tech tree used for the cycles validation. The UI manager and
+        # control panel are patched out so the scene can construct without
+        # a real pygame surface.
+        with patch(
+            'game.ui.research.research_scene.TechTree.load_from_json',
+            return_value=mock_tree,
+        ), patch('game.ui.research.research_scene.StarshipUIManager'), patch(
+            'game.ui.research.research_scene.ResearchControlPanel'
+        ), patch(
+            'game.ui.research.research_scene.ResearchRenderer'
+        ), patch('game.ui.research.research_scene.Camera'), patch(
+            'game.ui.research.research_scene.ResearchTracker'
+        ):
+            from game.ui.research.research_scene import ResearchTreeScene
 
-                    # Create scene (mocked)
-                    scene = MagicMock(spec=ResearchTreeScene)
-                    scene.tech_tree = mock_tree
+            ResearchTreeScene(
+                screen_width=1920,
+                screen_height=1080,
+                on_close_callback=None,
+            )
 
-                    # Manually call the validation logic (simulating __init__)
-                    mock_tree.validate_requirements()
-                    mock_tree.detect_cycles()
-
-                    # Verify detect_cycles was callable
-                    mock_tree.detect_cycles.assert_called_once()
+        # The scene's ``__init__`` — not the test — must have invoked
+        # detect_cycles on the tech tree.
+        mock_tree.detect_cycles.assert_called_once()
 
     def test_detect_cycles_errors_logged(self):
         """Cycle detection errors should be logged.

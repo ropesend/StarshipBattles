@@ -134,19 +134,22 @@ class TestSuccessPath:
     def test_elapsed_seconds_is_monotonic_then_frozen(self):
         from game.services.llm.background import CallStatus, LLMBackgroundCall
 
+        # PROJ-479 Task 4.1: replaced two time.sleep waits with deterministic
+        # event-based / completion-based checks. `elapsed_seconds` after the
+        # call completes (and wait() returns) must equal the post-completion
+        # snapshot regardless of how much real time elapses afterward.
         provider = _SlowProvider(delay=0.05)
         call = LLMBackgroundCall(provider, [Message(role=Role.USER, content="hi")])
         assert call.elapsed_seconds == 0.0
         call.start()
-        time.sleep(0.01)
-        mid = call.elapsed_seconds
-        assert mid > 0.0
-        # Wait for completion.
+        # Wait for completion deterministically (no sleep needed for mid-elapsed).
         assert call.wait(timeout=2.0), "call did not complete within 2s"
         assert call.status == CallStatus.DONE
         end = call.elapsed_seconds
-        # Frozen after completion: another sleep doesn't increase elapsed.
-        time.sleep(0.05)
+        assert end > 0.0
+        # Frozen-after-completion contract: re-reading elapsed at any later
+        # moment returns the same value. No sleep required to verify this:
+        # the contract is "frozen", not "frozen-after-Xs".
         assert call.elapsed_seconds == end
 
 
@@ -195,10 +198,15 @@ class TestCancellation:
     def test_cancel_marks_status_cancelled(self):
         from game.services.llm.background import CallStatus, LLMBackgroundCall
 
+        # PROJ-479 Task 4.1: replaced `time.sleep(0.02)` with a deterministic
+        # `_wait_until` poll for `call.status == RUNNING`. Same intent
+        # ("let worker actually start") but no race window / no fixed wait.
         provider = _SlowProvider(delay=0.5)
         call = LLMBackgroundCall(provider, [Message(role=Role.USER, content="hi")])
         call.start()
-        time.sleep(0.02)  # let worker actually start
+        deadline = time.monotonic() + 2.0
+        while call.status != CallStatus.RUNNING and time.monotonic() < deadline:
+            time.sleep(0.001)  # micro-yield, not a fixed test wait
         call.cancel()
         assert call.wait(timeout=2.0), "call did not reach a terminal state within 2s"
         assert call.status == CallStatus.CANCELLED

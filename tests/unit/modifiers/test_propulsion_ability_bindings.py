@@ -7,118 +7,63 @@ import pytest
 from game.simulation.components.abilities.stat_keys import StatKey, AbilityStatBinding
 
 
-class TestCombatPropulsionBindings:
-    """Tests for CombatPropulsion STAT_BINDINGS."""
+def _ability_cls(name):
+    """Lazy import helper to keep imports inside parametrized tests cheap."""
+    from game.simulation.components.abilities import propulsion as _prop
 
-    def test_combat_propulsion_has_thrust_binding(self):
-        """CombatPropulsion should have THRUST_MULT binding for 'thrust_force'."""
-        from game.simulation.components.abilities.propulsion import CombatPropulsion
-
-        thrust_bindings = [b for b in CombatPropulsion.STAT_BINDINGS
-                          if b.stat_key == StatKey.THRUST_MULT]
-        assert len(thrust_bindings) == 1
-
-        binding = thrust_bindings[0]
-        assert binding.attribute_name == 'thrust_force'
-        assert binding.operation == 'multiply'
-
-    def test_combat_propulsion_get_consumed_stats(self):
-        """get_consumed_stats() should return THRUST_MULT."""
-        from game.simulation.components.abilities.propulsion import CombatPropulsion
-
-        consumed = CombatPropulsion.get_consumed_stats()
-        assert StatKey.THRUST_MULT in consumed
-
-    def test_combat_propulsion_recalculate(self):
-        """recalculate() should apply thrust_mult."""
-        from game.simulation.components.abilities.propulsion import CombatPropulsion
-
-        class MockComponent:
-            def __init__(self):
-                self.stats = {'thrust_mult': 2.0}
-                self.ability_stats = {}
-
-        component = MockComponent()
-        ability = CombatPropulsion(component, {'value': 1000})
-
-        ability.recalculate()
-        assert ability.thrust_force == pytest.approx(2000)
+    return getattr(_prop, name)
 
 
-class TestManeuveringThrusterBindings:
-    """Tests for ManeuveringThruster STAT_BINDINGS."""
+@pytest.mark.parametrize(
+    "ability_name,stat_key_name,attr_name,base_value,mult_value,expected",
+    [
+        ("CombatPropulsion", "THRUST_MULT", "thrust_force", 1000, 2.0, 2000),
+        ("ManeuveringThruster", "TURN_MULT", "turn_rate", 30, 3.0, 90),
+        ("StrategicMovement", "STRATEGIC_MULT", "movement_points", 10, 4.0, 40),
+    ],
+    ids=["CombatPropulsion", "ManeuveringThruster", "StrategicMovement"],
+)
+class TestPropulsionAbilityBindings:
+    """Parametrized tests for the three propulsion ability STAT_BINDINGS triplets."""
 
-    def test_maneuvering_thruster_has_turn_binding(self):
-        """ManeuveringThruster should have TURN_MULT binding for 'turn_rate'."""
-        from game.simulation.components.abilities.propulsion import ManeuveringThruster
+    def test_has_multiply_binding(
+        self, ability_name, stat_key_name, attr_name, base_value, mult_value, expected
+    ):
+        ability_cls = _ability_cls(ability_name)
+        stat_key = getattr(StatKey, stat_key_name)
+        bindings = [b for b in ability_cls.STAT_BINDINGS if b.stat_key == stat_key]
+        assert len(bindings) == 1
+        binding = bindings[0]
+        assert binding.attribute_name == attr_name
+        assert binding.operation == "multiply"
 
-        turn_bindings = [b for b in ManeuveringThruster.STAT_BINDINGS
-                         if b.stat_key == StatKey.TURN_MULT]
-        assert len(turn_bindings) == 1
+    def test_get_consumed_stats(
+        self, ability_name, stat_key_name, attr_name, base_value, mult_value, expected
+    ):
+        ability_cls = _ability_cls(ability_name)
+        stat_key = getattr(StatKey, stat_key_name)
+        assert stat_key in ability_cls.get_consumed_stats()
 
-        binding = turn_bindings[0]
-        assert binding.attribute_name == 'turn_rate'
-        assert binding.operation == 'multiply'
-
-    def test_maneuvering_thruster_get_consumed_stats(self):
-        """get_consumed_stats() should return TURN_MULT."""
-        from game.simulation.components.abilities.propulsion import ManeuveringThruster
-
-        consumed = ManeuveringThruster.get_consumed_stats()
-        assert StatKey.TURN_MULT in consumed
-
-    def test_maneuvering_thruster_recalculate(self):
-        """recalculate() should apply turn_mult."""
-        from game.simulation.components.abilities.propulsion import ManeuveringThruster
+    def test_recalculate_applies_multiplier(
+        self, ability_name, stat_key_name, attr_name, base_value, mult_value, expected
+    ):
+        ability_cls = _ability_cls(ability_name)
+        stat_key = getattr(StatKey, stat_key_name)
 
         class MockComponent:
             def __init__(self):
-                self.stats = {'turn_mult': 3.0}
+                # attribute name for stat dict key is the lowercase stat_key
+                self.stats = {stat_key.value if hasattr(stat_key, "value") else stat_key_name.lower(): mult_value}
                 self.ability_stats = {}
 
+        # build component then patch in the correct dict-key
         component = MockComponent()
-        ability = ManeuveringThruster(component, {'value': 30})
-
+        # stat_keys.StatKey values are typically lowercase strings (e.g., "thrust_mult");
+        # rebuild stats dict to use the binding's stat_key value:
+        component.stats = {stat_key.value: mult_value} if hasattr(stat_key, "value") else {stat_key_name.lower(): mult_value}
+        ability = ability_cls(component, {"value": base_value})
         ability.recalculate()
-        assert ability.turn_rate == pytest.approx(90)
-
-
-class TestStrategicMovementBindings:
-    """Tests for StrategicMovement STAT_BINDINGS."""
-
-    def test_strategic_movement_has_strategic_binding(self):
-        """StrategicMovement should have STRATEGIC_MULT binding for 'movement_points'."""
-        from game.simulation.components.abilities.propulsion import StrategicMovement
-
-        strategic_bindings = [b for b in StrategicMovement.STAT_BINDINGS
-                              if b.stat_key == StatKey.STRATEGIC_MULT]
-        assert len(strategic_bindings) == 1
-
-        binding = strategic_bindings[0]
-        assert binding.attribute_name == 'movement_points'
-        assert binding.operation == 'multiply'
-
-    def test_strategic_movement_get_consumed_stats(self):
-        """get_consumed_stats() should return STRATEGIC_MULT."""
-        from game.simulation.components.abilities.propulsion import StrategicMovement
-
-        consumed = StrategicMovement.get_consumed_stats()
-        assert StatKey.STRATEGIC_MULT in consumed
-
-    def test_strategic_movement_recalculate(self):
-        """recalculate() should apply strategic_mult."""
-        from game.simulation.components.abilities.propulsion import StrategicMovement
-
-        class MockComponent:
-            def __init__(self):
-                self.stats = {'strategic_mult': 4.0}
-                self.ability_stats = {}
-
-        component = MockComponent()
-        ability = StrategicMovement(component, {'value': 10})
-
-        ability.recalculate()
-        assert ability.movement_points == pytest.approx(40)
+        assert getattr(ability, attr_name) == pytest.approx(expected)
 
 
 class TestWarpJumpBindings:

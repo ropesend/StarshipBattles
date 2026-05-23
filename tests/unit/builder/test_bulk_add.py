@@ -26,5 +26,13 @@ class TestBulkAdd:
         count = 10
         ship.add_components_bulk(comp, LayerType.ARMOR, count)
 
-        assert len(ship.layers[LayerType.ARMOR].components) == 10
+        components = ship.layers[LayerType.ARMOR].components
+        assert len(components) == 10
+        # add_components_bulk clones each instance, so identity differs but the
+        # clone must preserve the source component's id and classification —
+        # otherwise the test could pass with the wrong component in place.
+        for clone in components:
+            assert clone is not comp  # cloned, not aliased
+            assert clone.id == comp.id == "armor_std"
+            assert clone.major_classification == "Armor"
         assert ship.current_mass == 100  # 10 * 10

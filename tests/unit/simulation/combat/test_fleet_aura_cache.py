@@ -41,11 +41,6 @@ def _mock_ship(team_id=0, alive=True, name="Ship1", abilities=None):
 class TestFleetAuraCaching:
     """FleetAuraManager should cache and reuse aggregation results."""
 
-    def test_providers_dirty_flag_exists(self):
-        """Manager should have a _providers_dirty flag."""
-        mgr = FleetAuraManager()
-        assert hasattr(mgr, '_providers_dirty')
-
     def test_update_with_no_changes_skips_recalculation(self):
         """Calling update() when providers haven't changed should use cache."""
         mgr = FleetAuraManager()

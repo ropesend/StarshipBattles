@@ -1,5 +1,6 @@
 """Tests for game.ui.utils.portraits module."""
 import pygame
+import pytest
 
 from game.ui.colors import (
     SHIP_CLASS_CRUISER,
@@ -15,17 +16,21 @@ from game.ui.utils.portraits import (
 class TestGetShipClassColor:
     """Tests for get_ship_class_color utility."""
 
-    def test_known_class_fighter(self):
-        assert get_ship_class_color("Fighter") == SHIP_CLASS_FIGHTER
-
-    def test_known_class_cruiser(self):
-        assert get_ship_class_color("Cruiser") == SHIP_CLASS_CRUISER
-
-    def test_unknown_class_returns_default(self):
-        assert get_ship_class_color("Dreadnought") == SHIP_CLASS_DEFAULT
-
-    def test_none_returns_default(self):
-        assert get_ship_class_color(None) == SHIP_CLASS_DEFAULT
+    # PROJ-480 Task 3.33: parametrize 4 color lookups. Ids preserve
+    # each branch (known classes vs. unknown vs. None default).
+    @pytest.mark.parametrize(
+        "class_name, expected_color",
+        [
+            ("Fighter", SHIP_CLASS_FIGHTER),
+            ("Cruiser", SHIP_CLASS_CRUISER),
+            ("Dreadnought", SHIP_CLASS_DEFAULT),
+            (None, SHIP_CLASS_DEFAULT),
+        ],
+        ids=["known_fighter", "known_cruiser",
+             "unknown_returns_default", "none_returns_default"],
+    )
+    def test_get_ship_class_color(self, class_name, expected_color):
+        assert get_ship_class_color(class_name) == expected_color
 
 
 class TestCreatePlaceholderPortrait:

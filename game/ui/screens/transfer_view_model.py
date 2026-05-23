@@ -102,7 +102,7 @@ class TransferViewModel:
     # Pending-transfer math
     # ------------------------------------------------------------------
 
-    def apply_arrow(self, cargo_key: str, delta: int) -> Any:
+    def apply_arrow(self, cargo_key: str, delta: int) -> float | int:
         """Adjust pending transfer by ``delta``.
 
         If currently at MAX_LOAD / MAX_DROP, reset to 0 first then
@@ -119,7 +119,7 @@ class TransferViewModel:
         self.pending_transfers[cargo_key] = new_value
         return new_value
 
-    def apply_max(self, cargo_key: str, direction: str) -> Any:
+    def apply_max(self, cargo_key: str, direction: str) -> float | int:
         """Set pending to MAX_LOAD or MAX_DROP for ``cargo_key``.
 
         ``direction`` is ``'load'`` or ``'drop'``. Returns the new
@@ -145,7 +145,7 @@ class TransferViewModel:
         changes — old transfers no longer make sense)."""
         self.pending_transfers.clear()
 
-    def get_pending(self, cargo_key: str) -> Any:
+    def get_pending(self, cargo_key: str) -> float | int:
         """Return current pending value for ``cargo_key`` (default 0)."""
         return self.pending_transfers.get(cargo_key, 0)
 

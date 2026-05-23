@@ -14,18 +14,24 @@ from game.core.registry import get_default_registry_provider
 from tests.fixtures.paths import get_data_dir, get_unit_test_data_dir
 
 
-@pytest.fixture
-def ai_setup(fresh_registries):
-    """Setup fixture for AI controller tests."""
+# PROJ-479 Task 2.2: module-scoped cache marker for one-time JSON-loads.
+# The expensive `load_components` + `load_vehicle_classes` + policy
+# `load_data` calls are read-only-from-disk and only need to happen once
+# per session. Per-test we still build fresh Ships from fresh_registries
+# (Ship objects mutate during tests so they cannot be reused).
+_AI_TEST_DATA_LOADED = False
+
+
+def _ensure_ai_test_data_loaded():
+    global _AI_TEST_DATA_LOADED
+    if _AI_TEST_DATA_LOADED:
+        return
     data_dir = get_data_dir()
     unit_test_data_dir = get_unit_test_data_dir()
-
-    # PROJ-211: Pass registry_provider explicitly
     provider = get_default_registry_provider()
     load_components(str(data_dir / "components.json"), registry_provider=provider)
     from game.simulation.entities.ship_loader import load_vehicle_classes
     load_vehicle_classes(str(unit_test_data_dir / "test_vehicleclasses.json"), registry_provider=provider)
-    # Load test data for AI strategies to ensure reproducible tests
     manager = get_default_policy_manager()
     manager.load_data(
         str(unit_test_data_dir),
@@ -33,6 +39,14 @@ def ai_setup(fresh_registries):
         movement_file="test_movement_policies.json",
     )
     manager._loaded = True
+    _AI_TEST_DATA_LOADED = True
+
+
+@pytest.fixture
+def ai_setup(fresh_registries):
+    """Setup fixture for AI controller tests."""
+    _ensure_ai_test_data_loaded()
+    unit_test_data_dir = get_unit_test_data_dir()  # noqa: F841  (kept for future use)
 
     grid = SpatialGrid(cell_size=2000)
 
@@ -69,7 +83,9 @@ def ai_setup(fresh_registries):
         'registries': fresh_registries
     }
 
-    # Cleanup
+    # Per-test cleanup: invalidate cache so next test reloads.
+    global _AI_TEST_DATA_LOADED
+    _AI_TEST_DATA_LOADED = False
     get_default_policy_manager().clear()
 
 
@@ -184,7 +200,9 @@ def strategy_setup(fresh_registries):
         'registries': fresh_registries
     }
 
-    # Cleanup
+    # Per-test cleanup: invalidate cache so next test reloads.
+    global _AI_TEST_DATA_LOADED
+    _AI_TEST_DATA_LOADED = False
     get_default_policy_manager().clear()
 
 

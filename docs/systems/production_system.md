@@ -1,6 +1,6 @@
 # Production System - Compact Agent Reference
 
-> **Last verified:** 2026-05-18 — PROJ-436 Phase 10 doc refresh: `ProductionEngine.context_type` storage-dispatch deleted (Phase 8) — replaced with the `IProductionResourceSource` Protocol (`production_has_resources` / `production_get_resource` / `production_consume_resource`) satisfied by both `Planet` and `Fleet` via polymorphic delegators. `BuildQueueSource.context_type` is **UI entity routing only** (Phase 6a kept it for that purpose); the engine no longer reads it. Staging-yard pods are typed `DropPod` entries in `ship.bay_inventory.pods` (Phase 9).
+> **Last verified:** 2026-05-22 — PROJ-436 Phase 10 doc refresh: `ProductionEngine.context_type` storage-dispatch deleted (Phase 8) — replaced with the `IProductionResourceSource` Protocol (`production_has_resources` / `production_get_resource` / `production_consume_resource`) satisfied by both `Planet` and `Fleet` via polymorphic delegators. `BuildQueueSource.context_type` is **UI entity routing only** (Phase 6a kept it for that purpose); the engine no longer reads it. Staging-yard pods are typed `DropPod` entries in `ship.bay_inventory.pods` (Phase 9).
 
 This is the strategy-layer construction pipeline. Players queue designs in the
 Build Queue UI; `ProductionEngine` consumes local resources over 100 ticks per
@@ -67,8 +67,11 @@ Important contracts:
   component activation state.
 - `is_shipyard` returns true only for operational facilities whose design data
   contains component id `space_shipyard` or inline `SpaceShipyard`.
-- Fuel helpers are `get_fuel_storage()`, `get_max_fuel_storage(registries)`,
-  `add_fuel(amount, registries)`, and `withdraw_fuel(amount)`.
+- Consumable storage uses the generic API: `get_consumable_storage(resource_id)`,
+  `get_max_consumable_storage(resource_id, registries)`,
+  `add_consumable(resource_id, amount, registries)`,
+  `withdraw_consumable(resource_id, amount)`. Fuel is one such consumable
+  (`resource_id="fuel"`); legacy fuel-specific wrappers were removed in PROJ-487.
 - Facility component activation state uses `ComponentActivationState`; the
   legacy `set_component_active()` / `is_component_active()` wrappers still
   translate to that model.

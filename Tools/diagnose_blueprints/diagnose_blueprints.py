@@ -24,7 +24,8 @@ sys.path.insert(0, str(_find_project_root()))
 from game.strategy.data.stars import StarGenerator, StarType
 from game.strategy.data.planet_gen import PlanetGenerator
 from game.strategy.data.planet import PlanetType
-from game.strategy.data.planet_physics import MASS_EARTH, MASS_JUPITER
+from game.core.constants import EARTH_MASS
+from game.strategy.data.planet_physics import MASS_JUPITER
 from game.strategy.generation.loaders.system_blueprints_loader import SystemBlueprintsLoader
 from game.strategy.generation.planet_image_registry import PlanetImageRegistry
 
@@ -159,7 +160,7 @@ def analyze_system(result: dict, blueprint_name: str, expectations: dict) -> dic
 
     # Check for small planets in red_dwarf_pack
     if expectations.get("expect_small_planets"):
-        small_threshold = 5 * MASS_EARTH  # 5 Earth masses
+        small_threshold = 5 * EARTH_MASS  # 5 Earth masses
         small_planets = [p for p in planets if p.mass < small_threshold]
         if len(planets) > 0:
             small_ratio = len(small_planets) / len(planets)
@@ -205,7 +206,7 @@ def print_system_details(result: dict, blueprint_name: str):
 
     print(f"\n--- Planets ({len(result['planets'])}) ---")
     for planet in result["planets"]:
-        mass_earth = planet.mass / MASS_EARTH
+        mass_earth = planet.mass / EARTH_MASS
         mass_jupiter = planet.mass / MASS_JUPITER
         print(f"  {planet.name}:")
         print(f"    Type: {planet.planet_type.name}")

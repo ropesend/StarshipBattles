@@ -126,7 +126,7 @@ class ModifierControlRow:
             else:
                 btn.disable()
 
-    def build_ui(self, y) -> Any:
+    def build_ui(self, y) -> int:
         """Constructs the UI elements at the given y position."""
         self._clear_ui()
         self.y = y

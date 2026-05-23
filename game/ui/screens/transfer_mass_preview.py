@@ -25,7 +25,10 @@ Coverage:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any, Dict, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game.core.resources import ResourceCatalog
 
 
 # Tons per individual member of a species. Mirrors
@@ -186,7 +189,7 @@ def _qty_for_cargo_key(cargo_key: str, snapshots) -> int:
 _catalog = None
 
 
-def _get_catalog():
+def _get_catalog() -> "ResourceCatalog":
     """Lazy-load the resource catalog once per process.
 
     Same pattern as :mod:`game.ui.screens.transfer_view_model` —

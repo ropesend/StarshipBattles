@@ -62,29 +62,10 @@ class TestModifierLoaderV2:
         assert mod.effects[0]['stat'] == 'mass_mult'
         assert mod.effects[0]['formula'] == 'param'
 
-    def test_modifier_v2_evaluate_effects(self):
-        """V2 modifier should be able to evaluate effects."""
-        from game.simulation.components.component_constants import Modifier
-
-        v2_data = {
-            'id': 'hardened_mount',
-            'name': 'Hardened',
-            'effects': [
-                {'stat': 'mass_mult', 'formula': 'param'},
-                {'stat': 'hp_mult', 'formula': 'param ^ 2'}
-            ]
-        }
-
-        mod = Modifier(v2_data)
-        effects = mod.evaluate_effects(2.0)
-
-        assert len(effects) == 2
-
-        mass_effect = next(e for e in effects if e.stat_key == 'mass_mult')
-        hp_effect = next(e for e in effects if e.stat_key == 'hp_mult')
-
-        assert mass_effect.value == pytest.approx(2.0)
-        assert hp_effect.value == pytest.approx(4.0)
+    # PROJ-479 Task 1.14: deleted `test_modifier_v2_evaluate_effects` —
+    # fully subsumed by `TestModifierFormulaEvaluation::test_hardened_mount_formula`
+    # below which exercises the same hardened_mount evaluate_effects path
+    # at both param=2.0 and param=3.0.
 
     def test_load_modifiers_file(self):
         """Should load modifiers.json file correctly.

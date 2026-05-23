@@ -375,15 +375,26 @@ def test_ability_toggle_returns_without_planet_selection(
 
 
 @pytest.mark.parametrize(
-    ("phase", "expected_cmd_class_name"),
+    ("phase", "expected_cmd_class"),
     [
-        ("active", "DeactivatePlanetAbilityCommand"),
-        ("inactive", "ActivatePlanetAbilityCommand"),
+        # PROJ-479 Task 3.26: import real command classes and assert via
+        # isinstance instead of comparing `type(command).__name__` (which
+        # silently passes on shadowed classes or string typos).
+        pytest.param(
+            "active",
+            "DeactivatePlanetAbilityCommand",
+            id="active->deactivate",
+        ),
+        pytest.param(
+            "inactive",
+            "ActivatePlanetAbilityCommand",
+            id="inactive->activate",
+        ),
     ],
 )
-def test_ability_toggle_issues_order_for_first_operational_facility_component(
+def test_ability_toggle_issues_order_for_first_operational_facility_component(  # noqa: E501
     phase: str,
-    expected_cmd_class_name: str,
+    expected_cmd_class: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """PROJ-438 Phase 5: typed planet-ability commands replace the stringly
@@ -427,7 +438,10 @@ def test_ability_toggle_issues_order_for_first_operational_facility_component(
 
     scene.facade.handle_command.assert_called_once()
     command = scene.facade.handle_command.call_args.args[0]
-    assert type(command).__name__ == expected_cmd_class_name
+    # PROJ-479 Task 3.26: real class import for isinstance check
+    from game.strategy.engine import commands as _cmd_mod
+    expected_cls = getattr(_cmd_mod, expected_cmd_class)
+    assert isinstance(command, expected_cls)
     assert command.planet_id == 42
     assert command.facility_instance_id == "facility-1"
     assert command.ability_name == "PlanetaryShield"

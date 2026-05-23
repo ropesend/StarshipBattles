@@ -73,8 +73,11 @@ class TestActionTickInterval:
         assert len(results) == 1
         assert fleet.get_current_order().execution_progress == 1
 
-    def test_speed_1_fleet_acts_every_100_ticks(self):
-        """Speed 1 fleet should act only on tick 100."""
+    # PROJ-480 Task 1.28: parametrize on tick so each non-acting tick value
+    # fails in isolation rather than the first failure short-circuiting.
+    @pytest.mark.parametrize("tick", [1, 20, 50, 99])
+    def test_speed_1_fleet_does_not_act_on_non_100_tick(self, tick):
+        """Speed 1 fleet should NOT act on ticks before 100."""
         processor = _make_mock_order_processor()
         engine = ActionExecutionEngine(processor)
 
@@ -85,12 +88,21 @@ class TestActionTickInterval:
 
         galaxy = _make_mock_galaxy()
 
-        # Should NOT act on ticks 1-99
-        for tick in [1, 20, 50, 99]:
-            results = engine.process_action_ticks([empire], galaxy, tick)
-            assert len(results) == 0
+        results = engine.process_action_ticks([empire], galaxy, tick)
+        assert len(results) == 0
 
-        # Should act on tick 100
+    def test_speed_1_fleet_acts_on_tick_100(self):
+        """Speed 1 fleet acts on tick 100."""
+        processor = _make_mock_order_processor()
+        engine = ActionExecutionEngine(processor)
+
+        empire = _make_empire()
+        fleet = _make_fleet(speed=1.0)
+        fleet.add_order(Order(OrderType.COLONIZE, None))
+        empire.fleets.append(fleet)
+
+        galaxy = _make_mock_galaxy()
+
         results = engine.process_action_ticks([empire], galaxy, 100)
         assert len(results) == 1
         assert fleet.get_current_order().execution_progress == 1

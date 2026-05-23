@@ -53,7 +53,8 @@ def test_issue_orders_consumes_resolved_amount_field_not_slider_widget():
 
     assert orders_issued == 1
     facade.handle_command.assert_called_once()
-    cmd = facade.handle_command.call_args[0][0]
+    # PROJ-479 Task 3.28: explicit named extraction instead of call_args[0][0]
+    cmd = facade.handle_command.call_args.args[0]
     assert cmd.amount == 5
     assert cmd.cargo_type == 'metals'
 

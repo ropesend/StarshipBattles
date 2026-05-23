@@ -92,12 +92,13 @@ def _make_colony(facilities=None):
     return colony
 
 
+# PROJ-479 Task 5.4 (DUP-005): _make_empire moved to engine/conftest.py
+# Local wrapper preserves the empire_id=0 default this file used.
+from .conftest import make_mock_empire as _make_mock_empire_canonical  # noqa: E402
+
+
 def _make_empire(colonies=None):
-    """Create a mock empire with colonies."""
-    empire = MagicMock()
-    empire.colonies = colonies or []
-    empire.id = 0
-    return empire
+    return _make_mock_empire_canonical(empire_id=0, colonies=colonies)
 
 
 # ===========================================================================
@@ -488,7 +489,7 @@ class TestFuelTransferEdges:
         total = engine._transfer_fuel({ship: 100.0}, available=100.0, facility=facility)
 
         ship.resupply.assert_called_once_with("fuel", 100.0)
-        facility.withdraw_fuel.assert_called_once_with(25.0)
+        facility.withdraw_consumable.assert_called_once_with("fuel", 25.0)
         assert total == pytest.approx(25.0)
 
     def test_transfer_fuel_caps_later_ships_at_remaining_available(self):
@@ -508,7 +509,7 @@ class TestFuelTransferEdges:
 
         first.resupply.assert_called_once_with("fuel", 80.0)
         second.resupply.assert_called_once_with("fuel", 20.0)
-        facility.withdraw_fuel.assert_called_once_with(100.0)
+        facility.withdraw_consumable.assert_called_once_with("fuel", 100.0)
         assert total == pytest.approx(100.0)
 
     def test_transfer_fuel_breaks_when_available_exhausted(self):
@@ -527,7 +528,7 @@ class TestFuelTransferEdges:
 
         first.resupply.assert_called_once_with("fuel", 30.0)
         second.resupply.assert_not_called()
-        facility.withdraw_fuel.assert_called_once_with(30.0)
+        facility.withdraw_consumable.assert_called_once_with("fuel", 30.0)
         assert total == pytest.approx(30.0)
 
 

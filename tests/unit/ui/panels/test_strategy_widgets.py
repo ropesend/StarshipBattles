@@ -50,12 +50,6 @@ def _make_mock_planet():
 class TestDataGraphInit:
     """Tests for DataGraph base class initialization."""
 
-    def test_graph_can_be_imported(self):
-        """DataGraph can be imported."""
-        from game.ui.panels.strategy_widgets import DataGraph
-
-        assert DataGraph is not None
-
     def test_graph_stores_dimensions(self):
         """DataGraph stores width and height."""
         from game.ui.panels.strategy_widgets import DataGraph
@@ -120,12 +114,6 @@ class TestDataGraphInit:
 
 class TestSpectrumGraphInit:
     """Tests for SpectrumGraph initialization."""
-
-    def test_spectrum_graph_can_be_imported(self):
-        """SpectrumGraph can be imported."""
-        from game.ui.panels.strategy_widgets import SpectrumGraph
-
-        assert SpectrumGraph is not None
 
     def test_spectrum_graph_has_bands(self):
         """SpectrumGraph has BANDS constant."""
@@ -199,12 +187,6 @@ class TestSpectrumGraphRender:
 
 class TestAtmosphereGraphInit:
     """Tests for AtmosphereGraph initialization."""
-
-    def test_atmosphere_graph_can_be_imported(self):
-        """AtmosphereGraph can be imported."""
-        from game.ui.panels.strategy_widgets import AtmosphereGraph
-
-        assert AtmosphereGraph is not None
 
     def test_atmosphere_graph_has_gas_colors(self):
         """AtmosphereGraph has GAS_COLORS constant."""

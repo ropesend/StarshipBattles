@@ -38,12 +38,8 @@ def _make_planet(name="TestPlanet", facilities=None):
     return planet
 
 
-def _make_empire(colonies=None):
-    empire = MagicMock()
-    empire.id = 1
-    empire.colonies = colonies or []
-    empire.fleets = []
-    return empire
+# PROJ-479 Task 5.4 (DUP-005): _make_empire moved to engine/conftest.py
+from .conftest import make_mock_empire as _make_empire  # noqa: E402
 
 
 class TestComponentActivationEngine:

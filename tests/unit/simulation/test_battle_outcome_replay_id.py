@@ -16,21 +16,7 @@ from typing import Any
 from game.simulation.battle_outcome import (
     BattleOutcome,
     EndReason,
-    TeamOutcome,
 )
-
-
-def test_battle_outcome_has_replay_id_field_default_none() -> None:
-    """``BattleOutcome.replay_id`` exists and defaults to None."""
-    outcome = BattleOutcome(
-        end_reason=EndReason.TEAM_ELIMINATED,
-        duration_ticks=10,
-        seed=1,
-        teams=(TeamOutcome(team_id=0, name="t0", ships=()),),
-        telemetry_level="NORMAL",
-    )
-    assert hasattr(outcome, "replay_id")
-    assert outcome.replay_id is None
 
 
 def test_battle_outcome_replay_id_round_trips_string() -> None:

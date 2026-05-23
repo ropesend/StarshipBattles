@@ -84,7 +84,7 @@ class BattleUI:
         self.seeker_panel.draw(screen)
         self.control_panel.draw(screen)
 
-    def handle_click(self, mx, my, button) -> Any:
+    def handle_click(self, mx, my, button) -> bool:
         """Handle mouse clicks. Returns True if click was handled."""
 
         # Control Panel (End Battle / View Results button)

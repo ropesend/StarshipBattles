@@ -75,25 +75,30 @@ def _make_sidebar(panel, manager, column_manager, on_toggle=None):
 class TestEventLogSidebarInit:
     """Test EventLogSidebar initialization."""
 
-    def test_module_exists(self):
-        """EventLogSidebar module should be importable."""
-        from game.ui.screens.event_log_sidebar import EventLogSidebar
-        assert EventLogSidebar is not None
-
-    def test_stores_panel_reference(self, mock_panel, mock_manager, mock_column_manager):
-        """Sidebar should store panel reference."""
+    # PROJ-480 Task 3.41: parametrize the 3 attribute-storage tests on
+    # (sidebar_attr, source_fixture_name). The 4th test (`test_stores_callback`)
+    # is kept separate because it threads an extra constructor arg
+    # (`on_toggle=cb`) and so is not byte-identical to the others.
+    @pytest.mark.parametrize(
+        "sidebar_attr, source_attr",
+        [
+            ("panel", "panel"),
+            ("manager", "manager"),
+            ("column_manager", "column_manager"),
+        ],
+        ids=["panel_reference", "manager_reference", "column_manager_reference"],
+    )
+    def test_stores_reference(
+        self, mock_panel, mock_manager, mock_column_manager,
+        sidebar_attr, source_attr,
+    ):
         sidebar = _make_sidebar(mock_panel, mock_manager, mock_column_manager)
-        assert sidebar.panel is mock_panel
-
-    def test_stores_manager_reference(self, mock_panel, mock_manager, mock_column_manager):
-        """Sidebar should store manager reference."""
-        sidebar = _make_sidebar(mock_panel, mock_manager, mock_column_manager)
-        assert sidebar.manager is mock_manager
-
-    def test_stores_column_manager_reference(self, mock_panel, mock_manager, mock_column_manager):
-        """Sidebar should store column manager reference."""
-        sidebar = _make_sidebar(mock_panel, mock_manager, mock_column_manager)
-        assert sidebar.column_manager is mock_column_manager
+        sources = {
+            "panel": mock_panel,
+            "manager": mock_manager,
+            "column_manager": mock_column_manager,
+        }
+        assert getattr(sidebar, sidebar_attr) is sources[source_attr]
 
     def test_stores_callback(self, mock_panel, mock_manager, mock_column_manager):
         """Sidebar should store on_column_toggle callback."""

@@ -78,11 +78,6 @@ class TestColonyYardRegistryLookup:
         result = colony_has_planetary_yard(colony, fresh_registries)
         assert result is False
 
-    def test_game_registries_has_components_attribute(self, fresh_registries):
-        """GameRegistries must have .components attribute (not just .get_components())."""
-        assert hasattr(fresh_registries, 'components'), \
-            "GameRegistries must have .components attribute for colony_has_planetary_yard"
-
     def test_empty_facilities_returns_false(self, fresh_registries):
         """Colony with no facilities returns False."""
         colony = MagicMock()

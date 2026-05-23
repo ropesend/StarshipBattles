@@ -393,7 +393,7 @@ class DesignSelectorWindow(StrategyModalWindow):
         # Rebuild UI
         self._rebuild_design_list()
 
-    def _get_role_filter_options(self) -> Any:
+    def _get_role_filter_options(self) -> list[str]:
         """Get role display names for the filter dropdown."""
         from game.strategy.data.design_role_registry import get_default_design_role_registry
 

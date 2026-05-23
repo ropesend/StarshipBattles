@@ -191,7 +191,7 @@ class GravityTargetEditor(PlanetTargetEditor):
             val = self.slider.get_current_value()
             self.lbl_target.set_text(f"Target: {val:.2f} g")
 
-    def _button_handlers(self):
+    def _button_handlers(self) -> dict[UIButton, Callable[[], None]]:
         return {
             self.btn_apply: self._on_apply,
             self.btn_species_ideal: self._set_species_ideal,

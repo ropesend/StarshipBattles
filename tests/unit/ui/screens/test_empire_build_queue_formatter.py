@@ -13,6 +13,9 @@ from game.ui.screens.empire_build_queue_formatter import (
     get_system_name,
     get_sector_text,
     get_turns_left_text,
+    # PROJ-480 Task 1.9: lifted from 10 in-method imports below.
+    get_resource_rate_text,
+    get_resource_total_text,
 )
 
 
@@ -190,13 +193,11 @@ class TestGetResourceRateText:
 
     def test_empty_queue_returns_dash(self):
         """Empty queue returns '-'."""
-        from game.ui.screens.empire_build_queue_formatter import get_resource_rate_text
         source = _make_source(construction_queue=[])
         assert get_resource_rate_text(source, "metals") == "-"
 
     def test_with_cost_per_tick_returns_per_turn_value(self):
         """Queue with cost_per_tick returns formatted per-turn value (rate * 100)."""
-        from game.ui.screens.empire_build_queue_formatter import get_resource_rate_text
         source = _make_source(construction_queue=[
             {"design_id": "Ship", "cost_per_tick": {"metals": 15.0}}
         ])
@@ -205,7 +206,6 @@ class TestGetResourceRateText:
 
     def test_legacy_item_without_cost_per_tick_returns_dash(self):
         """Legacy queue item without cost_per_tick key returns '-'."""
-        from game.ui.screens.empire_build_queue_formatter import get_resource_rate_text
         source = _make_source(construction_queue=[
             {"design_id": "OldShip", "turns_remaining": 5}  # No cost_per_tick
         ])
@@ -213,7 +213,6 @@ class TestGetResourceRateText:
 
     def test_resource_not_in_cost_returns_zero(self):
         """Resource not in cost_per_tick returns '0'."""
-        from game.ui.screens.empire_build_queue_formatter import get_resource_rate_text
         source = _make_source(construction_queue=[
             {"design_id": "Ship", "cost_per_tick": {"metals": 10.0}}
         ])
@@ -221,7 +220,6 @@ class TestGetResourceRateText:
 
     def test_zero_rate_returns_zero(self):
         """Zero rate returns '0'."""
-        from game.ui.screens.empire_build_queue_formatter import get_resource_rate_text
         source = _make_source(construction_queue=[
             {"design_id": "Ship", "cost_per_tick": {"metals": 0.0}}
         ])
@@ -233,13 +231,11 @@ class TestGetResourceTotalText:
 
     def test_empty_queue_returns_dash(self):
         """Empty queue returns '-'."""
-        from game.ui.screens.empire_build_queue_formatter import get_resource_total_text
         source = _make_source(construction_queue=[])
         assert get_resource_total_text(source, "metals") == "-"
 
     def test_with_total_cost_returns_formatted(self):
         """Queue with total_cost returns formatted with k suffix."""
-        from game.ui.screens.empire_build_queue_formatter import get_resource_total_text
         source = _make_source(construction_queue=[
             {"design_id": "Ship", "total_cost": {"metals": 5000}}
         ])
@@ -247,7 +243,6 @@ class TestGetResourceTotalText:
 
     def test_large_value_uses_M_suffix(self):
         """Large total cost uses M suffix."""
-        from game.ui.screens.empire_build_queue_formatter import get_resource_total_text
         source = _make_source(construction_queue=[
             {"design_id": "Ship", "total_cost": {"metals": 1500000}}
         ])
@@ -255,7 +250,6 @@ class TestGetResourceTotalText:
 
     def test_legacy_item_without_total_cost_returns_dash(self):
         """Legacy queue item without total_cost key returns '-'."""
-        from game.ui.screens.empire_build_queue_formatter import get_resource_total_text
         source = _make_source(construction_queue=[
             {"design_id": "OldShip", "turns_remaining": 5}  # No total_cost
         ])
@@ -263,7 +257,6 @@ class TestGetResourceTotalText:
 
     def test_resource_not_in_total_returns_zero(self):
         """Resource not in total_cost returns '0'."""
-        from game.ui.screens.empire_build_queue_formatter import get_resource_total_text
         source = _make_source(construction_queue=[
             {"design_id": "Ship", "total_cost": {"metals": 100}}
         ])
@@ -271,7 +264,6 @@ class TestGetResourceTotalText:
 
     def test_small_value_no_suffix(self):
         """Small values below 1000 have no suffix."""
-        from game.ui.screens.empire_build_queue_formatter import get_resource_total_text
         source = _make_source(construction_queue=[
             {"design_id": "Ship", "total_cost": {"metals": 500}}
         ])

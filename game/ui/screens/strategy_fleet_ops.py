@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.facade.strategy_session_facade import StrategySessionFacade
+    from game.ui.renderer.camera import Camera
 
 
 def _format_result_error(result: Any, operation: str) -> dict:
@@ -58,14 +59,14 @@ class FleetOperations:
         self.facade = facade
 
     @property
-    def camera(self) -> Any:
+    def camera(self) -> "Camera":
         return self.scene.camera
 
     # PROJ-477 Phase 4: the unused ``empires`` wrapper property (delegated to
     # the scene.empires pass-through) was deleted — it had no consumer.
 
     @property
-    def hex_size(self) -> Any:
+    def hex_size(self) -> float:
         return self.scene.hex_size
 
     def get_fleet_at_hex(self, hex_coord) -> Optional[FleetInfo]:
@@ -84,7 +85,7 @@ class FleetOperations:
         fleets = self.facade.fleets.at_hex(hex_coord)
         return fleets[0] if fleets else None
 
-    def handle_move_designation(self, mx, my, selected_fleet) -> Any:
+    def handle_move_designation(self, mx, my, selected_fleet) -> "dict | None":
         """
         Handle designating a move target.
 
@@ -168,7 +169,7 @@ class FleetOperations:
         else:
             return _format_result_error(result, "Intercept")
 
-    def handle_join_designation(self, mx, my, selected_fleet) -> Any:
+    def handle_join_designation(self, mx, my, selected_fleet) -> "dict | None":
         """
         Handle designating a fleet to join.
 

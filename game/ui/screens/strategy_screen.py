@@ -16,7 +16,13 @@ PROJ-40: Use protocol type guards instead of isinstance for cross-layer checks.
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game.strategy.data.empire import Empire
+    from game.strategy.data.star_system import StarSystem
+    from game.core.registry import GameRegistries
+    from game.core.hex_math import HexCoord
 
 from game.ui.config import UIConfig
 from game.ui.renderer.camera import Camera
@@ -181,7 +187,7 @@ class StrategyScreen:
     # composition-root ``self._session`` directly (the screen IS the boundary).
 
     @property
-    def current_empire(self) -> Any:
+    def current_empire(self) -> "Empire | None":
         """Get the empire for the current player (supports N players).
 
         This is the *viewing* human — the player whose turn-order index
@@ -202,7 +208,7 @@ class StrategyScreen:
         return next((e for e in empires if e.id == current_player_id), empires[0])
 
     @property
-    def registries(self) -> Any:
+    def registries(self) -> "GameRegistries":
         """Facade-fed session ``GameRegistries`` accessor (PROJ-472 1C).
 
         Children (detail formatter, list windows) read registries through
@@ -259,7 +265,7 @@ class StrategyScreen:
         return empire.id if empire is not None else None
 
     @property
-    def facade(self) -> Any:
+    def facade(self) -> StrategySessionFacade:
         """Public accessor for the strategy session facade.
 
         Used by dialogs and child components that need to issue commands
@@ -334,7 +340,7 @@ class StrategyScreen:
         self._facade = StrategySessionFacade(value)
 
     @property
-    def input_mode(self) -> Any:
+    def input_mode(self) -> str:
         return self._input.input_mode
 
     @input_mode.setter
@@ -397,7 +403,7 @@ class StrategyScreen:
         """Process pygame events."""
         self._input.handle_event(event)
 
-    def handle_click(self, mx, my, button) -> Any:
+    def handle_click(self, mx, my, button) -> bool:
         """Handle mouse clicks."""
         return self._input.handle_click(mx, my, button)
 
@@ -565,7 +571,7 @@ class StrategyScreen:
     # Pathfinding (for external access)
     # =========================================================================
 
-    def calculate_hybrid_path(self, start_hex, end_hex) -> Any:
+    def calculate_hybrid_path(self, start_hex, end_hex) -> "list[HexCoord]":
         """Calculate path combining local hex movement and warp jumps.
 
         PROJ-477 Phase 6: reads the live pathfinder through the screen's own
@@ -573,11 +579,11 @@ class StrategyScreen:
         """
         return self._session.galaxy._pathfinder.find_hybrid_path(start_hex, end_hex)
 
-    def _get_system_at_hex(self, hex_c) -> Any:
+    def _get_system_at_hex(self, hex_c) -> "StarSystem | None":
         """Find which system owns this hex."""
         return self._session.galaxy._pathfinder.get_system_at_hex(hex_c)
 
-    def _find_nearest_system(self, hex_c) -> Any:
+    def _find_nearest_system(self, hex_c) -> "StarSystem | None":
         """Find the nearest system to a hex coordinate."""
         return self._session.galaxy._pathfinder.find_nearest_system(hex_c)
 

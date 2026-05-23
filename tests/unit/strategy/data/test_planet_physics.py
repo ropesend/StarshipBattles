@@ -11,7 +11,7 @@ from game.strategy.data.planet_physics import (
     calculate_surface_gravity,
     calculate_surface_area,
     calculate_blackbody_temperature,
-    MASS_EARTH, MASS_JUPITER, MASS_CERES
+    MASS_JUPITER, MASS_CERES
 )
 
 

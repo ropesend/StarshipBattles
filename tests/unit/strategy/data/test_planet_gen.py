@@ -146,9 +146,9 @@ class TestMoonGeneration:
 
     def test_calculate_moon_chance_earth_moderate(self, planet_generator):
         """Earth-sized bodies have moderate moon chance (~35%)."""
-        from game.strategy.data.planet_physics import MASS_EARTH
+        from game.core.constants import EARTH_MASS
 
-        chance = planet_generator._calculate_moon_chance(MASS_EARTH)
+        chance = planet_generator._calculate_moon_chance(EARTH_MASS)
 
         assert 0.25 <= chance <= 0.45
 
@@ -172,9 +172,9 @@ class TestMoonGeneration:
 
     def test_generate_moon_mass_proportional(self, planet_generator):
         """Moon mass is 0.001% to 5% of primary (log-uniform)."""
-        from game.strategy.data.planet_physics import MASS_EARTH
+        from game.core.constants import EARTH_MASS
 
-        primary_mass = MASS_EARTH
+        primary_mass = EARTH_MASS
 
         for _ in range(20):
             moon_mass = planet_generator._generate_moon_mass(primary_mass)
@@ -289,7 +289,7 @@ class TestOrbitalSlots:
 
     def test_generate_orbital_slots_hot_jupiter(self, planet_generator, mock_star):
         """Hot Jupiter blueprint places gas giant close to star."""
-        from game.strategy.data.planet_physics import MASS_EARTH
+        from game.core.constants import EARTH_MASS
 
         blueprint = {
             "planet_count": {"min": 1, "max": 3},
@@ -353,9 +353,9 @@ class TestSurfaceFlags:
 
     def test_generate_surface_flags_large_body(self, planet_generator):
         """Large bodies have higher activity and magnetic field."""
-        from game.strategy.data.planet_physics import MASS_EARTH
+        from game.core.constants import EARTH_MASS
 
-        water, activity, mag = generate_surface_flags(MASS_EARTH, 300)
+        water, activity, mag = generate_surface_flags(EARTH_MASS, 300)
 
         # Earth-like should have notable activity
         assert activity > 0
@@ -373,18 +373,18 @@ class TestSurfaceFlags:
 
     def test_generate_surface_flags_water_in_habitable(self, planet_generator):
         """Water present in habitable temperature range."""
-        from game.strategy.data.planet_physics import MASS_EARTH
+        from game.core.constants import EARTH_MASS
 
-        water, _, _ = generate_surface_flags(MASS_EARTH, 290)
+        water, _, _ = generate_surface_flags(EARTH_MASS, 290)
 
         # Should have some water in habitable range
         assert water >= 0
 
     def test_generate_surface_flags_no_water_hot(self, planet_generator):
         """No water when too hot (boiled off)."""
-        from game.strategy.data.planet_physics import MASS_EARTH
+        from game.core.constants import EARTH_MASS
 
-        water, _, _ = generate_surface_flags(MASS_EARTH, 500)
+        water, _, _ = generate_surface_flags(EARTH_MASS, 500)
 
         assert water == 0
 
@@ -424,10 +424,10 @@ class TestPlanetTypeDetermination:
 
     def test_determine_type_magma(self, planet_generator):
         """Hot terrestrial classified as Magma."""
-        from game.strategy.data.planet_physics import MASS_EARTH
+        from game.core.constants import EARTH_MASS
 
         p_type = determine_planet_type(
-            mass=MASS_EARTH,
+            mass=EARTH_MASS,
             temp=1500,
             pressure=100,
             water=0,
@@ -467,12 +467,12 @@ class TestPlanetTypeDetermination:
 
     def test_determine_type_pelagic(self, planet_generator):
         """High water body classified as Pelagic."""
-        from game.strategy.data.planet_physics import MASS_EARTH
+        from game.core.constants import EARTH_MASS
 
         # Pelagic requires: mass in terrestrial range, pressure > vacuum (500),
         # water > ocean_world (0.85)
         p_type = determine_planet_type(
-            mass=MASS_EARTH,
+            mass=EARTH_MASS,
             temp=290,
             pressure=101325,  # 1 atm (well above vacuum threshold of 500)
             water=0.95,  # Ocean world threshold > 0.85
@@ -483,14 +483,14 @@ class TestPlanetTypeDetermination:
 
     def test_determine_type_continental(self, planet_generator):
         """Moderate water/temp body classified as Continental."""
-        from game.strategy.data.planet_physics import MASS_EARTH
+        from game.core.constants import EARTH_MASS
 
         # Continental requires: mass in terrestrial range,
         # pressure > continental_pressure_min (5000),
         # temp in continental range (255-330),
         # water > arid (0.2) and < ocean_world (0.85)
         p_type = determine_planet_type(
-            mass=MASS_EARTH,
+            mass=EARTH_MASS,
             temp=288,  # In continental temp range (255-330)
             pressure=101325,  # 1 atm (above continental_pressure_min of 5000)
             water=0.5,  # Between arid (0.2) and ocean_world (0.85)
@@ -553,17 +553,17 @@ class TestResourceGeneration:
 
     def test_generate_resources_returns_dict(self, planet_generator):
         """_generate_resources returns dict of resources."""
-        from game.strategy.data.planet_physics import MASS_EARTH
+        from game.core.constants import EARTH_MASS
 
-        resources = generate_resources(MASS_EARTH, PlanetType.CONTINENTAL)
+        resources = generate_resources(EARTH_MASS, PlanetType.CONTINENTAL)
 
         assert isinstance(resources, dict)
 
     def test_generate_resources_has_required_keys(self, planet_generator):
         """Resources dict has quantity and quality for each resource."""
-        from game.strategy.data.planet_physics import MASS_EARTH
+        from game.core.constants import EARTH_MASS
 
-        resources = generate_resources(MASS_EARTH, PlanetType.CONTINENTAL)
+        resources = generate_resources(EARTH_MASS, PlanetType.CONTINENTAL)
 
         for res_name, res_data in resources.items():
             assert 'quantity' in res_data
@@ -571,18 +571,18 @@ class TestResourceGeneration:
 
     def test_generate_resources_quantity_positive(self, planet_generator):
         """Resource quantities are non-negative."""
-        from game.strategy.data.planet_physics import MASS_EARTH
+        from game.core.constants import EARTH_MASS
 
-        resources = generate_resources(MASS_EARTH, PlanetType.CONTINENTAL)
+        resources = generate_resources(EARTH_MASS, PlanetType.CONTINENTAL)
 
         for res_name, res_data in resources.items():
             assert res_data['quantity'] >= 0
 
     def test_generate_resources_quality_bounded(self, planet_generator):
         """Resource quality is bounded within valid range."""
-        from game.strategy.data.planet_physics import MASS_EARTH
+        from game.core.constants import EARTH_MASS
 
-        resources = generate_resources(MASS_EARTH, PlanetType.CONTINENTAL)
+        resources = generate_resources(EARTH_MASS, PlanetType.CONTINENTAL)
 
         for res_name, res_data in resources.items():
             assert 5.0 <= res_data['quality'] <= 100
@@ -602,13 +602,13 @@ class TestResourceGeneration:
 
     def test_generate_resources_earth_mass_baseline(self, planet_generator):
         """Earth-mass planet yields approximately 250M per resource (with affinity=1.0)."""
-        from game.strategy.data.planet_physics import MASS_EARTH
+        from game.core.constants import EARTH_MASS
 
         # Run multiple times and average to reduce randomness impact
         totals = {res: 0 for res in ["metals", "organics", "vapors", "radioactives", "exotics"]}
         n_samples = 50
         for _ in range(n_samples):
-            resources = generate_resources(MASS_EARTH, PlanetType.CONTINENTAL)
+            resources = generate_resources(EARTH_MASS, PlanetType.CONTINENTAL)
             for res_name, res_data in resources.items():
                 totals[res_name] += res_data['quantity']
 
@@ -654,13 +654,13 @@ class TestResourceGeneration:
 
     def test_generate_resources_planet_type_affinity(self, planet_generator):
         """Planet type affinities shift resource distribution."""
-        from game.strategy.data.planet_physics import MASS_EARTH
+        from game.core.constants import EARTH_MASS
 
         # MAGMA should favor Radioactives and Metals over Organics
         magma_totals = {"metals": 0, "organics": 0, "radioactives": 0}
         n_samples = 50
         for _ in range(n_samples):
-            resources = generate_resources(MASS_EARTH, PlanetType.MAGMA)
+            resources = generate_resources(EARTH_MASS, PlanetType.MAGMA)
             for res in magma_totals:
                 magma_totals[res] += resources[res]['quantity']
 
