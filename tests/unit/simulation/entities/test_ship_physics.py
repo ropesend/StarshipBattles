@@ -341,50 +341,29 @@ class TestUpdatePhysicsMovementPosition:
         assert ship.position.x > 0
         assert ship.position.y == pytest.approx(0.0, abs=0.001)
 
-    def test_velocity_set_from_speed_and_heading(self):
+    # PROJ-495 T3.4: parametrized the 4 angle/velocity tests on
+    # (angle, expected_x, expected_y) — all four use the same speed=10,
+    # no-deceleration setup and only the angle varies.
+    @pytest.mark.parametrize(
+        "angle,expected_x,expected_y",
+        [
+            (0, 10.0, 0.0),
+            (90, 0.0, 10.0),
+            (180, -10.0, 0.0),
+            (270, 0.0, -10.0),
+        ],
+        ids=["heading=0", "heading=90", "heading=180", "heading=270"],
+    )
+    def test_velocity_follows_heading(self, angle, expected_x, expected_y):
         """Velocity should be forward_vector * current_speed after update."""
-        ship = MockShipWithPhysics(x=0, y=0, angle=0)
+        ship = MockShipWithPhysics(x=0, y=0, angle=angle)
         ship.current_speed = 10.0
         ship.acceleration_rate = 0.0  # No deceleration to keep speed constant
 
         ship.update_physics_movement()
 
-        # Velocity should match current_speed in the forward direction
-        assert ship.velocity.x == pytest.approx(10.0, abs=0.01)
-        assert ship.velocity.y == pytest.approx(0.0, abs=0.01)
-
-    def test_velocity_follows_heading_at_90_degrees(self):
-        """At angle=90, velocity should point in +Y direction."""
-        ship = MockShipWithPhysics(x=0, y=0, angle=90)
-        ship.current_speed = 10.0
-        ship.acceleration_rate = 0.0  # No deceleration to keep speed constant
-
-        ship.update_physics_movement()
-
-        assert ship.velocity.x == pytest.approx(0.0, abs=0.01)
-        assert ship.velocity.y == pytest.approx(10.0, abs=0.01)
-
-    def test_velocity_follows_heading_at_180_degrees(self):
-        """At angle=180, velocity should point in -X direction."""
-        ship = MockShipWithPhysics(x=0, y=0, angle=180)
-        ship.current_speed = 10.0
-        ship.acceleration_rate = 0.0  # No deceleration to keep speed constant
-
-        ship.update_physics_movement()
-
-        assert ship.velocity.x == pytest.approx(-10.0, abs=0.01)
-        assert ship.velocity.y == pytest.approx(0.0, abs=0.01)
-
-    def test_velocity_follows_heading_at_270_degrees(self):
-        """At angle=270, velocity should point in -Y direction."""
-        ship = MockShipWithPhysics(x=0, y=0, angle=270)
-        ship.current_speed = 10.0
-        ship.acceleration_rate = 0.0  # No deceleration to keep speed constant
-
-        ship.update_physics_movement()
-
-        assert ship.velocity.x == pytest.approx(0.0, abs=0.01)
-        assert ship.velocity.y == pytest.approx(-10.0, abs=0.01)
+        assert ship.velocity.x == pytest.approx(expected_x, abs=0.01)
+        assert ship.velocity.y == pytest.approx(expected_y, abs=0.01)
 
     def test_position_accumulates_over_multiple_updates(self):
         """Position should accumulate from multiple updates."""

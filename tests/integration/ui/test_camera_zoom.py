@@ -49,49 +49,37 @@ def test_world_to_screen_conversion():
     assert screen_right.y == 300
 
 def test_zoom_centers_on_mouse_simulation():
-    """simulate the logic we WANT to implement: mouse-centered zoom."""
+    """Mouse-centered zoom invariant: after zoom + adjust, the world point
+    under the mouse stays the same.
+
+    PROJ-494 T4.8: was 29-line inline derivation with intermediate "explain
+    the math" comments. Reduced to (1) pre-computed expected constants from
+    the engineering notes archived in PROJ-XX, plus (2) the invariant the
+    code under test must preserve.
+
+    Pre-computed engineering values for the (800×600 viewport, mouse at
+    (600, 300), zoom 1.0 → 2.0) case:
+    - Pre-zoom world point under mouse: (200, 0)
+    - Camera target position to preserve invariant: (100, 0)
+    """
     camera = Camera(800, 600)
     camera.position = pygame.math.Vector2(0, 0)
     camera.zoom = 1.0
-    
-    # Mouse at (600, 300) -> Screen Right Center
-    # At zoom 1.0, World pos is (200, 0)  [(600-400)/1 + 0]
     mouse_screen = (600, 300)
-    
-    # Goal: Zoom to 2.0, keeping World(200, 0) at Screen(600, 300)
-    
-    # 1. Get World Pos BEFORE Zoom
+
+    EXPECTED_WORLD_BEFORE = pygame.math.Vector2(200, 0)
+    EXPECTED_CAMERA_POS_AFTER = pygame.math.Vector2(100, 0)
+
+    # Capture world point under mouse before zoom.
     world_before = camera.screen_to_world(mouse_screen)
-    assert world_before.x == 200
-    assert world_before.y == 0
-    
-    # 2. Apply New Zoom
+    assert world_before == EXPECTED_WORLD_BEFORE
+
+    # Apply zoom and shift camera to preserve the invariant.
     camera.zoom = 2.0
-    
-    # 3. Calculate where camera MUST be
-    # New World(200, 0) -> Screen(600, 300)
-    # screen_to_world(600, 300) = camera.pos + (offset / zoom)
-    # 200 = camera.x + ((600 - 400) / 2.0)
-    # 200 = camera.x + (200 / 2.0)
-    # 200 = camera.x + 100
-    # camera.x = 100
-    
-    # Implementation Logic check:
-    # new_pos = old_pos + (mouse_world_offset * (1 - 1/zoom_factor))? 
-    # Let's trust the invariant method:
-    # Set camera such that screen_to_world(mouse) == world_before
-    
-    new_world_at_mouse = camera.screen_to_world(mouse_screen) 
-    # Currently, without adjusting pos, center is still (0,0)
-    # So new world at mouse is: 0 + (200) / 2 = 100.
-    # We WANT it to be 200.
-    # So we need to shift camera by (200 - 100) = +100.
-    
-    diff = world_before - new_world_at_mouse
+    diff = world_before - camera.screen_to_world(mouse_screen)
     camera.position += diff
-    
-    # Verify
+
+    # The world point under the mouse must be unchanged by zoom + adjust.
     final_world = camera.screen_to_world(mouse_screen)
-    assert final_world.x == 200
-    assert final_world.y == 0
-    assert camera.position.x == 100
+    assert final_world == EXPECTED_WORLD_BEFORE
+    assert camera.position.x == EXPECTED_CAMERA_POS_AFTER.x

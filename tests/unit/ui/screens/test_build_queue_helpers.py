@@ -37,33 +37,62 @@ class TestResourceAbbreviations:
 
 
 class TestFormatEmpireResources:
-    """Tests for format_empire_resources function."""
+    """Tests for format_empire_resources function.
 
-    def test_formats_resources_with_capacity(self):
-        """Verify resources with capacity are formatted as current/cap."""
+    PROJ-494 T3.1: 6 tests collapsed into 1 parametrized data-driven test
+    covering the (resource_pool, max_storage, expected_substrs, forbidden_substrs)
+    matrix. The pipe-separator test is kept separate because it asserts
+    structural (not content) properties.
+    """
+
+    @pytest.mark.parametrize(
+        "resource_pool,max_storage,expected_substrs,forbidden_substrs,exact",
+        [
+            pytest.param(
+                {"metals": 500.0, "organics": 200.0},
+                {"metals": 1000.0, "organics": 500.0},
+                ["Met: 500/1000", "Org: 200/500"], [], None,
+                id="formats_with_capacity",
+            ),
+            pytest.param(
+                {"metals": 100.0, "organics": 50.0},
+                {"metals": 0.0, "organics": 0.0},
+                ["Met: 100", "Org: 50"], ["/"], None,
+                id="formats_without_capacity",
+            ),
+            pytest.param({}, {}, [], [], "No resources", id="empty_empire"),
+            pytest.param(
+                {"metals": 0.0, "organics": 0.0},
+                {"metals": 0.0, "organics": 0.0},
+                [], [], "No resources",
+                id="zero_values_not_shown",
+            ),
+            pytest.param(
+                {"metals": 123.7}, {"metals": 456.9},
+                ["Met: 123/456"], [], None,
+                id="truncates_to_integers",
+            ),
+        ],
+    )
+    def test_formats_empire_resources(
+        self, resource_pool, max_storage, expected_substrs, forbidden_substrs, exact,
+    ):
         empire = MagicMock()
-        empire.resource_pool = {"metals": 500.0, "organics": 200.0}
-        empire.max_storage = {"metals": 1000.0, "organics": 500.0}
+        empire.resource_pool = resource_pool
+        empire.max_storage = max_storage
 
         result = format_empire_resources(empire)
 
-        assert "Met: 500/1000" in result
-        assert "Org: 200/500" in result
-
-    def test_formats_resources_without_capacity(self):
-        """Verify resources without capacity show only current."""
-        empire = MagicMock()
-        empire.resource_pool = {"metals": 100.0, "organics": 50.0}
-        empire.max_storage = {"metals": 0.0, "organics": 0.0}
-
-        result = format_empire_resources(empire)
-
-        assert "Met: 100" in result
-        assert "Org: 50" in result
-        assert "/" not in result  # No capacity shown
+        if exact is not None:
+            assert result == exact
+        for s in expected_substrs:
+            assert s in result
+        for s in forbidden_substrs:
+            assert s not in result
 
     def test_uses_pipe_separator(self):
-        """Verify parts are separated by pipe characters."""
+        """Verify parts are separated by pipe characters (structural — kept out
+        of the parametrized matrix because the assertion is shape-not-value)."""
         empire = MagicMock()
         empire.resource_pool = {"metals": 100.0, "organics": 50.0}
         empire.max_storage = {"metals": 200.0, "organics": 100.0}
@@ -72,38 +101,10 @@ class TestFormatEmpireResources:
 
         assert "  |  " in result
 
-    def test_empty_empire_returns_no_resources(self):
-        """Verify empty resource pool returns 'No resources'."""
-        empire = MagicMock()
-        empire.resource_pool = {}
-        empire.max_storage = {}
-
-        result = format_empire_resources(empire)
-
-        assert result == "No resources"
-
-    def test_zero_values_not_shown(self):
-        """Verify zero-value resources are not shown."""
-        empire = MagicMock()
-        empire.resource_pool = {"metals": 0.0, "organics": 0.0}
-        empire.max_storage = {"metals": 0.0, "organics": 0.0}
-
-        result = format_empire_resources(empire)
-
-        assert result == "No resources"
-
-    def test_truncates_to_integers(self):
-        """Verify float values are truncated to integers."""
-        empire = MagicMock()
-        empire.resource_pool = {"metals": 123.7}
-        empire.max_storage = {"metals": 456.9}
-
-        result = format_empire_resources(empire)
-
-        assert "Met: 123/456" in result
-
     def test_handles_missing_resource_gracefully(self):
-        """Verify missing resources return 0."""
+        """Verify missing resources return 0 (uses MagicMock for resource_pool
+        rather than a real dict — kept out of the parametrized matrix because
+        the mock plumbing differs)."""
         empire = MagicMock()
         empire.resource_pool = MagicMock()
         empire.resource_pool.get = MagicMock(return_value=0.0)
@@ -116,59 +117,43 @@ class TestFormatEmpireResources:
 
 
 class TestFormatResourceCost:
-    """Tests for format_resource_cost function."""
+    """Tests for format_resource_cost function.
 
-    def test_formats_single_resource(self):
-        """Verify single resource cost is formatted."""
-        cost = {"metals": 100}
+    PROJ-494 T3.1: 6 tests collapsed into 1 parametrized data-driven test
+    covering the (cost_dict, expected_substrs, forbidden_substrs, exact) matrix.
+    """
 
+    @pytest.mark.parametrize(
+        "cost,expected_substrs,forbidden_substrs,exact",
+        [
+            pytest.param({"metals": 100}, [], [], "M:100", id="single_resource"),
+            pytest.param(
+                {"metals": 100, "organics": 50, "vapors": 25},
+                ["M:100", "O:50", "V:25"], [], None,
+                id="multiple_resources",
+            ),
+            pytest.param(
+                {"metals": 100, "organics": 0, "vapors": 25},
+                ["M:100", "V:25"], ["O:"], None,
+                id="skips_zero_cost",
+            ),
+            pytest.param({}, [], [], "", id="empty_cost"),
+            pytest.param(
+                {"metals": 0, "organics": 0, "vapors": 0}, [], [], "",
+                id="all_zero_cost",
+            ),
+            pytest.param({"metals": 99.9}, [], [], "M:99", id="truncates_to_integers"),
+        ],
+    )
+    def test_format_resource_cost(self, cost, expected_substrs, forbidden_substrs, exact):
         result = format_resource_cost(cost)
 
-        assert result == "M:100"
-
-    def test_formats_multiple_resources(self):
-        """Verify multiple resource costs are formatted."""
-        cost = {"metals": 100, "organics": 50, "vapors": 25}
-
-        result = format_resource_cost(cost)
-
-        assert "M:100" in result
-        assert "O:50" in result
-        assert "V:25" in result
-
-    def test_skips_zero_cost_resources(self):
-        """Verify zero-cost resources are not shown."""
-        cost = {"metals": 100, "organics": 0, "vapors": 25}
-
-        result = format_resource_cost(cost)
-
-        assert "M:100" in result
-        assert "V:25" in result
-        assert "O:" not in result
-
-    def test_empty_cost_returns_empty_string(self):
-        """Verify empty cost dict returns empty string."""
-        cost = {}
-
-        result = format_resource_cost(cost)
-
-        assert result == ""
-
-    def test_all_zero_costs_returns_empty_string(self):
-        """Verify all-zero costs return empty string."""
-        cost = {"metals": 0, "organics": 0, "vapors": 0}
-
-        result = format_resource_cost(cost)
-
-        assert result == ""
-
-    def test_truncates_to_integers(self):
-        """Verify float values are truncated to integers."""
-        cost = {"metals": 99.9}
-
-        result = format_resource_cost(cost)
-
-        assert result == "M:99"
+        if exact is not None:
+            assert result == exact
+        for s in expected_substrs:
+            assert s in result
+        for s in forbidden_substrs:
+            assert s not in result
 
     def test_uses_space_separator(self):
         """Verify parts are separated by spaces."""

@@ -404,6 +404,44 @@ class TestCameraUpdateInput:
 
         return MockKeyState(pressed)
 
+    def _mock_input(self, *, keys=None, mouse_pressed=(False, False, False),
+                    mouse_rel=(0, 0), mouse_pos=None):
+        """PROJ-494 T2.4: replace the duplicated `with patch(...), patch(...), patch(...)`
+        triple/quad stack used in all TestCameraUpdateInput methods.
+
+        Returns a `patch.multiple`-style context manager that patches all four
+        pygame input functions in one go. `mouse_pos` defaults to omitting that
+        patch (only the wheel-zoom tests need it).
+        """
+        targets = {
+            'pygame.key.get_pressed': patch(
+                'pygame.key.get_pressed',
+                return_value=self._mock_keys(keys or {})),
+            'pygame.mouse.get_pressed': patch(
+                'pygame.mouse.get_pressed', return_value=mouse_pressed),
+            'pygame.mouse.get_rel': patch(
+                'pygame.mouse.get_rel', return_value=mouse_rel),
+        }
+        if mouse_pos is not None:
+            targets['pygame.mouse.get_pos'] = patch(
+                'pygame.mouse.get_pos', return_value=mouse_pos)
+
+        class _MultiPatch:
+            def __init__(self, patches):
+                self._patches = list(patches)
+
+            def __enter__(self):
+                for p in self._patches:
+                    p.start()
+                return self
+
+            def __exit__(self, *exc):
+                for p in reversed(self._patches):
+                    p.stop()
+                return False
+
+        return _MultiPatch(targets.values())
+
     def test_keyboard_panning_wasd(self):
         """WASD keys should pan the camera."""
         camera = Camera(800, 600)
@@ -411,9 +449,7 @@ class TestCameraUpdateInput:
         original_pos = pygame.math.Vector2(camera.position)
 
         # Mock key state - W pressed (up = negative y)
-        with patch('pygame.key.get_pressed', return_value=self._mock_keys({pygame.K_w: True})), \
-             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
-             patch('pygame.mouse.get_rel', return_value=(0, 0)):
+        with self._mock_input(keys={pygame.K_w: True}, mouse_pressed=(False, False, False), mouse_rel=(0, 0)):
 
             camera.update_input(0.1, [])  # 100ms
 
@@ -425,9 +461,7 @@ class TestCameraUpdateInput:
         camera = Camera(800, 600)
         camera.position = pygame.math.Vector2(0, 0)
 
-        with patch('pygame.key.get_pressed', return_value=self._mock_keys({pygame.K_RIGHT: True})), \
-             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
-             patch('pygame.mouse.get_rel', return_value=(0, 0)):
+        with self._mock_input(keys={pygame.K_RIGHT: True}, mouse_pressed=(False, False, False), mouse_rel=(0, 0)):
 
             camera.update_input(0.1, [])
 
@@ -439,9 +473,7 @@ class TestCameraUpdateInput:
         camera = Camera(800, 600)
         camera.target = MockTarget(500, 500)
 
-        with patch('pygame.key.get_pressed', return_value=self._mock_keys({pygame.K_a: True})), \
-             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
-             patch('pygame.mouse.get_rel', return_value=(0, 0)):
+        with self._mock_input(keys={pygame.K_a: True}, mouse_pressed=(False, False, False), mouse_rel=(0, 0)):
 
             camera.update_input(0.1, [])
 
@@ -455,10 +487,7 @@ class TestCameraUpdateInput:
 
         wheel_event = pygame.event.Event(pygame.MOUSEWHEEL, y=1)
 
-        with patch('pygame.key.get_pressed', return_value=self._mock_keys()), \
-             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
-             patch('pygame.mouse.get_rel', return_value=(0, 0)), \
-             patch('pygame.mouse.get_pos', return_value=(400, 300)):
+        with self._mock_input(mouse_pressed=(False, False, False), mouse_rel=(0, 0), mouse_pos=(400, 300)):
 
             camera.update_input(0.1, [wheel_event])
 
@@ -473,10 +502,7 @@ class TestCameraUpdateInput:
 
         wheel_event = pygame.event.Event(pygame.MOUSEWHEEL, y=-1)
 
-        with patch('pygame.key.get_pressed', return_value=self._mock_keys()), \
-             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
-             patch('pygame.mouse.get_rel', return_value=(0, 0)), \
-             patch('pygame.mouse.get_pos', return_value=(400, 300)):
+        with self._mock_input(mouse_pressed=(False, False, False), mouse_rel=(0, 0), mouse_pos=(400, 300)):
 
             camera.update_input(0.1, [wheel_event])
 
@@ -492,10 +518,7 @@ class TestCameraUpdateInput:
         # Try to zoom in past max
         wheel_event = pygame.event.Event(pygame.MOUSEWHEEL, y=1)
 
-        with patch('pygame.key.get_pressed', return_value=self._mock_keys()), \
-             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
-             patch('pygame.mouse.get_rel', return_value=(0, 0)), \
-             patch('pygame.mouse.get_pos', return_value=(400, 300)):
+        with self._mock_input(mouse_pressed=(False, False, False), mouse_rel=(0, 0), mouse_pos=(400, 300)):
 
             camera.update_input(0.1, [wheel_event])
 
@@ -510,10 +533,7 @@ class TestCameraUpdateInput:
         # Try to zoom out past min
         wheel_event = pygame.event.Event(pygame.MOUSEWHEEL, y=-1)
 
-        with patch('pygame.key.get_pressed', return_value=self._mock_keys()), \
-             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
-             patch('pygame.mouse.get_rel', return_value=(0, 0)), \
-             patch('pygame.mouse.get_pos', return_value=(400, 300)):
+        with self._mock_input(mouse_pressed=(False, False, False), mouse_rel=(0, 0), mouse_pos=(400, 300)):
 
             camera.update_input(0.1, [wheel_event])
 
@@ -525,9 +545,7 @@ class TestCameraUpdateInput:
         camera.position = pygame.math.Vector2(0, 0)
         camera.zoom = 1.0
 
-        with patch('pygame.key.get_pressed', return_value=self._mock_keys()), \
-             patch('pygame.mouse.get_pressed', return_value=(False, True, False)), \
-             patch('pygame.mouse.get_rel', return_value=(50, 30)):
+        with self._mock_input(mouse_pressed=(False, True, False), mouse_rel=(50, 30)):
 
             camera.update_input(0.1, [])
 
@@ -540,9 +558,7 @@ class TestCameraUpdateInput:
         camera = Camera(800, 600)
         camera.target = MockTarget(500, 500)
 
-        with patch('pygame.key.get_pressed', return_value=self._mock_keys()), \
-             patch('pygame.mouse.get_pressed', return_value=(False, True, False)), \
-             patch('pygame.mouse.get_rel', return_value=(10, 10)):
+        with self._mock_input(mouse_pressed=(False, True, False), mouse_rel=(10, 10)):
 
             camera.update_input(0.1, [])
 
@@ -554,9 +570,7 @@ class TestCameraUpdateInput:
         camera.position = pygame.math.Vector2(100, 200)
         original = pygame.math.Vector2(camera.position)
 
-        with patch('pygame.key.get_pressed', return_value=self._mock_keys()), \
-             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
-             patch('pygame.mouse.get_rel', return_value=(0, 0)):
+        with self._mock_input(mouse_pressed=(False, False, False), mouse_rel=(0, 0)):
 
             camera.update_input(0.1, [])
 
@@ -573,9 +587,7 @@ class TestCameraUpdateInput:
         camera2.position = pygame.math.Vector2(0, 0)
         camera2.zoom = 0.5  # Zoomed out
 
-        with patch('pygame.key.get_pressed', return_value=self._mock_keys({pygame.K_d: True})), \
-             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
-             patch('pygame.mouse.get_rel', return_value=(0, 0)):
+        with self._mock_input(keys={pygame.K_d: True}, mouse_pressed=(False, False, False), mouse_rel=(0, 0)):
 
             camera1.update_input(0.1, [])
             camera2.update_input(0.1, [])
@@ -589,9 +601,7 @@ class TestCameraUpdateInput:
         original_pos = pygame.math.Vector2(camera.position)
 
         # Mock key state - W pressed (up = negative y), but allow_wasd=False
-        with patch('pygame.key.get_pressed', return_value=self._mock_keys({pygame.K_w: True})), \
-             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
-             patch('pygame.mouse.get_rel', return_value=(0, 0)):
+        with self._mock_input(keys={pygame.K_w: True}, mouse_pressed=(False, False, False), mouse_rel=(0, 0)):
 
             camera.update_input(0.1, [], allow_wasd=False)
 
@@ -604,9 +614,7 @@ class TestCameraUpdateInput:
         camera.position = pygame.math.Vector2(0, 0)
 
         # Mock key state - UP pressed, allow_wasd=False
-        with patch('pygame.key.get_pressed', return_value=self._mock_keys({pygame.K_UP: True})), \
-             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
-             patch('pygame.mouse.get_rel', return_value=(0, 0)):
+        with self._mock_input(keys={pygame.K_UP: True}, mouse_pressed=(False, False, False), mouse_rel=(0, 0)):
 
             camera.update_input(0.1, [], allow_wasd=False)
 

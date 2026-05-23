@@ -18,6 +18,59 @@ from unittest.mock import MagicMock, patch
 from tests.fixtures.ui_widget_factory import make_ui_widget
 
 
+def _make_panel_with_mocked_pygame_gui(race_config):
+    """PROJ-494 T2.11: extracted from
+    `TestFeat14RegistryDrivenSummary._refresh_with_mocked_uilabel`.
+
+    Stubs out pygame_gui inside `race_summary_panel`, instantiates a panel
+    via `__new__`, wires the dynamic-label bookkeeping the column-3 code
+    expects, calls `refresh()`, and returns `(ui_label_mock, panel)` so
+    callers can collect label texts via `_collect_label_texts`.
+    """
+    from game.ui.panels import race_summary_panel as rsp_module
+
+    # Fresh mock class so each call returns a distinct widget.
+    ui_label_mock = MagicMock()
+    ui_label_mock.side_effect = lambda *a, **kw: MagicMock()
+    ui_panel_mock = MagicMock()
+    ui_panel_mock.side_effect = lambda *a, **kw: MagicMock()
+    ui_scroll_mock = MagicMock()
+    ui_scroll_mock.side_effect = lambda *a, **kw: MagicMock()
+
+    with patch.object(rsp_module.pygame_gui.elements, "UILabel", ui_label_mock), \
+         patch.object(rsp_module.pygame_gui.elements, "UIPanel", ui_panel_mock), \
+         patch.object(
+             rsp_module.pygame_gui.elements,
+             "UIScrollingContainer",
+             ui_scroll_mock,
+         ), \
+         patch.object(rsp_module, "create_section_header", MagicMock()):
+        panel = rsp_module.RaceSummaryPanel.__new__(rsp_module.RaceSummaryPanel)
+        panel.race_config = race_config
+        panel.summary_labels = {}
+        panel.summary_flag_images = []
+        panel.summary_portrait_image = None
+        panel.summary_ship_images = []
+        panel.summary_ship_labels = []
+        panel._asset_loader = MagicMock()
+        panel.summary_flag_panel = None
+        panel.summary_portrait_panel = None
+        panel.summary_ship_panel = None
+        panel.ui_manager = MagicMock()
+        panel.panel = MagicMock()
+        panel._env_scroll_container = MagicMock()
+        # _rebuild_env_scroll_content reads container.get_relative_rect().width
+        # so it can size labels — give it a real int.
+        panel._env_scroll_container.get_relative_rect.return_value = pygame.Rect(
+            0, 0, 800, 400,
+        )
+        panel._dynamic_env_labels = []
+
+        panel.refresh()
+
+    return ui_label_mock, panel
+
+
 # =============================================================================
 # Fixtures
 # =============================================================================
@@ -362,49 +415,12 @@ class TestFeat14RegistryDrivenSummary:
         a panel via __new__ (skipping pygame init), wire the dynamic-label
         bookkeeping the new column-3 code expects, call refresh(), and
         return the captured UILabel-text list.
+
+        PROJ-494 T2.11: nested patches + summary-panel field wiring extracted
+        into the module-level `_make_panel_with_mocked_pygame_gui` factory.
         """
-        from game.ui.panels import race_summary_panel as rsp_module
-
-        # Fresh mock class so each call returns a distinct widget.
-        ui_label_mock = MagicMock()
-        ui_label_mock.side_effect = lambda *a, **kw: MagicMock()
-        ui_panel_mock = MagicMock()
-        ui_panel_mock.side_effect = lambda *a, **kw: MagicMock()
-        ui_scroll_mock = MagicMock()
-        ui_scroll_mock.side_effect = lambda *a, **kw: MagicMock()
-
-        with patch.object(rsp_module.pygame_gui.elements, "UILabel", ui_label_mock), \
-             patch.object(rsp_module.pygame_gui.elements, "UIPanel", ui_panel_mock), \
-             patch.object(
-                 rsp_module.pygame_gui.elements,
-                 "UIScrollingContainer",
-                 ui_scroll_mock,
-             ), \
-             patch.object(rsp_module, "create_section_header", MagicMock()):
-            panel = rsp_module.RaceSummaryPanel.__new__(rsp_module.RaceSummaryPanel)
-            panel.race_config = race_config
-            panel.summary_labels = {}
-            panel.summary_flag_images = []
-            panel.summary_portrait_image = None
-            panel.summary_ship_images = []
-            panel.summary_ship_labels = []
-            panel._asset_loader = MagicMock()
-            panel.summary_flag_panel = None
-            panel.summary_portrait_panel = None
-            panel.summary_ship_panel = None
-            panel.ui_manager = MagicMock()
-            panel.panel = MagicMock()
-            panel._env_scroll_container = MagicMock()
-            # _rebuild_env_scroll_content reads container.get_relative_rect().width
-            # so it can size labels — give it a real int.
-            panel._env_scroll_container.get_relative_rect.return_value = pygame.Rect(
-                0, 0, 800, 400,
-            )
-            panel._dynamic_env_labels = []
-
-            panel.refresh()
-
-            return _collect_label_texts(ui_label_mock), panel
+        ui_label_mock, panel = _make_panel_with_mocked_pygame_gui(race_config)
+        return _collect_label_texts(ui_label_mock), panel
 
     def test_refresh_renders_every_scalar_factor_display_name(
         self, mock_race_config_full,

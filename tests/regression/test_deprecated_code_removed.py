@@ -4,34 +4,30 @@ Verification tests for deprecated code removal (PROJ-42).
 These tests ensure that deprecated code stays removed and doesn't accidentally
 get reintroduced. They serve as regression guards for the cleanup work.
 """
+import pytest
 
 
 class TestDeprecatedRegistryFunctionsRemoved:
     """Verify deprecated registry utility functions have been removed."""
 
-    def test_get_component_registry_removed(self):
-        """get_component_registry() function should not exist."""
+    # PROJ-495 T3.1: parametrized the 4 deletion-guard tests on the attribute
+    # name + intended replacement so adding a new deprecated symbol is a
+    # single row, not a new method.
+    @pytest.mark.parametrize(
+        "attr_name,replacement_hint",
+        [
+            ("get_component_registry", "GameRegistries.components"),
+            ("get_modifier_registry", "GameRegistries.modifiers"),
+            ("get_vehicle_classes", "GameRegistries.vehicle_classes"),
+            ("get_resource_registry", "GameRegistries.resources"),
+        ],
+    )
+    def test_deprecated_attr_removed(self, attr_name: str, replacement_hint: str) -> None:
+        """The deprecated module-level function should not exist."""
         from game.core import registry
-        assert not hasattr(registry, 'get_component_registry'), \
-            "get_component_registry should be removed - use GameRegistries.components"
-
-    def test_get_modifier_registry_removed(self):
-        """get_modifier_registry() function should not exist."""
-        from game.core import registry
-        assert not hasattr(registry, 'get_modifier_registry'), \
-            "get_modifier_registry should be removed - use GameRegistries.modifiers"
-
-    def test_get_vehicle_classes_removed(self):
-        """get_vehicle_classes() function should not exist."""
-        from game.core import registry
-        assert not hasattr(registry, 'get_vehicle_classes'), \
-            "get_vehicle_classes should be removed - use GameRegistries.vehicle_classes"
-
-    def test_get_resource_registry_removed(self):
-        """get_resource_registry() function should not exist."""
-        from game.core import registry
-        assert not hasattr(registry, 'get_resource_registry'), \
-            "get_resource_registry should be removed - use GameRegistries.resources"
+        assert not hasattr(registry, attr_name), (
+            f"{attr_name} should be removed - use {replacement_hint}"
+        )
 
     # PROJ-195: test_get_validator_global_removed REMOVED
     # The get_validator() module-level function was intentionally added in PROJ-195
@@ -42,29 +38,16 @@ class TestDeprecatedRegistryFunctionsRemoved:
 class TestGameStateAliasesRemoved:
     """Verify GameState aliases have been removed from app.py."""
 
-    def test_menu_alias_removed(self):
-        """MENU alias should not exist in app module."""
+    @pytest.mark.parametrize(
+        "alias",
+        ["MENU", "BUILDER", "BATTLE", "SETTINGS"],
+    )
+    def test_alias_removed(self, alias: str) -> None:
+        """The GameState alias should not exist on the app module."""
         from game import app
-        assert not hasattr(app, 'MENU'), \
-            "MENU alias should be removed - use GameState.MENU"
-
-    def test_builder_alias_removed(self):
-        """BUILDER alias should not exist in app module."""
-        from game import app
-        assert not hasattr(app, 'BUILDER'), \
-            "BUILDER alias should be removed - use GameState.BUILDER"
-
-    def test_battle_alias_removed(self):
-        """BATTLE alias should not exist in app module."""
-        from game import app
-        assert not hasattr(app, 'BATTLE'), \
-            "BATTLE alias should be removed - use GameState.BATTLE"
-
-    def test_settings_alias_removed(self):
-        """SETTINGS alias should not exist in app module."""
-        from game import app
-        assert not hasattr(app, 'SETTINGS'), \
-            "SETTINGS alias should be removed - use GameState.SETTINGS"
+        assert not hasattr(app, alias), (
+            f"{alias} alias should be removed - use GameState.{alias}"
+        )
 
 
 class TestNewPatternsWork:

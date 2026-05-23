@@ -132,37 +132,13 @@ class TestInputModeTransitions:
 
         assert handler.input_mode == 'JOIN'
 
-    def test_escape_returns_to_select_from_move(self, mock_scene, mapper):
-        """ESC should return to SELECT from MOVE mode."""
+    # PROJ-494 T3.6: 4 escape-returns-to-select tests collapsed into 1
+    # parametrized test on `mode`.
+    @pytest.mark.parametrize("mode", ["MOVE", "JOIN", "COLONIZE_TARGET", "TRANSFER"])
+    def test_escape_returns_to_select(self, mock_scene, mapper, mode):
+        """ESC should return to SELECT from any of the input modes."""
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
-        handler.input_mode = 'MOVE'
-
-        handler.handle_event(_keydown(pygame.K_ESCAPE))
-
-        assert handler.input_mode == 'SELECT'
-
-    def test_escape_returns_to_select_from_join(self, mock_scene, mapper):
-        """ESC should return to SELECT from JOIN mode."""
-        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
-        handler.input_mode = 'JOIN'
-
-        handler.handle_event(_keydown(pygame.K_ESCAPE))
-
-        assert handler.input_mode == 'SELECT'
-
-    def test_escape_returns_to_select_from_colonize(self, mock_scene, mapper):
-        """ESC should return to SELECT from COLONIZE_TARGET mode."""
-        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
-        handler.input_mode = 'COLONIZE_TARGET'
-
-        handler.handle_event(_keydown(pygame.K_ESCAPE))
-
-        assert handler.input_mode == 'SELECT'
-
-    def test_escape_returns_to_select_from_transfer(self, mock_scene, mapper):
-        """ESC should return to SELECT from TRANSFER mode."""
-        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
-        handler.input_mode = 'TRANSFER'
+        handler.input_mode = mode
 
         handler.handle_event(_keydown(pygame.K_ESCAPE))
 

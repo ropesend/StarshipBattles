@@ -3,16 +3,18 @@
 ViewModel holds derived/view state for `FleetBattleSetupScreen`: selection
 indices, scanned designs, and a few derived queries. Pure data — no pygame
 imports. Following the TestLab MVVM pattern.
+
+PROJ-494 T2.6: hoisted 7 in-method imports to module level.
 """
 from __future__ import annotations
+
+from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
 
 
 class TestBattleSetupViewModelDefaults:
     """A freshly-constructed ViewModel has sensible defaults."""
 
     def test_construct_with_no_args(self):
-        from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
-
         vm = BattleSetupViewModel()
         assert vm.active_side == 0
         assert vm.active_fleet_index == 0
@@ -25,15 +27,11 @@ class TestBattleSetupViewModelMutation:
     """View state mutates via direct attribute assignment (dataclass-style)."""
 
     def test_set_active_side(self):
-        from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
-
         vm = BattleSetupViewModel()
         vm.active_side = 2
         assert vm.active_side == 2
 
     def test_set_selection_indices(self):
-        from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
-
         vm = BattleSetupViewModel()
         vm.selected_tf_index = 1
         vm.selected_sq_index = 0
@@ -44,8 +42,6 @@ class TestBattleSetupViewModelMutation:
         assert vm.selected_ship_index == 3
 
     def test_set_available_designs(self):
-        from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
-
         vm = BattleSetupViewModel()
         designs = [{"name": "Fighter"}, {"name": "Cruiser"}]
         vm.available_designs = designs
@@ -58,8 +54,6 @@ class TestBattleSetupViewModelHelpers:
     def test_clear_selection(self):
         """`clear_selection()` resets TF/SQ/ship selection to None — used when
         active side or fleet changes."""
-        from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
-
         vm = BattleSetupViewModel()
         vm.selected_tf_index = 2
         vm.selected_sq_index = 1
@@ -72,8 +66,6 @@ class TestBattleSetupViewModelHelpers:
         assert vm.selected_ship_index is None
 
     def test_has_tf_selection(self):
-        from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
-
         vm = BattleSetupViewModel()
         assert vm.has_tf_selection() is False
         vm.selected_tf_index = 0
@@ -81,8 +73,6 @@ class TestBattleSetupViewModelHelpers:
 
     def test_has_sq_selection(self):
         """Squadron selection requires BOTH TF and SQ indices set."""
-        from game.ui.screens.battle_setup.view_model import BattleSetupViewModel
-
         vm = BattleSetupViewModel()
         assert vm.has_sq_selection() is False
         vm.selected_tf_index = 0

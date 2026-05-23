@@ -39,33 +39,53 @@ class TestFindShip:
 
 
 class TestResolveFleet:
-    """Tests for BaseCommandHandler._resolve_fleet()."""
+    """Tests for BaseCommandHandler._resolve_fleet().
 
-    def test_resolve_fleet_not_found(self):
-        """Returns error when fleet doesn't exist."""
+    PROJ-495 T3.20: parametrized the 2 negative-result tests on
+    ``(session_setup, resolve_kwargs, expected_substring)``. The two
+    cases (no fleet vs wrong-owner fleet) share the same assertion
+    shape (returns None, error.is_valid False, substring in
+    error.errors[0]).
+    """
+
+    @staticmethod
+    def _session_no_fleet() -> Mock:
         session = Mock()
         session._get_fleet_by_id.return_value = None
+        return session
 
-        fleet, error = BaseCommandHandler._resolve_fleet(session, fleet_id=999)
-
-        assert fleet is None
-        assert error is not None
-        assert not error.is_valid
-        assert "Fleet not found" in error.errors[0]
-
-    def test_resolve_fleet_wrong_owner(self):
-        """Returns error when fleet belongs to different empire."""
+    @staticmethod
+    def _session_wrong_owner() -> Mock:
         session = Mock()
         mock_fleet = Mock()
         mock_fleet.owner_id = 1
         session._get_fleet_by_id.return_value = mock_fleet
+        return session
 
-        fleet, error = BaseCommandHandler._resolve_fleet(session, fleet_id=100, empire_id=2)
+    @pytest.mark.parametrize(
+        "session_factory,resolve_kwargs,expected_substring",
+        [
+            (_session_no_fleet, {"fleet_id": 999}, "Fleet not found"),
+            (
+                _session_wrong_owner,
+                {"fleet_id": 100, "empire_id": 2},
+                "does not belong",
+            ),
+        ],
+        ids=["fleet_not_found", "wrong_owner"],
+    )
+    def test_resolve_fleet_negative_paths(
+        self, session_factory, resolve_kwargs, expected_substring
+    ):
+        """Returns (None, error) with the expected message substring."""
+        session = session_factory()
+
+        fleet, error = BaseCommandHandler._resolve_fleet(session, **resolve_kwargs)
 
         assert fleet is None
         assert error is not None
         assert not error.is_valid
-        assert "does not belong" in error.errors[0]
+        assert expected_substring in error.errors[0]
 
     def test_resolve_fleet_success(self):
         """Returns fleet when found and owner matches."""

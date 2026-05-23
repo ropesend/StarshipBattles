@@ -87,6 +87,57 @@ def _make_race_setup_screen():
     return screen, mocks
 
 
+# PROJ-494 Task 1.3: shared mock-method factories used across multiple tests
+# to replace inline duplicates.
+
+def _install_mock_show_step(screen, *, clamp: bool = False):
+    """Replace screen._show_step with a deterministic test double.
+
+    Was inlined twice (test_show_step_updates_current_step,
+    test_show_step_hides_other_panels). The two variants differ only in
+    whether they clamp `step_num` to a valid range.
+    """
+    def mock_show_step(step_num):
+        if clamp:
+            step_num = max(0, min(step_num, len(screen.step_panels) - 1))
+        screen.current_step = step_num
+        for i, panel in enumerate(screen.step_panels):
+            if i == step_num:
+                panel.show()
+            else:
+                panel.hide()
+    screen._show_step = mock_show_step
+
+
+def _install_mock_update_tab_highlighting(screen):
+    """Replace screen._update_tab_highlighting with a deterministic test double.
+
+    Was inlined twice (test_update_tab_highlighting_selects_current,
+    test_update_tab_highlighting_unselects_others) byte-for-byte.
+    """
+    def mock_update_highlighting():
+        for i, btn in enumerate(screen.tab_buttons):
+            if i == screen.current_step:
+                btn.select()
+            else:
+                btn.unselect()
+    screen._update_tab_highlighting = mock_update_highlighting
+
+
+def _install_mock_update_navigation(screen):
+    """Replace screen._update_navigation_buttons with a deterministic test double.
+
+    Was inlined twice (test_save_button_visible_on_summary_tab,
+    test_save_button_hidden_on_other_tabs) byte-for-byte.
+    """
+    def mock_update_navigation():
+        if screen.current_step == screen.TAB_SUMMARY:
+            screen.btn_save.show()
+        else:
+            screen.btn_save.hide()
+    screen._update_navigation_buttons = mock_update_navigation
+
+
 # ===========================================================================
 # PROJ-325 Phase 3: two-stage construction PoC
 # ===========================================================================
@@ -151,17 +202,7 @@ class TestRaceSetupTabNavigation:
     def test_show_step_updates_current_step(self):
         """_show_step should update current_step."""
         screen, mocks = _make_race_setup_screen()
-
-        def mock_show_step(step_num):
-            step_num = max(0, min(step_num, len(screen.step_panels) - 1))
-            screen.current_step = step_num
-            for i, panel in enumerate(screen.step_panels):
-                if i == step_num:
-                    panel.show()
-                else:
-                    panel.hide()
-
-        screen._show_step = mock_show_step
+        _install_mock_show_step(screen, clamp=True)
         screen._show_step(screen.TAB_VISUALS)
 
         assert screen.current_step == screen.TAB_VISUALS
@@ -169,16 +210,7 @@ class TestRaceSetupTabNavigation:
     def test_show_step_hides_other_panels(self):
         """_show_step should hide non-current panels."""
         screen, mocks = _make_race_setup_screen()
-
-        def mock_show_step(step_num):
-            for i, panel in enumerate(screen.step_panels):
-                if i == step_num:
-                    panel.show()
-                else:
-                    panel.hide()
-            screen.current_step = step_num
-
-        screen._show_step = mock_show_step
+        _install_mock_show_step(screen)
         screen._show_step(screen.TAB_ENVIRONMENT)
 
         # Panel at TAB_ENVIRONMENT should be shown
@@ -517,15 +549,7 @@ class TestRaceSetupTabHighlighting:
         """_update_tab_highlighting should select current tab button."""
         screen, mocks = _make_race_setup_screen()
         screen.current_step = screen.TAB_SHIPS
-
-        def mock_update_highlighting():
-            for i, btn in enumerate(screen.tab_buttons):
-                if i == screen.current_step:
-                    btn.select()
-                else:
-                    btn.unselect()
-
-        screen._update_tab_highlighting = mock_update_highlighting
+        _install_mock_update_tab_highlighting(screen)
         screen._update_tab_highlighting()
 
         screen.tab_buttons[screen.TAB_SHIPS].select.assert_called()
@@ -534,15 +558,7 @@ class TestRaceSetupTabHighlighting:
         """_update_tab_highlighting should unselect non-current tabs."""
         screen, mocks = _make_race_setup_screen()
         screen.current_step = screen.TAB_IDENTITY
-
-        def mock_update_highlighting():
-            for i, btn in enumerate(screen.tab_buttons):
-                if i == screen.current_step:
-                    btn.select()
-                else:
-                    btn.unselect()
-
-        screen._update_tab_highlighting = mock_update_highlighting
+        _install_mock_update_tab_highlighting(screen)
         screen._update_tab_highlighting()
 
         # All tabs except IDENTITY should be unselected
@@ -562,14 +578,7 @@ class TestRaceSetupNavigationButtons:
         """Save button should be visible on Summary tab."""
         screen, _ = _make_race_setup_screen()
         screen.current_step = screen.TAB_SUMMARY
-
-        def mock_update_navigation():
-            if screen.current_step == screen.TAB_SUMMARY:
-                screen.btn_save.show()
-            else:
-                screen.btn_save.hide()
-
-        screen._update_navigation_buttons = mock_update_navigation
+        _install_mock_update_navigation(screen)
         screen._update_navigation_buttons()
 
         screen.btn_save.show.assert_called()
@@ -578,14 +587,7 @@ class TestRaceSetupNavigationButtons:
         """Save button should be hidden on non-Summary tabs."""
         screen, _ = _make_race_setup_screen()
         screen.current_step = screen.TAB_VISUALS
-
-        def mock_update_navigation():
-            if screen.current_step == screen.TAB_SUMMARY:
-                screen.btn_save.show()
-            else:
-                screen.btn_save.hide()
-
-        screen._update_navigation_buttons = mock_update_navigation
+        _install_mock_update_navigation(screen)
         screen._update_navigation_buttons()
 
         screen.btn_save.hide.assert_called()

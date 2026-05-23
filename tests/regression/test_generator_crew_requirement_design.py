@@ -35,6 +35,11 @@ def test_generator_without_crew_is_inactive(fresh_registries):
     This is EXPECTED behavior - Generator requires crew to operate.
 
     PROJ-50: Updated to use DI via fresh_registries fixture.
+    PROJ-496 T1.9 (origin PROJ-480 T5.8): removed the
+    ``if layer_key is None:`` defensive fallback + debug print. The
+    Cruiser vehicle class is guaranteed to produce an INNER layer; if
+    that ever stops being true, this test should fail loudly rather
+    than silently fall back onto the first arbitrary layer.
     """
     # Setup test-specific vehicle classes in our registries
     test_vehicle_classes = {"Cruiser": {'max_mass': 5000, 'type': 'Ship'}}
@@ -42,11 +47,7 @@ def test_generator_without_crew_is_inactive(fresh_registries):
 
     ship = Ship(name="TestShip", x=0, y=0, color=(255, 255, 255), ship_class="Cruiser", registries=fresh_registries)
     layer_key = _get_layer_key(ship, 'INNER')
-    if layer_key is None:
-        # Fallback for debug: what DO we have?
-        print(f"DEBUG: Ship layers keys: {[k.name if hasattr(k, 'name') else str(k) for k in ship.layers]}")
-        # If still None, append to a default layer if exists
-        layer_key = list(ship.layers.keys())[0] if ship.layers else None
+    assert layer_key is not None, "Cruiser ships must have an INNER layer"
 
     # Add ONLY generator (no crew quarters/life support)
     generator = create_component("generator", registries=fresh_registries)
@@ -77,8 +78,8 @@ def test_generator_with_crew_is_active(fresh_registries):
 
     ship = Ship(name="TestShip", x=0, y=0, color=(255, 255, 255), ship_class="Cruiser", registries=fresh_registries)
     layer_key = _get_layer_key(ship, 'INNER')
-    if layer_key is None:
-        layer_key = list(ship.layers.keys())[0] if ship.layers else None
+    # PROJ-496 T1.9: removed defensive `if layer_key is None` fallback.
+    assert layer_key is not None, "Cruiser ships must have an INNER layer"
 
     # Add crew support first
     quarters = create_component("crew_quarters", registries=fresh_registries)  # Provides crew capacity

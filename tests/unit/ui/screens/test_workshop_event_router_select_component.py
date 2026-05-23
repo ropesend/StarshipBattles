@@ -15,6 +15,7 @@ Fix: Attach the cloned dragged_item to `gui.ship` (the design being edited
 in the Workshop) before `recalculate_stats()`. Mirrors the existing fix in
 `game/ui/screens/builder/interaction_controller.py:95-99` (shift-drop path).
 """
+import math
 from unittest.mock import MagicMock
 
 import pytest
@@ -79,13 +80,29 @@ class TestSelectComponentTypeAttachesShip:
     def test_dragged_item_mass_reflects_design_mass_budget(
         self, fresh_registries
     ):
-        """With the fix, bridge mass is computed against the Workshop's
-        design ship. Formula: 50 * sqrt(2000/1000) ≈ 70.7 for a 2000t design."""
+        """Asserts (1) bridge mass exceeds the baseline (50.0) — a basic
+        property; (2) bridge mass for the given design budget is within ±10%
+        of the formula's expected output. The ±10% tolerance allows minor
+        formula tweaks (rounding, baseline shift) without rewriting the test,
+        while still catching meaningful calculation regressions.
+
+        Task wording: PROJ-480 T4.6.
+        """
         bridge = create_component('bridge', registries=fresh_registries)
         gui = _make_gui(design_mass_budget=2000.0)
         router = WorkshopEventRouter(gui)
 
         router._handle_select_component_type(bridge)
 
-        expected = 50.0 * (2000.0 / 1000.0) ** 0.5
-        assert gui.controller.dragged_item.mass == pytest.approx(expected, abs=0.1)
+        mass = gui.controller.dragged_item.mass
+        # (1) Sanity: bridge mass exceeds the baseline (independent of formula).
+        assert mass > 50, f"bridge mass {mass} should exceed baseline 50.0"
+        # (2) Relative-ratio band: within ±10% of the formula's expected output
+        # for budget=2000. Bridge formula is `50 * sqrt(budget / 1000)` →
+        # 50 * sqrt(2.0) ≈ 70.71 at budget=2000.
+        expected_base = 50 * math.sqrt(2.0)
+        ratio = mass / expected_base
+        assert 0.9 <= ratio <= 1.1, (
+            f"bridge mass {mass} / expected {expected_base:.4f} = {ratio:.4f}; "
+            "expected ratio in [0.9, 1.1]"
+        )

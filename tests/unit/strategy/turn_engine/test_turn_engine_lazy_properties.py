@@ -16,9 +16,40 @@ the absent-resolver case now raises clearly from
 """
 from __future__ import annotations
 
+import importlib
 from unittest.mock import MagicMock
 
+import pytest
+
 from tests.fixtures.turn_engine import build_test_turn_engine
+
+
+# PROJ-496 T1.1 (origin PROJ-480 T3.29): parametrize the 17 isinstance +
+# identity tests that share an identical pattern (engine attribute → class
+# match + same-instance idempotency check) into a single data table.
+#
+# Each entry is (attribute_name, module_path, class_name). We import the
+# class lazily inside the test body so a regression that breaks a single
+# module doesn't poison the collection of all 17 cases.
+_DEFAULT_ENGINE_CASES = [
+    ("movement_engine", "game.strategy.engine.fleet_movement_engine", "FleetMovementEngine"),
+    ("production_engine", "game.strategy.engine.production_engine", "ProductionEngine"),
+    ("order_processor", "game.strategy.engine.order_processor", "OrderProcessor"),
+    ("resource_engine", "game.strategy.engine.consumable_management_engine", "ConsumableManagementEngine"),
+    ("population_engine", "game.strategy.engine.population_engine", "PopulationEngine"),
+    ("resupply_engine", "game.strategy.engine.resupply_engine", "ResupplyEngine"),
+    ("harvesting_engine", "game.strategy.engine.harvesting_engine", "HarvestingEngine"),
+    ("environmental_engine", "game.strategy.engine.environmental_hazard_engine", "EnvironmentalHazardEngine"),
+    ("planet_energy_engine", "game.strategy.engine.planet_energy_engine", "PlanetEnergyEngine"),
+    ("action_engine", "game.strategy.engine.action_execution_engine", "ActionExecutionEngine"),
+    ("planet_action_engine", "game.strategy.engine.planet_action_engine", "PlanetActionEngine"),
+    ("component_activation_engine", "game.strategy.engine.component_activation_engine", "ComponentActivationEngine"),
+    ("organics_consumption_engine", "game.strategy.engine.organics_consumption_engine", "OrganicsConsumptionEngine"),
+    ("happiness_engine", "game.strategy.engine.happiness_engine", "HappinessEngine"),
+    ("quality_engine", "game.strategy.engine.quality_engine", "QualityEngine"),
+    ("atmosphere_engine", "game.strategy.engine.atmosphere_engine", "AtmosphereEngine"),
+    ("water_engine", "game.strategy.engine.water_engine", "WaterEngine"),
+]
 
 
 class TestEagerDefaultEngines:
@@ -31,150 +62,22 @@ class TestEagerDefaultEngines:
     property returns the same instance across accesses.
     """
 
-    def test_movement_engine_default(self, fresh_registries):
-        from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
+    @pytest.mark.parametrize(
+        "attr_name,module_path,class_name",
+        _DEFAULT_ENGINE_CASES,
+        ids=[attr for attr, _, _ in _DEFAULT_ENGINE_CASES],
+    )
+    def test_engine_property_default(
+        self, fresh_registries, attr_name, module_path, class_name
+    ):
+        module = importlib.import_module(module_path)
+        engine_class = getattr(module, class_name)
 
         engine = build_test_turn_engine(fresh_registries)
-        assert isinstance(engine.movement_engine, FleetMovementEngine)
-        assert engine.movement_engine is engine.movement_engine
-
-    def test_production_engine_default(self, fresh_registries):
-        from game.strategy.engine.production_engine import ProductionEngine
-
-        engine = build_test_turn_engine(fresh_registries)
-        prod = engine.production_engine
-        assert isinstance(prod, ProductionEngine)
-        assert engine.production_engine is prod
-
-    def test_order_processor_default(self, fresh_registries):
-        from game.strategy.engine.order_processor import OrderProcessor
-
-        engine = build_test_turn_engine(fresh_registries)
-        op = engine.order_processor
-        assert isinstance(op, OrderProcessor)
-        assert engine.order_processor is op
-
-    def test_resource_engine_default(self, fresh_registries):
-        from game.strategy.engine.consumable_management_engine import (
-            ConsumableManagementEngine,
-        )
-
-        engine = build_test_turn_engine(fresh_registries)
-        re = engine.resource_engine
-        assert isinstance(re, ConsumableManagementEngine)
-        assert engine.resource_engine is re
-
-    def test_population_engine_default(self, fresh_registries):
-        from game.strategy.engine.population_engine import PopulationEngine
-
-        engine = build_test_turn_engine(fresh_registries)
-        pe = engine.population_engine
-        assert isinstance(pe, PopulationEngine)
-        assert engine.population_engine is pe
-
-    def test_resupply_engine_default(self, fresh_registries):
-        from game.strategy.engine.resupply_engine import ResupplyEngine
-
-        engine = build_test_turn_engine(fresh_registries)
-        rse = engine.resupply_engine
-        assert isinstance(rse, ResupplyEngine)
-        assert engine.resupply_engine is rse
-
-    def test_harvesting_engine_default(self, fresh_registries):
-        from game.strategy.engine.harvesting_engine import HarvestingEngine
-
-        engine = build_test_turn_engine(fresh_registries)
-        he = engine.harvesting_engine
-        assert isinstance(he, HarvestingEngine)
-        assert engine.harvesting_engine is he
-
-    def test_environmental_engine_default(self, fresh_registries):
-        from game.strategy.engine.environmental_hazard_engine import (
-            EnvironmentalHazardEngine,
-        )
-
-        engine = build_test_turn_engine(fresh_registries)
-        ee = engine.environmental_engine
-        assert isinstance(ee, EnvironmentalHazardEngine)
-        assert engine.environmental_engine is ee
-
-    def test_planet_energy_engine_default(self, fresh_registries):
-        from game.strategy.engine.planet_energy_engine import PlanetEnergyEngine
-
-        engine = build_test_turn_engine(fresh_registries)
-        pee = engine.planet_energy_engine
-        assert isinstance(pee, PlanetEnergyEngine)
-        assert engine.planet_energy_engine is pee
-
-    def test_action_engine_default(self, fresh_registries):
-        from game.strategy.engine.action_execution_engine import (
-            ActionExecutionEngine,
-        )
-
-        engine = build_test_turn_engine(fresh_registries)
-        ae = engine.action_engine
-        assert isinstance(ae, ActionExecutionEngine)
-        assert engine.action_engine is ae
-
-    def test_planet_action_engine_default(self, fresh_registries):
-        from game.strategy.engine.planet_action_engine import PlanetActionEngine
-
-        engine = build_test_turn_engine(fresh_registries)
-        pae = engine.planet_action_engine
-        assert isinstance(pae, PlanetActionEngine)
-        assert engine.planet_action_engine is pae
-
-    def test_component_activation_engine_default(self, fresh_registries):
-        from game.strategy.engine.component_activation_engine import (
-            ComponentActivationEngine,
-        )
-
-        engine = build_test_turn_engine(fresh_registries)
-        cae = engine.component_activation_engine
-        assert isinstance(cae, ComponentActivationEngine)
-        assert engine.component_activation_engine is cae
-
-    def test_organics_consumption_engine_default(self, fresh_registries):
-        from game.strategy.engine.organics_consumption_engine import (
-            OrganicsConsumptionEngine,
-        )
-
-        engine = build_test_turn_engine(fresh_registries)
-        oce = engine.organics_consumption_engine
-        assert isinstance(oce, OrganicsConsumptionEngine)
-        assert engine.organics_consumption_engine is oce
-
-    def test_happiness_engine_default(self, fresh_registries):
-        from game.strategy.engine.happiness_engine import HappinessEngine
-
-        engine = build_test_turn_engine(fresh_registries)
-        he = engine.happiness_engine
-        assert isinstance(he, HappinessEngine)
-        assert engine.happiness_engine is he
-
-    def test_quality_engine_default(self, fresh_registries):
-        from game.strategy.engine.quality_engine import QualityEngine
-
-        engine = build_test_turn_engine(fresh_registries)
-        qe = engine.quality_engine
-        assert isinstance(qe, QualityEngine)
-        assert engine.quality_engine is qe
-
-    def test_atmosphere_engine_default(self, fresh_registries):
-        from game.strategy.engine.atmosphere_engine import AtmosphereEngine
-
-        engine = build_test_turn_engine(fresh_registries)
-        ae = engine.atmosphere_engine
-        assert isinstance(ae, AtmosphereEngine)
-        assert engine.atmosphere_engine is ae
-
-    def test_water_engine_default(self, fresh_registries):
-        from game.strategy.engine.water_engine import WaterEngine
-
-        engine = build_test_turn_engine(fresh_registries)
-        we = engine.water_engine
-        assert isinstance(we, WaterEngine)
-        assert engine.water_engine is we
+        value = getattr(engine, attr_name)
+        assert isinstance(value, engine_class)
+        # Idempotency: same instance on re-access.
+        assert getattr(engine, attr_name) is value
 
 
 class TestConflictEngineBattleResolverBranches:
@@ -216,84 +119,28 @@ class TestConflictEngineBattleResolverBranches:
         )
         assert engine.conflict_engine._battle_resolver is None
 
-    def test_conflict_engine_resolver_guard_present_at_dispatch_site(
-        self, fresh_registries
-    ):
-        """PROJ-369 Phase 3: ``_NullBattleResolver`` deleted. The
-        absent-resolver case is now guarded at the dispatch site
-        inside ``ConflictResolutionEngine._resolve_combat_at_hex``
-        (just before ``self._battle_resolver.resolve_battle(...)``).
-
-        Non-combat ticks (no actual battle) do not raise — only the
-        attempt to dispatch a battle does. We verify the guard is
-        present by inspecting the engine source for the explicit
-        ``ValueError`` and the ``battle_resolver`` reference.
-        """
-        import inspect
-        from game.strategy.engine import conflict_resolution_engine
-
-        src = inspect.getsource(
-            conflict_resolution_engine.ConflictResolutionEngine._resolve_combat_at_hex
-        )
-        assert "self._battle_resolver is None" in src, (
-            "PROJ-369 Phase 3 guard missing from _resolve_combat_at_hex: "
-            "expected an explicit `self._battle_resolver is None` check "
-            "before the resolver call site."
-        )
-        assert "ValueError" in src
-        assert "battle_resolver" in src
-
-        # Production wiring sanity: with ai_factory=None, the engine's
-        # bound resolver is None.
-        engine = build_test_turn_engine(
-            fresh_registries, ai_factory=None,
-        )
-        assert engine.conflict_engine._battle_resolver is None
+    # PROJ-496 T1.2 (origin PROJ-480 T5.14): the `inspect.getsource(...)`
+    # guard that verified the resolver-absent check at the dispatch site
+    # was moved to `tests/static_guards/test_turn_engine_architectural_guards.py::
+    # test_conflict_engine_resolver_guard_present_at_dispatch_site`.
+    # The behavioral coverage that `ai_factory=None` produces a None
+    # resolver is preserved by `test_battle_resolver_none_when_ai_factory_none`
+    # above.
 
 
-class TestPlanetModifierEffectEngineLazyProperty:
-    """PROJ-428 Phase 1: planet-modifier engine lives on TurnEngine.
-
-    The registry module must not import PlanetModifierEffectEngine; the
-    construction site moves to a lazy property on TurnEngine, accessed
-    through a resolver lambda on the descriptor.
-    """
-
-    def test_registry_module_does_not_import_planet_modifier_effect_engine(self):
-        """AST guard: turn_phase_registry must not import the engine."""
-        import ast
-        from pathlib import Path
-
-        from game.strategy.engine import turn_phase_registry as _reg
-
-        src = Path(_reg.__file__).read_text(encoding="utf-8")
-        tree = ast.parse(src)
-        offenders: list[str] = []
-        for node in ast.walk(tree):
-            if isinstance(node, ast.ImportFrom):
-                module = node.module or ""
-                if "planet_modifier_effect_engine" in module:
-                    offenders.append(f"from {module} import ...")
-                for alias in node.names:
-                    if alias.name == "PlanetModifierEffectEngine":
-                        offenders.append(f"from {module} import {alias.name}")
-            elif isinstance(node, ast.Import):
-                for alias in node.names:
-                    if "planet_modifier_effect_engine" in alias.name:
-                        offenders.append(f"import {alias.name}")
-        assert not offenders, (
-            f"turn_phase_registry must not import PlanetModifierEffectEngine "
-            f"(found: {offenders}). PROJ-428 Phase 1 moves construction to "
-            f"TurnEngine.planet_modifier_effect_engine."
-        )
-
-    # PROJ-479 Task 1.11: deleted
-    # `test_planet_modifier_effect_engine_property_returns_cached_instance` —
-    # the 18-test cluster above (`test_*_engine_default`) already exercises
-    # the identical isinstance + identity caching pattern for every other
-    # engine property; adding `planet_modifier_effect_engine` to the
-    # `TestTurnEngineLazyProperties` class via the same pattern would be
-    # the right place if a new variant is needed.
+# PROJ-496 T1.2: TestPlanetModifierEffectEngineLazyProperty's only test
+# (the AST guard against importing PlanetModifierEffectEngine from
+# turn_phase_registry) was moved to
+# `tests/static_guards/test_turn_engine_architectural_guards.py::
+# test_registry_module_does_not_import_planet_modifier_effect_engine`.
+#
+# PROJ-479 Task 1.11: deleted
+# `test_planet_modifier_effect_engine_property_returns_cached_instance` —
+# the 17-test parametrize cluster above (`test_engine_property_default`)
+# already exercises the identical isinstance + identity caching pattern
+# for every other engine property; adding `planet_modifier_effect_engine`
+# to the `_DEFAULT_ENGINE_CASES` table via the same pattern would be the
+# right place if a new variant is needed.
 
 
 class TestNullBattleResolverSymbolAbsent:

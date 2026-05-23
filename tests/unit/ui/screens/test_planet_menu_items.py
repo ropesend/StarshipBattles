@@ -139,29 +139,32 @@ def _patch_ability_helper(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 class TestPlanetMenuCapabilityMatrix:
-    def test_lay_mines_visible_with_layer_facility(self) -> None:
-        planet = _planet(facility_abilities={"StrategicMineLayer"})
+    # PROJ-494 T3.4: 4 facility→label visibility tests collapsed into 1
+    # parametrized test on `(facility_abilities, expected_label, should_be_visible)`.
+    @pytest.mark.parametrize(
+        "facility_abilities,expected_label,should_be_visible",
+        [
+            pytest.param({"StrategicMineLayer"}, "Lay Mines", True,
+                         id="lay_mines_visible_with_facility"),
+            pytest.param(set(), "Lay Mines", False,
+                         id="lay_mines_hidden_without_facility"),
+            pytest.param({"StrategicFighterLaunch"}, "Launch Fighters", True,
+                         id="launch_fighters_visible_with_facility"),
+            pytest.param({"StrategicSatelliteLaunch"}, "Launch Satellites", True,
+                         id="launch_satellites_visible_with_facility"),
+        ],
+    )
+    def test_facility_label_visibility(
+        self, facility_abilities, expected_label, should_be_visible,
+    ) -> None:
+        planet = _planet(facility_abilities=facility_abilities)
         cbs, _ = _all_callbacks()
         items = build_menu_items(planet, _galaxy_with_groups(), cbs)
-        assert "Lay Mines" in [it.label for it in items]
-
-    def test_lay_mines_hidden_without_facility_ability(self) -> None:
-        planet = _planet(facility_abilities=set())
-        cbs, _ = _all_callbacks()
-        items = build_menu_items(planet, _galaxy_with_groups(), cbs)
-        assert "Lay Mines" not in [it.label for it in items]
-
-    def test_launch_fighters_visible_with_facility(self) -> None:
-        planet = _planet(facility_abilities={"StrategicFighterLaunch"})
-        cbs, _ = _all_callbacks()
-        items = build_menu_items(planet, _galaxy_with_groups(), cbs)
-        assert "Launch Fighters" in [it.label for it in items]
-
-    def test_launch_satellites_visible_with_facility(self) -> None:
-        planet = _planet(facility_abilities={"StrategicSatelliteLaunch"})
-        cbs, _ = _all_callbacks()
-        items = build_menu_items(planet, _galaxy_with_groups(), cbs)
-        assert "Launch Satellites" in [it.label for it in items]
+        labels = [it.label for it in items]
+        if should_be_visible:
+            assert expected_label in labels
+        else:
+            assert expected_label not in labels
 
     def test_recover_fighters_requires_both_facility_and_matching_group(self) -> None:
         loc = SimpleNamespace(q=5, r=3)

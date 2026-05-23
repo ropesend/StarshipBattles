@@ -10,7 +10,52 @@ mirrors the pattern PROJ-289 established in
 """
 from __future__ import annotations
 
+import pytest
+
 from unittest.mock import MagicMock, patch
+
+
+@pytest.fixture
+def factory_for_create_all_panels():
+    """PROJ-494 T2.1: shared factory configured for create_all_panels exercises.
+
+    Stands up a bypass-init `BuildQueuePanelFactory` with all UI primitives
+    available for patching. Set up for a fleet-context build (avoids the
+    PlanetReportPanel branch) — tests that need a planet context can mutate
+    `factory.build_context.context_type` directly.
+    """
+    from game.ui.screens.build_queue_panel_factory import BuildQueuePanelFactory
+
+    factory = BuildQueuePanelFactory.__new__(BuildQueuePanelFactory)
+    factory.manager = MagicMock()
+    # PROJ-396 MAJ-003: factory has no .session field; facade is the
+    # canonical surface for registries / turn.
+    factory._facade = MagicMock()
+    factory._facade.economy.registries = MagicMock(return_value=MagicMock())
+    factory._facade.session_meta.turn_number = MagicMock(return_value=0)
+    factory._empire = None
+
+    build_context = MagicMock()
+    build_context.context_type = "fleet"  # avoid PlanetReportPanel branch
+    build_context.id = 1
+    build_context.owner_id = 1
+    build_context.name = "Test Fleet"
+    build_context.has_space_shipyard = True
+    build_context.construction_queue = []
+    build_context.ships = []
+    factory.build_context = build_context
+
+    factory.queue_sources = []
+    factory.portrait_loader = MagicMock()
+    factory.portrait_loader.load_resource_icons.return_value = {}
+    factory.portrait_surface = None
+    factory.on_queue_selection_changed = MagicMock()
+
+    factory.screen_width = 1600
+    factory.screen_height = 900
+
+    factory.resource_icons = {}
+    return factory
 
 
 def _make_factory():
@@ -127,50 +172,16 @@ class TestViewThreading:
 
 
 class TestScopedFastPanelObjectId:
-    """PROJ-373 Phase 4: every UIPanel in the factory opts into @fast_panel."""
+    """PROJ-373 Phase 4: every UIPanel in the factory opts into @fast_panel.
 
-    @staticmethod
-    def _build_factory_for_create_all_panels():
-        """Stand up a factory that can run create_all_panels with all UI
-        primitives mocked. Returns (factory, mock_modules) where mock_modules
-        is the dict captured from the patch context (UIPanel etc.)."""
-        from game.ui.screens.build_queue_panel_factory import BuildQueuePanelFactory
+    PROJ-494 T2.1: factory construction moved to the module-level
+    `factory_for_create_all_panels` fixture.
+    """
 
-        factory = BuildQueuePanelFactory.__new__(BuildQueuePanelFactory)
-        factory.manager = MagicMock()
-        # PROJ-396 MAJ-003: factory has no .session field; facade is the
-        # canonical surface for registries / turn.
-        factory._facade = MagicMock()
-        factory._facade.economy.registries = MagicMock(return_value=MagicMock())
-        factory._facade.session_meta.turn_number = MagicMock(return_value=0)
-        factory._empire = None
-
-        build_context = MagicMock()
-        build_context.context_type = "fleet"  # avoid PlanetReportPanel branch
-        build_context.id = 1
-        build_context.owner_id = 1
-        build_context.name = "Test Fleet"
-        build_context.has_space_shipyard = True
-        build_context.construction_queue = []
-        build_context.ships = []
-        factory.build_context = build_context
-
-        factory.queue_sources = []
-        factory.portrait_loader = MagicMock()
-        factory.portrait_loader.load_resource_icons.return_value = {}
-        factory.portrait_surface = None
-        factory.on_queue_selection_changed = MagicMock()
-
-        factory.screen_width = 1600
-        factory.screen_height = 900
-
-        factory.resource_icons = {}
-        return factory
-
-    def test_every_uipanel_in_factory_uses_fast_panel_class_id(self):
+    def test_every_uipanel_in_factory_uses_fast_panel_class_id(self, factory_for_create_all_panels):
         """Every `ui.UIPanel(...)` call inside the factory passes
         `object_id="@fast_panel"` so the scoped rectangle shape applies."""
-        factory = self._build_factory_for_create_all_panels()
+        factory = factory_for_create_all_panels
         with patch(
             "game.ui.screens.build_queue_panel_factory.ui.UIPanel"
         ) as mock_panel, patch(
@@ -207,20 +218,16 @@ class TestScopedFastPanelObjectId:
 
     def test_theme_json_has_fast_panel_block_with_rectangle_shape(self):
         """Sanity-check that the data file actually defines the scoped
-        block referenced by the factory."""
-        import json
-        import os
+        block referenced by the factory.
 
-        repo_root = os.path.dirname(
-            os.path.dirname(
-                os.path.dirname(
-                    os.path.dirname(
-                        os.path.dirname(os.path.abspath(__file__))
-                    )
-                )
-            )
-        )
-        theme_path = os.path.join(repo_root, "data", "builder_theme.json")
+        PROJ-494 T4.6: was a 5-level `os.path.dirname` chain to reach
+        `data/builder_theme.json`. Replaced with the canonical `Paths.data_dir()`
+        accessor — a single source of truth for repo-relative file locations.
+        """
+        import json
+        from game.core.paths import Paths
+
+        theme_path = Paths.get_data_dir() / "builder_theme.json"
         with open(theme_path) as f:
             theme = json.load(f)
 

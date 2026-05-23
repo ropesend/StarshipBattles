@@ -108,104 +108,71 @@ class TestRendererIsVisible:
             node_height=60
         )
 
-    # --- Tests for positions within viewport ---
-
-    def test_center_of_viewport_is_visible(self, renderer_module):
-        """Position at center of viewport should be visible."""
+    # PROJ-494 T3.15 cluster 1: 9 viewport-visibility tests parametrized on
+    # `(pos, expected)`. Multi-position tests (left/right/above/below/diagonal)
+    # contribute one parametrize case per checked position.
+    @pytest.mark.parametrize(
+        "pos,expected",
+        [
+            # In-viewport
+            pytest.param((400, 300), True, id='center'),
+            pytest.param((0, 0), True, id='origin'),
+            pytest.param((800, 0), True, id='top_right_corner'),
+            pytest.param((0, 600), True, id='bottom_left_corner'),
+            pytest.param((800, 600), True, id='bottom_right_corner'),
+            # Outside left
+            pytest.param((-1, 300), False, id='left_near'),
+            pytest.param((-100, 300), False, id='left_far'),
+            # Outside right
+            pytest.param((801, 300), False, id='right_near'),
+            pytest.param((1000, 300), False, id='right_far'),
+            # Outside above
+            pytest.param((400, -1), False, id='above_near'),
+            pytest.param((400, -50), False, id='above_far'),
+            # Outside below
+            pytest.param((400, 601), False, id='below_near'),
+            pytest.param((400, 1000), False, id='below_far'),
+            # Diagonally outside
+            pytest.param((-10, -10), False, id='diag_tl'),
+            pytest.param((900, 700), False, id='diag_br'),
+            pytest.param((-50, 700), False, id='diag_bl'),
+            pytest.param((900, -50), False, id='diag_tr'),
+        ],
+    )
+    def test_is_visible_no_margin(self, renderer_module, pos, expected):
+        """_is_visible without margin correctly classifies positions inside vs outside viewport."""
         renderer = self._create_renderer(renderer_module, 800, 600)
-        assert renderer._is_visible((400, 300)) is True
-
-    def test_origin_is_visible(self, renderer_module):
-        """Position at (0, 0) should be visible."""
-        renderer = self._create_renderer(renderer_module, 800, 600)
-        assert renderer._is_visible((0, 0)) is True
-
-    def test_top_right_corner_is_visible(self, renderer_module):
-        """Position at top-right corner should be visible."""
-        renderer = self._create_renderer(renderer_module, 800, 600)
-        assert renderer._is_visible((800, 0)) is True
-
-    def test_bottom_left_corner_is_visible(self, renderer_module):
-        """Position at bottom-left corner should be visible."""
-        renderer = self._create_renderer(renderer_module, 800, 600)
-        assert renderer._is_visible((0, 600)) is True
-
-    def test_bottom_right_corner_is_visible(self, renderer_module):
-        """Position at bottom-right corner should be visible."""
-        renderer = self._create_renderer(renderer_module, 800, 600)
-        assert renderer._is_visible((800, 600)) is True
-
-    # --- Tests for positions outside viewport ---
-
-    def test_position_left_of_viewport_not_visible(self, renderer_module):
-        """Position left of viewport (negative x) should not be visible."""
-        renderer = self._create_renderer(renderer_module, 800, 600)
-        assert renderer._is_visible((-1, 300)) is False
-        assert renderer._is_visible((-100, 300)) is False
-
-    def test_position_right_of_viewport_not_visible(self, renderer_module):
-        """Position right of viewport should not be visible."""
-        renderer = self._create_renderer(renderer_module, 800, 600)
-        assert renderer._is_visible((801, 300)) is False
-        assert renderer._is_visible((1000, 300)) is False
-
-    def test_position_above_viewport_not_visible(self, renderer_module):
-        """Position above viewport (negative y) should not be visible."""
-        renderer = self._create_renderer(renderer_module, 800, 600)
-        assert renderer._is_visible((400, -1)) is False
-        assert renderer._is_visible((400, -50)) is False
-
-    def test_position_below_viewport_not_visible(self, renderer_module):
-        """Position below viewport should not be visible."""
-        renderer = self._create_renderer(renderer_module, 800, 600)
-        assert renderer._is_visible((400, 601)) is False
-        assert renderer._is_visible((400, 1000)) is False
-
-    def test_position_diagonally_outside_not_visible(self, renderer_module):
-        """Positions diagonally outside viewport corners should not be visible."""
-        renderer = self._create_renderer(renderer_module, 800, 600)
-        assert renderer._is_visible((-10, -10)) is False
-        assert renderer._is_visible((900, 700)) is False
-        assert renderer._is_visible((-50, 700)) is False
-        assert renderer._is_visible((900, -50)) is False
+        assert renderer._is_visible(pos) is expected
 
     # --- Tests with margin ---
 
-    def test_margin_extends_visibility_left(self, renderer_module):
-        """Margin should allow partial visibility on the left edge."""
+    # PROJ-494 T5.2: 4 directional margin tests parametrized on
+    # `(near_outside_pos, far_outside_pos, margin)`. The body asserts:
+    # without margin near_outside is False; with margin near_outside is True;
+    # if far_outside_pos provided, with margin far_outside is False.
+    # left/right originally checked the far-outside case; top/bottom did not.
+    # Added symmetric far-outside cases for top/bottom (51 px past edge,
+    # mirroring the left/right pattern).
+    @pytest.mark.parametrize(
+        "near_outside_pos,far_outside_pos,margin",
+        [
+            pytest.param((-10, 300), (-51, 300), 50, id='left'),
+            pytest.param((810, 300), (851, 300), 50, id='right'),
+            pytest.param((400, -10), (400, -51), 50, id='top'),
+            pytest.param((400, 610), (400, 651), 50, id='bottom'),
+        ],
+    )
+    def test_margin_extends_visibility_directional(
+        self, renderer_module, near_outside_pos, far_outside_pos, margin
+    ):
+        """Margin allows partial visibility on each edge but not beyond it."""
         renderer = self._create_renderer(renderer_module, 800, 600)
-        # Without margin, -10 is not visible
-        assert renderer._is_visible((-10, 300), margin=0) is False
-        # With margin of 50, -10 should be visible
-        assert renderer._is_visible((-10, 300), margin=50) is True
-        # But -51 should still not be visible
-        assert renderer._is_visible((-51, 300), margin=50) is False
-
-    def test_margin_extends_visibility_right(self, renderer_module):
-        """Margin should allow partial visibility on the right edge."""
-        renderer = self._create_renderer(renderer_module, 800, 600)
-        # Without margin, 810 is not visible
-        assert renderer._is_visible((810, 300), margin=0) is False
-        # With margin of 50, 810 should be visible
-        assert renderer._is_visible((810, 300), margin=50) is True
-        # But 851 should still not be visible
-        assert renderer._is_visible((851, 300), margin=50) is False
-
-    def test_margin_extends_visibility_top(self, renderer_module):
-        """Margin should allow partial visibility on the top edge."""
-        renderer = self._create_renderer(renderer_module, 800, 600)
-        # Without margin, -10 y is not visible
-        assert renderer._is_visible((400, -10), margin=0) is False
-        # With margin of 50, -10 y should be visible
-        assert renderer._is_visible((400, -10), margin=50) is True
-
-    def test_margin_extends_visibility_bottom(self, renderer_module):
-        """Margin should allow partial visibility on the bottom edge."""
-        renderer = self._create_renderer(renderer_module, 800, 600)
-        # Without margin, 610 y is not visible
-        assert renderer._is_visible((400, 610), margin=0) is False
-        # With margin of 50, 610 y should be visible
-        assert renderer._is_visible((400, 610), margin=50) is True
+        # Without margin, near_outside is not visible.
+        assert renderer._is_visible(near_outside_pos, margin=0) is False
+        # With margin, near_outside is visible.
+        assert renderer._is_visible(near_outside_pos, margin=margin) is True
+        # With margin, far_outside (beyond the margin) is still not visible.
+        assert renderer._is_visible(far_outside_pos, margin=margin) is False
 
     def test_margin_extends_visibility_all_corners(self, renderer_module):
         """Margin should extend visibility in all directions."""

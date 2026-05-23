@@ -294,20 +294,24 @@ def test_compiler_emits_no_placeholder_for_real_complex(
     )
 
 
+def _snapshot_ship_tuples(state):
+    """PROJ-494 T4.9: extracted from `test_compiler_does_not_mutate_ships`.
+
+    Walks `state.sides[*].fleets[*].ships[*]` and returns a list of
+    `(instance_id, design_id, name, owner_id)` tuples in deterministic
+    iteration order — used as a before/after snapshot to assert the spec
+    compiler doesn't mutate ship state.
+    """
+    return [
+        (ship.instance_id, ship.design_id, ship.name, ship.owner_id)
+        for side in (state.sides[0], state.sides[1])
+        for fleet in side.fleets
+        for ship in fleet.ships
+    ]
+
+
 def test_compiler_does_not_mutate_ships(ui_state_with_ships, session_registries):
-    # Capture ship attributes before compilation.
-    snapshots = []
-    for side in (ui_state_with_ships.sides[0], ui_state_with_ships.sides[1]):
-        for fleet in side.fleets:
-            for ship in fleet.ships:
-                snapshots.append(
-                    (
-                        ship.instance_id,
-                        ship.design_id,
-                        ship.name,
-                        ship.owner_id,
-                    )
-                )
+    snapshots = _snapshot_ship_tuples(ui_state_with_ships)
 
     # Add some modifiers — these should NOT cause ship mutation.
     ui_state_with_ships.sides[0].system_complexes.append(
@@ -319,20 +323,7 @@ def test_compiler_does_not_mutate_ships(ui_state_with_ships, session_registries)
 
     build_manual_battle_spec(ui_state_with_ships, session_registries)
 
-    # Re-check every attribute.
-    after = []
-    for side in (ui_state_with_ships.sides[0], ui_state_with_ships.sides[1]):
-        for fleet in side.fleets:
-            for ship in fleet.ships:
-                after.append(
-                    (
-                        ship.instance_id,
-                        ship.design_id,
-                        ship.name,
-                        ship.owner_id,
-                    )
-                )
-    assert after == snapshots
+    assert _snapshot_ship_tuples(ui_state_with_ships) == snapshots
 
 
 def test_compiler_empty_ui_state_yields_empty_teams(session_registries):

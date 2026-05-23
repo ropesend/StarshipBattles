@@ -4,12 +4,42 @@ Tests for FleetNavigationService path projection with action timing (PROJ-187).
 These tests verify that project_path() correctly accounts for action_time
 on non-movement orders, delaying subsequent movement appropriately.
 """
+import contextlib
 import pytest
 from unittest.mock import MagicMock, patch
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import Order, OrderType
+
+
+_FIND_HYBRID_PATH = (
+    'game.strategy.services.galaxy_pathfinding_service.'
+    'GalaxyPathfindingService.find_hybrid_path'
+)
+_RESOLVE_ACTION_TIME = (
+    'game.strategy.services.action_time_resolver.'
+    'ActionTimeResolver.resolve_action_time'
+)
+
+
+@contextlib.contextmanager
+def patched_pathing(*, hybrid_path_return, action_time_return):
+    """Patch the two cross-module DI dependencies used by project_path().
+
+    PROJ-495 T2.5: extracts the 2-level `with patch(find_hybrid_path)` +
+    `with patch(resolve_action_time)` stack into a single context manager.
+    Each yields its mocks tuple so tests can assert on `.call_args` /
+    `.assert_called`. The two patches remain logically distinct (see the
+    PROJ-323 Task 2.14 note on the TestProjectPathActionTiming docstring);
+    the helper does NOT collapse them into `patch.multiple` — it just hides
+    the boilerplate.
+    """
+    with patch(_FIND_HYBRID_PATH) as mock_find_path:
+        mock_find_path.return_value = hybrid_path_return
+        with patch(_RESOLVE_ACTION_TIME) as mock_action_time:
+            mock_action_time.return_value = action_time_return
+            yield mock_find_path, mock_action_time
 
 
 class TestProjectPathActionTiming:
@@ -63,21 +93,13 @@ class TestProjectPathActionTiming:
         mock_galaxy = MagicMock()
         mock_galaxy.state.global_hex_warp_points = {}
 
-        with patch(
-            'game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path'
-        ) as mock_find_path:
-            # Return path from (2,0) to (4,0) after colonize
-            mock_find_path.return_value = [HexCoord(2, 0), HexCoord(3, 0), HexCoord(4, 0)]
-
-            # Patch action time resolver to return 1 for colonize
-            with patch(
-                'game.strategy.services.action_time_resolver.ActionTimeResolver.resolve_action_time'
-            ) as mock_action_time:
-                mock_action_time.return_value = 1
-
-                segments = service.project_path(
-                    fleet, mock_galaxy, max_turns=5, component_registry=mock_registry
-                )
+        with patched_pathing(
+            hybrid_path_return=[HexCoord(2, 0), HexCoord(3, 0), HexCoord(4, 0)],
+            action_time_return=1,
+        ):
+            segments = service.project_path(
+                fleet, mock_galaxy, max_turns=5, component_registry=mock_registry
+            )
 
         # Verify segments exist
         assert len(segments) >= 3, f"Expected at least 3 movement segments, got {len(segments)}"
@@ -121,20 +143,13 @@ class TestProjectPathActionTiming:
         mock_galaxy = MagicMock()
         mock_galaxy.state.global_hex_warp_points = {}
 
-        with patch(
-            'game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path'
-        ) as mock_find_path:
-            mock_find_path.return_value = [HexCoord(2, 0), HexCoord(3, 0), HexCoord(4, 0)]
-
-            with patch(
-                'game.strategy.services.action_time_resolver.ActionTimeResolver.resolve_action_time'
-            ) as mock_action_time:
-                # STELLERATE_STAR takes 5 ticks
-                mock_action_time.return_value = 5
-
-                segments = service.project_path(
-                    fleet, mock_galaxy, max_turns=10, component_registry={}
-                )
+        with patched_pathing(
+            hybrid_path_return=[HexCoord(2, 0), HexCoord(3, 0), HexCoord(4, 0)],
+            action_time_return=5,  # STELLERATE_STAR takes 5 ticks
+        ):
+            segments = service.project_path(
+                fleet, mock_galaxy, max_turns=10, component_registry={}
+            )
 
         # First 2 moves in turn 0
         assert segments[0].turn == 0
@@ -179,20 +194,13 @@ class TestProjectPathActionTiming:
         mock_galaxy = MagicMock()
         mock_galaxy.state.global_hex_warp_points = {}
 
-        with patch(
-            'game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path'
-        ) as mock_find_path:
-            mock_find_path.return_value = [HexCoord(5, 5), HexCoord(6, 5), HexCoord(7, 5)]
-
-            with patch(
-                'game.strategy.services.action_time_resolver.ActionTimeResolver.resolve_action_time'
-            ) as mock_action_time:
-                # Full action time is 5
-                mock_action_time.return_value = 5
-
-                segments = service.project_path(
-                    fleet, mock_galaxy, max_turns=10, component_registry={}
-                )
+        with patched_pathing(
+            hybrid_path_return=[HexCoord(5, 5), HexCoord(6, 5), HexCoord(7, 5)],
+            action_time_return=5,  # Full action time
+        ):
+            segments = service.project_path(
+                fleet, mock_galaxy, max_turns=10, component_registry={}
+            )
 
         # With 3 remaining ticks (5-2):
         # - Turn 0: 2 ticks consumed (1 tick left)
@@ -255,20 +263,13 @@ class TestProjectPathActionTimingEdgeCases:
         mock_galaxy = MagicMock()
         mock_galaxy.state.global_hex_warp_points = {}
 
-        with patch(
-            'game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path'
-        ) as mock_find_path:
-            mock_find_path.return_value = [HexCoord(0, 0), HexCoord(1, 0), HexCoord(2, 0)]
-
-            with patch(
-                'game.strategy.services.action_time_resolver.ActionTimeResolver.resolve_action_time'
-            ) as mock_action_time:
-                # Both actions take 1 tick each = 2 ticks total
-                mock_action_time.return_value = 1
-
-                segments = service.project_path(
-                    fleet, mock_galaxy, max_turns=10, component_registry={}
-                )
+        with patched_pathing(
+            hybrid_path_return=[HexCoord(0, 0), HexCoord(1, 0), HexCoord(2, 0)],
+            action_time_return=1,  # Both actions take 1 tick each
+        ):
+            segments = service.project_path(
+                fleet, mock_galaxy, max_turns=10, component_registry={}
+            )
 
         # After 2 ticks of action (1+1), fleet has 0 moves left in turn 0
         # Turn 1 starts fresh with 2 moves
@@ -298,21 +299,14 @@ class TestProjectPathActionTimingEdgeCases:
         mock_galaxy = MagicMock()
         mock_galaxy.state.global_hex_warp_points = {}
 
-        with patch(
-            'game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path'
-        ) as mock_find_path:
-            mock_find_path.return_value = [HexCoord(0, 0), HexCoord(1, 0), HexCoord(2, 0)]
-
-            with patch(
-                'game.strategy.services.action_time_resolver.ActionTimeResolver.resolve_action_time'
-            ) as mock_action_time:
-                # Very long action (100 ticks)
-                mock_action_time.return_value = 100
-
-                # Only project 5 turns
-                segments = service.project_path(
-                    fleet, mock_galaxy, max_turns=5, component_registry={}
-                )
+        with patched_pathing(
+            hybrid_path_return=[HexCoord(0, 0), HexCoord(1, 0), HexCoord(2, 0)],
+            action_time_return=100,  # Very long action
+        ):
+            # Only project 5 turns
+            segments = service.project_path(
+                fleet, mock_galaxy, max_turns=5, component_registry={}
+            )
 
         # Should return empty or partial since action exceeds max_turns
         # (100 ticks at speed 1 = 100 turns, way past max_turns=5)

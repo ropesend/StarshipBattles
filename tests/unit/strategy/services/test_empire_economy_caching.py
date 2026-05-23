@@ -29,12 +29,24 @@ def _build_service(fresh_registries):
     return EmpireEconomyService(registries=fresh_registries)
 
 
-def test_get_snapshot_second_call_returns_cached(
-    smoke_turn1_scenario, fake_state: FacadeSessionState, fresh_registries
-) -> None:
-    """Second ``get_snapshot()`` within the same turn returns the same object."""
+@pytest.fixture
+def economy_test_env(smoke_turn1_scenario, fresh_registries):
+    """PROJ-495 T4.3: bundle the ``smoke_turn1_scenario`` unpack +
+    ``_build_service(fresh_registries)`` into a single fixture.
+
+    Returns a 4-tuple ``(service, session, galaxy, empires)`` that the four
+    cache-behaviour tests below need verbatim.
+    """
     session, galaxy, empires = smoke_turn1_scenario
     service = _build_service(fresh_registries)
+    return service, session, galaxy, empires
+
+
+def test_get_snapshot_second_call_returns_cached(
+    economy_test_env, fake_state: FacadeSessionState
+) -> None:
+    """Second ``get_snapshot()`` within the same turn returns the same object."""
+    service, _session, _galaxy, empires = economy_test_env
 
     first = service.get_snapshot(empires[0], facade_state=fake_state)
     second = service.get_snapshot(empires[0], facade_state=fake_state)
@@ -45,11 +57,10 @@ def test_get_snapshot_second_call_returns_cached(
 
 
 def test_get_snapshot_cache_isolated_per_empire(
-    smoke_turn1_scenario, fake_state: FacadeSessionState, fresh_registries
+    economy_test_env, fake_state: FacadeSessionState
 ) -> None:
     """Each empire gets its own cache slot."""
-    session, galaxy, empires = smoke_turn1_scenario
-    service = _build_service(fresh_registries)
+    service, _session, _galaxy, empires = economy_test_env
 
     snap0 = service.get_snapshot(empires[0], facade_state=fake_state)
     snap1 = service.get_snapshot(empires[1], facade_state=fake_state)
@@ -59,11 +70,10 @@ def test_get_snapshot_cache_isolated_per_empire(
 
 
 def test_get_snapshot_invalidate_all_drops_cache(
-    smoke_turn1_scenario, fake_state: FacadeSessionState, fresh_registries
+    economy_test_env, fake_state: FacadeSessionState
 ) -> None:
     """``invalidate_all()`` clears the cache so the next call rebuilds."""
-    session, galaxy, empires = smoke_turn1_scenario
-    service = _build_service(fresh_registries)
+    service, _session, _galaxy, empires = economy_test_env
 
     first = service.get_snapshot(empires[0], facade_state=fake_state)
     fake_state.invalidate_all()
@@ -71,12 +81,9 @@ def test_get_snapshot_invalidate_all_drops_cache(
     assert second is not first
 
 
-def test_get_snapshot_no_facade_state_is_uncached(
-    smoke_turn1_scenario, fresh_registries
-) -> None:
+def test_get_snapshot_no_facade_state_is_uncached(economy_test_env) -> None:
     """Legacy callers without ``facade_state`` rebuild every call."""
-    session, galaxy, empires = smoke_turn1_scenario
-    service = _build_service(fresh_registries)
+    service, _session, _galaxy, empires = economy_test_env
 
     first = service.get_snapshot(empires[0])
     second = service.get_snapshot(empires[0])

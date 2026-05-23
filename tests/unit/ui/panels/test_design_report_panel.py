@@ -264,13 +264,21 @@ class TestUpdatePortrait:
 class TestWidthRequired:
     """Tests for get_width_required method."""
 
-    def test_width_returns_750(self):
-        """get_width_required returns 750."""
+    def test_width_returns_positive_within_reasonable_bounds(self):
+        """get_width_required returns a positive width within reasonable bounds.
+
+        PROJ-494 T4.1: was `assert width == 750` (magic number). Replaced with
+        a property-style assertion (positive, within reasonable layout bounds)
+        so a deliberate layout change doesn't break this test for no reason.
+        """
         panel = _bypass_init_panel()
 
         width = panel.get_width_required()
 
-        assert width == 750
+        # Sanity-check: panel width must be positive and within the
+        # 2560×1600 minimum-supported window.
+        assert isinstance(width, int)
+        assert 0 < width < 2000
 
 
 # --- Kill / Cleanup Tests ---

@@ -2,7 +2,16 @@
 Unit tests for EmpireTreasuryPanel.
 
 PROJ-99 Phase 2: Tests for treasury panel layout, formatting, and data binding.
+
+PROJ-494 T2.14: the 4-decorator `@patch(create_section_header)` /
+`@patch(UIScrollingContainer)` / `@patch(UILabel)` / `@patch(UIImage)` stack
+that wrapped 16+ methods has been replaced by a single autouse
+`_patched_empire_treasury_imports` fixture that injects the same mocks onto
+the test instance as `self.mock_header`, `self.mock_container`, `self.mock_label`,
+`self.mock_image`. Method signatures no longer take the 4 positional args.
 """
+from contextlib import ExitStack
+
 import pytest
 from unittest.mock import MagicMock, patch
 
@@ -41,7 +50,7 @@ from game.ui.panels.empire_treasury_panel import (
 # Original PROJ-322 Task 2.11 deferral cited "mutable MagicMocks accumulate
 # assert state" (i.e. .assert_called_once_with after a call records state).
 # That is true, but only `mock_panel.get_relative_rect`,
-# `mock_container.assert_called_once`, `old_container.kill.assert_called_once`,
+# `self.mock_container.assert_called_once`, `old_container.kill.assert_called_once`,
 # and similar call-records are checked — and those are checked on either
 # (a) the inner `mock_container`/`mock_header`/etc that come from `@patch`
 # decorators (not these fixtures), or (b) `panel._scroll_container.kill`
@@ -127,6 +136,27 @@ def mock_resource_icons():
         mock_surface.get_size.return_value = (ICON_SIZE, ICON_SIZE)
         icons[resource] = mock_surface
     return icons
+
+
+@pytest.fixture
+def patched_treasury_imports(request):
+    """PROJ-494 T2.14: stand up the 4-mock stack
+    (create_section_header / UIScrollingContainer / UILabel / UIImage) that
+    previously decorated 16+ methods individually. Attaches mocks to the test
+    instance so existing assertion sites (`self.mock_container.call_args`,
+    `self.mock_image.assert_not_called()`, etc.) continue to work via
+    `self.mock_*`.
+    """
+    targets = (
+        ('mock_header', 'game.ui.panels.empire_treasury_panel.create_section_header'),
+        ('mock_container', 'game.ui.panels.empire_treasury_panel.UIScrollingContainer'),
+        ('mock_label', 'game.ui.panels.empire_treasury_panel.UILabel'),
+        ('mock_image', 'game.ui.panels.empire_treasury_panel.UIImage'),
+    )
+    with ExitStack() as stack:
+        for attr, target in targets:
+            setattr(request.instance, attr, stack.enter_context(patch(target)))
+        yield
 
 
 # =============================================================================
@@ -235,52 +265,44 @@ class TestResourceAbbreviations:
 class TestValueFormatting:
     """Tests for _format_value method."""
 
-    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
-    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
-    @patch('game.ui.panels.empire_treasury_panel.UILabel')
-    @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_format_zero_returns_zero(self, mock_image, mock_label, mock_container, mock_header,
-                                       mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
-        """Zero values should format as '0'."""
-        panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
-        assert panel._format_value(0) == "0"
-        assert panel._format_value(0.0) == "0"
+    @pytest.fixture(autouse=True)
+    def _setup_patches(self, patched_treasury_imports):
+        """PROJ-494 T2.14: replaces the 4-decorator stack."""
+        pass
 
-    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
-    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
-    @patch('game.ui.panels.empire_treasury_panel.UILabel')
-    @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_format_small_integers(self, mock_image, mock_label, mock_container, mock_header,
-                                    mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
-        """Small integers should format without commas."""
-        panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
-        assert panel._format_value(5) == "5"
-        assert panel._format_value(100) == "100"
-        assert panel._format_value(999) == "999"
 
-    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
-    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
-    @patch('game.ui.panels.empire_treasury_panel.UILabel')
-    @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_format_large_integers_with_commas(self, mock_image, mock_label, mock_container, mock_header,
-                                                mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
-        """Large integers should format with comma separators."""
-        panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
-        assert panel._format_value(1000) == "1,000"
-        assert panel._format_value(10000) == "10,000"
-        assert panel._format_value(1000000) == "1,000,000"
-
-    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
-    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
-    @patch('game.ui.panels.empire_treasury_panel.UILabel')
-    @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_format_floats_rounds_to_integer(self, mock_image, mock_label, mock_container, mock_header,
-                                              mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
-        """Float values should round to nearest integer."""
-        panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
-        assert panel._format_value(9.5) == "10"  # Round up
-        assert panel._format_value(9.4) == "9"   # Round down
-        assert panel._format_value(1234.7) == "1,235"
+    # PROJ-494 T3.18: 4 _format_value tests parametrized on
+    # `(input_value, expected_output)`. Each original test asserted multiple
+    # input→output pairs; the parametrize now spreads them across cases.
+    @pytest.mark.parametrize(
+        "input_value,expected_output",
+        [
+            # Zero values
+            pytest.param(0, "0", id='zero_int'),
+            pytest.param(0.0, "0", id='zero_float'),
+            # Small integers (no commas)
+            pytest.param(5, "5", id='small_5'),
+            pytest.param(100, "100", id='small_100'),
+            pytest.param(999, "999", id='small_999'),
+            # Large integers (with commas)
+            pytest.param(1000, "1,000", id='large_1k'),
+            pytest.param(10000, "10,000", id='large_10k'),
+            pytest.param(1000000, "1,000,000", id='large_1m'),
+            # Float rounding
+            pytest.param(9.5, "10", id='round_up'),
+            pytest.param(9.4, "9", id='round_down'),
+            pytest.param(1234.7, "1,235", id='round_with_comma'),
+        ],
+    )
+    def test_format_value(
+        self, mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
+        input_value, expected_output,
+    ):
+        """_format_value handles zero, small/large integers, and float rounding."""
+        panel = EmpireTreasuryPanel(
+            mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
+        )
+        assert panel._format_value(input_value) == expected_output
 
 
 # =============================================================================
@@ -290,12 +312,14 @@ class TestValueFormatting:
 class TestRowData:
     """Tests for row data structure methods."""
 
-    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
-    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
-    @patch('game.ui.panels.empire_treasury_panel.UILabel')
-    @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_production_rows_structure(self, mock_image, mock_label, mock_container, mock_header,
-                                        mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
+    @pytest.fixture(autouse=True)
+    def _setup_patches(self, patched_treasury_imports):
+        """PROJ-494 T2.14: replaces the 4-decorator stack."""
+        pass
+
+
+    def test_production_rows_structure(self,
+        mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
         """Production rows should have correct structure."""
         panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
         rows = panel._get_production_rows()
@@ -309,12 +333,8 @@ class TestRowData:
         for i in range(5):
             assert rows[i][2] is False
 
-    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
-    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
-    @patch('game.ui.panels.empire_treasury_panel.UILabel')
-    @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_expense_rows_structure(self, mock_image, mock_label, mock_container, mock_header,
-                                     mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
+    def test_expense_rows_structure(self,
+        mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
         """Expense rows should have correct structure."""
         panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
         rows = panel._get_expense_rows()
@@ -326,12 +346,8 @@ class TestRowData:
         assert rows[3][0] == "Total"
         assert rows[3][2] is True
 
-    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
-    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
-    @patch('game.ui.panels.empire_treasury_panel.UILabel')
-    @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_treasury_rows_structure(self, mock_image, mock_label, mock_container, mock_header,
-                                      mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
+    def test_treasury_rows_structure(self,
+        mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
         """Treasury rows should have correct structure."""
         panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
         rows = panel._get_treasury_rows()
@@ -345,12 +361,8 @@ class TestRowData:
         for row in rows:
             assert row[2] is False
 
-    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
-    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
-    @patch('game.ui.panels.empire_treasury_panel.UILabel')
-    @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_production_rows_use_snapshot_data(self, mock_image, mock_label, mock_container, mock_header,
-                                                mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
+    def test_production_rows_use_snapshot_data(self,
+        mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
         """Production rows should reference snapshot data."""
         panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
         rows = panel._get_production_rows()
@@ -365,6 +377,11 @@ class TestRowData:
 # =============================================================================
 
 class TestPopulationUpkeepRow:
+    @pytest.fixture(autouse=True)
+    def _setup_patches(self, patched_treasury_imports):
+        """PROJ-494 T2.14: replaces the 4-decorator stack."""
+        pass
+
     """Tests for the PROJ-290 "Population Upkeep" expense row.
 
     Inserted before the "Total" row when
@@ -377,12 +394,8 @@ class TestPopulationUpkeepRow:
     render as 0 via the existing per-column default.
     """
 
-    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
-    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
-    @patch('game.ui.panels.empire_treasury_panel.UILabel')
-    @patch('game.ui.panels.empire_treasury_panel.UIImage')
     def test_row_hidden_when_total_population_upkeep_empty(
-        self, mock_image, mock_label, mock_container, mock_header,
+        self,
         mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
     ):
         """Fresh-game snapshot with `total_population_upkeep == {}` →
@@ -394,12 +407,8 @@ class TestPopulationUpkeepRow:
         assert "Population Upkeep" not in labels
         assert len(rows) == 4
 
-    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
-    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
-    @patch('game.ui.panels.empire_treasury_panel.UILabel')
-    @patch('game.ui.panels.empire_treasury_panel.UIImage')
     def test_row_hidden_when_all_values_zero(
-        self, mock_image, mock_label, mock_container, mock_header,
+        self,
         mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
     ):
         """Dict populated but every value is 0 → still hidden."""
@@ -411,12 +420,8 @@ class TestPopulationUpkeepRow:
         labels = [r[0] for r in rows]
         assert "Population Upkeep" not in labels
 
-    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
-    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
-    @patch('game.ui.panels.empire_treasury_panel.UILabel')
-    @patch('game.ui.panels.empire_treasury_panel.UIImage')
     def test_row_visible_with_single_resource_upkeep(
-        self, mock_image, mock_label, mock_container, mock_header,
+        self,
         mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
     ):
         """`{"organics": 5.0}` → row shown, organics cell is -5.0 drain."""
@@ -434,12 +439,8 @@ class TestPopulationUpkeepRow:
         # Unused resources default to 0 (sparse dict).
         assert values.get("metals", 0.0) == 0.0
 
-    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
-    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
-    @patch('game.ui.panels.empire_treasury_panel.UILabel')
-    @patch('game.ui.panels.empire_treasury_panel.UIImage')
     def test_row_visible_with_multi_resource_upkeep(
-        self, mock_image, mock_label, mock_container, mock_header,
+        self,
         mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
     ):
         """Multi-resource upkeep: every key becomes a negative cell."""
@@ -455,12 +456,8 @@ class TestPopulationUpkeepRow:
         assert values["metals"] == pytest.approx(-0.15)
         assert values["radioactives"] == pytest.approx(-0.015)
 
-    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
-    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
-    @patch('game.ui.panels.empire_treasury_panel.UILabel')
-    @patch('game.ui.panels.empire_treasury_panel.UIImage')
     def test_upkeep_row_inserted_before_total(
-        self, mock_image, mock_label, mock_container, mock_header,
+        self,
         mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
     ):
         """Population Upkeep must appear BEFORE the Total row so the
@@ -479,12 +476,14 @@ class TestPopulationUpkeepRow:
 class TestPanelConstruction:
     """Tests for panel initialization and construction."""
 
-    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
-    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
-    @patch('game.ui.panels.empire_treasury_panel.UILabel')
-    @patch('game.ui.panels.empire_treasury_panel.UIImage')
+    @pytest.fixture(autouse=True)
+    def _setup_patches(self, patched_treasury_imports):
+        """PROJ-494 T2.14: replaces the 4-decorator stack."""
+        pass
+
+
     def test_panel_passes_constructor_args_to_ui_widgets(
-        self, mock_image, mock_label, mock_container, mock_header,
+        self,
         mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
     ):
         """Panel forwards `manager` to UIScrollingContainer and `panel` as the
@@ -497,16 +496,12 @@ class TestPanelConstruction:
         )
         # The scrolling container MUST have been constructed with the
         # passed-in manager and parent panel as its container.
-        kwargs = mock_container.call_args.kwargs
+        kwargs = self.mock_container.call_args.kwargs
         assert kwargs["manager"] is mock_ui_manager
         assert kwargs["container"] is mock_panel
 
-    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
-    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
-    @patch('game.ui.panels.empire_treasury_panel.UILabel')
-    @patch('game.ui.panels.empire_treasury_panel.UIImage')
     def test_scroll_container_sized_from_panel_relative_rect_minus_margin(
-        self, mock_image, mock_label, mock_container, mock_header,
+        self,
         mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
     ):
         """Scroll-container rect is derived from the parent panel's
@@ -517,7 +512,7 @@ class TestPanelConstruction:
         EmpireTreasuryPanel(
             mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
         )
-        rect = mock_container.call_args.kwargs["relative_rect"]
+        rect = self.mock_container.call_args.kwargs["relative_rect"]
         assert rect.x == LEFT_MARGIN
         assert rect.y == TOP_MARGIN
         assert rect.width == 800 - 20
@@ -531,12 +526,14 @@ class TestPanelConstruction:
 class TestRefresh:
     """Tests for panel refresh functionality."""
 
-    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
-    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
-    @patch('game.ui.panels.empire_treasury_panel.UILabel')
-    @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_refresh_updates_snapshot(self, mock_image, mock_label, mock_container, mock_header,
-                                       mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
+    @pytest.fixture(autouse=True)
+    def _setup_patches(self, patched_treasury_imports):
+        """PROJ-494 T2.14: replaces the 4-decorator stack."""
+        pass
+
+
+    def test_refresh_updates_snapshot(self,
+        mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
         """Refresh should update the stored snapshot."""
         panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
 
@@ -546,12 +543,8 @@ class TestRefresh:
 
         assert panel.snapshot is new_snapshot
 
-    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
-    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
-    @patch('game.ui.panels.empire_treasury_panel.UILabel')
-    @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_refresh_clears_old_elements(self, mock_image, mock_label, mock_container, mock_header,
-                                          mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
+    def test_refresh_clears_old_elements(self,
+        mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
         """Refresh should kill old UI elements."""
         panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
 
@@ -581,12 +574,14 @@ class TestFormatValueRoundingBoundary:
     formats with comma separators. This pins the observed behavior.
     """
 
-    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
-    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
-    @patch('game.ui.panels.empire_treasury_panel.UILabel')
-    @patch('game.ui.panels.empire_treasury_panel.UIImage')
+    @pytest.fixture(autouse=True)
+    def _setup_patches(self, patched_treasury_imports):
+        """PROJ-494 T2.14: replaces the 4-decorator stack."""
+        pass
+
+
     def test_format_value_zero_thousands_and_rounding(
-        self, mock_image, mock_label, mock_container, mock_header,
+        self,
         mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons,
     ):
         """`0` -> "0"; `1234` -> "1,234"; `10000.5` rounds via banker's
@@ -609,12 +604,14 @@ class TestBuildResourceHeaderMissingIcon:
     when a resource id is absent from `resource_icons`. The label is still
     rendered."""
 
-    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
-    @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
-    @patch('game.ui.panels.empire_treasury_panel.UILabel')
-    @patch('game.ui.panels.empire_treasury_panel.UIImage')
+    @pytest.fixture(autouse=True)
+    def _setup_patches(self, patched_treasury_imports):
+        """PROJ-494 T2.14: replaces the 4-decorator stack."""
+        pass
+
+
     def test_build_resource_header_skips_missing_icon(
-        self, mock_image, mock_label, mock_container, mock_header,
+        self,
         mock_panel, mock_ui_manager, sample_snapshot,
     ):
         """If resource_icons dict is empty, panel constructs without
@@ -624,9 +621,9 @@ class TestBuildResourceHeaderMissingIcon:
             mock_panel, mock_ui_manager, sample_snapshot, empty_icons,
         )
         # No UIImage constructed because no resource is present in icons dict
-        mock_image.assert_not_called()
+        self.mock_image.assert_not_called()
         # Labels were still constructed (panel built without raising)
         assert panel._scroll_container is not None
-        assert mock_label.call_count > 0
+        assert self.mock_label.call_count > 0
 
 

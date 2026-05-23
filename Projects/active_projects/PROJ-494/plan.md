@@ -13,17 +13,18 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Retarget / prune | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. CAT-9 simplification (UI) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. CAT-8 needless complexity (UI) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. CAT-10 parametrize (UI) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. CAT-11/12 fragile + logic (UI) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 0. Retarget / prune | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
+| 1. CAT-9 simplification (UI) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. CAT-8 needless complexity (UI) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. CAT-10 parametrize (UI) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. CAT-11/12 fragile + logic (UI) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Audit remediation (Codex 2026-05-23) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-23
-**Active Phase:** Planning complete; ready for Phase 0
-**Last Action:** Project scaffolded from PROJ-480 deferred backlog (Codex consult 2026-05-23 — locality-first split). All listed file paths re-verified against current tree.
-**Next Action:** Run Phase 0 (retarget/prune) — re-grep every task's target pattern before TDD. Task 1.3 already eliminated (helpers in place).
+**Active Phase:** All 6 phases (Phases 0-5) complete; awaiting user verification.
+**Last Action:** Phase 5 audit remediation executed in a single pass. T3.14 winner-determination cluster parametrized into 3-case `test_get_winner_for_team_deaths`; T3.15 directional margin cluster parametrized into 4-case `test_margin_extends_visibility_directional` with symmetric far-outside cases for top/bottom; T4.6 workshop bridge-mass assertion tightened to `mass / (50 * sqrt(2.0)) in [0.9, 1.1]` ratio band. Phase 3 checklist notes updated. Targeted pytest: 67 passed (test_battle_screen_simulation.py + test_research_renderer.py + test_workshop_event_router_select_component.py).
+**Next Action:** User verification.
 **Blockers:** None.
 
 ## Overview

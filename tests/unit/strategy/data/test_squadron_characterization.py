@@ -16,6 +16,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from game.strategy.data.fleet_hierarchy import BattleRole, CombatPolicy
 from game.strategy.data.squadron import Squadron
 
@@ -122,16 +124,45 @@ class TestFromDictReconstruction:
         assert restored.spatial_behavior is None
         assert restored.spatial_behavior_params == {}
 
-    def test_round_trip_with_battle_role_enum(self):
-        original = Squadron(
-            name="Alpha",
-            node_id="id-1",
-            battle_role=BattleRole.VANGUARD,
-        )
+    @pytest.mark.parametrize(
+        "squadron_kwargs, expected_attrs",
+        [
+            pytest.param(
+                {"battle_role": BattleRole.VANGUARD},
+                {"battle_role": BattleRole.VANGUARD},
+                id="battle_role",
+            ),
+            pytest.param(
+                {
+                    "spatial_behavior": "formation",
+                    "spatial_behavior_params": {"slot": 1, "axis": "x"},
+                },
+                {
+                    "spatial_behavior": "formation",
+                    "spatial_behavior_params": {"slot": 1, "axis": "x"},
+                },
+                id="spatial_behavior",
+            ),
+            pytest.param(
+                {"flagship_id": "ship-99"},
+                {"flagship_id": "ship-99"},
+                id="flagship_id",
+            ),
+        ],
+    )
+    def test_round_trip_preserves_single_attribute(
+        self, squadron_kwargs, expected_attrs
+    ):
+        # PROJ-495 Phase 5 (Task 5.1): 3 of the original 5 single-attribute
+        # roundtrips share the identical structural shape — parametrized here.
+        # `combat_policy` (nested asserts) and `default-fields` (different
+        # contract) remain distinct below.
+        original = Squadron(name="Alpha", node_id="id-1", **squadron_kwargs)
 
         restored = Squadron.from_dict(original.to_dict())
 
-        assert restored.battle_role == BattleRole.VANGUARD
+        for attr_name, expected_value in expected_attrs.items():
+            assert getattr(restored, attr_name) == expected_value
 
     def test_round_trip_with_combat_policy(self):
         original = Squadron(
@@ -145,30 +176,6 @@ class TestFromDictReconstruction:
         assert restored.policy.targeting == "aggressive"
         assert restored.policy.movement is None
         assert restored.policy.retreat == "never"
-
-    def test_round_trip_preserves_spatial_behavior_when_set(self):
-        original = Squadron(
-            name="Alpha",
-            node_id="id-1",
-            spatial_behavior="formation",
-            spatial_behavior_params={"slot": 1, "axis": "x"},
-        )
-
-        restored = Squadron.from_dict(original.to_dict())
-
-        assert restored.spatial_behavior == "formation"
-        assert restored.spatial_behavior_params == {"slot": 1, "axis": "x"}
-
-    def test_round_trip_preserves_flagship_id(self):
-        original = Squadron(
-            name="Alpha",
-            node_id="id-1",
-            flagship_id="ship-99",
-        )
-
-        restored = Squadron.from_dict(original.to_dict())
-
-        assert restored.flagship_id == "ship-99"
 
 
 class TestFromDictMissingRequiredKeys:

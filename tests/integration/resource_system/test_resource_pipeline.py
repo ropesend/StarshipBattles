@@ -17,13 +17,20 @@ from .conftest import create_mock_component, create_test_ship_design, make_ship_
 
 
 class TestCustomResourceTypeFullPipeline:
-    """Test loading custom resource and using it through the entire pipeline."""
+    """Test loading custom resource and using it through the entire pipeline.
 
-    def test_custom_resource_type_full_pipeline(self, loaded_registry, singleton_registries, tmp_path):
-        """
-        Load custom resource from JSON, create component with that resource type,
-        create ship with that component, verify resource appears in stats,
-        and verify consumption works.
+    PROJ-496 T2.1 (origin PROJ-480 T2.2): the original monolithic 73-line
+    test was split at the natural assertion boundaries (registry-load /
+    stats-surface / consume) so each step fails independently.
+    """
+
+    @pytest.fixture
+    def plasma_ship(self, loaded_registry, singleton_registries, tmp_path):
+        """Builds the plasma-resource ship used by all three split tests.
+
+        Performs steps 1-4 of the original monolithic test: load custom
+        resource, register a tank component, build a design, and
+        instantiate the ship.
         """
         registry = loaded_registry
 
@@ -43,9 +50,6 @@ class TestCustomResourceTypeFullPipeline:
         catalog = ResourceCatalog.from_json(str(resources_file))
         for defn in catalog.all_definitions():
             registry.resources[defn.id] = {'id': defn.id, 'name': defn.name}
-
-        # Verify custom resource is loaded
-        assert 'plasma' in registry.resources
 
         # Step 2: Create component with custom resource storage
         plasma_tank = create_mock_component(
@@ -72,16 +76,27 @@ class TestCustomResourceTypeFullPipeline:
 
         # Step 4: Create ship instance (PROJ-211: pass registries for DI)
         ship = make_ship_instance(design_data, registries=singleton_registries)
+        return registry, ship
 
-        # Step 5: Verify resource appears in stats
+    def test_custom_resource_appears_in_registry(self, plasma_ship):
+        """Step 1: the custom resource is registered after JSON load."""
+        registry, _ = plasma_ship
+        assert 'plasma' in registry.resources
+
+    def test_custom_resource_surfaces_in_ship_stats(self, plasma_ship):
+        """Step 5: the custom resource surfaces in the ship's
+        calculated-stats resource_storage map with the right capacity."""
+        _, ship = plasma_ship
         stats = ship.get_calculated_stats()
         resource_storage = stats.get('resource_storage', {})
 
         assert 'plasma' in resource_storage, "Custom resource 'plasma' should appear in storage"
         assert resource_storage['plasma'] == 5000, "Plasma capacity should be 5000"
 
-        # Step 6: Verify consumption works
-        # Set initial resource level
+    def test_custom_resource_consumption_round_trip(self, plasma_ship):
+        """Step 6: consume() succeeds when funds are available, fails
+        cleanly (no partial debit) when funds are short."""
+        _, ship = plasma_ship
         ship.consumable_levels['plasma'] = 5000
 
         # Consume some plasma

@@ -13,17 +13,18 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Retarget / prune | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. CAT-9 simplification (core) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. CAT-8 needless complexity (core) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. CAT-10 parametrize (core) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. CAT-11/12 fragile + logic (core) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 0. Retarget / prune | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
+| 1. CAT-9 simplification (core) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. CAT-8 needless complexity (core) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. CAT-10 parametrize (core) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. CAT-11/12 fragile + logic (core) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Audit remediation (Codex 2026-05-23) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-23
-**Active Phase:** Planning complete; ready for Phase 0
-**Last Action:** Project scaffolded from PROJ-480 deferred backlog (Codex consult 2026-05-23 — locality-first split). All listed file paths re-verified against current tree.
-**Next Action:** Run Phase 0 (retarget/prune) — re-grep every task's target pattern before TDD.
+**Active Phase:** All 6 phases (Phases 0-5) complete; awaiting user verification.
+**Last Action:** Phase 5 audit remediation landed: T3.3 retry (3 squadron roundtrips parametrized), T2.12 retry (7 ad-hoc MagicMock empire stubs in test_resupply_engine.py replaced with `_make_empire(fleets=...)`), and orphan helper `_assert_roundtrip_property` logged as discovered-issue `DI-2026-05-23-007` against PROJ-479 DUP-003. Targeted tests pass (45/45).
+**Next Action:** User verification.
 **Blockers:** None.
 
 ## Overview

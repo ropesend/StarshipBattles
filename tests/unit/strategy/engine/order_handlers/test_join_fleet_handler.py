@@ -214,8 +214,14 @@ def test_process_instant_orders_phase_c_aliveness_skip_absorbed_target():
     assert result == []
 
 
-def test_process_instant_orders_emits_fleet_joined_event_payload_exact_match():
-    """FLEET_JOINED event payload — exact dict equality."""
+def test_process_instant_orders_emits_fleet_joined_event_payload_key_presence():
+    """FLEET_JOINED event payload — required keys + load-bearing values.
+
+    PROJ-495 T4.1: replaced exact-dict equality with key-presence + the
+    handful of values that genuinely encode invariants. Exact-equality
+    was fragile against any harmless additive field; this version still
+    fails fast if the contract narrows.
+    """
     from game.strategy.events.event_types import EventCategory
     bus, captured = _captured()
     handler = JoinFleetHandler(event_bus=bus)
@@ -231,15 +237,26 @@ def test_process_instant_orders_emits_fleet_joined_event_payload_exact_match():
     joined = [e for e in captured if e[0] == EventType.FLEET_JOINED]
     assert len(joined) == 1
     payload = joined[0][1]
-    # Exact-dict-equality on the structured fields.
-    assert payload == {
-        "category": EventCategory.FLEET_OPERATIONS,
-        "empire_id": 0,
-        "message": "Fleet 1 joined Fleet 2",
-        "fleet_id": 1,
-        "target_fleet_id": 2,
-        "ship_count": 5,  # post-merge target size
+    # Every required key is present.
+    required_keys = {
+        "category",
+        "empire_id",
+        "message",
+        "fleet_id",
+        "target_fleet_id",
+        "ship_count",
     }
+    assert required_keys <= set(payload), (
+        f"FLEET_JOINED payload missing required keys: {required_keys - set(payload)}"
+    )
+    # Load-bearing values (category enum, identifiers, post-merge ship count,
+    # the human-readable message body).
+    assert payload["category"] == EventCategory.FLEET_OPERATIONS
+    assert payload["empire_id"] == 0
+    assert payload["fleet_id"] == 1
+    assert payload["target_fleet_id"] == 2
+    assert payload["ship_count"] == 5  # post-merge target size
+    assert payload["message"] == "Fleet 1 joined Fleet 2"
 
 
 def test_process_instant_orders_emits_fleet_join_cancelled_with_reason_field():

@@ -97,8 +97,10 @@ def _make_colony(facilities=None):
 from .conftest import make_mock_empire as _make_mock_empire_canonical  # noqa: E402
 
 
-def _make_empire(colonies=None):
-    return _make_mock_empire_canonical(empire_id=0, colonies=colonies)
+def _make_empire(colonies=None, fleets=None, empire_id=0):
+    return _make_mock_empire_canonical(
+        empire_id=empire_id, colonies=colonies, fleets=fleets
+    )
 
 
 # ===========================================================================
@@ -557,8 +559,7 @@ class TestFleetResupply:
 
         galaxy = _make_mock_galaxy(planets_at_hex={location: [planet]})
 
-        empire = MagicMock()
-        empire.fleets = [fleet]
+        empire = _make_empire(fleets=[fleet])
 
         events = engine.process_fleet_resupply(tick=1, empires=[empire], galaxy=galaxy)
 
@@ -586,8 +587,7 @@ class TestFleetResupply:
         planet_loc = HexCoord(10, 10)
         galaxy = _make_mock_galaxy(planets_at_hex={planet_loc: [planet]})
 
-        empire = MagicMock()
-        empire.fleets = [fleet]
+        empire = _make_empire(fleets=[fleet])
 
         events = engine.process_fleet_resupply(tick=1, empires=[empire], galaxy=galaxy)
 
@@ -618,10 +618,8 @@ class TestFleetResupply:
 
         galaxy = _make_mock_galaxy(planets_at_hex={location: [planet]})
 
-        empire_0 = MagicMock()
-        empire_0.fleets = [owner_fleet]
-        empire_1 = MagicMock()
-        empire_1.fleets = [other_fleet]
+        empire_0 = _make_empire(fleets=[owner_fleet], empire_id=0)
+        empire_1 = _make_empire(fleets=[other_fleet], empire_id=1)
 
         events = engine.process_fleet_resupply(
             tick=1, empires=[empire_0, empire_1], galaxy=galaxy
@@ -663,8 +661,7 @@ class TestFleetResupply:
 
         galaxy = _make_mock_galaxy(planets_at_hex={location: [planet]})
 
-        empire = MagicMock()
-        empire.fleets = [fleet]
+        empire = _make_empire(fleets=[fleet])
 
         engine.process_fleet_resupply(tick=1, empires=[empire], galaxy=galaxy)
 
@@ -710,8 +707,7 @@ class TestFleetResupply:
 
         galaxy = _make_mock_galaxy(planets_at_hex={location: [planet]})
 
-        empire = MagicMock()
-        empire.fleets = [fleet]
+        empire = _make_empire(fleets=[fleet])
 
         events = engine.process_fleet_resupply(tick=1, empires=[empire], galaxy=galaxy)
 
@@ -740,8 +736,7 @@ class TestFleetResupply:
 
         galaxy = _make_mock_galaxy(planets_at_hex={location: [planet]})
 
-        empire = MagicMock()
-        empire.fleets = [fleet]
+        empire = _make_empire(fleets=[fleet])
 
         events = engine.process_fleet_resupply(tick=1, empires=[empire], galaxy=galaxy)
 

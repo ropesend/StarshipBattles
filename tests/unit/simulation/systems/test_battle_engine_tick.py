@@ -607,14 +607,20 @@ class TestProjectileManagerUpdate:
 class TestMultipleTicks:
     """Tests for behavior across multiple ticks."""
 
-    def test_multiple_ticks_increment_counter(self, battle_engine_with_ships):
-        """Multiple update() calls should increment tick_counter correctly."""
+    @pytest.mark.parametrize("n", [1, 10, 100])
+    def test_ticks_increment_counter(self, battle_engine_with_ships, n):
+        """N update() calls must drive tick_counter to N for any N. Sweeps
+        small/medium/large counts in one body (PROJ-496 Phase 3 Task 3.3,
+        consolidating the former test_multiple_ticks_increment_counter and
+        test_rapid_succession_ticks). max_ticks is raised above n so the
+        end-condition never short-circuits the loop."""
         engine = battle_engine_with_ships
+        engine.end_condition = TickLimitCondition(max_ticks=n + 1)
 
-        for i in range(10):
+        for _ in range(n):
             engine.update()
 
-        assert engine.tick_counter == 10
+        assert engine.tick_counter == n
 
     def test_state_persists_across_ticks(self, battle_engine_with_ships):
         """State changes should persist across ticks."""
@@ -736,16 +742,6 @@ class TestEdgeCases:
         assert engine.projectile_manager.add_projectile.call_count == 2
         # Beam should be processed
         engine.collision_system.process_beam_attack.assert_called_once()
-
-    def test_rapid_succession_ticks(self, battle_engine_with_ships):
-        """Many rapid ticks should work correctly."""
-        engine = battle_engine_with_ships
-        engine.end_condition = TickLimitCondition(max_ticks=1000)
-
-        for _ in range(100):
-            engine.update()
-
-        assert engine.tick_counter == 100
 
 
 # =============================================================================

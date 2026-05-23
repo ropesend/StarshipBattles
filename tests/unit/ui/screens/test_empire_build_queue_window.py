@@ -650,26 +650,19 @@ class TestGetColumnValue:
 class TestColumnToggle:
     """Column visibility toggle should work correctly."""
 
-    def test_toggle_column_hides_visible_column(self):
-        """Toggling a visible column makes it invisible."""
+    # PROJ-494 T3.7: 2 same-named `test_toggle_column_hides_visible_column`
+    # methods (Python's shadow rule meant only the second was ever run) merged
+    # into one parametrized test exercising both columns.
+    @pytest.mark.parametrize("column_id", ["location", "build_rate"])
+    def test_toggle_column_hides_any_column(self, column_id):
+        """Toggling any visible column makes it invisible."""
         win = _make_window()
-        # Verify location starts visible
-        loc_col = next(c for c in win.columns if c['id'] == 'location')
-        assert loc_col['visible'] is True
+        col = next(c for c in win.columns if c['id'] == column_id)
+        assert col['visible'] is True
 
-        result = win.toggle_column_visibility('location')
+        result = win.toggle_column_visibility(column_id)
         assert result is True
-        assert loc_col['visible'] is False
-
-    def test_toggle_column_hides_visible_column(self):
-        """Toggling a visible column makes it hidden."""
-        win = _make_window()
-        rate_col = next(c for c in win.columns if c['id'] == 'build_rate')
-        assert rate_col['visible'] is True
-
-        result = win.toggle_column_visibility('build_rate')
-        assert result is True
-        assert rate_col['visible'] is False
+        assert col['visible'] is False
 
     def test_toggle_unknown_column_returns_false(self):
         """Toggling an unknown column ID returns False."""

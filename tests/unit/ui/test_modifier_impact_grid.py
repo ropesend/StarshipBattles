@@ -1,22 +1,33 @@
 """Tests for ModifierImpactGrid widget."""
 import pygame
 import pygame_gui
+import pytest
 from unittest.mock import MagicMock, patch
+
+
+@pytest.fixture
+def pygame_ui_env(request):
+    """PROJ-494 T2.9: shared pygame.init + UIManager + UIPanel container
+    setup. Was duplicated as identical `setup_method` blocks in
+    `TestModifierImpactGrid` and `TestPROJ339Characterization`.
+    Attaches `self.manager` and `self.container` to the test instance so
+    the existing assertion sites (`self.manager`, `self.container`) keep working.
+    """
+    pygame.init()
+    pygame.display.set_mode((1, 1), pygame.NOFRAME)
+    request.instance.manager = pygame_gui.UIManager((800, 600))
+    request.instance.container = pygame_gui.elements.UIPanel(
+        pygame.Rect(0, 0, 500, 400), manager=request.instance.manager,
+    )
+    yield
 
 
 class TestModifierImpactGrid:
     """Test the ModifierImpactGrid widget for displaying modifier effects."""
 
-    def setup_method(self):
-        pygame.init()
-        pygame.display.set_mode((1, 1), pygame.NOFRAME)
-        self.manager = pygame_gui.UIManager((800, 600))
-        self.container = pygame_gui.elements.UIPanel(
-            pygame.Rect(0, 0, 500, 400), manager=self.manager
-        )
-
-    def teardown_method(self):
-        pass  # Don't quit pygame for session isolation
+    @pytest.fixture(autouse=True)
+    def _setup(self, pygame_ui_env):
+        yield
 
     def test_init_constructs_panel_with_passed_rect_and_container(self):
         """Pin that __init__ forwards `rect` and `container` to the
@@ -232,16 +243,9 @@ class TestPROJ339Characterization:
     """PROJ-339: pin observable behavior of `update`, formatters, and
     scroll gating in ModifierImpactGrid."""
 
-    def setup_method(self):
-        pygame.init()
-        pygame.display.set_mode((1, 1), pygame.NOFRAME)
-        self.manager = pygame_gui.UIManager((800, 600))
-        self.container = pygame_gui.elements.UIPanel(
-            pygame.Rect(0, 0, 500, 400), manager=self.manager,
-        )
-
-    def teardown_method(self):
-        pass
+    @pytest.fixture(autouse=True)
+    def _setup(self, pygame_ui_env):
+        yield
 
     def _grid(self):
         from game.ui.panels.modifier_impact_grid import ModifierImpactGrid
