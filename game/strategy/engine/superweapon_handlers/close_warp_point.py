@@ -60,7 +60,7 @@ def process_close_warp_point(
 
     spec = find_superweapon_spec(OrderType.CLOSE_WARP_POINT)
 
-    def _precheck(*, fleet, empire, galaxy, empires, order, component_registry):
+    def _precheck(*, fleet, empire, galaxy, empires, order, component_registry) -> "SuperweaponResult | None":
         destination_id, _expected_hex = _parse_close_target(order.target)
         if not destination_id:
             return SuperweaponResult(
@@ -72,7 +72,7 @@ def process_close_warp_point(
             )
         return None
 
-    def _effect(*, fleet, empire, galaxy, empires, order, ship, component_registry):
+    def _effect(*, fleet, empire, galaxy, empires, order, ship, component_registry) -> "SuperweaponResult | dict[str, Any]":
         destination_id, expected_hex = _parse_close_target(order.target)
         current_system = processor._get_system_at_hex(galaxy, fleet.location)
 

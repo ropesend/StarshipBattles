@@ -36,6 +36,10 @@ from typing import (
 
 from game.core.protocols import _has_attrs
 
+if TYPE_CHECKING:
+    from game.core.constants import AttackType
+    from game.core.math import Vector2
+
 
 # =============================================================================
 # Combat Ship Protocol
@@ -85,12 +89,12 @@ class ICombatShip(Protocol):
     # -------------------------------------------------------------------------
 
     @property
-    def position(self) -> Any:
+    def position(self) -> "Vector2":
         """Current position as Vector2."""
         ...
 
     @property
-    def velocity(self) -> Any:
+    def velocity(self) -> "Vector2":
         """Current velocity as Vector2."""
         ...
 
@@ -195,6 +199,10 @@ class ICombatShip(Protocol):
         """Dict mapping LayerType to LayerData."""
         ...
 
+    def get_components_by_layer(self, layer_type: Any) -> List[Any]:
+        """Return all components in the given layer (keyed by LayerType)."""
+        ...
+
     @property
     def resources(self) -> Any:
         """ResourceRegistry for fuel, ammo, energy."""
@@ -262,12 +270,12 @@ class IProjectile(Protocol):
     # -------------------------------------------------------------------------
 
     @property
-    def position(self) -> Any:
+    def position(self) -> "Vector2":
         """Current position as Vector2."""
         ...
 
     @property
-    def velocity(self) -> Any:
+    def velocity(self) -> "Vector2":
         """Current velocity as Vector2."""
         ...
 
@@ -301,7 +309,7 @@ class IProjectile(Protocol):
         ...
 
     @property
-    def type(self) -> Any:
+    def type(self) -> "AttackType":
         """AttackType enum (PROJECTILE, MISSILE, BEAM)."""
         ...
 

@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
+    from game.simulation.replay import ReplayCaptureContext
     from game.strategy.combat.battle_assembly import StrategyBattleAssembly
     from game.strategy.data.fleet import Fleet
     from game.core.registry import GameRegistries
@@ -428,7 +429,7 @@ class SimulationBattleResolver(IBattleResolver):
         fleets: List['Fleet'],
         *,
         registries: 'GameRegistries',
-    ) -> Any:
+    ) -> "ReplayCaptureContext":
         """Build a ``ReplayCaptureContext`` for this strategy battle.
 
         PROJ-312: the context carries metadata + a ``ship_instance_lookup``
@@ -485,7 +486,7 @@ class SimulationBattleResolver(IBattleResolver):
         # ship_instance_lookup serializes the strategy ShipInstance referenced
         # by ShipSpec.instance_ref. Returns None when no instance is attached
         # (synthetic / Combat Lab / Battle Setup fixtures).
-        def _lookup(ship_spec):  # type: ignore[no-redef]
+        def _lookup(ship_spec) -> "Dict[str, Any] | None":
             instance = getattr(ship_spec, "instance_ref", None)
             if instance is None:
                 return None

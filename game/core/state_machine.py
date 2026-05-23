@@ -55,8 +55,8 @@ class ScreenStateMachine:
         initial_state: Any,
         transitions: FrozenSet[Tuple[Any, Any]],
         guards: Optional[Dict[Tuple[Any, Any], Callable[[], bool]]] = None,
-        on_enter: Optional[Dict[Any, Callable]] = None,
-        on_exit: Optional[Dict[Any, Callable]] = None,
+        on_enter: Optional[Dict[Any, Callable[..., Any]]] = None,
+        on_exit: Optional[Dict[Any, Callable[..., Any]]] = None,
     ):
         self._state = initial_state
         self._transitions = transitions

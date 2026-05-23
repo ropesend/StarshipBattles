@@ -87,8 +87,9 @@ def kelvin_to_rgb(temp_k: float) -> Tuple[int, int, int]:
     temp = temp_k / 100
 
     # Red channel
+    r: float
     if temp <= _KELVIN_WARM_COOL_BOUNDARY:
-        r = 255
+        r = 255.0
     else:
         r = temp - 60
         r = _KELVIN_RED_COEFF * (r ** _KELVIN_RED_EXP)
@@ -114,11 +115,12 @@ def kelvin_to_rgb(temp_k: float) -> Tuple[int, int, int]:
             g = 255
 
     # Blue channel
+    b: float
     if temp >= _KELVIN_WARM_COOL_BOUNDARY:
-        b = 255
+        b = 255.0
     else:
         if temp <= _KELVIN_BLUE_FLOOR:
-            b = 0
+            b = 0.0
         else:
             b = temp - 10
             b = _KELVIN_BLUE_COEFF * math.log(b) + _KELVIN_BLUE_OFFSET

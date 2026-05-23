@@ -47,13 +47,14 @@ Hit Chance Calculation (Sigmoid):
 """
 import math
 import random
-from typing import List, Dict, Any, TYPE_CHECKING
+from typing import List, Dict, Any, TYPE_CHECKING, cast
 
 from game.core.config import BattleTuning
 from game.core.combat_types import DamageContext
 
 if TYPE_CHECKING:
     from game.simulation.combat.attack_contract import BeamResolution
+    from game.simulation.components.abilities.weapons import BeamWeaponAbility
 
 # Note: Ship type hint uses Any to avoid tight coupling with simulation entities
 
@@ -112,8 +113,19 @@ class CollisionSystem:
                     hit_dist = min(valid_t)
                     beam_comp = attack.component
 
-                    # Get ability for hit chance and damage calculations
-                    beam_ab = beam_comp.get_ability('BeamWeaponAbility')
+                    # Get ability for hit chance and damage calculations.
+                    # BeamResolution invariant: AttackRequest carries a live
+                    # weapon_ability for the dispatched beam component
+                    # (see game/simulation/combat/families/_beam_common.py and
+                    # game/simulation/combat/attack_contract.py). A missing
+                    # BeamWeaponAbility here is a programming error, not a
+                    # runtime condition to silently absorb.
+                    beam_ab_raw = beam_comp.get_ability('BeamWeaponAbility')
+                    assert beam_ab_raw is not None, (
+                        f"BeamResolution invariant: component {beam_comp.name!r} "
+                        f"dispatched as beam but has no BeamWeaponAbility"
+                    )
+                    beam_ab = cast("BeamWeaponAbility", beam_ab_raw)
 
                     # Get Scores (includes fleet aura bonuses)
                     source_ship = attack.source
@@ -128,7 +140,7 @@ class CollisionSystem:
                     fleet_def = getattr(target, 'fleet_defense_bonus', None)
                     if isinstance(fleet_def, (int, float)):
                         defense_score += fleet_def
-                        
+
                     # Calculate Chance with Sigmoid Logic using ability
                     chance = beam_ab.calculate_hit_chance(hit_dist, attack_score, defense_score)
 

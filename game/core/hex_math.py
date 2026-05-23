@@ -64,7 +64,7 @@ Example:
 """
 import math
 import random
-from typing import FrozenSet, List, Optional, Set, Tuple
+from typing import Any, FrozenSet, List, Optional, Set, Tuple
 
 
 class HexCoord:
@@ -281,7 +281,7 @@ def hex_linedraw(a: HexCoord, b: HexCoord) -> List[HexCoord]:
 
 
 # Serialization helpers for save/load system
-def hex_to_dict(coord: HexCoord) -> dict:
+def hex_to_dict(coord: HexCoord) -> dict[str, int]:
     """
     Serialize HexCoord to dict.
 
@@ -294,7 +294,7 @@ def hex_to_dict(coord: HexCoord) -> dict:
     return {'q': coord.q, 'r': coord.r}
 
 
-def hex_from_dict(data: dict) -> HexCoord:
+def hex_from_dict(data: dict[str, int]) -> HexCoord:
     """
     Deserialize HexCoord from dict.
 
@@ -308,7 +308,7 @@ def hex_from_dict(data: dict) -> HexCoord:
 
 
 def hex_from_dict_safe(
-    data: dict,
+    data: dict[str, Any],
     key: str = 'location',
     default: Optional[HexCoord] = None
 ) -> Optional[HexCoord]:

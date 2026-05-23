@@ -27,7 +27,7 @@ class EscortBehavior(SpatialBehavior):
         self,
         ship: Any,
         group_ships: List[Any],
-        **kwargs,
+        **kwargs: Any,
     ) -> Optional[Vector2]:
         """Compute position near the anchor ship.
 

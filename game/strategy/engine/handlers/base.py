@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
     from game.strategy.data.planet import Planet
+    from game.strategy.data.planetary_facility import PlanetaryFacility
     from game.strategy.engine.game_session import GameSession
     from game.strategy.engine.commands import Command
 
@@ -333,7 +334,7 @@ class BaseCommandHandler:
         return result
 
     @staticmethod
-    def _resolve_build_entity(session: 'GameSession', entity_id: int, entity_type: str) -> Any:
+    def _resolve_build_entity(session: 'GameSession', entity_id: int, entity_type: str) -> "Planet | Fleet | None":
         """Resolve a planet or fleet by ID and type.
 
         BUG-103: Extracted to BaseCommandHandler for shared use by all
@@ -387,7 +388,7 @@ class BaseCommandHandler:
         return getattr(entity, 'construction_queue', None)
 
     @staticmethod
-    def _resolve_queue_owner(entity, queue_id: Optional[str]) -> Any:
+    def _resolve_queue_owner(entity, queue_id: Optional[str]) -> "Planet | Fleet | PlanetaryFacility | None":
         """Find the entity that *owns* a queue (i.e., where the per-queue
         flags like FEAT-17's `construction_queue_paused` live).
 
@@ -429,7 +430,7 @@ class BaseCommandHandler:
         return None
 
     @staticmethod
-    def _build_colonize_target(planet, cmd) -> Any:
+    def _build_colonize_target(planet, cmd) -> "Planet | dict[str, Any]":
         """Build COLONIZE order target — Planet or dict with amounts.
 
         If population_amount or cargo_amounts are specified on the command,

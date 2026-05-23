@@ -13,15 +13,15 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Critical Strategy missing returns | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Major Strategy narrowings | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Minor Strategy narrowings + closures | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. Critical Strategy missing returns | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Major Strategy narrowings | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Minor Strategy narrowings + closures | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-22 17:30
-**Active Phase:** Phase 1
-**Last Action:** Project created from `Reviews/results/2026-05-20_210540_type-audit/` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Last Updated:** 2026-05-23
+**Active Phase:** Complete (all 3 phases + Codex audit closed)
+**Last Action:** Codex mid-project-review audit (2026-05-23) returned 5 findings. 4 were clean bills / non-actionable (no scope creep, primary_star narrowing correct, simulation_adapter plan-correction valid, pop_construction_item annotation matches PROJ-483 protocol). 1 finding (over-specific narrowing of helper methods to concrete `PlanetWriteService`/`EmpireWriteService` instead of `IPlanetMutator` protocol) is real but architecturally out of scope — the clean fix (add `empire=` kwarg to `IPlanetMutator.add_facility`) lives in core/protocols/ which PROJ-482 explicitly defers to the Foundation track. Logged as DI-2026-05-23-001. See [findings/audit_verification.md](findings/audit_verification.md).
+**Next Action:** Project ready for user verification / archival.
 **Blockers:** None
 
 ## Overview

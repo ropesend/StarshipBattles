@@ -53,7 +53,7 @@ logger = logging.getLogger(__name__)
 _SERIALIZABLE_REGISTRY: Dict[str, type] = {}
 
 
-def register_serializable(type_name: str = None) -> Callable[[type], type]:
+def register_serializable(type_name: Optional[str] = None) -> Callable[[type], type]:
     """Decorator that registers a class as a serializable type.
 
     Optional — not required for serialization to work. Supports gradual adoption.
@@ -222,8 +222,8 @@ T = TypeVar('T')
 
 
 def deserialize_list(
-    items: Optional[List[dict]],
-    deserializer: Callable[[dict], T],
+    items: Optional[List[dict[str, Any]]],
+    deserializer: Callable[[dict[str, Any]], T],
     entity_name: str,
     parent_name: str,
     strict: bool = False

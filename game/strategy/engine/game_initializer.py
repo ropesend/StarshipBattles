@@ -8,11 +8,14 @@ Provides a single entry point for creating new game galaxies with empires.
 """
 import logging
 import random
-from typing import Any, List, Optional, Tuple
+from typing import Any, Iterator, List, Optional, TYPE_CHECKING, Tuple
 
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
 from game.strategy.data.empire import Empire
+
+if TYPE_CHECKING:
+    from game.strategy.data.fleet import Fleet
 
 logger = logging.getLogger(__name__)
 from game.strategy.data.galaxy import Galaxy
@@ -165,13 +168,13 @@ class GameInitializer:
         """
         from game.strategy.services.ability_iterator import set_fleet_lookups
 
-        def _at_hex(system, hex_coord):
+        def _at_hex(system, hex_coord) -> "Iterator[Fleet]":
             for empire in empires:
                 for fleet in getattr(empire, 'fleets', []) or []:
                     if getattr(fleet, 'location', None) == hex_coord:
                         yield fleet
 
-        def _in_system(system):
+        def _in_system(system) -> "Iterator[Fleet]":
             sys_loc = getattr(system, 'global_location', None)
             if sys_loc is None:
                 return

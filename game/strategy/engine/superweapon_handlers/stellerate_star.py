@@ -44,14 +44,14 @@ def process_stellerate_star(
 
     spec = find_superweapon_spec(OrderType.STELLERATE_STAR)
 
-    def _precheck(*, fleet, empire, galaxy, empires, order, component_registry):
+    def _precheck(*, fleet, empire, galaxy, empires, order, component_registry) -> "SuperweaponResult | None":
         if processor._get_system_at_hex(galaxy, fleet.location) is None:
             return SuperweaponResult(
                 success=False, message="Fleet not at a star system"
             )
         return None
 
-    def _effect(*, fleet, empire, galaxy, empires, order, ship, component_registry):
+    def _effect(*, fleet, empire, galaxy, empires, order, ship, component_registry) -> dict[str, str]:
         system = processor._get_system_at_hex(galaxy, fleet.location)
         system_name = system.name
 

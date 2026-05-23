@@ -11,12 +11,20 @@ This enables:
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from game.core.constants import CombatConstants
 
-# Note: Vector2 type hints use Any to avoid pygame dependency in AI layer.
-# Methods returning positions/velocities return pygame.math.Vector2 at runtime.
+if TYPE_CHECKING:
+    from game.core.math import Vector2
+    from game.core.constants import LayerType
+    from game.simulation.entities.layer_data import LayerData
+    from game.simulation.entities.ship import Ship
+
+# Note: Vector2 type hints use TYPE_CHECKING string forward refs to avoid an
+# unconditional runtime import of pygame from the AI layer. Methods returning
+# positions/velocities return ``game.core.math.Vector2`` at runtime (the
+# codebase's framework-agnostic wrapper around pygame's Vector2 API).
 
 
 class IControllable(ABC):
@@ -38,12 +46,12 @@ class IControllable(ABC):
     # =========================================================================
 
     @abstractmethod
-    def get_position(self) -> Any:
+    def get_position(self) -> "Vector2":
         """Get the current position of the entity."""
         pass
 
     @abstractmethod
-    def get_velocity(self) -> Any:
+    def get_velocity(self) -> "Vector2":
         """Get the current velocity vector of the entity."""
         pass
 
@@ -192,8 +200,14 @@ class IControllable(ABC):
         pass
 
     @abstractmethod
-    def get_layers(self) -> Dict[str, Any]:
-        """Get the component layers dictionary."""
+    def get_layers(self) -> Dict[Any, Any]:
+        """Get the component layers dictionary.
+
+        Concrete Ship-backed implementations return
+        ``Dict[LayerType, LayerData]``; the interface declares the loose
+        ``Dict[Any, Any]`` to keep adapters for non-Ship entities free to
+        return a comparable mapping.
+        """
         pass
 
     @abstractmethod
@@ -226,17 +240,17 @@ class ShipControllableAdapter(IControllable):
     the new IControllable interface without modifying Ship directly.
     """
 
-    def __init__(self, ship: Any):
+    def __init__(self, ship: "Ship") -> None:
         """
         Create an adapter for a Ship.
 
         Args:
             ship: The Ship instance to wrap
         """
-        self._ship = ship
+        self._ship: "Ship" = ship
 
     @property
-    def ship(self) -> Any:
+    def ship(self) -> "Ship":
         """Access the underlying ship."""
         return self._ship
 
@@ -255,11 +269,11 @@ class ShipControllableAdapter(IControllable):
     # Position and Movement (Read)
     # =========================================================================
 
-    def get_position(self) -> Any:
+    def get_position(self) -> "Vector2":
         """Get the current position of the ship."""
         return self._ship.position
 
-    def get_velocity(self) -> Any:
+    def get_velocity(self) -> "Vector2":
         """Get the current velocity vector of the ship."""
         return self._ship.velocity
 
@@ -371,8 +385,13 @@ class ShipControllableAdapter(IControllable):
         """Get components with a specific ability."""
         return self._ship.get_components_by_ability(name, operational_only)
 
-    def get_layers(self) -> Dict[str, Any]:
-        """Get the component layers dictionary."""
+    def get_layers(self) -> "Dict[LayerType, LayerData]":
+        """Get the component layers dictionary.
+
+        Mapping is keyed by LayerType (not str), with LayerData values.
+        Materialised at runtime by ShipLayerManager and declared on Ship's
+        class body as `layers: Dict[LayerType, LayerData]` (PROJ-483 Task 5.4).
+        """
         return self._ship.layers
 
     def get_movement_policy(self) -> str:

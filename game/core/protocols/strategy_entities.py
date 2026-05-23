@@ -7,9 +7,14 @@ facilities, races, ship instances) live in `strategy_domain.py`.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Any, Protocol, TypeGuard, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, TypeGuard, runtime_checkable
 
 from game.core.protocols.common import _has_attrs
+
+if TYPE_CHECKING:
+    from game.core.hex_math import HexCoord
+    from game.strategy.data.planet import PlanetType
+    from game.strategy.data.stars import StarType
 
 
 class SourceKind(StrEnum):
@@ -48,7 +53,7 @@ class IStarSystem(Protocol):
         ...
 
     @property
-    def global_location(self) -> Any:
+    def global_location(self) -> HexCoord:
         """HexCoord of system on galaxy map."""
         ...
 
@@ -82,7 +87,7 @@ class IStar(Protocol):
         ...
 
     @property
-    def star_type(self) -> Any:
+    def star_type(self) -> StarType:
         """StarType enum."""
         ...
 
@@ -95,7 +100,7 @@ class IStar(Protocol):
 class IPlanet(Protocol):
     """Protocol for Planet entities."""
     @property
-    def planet_type(self) -> Any:
+    def planet_type(self) -> PlanetType:
         """PlanetType enum."""
         ...
 
@@ -122,7 +127,7 @@ class IPlanet(Protocol):
         ...
 
     @property
-    def location(self) -> Any:
+    def location(self) -> HexCoord | None:
         """HexCoord (local to system)."""
         ...
 
@@ -268,7 +273,7 @@ class IFleet(Protocol):
         ...
 
     @property
-    def location(self) -> Any:
+    def location(self) -> HexCoord:
         """HexCoord (global on galaxy map)."""
         ...
 
@@ -331,7 +336,7 @@ class IWarpPoint(Protocol):
         ...
 
     @property
-    def location(self) -> Any:
+    def location(self) -> HexCoord:
         """HexCoord (local to system)."""
         ...
 
@@ -340,7 +345,7 @@ class IWarpPoint(Protocol):
 class ISectorEnvironment(Protocol):
     """Protocol for SectorEnvironment entities."""
     @property
-    def local_hex(self) -> Any:
+    def local_hex(self) -> HexCoord:
         """HexCoord within the system."""
         ...
 

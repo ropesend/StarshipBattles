@@ -34,7 +34,7 @@ class ScreenBehavior(SpatialBehavior):
         self,
         ship: Any,
         group_ships: List[Any],
-        **kwargs,
+        **kwargs: Any,
     ) -> Optional[Vector2]:
         """Compute position on the screen circle around anchor.
 

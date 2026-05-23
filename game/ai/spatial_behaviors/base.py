@@ -34,7 +34,7 @@ class SpatialBehavior(ABC):
         self,
         ship: Any,
         group_ships: List[Any],
-        **kwargs,
+        **kwargs: Any,
     ) -> Optional['Vector2']:
         """Compute the target position for a ship.
 

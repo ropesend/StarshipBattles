@@ -24,7 +24,10 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple, TYPE_CHECKIN
 from game.strategy.data.design_metadata import DesignMetadata
 
 if TYPE_CHECKING:
-    from game.strategy.systems.design_repository import DesignRepository
+    from game.strategy.systems.design_repository import (
+        DesignLoadResult,
+        DesignRepository,
+    )
 
 
 class DesignCatalog:
@@ -233,7 +236,7 @@ class DesignCatalog:
         """
         return self._list_view
 
-    def load_design_data(self, design_id: str):
+    def load_design_data(self, design_id: str) -> "DesignLoadResult":
         """Load raw design data — delegates to the bound repository.
 
         Returns ``DesignLoadResult`` (same shape as

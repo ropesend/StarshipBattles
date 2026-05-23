@@ -122,7 +122,9 @@ class PlanetWriteService:
     def append_construction_item(self, planet: "Planet", item: Any) -> None:
         planet.construction_queue.append(item)
 
-    def pop_construction_item(self, planet: "Planet", index: int = 0) -> Any:
+    def pop_construction_item(
+        self, planet: "Planet", index: int = 0
+    ) -> "dict[str, Any] | None":
         return planet.construction_queue.pop(index)
 
     # --- Orders ---

@@ -35,7 +35,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Dict, List, Tuple, Union
+from typing import Any, Callable, Dict, List, Tuple, Union
 
 from game.core.exceptions import StateException
 from game.core.json_utils import load_json_required
@@ -200,7 +200,7 @@ class RoleRegistry:
     # ---- internals -------------------------------------------------------
 
     @staticmethod
-    def _role_from_dict(role_dict: dict) -> Role:
+    def _role_from_dict(role_dict: dict[str, Any]) -> Role:
         """Build a Role from a JSON dict, skipping `_`-prefixed keys.
 
         Per project convention (memory: "_-prefixed JSON keys are skipped
