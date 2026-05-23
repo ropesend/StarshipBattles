@@ -4,6 +4,15 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-498 | ModifierService allow_abilities engineering hardening: rejection logging, reason API, rejection-matrix coverage | Planning | 2026-05-23 | 2026-05-23 |
+| PROJ-497 | ModifierService data-intent decisions: efficient_engines and seeker/beam allowance review | Planning | 2026-05-23 | 2026-05-23 |
+| PROJ-499 | Regression-snapshot harness: symmetric key comparison + baseline cleanup | Planning | 2026-05-23 | 2026-05-23 |
+| PROJ-496 | Test polish risky + non-UI integration (PROJ-480 follow-through) | Planning | 2026-05-23 | 2026-05-23 |
+| PROJ-495 | Test polish core mechanical (PROJ-480 follow-through) | Planning | 2026-05-23 | 2026-05-23 |
+| PROJ-494 | Test polish UI-family (PROJ-480 follow-through) | Planning | 2026-05-23 | 2026-05-23 |
+| PROJ-493 | SuperweaponValidator DI seam introduction | Planning | 2026-05-23 | 2026-05-23 |
+| PROJ-492 | HLP mechanical sweeps and setup_tmpdir strategy | Planning | 2026-05-23 | 2026-05-23 |
+| PROJ-491 | CAT-6 test-side mechanical migrations | Planning | 2026-05-23 | 2026-05-23 |
 | PROJ-490 | Legacy removal — stale-comment cleanup sweep (2026-05-20) | Planning | 2026-05-22 | 2026-05-22 |
 | PROJ-489 | Legacy removal — ModifierService consolidation (2026-05-20) | Planning | 2026-05-22 | 2026-05-22 |
 | PROJ-488 | Legacy removal — MASS_EARTH alias (2026-05-20) | Planning | 2026-05-22 | 2026-05-22 |
