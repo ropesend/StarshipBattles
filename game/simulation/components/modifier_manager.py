@@ -41,7 +41,7 @@ class ModifierManager:
     from component data during construction.
     """
 
-    __slots__ = ('_component', '_modifiers')
+    __slots__ = ('_component', '_modifiers', '_modifier_service')
 
     def __init__(self, component: 'Component'):
         """Initialize with a component reference and load initial modifiers.
@@ -51,7 +51,23 @@ class ModifierManager:
         """
         self._component = component
         self._modifiers: List['ApplicationModifier'] = []
+        # PROJ-489: lazy ModifierService instance for restriction delegation.
+        self._modifier_service = None  # type: ignore[assignment]
         self._load_initial_modifiers()
+
+    def _get_modifier_service(self):
+        """Return a cached ModifierService bound to this component's registries.
+
+        PROJ-489: replaces the inline restriction check in ``add_modifier``
+        with the canonical simulation-layer service so that ``allow_types``,
+        ``deny_types`` AND ``allow_abilities`` are honored consistently.
+        """
+        if self._modifier_service is None:
+            from game.simulation.services.modifier_service import ModifierService
+            self._modifier_service = ModifierService(
+                modifier_registry=self._component._registries.modifiers
+            )
+        return self._modifier_service
 
     def _load_initial_modifiers(self) -> None:
         """Load default modifiers from component data definition.
@@ -105,16 +121,13 @@ class ModifierManager:
         if mod_id not in mods:
             return False
 
-        # Check restrictions
+        # PROJ-489: delegate restriction checks (allow_types/deny_types/
+        # allow_abilities) to the canonical ModifierService. Previously this
+        # was an inline check that omitted the allow_abilities branch.
+        if not self._get_modifier_service().is_modifier_allowed(mod_id, self._component):
+            return False
+
         mod_def = mods[mod_id]
-        component_type = self._component.type_str
-        if component_type:
-            if 'deny_types' in mod_def.restrictions:
-                if component_type in mod_def.restrictions['deny_types']:
-                    return False
-            if 'allow_types' in mod_def.restrictions:
-                if component_type not in mod_def.restrictions['allow_types']:
-                    return False
 
         # Remove existing if any (replace) -- in-place mutation
         self.remove_modifier(mod_id)

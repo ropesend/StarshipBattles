@@ -6,7 +6,7 @@ No pygame or other framework dependencies.
 """
 from __future__ import annotations
 import math as _math
-from typing import Tuple, Union
+from typing import Iterator, Tuple, Union
 
 
 class Vector2:
@@ -19,7 +19,10 @@ class Vector2:
 
     __slots__ = ('x', 'y')
 
-    def __init__(self, x: float = 0, y: float = None):
+    x: float
+    y: float
+
+    def __init__(self, x: float = 0, y: float | None = None):
         """
         Create a new Vector2.
 
@@ -46,19 +49,19 @@ class Vector2:
             self.x = float(x)
             self.y = float(y)
 
-    def __add__(self, other) -> 'Vector2':
+    def __add__(self, other: 'Vector2') -> 'Vector2':
         """Add two vectors (supports any object with x, y attributes)."""
         return Vector2(self.x + other.x, self.y + other.y)
 
-    def __radd__(self, other) -> 'Vector2':
+    def __radd__(self, other: 'Vector2') -> 'Vector2':
         """Reverse add (supports any object with x, y attributes)."""
         return Vector2(self.x + other.x, self.y + other.y)
 
-    def __sub__(self, other) -> 'Vector2':
+    def __sub__(self, other: 'Vector2') -> 'Vector2':
         """Subtract two vectors (supports any object with x, y attributes)."""
         return Vector2(self.x - other.x, self.y - other.y)
 
-    def __rsub__(self, other) -> 'Vector2':
+    def __rsub__(self, other: 'Vector2') -> 'Vector2':
         """Reverse subtract (supports any object with x, y attributes)."""
         return Vector2(other.x - self.x, other.y - self.y)
 
@@ -82,13 +85,13 @@ class Vector2:
         """Check equality with another vector-like object (supports pygame.math.Vector2)."""
         if not hasattr(other, 'x') or not hasattr(other, 'y'):
             return False
-        return self.x == other.x and self.y == other.y
+        return bool(self.x == other.x and self.y == other.y)
 
     def __repr__(self) -> str:
         """Return string representation."""
         return f"Vector2({self.x}, {self.y})"
 
-    def __iter__(self):
+    def __iter__(self) -> "Iterator[float]":
         """Allow iteration over x, y for sequence compatibility."""
         yield self.x
         yield self.y
@@ -136,17 +139,17 @@ class Vector2:
             self.x /= length
             self.y /= length
 
-    def dot(self, other) -> float:
+    def dot(self, other: 'Vector2') -> float:
         """Return the dot product with another vector (supports any object with x, y)."""
-        return self.x * other.x + self.y * other.y
+        return float(self.x * other.x + self.y * other.y)
 
-    def distance_to(self, other) -> float:
+    def distance_to(self, other: 'Vector2') -> float:
         """Return the distance to another vector (supports any object with x, y)."""
-        return (self - other).length()
+        return float((self - other).length())
 
-    def distance_squared_to(self, other) -> float:
+    def distance_squared_to(self, other: 'Vector2') -> float:
         """Return the squared distance to another vector (supports any object with x, y)."""
-        return (self - other).length_squared()
+        return float((self - other).length_squared())
 
     def rotate(self, angle_degrees: float) -> 'Vector2':
         """

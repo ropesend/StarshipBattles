@@ -19,7 +19,8 @@ full-turn rollover — sees identical turn-start behaviour.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+from collections.abc import Iterator
 
 import pygame
 
@@ -167,7 +168,7 @@ class StrategyGameStateManager:
             # PROJ-477 Phase 3: through the scene write handle, not the getter.
             self._screen.order_writes.set_active_empire(current_empire)
 
-    def _iter_snapshot_windows(self):
+    def _iter_snapshot_windows(self) -> "Iterator[Any]":
         """Yield each opt-in window participating in the per-player UI snapshot.
 
         Issue #28: a window participates by exposing ``SNAPSHOT_SLOT``

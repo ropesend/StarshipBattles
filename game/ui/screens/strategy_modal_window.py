@@ -271,7 +271,7 @@ class StrategyModalWindow(UIWindow):
         """
         return None
 
-    def check_clicked_inside_or_blocking(self, event):
+    def check_clicked_inside_or_blocking(self, event) -> bool:
         """Skip the pygame_gui focus/block check when hidden.
 
         PROJ-411 Task 2.6: when a reusable PROJ-411 window is hidden,

@@ -81,18 +81,3 @@ class TestEmpirePostPROJ436Contract:
         )
 
 
-class TestPhase4ScopeCollapseRationale:
-    """A one-test marker class documenting that Phase 4 produced no
-    production code change. Acts as a discoverable pointer for future
-    agents grepping for ``Phase 4`` to find the decisions.md row."""
-
-    def test_phase_4_collapsed_per_decisions(self) -> None:
-        """If this test is the only PROJ-438 Phase 4 ratchet you see in
-        ship/empire/planet code review, that is by design. The Phase 4
-        scope (Planet save-schema breadth / Fleet+Empire persistence-
-        facing aggregate behavior / galaxy_protocols.py read contracts)
-        was audited and confirmed already absorbed by PROJ-436 Phases 4–6.
-        See ``Projects/active_projects/PROJ-438/decisions.md`` row dated
-        2026-05-18 for the full rationale."""
-        # Pure documentation marker; the assertion is trivial.
-        assert True

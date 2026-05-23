@@ -61,11 +61,8 @@ def _make_planet(name="TestPlanet", facilities=None):
     return planet
 
 
-def _make_empire(colonies=None):
-    """Create a mock Empire."""
-    empire = MagicMock()
-    empire.colonies = colonies or []
-    return empire
+# PROJ-479 Task 5.4 (DUP-005): _make_empire moved to engine/conftest.py
+from .conftest import make_mock_empire as _make_empire  # noqa: E402
 
 
 def _generator_design(generation_rate=50.0):

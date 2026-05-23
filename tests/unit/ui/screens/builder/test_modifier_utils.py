@@ -7,14 +7,8 @@ from typing import Any
 from game.ui.screens.builder.modifier_utils import copy_modifiers
 
 
-class _Modifier:
-    def __init__(self, definition: Any, value: float) -> None:
-        self.definition = definition
-        self.value = value
-
-
-class _SpecialModifier(_Modifier):
-    pass
+# PROJ-479 Task 5.5 (DUP-006): stubs moved to tests/fixtures/modifier_stubs.py.
+from tests.fixtures.modifier_stubs import _Modifier, _SpecialModifier  # noqa: F401, E402
 
 
 @dataclass

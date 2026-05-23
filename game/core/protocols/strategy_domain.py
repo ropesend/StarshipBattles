@@ -29,7 +29,7 @@ class IEmpire(Protocol):
         ...
 
     @property
-    def color(self) -> Any:
+    def color(self) -> tuple[int, int, int]:
         """Empire color (RGB tuple)."""
         ...
 
@@ -104,7 +104,7 @@ class IEmpire(Protocol):
         ...
 
     @property
-    def built_ship_designs(self) -> Any:
+    def built_ship_designs(self) -> set[str]:
         """Set of design_ids that were ever built."""
         ...
 

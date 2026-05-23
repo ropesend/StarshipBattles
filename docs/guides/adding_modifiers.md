@@ -1,6 +1,6 @@
 # Adding Modifiers
 
-> **Last verified:** 2026-05-08 - Rebalanced against `docs/guides/adding_modifiers.md`, the compact alternate, and current modifier code paths.
+> **Last verified:** 2026-05-23 - Updated `ModifierManager.add_modifier()` restriction-enforcement notes to reflect PROJ-489 consolidation (now enforces `allow_types`, `deny_types`, and `allow_abilities` via delegation to `ModifierService`); previously (2026-05-08) rebalanced against the compact alternate and current modifier code paths.
 
 Compact checklist for adding component-born modifiers. For broader architecture, see `docs/guides/modifier_system.md`.
 
@@ -125,7 +125,7 @@ Restriction fields recognized by the schema:
 - `require_mode`: schema-valid as `"any"` or `"all"`.
 - `allow_types` / `deny_types`: runtime-supported legacy/type restrictions used by services and manager code.
 
-Current runtime caveat: `ModifierService.is_modifier_allowed()` and `ComponentService.is_modifier_allowed()` enforce `allow_types`, `deny_types`, and `allow_abilities`; `ModifierManager.add_modifier()` enforces only type restrictions. `deny_abilities` and `require_mode` are schema-valid but are not consistently enforced by the runtime allowance paths. For new modifiers, prefer positive `allow_abilities` restrictions and add tests before relying on ability-deny or all-match behavior.
+Current runtime caveat: `ModifierService.is_modifier_allowed()` and `ComponentService.is_modifier_allowed()` enforce `allow_types`, `deny_types`, and `allow_abilities`; `ModifierManager.add_modifier()` enforces `allow_types`, `deny_types`, AND `allow_abilities` (delegates to `ModifierService.is_modifier_allowed`). `deny_abilities` and `require_mode` are schema-valid but are not consistently enforced by the runtime allowance paths. For new modifiers, prefer positive `allow_abilities` restrictions and add tests before relying on ability-deny or all-match behavior.
 
 Ability names must match the keys/classes the component actually carries. Check `data/components.json` and `game/simulation/components/abilities/` before choosing names.
 
@@ -159,7 +159,7 @@ Targeted effects write to `component.ability_stats[target_ability]`; global `com
 - `load_modifiers_data()` warns on schema validation failure but still attempts to load. Tests are the real gate.
 - `ModifierService(modifier_registry=...)` requires an injected registry; no fallback lookup.
 - `get_mandatory_modifiers(component)` currently returns every modifier that passes `is_modifier_allowed()`, and `ensure_mandatory_modifiers()` auto-adds missing ones at initial values.
-- `ModifierManager.add_modifier()` replaces an existing modifier with the same ID.
+- `ModifierManager.add_modifier()` replaces an existing modifier with the same ID and enforces `allow_types`, `deny_types`, AND `allow_abilities` (delegates to `ModifierService.is_modifier_allowed`).
 - Applied modifiers serialize as `{ "id": "...", "value": ... }` and are re-evaluated from current definitions on load. There is no save-file migration policy for old modifier formats.
 - Component-born modifier stats persist on `component.stats` / `component.ability_stats`; battle-scoped auras persist only for the battle on `ship.external_stats`.
 

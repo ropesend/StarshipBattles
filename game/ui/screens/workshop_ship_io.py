@@ -8,6 +8,10 @@ DUP-UI2-001: Tkinter initialization now uses shared tkinter_utils module.
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game.strategy.systems.design_catalog import DesignCatalog
 
 from game.core.profiling import profile_action
 
@@ -64,7 +68,7 @@ class WorkshopShipIO:
         self._show_error = show_error_callback
         self._apply_loaded_ship = apply_loaded_ship_callback
 
-    def _design_catalog(self):
+    def _design_catalog(self) -> "DesignCatalog | None":
         """Resolve the per-empire ``DesignCatalog`` via ``facade_state``.
 
         PROJ-434 Phase 2: replaces the previous

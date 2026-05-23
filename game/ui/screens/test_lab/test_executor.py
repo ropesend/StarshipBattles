@@ -172,7 +172,7 @@ class TestLabExecutor:
         finally:
             runner.cleanup()
 
-    def run_headless(self, test_id) -> Any:
+    def run_headless(self, test_id) -> bool:
         """
         Run the selected test scenario in headless mode (fast, no visuals).
 

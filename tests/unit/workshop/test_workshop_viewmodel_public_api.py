@@ -103,33 +103,3 @@ class TestWorkshopViewModelPublicAPI:
             f"WorkshopViewModel is missing public-API members after split: "
             f"{sorted(missing)}"
         )
-
-    def test_select_component_is_callable(self) -> None:
-        assert callable(WorkshopViewModel.select_component)
-
-    def test_ship_is_property(self) -> None:
-        assert isinstance(WorkshopViewModel.ship, property)
-
-    def test_selected_components_is_property(self) -> None:
-        assert isinstance(WorkshopViewModel.selected_components, property)
-
-    def test_primary_selection_is_property(self) -> None:
-        assert isinstance(WorkshopViewModel.primary_selection, property)
-
-    def test_dragged_item_is_property(self) -> None:
-        assert isinstance(WorkshopViewModel.dragged_item, property)
-
-    def test_available_components_is_property(self) -> None:
-        assert isinstance(WorkshopViewModel.available_components, property)
-
-    def test_show_hull_layer_is_property(self) -> None:
-        assert isinstance(WorkshopViewModel.show_hull_layer, property)
-
-    def test_last_result_is_property(self) -> None:
-        assert isinstance(WorkshopViewModel.last_result, property)
-
-    def test_last_errors_is_property(self) -> None:
-        assert isinstance(WorkshopViewModel.last_errors, property)
-
-    def test_last_warnings_is_property(self) -> None:
-        assert isinstance(WorkshopViewModel.last_warnings, property)

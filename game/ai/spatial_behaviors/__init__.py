@@ -38,7 +38,7 @@ __all__ = [
     'create_spatial_behavior',
 ]
 
-_BEHAVIOR_REGISTRY = {
+_BEHAVIOR_REGISTRY: dict[str, type[SpatialBehavior]] = {
     'free_maneuver': FreeManeuverBehavior,
     'battle_line': BattleLineBehavior,
     'column': ColumnBehavior,

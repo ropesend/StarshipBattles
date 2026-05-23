@@ -44,6 +44,7 @@ from game.ui.fonts import get_font
 from game.ui.services.input_mapper import InputMapper
 
 if TYPE_CHECKING:
+    from game.simulation.entities.ship import Ship
     from game.strategy.services.replay_store import ReplayStore
     from game.strategy.services.replay_verification_coordinator import (
         ReplayVerificationCoordinator,
@@ -306,7 +307,7 @@ def bootstrap(args: argparse.Namespace | None = None) -> BootstrapResult:
 
         _cl_materializer = DesignOnlyMaterializer(design_loader=load_combat_lab_design)
 
-        def _replay_combat_lab_fallback(ship_spec, team_id):
+        def _replay_combat_lab_fallback(ship_spec, team_id) -> "Ship":
             return _cl_materializer.materialize(ship_spec, team_id, registries)
 
         replay_verification_coordinator = ReplayVerificationCoordinator(

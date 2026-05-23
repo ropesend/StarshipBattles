@@ -5,19 +5,7 @@ PROJ-50: Updated to use strict DI (registries required).
 """
 
 import pytest
-from game.core.registry import GameRegistries
 from game.core.exceptions import ValidationException
-
-
-@pytest.fixture
-def mock_registries():
-    """Create minimal registries for testing."""
-    return GameRegistries(
-        components={},
-        modifiers={},
-        vehicle_classes={},
-        resources={}
-    )
 
 
 class TestConsumableManagementEngineInit:

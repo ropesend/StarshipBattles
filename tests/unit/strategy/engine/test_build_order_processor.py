@@ -57,7 +57,7 @@ class TestBuildOrderProcessing:
         assert current.type == OrderType.BUILD
 
     def test_build_order_auto_completes_when_queue_empties(
-        self, mock_empire, mock_galaxy
+        self, order_processor, mock_empire, mock_galaxy
     ):
         """Test BUILD order auto-completes when construction_queue empties.
 
@@ -77,7 +77,7 @@ class TestBuildOrderProcessing:
         fleet.construction_queue = []  # Empty queue
         mock_empire.fleets = [fleet]
 
-        order_processor = OrderProcessor()
+        # PROJ-480 Task 1.8: use existing `order_processor` fixture.
         engine = ActionExecutionEngine(order_processor)
 
         # Process tick - BUILD order should auto-pop when queue empty
@@ -132,7 +132,7 @@ class TestBuildOrderProcessing:
         assert len(fleet.orders) == 1
 
     def test_queued_orders_remain_after_build_completion(
-        self, mock_empire, mock_galaxy
+        self, order_processor, mock_empire, mock_galaxy
     ):
         """Test orders queued after BUILD remain when BUILD completes.
 
@@ -146,7 +146,7 @@ class TestBuildOrderProcessing:
         fleet.construction_queue = []  # Empty, BUILD will complete
         mock_empire.fleets = [fleet]
 
-        order_processor = OrderProcessor()
+        # PROJ-480 Task 1.8: use existing `order_processor` fixture.
         engine = ActionExecutionEngine(order_processor)
 
         engine.process_action_ticks([mock_empire], mock_galaxy, tick=20)

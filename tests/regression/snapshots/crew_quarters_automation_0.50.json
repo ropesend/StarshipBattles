@@ -2,18 +2,18 @@
   "component": {
     "id": "crew_quarters",
     "name": "Crew Quarters",
-    "mass": 45.0,
+    "mass": 30.0,
     "base_mass": 30,
     "max_hp": 60,
     "base_max_hp": 60,
     "cost": 0,
     "type_str": "CrewQuarters",
     "stats": {
-      "mass_mult": 1.5,
+      "mass_mult": 1.0,
       "hp_mult": 1.0,
       "damage_mult": 1.0,
       "range_mult": 1.0,
-      "cost_mult": 1.5,
+      "cost_mult": 1.0,
       "thrust_mult": 1.0,
       "turn_mult": 1.0,
       "strategic_mult": 1.0,
@@ -27,20 +27,19 @@
       "endurance_mult": 1.0,
       "projectile_hp_mult": 1.0,
       "projectile_damage_mult": 1.0,
-      "crew_req_mult": 0.5,
+      "crew_req_mult": 1.0,
+      "launch_rate_mult": 1.0,
+      "recovery_rate_mult": 1.0,
+      "bay_capacity_mult": 1.0,
       "mass_add": 0.0,
       "arc_add": 0.0,
       "accuracy_add": 0.0,
       "projectile_stealth_level": 0.0,
+      "shield_bonus_add": 0.0,
       "arc_set": null,
       "properties": {}
     },
-    "modifiers": [
-      {
-        "id": "automation",
-        "value": 0.5
-      }
-    ]
+    "modifiers": []
   },
   "abilities": [
     {

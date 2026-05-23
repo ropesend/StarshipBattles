@@ -40,11 +40,11 @@ class Profiler:
             do_something()
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.active = False
         self.session_id = str(uuid.uuid4())
-        self.records: List[Dict] = []
-        self.start_time = None
+        self.records: List[Dict[str, Any]] = []
+        self.start_time: Optional[float] = None
         logger.info(f"Profiler initialized with session ID: {self.session_id}")
 
     def clear(self) -> None:
@@ -74,7 +74,7 @@ class Profiler:
     def is_active(self) -> bool:
         return self.active
 
-    def record(self, name: str, duration: float, metadata: Optional[Dict] = None) -> None:
+    def record(self, name: str, duration: float, metadata: Optional[Dict[str, Any]] = None) -> None:
         """Record a profiled action."""
         if not self.active:
             return
@@ -87,7 +87,7 @@ class Profiler:
         }
         self.records.append(entry)
 
-    def save_history(self, filename: str = None) -> None:
+    def save_history(self, filename: Optional[str] = None) -> None:
         """Save current session to history file."""
         if filename is None:
             filename = Paths.PROFILING_HISTORY

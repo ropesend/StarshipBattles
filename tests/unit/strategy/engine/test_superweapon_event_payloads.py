@@ -103,15 +103,6 @@ def _make_ship(component_id: str) -> MagicMock:
 # ---------------------------------------------------------------------------
 
 
-def test_existing_event_payload_coverage_documented():
-    """Sanity reference: PLANET_DESTROYED and SHIPS_SELF_DESTRUCTED payloads
-    are pinned by ``test_superweapon_order_processor.py``. This file fills
-    the gaps for the other 4 events.
-    """
-    # No assertion needed — the test exists to keep the docstring discoverable
-    # via `pytest --collect-only`.
-
-
 # ---------------------------------------------------------------------------
 # STAR_DESTROYED
 # ---------------------------------------------------------------------------

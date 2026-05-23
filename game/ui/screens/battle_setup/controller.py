@@ -24,7 +24,10 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game.simulation.systems.battle_end_conditions import IEndCondition
 
 from game.core.json_utils import load_json, save_json
 from game.core.paths import Paths
@@ -408,7 +411,7 @@ class BattleSetupController:
         except (ValueError, TypeError):
             pass
 
-    def _build_end_condition(self) -> Any:
+    def _build_end_condition(self) -> "IEndCondition":
         """Compose an `IEndCondition` from the current toggle settings."""
         from game.simulation.systems.battle_end_conditions import (
             AnyCondition,

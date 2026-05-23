@@ -274,7 +274,7 @@ class FleetReportWindow(StrategyModalWindow):
         self.virtual_table.force_update()
         self.virtual_table.update_visible_rows()
 
-    def process_event(self, event) -> Any:
+    def process_event(self, event) -> bool:
         """Handle UI events."""
         handled = super().process_event(event)
 

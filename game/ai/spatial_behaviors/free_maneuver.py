@@ -19,7 +19,7 @@ class FreeManeuverBehavior(SpatialBehavior):
         self,
         ship: Any,
         group_ships: List[Any],
-        **kwargs,
+        **kwargs: Any,
     ) -> Optional[Vector2]:
         """Returns None — no positional constraint."""
         return None

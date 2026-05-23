@@ -26,8 +26,9 @@ class TestResetMethod:
         panel.on_auto_spread_changed = MagicMock()
         # Mock the slider_budget UI element
         panel.slider_budget = MagicMock()
-        # Bind the actual reset method to the mock
-        panel.reset = lambda t, tt: rc.ResearchControlPanel.reset(panel, t, tt)
+        # PROJ-479 Task 3.17: removed `panel.reset = lambda t, tt: rc.ResearchControlPanel.reset(panel, t, tt)`
+        # which shadowed the production method. Callers below now invoke
+        # `rc.ResearchControlPanel.reset(panel, ...)` directly.
         return panel
 
     def test_reset_updates_tracker_reference(self, mock_pygame_gui, mock_tracker,
@@ -46,7 +47,7 @@ class TestResetMethod:
         new_tech_tree = MagicMock()
 
         # Call reset
-        panel.reset(new_tracker, new_tech_tree)
+        rc.ResearchControlPanel.reset(panel, new_tracker, new_tech_tree)
 
         # Tracker should be updated
         assert panel.tracker is new_tracker
@@ -66,7 +67,7 @@ class TestResetMethod:
         new_tech_tree = MagicMock()
         new_tech_tree.nodes = {'new_node': MagicMock()}
 
-        panel.reset(new_tracker, new_tech_tree)
+        rc.ResearchControlPanel.reset(panel, new_tracker, new_tech_tree)
 
         assert panel.tech_tree is new_tech_tree
 
@@ -82,7 +83,7 @@ class TestResetMethod:
         new_tracker.auto_spread_enabled = False
         new_tracker.get_total_allocated.return_value = 0
 
-        panel.reset(new_tracker, mock_tech_tree)
+        rc.ResearchControlPanel.reset(panel, new_tracker, mock_tech_tree)
 
         panel.clear_selection.assert_called_once()
 
@@ -98,7 +99,7 @@ class TestResetMethod:
         new_tracker.auto_spread_enabled = False
         new_tracker.get_total_allocated.return_value = 0
 
-        panel.reset(new_tracker, mock_tech_tree)
+        rc.ResearchControlPanel.reset(panel, new_tracker, mock_tech_tree)
 
         panel.update_budget_display.assert_called_once()
 
@@ -114,7 +115,7 @@ class TestResetMethod:
         new_tracker.auto_spread_enabled = False
         new_tracker.get_total_allocated.return_value = 0
 
-        panel.reset(new_tracker, mock_tech_tree)
+        rc.ResearchControlPanel.reset(panel, new_tracker, mock_tech_tree)
 
         panel.clear_log.assert_called_once()
 
@@ -130,7 +131,7 @@ class TestResetMethod:
         new_tracker.auto_spread_enabled = False
         new_tracker.get_total_allocated.return_value = 0
 
-        panel.reset(new_tracker, mock_tech_tree)
+        rc.ResearchControlPanel.reset(panel, new_tracker, mock_tech_tree)
 
         panel._update_auto_spread_button.assert_called_once()
 
@@ -156,7 +157,7 @@ class TestResetMethod:
         new_tracker.auto_spread_enabled = False
         new_tracker.get_total_allocated.return_value = 0
 
-        panel.reset(new_tracker, mock_tech_tree)
+        rc.ResearchControlPanel.reset(panel, new_tracker, mock_tech_tree)
 
         # Callbacks should be unchanged
         assert panel.on_next_turn is on_next_turn
@@ -181,7 +182,7 @@ class TestResetMethod:
         new_tracker.auto_spread_enabled = False
         new_tracker.get_total_allocated.return_value = 0
 
-        panel.reset(new_tracker, mock_tech_tree)
+        rc.ResearchControlPanel.reset(panel, new_tracker, mock_tech_tree)
 
         # Slider should be updated to match new tracker's budget
         panel.slider_budget.set_current_value.assert_called_once_with(300)

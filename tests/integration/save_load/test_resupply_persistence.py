@@ -97,7 +97,7 @@ class TestFacilityFuelPersistence:
 
         assert len(restored.facilities) == 1
         assert restored.facilities[0].consumable_levels == {}
-        assert restored.facilities[0].get_fuel_storage() == 0.0
+        assert restored.facilities[0].get_consumable_storage("fuel") == 0.0
 
     def test_facility_design_data_persists(self):
         """Facility design_data (component layout) persists for fuel calculations."""

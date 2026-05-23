@@ -205,7 +205,7 @@ class TestFacilityResourceSerialization:
 # ===========================================================================
 
 class TestGenericConsumableAPI:
-    """F-A-012: generic add/withdraw/get_consumable_* API."""
+    """Generic add/withdraw/get_consumable_* API."""
 
     def _make_storage_facility(self, resource_id: str, capacity: float = 500.0):
         facility = PlanetaryFacility(
@@ -262,45 +262,37 @@ class TestGenericConsumableAPI:
         assert overflow == 50.0
         assert facility.get_consumable_storage("organics") == 100.0
 
-    def test_fuel_wrappers_delegate_to_generic_consumable_api(self):
-        """add_fuel/get_fuel_storage are now thin wrappers over the generic API."""
-        facility, registries = self._make_storage_facility("fuel", capacity=200.0)
-        facility.add_fuel(75.0, registries)
-        # Same value visible through both APIs.
-        assert facility.get_fuel_storage() == 75.0
-        assert facility.get_consumable_storage("fuel") == 75.0
-
 
 class TestGetFuelStorage:
-    """Test PlanetaryFacility.get_fuel_storage()."""
+    """Test PlanetaryFacility.get_consumable_storage('fuel')."""
 
     def test_returns_zero_when_no_fuel(self):
-        """get_fuel_storage() returns 0.0 when no fuel stored."""
+        """get_consumable_storage('fuel') returns 0.0 when no fuel stored."""
         facility = _make_fuel_facility()
-        assert facility.get_fuel_storage() == 0.0
+        assert facility.get_consumable_storage("fuel") == 0.0
 
     def test_returns_current_fuel_level(self):
-        """get_fuel_storage() returns the current fuel level."""
+        """get_consumable_storage('fuel') returns the current fuel level."""
         facility = _make_fuel_facility(consumable_levels={"fuel": 250.0})
-        assert facility.get_fuel_storage() == 250.0
+        assert facility.get_consumable_storage("fuel") == 250.0
 
     def test_ignores_other_resource_types(self):
-        """get_fuel_storage() only returns fuel, not other resources."""
+        """get_consumable_storage('fuel') only returns fuel, not other resources."""
         facility = _make_fuel_facility(consumable_levels={"energy": 100.0})
-        assert facility.get_fuel_storage() == 0.0
+        assert facility.get_consumable_storage("fuel") == 0.0
 
 
 class TestGetMaxFuelStorage:
-    """Test PlanetaryFacility.get_max_fuel_storage()."""
+    """Test PlanetaryFacility.get_max_consumable_storage('fuel', ...)."""
 
     def test_returns_fuel_tank_capacity(self):
-        """get_max_fuel_storage() returns total fuel tank capacity from components."""
+        """get_max_consumable_storage('fuel', ...) returns total fuel tank capacity from components."""
         facility = _make_fuel_facility(fuel_storage_amount=500.0)
         registries = _make_mock_registries(fuel_tank_amount=500.0)
-        assert facility.get_max_fuel_storage(registries) == 500.0
+        assert facility.get_max_consumable_storage("fuel", registries) == 500.0
 
     def test_returns_zero_when_no_fuel_tanks(self):
-        """get_max_fuel_storage() returns 0 when facility has no fuel tank components."""
+        """get_max_consumable_storage('fuel', ...) returns 0 when facility has no fuel tank components."""
         facility = PlanetaryFacility(
             instance_id="no-tank",
             design_id="basic",
@@ -312,10 +304,10 @@ class TestGetMaxFuelStorage:
         hull_comp = MagicMock()
         hull_comp.abilities = {}
         registries.components.get = lambda cid: hull_comp if cid == "hull_plate" else None
-        assert facility.get_max_fuel_storage(registries) == 0.0
+        assert facility.get_max_consumable_storage("fuel", registries) == 0.0
 
     def test_sums_multiple_fuel_tanks(self):
-        """get_max_fuel_storage() sums multiple fuel tank components."""
+        """get_max_consumable_storage('fuel', ...) sums multiple fuel tank components."""
         facility = PlanetaryFacility(
             instance_id="multi-tank",
             design_id="big_depot",
@@ -330,10 +322,10 @@ class TestGetMaxFuelStorage:
             },
         )
         registries = _make_mock_registries(fuel_tank_amount=300.0)
-        assert facility.get_max_fuel_storage(registries) == 600.0
+        assert facility.get_max_consumable_storage("fuel", registries) == 600.0
 
     def test_ignores_non_fuel_storage(self):
-        """get_max_fuel_storage() ignores non-fuel ResourceStorage abilities."""
+        """get_max_consumable_storage('fuel', ...) ignores non-fuel ResourceStorage abilities."""
         facility = PlanetaryFacility(
             instance_id="mixed",
             design_id="mixed",
@@ -346,52 +338,52 @@ class TestGetMaxFuelStorage:
             "ResourceStorage": [{"resource": "energy", "amount": 1000}],
         }
         registries.components.get = lambda cid: energy_comp if cid == "energy_tank" else None
-        assert facility.get_max_fuel_storage(registries) == 0.0
+        assert facility.get_max_consumable_storage("fuel", registries) == 0.0
 
 
 class TestAddFuel:
-    """Test PlanetaryFacility.add_fuel()."""
+    """Test PlanetaryFacility.add_consumable('fuel', ...)."""
 
     def test_adds_fuel_to_empty_facility(self):
-        """add_fuel() should add fuel when facility is empty."""
+        """add_consumable('fuel', ...) should add fuel when facility is empty."""
         facility = _make_fuel_facility(fuel_storage_amount=500.0)
         registries = _make_mock_registries(fuel_tank_amount=500.0)
-        overflow = facility.add_fuel(200.0, registries)
-        assert facility.get_fuel_storage() == 200.0
+        overflow = facility.add_consumable("fuel", 200.0, registries)
+        assert facility.get_consumable_storage("fuel") == 200.0
         assert overflow == 0.0
 
     def test_caps_at_max_storage(self):
-        """add_fuel() should cap fuel at max storage and return overflow."""
+        """add_consumable('fuel', ...) should cap fuel at max storage and return overflow."""
         facility = _make_fuel_facility(fuel_storage_amount=500.0)
         registries = _make_mock_registries(fuel_tank_amount=500.0)
-        overflow = facility.add_fuel(700.0, registries)
-        assert facility.get_fuel_storage() == 500.0
+        overflow = facility.add_consumable("fuel", 700.0, registries)
+        assert facility.get_consumable_storage("fuel") == 500.0
         assert overflow == 200.0
 
     def test_adds_to_existing_fuel(self):
-        """add_fuel() should add to existing fuel level."""
+        """add_consumable('fuel', ...) should add to existing fuel level."""
         facility = _make_fuel_facility(
             fuel_storage_amount=500.0,
             consumable_levels={"fuel": 200.0},
         )
         registries = _make_mock_registries(fuel_tank_amount=500.0)
-        overflow = facility.add_fuel(100.0, registries)
-        assert facility.get_fuel_storage() == 300.0
+        overflow = facility.add_consumable("fuel", 100.0, registries)
+        assert facility.get_consumable_storage("fuel") == 300.0
         assert overflow == 0.0
 
     def test_partial_overflow_when_near_capacity(self):
-        """add_fuel() returns overflow when adding more than remaining space."""
+        """add_consumable('fuel', ...) returns overflow when adding more than remaining space."""
         facility = _make_fuel_facility(
             fuel_storage_amount=500.0,
             consumable_levels={"fuel": 450.0},
         )
         registries = _make_mock_registries(fuel_tank_amount=500.0)
-        overflow = facility.add_fuel(100.0, registries)
-        assert facility.get_fuel_storage() == 500.0
+        overflow = facility.add_consumable("fuel", 100.0, registries)
+        assert facility.get_consumable_storage("fuel") == 500.0
         assert overflow == 50.0
 
     def test_zero_capacity_returns_all_as_overflow(self):
-        """add_fuel() with zero max storage returns all fuel as overflow."""
+        """add_consumable('fuel', ...) with zero max storage returns all fuel as overflow."""
         facility = PlanetaryFacility(
             instance_id="no-tank",
             design_id="basic",
@@ -402,38 +394,38 @@ class TestAddFuel:
         hull_comp = MagicMock()
         hull_comp.abilities = {}
         registries.components.get = lambda cid: hull_comp
-        overflow = facility.add_fuel(100.0, registries)
-        assert facility.get_fuel_storage() == 0.0
+        overflow = facility.add_consumable("fuel", 100.0, registries)
+        assert facility.get_consumable_storage("fuel") == 0.0
         assert overflow == 100.0
 
 
 class TestWithdrawFuel:
-    """Test PlanetaryFacility.withdraw_fuel()."""
+    """Test PlanetaryFacility.withdraw_consumable('fuel', ...)."""
 
     def test_withdraws_available_fuel(self):
-        """withdraw_fuel() should return requested amount when available."""
+        """withdraw_consumable('fuel', ...) should return requested amount when available."""
         facility = _make_fuel_facility(consumable_levels={"fuel": 300.0})
-        withdrawn = facility.withdraw_fuel(100.0)
+        withdrawn = facility.withdraw_consumable("fuel", 100.0)
         assert withdrawn == 100.0
-        assert facility.get_fuel_storage() == 200.0
+        assert facility.get_consumable_storage("fuel") == 200.0
 
     def test_withdraws_all_when_requesting_more(self):
-        """withdraw_fuel() should return actual amount when requesting more than available."""
+        """withdraw_consumable('fuel', ...) should return actual amount when requesting more than available."""
         facility = _make_fuel_facility(consumable_levels={"fuel": 50.0})
-        withdrawn = facility.withdraw_fuel(100.0)
+        withdrawn = facility.withdraw_consumable("fuel", 100.0)
         assert withdrawn == 50.0
-        assert facility.get_fuel_storage() == 0.0
+        assert facility.get_consumable_storage("fuel") == 0.0
 
     def test_returns_zero_when_empty(self):
-        """withdraw_fuel() returns 0.0 when facility has no fuel."""
+        """withdraw_consumable('fuel', ...) returns 0.0 when facility has no fuel."""
         facility = _make_fuel_facility()
-        withdrawn = facility.withdraw_fuel(100.0)
+        withdrawn = facility.withdraw_consumable("fuel", 100.0)
         assert withdrawn == 0.0
-        assert facility.get_fuel_storage() == 0.0
+        assert facility.get_consumable_storage("fuel") == 0.0
 
     def test_exact_withdrawal(self):
-        """withdraw_fuel() works correctly for exact amount available."""
+        """withdraw_consumable('fuel', ...) works correctly for exact amount available."""
         facility = _make_fuel_facility(consumable_levels={"fuel": 100.0})
-        withdrawn = facility.withdraw_fuel(100.0)
+        withdrawn = facility.withdraw_consumable("fuel", 100.0)
         assert withdrawn == 100.0
-        assert facility.get_fuel_storage() == 0.0
+        assert facility.get_consumable_storage("fuel") == 0.0

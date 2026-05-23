@@ -110,6 +110,10 @@ class TestSuperweaponAbilityStats:
 class TestSuperweaponAbilityUIRows:
     """Test that all superweapon abilities return proper UI rows."""
 
+    # PROJ-480 Task 1.26: this parametrize intentionally uses `.items()`
+    # (not `.keys()` like the 9 peer parametrizations) because the test
+    # asserts against `expected_value` from the registry; converting to
+    # `.keys()` would force a second registry lookup inside the body.
     @pytest.mark.parametrize("ability_name,expected_value", SUPERWEAPON_ABILITIES.items())
     def test_get_ui_rows_returns_superweapon_row(self, mock_component, ability_name, expected_value):
         """Each ability should return a UI row with correct label and value."""

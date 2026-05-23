@@ -33,33 +33,13 @@ def _patched_saves_tmpdir():
     shutil.rmtree(tmpdir, ignore_errors=True)
 
 
-class MockGameSession:
-    """Mock GameSession for testing save operations."""
-
-    def __init__(self, turn_number=1, num_empires=2):
-        self.config = GameConfig()
-        self.turn_number = turn_number
-        self.save_path = None
-        self.systems = [MagicMock()]
-
-        self.empires = []
-        for i in range(num_empires):
-            empire = MagicMock()
-            empire.id = i
-            empire.name = f"Empire {i}"
-            self.empires.append(empire)
-
-    def to_dict(self):
-        return {
-            'turn_number': self.turn_number,
-            'save_path': self.save_path,
-            'config': self.config.to_dict(),
-            'galaxy': {'systems': {}, 'warp_lanes': [], 'radius': 4000},
-            'empires': [{'id': e.id, 'name': e.name, 'color': (0, 0, 255),
-                         'colony_ids': [], 'fleets': [], 'built_ship_designs': []}
-                        for e in self.empires],
-            'human_player_ids': [0, 1]
-        }
+# PROJ-479 Task 6.1 (HLP-001): MockGameSession moved to
+# tests/unit/strategy/save_game_service/conftest.py. The canonical version
+# accepts an optional `config=` kwarg this file doesn't pass, but the default
+# `GameConfig()` is equivalent.
+from tests.unit.strategy.save_game_service.conftest import (  # noqa: E402
+    MockGameSession,
+)
 
 
 class TestSaveSelectionTurnList:

@@ -5,8 +5,21 @@ Shared fixtures for pathfinding tests.
 import pytest
 from unittest.mock import MagicMock
 
-from game.core.hex_math import HexCoord
+from game.core.hex_math import HexCoord, hex_linedraw
 from game.strategy.data.fleet import Fleet
+from game.strategy.services.galaxy_pathfinding_service import GalaxyPathfindingService
+
+
+# PROJ-480 Task 1.19: shared pre-PROJ-414 shim helpers, previously
+# duplicated in test_basic_paths.py and test_edge_cases.py.
+def find_path_deep_space(start, end):
+    """Test helper preserving the pre-PROJ-414 shim signature."""
+    return hex_linedraw(start, end)
+
+
+def find_path_interstellar(start_system, end_system, galaxy):
+    """Test helper preserving the pre-PROJ-414 shim signature."""
+    return GalaxyPathfindingService(galaxy).find_path_interstellar(start_system, end_system)
 
 
 @pytest.fixture

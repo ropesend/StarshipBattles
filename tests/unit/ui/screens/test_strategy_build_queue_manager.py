@@ -514,49 +514,11 @@ class TestProj410TurnBoundaryRebind:
         manager = StrategyBuildQueueManager(mock_screen)
         return manager, mock_screen, empire_1, empire_2, active
 
-    def test_open_after_active_player_change_calls_on_active_player_changed(self):
-        """When the active empire changed since the last open, the manager
-        must call cached_screen.on_active_player_changed() before reopening.
-
-        FAILS today: the manager has no last-active-empire tracking and
-        never calls on_active_player_changed(). Phase 4 Task 4.2.
-        """
-        manager, screen, empire_1, empire_2, active = self._two_empire_screen()
-
-        # Pre-populate cached BQ screen as if first open already happened
-        # under empire_1.
-        cached_screen = MagicMock()
-        cached_screen.on_active_player_changed = MagicMock()
-        screen.build_queue_screen = cached_screen
-
-        # Simulate a planet selection owned by empire_1, first reopen.
-        from game.strategy.data.planet import Planet
-        planet_e1 = MagicMock(spec=Planet)
-        planet_e1.owner_id = 1
-        planet_e1.name = "Empire 1 Planet"
-        screen.selected_object = planet_e1
-        screen._get_object_asset = MagicMock(return_value=None)
-        screen.world.system_for_object.return_value = None
-
-        with patch("game.ui.screens.strategy_build_queue_manager.BuildQueueScreen"), \
-             patch("game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader"), \
-             patch("game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter"), \
-             patch("game.ui.screens.strategy_build_queue_manager.BuildQueuePortraitLoader"), \
-             patch("game.ui.screens.strategy_build_queue_manager.is_planet", return_value=True):
-            # First open under empire_1.
-            manager.on_build_yard_click()
-
-            # Active empire flips to empire_2 (turn advance).
-            active["empire"] = empire_2
-            planet_e2 = MagicMock(spec=Planet)
-            planet_e2.owner_id = 2
-            planet_e2.name = "Empire 2 Planet"
-            screen.selected_object = planet_e2
-
-            # Second open under empire_2.
-            manager.on_build_yard_click()
-
-        cached_screen.on_active_player_changed.assert_called_once()
+    # PROJ-479 Task 1.13: `test_open_after_active_player_change_calls_on_active_player_changed`
+    # was merged into `test_issue17_player_turn_change_flush_invokes_invalidate_widget_caches`
+    # below — both did the same flip-empire-then-call-twice + assert
+    # on_active_player_changed.assert_called_once() pattern. The kept test
+    # carries the additional Issue #17 invalidate-widget-cache documentation.
 
     def test_open_rebinds_cached_screen_empire_galaxy_facade_each_open(self):
         """Every _open_build_queue() must rebind cached_screen.empire,

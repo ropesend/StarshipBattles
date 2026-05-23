@@ -32,29 +32,43 @@ class TestTooltipEnrichment:
     """StrategyUI should apply hotkey tooltips to buttons."""
 
     def test_get_tooltip_text_returns_hotkey(self):
-        """_get_tooltip_text returns formatted hotkey hint."""
+        """get_display_text returns the formatted hotkey hint for an action.
+
+        PROJ-478 Phase 2: rewritten to inject bindings rather than asserting
+        against the production ``DEFAULT_KEYBINDINGS_FILE``. The mapping logic
+        is what this test exercises; the production defaults file is exercised
+        by integration tests and by ``test_default_keybindings_file_loads``.
+        """
+        from game.core.input_actions import KeyBinding
+
         mapper = InputMapper()
-        from game.core.paths import Paths
-        mapper.load(Paths.DEFAULT_KEYBINDINGS_FILE)
+        # Seed empties for every action.
+        mapper.load(None)
+        # Inject controlled bindings — covers the three modifier shapes
+        # (none, single-mod, mixed) that the production tooltip code must
+        # render correctly.
+        mapper.set_binding(
+            InputAction.STRATEGY_NEXT_TURN,
+            KeyBinding(key="K_RETURN", modifiers=frozenset()),
+        )
+        mapper.set_binding(
+            InputAction.STRATEGY_OPEN_PLANETS,
+            KeyBinding(key="K_p", modifiers=frozenset({"shift"})),
+        )
+        mapper.set_binding(
+            InputAction.STRATEGY_ZOOM_GALAXY,
+            KeyBinding(key="K_g", modifiers=frozenset({"shift"})),
+        )
 
-        # Test for End Turn button (bound to Enter)
-        display = mapper.get_display_text(InputAction.STRATEGY_NEXT_TURN)
-        assert display == "Enter"
-
-        # Test for Planets button (bound to Shift+P)
-        display = mapper.get_display_text(InputAction.STRATEGY_OPEN_PLANETS)
-        assert display == "Shift+P"
-
-        # Test for zoom galaxy (bound to Shift+G)
-        display = mapper.get_display_text(InputAction.STRATEGY_ZOOM_GALAXY)
-        assert display == "Shift+G"
+        assert mapper.get_display_text(InputAction.STRATEGY_NEXT_TURN) == "Enter"
+        assert mapper.get_display_text(InputAction.STRATEGY_OPEN_PLANETS) == "Shift+P"
+        assert mapper.get_display_text(InputAction.STRATEGY_ZOOM_GALAXY) == "Shift+G"
 
     def test_unbound_actions_return_empty_string(self):
         """Unbound actions should return empty string for tooltip."""
         mapper = InputMapper()
-        from game.core.paths import Paths
-        mapper.load(Paths.DEFAULT_KEYBINDINGS_FILE)
+        # Empty load -> every action unbound; no dependency on production
+        # defaults file.
+        mapper.load(None)
 
-        # detail_panel.build is intentionally unbound in defaults
-        display = mapper.get_display_text(InputAction.DETAIL_PANEL_BUILD)
-        assert display == ""
+        assert mapper.get_display_text(InputAction.DETAIL_PANEL_BUILD) == ""

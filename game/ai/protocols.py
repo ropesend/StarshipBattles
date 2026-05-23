@@ -25,6 +25,10 @@ from typing import (
 
 from game.core.protocols import _has_attrs
 
+if TYPE_CHECKING:
+    from game.core.constants import AttackType
+    from game.core.math import Vector2
+
 
 # =============================================================================
 # Grid Entity Protocol (Combat entities with position and team)
@@ -39,7 +43,7 @@ class IGridEntity(Protocol):
     in spatial combat calculations (distance, targeting, collision).
     """
     @property
-    def position(self) -> Any:
+    def position(self) -> "Vector2":
         """Entity's position (Vector2)."""
         ...
 
@@ -72,7 +76,7 @@ class IProjectile(IGridEntity, Protocol):
     Used by targeting systems to identify interceptable projectiles.
     """
     @property
-    def type(self) -> Any:
+    def type(self) -> "AttackType":
         """AttackType enum indicating projectile category."""
         ...
 

@@ -15,11 +15,12 @@ Turn Integration:
 """
 
 from dataclasses import dataclass
-from typing import Any, List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING
 
 from game.strategy.interfaces.engines import IEnvironmentalHazardEngine
 
 if TYPE_CHECKING:
+    from game.core.protocols.strategy_mutators import IShipInstanceMutator
     from game.strategy.data.fleet import Fleet
 
 
@@ -62,7 +63,7 @@ class EnvironmentalHazardEngine(IEnvironmentalHazardEngine):
         """
         self._ship_mutator = ship_mutator
 
-    def _get_ship_mutator(self) -> Any:
+    def _get_ship_mutator(self) -> "IShipInstanceMutator":
         if self._ship_mutator is None:
             from game.strategy.services.ship_instance_write_service import (
                 ShipInstanceWriteService,

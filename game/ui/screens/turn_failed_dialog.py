@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any
 
 import pygame
 import pygame_gui
+from pygame_gui.elements import UIButton
 
 from game.core.exceptions import EnginePhaseError, TurnFailedError
 from game.ui.screens.strategy_modal_window import DismissableModalDialog
@@ -94,9 +95,10 @@ class TurnFailedDialog(DismissableModalDialog):
             window_manager=window_manager,
         )
 
+        self._dismiss_button: UIButton | None = None
+
         # Bypass-init shortcut for tests that skip UIWindow.__init__.
         if getattr(self, "_window_init_bypassed", False):
-            self._dismiss_button = None  # type: ignore[assignment]
             return
 
         body_rect = pygame.Rect(10, 10, _DIALOG_WIDTH - 30, _DIALOG_HEIGHT - 90)

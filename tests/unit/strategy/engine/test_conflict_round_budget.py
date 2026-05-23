@@ -32,23 +32,21 @@ from game.strategy.engine.conflict_resolution_engine import (
 )
 
 
-def _make_fleet(fleet_id: int, owner_id: int, location, speed: float, orders=None):
-    """Build a MagicMock fleet that ducktypes as `game.strategy.data.fleet.Fleet`.
+# PROJ-479 Task 5.1 (DUP-001): _make_fleet moved to tests/conftest.py.
+# Local wrapper preserves the `orders=None` kwarg semantic.
+from tests.conftest import _make_mock_fleet as _make_mock_fleet_canonical  # noqa: E402
 
-    The trigger predicate only reads `fleet.id`, `fleet.location`,
-    `fleet.speed`, and (indirectly via callers) `fleet.ships` /
-    `fleet.owner_id`. A MagicMock is sufficient — no real `Fleet`
-    construction needed.
-    """
-    fleet = MagicMock()
-    fleet.id = fleet_id
-    fleet.owner_id = owner_id
-    fleet.location = location
-    fleet.speed = speed
-    fleet.orders = list(orders) if orders else []
-    fleet.ships = [MagicMock()]
-    fleet.task_forces = []
-    return fleet
+
+def _make_fleet(fleet_id: int, owner_id: int, location, speed: float, orders=None):
+    """Local thin wrapper delegating to canonical conftest helper.
+    Preserves the `orders=None → []` semantic this file used."""
+    return _make_mock_fleet_canonical(
+        fleet_id=fleet_id,
+        owner_id=owner_id,
+        location=location,
+        speed=speed,
+        orders=list(orders) if orders else [],
+    )
 
 
 def _make_engine() -> ConflictResolutionEngine:

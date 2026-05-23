@@ -18,7 +18,7 @@ def _is_component_like(item) -> bool:
     return hasattr(item, 'id')
 
 
-def normalize_selection(new_selection, ship) -> Any:
+def normalize_selection(new_selection, ship) -> list[tuple]:
     """Normalize selection items to (layer, index, component) tuples.
 
     Args:
@@ -111,7 +111,7 @@ def process_selection_change(current_selection, new_selection, ship, append=Fals
         return norm_selection, False
 
 
-def get_primary_selection(selected_components) -> Any:
+def get_primary_selection(selected_components) -> tuple | None:
     """Get the primary (last) selected component.
 
     Args:

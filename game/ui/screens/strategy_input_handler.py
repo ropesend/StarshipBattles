@@ -155,7 +155,7 @@ class StrategyInputHandler:
         if self._fleet_router.handle_detail_action(action):
             return
 
-    def handle_click(self, mx, my, button) -> Any:
+    def handle_click(self, mx, my, button) -> bool:
         """Handle mouse clicks.
 
         Args:

@@ -58,11 +58,13 @@ def _make_fleet(
     return fleet
 
 
+# PROJ-479 Task 5.4 (DUP-005): _make_empire moved to engine/conftest.py
+# Local wrapper preserves the empire_id=0 default + fleets-only positional API.
+from .conftest import make_mock_empire as _make_mock_empire_canonical  # noqa: E402
+
+
 def _make_empire(empire_id: int = 0, fleets=None):
-    empire = MagicMock()
-    empire.id = empire_id
-    empire.fleets = list(fleets or [])
-    return empire
+    return _make_mock_empire_canonical(empire_id=empire_id, fleets=list(fleets or []))
 
 
 def _make_galaxy(*, system=None, has_get_system_at_location: bool = True):

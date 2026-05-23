@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, FrozenSet, List, Optional
+from typing import Any, Dict, FrozenSet, List, Optional
 
 
 class InputAction(str, Enum):
@@ -315,7 +315,7 @@ class KeyBinding:
         return self.key.replace("K_", "")
 
     @classmethod
-    def from_dict(cls, data: dict) -> Optional["KeyBinding"]:
+    def from_dict(cls, data: dict[str, Any]) -> Optional["KeyBinding"]:
         """Create a KeyBinding from a JSON-style dict.
 
         Args:
@@ -332,7 +332,7 @@ class KeyBinding:
             modifiers=frozenset(data.get("modifiers", [])),
         )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Serialize to a JSON-compatible dict.
 
         Returns:

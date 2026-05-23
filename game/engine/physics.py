@@ -55,28 +55,28 @@ class PhysicsBody:
         self.velocity = Vector2(0, 0)
         self.acceleration = Vector2(0, 0)
         self.angle = angle  # Degrees
-        self.angular_velocity = 0  # Degrees per second
+        self.angular_velocity: float = 0.0  # Degrees per second
         self.mass = 1.0  # Default, will be overridden by ship stats
         self.drag = PhysicsConfig.DEFAULT_LINEAR_DRAG
         self.angular_drag = PhysicsConfig.DEFAULT_ANGULAR_DRAG
 
     @property
     def x(self) -> float:
-        return self.position.x
+        return float(self.position.x)
 
     @x.setter
-    def x(self, value) -> None:
+    def x(self, value: float) -> None:
         self.position.x = value
 
     @property
     def y(self) -> float:
-        return self.position.y
+        return float(self.position.y)
 
     @y.setter
-    def y(self, value) -> None:
+    def y(self, value: float) -> None:
         self.position.y = value
 
-    def update(self, dt=1.0) -> None:
+    def update(self, dt: float = 1.0) -> None:
         """
         Update physics. dt is ignored (1 tick = fixed step).
         NOTE: Ship class overrides this with its own cycle-based mixins.

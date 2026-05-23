@@ -244,8 +244,12 @@ def test_process_colonize_seeds_stockpile_from_design_initial_stockpile():
     ):
         proc.get_handler(OrderType.COLONIZE).execute_action_order(fleet, empire, galaxy, component_registry={})
 
+    # PROJ-480 Task 4.10: per-key assertion. Adding a new resource to
+    # the colony-pod payload should not break this test — it only fails
+    # if the historically-tracked metals/organics amounts drift.
     add_calls = {c.args[0]: c.args[1] for c in planet.add_to_stockpile.call_args_list}
-    assert add_calls == {"metals": 50.0, "organics": 25.0}
+    assert add_calls.get("metals") == 50.0
+    assert add_calls.get("organics") == 25.0
 
 
 # ---------------------------------------------------------------------------

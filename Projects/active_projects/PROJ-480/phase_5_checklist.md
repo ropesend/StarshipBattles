@@ -80,7 +80,7 @@
 **File:** `tests/unit/strategy/engine/test_fleet_transfer_extended.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_fleet_transfer_extended.py`
 
-- [ ] Documented as acceptable per Phase 1 — keep as-is. _(verification: VERIFIED but tests document the transfer formula through assertions, valid integration-level pattern.)_
+- [x] Documented as acceptable per Phase 1 — keep as-is. _(verification: VERIFIED but tests document the transfer formula through assertions, valid integration-level pattern.)_
 
 ### Task 5.11: test_workflow.py (research) — conditional branch on RNG outcome
 **File:** `tests/integration/research_workflow/test_workflow.py`
@@ -108,7 +108,7 @@
 **File:** `tests/unit/strategy/turn_engine/test_turn_engine_lazy_properties.py`
 **Tests:** `pytest tests/unit/strategy/turn_engine/test_turn_engine_lazy_properties.py`
 
-- [ ] _(coordination note: addressed via Task 3.21 in PROJ-479 Phase 3 CAT-6 — split into `tests/static_guards/` directory.)_
+- [ ] _(coordination note: PROJ-480 originally expected Task 3.21 in PROJ-479 Phase 3 CAT-6 to split this into tests/static_guards/. That PROJ-479 task was NOT completed — it's in the NEEDS_REWORK list per PROJ-479/phase_3_checklist.md:156-162. Both the inspect.getsource() guard (lines 219-251) and the AST-parsing guard (lines 262-288) are still present in test_turn_engine_lazy_properties.py. Re-pending.)_
 
 ### Task 5.15: test_order_processor_facade.py — meta-test imports
 **File:** `tests/unit/strategy/engine/order_handlers/test_order_processor_facade.py`
@@ -135,7 +135,7 @@
 **File:** `tests/unit/strategy/engine/test_action_execution_engine.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_action_execution_engine.py`
 
-- [ ] _(coordination note: addressed via Task 1.28 in PROJ-480 Phase 1 — parametrize on tick.)_
+- [x] _(coordination note: addressed via Task 1.28 in PROJ-480 Phase 1 — parametrize on tick.)_ — Phase 1 Task 1.28 done.
 
 ---
 

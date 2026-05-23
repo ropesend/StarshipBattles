@@ -56,7 +56,12 @@ from __future__ import annotations
 #
 # ``OrderType`` is imported from the data layer (not the registry) so
 # this module remains independent of registry init at module load.
+from typing import TYPE_CHECKING
+
 from game.strategy.data.order_types import OrderType
+
+if TYPE_CHECKING:
+    from game.strategy.engine.commands.registry import CommandRegistry
 
 
 class OrderMetadataView:
@@ -73,7 +78,7 @@ class OrderMetadataView:
     """
 
     @staticmethod
-    def _registry():
+    def _registry() -> "CommandRegistry":
         """Return the seeded ``command_registry`` (lazy import).
 
         The deferred import is the single linchpin that keeps the

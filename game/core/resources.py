@@ -82,7 +82,7 @@ class ResourceCatalog:
         self._definitions: Dict[str, ResourceDefinition] = dict(definitions)
 
     @classmethod
-    def from_json(cls, file_path: str = None) -> 'ResourceCatalog':
+    def from_json(cls, file_path: Optional[str] = None) -> 'ResourceCatalog':
         """Load a ResourceCatalog from a JSON file.
 
         Args:

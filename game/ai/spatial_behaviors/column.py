@@ -27,7 +27,7 @@ class ColumnBehavior(SpatialBehavior):
         self,
         ship: Any,
         group_ships: List[Any],
-        **kwargs,
+        **kwargs: Any,
     ) -> Optional[Vector2]:
         """Compute position behind the leader in column.
 

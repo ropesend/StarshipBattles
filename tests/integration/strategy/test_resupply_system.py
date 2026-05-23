@@ -297,7 +297,7 @@ class TestRangeEqualization:
         # Ship B should stay at 100 (target is 100, already there)
         assert ship_b.get_current_resource('fuel') == pytest.approx(100.0)
         # Facility should have 0 fuel left (400 transferred to Ship A)
-        assert facility.get_fuel_storage() == pytest.approx(0.0)
+        assert facility.get_consumable_storage("fuel") == pytest.approx(0.0)
 
     def test_range_equalization_limited_fuel(self):
         """When fuel is limited, ships get proportional amounts for equal range.
@@ -341,7 +341,7 @@ class TestRangeEqualization:
         # Ship B: 50 fuel (10 hexes × 5 cost/hex)
         assert ship_b.get_current_resource('fuel') == pytest.approx(50.0)
         # Facility depleted
-        assert facility.get_fuel_storage() == pytest.approx(0.0)
+        assert facility.get_consumable_storage("fuel") == pytest.approx(0.0)
 
     def test_enemy_fleet_not_resupplied(self):
         """Fleets belonging to a different owner than the planet get nothing."""
@@ -372,7 +372,7 @@ class TestRangeEqualization:
         # Ship should NOT have been resupplied
         ship.resupply.assert_not_called()
         # Fuel should remain in facility
-        assert facility.get_fuel_storage() == pytest.approx(500.0)
+        assert facility.get_consumable_storage("fuel") == pytest.approx(500.0)
 
     def test_fleet_already_full_no_transfer(self):
         """Fleet at full fuel receives no additional fuel."""
@@ -398,4 +398,4 @@ class TestRangeEqualization:
         resupply_engine.process_fleet_resupply(1, [empire], galaxy)
 
         # Fuel in facility should not change (no deficit to fill)
-        assert facility.get_fuel_storage() == pytest.approx(500.0)
+        assert facility.get_consumable_storage("fuel") == pytest.approx(500.0)

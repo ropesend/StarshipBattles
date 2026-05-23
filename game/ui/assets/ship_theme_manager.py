@@ -39,7 +39,7 @@ from __future__ import annotations
 import logging
 import os
 import threading
-from typing import Optional
+from typing import Optional, Sequence
 
 import pygame
 
@@ -238,7 +238,7 @@ class ShipThemeManager:
     @staticmethod
     def _validate_image_size(
         path: str,
-        expected: Optional[object],
+        expected: Sequence[int] | None,
         theme_name: str,
         ship_class: str,
         kind: str,
@@ -251,7 +251,7 @@ class ShipThemeManager:
         if expected is None:
             return
         try:
-            ew, eh = int(expected[0]), int(expected[1])  # type: ignore[index]
+            ew, eh = int(expected[0]), int(expected[1])
         except (TypeError, ValueError, IndexError):
             return
         try:

@@ -20,6 +20,9 @@ from game.strategy.engine.commands import IssueColonizeCommand, QueueColonizeMis
 
 if TYPE_CHECKING:
     from game.strategy.facade.strategy_session_facade import StrategySessionFacade
+    from game.ui.renderer.camera import Camera
+    from game.strategy.data.star_system import StarSystem
+    from game.core.hex_math import HexCoord
 
 
 class ColonizationSystem:
@@ -37,11 +40,11 @@ class ColonizationSystem:
         self.facade = facade
 
     @property
-    def camera(self) -> Any:
+    def camera(self) -> "Camera":
         return self.scene.camera
 
     @property
-    def hex_size(self) -> Any:
+    def hex_size(self) -> float:
         return self.scene.hex_size
 
     def on_colonize_click(self, fleet) -> dict | None:
@@ -217,7 +220,7 @@ class ColonizationSystem:
             logger.warning(f"Colonize mission failed: {result.message}")
             return {'type': 'error', 'message': result.message}
 
-    def request_colonize_order(self, fleet, planet) -> Any:
+    def request_colonize_order(self, fleet, planet) -> "dict[str, Any] | None":
         """
         Request colonization order from UI (e.g. detailed panel button).
 
@@ -239,7 +242,7 @@ class ColonizationSystem:
         else:
             return self.on_colonize_click(fleet)
 
-    def _get_system_at_hex(self, hex_coord) -> Any:
+    def _get_system_at_hex(self, hex_coord) -> "StarSystem | None":
         """
         Find system at hex coordinate.
 
@@ -253,7 +256,7 @@ class ColonizationSystem:
         # (radius=50 pathfinder semantics). Caller reads the live .planets.
         return self.scene.world.system_at_map_hex(hex_coord)
 
-    def _resolve_planet_global_hex(self, planet) -> Any:
+    def _resolve_planet_global_hex(self, planet) -> "HexCoord | None":
         """
         Resolve a planet's global hex coordinate.
 

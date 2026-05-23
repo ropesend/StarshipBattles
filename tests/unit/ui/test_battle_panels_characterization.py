@@ -432,40 +432,26 @@ class TestBattleControlPanel:
         font.render.return_value = rendered
         return patch.object(mod, "get_default_font", return_value=font)
 
-    def test_draw_battle_over_team0_alive_renders_team1_wins_text(
-        self, battle_panels_module
+    @pytest.mark.parametrize(
+        "ships_config,expected_text",
+        [
+            ([("A", 0, True)], "TEAM 1 WINS"),
+            ([("A", 1, True)], "TEAM 2 WINS"),
+            ([("A", 0, False), ("B", 1, False)], "DRAW"),
+        ],
+        ids=["team1_wins", "team2_wins", "draw"],
+    )
+    def test_draw_battle_over_renders_correct_winner_text(
+        self, battle_panels_module, ships_config, expected_text
     ):
         mod, mp = battle_panels_module
-        ships = [_make_ship("A", team_id=0, alive=True)]
-        panel, screen = self._draw_setup(mod, mp, ships, is_over=True)
-        with self._stub_fonts(mod) as get_font:
-            panel.draw(screen)
-            # First render call carries winner text
-            font = get_font.return_value
-            calls = [c[0][0] for c in font.render.call_args_list]
-            assert any("TEAM 1 WINS" in t for t in calls)
-
-    def test_draw_battle_over_team1_alive_renders_team2_wins_text(
-        self, battle_panels_module
-    ):
-        mod, mp = battle_panels_module
-        ships = [_make_ship("A", team_id=1, alive=True)]
+        ships = [_make_ship(name, team_id=t, alive=alive) for name, t, alive in ships_config]
         panel, screen = self._draw_setup(mod, mp, ships, is_over=True)
         with self._stub_fonts(mod) as get_font:
             panel.draw(screen)
             font = get_font.return_value
             calls = [c[0][0] for c in font.render.call_args_list]
-            assert any("TEAM 2 WINS" in t for t in calls)
-
-    def test_draw_battle_over_no_alive_renders_draw_text(self, battle_panels_module):
-        mod, mp = battle_panels_module
-        ships = [_make_ship("A", team_id=0, alive=False), _make_ship("B", team_id=1, alive=False)]
-        panel, screen = self._draw_setup(mod, mp, ships, is_over=True)
-        with self._stub_fonts(mod) as get_font:
-            panel.draw(screen)
-            font = get_font.return_value
-            calls = [c[0][0] for c in font.render.call_args_list]
-            assert any("DRAW" in t for t in calls)
+            assert any(expected_text in t for t in calls)
 
     def test_draw_battle_ongoing_sets_end_battle_early_rect_not_battle_end_rect(
         self, battle_panels_module

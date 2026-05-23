@@ -103,7 +103,7 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
 
         return ValidationResult.success()
 
-    def _resolve_design_data(self, session: 'GameSession', entity, design_id: str):
+    def _resolve_design_data(self, session: 'GameSession', entity, design_id: str) -> "dict | None":
         """PROJ-427 Phase 3: resolve design data via the per-empire
         ``DesignCatalog`` exposed on ``session.services``. Returns the
         data dict (or ``None`` if missing); no filesystem I/O.

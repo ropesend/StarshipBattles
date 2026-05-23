@@ -6,7 +6,7 @@ import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 from PIL import Image
 
@@ -102,17 +102,18 @@ def ensure_component_derivatives(
     )
 
 
-def _read_manifest(path: Path) -> dict:
+def _read_manifest(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        result: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+        return result
     except json.JSONDecodeError:
         logger.warning("Ignoring invalid component derivative manifest: %s", path)
         return {}
 
 
-def _write_manifest(path: Path, manifest: dict) -> None:
+def _write_manifest(path: Path, manifest: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temp_path = path.with_suffix(path.suffix + ".tmp")
     temp_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
@@ -130,7 +131,7 @@ def _sha256(path: Path) -> str:
 def _source_fast_path_hit(
     root: Path,
     source_path: Path,
-    source_entry: dict,
+    source_entry: dict[str, Any],
     sizes: tuple[int, ...],
     source_stat: os.stat_result,
 ) -> bool:

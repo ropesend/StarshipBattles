@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from .ship_component_manager import ShipComponentManager
     from .ship_combat_manager import ShipCombatManager
     from .ship_combat_engine import ShipCombatEngine
+    from .layer_data import LayerData
 
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
@@ -49,6 +50,12 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         ShipStatQuerier: Ability totals, sensor/ECM scores
         ShipValidatorHelper: Design validation
     """
+
+    # PROJ-483 Phase 5 (Task 5.4): class-level annotation for `layers`, which
+    # is materialised at runtime by ShipLayerManager.initialize_layers(). The
+    # annotation lets mypy see the attribute on instances without forcing
+    # every callsite to use `# type: ignore[attr-defined]`.
+    layers: Dict[LayerType, "LayerData"]
 
     def __init__(self, name: str, x: float, y: float, color: Union[Tuple[int, int, int], List[int]],
                  team_id: int = 0, ship_class: str = "Escort", theme_id: str = "Federation",

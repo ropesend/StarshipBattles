@@ -7,132 +7,34 @@ from game.simulation.components.component import create_component
 from game.simulation.components.modifier_manager import ModifierManager
 
 
-class TestModifierManagerAddRemove:
-    """Test modifier add/remove operations."""
+class TestComponentModifierFacade:
+    """Smoke tests for the Component-level facade delegating to ModifierManager.
 
-    def test_add_modifier_success(self, fresh_registries):
-        """add_modifier should add modifier to component."""
+    PROJ-479 Task 1.5: the bulk legacy class tests (add/remove/query/effects/
+    stat-summary) duplicated the stateful ModifierManager tests below; the
+    facade delegation is now covered by these few smoke tests plus
+    test_component_clone_propagates_ship, test_component_stats_calculator,
+    test_size_mount_sub_one, and test_facing_angle_modifier which assert the
+    recalc side effect of Component.add_modifier.
+    """
+
+    def test_facade_add_modifier_round_trips(self, fresh_registries):
         railgun = create_component('railgun', registries=fresh_registries)
-
-        result = railgun.add_modifier('simple_size_mount', 2.0)
-
-        assert result is True
+        assert railgun.add_modifier('simple_size_mount', 2.0) is True
         assert railgun.get_modifier('simple_size_mount') is not None
 
-    def test_add_modifier_nonexistent(self, fresh_registries):
-        """add_modifier should return False for nonexistent modifier."""
-        railgun = create_component('railgun', registries=fresh_registries)
-
-        result = railgun.add_modifier('nonexistent_modifier', 1.0)
-
-        assert result is False
-
-    def test_add_modifier_replaces_existing(self, fresh_registries):
-        """add_modifier should replace existing modifier with same ID."""
-        railgun = create_component('railgun', registries=fresh_registries)
-
-        railgun.add_modifier('simple_size_mount', 2.0)
-        railgun.add_modifier('simple_size_mount', 3.0)
-
-        # Should only have one modifier
-        count = len([m for m in railgun.modifiers if m.definition.id == 'simple_size_mount'])
-        assert count == 1
-
-        # Should have the new value
-        mod = railgun.get_modifier('simple_size_mount')
-        assert mod.value == 3.0
-
-    def test_remove_modifier(self, fresh_registries):
-        """remove_modifier should remove modifier from component."""
+    def test_facade_remove_modifier(self, fresh_registries):
         railgun = create_component('railgun', registries=fresh_registries)
         railgun.add_modifier('simple_size_mount', 2.0)
-
         railgun.remove_modifier('simple_size_mount')
-
         assert railgun.get_modifier('simple_size_mount') is None
 
-
-class TestModifierManagerQuery:
-    """Test modifier querying methods."""
-
-    def test_get_modifier_returns_matching(self, fresh_registries):
-        """get_modifier should return matching modifier."""
-        railgun = create_component('railgun', registries=fresh_registries)
-        railgun.add_modifier('simple_size_mount', 2.0)
-
-        mod = railgun.get_modifier('simple_size_mount')
-
-        assert mod is not None
-        assert mod.definition.id == 'simple_size_mount'
-
-    def test_get_modifier_returns_none_for_missing(self, fresh_registries):
-        """get_modifier should return None for missing modifier."""
-        railgun = create_component('railgun', registries=fresh_registries)
-
-        mod = railgun.get_modifier('simple_size_mount')
-
-        assert mod is None
-
-
-class TestModifierManagerEffects:
-    """Test modifier effect aggregation."""
-
-    def test_get_all_modifier_effects_empty(self, fresh_registries):
-        """get_all_modifier_effects should return empty list for no modifiers."""
-        railgun = create_component('railgun', registries=fresh_registries)
-        railgun.modifiers.clear()
-
-        effects = railgun.get_all_modifier_effects()
-
-        assert effects == []
-
-    def test_get_all_modifier_effects_with_modifiers(self, fresh_registries):
-        """get_all_modifier_effects should return effects from all modifiers."""
-        railgun = create_component('railgun', registries=fresh_registries)
-        railgun.add_modifier('simple_size_mount', 2.0)
-
-        effects = railgun.get_all_modifier_effects()
-
-        assert len(effects) > 0
-
-
-class TestModifierManagerStatSummary:
-    """Test stat summary generation."""
-
-    def test_get_modifier_stat_summary_empty(self, fresh_registries):
-        """get_modifier_stat_summary should return empty dict for no modifiers."""
-        railgun = create_component('railgun', registries=fresh_registries)
-        railgun.modifiers.clear()
-
-        summary = railgun.get_modifier_stat_summary()
-
-        assert summary == {}
-
-    def test_get_modifier_stat_summary_structure(self, fresh_registries):
-        """get_modifier_stat_summary should have correct structure."""
-        railgun = create_component('railgun', registries=fresh_registries)
-        railgun.add_modifier('simple_size_mount', 2.0)
-
-        summary = railgun.get_modifier_stat_summary()
-
-        # Should have at least one stat key
-        assert len(summary) > 0
-
-        # Each entry should have expected structure
-        for stat_key, entry in summary.items():
-            assert 'net_value' in entry
-            assert 'operation' in entry
-            assert 'contributors' in entry
-
-    def test_get_modifier_stat_summary_multiplicative_stacking(self, fresh_registries):
-        """get_modifier_stat_summary should reflect multiplicative stacking."""
+    def test_facade_get_all_modifier_effects_and_summary(self, fresh_registries):
         railgun = create_component('railgun', registries=fresh_registries)
         railgun.add_modifier('simple_size_mount', 2.0)
         railgun.add_modifier('hardened_mount', 1.25)
-
+        assert railgun.get_all_modifier_effects()
         summary = railgun.get_modifier_stat_summary()
-
-        # mass_mult should show combined multiplier
         if 'mass_mult' in summary:
             assert summary['mass_mult']['net_value'] == pytest.approx(2.0 * 1.25, abs=0.01)
 

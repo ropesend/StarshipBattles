@@ -204,7 +204,7 @@ class RadiationShieldEditor(PlanetTargetEditor):
             val = self.slider.get_current_value()
             self.lbl_target.set_text(f"Target Shielding: {val:.2f}")
 
-    def _button_handlers(self):
+    def _button_handlers(self) -> dict[UIButton, Callable[[], None]]:
         return {
             self.btn_apply: self._on_apply,
             self.btn_auto: self._set_auto,

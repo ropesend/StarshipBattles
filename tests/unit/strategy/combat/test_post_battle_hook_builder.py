@@ -35,20 +35,57 @@ def test_build_hook_with_empty_inputs_returns_no_op_safe_closure():
 
 
 def test_build_hook_threads_mine_groups_and_engine_ref():
-    """The closure captures `mine_groups` and `engine_ref` for later use."""
+    """The closure must actually exercise the captured mine_groups and
+    engine_ref when invoked — pinning observable behavior, not just the
+    fact that ``build`` returns a callable."""
     builder = PostBattleHookBuilder()
     fleet = MagicMock()
     fleet.id = 1
     fleet.owner_id = 10
     fleet.ships = []
 
-    mine_group = MagicMock()
-    mine_group.id = 99
-    mine_group.owner_id = 10
-    mine_group.ships = []
+    # Mine group with a tactical resolver — the closure should call its
+    # writeback_to_mine_group then delattr the resolver. Use real attributes
+    # rather than MagicMock auto-attrs so delattr is observable.
+    class _StubMineGroup:
+        def __init__(self) -> None:
+            self.id = 99
+            self.owner_id = 10
+            self.ships: list = []
+            self.mines = ["m1"]  # has inventory -> should NOT be pruned
+            self._tactical_resolver = MagicMock()
 
-    engine_ref = []  # mutable one-slot list
+    mine_group = _StubMineGroup()
+
+    # Empty engine_ref => the reboard branch must be skipped (no engine to
+    # call apply_reboard on). Verify this by ensuring the closure does not
+    # raise even though apply_reboard would fail on an empty list.
+    engine_ref: list = []
+
+    # Empire stub so the mine_group prune step has somewhere to look — but
+    # since the mine_group still has inventory, it must remain in
+    # deployed_groups after the hook runs.
+    empire = MagicMock()
+    empire.deployed_groups = [mine_group]
+
     hook = builder.build(
-        [fleet], empires={}, mine_groups=[mine_group], engine_ref=engine_ref,
+        [fleet],
+        empires={10: empire},
+        mine_groups=[mine_group],
+        engine_ref=engine_ref,
     )
-    assert callable(hook)
+
+    outcome = MagicMock()
+    outcome.teams = []
+
+    # Behavioral checks: invoking the hook must drive writeback on the
+    # mine_group resolver and must drop the captured resolver reference.
+    resolver_mock = mine_group._tactical_resolver
+    hook(outcome)
+
+    resolver_mock.writeback_to_mine_group.assert_called_once_with(mine_group)
+    assert not hasattr(mine_group, "_tactical_resolver"), (
+        "Hook should delattr _tactical_resolver after writeback."
+    )
+    # Mine group still has inventory => empire.deployed_groups untouched.
+    assert mine_group in empire.deployed_groups

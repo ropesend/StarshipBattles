@@ -50,6 +50,8 @@ class ComponentService:
                 context={"service": "ComponentService", "parameter": "registry_provider"}
             )
         self._provider = registry_provider
+        # PROJ-489: lazy ModifierService for delegating is_modifier_allowed.
+        self._modifier_service: Any = None
 
     def _get_provider(self) -> IRegistryProvider:
         """Get the registry provider."""
@@ -88,8 +90,9 @@ class ComponentService:
     def is_modifier_allowed(self, mod_id: str, component: Any) -> bool:
         """Check if a modifier is allowed for the given component.
 
-        This checks the modifier's restrictions against the component's
-        type and abilities.
+        PROJ-489: thin delegate to the canonical simulation-layer
+        ``ModifierService.is_modifier_allowed``. This class no longer
+        re-implements the restriction logic.
 
         Args:
             mod_id: The modifier identifier.
@@ -98,35 +101,9 @@ class ComponentService:
         Returns:
             True if the modifier can be applied to the component, False otherwise.
         """
-        mod_def = self.get_modifier_definition(mod_id)
-        if mod_def is None:
-            return False
-
-        # No restrictions means always allowed
-        if not mod_def.restrictions:
-            return True
-
-        restrictions = mod_def.restrictions
-
-        # Check allow_types restriction
-        if 'allow_types' in restrictions:
-            if component.type_str not in restrictions['allow_types']:
-                return False
-
-        # Check deny_types restriction
-        if 'deny_types' in restrictions:
-            if component.type_str in restrictions['deny_types']:
-                return False
-
-        # Check allow_abilities restriction
-        if 'allow_abilities' in restrictions:
-            required = restrictions['allow_abilities']
-            has_ability = False
-            for abil in required:
-                if abil in component.abilities or abil in component.data.get('abilities', {}):
-                    has_ability = True
-                    break
-            if not has_ability:
-                return False
-
-        return True
+        if self._modifier_service is None:
+            from game.simulation.services.modifier_service import ModifierService
+            self._modifier_service = ModifierService(
+                modifier_registry=self.get_modifier_registry()
+            )
+        return self._modifier_service.is_modifier_allowed(mod_id, component)

@@ -287,19 +287,13 @@ class TestPlanetModifierEffectEngineLazyProperty:
             f"TurnEngine.planet_modifier_effect_engine."
         )
 
-    def test_planet_modifier_effect_engine_property_returns_cached_instance(
-        self, fresh_registries
-    ):
-        """The lazy property must construct once and cache."""
-        from game.strategy.engine.planet_modifier_effect_engine import (
-            PlanetModifierEffectEngine,
-        )
-
-        engine = build_test_turn_engine(fresh_registries)
-        first = engine.planet_modifier_effect_engine
-        second = engine.planet_modifier_effect_engine
-        assert isinstance(first, PlanetModifierEffectEngine)
-        assert first is second
+    # PROJ-479 Task 1.11: deleted
+    # `test_planet_modifier_effect_engine_property_returns_cached_instance` —
+    # the 18-test cluster above (`test_*_engine_default`) already exercises
+    # the identical isinstance + identity caching pattern for every other
+    # engine property; adding `planet_modifier_effect_engine` to the
+    # `TestTurnEngineLazyProperties` class via the same pattern would be
+    # the right place if a new variant is needed.
 
 
 class TestNullBattleResolverSymbolAbsent:

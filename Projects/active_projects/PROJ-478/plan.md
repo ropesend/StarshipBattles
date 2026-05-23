@@ -13,16 +13,28 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. CAT-1 Trivial Pass | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. CAT-2 Tests Nothing Real | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. CAT-3 Dead Test Code | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. CAT-1 Trivial Pass | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. CAT-2 Tests Nothing Real | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. CAT-3 Dead Test Code | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Audit remediation (Codex consult 2026-05-23) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-22
-**Active Phase:** Phase 1 (CAT-1 Trivial Pass)
-**Last Action:** Project created from `2026-05-20_210550_test-review` after independent verification
-**Next Action:** Begin Phase 1 tasks
-**Blockers:** None
+**Last Updated:** 2026-05-23
+**Active Phase:** All 4 phases complete
+**Last Action:** Executed Phases 1–3 in a single autonomous pass. Targeted test suite (Phase 1 + Phase 2 + Phase 3 affected files) all green: 4 passed + 1 skipped (test_ship_loading), 63 passed (Phase 2 broader run), 9 passed (build_queue lifecycle scope check).
+**Next Action:** User review + project close. See per-phase Notes sections for full disposition.
+**Blockers:** None.
+**Surfaced issues (require user decision):**
+1. **Phase 1 Task 1.10** — `test_all_ships_match_expected_stats` was a vacuous-pass test pointing to a nonexistent fixture directory `tests/unit/ships/`. Skipped with detailed reason; logged as discovered issue `DI-2026-05-23-002`. Needs either real-ship fixtures created, or a test redesign that loads test-only components from `tests/unit/data/test_components.json`, or deletion.
+2. **Phase 3 Task 3.2** — verification report's premise (PROJ-410 Phase 2 helper not yet implemented) is stale. `VirtualTable.invalidate_widget_caches` exists in production and the 4 affected tests all pass. Did NOT apply skip decorators because doing so would remove legitimate coverage. Recommend closing Task 3.2 as resolved-upstream.
+
+**Manifest path corrections discovered during execution:**
+- `test_strategy_widgets.py` lives under `tests/unit/ui/panels/`, not `tests/unit/ui/screens/`.
+- `test_galaxy_state_encapsulation.py` lives under `tests/unit/strategy/data/`, not `tests/unit/strategy/`.
+- `test_codex_consult_skills.py` source was already at `tests/static_guards/`, not `tests/unit/agent_coordination/`.
+- `test_codex_interagent_discussion_skills.py` source was `tests/unit/tools/`, not `tests/unit/agent_coordination/`.
+- `test_panel_full_open_benchmark.py` source was `tests/performance/`, not `tests/regression/`.
+
 **Line refs refreshed 2026-05-22 post-merge `67116932d`.**
 
 ## Overview

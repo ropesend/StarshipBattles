@@ -16,7 +16,7 @@ def _unique_save_name(prefix: str) -> str:
 class TestQuickstartWithComplexes:
     """Integration tests verifying quickstart creates playable scenario."""
 
-    @pytest.fixture
+    @pytest.fixture(scope="class")
     def full_quickstart_1p(self):
         """Run complete 1P quickstart flow including complex spawning."""
         config = QuickstartBuilder.build_1p_config(
@@ -39,7 +39,7 @@ class TestQuickstartWithComplexes:
         # Cleanup
         shutil.rmtree(save_path, ignore_errors=True)
 
-    @pytest.fixture
+    @pytest.fixture(scope="class")
     def full_quickstart_2p(self):
         """Run complete 2P quickstart flow including complex spawning."""
         config = QuickstartBuilder.build_2p_config(

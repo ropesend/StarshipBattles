@@ -13,14 +13,16 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Consolidate to `ModifierService` canonical | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Consolidate to `ModifierService` canonical | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Audit remediation (Codex consult 2026-05-23) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-22
-**Active Phase:** Phase 1
-**Last Action:** Project created from `Reviews/results/2026-05-20_210635_legacy-audit/` after independent verification
-**Next Action:** Begin Phase 1 tasks
-**Blockers:** None
+**Last Updated:** 2026-05-23
+**Active Phase:** All phases complete
+**Last Action:** Phase 2 (audit remediation — doc drift) complete. Updated `docs/04_SERVICES.md` `ModifierLogicService` section to reflect post-PROJ-489 thin-facade reality; updated `docs/guides/modifier_system.md` (lines 98, 285) and `docs/guides/adding_modifiers.md` (lines 128, 162) so `ModifierManager.add_modifier()` is described as enforcing `allow_types`, `deny_types`, AND `allow_abilities` via delegation to `ModifierService`. All three docs' "Last verified" timestamps bumped to 2026-05-23.
+**Note:** DI-2026-05-23-004 logged for pre-existing `efficient_engines` data bug surfaced by audit (out of scope).
+**Next Action:** None — awaiting user confirmation / commit.
+**Blockers:** None.
 
 ## Overview
 The audit's cross-system analysis identified triplicate modifier-allowed-checking logic across three classes (plus a fourth inline implementation in `ModifierManager.add_modifier`). The simulation-layer `ModifierService` (`game/simulation/services/modifier_service.py:16`) is the canonical home; the UI-layer `ModifierLogicService` and `ComponentService.is_modifier_allowed` re-implement 80%+ of its surface. `ModifierManager.add_modifier` (lines 108-117) has a fourth inline restriction check.

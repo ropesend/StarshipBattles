@@ -28,8 +28,12 @@ from game.strategy.validation.superweapon_validator import SuperweaponValidator
 from game.strategy.services.galaxy_pathfinding_service import GalaxyPathfindingService
 
 if TYPE_CHECKING:
+    from game.core.protocols.strategy_mutators import IEmpireMutator
     from game.strategy.data.empire import Empire
     from game.strategy.data.star_system import StarSystem
+    from game.strategy.services.fleet_navigation_service import (
+        FleetNavigationService,
+    )
 
 
 @dataclass
@@ -74,7 +78,7 @@ class SuperweaponOrderProcessor:
         self._empire_mutator = empire_mutator
         self._nav_service = nav_service
 
-    def _get_empire_mutator(self) -> Any:
+    def _get_empire_mutator(self) -> "IEmpireMutator":
         if self._empire_mutator is None:
             from game.strategy.services.empire_write_service import (
                 EmpireWriteService,
@@ -82,7 +86,7 @@ class SuperweaponOrderProcessor:
             self._empire_mutator = EmpireWriteService()
         return self._empire_mutator
 
-    def _get_nav_service(self):
+    def _get_nav_service(self) -> "FleetNavigationService":
         if self._nav_service is None:
             from game.strategy.services.fleet_navigation_service import (
                 FleetNavigationService,

@@ -8,8 +8,9 @@ import math
 import random
 from typing import Dict, Tuple
 
+from game.core.constants import EARTH_MASS
 from game.strategy.data.planet_physics import (
-    BOLTZMANN_K, ATM_TO_PA, GASES, MASS_EARTH
+    BOLTZMANN_K, ATM_TO_PA, GASES
 )
 
 
@@ -95,14 +96,14 @@ def _calculate_base_pressure(
     volatile_richness = rng.lognormvariate(0, 1.5)
 
     # Base pressure scaling with mass^2
-    mass_earth_units = mass / MASS_EARTH
+    mass_earth_units = mass / EARTH_MASS
     base_pressure_atm = (mass_earth_units ** 2) * volatile_richness
 
     if 'H2' in retained_gases:  # Gas Giant territory
         base_pressure_atm *= 1000
 
     # Hot planets strip atmosphere
-    if base_temp > 500 and mass < MASS_EARTH:
+    if base_temp > 500 and mass < EARTH_MASS:
         base_pressure_atm *= 0.1
 
     return base_pressure_atm
@@ -121,7 +122,7 @@ def _distribute_gas_composition(
     """
     props = {}
 
-    if 'H2' in retained_gases and mass > MASS_EARTH * 2:
+    if 'H2' in retained_gases and mass > EARTH_MASS * 2:
         # Gas/Ice Giant - mostly H2/He
         props['H2'] = 75
         props['He'] = 24

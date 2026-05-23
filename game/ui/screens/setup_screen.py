@@ -130,7 +130,7 @@ class BattleSetupScreen:
             self.team2 = new_team2
             self.ai_dropdown_open = None
 
-    def get_team_display_groups(self, team_list) -> Any:
+    def get_team_display_groups(self, team_list) -> list[dict[str, str | int]]:
         """Group team entries for display."""
         display_items = []
         for i, entry in enumerate(team_list):

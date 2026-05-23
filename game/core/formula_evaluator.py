@@ -17,7 +17,7 @@ import logging
 import math
 import operator
 from dataclasses import dataclass, field
-from typing import Dict, Any, Union, List, Optional
+from typing import Callable, Dict, Any, Union, List, Optional
 from game.core.exceptions import FormulaException
 from game.core.error_codes import ErrorCode
 
@@ -57,7 +57,7 @@ _BINARY_OPS = {
     ast.BitOr: operator.or_,
 }
 
-_UNARY_OPS = {
+_UNARY_OPS: Dict[type, Callable[[Any], Any]] = {
     ast.UAdd: operator.pos,
     ast.USub: operator.neg,
 }
@@ -116,13 +116,13 @@ def _eval_node(node: ast.AST, names: Dict[str, Any]) -> Any:
         return op_func(left, right)
 
     if isinstance(node, ast.UnaryOp):
-        op_func = _UNARY_OPS.get(type(node.op))
-        if op_func is None:
+        unary_func = _UNARY_OPS.get(type(node.op))
+        if unary_func is None:
             raise FormulaException(
                 f"Unsupported unary operator: {type(node.op).__name__}",
                 code=ErrorCode.FORMULA_GENERAL_ERROR.value,
             )
-        return op_func(_eval_node(node.operand, names))
+        return unary_func(_eval_node(node.operand, names))
 
     if isinstance(node, ast.Call):
         if not isinstance(node.func, ast.Name):
@@ -286,7 +286,8 @@ class FormulaEvaluator:
 
         try:
             tree = _parse_formula(eval_formula)
-            return _eval_node(tree, names)
+            result: int | float = _eval_node(tree, names)
+            return result
         except FormulaException as e:
             if not e.context:
                 raise FormulaException(

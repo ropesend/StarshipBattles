@@ -31,7 +31,8 @@ from functools import lru_cache
 
 from game.core.resources import ResourceCatalog
 from game.strategy.data.planet import PlanetType
-from game.strategy.data.planet_physics import MASS_MARS, MASS_EARTH
+from game.core.constants import EARTH_MASS
+from game.strategy.data.planet_physics import MASS_MARS
 
 
 @lru_cache(maxsize=1)
@@ -198,7 +199,7 @@ def generate_resources(
     size_factor = sf_linear ** 2 * (1.0 + cfg.ramp_c * sf_linear ** 4)
 
     # Earth-mass size_factor for baseline calibration
-    earth_log = math.log10(MASS_EARTH)
+    earth_log = math.log10(EARTH_MASS)
     earth_sf_linear = (earth_log - cfg.min_log_mass) / (cfg.max_log_mass - cfg.min_log_mass)
     earth_size_factor = earth_sf_linear ** 2 * (1.0 + cfg.ramp_c * earth_sf_linear ** 4)
 

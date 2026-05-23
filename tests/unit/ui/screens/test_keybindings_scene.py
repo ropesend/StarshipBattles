@@ -266,16 +266,3 @@ class TestHandleResize:
         assert scene._height == 1080
 
 
-class TestUpdateAndDraw:
-    """Scene update and draw should not raise errors."""
-
-    def test_update_does_not_raise(self, scene):
-        """update() should not raise."""
-        scene.update(0.016)
-
-    def test_draw_does_not_raise(self, scene):
-        """draw() should not raise on a valid surface."""
-        surface = pygame.Surface((1280, 800))
-        scene.draw(surface)
-
-

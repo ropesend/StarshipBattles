@@ -14,8 +14,9 @@ from game.strategy.data.planet_atmosphere import (
     _distribute_gas_composition,
     _calculate_greenhouse_effect,
 )
+from game.core.constants import EARTH_MASS
 from game.strategy.data.planet_physics import (
-    BOLTZMANN_K, ATM_TO_PA, GASES, MASS_EARTH, MASS_MARS
+    BOLTZMANN_K, ATM_TO_PA, GASES, MASS_MARS
 )
 
 
@@ -124,8 +125,8 @@ class TestBasePressure:
         """Pressure scales with mass^2."""
         mock_lognorm.return_value = 1.0  # Fixed volatile richness
 
-        pressure_earth = _calculate_base_pressure(MASS_EARTH, ["N2", "CO2"], 300.0)
-        pressure_half = _calculate_base_pressure(MASS_EARTH / 2, ["N2", "CO2"], 300.0)
+        pressure_earth = _calculate_base_pressure(EARTH_MASS, ["N2", "CO2"], 300.0)
+        pressure_half = _calculate_base_pressure(EARTH_MASS / 2, ["N2", "CO2"], 300.0)
 
         # mass^2 scaling means 0.5^2 = 0.25
         expected_ratio = 4.0  # (1/0.5)^2
@@ -137,8 +138,8 @@ class TestBasePressure:
         """H2 retention triggers 1000x pressure multiplier."""
         mock_lognorm.return_value = 1.0
 
-        pressure_rocky = _calculate_base_pressure(MASS_EARTH * 3, ["N2", "CO2"], 100.0)
-        pressure_gas_giant = _calculate_base_pressure(MASS_EARTH * 3, ["H2", "He", "N2"], 100.0)
+        pressure_rocky = _calculate_base_pressure(EARTH_MASS * 3, ["N2", "CO2"], 100.0)
+        pressure_gas_giant = _calculate_base_pressure(EARTH_MASS * 3, ["H2", "He", "N2"], 100.0)
 
         # H2 presence should multiply by 1000
         assert pressure_gas_giant >= pressure_rocky * 500  # Allow some tolerance
@@ -160,10 +161,10 @@ class TestBasePressure:
     def test_volatile_richness_affects_pressure(self, mock_lognorm):
         """Volatile richness roll affects final pressure."""
         mock_lognorm.return_value = 2.0
-        pressure_rich = _calculate_base_pressure(MASS_EARTH, ["N2"], 300.0)
+        pressure_rich = _calculate_base_pressure(EARTH_MASS, ["N2"], 300.0)
 
         mock_lognorm.return_value = 0.5
-        pressure_poor = _calculate_base_pressure(MASS_EARTH, ["N2"], 300.0)
+        pressure_poor = _calculate_base_pressure(EARTH_MASS, ["N2"], 300.0)
 
         assert pressure_rich > pressure_poor
         assert abs(pressure_rich / pressure_poor - 4.0) < 0.1
@@ -192,7 +193,7 @@ class TestGasComposition:
 
         # Large mass with H2
         composition = _distribute_gas_composition(
-            ["H2", "He", "CH4"], MASS_EARTH * 3, 1e8
+            ["H2", "He", "CH4"], EARTH_MASS * 3, 1e8
         )
 
         # H2 should be dominant
@@ -209,7 +210,7 @@ class TestGasComposition:
         mock_uniform.return_value = 1.0  # Max weight
 
         composition = _distribute_gas_composition(
-            ["CO2", "N2", "O2"], MASS_EARTH, 1e5
+            ["CO2", "N2", "O2"], EARTH_MASS, 1e5
         )
 
         total = sum(composition.values())
@@ -226,7 +227,7 @@ class TestGasComposition:
         # Use several runs with random
         for _ in range(5):
             composition = _distribute_gas_composition(
-                ["CO2", "N2", "H2O"], MASS_EARTH, pressure_pa
+                ["CO2", "N2", "H2O"], EARTH_MASS, pressure_pa
             )
 
             total = sum(composition.values())
@@ -235,7 +236,7 @@ class TestGasComposition:
 
     def test_empty_gas_list_returns_empty(self):
         """Empty retained gases returns empty composition."""
-        composition = _distribute_gas_composition([], MASS_EARTH, 1e5)
+        composition = _distribute_gas_composition([], EARTH_MASS, 1e5)
 
         assert composition == {}
 
@@ -245,7 +246,7 @@ class TestGasComposition:
         mock_uniform.return_value = 10.0
         pressure_pa = 50000.0
 
-        composition = _distribute_gas_composition(["CO2"], MASS_EARTH, pressure_pa)
+        composition = _distribute_gas_composition(["CO2"], EARTH_MASS, pressure_pa)
 
         assert "CO2" in composition
         assert abs(composition["CO2"] - pressure_pa) < 1.0
@@ -253,7 +254,7 @@ class TestGasComposition:
     def test_all_gases_positive_pressure(self):
         """All retained gases get positive partial pressure."""
         composition = _distribute_gas_composition(
-            ["CO2", "N2", "O2", "Ar"], MASS_EARTH, 1e5
+            ["CO2", "N2", "O2", "Ar"], EARTH_MASS, 1e5
         )
 
         for gas, pressure in composition.items():

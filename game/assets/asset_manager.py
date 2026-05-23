@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+from typing import Any, cast
 
 import pygame
 from game.core.json_utils import load_json
@@ -28,11 +29,12 @@ class AssetManager:
     """
 
     def __init__(self) -> None:
-        self.assets = {}  # Cache: {key: Surface} or {key: [Surfaces]}
-        self.manifest = {}
+        # Cache: {key: Surface} or {key: [Surfaces]}
+        self.assets: dict[str, pygame.Surface | list[pygame.Surface]] = {}
+        self.manifest: dict[str, Any] = {}
         self.manifest_path = Paths.ASSET_MANIFEST_FILE
-        self.missing_texture = None
-        self.star_metadata = {}
+        self.missing_texture: pygame.Surface | None = None
+        self.star_metadata: dict[str, dict[str, float]] = {}
         self._load_star_metadata()
 
     def _load_star_metadata(self) -> None:
@@ -74,7 +76,7 @@ class AssetManager:
         # Check cache
         cache_key = f"{category}.{key}"
         if cache_key in self.assets:
-            return self.assets[cache_key]
+            return cast(pygame.Surface, self.assets[cache_key])
         
         # Resolve path
         cat_data = self.manifest.get(category, {})
@@ -98,16 +100,16 @@ class AssetManager:
         """Load a group of images (e.g., planet variations). Returns cached copy if available."""
         cache_key = f"{category}.{group_key}"
         if cache_key in self.assets:
-            return self.assets[cache_key]
-            
+            return cast(list[pygame.Surface], self.assets[cache_key])
+
         cat_data = self.manifest.get(category, {})
         file_paths = cat_data.get(group_key)
-        
+
         if not file_paths or not isinstance(file_paths, list):
             logger.warning(f"Asset group not found in manifest: {category}.{group_key}")
             return [self.get_missing_texture()]
 
-        images = []
+        images: list[pygame.Surface] = []
         for i, path in enumerate(file_paths):
             sub_key = f"{cache_key}.{i}"
             try:
@@ -162,7 +164,7 @@ class AssetManager:
                 
         return self.get_missing_texture()
 
-    def get_star_core_info(self, image_filename: str) -> dict:
+    def get_star_core_info(self, image_filename: str) -> dict[str, float]:
         """
         Get the normalized core information (center and radius) for a star.
 
@@ -193,20 +195,20 @@ class AssetManager:
             Asset key string (e.g., 'yellow', 'red', 'blue')
         """
         type_assets = self.manifest.get('star_type_assets', {})
-        return type_assets.get(star_type_name, 'yellow')
+        return str(type_assets.get(star_type_name, 'yellow'))
 
 
     def load_external_image(self, path: str) -> pygame.Surface:
         """Load an image from an absolute or relative path, using the cache."""
         if not path:
              return self.get_missing_texture()
-             
+
         # Normalize path for cache key
         norm_path = os.path.normpath(path)
         cache_key = f"external.{norm_path}"
-        
+
         if cache_key in self.assets:
-             return self.assets[cache_key]
+             return cast(pygame.Surface, self.assets[cache_key])
              
         try:
              return self._load_image(cache_key, norm_path)
@@ -263,7 +265,7 @@ class AssetManager:
     # dedicated directories. See docs/03_CONVENTIONS.md (Image Assets) for the
     # split convention. Append new entries here to support future special
     # stellar objects (ringworlds, etc.) without duplicating assets.
-    _STELLAR_OBJECT_FALLBACK_DIRS: tuple = (Paths.SPHERE_WORLD_DIR,)
+    _STELLAR_OBJECT_FALLBACK_DIRS: tuple[str, ...] = (Paths.SPHERE_WORLD_DIR,)
 
     def load_planet_image(self, image_filename: str, requested_size: int = 512) -> pygame.Surface:
         """

@@ -7,8 +7,9 @@ Tests the main generate_atmosphere function and edge cases.
 import pytest
 
 from game.strategy.data.planet_atmosphere import generate_atmosphere
+from game.core.constants import EARTH_MASS
 from game.strategy.data.planet_physics import (
-    ATM_TO_PA, GASES, MASS_EARTH, MASS_JUPITER
+    ATM_TO_PA, GASES, MASS_JUPITER
 )
 
 
@@ -103,7 +104,7 @@ class TestGenerateAtmosphere:
     def test_zero_base_temp_handled(self):
         """Zero base temperature is handled gracefully."""
         params = {
-            "mass": MASS_EARTH,
+            "mass": EARTH_MASS,
             "escape_vel": 11000.0,
             "base_temp": 0.0,  # Zero
             "flux_wm2": 0.0,
@@ -147,7 +148,7 @@ class TestGenerateAtmosphere:
         """Greenhouse gases increase temperature above base."""
         # Force high CO2 atmosphere
         params = {
-            "mass": MASS_EARTH * 2,  # Bigger to retain more
+            "mass": EARTH_MASS * 2,  # Bigger to retain more
             "escape_vel": 15000.0,
             "base_temp": 200.0,
             "flux_wm2": 1000.0,
@@ -212,7 +213,7 @@ class TestAtmosphereEdgeCases:
         """Extreme temperatures (hot/cold) handled."""
         # Very hot
         hot_params = {
-            "mass": MASS_EARTH,
+            "mass": EARTH_MASS,
             "escape_vel": 11000.0,
             "base_temp": 2000.0,  # Very hot
             "flux_wm2": 50000.0,
@@ -223,7 +224,7 @@ class TestAtmosphereEdgeCases:
 
         # Very cold
         cold_params = {
-            "mass": MASS_EARTH,
+            "mass": EARTH_MASS,
             "escape_vel": 11000.0,
             "base_temp": 10.0,  # Very cold
             "flux_wm2": 1.0,

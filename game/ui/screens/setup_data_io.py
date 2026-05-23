@@ -9,8 +9,11 @@ PROJ-211: ShipFactory now requires registry_provider. Uses lazy initialization.
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TYPE_CHECKING
 import os
+
+if TYPE_CHECKING:
+    from game.simulation.entities.ship import Ship
 import glob
 # PROJ-382 Phase 3 (Pattern #12): bare ``json`` import preserved for the
 # ``json.JSONDecodeError`` exception type used in the file-IO except
@@ -31,12 +34,12 @@ from game.core.paths import Paths
 from game.core.registry_cache import get_cached_registries
 
 
-def get_base_path() -> Any:
+def get_base_path() -> str:
     """Get the base path (root of project). Delegates to Paths.ROOT_DIR."""
     return Paths.ROOT_DIR
 
 
-def scan_ship_designs() -> Any:
+def scan_ship_designs() -> list[dict[str, Any]]:
     """Scan for available ship design JSON files in ships/ folder."""
     ships_folder = Paths.SHIPS_DIR
     json_files = glob.glob(os.path.join(ships_folder, "*.json"))
@@ -62,7 +65,7 @@ def scan_ship_designs() -> Any:
     return designs
 
 
-def load_ships_from_entries(team_entries, team_id, start_x, start_y, facing_angle=0) -> Any:
+def load_ships_from_entries(team_entries, team_id, start_x, start_y, facing_angle=0) -> list["Ship"]:
     """
     Load ships from team entry list.
 
@@ -168,7 +171,7 @@ def save_battle_setup(file_path, team1, team2) -> bool:
         return False
 
 
-def load_battle_setup(file_path, available_designs) -> Any:
+def load_battle_setup(file_path, available_designs) -> tuple[list[dict[str, Any]], list[dict[str, Any]]] | tuple[None, None]:
     """
     Load battle setup from JSON file.
 

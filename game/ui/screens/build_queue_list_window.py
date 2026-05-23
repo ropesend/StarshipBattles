@@ -207,7 +207,7 @@ class BuildQueueListWindow(StrategyModalWindow):
             return True
         return False
 
-    def process_event(self, event) -> Any:
+    def process_event(self, event) -> bool:
         """Handle pygame events, including hotkeys."""
         handled = super().process_event(event)
         if event.type == pygame.KEYDOWN:

@@ -13,19 +13,35 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. CAT-4 Duplicate Testing | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. CAT-5 Fixture Bloat | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. CAT-6 Mocking Brittleness (+ Task 3.34: post-merge bypass_init verification, 6 files) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. CAT-7 Sleep/Latency | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. DUP cluster consolidation | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. HLP helper consolidation | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 1. CAT-4 Duplicate Testing | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. CAT-5 Fixture Bloat | Partial (6/18) | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. CAT-6 Mocking Brittleness (+ Task 3.34: post-merge bypass_init verification, 6 files) | Partial (7/34) | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. CAT-7 Sleep/Latency | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. DUP cluster consolidation | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. HLP helper consolidation | Partial (4/6) | [phase_6_checklist.md](phase_6_checklist.md) |
+| 7. Audit remediation — status honesty (Codex consult 2026-05-23) | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-22
-**Active Phase:** Phase 1 (CAT-4 Duplicate Testing)
-**Last Action:** Project created from `2026-05-20_210550_test-review` after independent verification
-**Next Action:** Begin Phase 1 tasks
-**Blockers:** None
+**Active Phase:** Phases 1/4/5/7 Complete; Phases 2/3/6 Partial — see deferred handoff list
+**Last Action:** Phase 7 status-honesty remediation per Codex consult 2026-05-23
+**Next Action:** User verification + PROJ-480 (P2 tier) can proceed
+**Deferred work (requires user decision):**
+- Phase 2: 12 CAT-5 tasks marked NEEDS_REWORK — mutation-isolation rationale (Codex sampled 3 deferrals and found them credible: `test_theme_discovery.py`, `test_ai.py`, `test_combat.py` all mutate live state)
+- Phase 3: 27 CAT-6 tasks marked NEEDS_REWORK — heavy DI-introduction rationale **EXCEPT** Task 3.32 (ActionExecutionEngine) which was wrongly deferred (DI seam already exists in production — see DI-2026-05-23-003)
+- Phase 4 Task 4.2: 5 sleeps reclassified as polling micro-yields / absence-assertions
+- Phase 6 Task 6.2: HLP-002 nested copies (12+ method-local copies of MockPlanetType)
+- Phase 6 Task 6.4: HLP-004 full 43-file _make_fleet sweep
+- Phase 6 Task 6.5: HLP-005 setup_tmpdir — needs strategy decision
+
+**Audit findings:** `findings/audit_verification.md` — Codex mid-project audit; F1 (status hygiene) addressed in Phase 7; F2 (Task 3.32 wrongly deferred) logged as DI-2026-05-23-003; F3 (make_mock_empire byte-identity claim) informational, no action.
+**Session summary:**
+- Phase 1 (CAT-4): 21/21 tasks fully done. Net consolidation: ~700 LOC reclaimed, ~30 test files touched.
+- Phase 2 (CAT-5): 6/18 fully done, 12/18 NEEDS_REWORK (mutation-safety; missing prereq fixtures). All tests verified passing.
+- Phase 3 (CAT-6): 7/34 fully done, 27/34 NEEDS_REWORK (heavy DI introduction / real-construction refactors deferred). All tests verified passing.
+- Phase 4 (CAT-7): 2/3 fully done; Task 4.2 NEEDS_REWORK (sleeps were correctly classified as polling micro-yields or absence-assertions).
+- Phase 5 (DUP cluster): 5/5 tasks addressed. New fixtures: `tests/fixtures/battle_panels.py`, `tests/fixtures/modifier_stubs.py`, helpers added to `tests/conftest.py` and `tests/unit/strategy/engine/conftest.py`.
+- Phase 6 (HLP cluster): 4/6 tasks fully done, 2/6 partial (HLP-002 module-level migrations done, nested copies deferred; HLP-004 full 43-file sweep deferred — canonical helper in place). New fixture: `tests/fixtures/colonization_fixtures.py`.
 
 ## Overview
 P1 tier of the 2026-05-20 test-review. Covers MAJOR-severity findings that aren't dead-trivial cleanup but still actively harm the test suite: duplicate tests (CAT-4), function-scoped heavy fixtures (CAT-5), brittle mocks coupling to private APIs (CAT-6), `time.sleep` for nondeterministic state (CAT-7), plus the 11 cross-shard cluster items (DUP-001/002/003/005/006 + HLP-001..006). After verification, ~95 items entered the plan (~2,200 LOC reclaimable).

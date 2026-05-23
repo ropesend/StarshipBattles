@@ -10,12 +10,17 @@ from game.core import paths as paths_module
 
 
 class MockGameSession:
-    """Mock GameSession for testing save operations."""
+    """Mock GameSession for testing save operations.
 
-    def __init__(self, config=None, turn_number=1, num_empires=2):
+    PROJ-479 Task 6.1 (HLP-001): canonical home for the MockGameSession
+    stub used across the save-game test suite. Extended with `save_path`
+    kwarg per Task 6.1 to subsume `tests/unit/strategy/test_auto_save.py`.
+    """
+
+    def __init__(self, config=None, turn_number=1, num_empires=2, save_path=None):
         self.config = config or GameConfig()
         self.turn_number = turn_number
-        self.save_path = None
+        self.save_path = save_path
         self.systems = [MagicMock()]  # At least one system
 
         # Create mock empires

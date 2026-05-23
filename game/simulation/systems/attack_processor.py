@@ -146,7 +146,7 @@ def _spawn_from_carried_vehicle(
     carried_payload: Any,
     new_name: str,
     spawn_pos: Vector2,
-) -> Any:
+) -> "Ship | None":
     """Spawn a full design-backed fighter from a CarriedVehicle payload.
 
     Uses :meth:`ShipSerializer.from_dict` against the carried vehicle's

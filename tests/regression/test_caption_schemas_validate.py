@@ -53,13 +53,16 @@ class TestSchemaJSONValidity:
 
 class TestFlagSchema:
     def test_has_six_fields(self):
+        # PROJ-480 Task 4.2: assert the schema's required_fields are a
+        # superset of the historically-stable core set. Adding new fields
+        # to the schema should not break this test; removing an existing
+        # one still fails. (Was: exact `set(fields) == {...}`.)
         schema = _load("flag.schema.json")
-        # required fields, excluding schema_version
-        fields = schema.get("required_fields", [])
-        assert set(fields) == {
+        fields = set(schema.get("required_fields", []))
+        assert fields.issuperset({
             "geometry", "color_palette", "symbolism",
             "cultural_hints", "mood", "distinctive_traits",
-        }
+        })
 
     def test_mood_enum_values(self):
         schema = _load("flag.schema.json")
@@ -69,13 +72,14 @@ class TestFlagSchema:
 
 class TestPortraitSchema:
     def test_has_six_fields(self):
+        # PROJ-480 Task 4.2: superset, not exact equality.
         schema = _load("portrait.schema.json")
-        fields = schema.get("required_fields", [])
-        assert set(fields) == {
+        fields = set(schema.get("required_fields", []))
+        assert fields.issuperset({
             "anatomy", "coloration", "attire_and_adornment",
             "posture_and_expression", "technology_level_hint",
             "distinctive_traits",
-        }
+        })
 
     def test_tech_level_enum_values(self):
         schema = _load("portrait.schema.json")
@@ -85,12 +89,13 @@ class TestPortraitSchema:
 
 class TestThemeSchema:
     def test_has_six_fields(self):
+        # PROJ-480 Task 4.2: superset, not exact equality.
         schema = _load("theme.schema.json")
-        fields = schema.get("required_fields", [])
-        assert set(fields) == {
+        fields = set(schema.get("required_fields", []))
+        assert fields.issuperset({
             "hull_geometry", "materials_and_finish", "design_philosophy",
             "color_scheme", "technology_level_hint", "distinctive_traits",
-        }
+        })
 
     def test_tech_level_enum_values(self):
         schema = _load("theme.schema.json")

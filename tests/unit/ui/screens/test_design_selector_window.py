@@ -186,7 +186,7 @@ class TestDesignSelectorFiltering:
 
         # Check search was called with class filter
         call_args = library.search_designs.call_args
-        assert call_args[1]['filters']['ship_class'] == "Cruiser"
+        assert call_args.kwargs['filters']['ship_class'] == "Cruiser"
 
     def test_filter_by_vehicle_type(self):
         """Test filtering by vehicle type."""
@@ -199,7 +199,7 @@ class TestDesignSelectorFiltering:
 
         # Check search was called with type filter
         call_args = library.search_designs.call_args
-        assert call_args[1]['filters']['vehicle_type'] == "Fighter"
+        assert call_args.kwargs['filters']['vehicle_type'] == "Fighter"
 
     def test_text_search_filters_by_name(self):
         """Test text search filters by design name."""
@@ -212,7 +212,7 @@ class TestDesignSelectorFiltering:
 
         # Check search was called with name query
         call_args = library.search_designs.call_args
-        assert call_args[1]['name_query'] == "Alpha"
+        assert call_args.kwargs['name_query'] == "Alpha"
 
     def test_obsolete_filter_toggle(self):
         """Test obsolete filter toggle."""
@@ -225,7 +225,7 @@ class TestDesignSelectorFiltering:
 
         # Check search was called with show_obsolete
         call_args = library.search_designs.call_args
-        assert call_args[1]['filters']['show_obsolete'] is True
+        assert call_args.kwargs['filters']['show_obsolete'] is True
 
     def test_combined_filters(self):
         """Test combining multiple filters."""
@@ -239,9 +239,9 @@ class TestDesignSelectorFiltering:
         window._refresh_designs()
 
         call_args = library.search_designs.call_args
-        assert call_args[1]['name_query'] == "Battle"
-        assert call_args[1]['filters']['ship_class'] == "Battleship"
-        assert call_args[1]['filters']['show_obsolete'] is True
+        assert call_args.kwargs['name_query'] == "Battle"
+        assert call_args.kwargs['filters']['ship_class'] == "Battleship"
+        assert call_args.kwargs['filters']['show_obsolete'] is True
 
     def test_all_classes_means_no_filter(self):
         """Test All Classes dropdown option means no class filter."""
@@ -253,7 +253,7 @@ class TestDesignSelectorFiltering:
         window._refresh_designs()
 
         call_args = library.search_designs.call_args
-        assert call_args[1]['filters']['ship_class'] is None
+        assert call_args.kwargs['filters']['ship_class'] is None
 
     def test_dropdown_tuple_value_extraction(self):
         """Test handling pygame_gui dropdown tuple values."""
@@ -266,7 +266,7 @@ class TestDesignSelectorFiltering:
         window._refresh_designs()
 
         call_args = library.search_designs.call_args
-        assert call_args[1]['filters']['ship_class'] == "Destroyer"
+        assert call_args.kwargs['filters']['ship_class'] == "Destroyer"
 
     def test_refresh_sorts_by_name(self):
         """Test refresh sorts designs by name."""
@@ -811,4 +811,4 @@ class TestDesignSelectorDropdownOptions:
         window._refresh_designs()
 
         call_args = library.search_designs.call_args
-        assert call_args[1]["filters"]["vehicle_type"] == "Mine"
+        assert call_args.kwargs["filters"]["vehicle_type"] == "Mine"

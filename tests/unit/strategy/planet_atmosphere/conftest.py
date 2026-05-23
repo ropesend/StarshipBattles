@@ -4,8 +4,9 @@ Shared fixtures for planet atmosphere tests.
 
 import pytest
 
+from game.core.constants import EARTH_MASS
 from game.strategy.data.planet_physics import (
-    MASS_EARTH, MASS_JUPITER, MASS_MARS
+    MASS_JUPITER, MASS_MARS
 )
 
 
@@ -13,7 +14,7 @@ from game.strategy.data.planet_physics import (
 def earth_like_params():
     """Parameters for an Earth-like planet."""
     return {
-        "mass": MASS_EARTH,
+        "mass": EARTH_MASS,
         "escape_vel": 11186.0,  # m/s
         "base_temp": 255.0,  # K (blackbody temp)
         "flux_wm2": 1361.0,  # W/m^2 (solar constant)

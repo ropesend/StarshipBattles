@@ -16,6 +16,12 @@ import pygame
 import time
 from typing import Any, Optional, List, TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from game.simulation.systems.battle_engine import BattleEngine
+    from game.simulation.entities.ship import Ship
+    from game.simulation.entities.projectile import Projectile
+    from game.ai.controller import AIController
+
 from game.core.config import PhysicsConfig
 
 logger = logging.getLogger(__name__)
@@ -169,7 +175,7 @@ class BattleScreen:
         return self._controller
 
     @property
-    def engine(self) -> Any:
+    def engine(self) -> "BattleEngine":
         """Access the underlying BattleEngine."""
         return self._battle_service.get_engine()
 
@@ -196,27 +202,27 @@ class BattleScreen:
         self.ui.handle_resize(width, height)
 
     @property
-    def show_overlay(self) -> Any:
+    def show_overlay(self) -> bool:
         return self.ui.show_overlay
-    
+
     @show_overlay.setter
     def show_overlay(self, value) -> None:
         self.ui.show_overlay = value
 
     @property
-    def stats_panel_width(self) -> Any:
+    def stats_panel_width(self) -> int:
         return self.ui.stats_panel.rect.width
 
     @property
-    def ships(self) -> Any:
+    def ships(self) -> "list[Ship]":
         return self.engine.ships
 
     @property
-    def projectiles(self) -> Any:
+    def projectiles(self) -> "list[Projectile]":
         return self.engine.projectiles
 
     @property
-    def ai_controllers(self) -> Any:
+    def ai_controllers(self) -> "list[AIController]":
         return self.engine.ai_controllers
 
     def handle_event(self, event) -> None:
@@ -478,11 +484,11 @@ class BattleScreen:
     def _on_ship_destroyed(self, event: CombatEvent) -> None:
         self._add_hit_effect(HitEffectType.SHIP_DESTROYED, event.target_ship)
 
-    def is_battle_over(self) -> Any:
+    def is_battle_over(self) -> bool:
         """Check if the battle has ended."""
         return self._battle_service.is_battle_over()
 
-    def get_winner(self) -> Any:
+    def get_winner(self) -> int:
         """Get the winning team. Returns 0, 1, or -1 for draw."""
         return self._battle_service.get_winner()
     

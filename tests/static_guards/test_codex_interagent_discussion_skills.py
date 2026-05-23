@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = Path(__file__).resolve().parents[2]
 SKILL_ROOT = ROOT / ".agents" / "skills"
 DISCUSSION_SKILLS = (
     "codex-discuss-start",

@@ -27,6 +27,9 @@ from game.strategy.engine.commands import (
 if TYPE_CHECKING:
     from game.strategy.facade.strategy_session_facade import StrategySessionFacade
     from game.strategy.data.fleet import Fleet
+    from game.ui.renderer.camera import Camera
+    from game.strategy.data.star_system import StarSystem
+    from game.strategy.data.star_system import WarpPoint
 
 
 def _check_fleet_ability(
@@ -70,11 +73,11 @@ class SuperweaponOperations:
         self.facade = facade
 
     @property
-    def camera(self) -> Any:
+    def camera(self) -> "Camera":
         return self.scene.camera
 
     @property
-    def hex_size(self) -> Any:
+    def hex_size(self) -> float:
         return self.scene.hex_size
 
     def handle_implode_planet_designation(self, mx: int, my: int, fleet: 'Fleet') -> Optional[dict]:
@@ -353,7 +356,7 @@ class SuperweaponOperations:
     # Helper Methods
     # =========================================================================
 
-    def _get_system_at_hex(self, hex_coord) -> Any:
+    def _get_system_at_hex(self, hex_coord) -> "StarSystem | None":
         """Find system at hex coordinate.
 
         PROJ-477 Phase 4: live system-ownership lookup via scene.world
@@ -361,7 +364,7 @@ class SuperweaponOperations:
         """
         return self.scene.world.system_at_map_hex(hex_coord)
 
-    def _get_warp_point_at_hex(self, hex_coord) -> Any:
+    def _get_warp_point_at_hex(self, hex_coord) -> "WarpPoint | None":
         """Find warp point at the given global hex coordinate."""
         system = self._get_system_at_hex(hex_coord)
         if not system:

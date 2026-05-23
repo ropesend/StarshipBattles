@@ -9,33 +9,62 @@ from game.strategy.data.fleet import Fleet
 from game.core.hex_math import HexCoord
 
 
+def _build_mock_warp_ship(
+    warp_resource_costs: dict | None = None,
+    current_resources: dict | None = None,
+    is_combat_capable: bool = True,
+    is_alive: bool = True,
+    is_derelict: bool = False,
+    resource_costs_per_hex: dict | None = None,
+):
+    """Shared mock-ship factory (PROJ-479 Task 1.21 NEEDS_REWORK).
+
+    Replaces the ~70% overlap between `make_warp_ship` and `make_edge_ship`
+    fixtures. Both fixtures now delegate here; the per-fixture wrappers
+    expose the previously-used signature with sensible defaults so existing
+    call sites keep working.
+    """
+    from game.strategy.data.ship_instance import ShipInstance
+
+    mock = MagicMock(spec=ShipInstance)
+    mock.is_combat_capable.return_value = (
+        is_combat_capable and is_alive and not is_derelict
+    )
+    mock.is_alive = is_alive
+    mock.is_derelict = is_derelict
+    mock.get_warp_resource_costs.return_value = warp_resource_costs or {}
+    if resource_costs_per_hex is not None:
+        mock.get_all_resource_costs_per_hex.return_value = resource_costs_per_hex
+
+    current = current_resources or {}
+    mock.get_current_resource.side_effect = lambda r: current.get(r, 0)
+
+    mock._consumed = {}
+
+    def _consume(resource_type, amount):
+        mock._consumed[resource_type] = mock._consumed.get(resource_type, 0) + amount
+        return True
+
+    mock.consume_resource.side_effect = _consume
+    return mock
+
+
 class TestWarpResourceMethods:
     """Test cases for fleet warp resource methods (Group 4.2)."""
 
     @pytest.fixture
     def make_warp_ship(self):
-        """Factory for creating mock ship instances with warp costs."""
-        from game.strategy.data.ship_instance import ShipInstance
-
+        """Factory wrapper delegating to module-level _build_mock_warp_ship."""
         def _make(
             warp_resource_costs: dict = None,
             current_resources: dict = None,
-            is_combat_capable: bool = True
+            is_combat_capable: bool = True,
         ):
-            mock = MagicMock(spec=ShipInstance)
-            mock.is_combat_capable.return_value = is_combat_capable
-            mock.get_warp_resource_costs.return_value = warp_resource_costs or {}
-
-            current = current_resources or {}
-            mock.get_current_resource.side_effect = lambda r: current.get(r, 0)
-
-            mock._consumed = {}
-            def consume(resource_type, amount):
-                mock._consumed[resource_type] = mock._consumed.get(resource_type, 0) + amount
-                return True
-            mock.consume_resource.side_effect = consume
-
-            return mock
+            return _build_mock_warp_ship(
+                warp_resource_costs=warp_resource_costs,
+                current_resources=current_resources,
+                is_combat_capable=is_combat_capable,
+            )
         return _make
 
     def test_warp_resource_costs_single_ship(self, make_warp_ship):
@@ -216,34 +245,23 @@ class TestEdgeCases:
 
     @pytest.fixture
     def make_edge_ship(self):
-        """Factory for creating mock ship instances."""
-        from game.strategy.data.ship_instance import ShipInstance
-
+        """Factory wrapper delegating to module-level _build_mock_warp_ship."""
         def _make(
             resource_costs_per_hex: dict = None,
             warp_resource_costs: dict = None,
             current_resources: dict = None,
             is_combat_capable: bool = True,
             is_alive: bool = True,
-            is_derelict: bool = False
+            is_derelict: bool = False,
         ):
-            mock = MagicMock(spec=ShipInstance)
-            mock.is_combat_capable.return_value = is_combat_capable and is_alive and not is_derelict
-            mock.is_alive = is_alive
-            mock.is_derelict = is_derelict
-            mock.get_all_resource_costs_per_hex.return_value = resource_costs_per_hex or {}
-            mock.get_warp_resource_costs.return_value = warp_resource_costs or {}
-
-            current = current_resources or {}
-            mock.get_current_resource.side_effect = lambda r: current.get(r, 0)
-
-            mock._consumed = {}
-            def consume(resource_type, amount):
-                mock._consumed[resource_type] = mock._consumed.get(resource_type, 0) + amount
-                return True
-            mock.consume_resource.side_effect = consume
-
-            return mock
+            return _build_mock_warp_ship(
+                warp_resource_costs=warp_resource_costs,
+                current_resources=current_resources,
+                is_combat_capable=is_combat_capable,
+                is_alive=is_alive,
+                is_derelict=is_derelict,
+                resource_costs_per_hex=resource_costs_per_hex or {},
+            )
         return _make
 
     def test_destroyed_ships_excluded_from_movement_calculation(self, make_edge_ship):

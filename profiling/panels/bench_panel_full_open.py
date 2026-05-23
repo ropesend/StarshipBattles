@@ -1,24 +1,26 @@
 """PROJ-411 Task 1.10: Full-panel-open benchmark.
 
-Unlike ``test_panel_loadtime_benchmark.py`` (which loops module-level
-data-gathering functions in isolation), this benchmark constructs each
-of the five strategy panel windows end-to-end. That captures the
-**user-visible** open cost — pygame_gui widget construction, window
-shell rasterization, VirtualTable build, plus the data-gathering work
-already covered by the existing benchmark.
+Unlike ``tests/performance/test_panel_loadtime_benchmark.py`` (which loops
+module-level data-gathering functions in isolation), this benchmark
+constructs each of the five strategy panel windows end-to-end. That
+captures the **user-visible** open cost — pygame_gui widget construction,
+window shell rasterization, VirtualTable build, plus the data-gathering
+work already covered by the existing benchmark.
 
-The full-window spans added in Task 1.10 (`Panel: *.window_init` etc.)
-fire here; the data-gathering spans fire as part of the same call
-chain.
+PROJ-478 Phase 2 relocated this module from
+``tests/performance/test_panel_full_open_benchmark.py`` to
+``profiling/panels/bench_panel_full_open.py``. The original "test_*"
+functions performed zero assertions (CAT-2 tests-nothing-real) — they
+exist purely to populate Profiler spans and pretty-print medians. As
+profiling scripts rather than tests they are no longer collected by
+pytest's default discovery; invoke explicitly:
 
-Run with:
-
-    python -m pytest tests/performance/test_panel_full_open_benchmark.py -n 0 -s
+    python -m pytest profiling/panels/bench_panel_full_open.py -n 0 -s
 
 For Scalene line-level data:
 
     python Tools/profiling/run_scalene.py pytest --mode cpu \\
-        --pytest-target tests/performance/test_panel_full_open_benchmark.py
+        --pytest-target profiling/panels/bench_panel_full_open.py
 """
 from __future__ import annotations
 
@@ -136,7 +138,7 @@ def _build_event_log_window(ui_manager):
     return window
 
 
-def test_full_window_open_uncached(
+def bench_full_window_open_uncached(
     smoke_turn1_scenario, ui_manager, active_profiler
 ):
     """BEFORE state: ``facade_state=None`` — every open does full work."""
@@ -159,7 +161,7 @@ def test_full_window_open_uncached(
     _print_span_medians(active_profiler, "FULL OPEN — uncached")
 
 
-def test_full_window_open_with_cache(
+def bench_full_window_open_with_cache(
     smoke_turn1_scenario, ui_manager, active_profiler
 ):
     """AFTER state: ``facade_state`` supplied — caches active across opens."""

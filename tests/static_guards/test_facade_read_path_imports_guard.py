@@ -205,7 +205,7 @@ _TOOLING_EXEMPTIONS: frozenset[tuple[str, str, str, str, str]] = frozenset({
      "sandbox-harness", "sandbox builds its OWN Planet objects for inspection (runtime-local at :373)"),
     ("game/ui/screens/galaxy_test/system_mode.py", "game.strategy.data.planet_gen", "PlanetGenerator",
      "sandbox-harness", "sandbox generation: planet generator (runtime-local at :210)"),
-    ("game/ui/screens/galaxy_test/system_mode.py", "game.strategy.data.planet_physics", "MASS_EARTH",
+    ("game/ui/screens/galaxy_test/system_mode.py", "game.core.constants", "EARTH_MASS",
      "sandbox-harness", "sandbox physics derivation constant for the info panel (runtime-local at :408)"),
     ("game/ui/screens/galaxy_test/system_mode.py", "game.strategy.data.planet_physics", "calculate_escape_velocity",
      "sandbox-harness", "sandbox physics derivation for the info panel (runtime-local at :408)"),

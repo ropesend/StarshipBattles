@@ -7,7 +7,11 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Optional, Any
+from typing import Optional, Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game.simulation.components.component import Component
+    from game.simulation.entities.ship import Ship
 
 import pygame
 from pygame_gui.elements import UIPanel, UIButton, UIWindow
@@ -39,6 +43,7 @@ from game.ui.screens.workshop_data_reloader import WorkshopDataReloader
 from game.ui.colors import COLORS
 from game.ui.screens.builder.detail_panel import ComponentDetailPanel
 from game.ui.screens.builder.modifier_logic import ModifierLogicService
+from game.simulation.services.modifier_service import ModifierService
 from game.ui.services.vehicle_class_service import VehicleClassService
 
 logger = logging.getLogger(__name__)
@@ -69,8 +74,11 @@ class DesignWorkshopScreen:
 
         self.event_bus = WorkshopEventBus()
 
-        # Instance-based service injected into panels via constructor (strict DI).
-        self._modifier_logic = ModifierLogicService(context.registries)
+        # PROJ-489: ModifierLogicService is now a thin UI facade around the
+        # canonical ModifierService. Construct one ModifierService from the
+        # context registries and pass it to the facade.
+        self._modifier_service = ModifierService(modifier_registry=context.registries.modifiers)
+        self._modifier_logic = ModifierLogicService(self._modifier_service)
 
         # PROJ-43: UI service adapters for ship I/O and design loading
         self._ship_io_adapter = ShipIOAdapter()
@@ -190,7 +198,7 @@ class DesignWorkshopScreen:
             update_stats_callback=self.update_stats
         )
 
-    def _get_vehicle_classes(self) -> Any:
+    def _get_vehicle_classes(self) -> dict[str, Any]:
         """PROJ-50: Get vehicle_classes from context registries (required)."""
         return self.context.registries.vehicle_classes
 
@@ -366,7 +374,7 @@ class DesignWorkshopScreen:
         self.modifier_panel.layout(0)
         
     @property
-    def selected_component(self) -> Any:
+    def selected_component(self) -> "Component | None":
         return self.controller.selected_component
         
     @selected_component.setter
@@ -374,7 +382,7 @@ class DesignWorkshopScreen:
         self.controller.selected_component = value
         
     @property
-    def dragged_item(self) -> Any:
+    def dragged_item(self) -> "Component | None":
         return self.controller.dragged_item
         
     @dragged_item.setter
@@ -383,11 +391,11 @@ class DesignWorkshopScreen:
 
     # --- Viewmodel delegation properties (used by builder sub-panels) ---
     @property
-    def ship(self) -> Any:
+    def ship(self) -> "Ship | None":
         return self.viewmodel.ship
 
     @property
-    def selected_components(self) -> Any:
+    def selected_components(self) -> "list[Component]":
         return self.viewmodel.selected_components
 
     @selected_components.setter
@@ -395,7 +403,7 @@ class DesignWorkshopScreen:
         self.viewmodel.selected_components = value
 
     @property
-    def available_components(self) -> Any:
+    def available_components(self) -> "list[Component]":
         return self.viewmodel.available_components
 
     @available_components.setter
@@ -575,7 +583,7 @@ class DesignWorkshopScreen:
             window_title="Confirm Clear"
         )
 
-    def _get_button_definitions(self) -> Any:
+    def _get_button_definitions(self) -> list[tuple[str, str, int]]:
         """
         Returns button definitions based on launch mode.
 

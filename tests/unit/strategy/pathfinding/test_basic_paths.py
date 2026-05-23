@@ -7,16 +7,11 @@ from unittest.mock import MagicMock
 
 from game.core.hex_math import HexCoord, hex_distance, hex_linedraw
 from game.strategy.services.galaxy_pathfinding_service import GalaxyPathfindingService
-
-
-def find_path_deep_space(start, end):
-    """Test helper preserving the pre-PROJ-414 shim signature."""
-    return hex_linedraw(start, end)
-
-
-def find_path_interstellar(start_system, end_system, galaxy):
-    """Test helper preserving the pre-PROJ-414 shim signature."""
-    return GalaxyPathfindingService(galaxy).find_path_interstellar(start_system, end_system)
+# PROJ-480 Task 1.19: shared helpers moved to conftest.
+from tests.unit.strategy.pathfinding.conftest import (
+    find_path_deep_space,
+    find_path_interstellar,
+)
 
 
 def get_system_at_hex(galaxy, hex_c, radius=50):

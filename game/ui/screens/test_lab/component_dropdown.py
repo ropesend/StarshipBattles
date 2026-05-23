@@ -98,7 +98,7 @@ class ComponentDropdown:
         else:
             self.hovered_index = -1
 
-    def get_selected_component_id(self) -> Any:
+    def get_selected_component_id(self) -> str | None:
         """Get currently selected component ID."""
         if 0 <= self.selected_index < len(self.component_ids):
             comp_id = self.component_ids[self.selected_index]

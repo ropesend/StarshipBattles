@@ -347,7 +347,54 @@ def assert_list_length(items, expected_length: int, description: str = "") -> No
 # PROJ-40: Shared Test Helpers
 # =============================================================================
 
-def make_mock_ship_instance(name="Test Ship", owner_id=0, registries=None):
+def _make_mock_fleet(
+    fleet_id: int = 1,
+    owner_id: int = 1,
+    location=None,
+    speed: float = 5,
+    **overrides,
+):
+    """Create a MagicMock Fleet for tests that need a basic Fleet stub.
+
+    PROJ-479 Task 5.1 + Phase 6 Task 6.4 (DUP-001 + HLP-004):
+    Canonical replacement for the 43+ local `_make_fleet` definitions
+    scattered across the test suite. Provides the 6 core MagicMock fields
+    (id, owner_id, location, speed, ships, task_forces, orders) and any
+    extra attributes passed via ``**overrides``.
+    """
+    from unittest.mock import MagicMock
+
+    fleet = MagicMock()
+    fleet.id = fleet_id
+    fleet.owner_id = owner_id
+    fleet.location = location
+    fleet.speed = float(speed)
+    fleet.ships = [MagicMock()]
+    fleet.task_forces = []
+    fleet.orders = []
+    for attr, value in overrides.items():
+        setattr(fleet, attr, value)
+    return fleet
+
+
+def _assert_roundtrip_property(obj, expected_attr: str, expected_value) -> None:
+    """Assert a deserialized object's property matches the expected value.
+
+    PROJ-479 Task 5.3 (DUP-003): Shared helper for the overlapping
+    `assert serialized.name == ship.name` / `assert obj.class == ...`
+    pattern between `test_ship_io.py` and `test_ship_serialization.py`.
+    Kept narrow on purpose — full consolidation would lose layer separation.
+    """
+    actual = getattr(obj, expected_attr)
+    assert actual == expected_value, (
+        f"Roundtrip property mismatch: expected {expected_attr}={expected_value!r}, "
+        f"got {actual!r}"
+    )
+
+
+def make_mock_ship_instance(
+    name="Test Ship", owner_id=0, registries=None, has_yard=False,
+):
     """
     Create a mock ShipInstance for testing.
 
@@ -358,15 +405,21 @@ def make_mock_ship_instance(name="Test Ship", owner_id=0, registries=None):
     get_calculated_stats() calls. Required for tests that call process_turn()
     or Fleet.add_ship() since those trigger stats calculations.
 
+    PROJ-479 Task 6.3 (HLP-003): Added optional ``has_yard`` kwarg to
+    subsume the `tests/integration/ui/test_fleet_build_button.py` variant.
+
     Args:
         name: Ship name (also used as design_id)
         owner_id: Owner empire ID
         registries: Optional GameRegistries for stats calculation
+        has_yard: If True, mock get_all_abilities() to return a SpaceShipyard
+            ability (used by tests checking shipyard-only behavior).
 
     Returns:
         ShipInstance: A mock ship instance for testing
     """
     from game.strategy.data.ship_instance import ShipInstance
+    from unittest.mock import MagicMock as _MagicMock
 
     ship = ShipInstance(
         instance_id=f"test-{name.lower().replace(' ', '-')}-{id(name)}",
@@ -381,6 +434,11 @@ def make_mock_ship_instance(name="Test Ship", owner_id=0, registries=None):
     )
     if registries is not None:
         ship._registries = registries
+    if has_yard:
+        # The has_space_shipyard check uses get_all_abilities()
+        ship.get_all_abilities = _MagicMock(return_value=[
+            _MagicMock(ability_type='SpaceShipyard')
+        ])
     return ship
 
 

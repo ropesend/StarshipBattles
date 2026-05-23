@@ -58,7 +58,7 @@ import logging
 from dataclasses import dataclass, field
 from enum import Enum
 from itertools import count
-from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Callable, Dict, Iterator, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from game.simulation.components.component import Component
@@ -316,7 +316,7 @@ class _StatContributorRegistry:
         """Backward-compat: dict-like ``.get(name)`` returns the active entry."""
         return self.get_active_entry(ability_name)
 
-    def iter_for(self, comp: "Component"):
+    def iter_for(self, comp: "Component") -> Iterator[StatContributorEntry]:
         """Yield every entry whose ability the component has, in phase_order ascending.
 
         Replacement entries inherit ``phase_order=99`` unless explicitly

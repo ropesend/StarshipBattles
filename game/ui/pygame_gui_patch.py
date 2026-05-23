@@ -87,7 +87,7 @@ _CacheKey = Tuple[
 ]
 
 
-def _to_tuple(value):
+def _to_tuple(value) -> tuple | None:
     """Convert ``list | None`` → ``tuple | None`` for cache-key hashing."""
     if value is None:
         return None

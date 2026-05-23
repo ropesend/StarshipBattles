@@ -13,14 +13,15 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Migrate `resupply_engine.py` callers to generic consumable API | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Migrate test callers + delete deprecated wrappers | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Migrate `resupply_engine.py` callers to generic consumable API | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Migrate test callers + delete deprecated wrappers | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Audit remediation (Codex consult 2026-05-23) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-22
-**Active Phase:** Phase 1
-**Last Action:** Project created from `Reviews/results/2026-05-20_210635_legacy-audit/` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Active Phase:** All 3 phases complete
+**Last Action:** Phase 3 complete — applied Codex audit remediation: rewrote `docs/systems/production_system.md` lines 70-71 to document the generic `*_consumable` API as canonical (and bumped "Last verified" to 2026-05-22), and dropped the stale `F-A-012:` prefix from `tests/unit/strategy/data/test_facility_resource_tracking.py:208`. Verified: `docs/` grep for fuel-wrapper names returns no hits; `TestGenericConsumableAPI` (5 tests) passes.
+**Next Action:** User to verify and close. Not committed per orchestrator instruction.
 **Blockers:** None
 
 ## Overview

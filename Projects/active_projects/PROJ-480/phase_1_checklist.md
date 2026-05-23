@@ -16,15 +16,15 @@
 **File:** `tests/unit/ui/screens/test_workshop_screen.py`
 **Tests:** `pytest tests/unit/ui/screens/test_workshop_screen.py`
 
-- [ ] Once Phase 2 of PROJ-478 deletes the CAT-2 cluster (lines 260-331 deleted), the CAT-9 boilerplate derivative disappears. _(coordination note: this finding is mostly subsumed by P0 work; no separate action required if PROJ-478 Phase 2 has run.)_
-- [ ] Verify: re-check `pytest tests/unit/ui/screens/test_workshop_screen.py` after PROJ-478 work; LOC delta covered there.
+- [x] Once Phase 2 of PROJ-478 deletes the CAT-2 cluster (lines 260-331 deleted), the CAT-9 boilerplate derivative disappears. _(coordination note: this finding is mostly subsumed by P0 work; no separate action required if PROJ-478 Phase 2 has run.)_ — PROJ-478 ran, current file has 16 tests passing.
+- [x] Verify: re-check `pytest tests/unit/ui/screens/test_workshop_screen.py` after PROJ-478 work; LOC delta covered there. — Confirmed (16 passed).
 
 ### Task 1.2: test_system_selection_window.py — 6 repeated SystemSelectionWindow constructions
 **File:** `tests/unit/ui/screens/test_system_selection_window.py`
 **Tests:** `pytest tests/unit/ui/screens/test_system_selection_window.py`
 
-- [ ] Extract `_make_system_selection_window()` helper (or `@pytest.fixture`) for the 6 tests at lines 50-227 that share `Rect(100,100,450,500)` + identical systems list.
-- [ ] Verify: passes; LOC delta ≈ -50.
+- [x] Extract `_make_system_selection_window()` helper (or `@pytest.fixture`) for the 6 tests at lines 50-227 that share `Rect(100,100,450,500)` + identical systems list. Added `make_window` fixture; 6 tests now use it.
+- [x] Verify: passes; LOC delta ≈ -50. — 9 tests pass.
 
 ### Task 1.3: test_fleet_menu_items.py — repeated fleet/mapper/galaxy construction
 **File:** `tests/unit/ui/screens/test_fleet_menu_items.py`
@@ -38,8 +38,8 @@
 **File:** `tests/unit/strategy/test_physics_constants.py`
 **Tests:** `pytest tests/unit/strategy/test_physics_constants.py`
 
-- [ ] Parametrize the 3 docstring-substring tests (lines 91-108) on `(constant, expected_substring)`.
-- [ ] Verify: passes; LOC delta ≈ -10.
+- [x] Parametrize the 3 docstring-substring tests (lines 91-108) on `(constant, expected_substring)`. Actual path was `tests/unit/simulation/test_physics_constants.py` (plan said `strategy/`). Kept distinct substring sets so each formula's missing substring fails its own param case.
+- [x] Verify: passes; LOC delta ≈ -10. — 11 tests pass.
 
 ### Task 1.5: test_save_selection.py — 3 setup_tmpdir wrappers
 **File:** `tests/unit/ui/test_save_selection.py`
@@ -52,8 +52,8 @@
 **File:** `tests/unit/core/test_hex_math_core.py`
 **Tests:** `pytest tests/unit/core/test_hex_math_core.py`
 
-- [ ] Add `import random` at module level (or `from game.core.hex_math import hex_random_cluster`) and remove the 9 in-method import statements at lines 722, 735, 748, 757, 783, 806, 819, 841, 853.
-- [ ] Verify: passes; LOC delta ≈ -9.
+- [x] Add `import random` at module level (or `from game.core.hex_math import hex_random_cluster`) and remove the 9 in-method import statements at lines 722, 735, 748, 757, 783, 806, 819, 841, 853. `hex_random_cluster` already at module level; removed 9 in-method `from game.core.hex_math import hex_random_cluster` lines.
+- [x] Verify: passes; LOC delta ≈ -9. — 92 tests pass.
 
 ### Task 1.7: test_colonization_facade.py — 8 in-method MockPlanetType defs
 **File:** `tests/unit/strategy/services/test_colonization_facade.py`
@@ -66,22 +66,22 @@
 **File:** `tests/unit/strategy/engine/test_build_order_processor.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_build_order_processor.py`
 
-- [ ] Update `test_build_order_auto_completes_when_queue_empties` (line 80) and `test_queued_orders_remain_after_build_completion` (line 149) to use the existing `order_processor` fixture at lines 14-17 instead of constructing locally.
-- [ ] Verify: passes; LOC delta ≈ -4.
+- [x] Update `test_build_order_auto_completes_when_queue_empties` (line 80) and `test_queued_orders_remain_after_build_completion` (line 149) to use the existing `order_processor` fixture at lines 14-17 instead of constructing locally.
+- [x] Verify: passes; LOC delta ≈ -4. — All tests pass.
 
 ### Task 1.9: test_empire_build_queue_formatter.py — repeated in-method imports
 **File:** `tests/unit/ui/screens/test_empire_build_queue_formatter.py`
 **Tests:** `pytest tests/unit/ui/screens/test_empire_build_queue_formatter.py`
 
-- [ ] Move `get_resource_rate_text` and `get_resource_total_text` imports to module level; remove from 5+ method bodies in TestGetResourceRateText and TestGetResourceTotalText (lines 193-258).
-- [ ] Verify: passes; LOC delta ≈ -10.
+- [x] Move `get_resource_rate_text` and `get_resource_total_text` imports to module level; remove from 5+ method bodies in TestGetResourceRateText and TestGetResourceTotalText (lines 193-258). Removed 10 in-method imports.
+- [x] Verify: passes; LOC delta ≈ -10. — 31 tests pass.
 
 ### Task 1.10: test_engine_validation.py — 12 near-identical engine classes
 **File:** `tests/unit/strategy/engine/test_engine_validation.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_engine_validation.py`
 
-- [ ] Consolidate the 12 engine validation classes (lines 39-319, ~280 LOC, each has `test_valid_empires_pass` + `test_*_raises` with the same `_empire()` / `_fleet()` helpers) into a parametrized superclass or per-engine `@pytest.fixture(params=[...])`.
-- [ ] Verify: passes; LOC delta ≈ -180.
+- [x] Consolidate the 12 engine validation classes (lines 39-319, ~280 LOC, each has `test_valid_empires_pass` + `test_*_raises` with the same `_empire()` / `_fleet()` helpers) into a parametrized superclass or per-engine `@pytest.fixture(params=[...])`. Single `TestEngineValidationMatrix` parametrized over 15 engine-case rows; each row preserves its distinct failure mode (colony-none / fleet-none-location / fleet-none-ships / fleet-none-orders / resource_pool-none) so a regression in one engine fails its own param id.
+- [x] Verify: passes; LOC delta ≈ -180. — 30 tests pass (file shrank from 320 LOC to ~245).
 
 ### Task 1.11: test_strategy_input_handler_transfer.py — 3 mode-test classes
 **File:** `tests/unit/ui/screens/test_strategy_input_handler_transfer.py`
@@ -94,14 +94,14 @@
 **File:** `tests/unit/ui/screens/builder/test_modifier_utils.py`
 **Tests:** `pytest tests/unit/ui/screens/builder/test_modifier_utils.py`
 
-- [ ] _(coordination note: addressed via DUP-006 in PROJ-479 Phase 5 Task 5.5. No separate action required.)_
+- [x] _(coordination note: addressed via DUP-006 in PROJ-479 Phase 5 Task 5.5. No separate action required.)_
 
 ### Task 1.13: test_fleet_movement_engine/conftest.py — 16-attribute mock_fleet duplicated
 **File:** `tests/unit/strategy/fleet_movement_engine/conftest.py`
 **Tests:** `pytest tests/unit/strategy/fleet_movement_engine/`
 
-- [ ] Move the 16-attribute `mock_fleet` fixture (lines 21-38) to the canonical conftest if duplicated in `test_fleet_order_transfer.py:21-36`, or extend kwargs to avoid duplication.
-- [ ] Verify: passes; LOC delta ≈ -18.
+- [x] Move the 16-attribute `mock_fleet` fixture (lines 21-38) to the canonical conftest if duplicated in `test_fleet_order_transfer.py:21-36`, or extend kwargs to avoid duplication. — `test_fleet_order_transfer.py` no longer exists; duplication is gone. No further action required.
+- [x] Verify: passes; LOC delta ≈ -18. — Confirmed: no duplicate.
 
 ### Task 1.14: test_race_setup_screen.py — repeated inline mock function defs
 **File:** `tests/unit/ui/test_race_setup_screen.py`
@@ -135,21 +135,21 @@
 **File:** `tests/unit/ui/utils/test_list_data_source_base.py`
 **Tests:** `pytest tests/unit/ui/utils/test_list_data_source_base.py`
 
-- [ ] Split `test_get_cell_value_supports_func_attr_nested_attr_and_format` (lines 57-64) into 4 parametrized tests: computed, direct_attr, formatted_attr, nested_attr. Improves failure isolation.
-- [ ] Verify: passes; LOC delta ≈ +5 (split is wider but more diagnostic).
+- [x] Split `test_get_cell_value_supports_func_attr_nested_attr_and_format` (lines 57-64) into 4 parametrized tests: computed, direct_attr, formatted_attr, nested_attr. Improves failure isolation. Actual path: `tests/unit/ui/screens/test_list_data_source_base.py`.
+- [x] Verify: passes; LOC delta ≈ +5 (split is wider but more diagnostic). — 8 tests pass.
 
 ### Task 1.19: test_basic_paths.py — find_path_deep_space duplicated helpers
 **File:** `tests/unit/strategy/pathfinding/test_basic_paths.py`
 **Tests:** `pytest tests/unit/strategy/pathfinding/`
 
-- [ ] Move `find_path_deep_space` and `find_path_interstellar` (lines 12-30, also in `test_edge_cases.py`) to `tests/unit/strategy/pathfinding/conftest.py`; import in both files.
-- [ ] Verify: passes; LOC delta ≈ -20.
+- [x] Move `find_path_deep_space` and `find_path_interstellar` (lines 12-30, also in `test_edge_cases.py`) to `tests/unit/strategy/pathfinding/conftest.py`; import in both files. Done; both test files now import from conftest.
+- [x] Verify: passes; LOC delta ≈ -20. — 76 tests pass.
 
 ### Task 1.20: test_naming.py — module-level loop test
 **File:** `tests/unit/strategy/utility/test_naming.py`
 **Tests:** `pytest tests/unit/strategy/utility/test_naming.py`
 
-- [ ] _(CAT-12 finding S14-F005 was REJECTED — 5-line loop is straightforward; do not change.)_
+- [x] _(CAT-12 finding S14-F005 was REJECTED — 5-line loop is straightforward; do not change.)_
 
 ### Task 1.21: test_damage_calculator.py — mock_ship factory unused
 **File:** `tests/unit/simulation/combat/test_damage_calculator.py`
@@ -162,48 +162,48 @@
 **File:** `tests/unit/ui/test_battle_panels_extended.py`
 **Tests:** `pytest tests/unit/ui/test_battle_panels_extended.py`
 
-- [ ] _(coordination note: addressed via DUP-002 in PROJ-479 Phase 5 Task 5.2. No separate action required.)_
+- [x] _(coordination note: addressed via DUP-002 in PROJ-479 Phase 5 Task 5.2. No separate action required.)_
 
 ### Task 1.23: test_harvesting_engine.py — staticmethod _make_engine declared 3×
 **File:** `tests/unit/strategy/engine/test_harvesting_engine.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_harvesting_engine.py`
 
-- [ ] Remove the 3 `_make_engine = staticmethod(_make_engine)` declarations at lines 157, 524, 842 — call the module-level `_make_engine()` directly in test methods.
-- [ ] Verify: passes; LOC delta ≈ -3.
+- [x] Remove the 3 `_make_engine = staticmethod(_make_engine)` declarations at lines 157, 524, 842 — call the module-level `_make_engine()` directly in test methods. Removed 4 declarations (plan undercounted by 1); replaced all `self._make_engine(...)` with `_make_engine(...)`.
+- [x] Verify: passes; LOC delta ≈ -3. — 36 tests pass.
 
 ### Task 1.24: test_battle_spec.py — 4 _minimal_* helpers
 **File:** `tests/unit/simulation/test_battle_spec.py`
 **Tests:** `pytest tests/unit/simulation/test_battle_spec.py`
 
-- [ ] _(verification: VERIFIED but flagged as acceptable per advisory rule — helpers are well-factored factories. No remediation indicated.)_
-- [ ] No action required.
+- [x] _(verification: VERIFIED but flagged as acceptable per advisory rule — helpers are well-factored factories. No remediation indicated.)_
+- [x] No action required.
 
 ### Task 1.25: test_save_load_ops.py + others — setup_tmpdir 5× duplication
 **File:** `tests/unit/strategy/save_game_service/test_save_load_ops.py`
 **Tests:** `pytest tests/unit/strategy/save_game_service/`
 
-- [ ] _(coordination note: addressed via HLP-005 in PROJ-479 Phase 6 Task 6.5. No separate action required here.)_
+- [x] _(coordination note: addressed via HLP-005 in PROJ-479 Phase 6 Task 6.5. No separate action required here.)_
 
 ### Task 1.26: test_superweapons.py — `.items()` parametrize variant
 **File:** `tests/unit/strategy/engine/test_superweapons.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_superweapons.py`
 
-- [ ] Normalize the lone `.items()` parametrization at line 113 to match the 9 `.keys()` peers — or document why this one diverges.
-- [ ] Verify: passes; LOC delta ≈ 0 (semantic alignment only).
+- [x] Normalize the lone `.items()` parametrization at line 113 to match the 9 `.keys()` peers — or document why this one diverges. Documented divergence: the `.items()` form is required because the assertion checks `expected_value` from the registry. Actual path: `tests/unit/simulation/components/abilities/test_superweapons.py`.
+- [x] Verify: passes; LOC delta ≈ 0 (semantic alignment only). — Tests pass.
 
 ### Task 1.27: test_planet_specific_colonization.py — duplicate 'colony_pod' dict keys
 **File:** `tests/unit/strategy/engine/test_planet_specific_colonization.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_planet_specific_colonization.py`
 
-- [ ] Remove the 2 duplicate `'colony_pod'` dict entries at lines 174, 178 (line 183 is the surviving entry per dict-last-wins semantics).
-- [ ] Verify: passes; LOC delta ≈ -2.
+- [x] Remove the 2 duplicate `'colony_pod'` dict entries at lines 174, 178 (line 183 is the surviving entry per dict-last-wins semantics). Actual path: `tests/integration/colonization/test_planet_specific_colonization.py`.
+- [x] Verify: passes; LOC delta ≈ -2. — All tests pass.
 
 ### Task 1.28: test_action_execution_engine.py — for-loop with assertions
 **File:** `tests/unit/strategy/engine/test_action_execution_engine.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_action_execution_engine.py`
 
-- [ ] Parametrize `test_speed_1_fleet_acts_every_100_ticks` (lines 76-96) on `tick` ∈ [1, 20, 50, 99] for per-tick failure isolation.
-- [ ] Verify: passes; LOC delta ≈ +5.
+- [x] Parametrize `test_speed_1_fleet_acts_every_100_ticks` (lines 76-96) on `tick` ∈ [1, 20, 50, 99] for per-tick failure isolation. Split into `test_speed_1_fleet_does_not_act_on_non_100_tick` (parametrized) + `test_speed_1_fleet_acts_on_tick_100`.
+- [x] Verify: passes; LOC delta ≈ +5. — Tests pass.
 
 ---
 

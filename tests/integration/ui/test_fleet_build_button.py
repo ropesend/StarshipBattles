@@ -9,39 +9,9 @@ from game.strategy.data.empire import Empire
 from game.strategy.data.ship_instance import ShipInstance
 
 
-def make_mock_ship_instance(name="Test Ship", owner_id=0, has_yard=False, registries=None):
-    """Create a mock ShipInstance for testing.
-
-    PROJ-211: Accepts optional registries for DI compliance. Required for tests
-    that call get_calculated_stats() (triggered by show_detailed_report).
-    """
-    design_data = {
-        'name': name,
-        'vehicle_type': 'Ship',
-        'stats': {'mass': 100}
-    }
-
-    ship = ShipInstance(
-        instance_id=f"test-{name.lower().replace(' ', '-')}",
-        design_id=name,
-        name=name,
-        owner_id=owner_id,
-        design_data=design_data,
-    )
-
-    # PROJ-211: Set registries for DI compliance
-    if registries is not None:
-        ship.set_registries(registries)
-
-    # Mock has_space_shipyard ability if requested
-    if has_yard:
-        # The has_space_shipyard check uses get_all_abilities()
-        # We need to mock this to return a SpaceShipyard ability
-        ship.get_all_abilities = MagicMock(return_value=[
-            MagicMock(ability_type='SpaceShipyard')
-        ])
-
-    return ship
+# PROJ-479 Task 6.3 (HLP-003): make_mock_ship_instance moved to
+# tests/conftest.py — the canonical version was extended with `has_yard` kwarg.
+from tests.conftest import make_mock_ship_instance  # noqa: F401, E402
 
 
 class MockScene:

@@ -6,12 +6,15 @@ canonical module for both classes — import directly from here.
 """
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, TYPE_CHECKING
 
 from game.core.error_codes import ErrorCode
 from game.core.exceptions import PersistenceException
 from game.core.hex_math import hex_from_dict, hex_to_dict
 from game.core.validation_helpers import require_keys
+
+if TYPE_CHECKING:
+    from game.strategy.data.stars import Star
 
 __all__ = ["WarpPoint", "StarSystem"]
 
@@ -82,7 +85,7 @@ class StarSystem:
         )
 
     @property
-    def primary_star(self):
+    def primary_star(self) -> "Star | None":
         return self.stars[0] if self.stars else None
 
     def add_warp_point(self, destination_id, location) -> None:

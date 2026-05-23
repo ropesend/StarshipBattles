@@ -1,8 +1,9 @@
 import pytest
 import math
 from game.strategy.data.planet_gen import PlanetGenerator
+from game.core.constants import EARTH_MASS
 from game.strategy.data.planet_physics import (
-    MASS_MOON, MASS_EARTH, MASS_JUPITER,
+    MASS_MOON, MASS_JUPITER,
     calculate_radius_density_from_mass,
 )
 from game.strategy.data.planet_atmosphere import generate_atmosphere
@@ -16,7 +17,7 @@ def generator():
 
 def test_radius_density_consistency(generator):
     """Verify radius and density calculations are physically linked."""
-    mass = MASS_EARTH
+    mass = EARTH_MASS
     radius, density = calculate_radius_density_from_mass(mass)
     
     # V = m/rho
@@ -34,7 +35,7 @@ def test_earthlike_planet_does_not_retain_h2(generator):
     """Earth-mass planet (escape ~11 km/s, T=300K) should lose H2."""
     # H2 v_rms ~ 1900 m/s; 6*v_rms ~ 11400 m/s. Usually Earth loses H2.
     comp, _press, _temp = generate_atmosphere(
-        mass=MASS_EARTH,
+        mass=EARTH_MASS,
         escape_vel=11200,
         base_temp=300,
         flux_wm2=1360,
@@ -70,7 +71,7 @@ def test_greenhouse_effect(generator):
     
     # Mass 2x Earth, Temp 300
     comp, press, temp_atm = generate_atmosphere(
-        mass=MASS_EARTH * 2, 
+        mass=EARTH_MASS * 2,
         escape_vel=15000, 
         base_temp=300, 
         flux_wm2=1360

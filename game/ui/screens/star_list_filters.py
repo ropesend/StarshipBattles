@@ -14,6 +14,7 @@ from game.ui.screens.list_filter_utils import make_attr_sort_key
 
 if TYPE_CHECKING:
     from game.strategy.facade.slices._facade_state import FacadeSessionState
+    from game.strategy.data.stars import Star
 
 
 @profile_action("Panel: StarRegistry.gather_stars")
@@ -21,7 +22,7 @@ def gather_stars(
     world,
     *,
     facade_state: "Optional[FacadeSessionState]" = None,
-) -> Any:
+) -> list["Star"]:
     """Collect all stars from the galaxy with pre-computed filter values.
 
     PROJ-477 Phase 4: takes the scene-owned ``StrategyWorldAccess`` seam
@@ -70,7 +71,7 @@ def gather_stars(
 def filter_stars(stars, search_lower, filter_types,
                  min_mass, max_mass, min_temp, max_temp,
                  min_lum, max_lum, min_age, max_age,
-                 min_radius, max_radius) -> Any:
+                 min_radius, max_radius) -> list["Star"]:
     """Filter stars based on search criteria.
 
     Args:
@@ -121,7 +122,7 @@ def filter_stars(stars, search_lower, filter_types,
     return [s for s in stars if matches_filter(s)]
 
 
-def sort_stars(stars, sort_column_id, sort_descending, columns) -> Any:
+def sort_stars(stars, sort_column_id, sort_descending, columns) -> list["Star"]:
     """Sort stars by the specified column.
 
     Args:
@@ -163,7 +164,7 @@ def sort_stars(stars, sort_column_id, sort_descending, columns) -> Any:
 
 
 @profile_action("Panel: StarRegistry.compute_ranges")
-def compute_star_ranges(all_stars) -> Any:
+def compute_star_ranges(all_stars) -> dict[str, tuple[float, float]]:
     """Compute min/max ranges for filter sliders from actual star data.
 
     Args:
@@ -203,7 +204,7 @@ def compute_star_ranges(all_stars) -> Any:
     return ranges
 
 
-def get_system_name(star) -> Any:
+def get_system_name(star) -> str:
     """Get the system name for a star.
 
     Uses cached system name attached during gather_stars().
@@ -217,7 +218,7 @@ def get_system_name(star) -> Any:
     return getattr(star, '_cached_system_name', "?")
 
 
-def get_star_type_display(star) -> Any:
+def get_star_type_display(star) -> str:
     """Get human-readable display name for a star's type.
 
     Args:

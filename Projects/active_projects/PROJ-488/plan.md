@@ -13,13 +13,14 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Migrate 25 callers + delete alias | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Migrate 25 callers + delete alias | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Audit remediation (Codex consult 2026-05-23) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-05-22
-**Active Phase:** Phase 1
-**Last Action:** Project created from `Reviews/results/2026-05-20_210635_legacy-audit/` after independent verification
-**Next Action:** Begin Phase 1 tasks
+**Last Updated:** 2026-05-23
+**Active Phase:** All 2 phases complete
+**Last Action:** Phase 1 complete — migrated 67 `MASS_EARTH` references across 11 Python files to canonical `EARTH_MASS` from `game.core.constants`, deleted the alias declaration (and its now-unused import) in `game/strategy/data/planet_physics.py`, updated the static-guard fixture entry at `tests/static_guards/test_facade_read_path_imports_guard.py:208` from `(system_mode.py, game.strategy.data.planet_physics, MASS_EARTH)` to `(system_mode.py, game.core.constants, EARTH_MASS)`. Targeted test suite (471 tests across planet_physics / planet_gen / planet_atmosphere / static_guards / integration) passes in 3.94s. Not committed per project policy.
+**Next Action:** Project ready for audit + close. (Note: `pytest tests/ --testmon` errored out with an environment-level `path is on mount '\\\\.\\nul'` ValueError in testmon itself — unrelated to this change, ran targeted suite without `--testmon` instead.)
 **Blockers:** None
 
 ## Overview

@@ -36,7 +36,7 @@ def process_create_dyson_sphere(
 
     spec = find_superweapon_spec(OrderType.CREATE_DYSON_SPHERE)
 
-    def _precheck(*, fleet, empire, galaxy, empires, order, component_registry):
+    def _precheck(*, fleet, empire, galaxy, empires, order, component_registry) -> "SuperweaponResult | None":
         system = processor._get_system_at_hex(galaxy, fleet.location)
         if system is None:
             return SuperweaponResult(
@@ -48,7 +48,7 @@ def process_create_dyson_sphere(
             )
         return None
 
-    def _effect(*, fleet, empire, galaxy, empires, order, ship, component_registry):
+    def _effect(*, fleet, empire, galaxy, empires, order, ship, component_registry) -> "dict[str, Any]":
         system = processor._get_system_at_hex(galaxy, fleet.location)
         primary_star = system.stars[0]
         star_loc = primary_star.location

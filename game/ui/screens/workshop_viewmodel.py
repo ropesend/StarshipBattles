@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     from game.core.registry import GameRegistries
     from game.simulation.components.component import Component
     from game.simulation.entities.ship import Ship
-    from game.simulation.services.vehicle_design_service import DesignResult
+    from game.simulation.services.vehicle_design_service import DesignResult, ValidationResult
     from game.ui.screens.workshop_context import WorkshopContext
 
 
@@ -132,7 +132,7 @@ class WorkshopViewModel:
         service_call,
         on_success,
         on_failure,
-    ):
+    ) -> Any:
         """Run a ship operation with the standard guard / notify / log pattern.
 
         Extracted in PROJ-319 (DUP-X-10) to consolidate the boilerplate around
@@ -404,7 +404,7 @@ class WorkshopViewModel:
         """Change the ship's vehicle class using the service."""
         return self._ship_ops.change_ship_class(new_class, migrate_components)
 
-    def validate_design(self) -> Any:
+    def validate_design(self) -> "ValidationResult | None":
         """Validate the current ship design using the service."""
         return self._ship_ops.validate_design()
 

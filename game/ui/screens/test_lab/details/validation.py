@@ -36,7 +36,7 @@ _PHASE_LABELS = {
 }
 
 
-def _phase_color(phase: str):
+def _phase_color(phase: str) -> tuple[int, int, int]:
     """Resolve the per-phase header color from `theme`. Done at call time so
     test patches of `theme` are honoured."""
     return {

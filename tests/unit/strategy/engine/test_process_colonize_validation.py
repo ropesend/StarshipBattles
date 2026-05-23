@@ -178,64 +178,33 @@ def galaxy_with_ice_planet():
 class TestProcessColonizeValidation:
     """Tests for ColonizeHandler execution-time validation (PROJ-140 Bug 1+2)."""
 
-    def test_process_colonize_universal_drop_pod_succeeds(
-        self, galaxy_with_ice_planet, component_registry
+    @pytest.mark.parametrize(
+        "pod_type,colony_name",
+        [
+            ("CONTINENTAL", "Continental Colony Ship"),
+            ("ICE_DWARF", "Ice Colony Ship"),
+        ],
+        ids=["universal_drop_pod", "correct_pod_type"],
+    )
+    def test_process_colonize_pod_type_succeeds(
+        self, galaxy_with_ice_planet, component_registry, pod_type, colony_name
     ):
         """
-        Phase 3: Drop pods are universal -- any drop pod works on any planet type.
-
-        Fleet with any drop pod at ICE_DWARF planet.
-        Assert: colonized=True, planet owner_id set to empire.
+        Phase 3 (PROJ-140): Drop pods are universal -- any pod type
+        colonizes any planet type. Parametrized over CONTINENTAL / ICE_DWARF.
         """
         galaxy, ice_planet = galaxy_with_ice_planet
-
-        # Create fleet with any drop pod (originally labelled CONTINENTAL)
-        colony_ship = make_colony_ship("Continental Colony Ship", 1, "CONTINENTAL")
-
+        colony_ship = make_colony_ship(colony_name, 1, pod_type)
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(colony_ship)
         fleet.orders.append(Order(OrderType.COLONIZE, ice_planet))
-
         empire = Empire(1, "Player 1", (255, 0, 0))
         empire.fleets.append(fleet)
 
-        # Execute colonization
         processor = OrderProcessor()
         result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
             fleet, empire, galaxy, component_registry=component_registry)
 
-        # Phase 3: Drop pods are universal
-        assert result.colonized is True
-        assert ice_planet.owner_id == 1
-        assert ice_planet in empire.colonies
-
-    def test_process_colonize_correct_pod_type_succeeds(
-        self, galaxy_with_ice_planet, component_registry
-    ):
-        """
-        PROJ-140: Verify correct pod type colonization still works.
-
-        Fleet with ICE_DWARF pod at ICE_DWARF planet, component_registry provided.
-        Assert: colonized=True, planet owner_id set to empire.
-        """
-        galaxy, ice_planet = galaxy_with_ice_planet
-
-        # Create fleet with ICE_DWARF colony ship (correct type)
-        colony_ship = make_colony_ship("Ice Colony Ship", 1, "ICE_DWARF")
-
-        fleet = Fleet(1, 1, HexCoord(10, 10))
-        fleet.ships.append(colony_ship)
-        fleet.orders.append(Order(OrderType.COLONIZE, ice_planet))
-
-        empire = Empire(1, "Player 1", (255, 0, 0))
-        empire.fleets.append(fleet)
-
-        # Execute colonization WITH component registry
-        processor = OrderProcessor()
-        result = processor.get_handler(OrderType.COLONIZE).execute_action_order(
-            fleet, empire, galaxy, component_registry=component_registry)
-
-        # Assert: Colonization succeeded
         assert result.colonized is True
         assert ice_planet.owner_id == 1
         assert ice_planet in empire.colonies

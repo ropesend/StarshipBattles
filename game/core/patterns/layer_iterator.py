@@ -35,7 +35,7 @@ def get_component_id(comp_entry: Any) -> str:
     if isinstance(comp_entry, str):
         return comp_entry
     if isinstance(comp_entry, dict):
-        return comp_entry.get('id', '')
+        return str(comp_entry.get('id', ''))
     return ''
 
 

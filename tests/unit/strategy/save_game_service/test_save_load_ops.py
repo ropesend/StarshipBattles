@@ -21,34 +21,11 @@ from game.core.json_utils import load_json, save_json
 from game.core import paths as paths_module
 
 
-class MockGameSession:
-    """Mock GameSession for testing save operations."""
-
-    def __init__(self, config=None, turn_number=1, num_empires=2):
-        self.config = config or GameConfig()
-        self.turn_number = turn_number
-        self.save_path = None
-        self.systems = [MagicMock()]  # At least one system
-
-        # Create mock empires
-        self.empires = []
-        for i in range(num_empires):
-            empire = MagicMock()
-            empire.id = i
-            empire.name = f"Empire {i}"
-            self.empires.append(empire)
-
-    def to_dict(self):
-        return {
-            'turn_number': self.turn_number,
-            'save_path': self.save_path,
-            'config': self.config.to_dict(),
-            'galaxy': {'systems': {}, 'warp_lanes': [], 'radius': 4000},
-            'empires': [{'id': e.id, 'name': e.name, 'color': (0, 0, 255),
-                         'colony_ids': [], 'fleets': [], 'built_ship_designs': []}
-                        for e in self.empires],
-            'human_player_ids': [0, 1]
-        }
+# PROJ-479 Task 1.20 + HLP-001 (Phase 6): MockGameSession is imported from
+# the sibling conftest (`tests/unit/strategy/save_game_service/conftest.py`)
+# instead of being redefined here. The conftest copy is byte-identical with
+# the previous local class.
+from .conftest import MockGameSession  # noqa: F401  (re-export for back-compat)
 
 
 class TestSaveGameServiceFolderStructure:

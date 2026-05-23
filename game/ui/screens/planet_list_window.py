@@ -211,7 +211,7 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
     # -----------------------------------------------------------------------
 
     @property
-    def filter_types(self) -> Any:
+    def filter_types(self) -> dict[str, bool]:
         """Planet type filter dict (mutable reference)."""
         return self._filter_mgr.filter_types
 
@@ -221,7 +221,7 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
         self._filter_mgr.filter_types = value
 
     @property
-    def filter_owner(self) -> Any:
+    def filter_owner(self) -> dict[str, bool]:
         """Owner category filter dict (mutable reference)."""
         return self._filter_mgr.filter_owner
 
@@ -231,7 +231,7 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
         self._filter_mgr.filter_owner = value
 
     @property
-    def filter_effects(self) -> Any:
+    def filter_effects(self) -> dict[str, FilterState]:
         """FEAT-16: Effects filter dict (mutable reference)."""
         return self._filter_mgr.filter_effects
 
@@ -241,7 +241,7 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
         self._filter_mgr.filter_effects = value
 
     @property
-    def filter_ranges(self) -> Any:
+    def filter_ranges(self) -> dict[str, list[float]]:
         """Range filter dict (mutable reference)."""
         return self._filter_mgr.filter_ranges
 
@@ -292,7 +292,7 @@ class PlanetListWindow(DataListWindowMixin, StrategyModalWindow):
         super().update(time_delta)
         # PROJ-375 Task 3.2: shared scroll/slider/header/preset polling.
         self._run_update_template(['gravity', 'temp', 'mass'])
-    def _capture_current_state(self) -> Any:
+    def _capture_current_state(self) -> dict[str, Any]:
         """Serialize current filters and column config."""
         return capture_planet_list_state(
             self.columns, self.txt_name_filter, self.filter_types,

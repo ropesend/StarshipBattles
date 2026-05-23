@@ -17,16 +17,10 @@ import pytest
 class TestGroupPolicyRegistryLoading:
     """Tests for loading group policies from JSON."""
 
-    def test_registry_loads_from_data_file(self):
-        """GroupPolicyRegistry loads from data/group_policies.json."""
-        from game.strategy.data.group_policy_registry import GroupPolicyRegistry
-
-        registry = GroupPolicyRegistry()
-        registry.load()
-
-        assert len(registry.targeting_policies) > 0
-        assert len(registry.movement_policies) > 0
-        assert len(registry.retreat_policies) > 0
+    # PROJ-479 Task 1.7: deleted `test_registry_loads_from_data_file` —
+    # the parametrized `test_policy_registry_structural_invariants` below
+    # covers the same ground (each axis has > 0 policies) with stronger
+    # per-policy accessor/validator assertions.
 
     @pytest.mark.parametrize('axis', ['targeting', 'movement', 'retreat'])
     def test_policy_registry_structural_invariants(self, axis):

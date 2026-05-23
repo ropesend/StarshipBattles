@@ -19,13 +19,14 @@ import importlib.util
 from pathlib import Path
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="module")
 def renderer_module():
     """Load the renderer module directly by file path, bypassing package __init__.py.
 
-    This uses importlib.util.spec_from_file_location to load research_renderer.py
-    without triggering game.ui.research.__init__ (which imports research_scene,
-    which imports pygame_gui). This avoids pygame_gui corruption under xdist.
+    PROJ-479 Task 2.10: scope=module — the importlib.util load is the
+    expensive operation and the resulting module is read-only across the
+    test suite. Session scope would be wrong (could leak into unrelated
+    modules under xdist).
     """
     import pygame
     if not pygame.font.get_init():

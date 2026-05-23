@@ -60,7 +60,7 @@ class GalaxyModeHelper:
         self.fps_label = None
         self.btn_back = None
 
-    def create_ui(self) -> Any:
+    def create_ui(self) -> list:
         """
         Create UI for galaxy layout testing mode.
 

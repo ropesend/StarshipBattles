@@ -17,8 +17,10 @@ import pygame_gui
 import pytest
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def pygame_init():
+    """PROJ-479 Task 2.6: module-scoped pygame init — reusable across all
+    tests in this module since pygame.display.set_mode HIDDEN is read-only."""
     pygame.init()
     pygame.display.set_mode((1024, 768), pygame.HIDDEN)
     yield
