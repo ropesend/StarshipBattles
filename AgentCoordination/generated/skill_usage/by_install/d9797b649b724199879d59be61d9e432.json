@@ -39,10 +39,10 @@
     },
     "claude-proj-archive": {
       "agents": {
-        "claude": 6
+        "claude": 7
       },
-      "count": 6,
-      "last_used": "2026-05-06T02:54:10Z"
+      "count": 7,
+      "last_used": "2026-05-23T13:39:03Z"
     },
     "claude-proj-continue": {
       "agents": {
@@ -109,10 +109,10 @@
     },
     "codex-starship-consult-respond": {
       "agents": {
-        "codex": 40
+        "codex": 41
       },
-      "count": 40,
-      "last_used": "2026-05-23T13:21:17Z"
+      "count": 41,
+      "last_used": "2026-05-23T13:47:06Z"
     },
     "codex-starship-performance-profiling": {
       "agents": {

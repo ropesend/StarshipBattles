@@ -1,0 +1,144 @@
+BATCH 5 ORCHESTRATOR — Cluster E (3 projects, serial) — PROJ-480 follow-through
+
+You are the orchestrator for Batch 5 of a 3-batch parallel execution (Batches 4/5/6 run CONCURRENTLY on separate machines, each on its own branch). The other two batches:
+  - Batch 4 = PROJ-491, PROJ-492, PROJ-493 (PROJ-479 follow-through — CAT-6 test rewrites + HLP sweeps + SuperweaponValidator DI seam)
+  - Batch 6 = PROJ-497, PROJ-498, PROJ-499 (PROJ-489 blast-radius mitigation + snapshot harness fix)
+
+These three batches were scaffolded on 2026-05-23 by four parallel planning subagents working with Codex consults. The 9 new projects (PROJ-491..499) were partitioned across the batches by file-overlap analysis. Batch 5's scope is the PROJ-480 deferred backlog (P2 test polish — CAT-8 needless complexity, CAT-9 simplification, CAT-10 parametrize, CAT-11 fragile assertion, CAT-12 logic-heavy), partitioned by locality.
+
+> **Cross-batch file friction (READ THIS):** Batch 4 and Batch 5 are NOT fully disjoint. Roughly 9 UI-screen test files appear in both Batch 4's PROJ-491 (CAT-6 rewrites) and Batch 5's PROJ-494 (CAT-10 parametrize), and 1 colonization-facade test appears in both PROJ-492 (HLP-002 sweep, Batch 4) and PROJ-494 (Batch 5). PROJ-492's 37-file `_make_fleet` sweep additionally hits files PROJ-495 also edits. See the PARALLEL-BATCH AWARENESS section near the end of this prompt for the explicit shared-file list. Plan for merge work when the branches converge.
+
+> **Phase 0 is mandatory for every project in this batch.** Each of PROJ-494/495/496 starts with a "Retarget / prune" phase. The plan paths inherited from PROJ-480 had drifted significantly (PROJ-478/479/487/488/489 moved or edited many of the target files during Batch 1). Subagent B re-verified paths at scaffold time, but the working tree continues to evolve — RE-VERIFY each task's target before TDD inside that task.
+
+Your 3 projects MUST run in this exact serial order. Do NOT parallelize within the batch — every project's workflow must complete before the next begins.
+
+================================================================
+PROJECT ORDER (run one at a time, in this sequence)
+================================================================
+
+1. PROJ-494 — Test polish UI-family (5 phases: Phase 0 retarget, CAT-9, CAT-8, CAT-10, CAT-11/12 on ~40 UI test files)
+2. PROJ-495 — Test polish core mechanical (5 phases: Phase 0 retarget, CAT-9, CAT-8, CAT-10, CAT-11/12 on ~33 simulation/strategy test files)
+3. PROJ-496 — Test polish risky + non-UI integration (3 phases: Phase 0 retarget, ~7 high-judgment unit files, ~5 integration files)
+
+Why this order:
+- 494 first: largest surface (~40 files), all UI test files. Doing this batch's UI work first reduces churn for the smaller subsequent projects. Also the UI-family files have the most cross-batch friction (with Batch 4's PROJ-491), so getting them through the audit loop first localizes the merge work.
+- 495 second: core mechanical (non-UI) — simulation/strategy/regression tests. Lower cross-batch friction. Has one coordination point with PROJ-479's DUP-005 (PROJ-495 T2.12 `tests/unit/strategy/engine/test_resupply_engine.py`) and DUP-003 (T3.28 `tests/unit/simulation/entities/test_ship_serialization.py`) — confirm these landed in PROJ-479 before relying on shared helpers.
+- 496 last: judgment-heavy / risky single-test-body rewrites + 5 integration files. Lowest LOC, highest concentration. Putting it last lets the orchestrator focus on the high-judgment work with a clean state.
+
+================================================================
+PER-PROJECT WORKFLOW (apply this loop to each project, in order)
+================================================================
+
+For project PROJ-NNN, execute the following steps in sequence:
+
+STEP A — IMPLEMENT
+  Spawn a single subagent via the Agent tool with subagent_type "general-purpose" and the prompt:
+    "Run /claude-proj-continue PROJ-NNN. Implement every phase listed in plan.md per the protocol at Projects/protocols/. Phase 0 is RETARGET/PRUNE — for every task in the project, re-grep the actual target file/line against the live tree BEFORE making any edit. If the file moved, the symbol was renamed, or the work was already absorbed by a Batch-1 project, mark the task DROPPED with a reason in the checklist. Only after Phase 0 completes should you proceed to Phase 1 onward. Mark each phase Complete in plan.md and the phase checklist when its checkboxes are all checked. Do not commit. When all phases are done, report back with: (a) files modified, (b) per-phase counts of tasks completed / dropped / parametrized, (c) any task you reclassified as out-of-scope, (d) targeted test results."
+
+  Wait for the subagent's reply. Do NOT spawn the next project's subagent until this step completes.
+
+  Special notes per project:
+  - PROJ-494 has the highest risk of stale plan refs because UI files were heavily moved by PROJ-478/479. Phase 0 may drop several tasks; that's expected and not a blocker.
+  - PROJ-495 Task 2.12 (test_resupply_engine.py mock factories) coordinates with PROJ-479 DUP-005. Re-check whether PROJ-479's helper landing already absorbed this task before doing the work.
+  - PROJ-496 includes Task 5.14 from PROJ-480 (test_turn_engine_lazy_properties.py AST + inspect.getsource guards). This file is ALSO touched by Batch 4's PROJ-491 Task 3.21. If Batch 4 lands first on the converged branch, PROJ-496's task may be partially absorbed — check.
+
+STEP B — CODEX AUDIT (mid-project review)
+  Use the Skill tool to invoke:
+    Skill: claude-consult
+    args: --with codex --mode mid-project-review --slug audit-PROJ-NNN --question "Audit the just-completed PROJ-NNN. The implementer reported the file set <files>. The project's plan is at Projects/active_projects/PROJ-NNN/plan.md, decisions at decisions.md, manifest at manifest.md. Read the git diff against main for these files and report: (1) any deviation from the project's stated Goals or Scope in plan.md, (2) any introduced regression / parametrization that lost an edge case / fragile-assertion relaxation that removed a contract, (3) any obvious missed callers or orphan helpers left behind, (4) any task that was marked DROPPED in Phase 0 that should have been done instead (false-stale claim). Be specific (file:line). Do NOT propose new features."
+
+  The consult will write a response.md you can read.
+
+STEP C — VERIFY CODEX FINDINGS
+  For EACH finding in the consult response.md `## Findings` section:
+    1. Open the cited file:line and confirm the finding is real (the code matches the description).
+    2. Decide one of:
+       - VERIFIED + IN-SCOPE: real issue, belongs in this project's scope per plan.md.
+       - VERIFIED + OUT-OF-SCOPE: real issue but outside this project's stated Scope — log via /claude-di-log with link back to PROJ-NNN, then move on.
+       - REJECTED: false positive (contrary evidence in the cited file, or audit-self-retraction pattern). Record rationale.
+
+  Write your verification table to Projects/active_projects/PROJ-NNN/findings/audit_verification.md with rows: id | verdict | evidence | action.
+
+  Special caution for PROJ-494/495 audits: relaxing an assertion from exact-match to subset (the CAT-11 pattern) is per-plan when the plan task explicitly says so. Read the original task wording before flagging as a contract weakening. PROJ-480's Phase 4 had several "Replace exact set equality with issuperset" tasks where the relaxation IS the goal.
+
+STEP D — REMEDIATE (if verified in-scope findings exist)
+  If any finding is VERIFIED + IN-SCOPE:
+    1. Determine the next phase number N (= current max phase + 1).
+    2. Create Projects/active_projects/PROJ-NNN/phase_N_checklist.md using the PHASE_TEMPLATE format from Projects/scripts/create_project.py:126-158. Title it "Phase N: Audit remediation (Codex consult <date>)". Add one task per verified finding.
+    3. Update Projects/active_projects/PROJ-NNN/plan.md Quick Status table — add a new row for Phase N linking to the new checklist.
+    4. Update Current State to point to Phase N.
+    5. Spawn ANOTHER subagent (same skill: /claude-proj-continue PROJ-NNN) to execute the new phase.
+    6. Wait for completion.
+    7. Do NOT re-audit. One round only.
+
+  Estimate first: if the remediation work would take more than ~15 minutes of LLM time, STOP and surface the situation to the user with a summary of findings. Do not unilaterally expand scope.
+
+STEP E — VERIFY DONE
+  Confirm all phases (incl. any added Phase N) are marked Complete in plan.md and their checklists. Then move to the next project in the order list above.
+
+  Special note for PROJ-494/495: if Phase 0 dropped many tasks because they were already absorbed by Batch 1 projects, that's a SUCCESSFUL result, not a failure. Mark the dropped tasks with rationale and move on.
+
+================================================================
+PARALLEL-BATCH AWARENESS
+================================================================
+
+Batches 4 and 6 are editing the working tree concurrently on their own branches. Specific shared-file friction:
+
+**Batch 5 ↔ Batch 4 shared files (15 known per Codex manifest-based audit 2026-05-23)**:
+
+Severity legend: HIGH = both batches modify same helper/test-body surface (manual merge expected); MEDIUM = helper-region + assertion-region collisions (auto-merge likely, review still needed); LOW = textually disjoint regions.
+
+- HIGH-severity (manual reconstruction expected):
+  - tests/integration/ui/test_colonization_facade.py (PROJ-494 T1.7 vs PROJ-492 HLP-002 sweep)
+  - tests/unit/ui/screens/test_build_queue_panel_factory.py (PROJ-494 T2.3/T5.3 vs PROJ-491 T3.1)
+  - tests/unit/ui/screens/test_event_log_window.py (PROJ-494 T2.6 vs PROJ-491 T3.13)
+  - tests/unit/ui/screens/test_strategy_game_state_manager.py (PROJ-494 T2.14 vs PROJ-491 T3.20)
+  - tests/unit/ui/test_race_summary_panel.py (PROJ-494 T2.17 vs PROJ-491 T3.25)
+  - tests/unit/ui/screens/test_strategy_screen.py (PROJ-494 T2.21 vs PROJ-491 T3.33)
+  - tests/unit/strategy/turn_engine/test_turn_engine_lazy_properties.py (PROJ-496 Phase 1 vs PROJ-491 T3.21)
+
+- MEDIUM-severity (review needed):
+  - tests/unit/modifiers/test_invalid_operation_handling.py (PROJ-495 T3.11 vs PROJ-491 T3.2)
+  - tests/unit/strategy/engine/order_handlers/test_order_processor_facade.py (PROJ-495 T5.15 vs PROJ-491 T3.22)
+  - tests/unit/strategy/engine/test_resupply_engine.py (PROJ-495 T2.12 vs PROJ-492 _make_fleet sweep)
+  - tests/unit/strategy/fleet/test_fleet_pursuer_tracker.py (PROJ-495 T3.35 vs PROJ-492 _make_fleet sweep)
+  - tests/unit/strategy/test_engine_event_emission.py (PROJ-495 T3.6 vs PROJ-492 sweep)
+  - tests/unit/ui/screens/test_empire_build_queue_window.py (PROJ-494 T3.16 vs PROJ-491 T3.6)
+  - tests/unit/ui/screens/test_fleet_menu_items.py (PROJ-494 T3.14 vs PROJ-492 sweep)
+  - tests/unit/ui/screens/test_strategy_input_handler_core.py (PROJ-494 T3.15 vs PROJ-491 T3.4)
+
+NOTE: An earlier draft listed `tests/unit/ui/screens/test_build_queue_list_window.py` as a Batch 4 ↔ Batch 5 overlap. That was a FALSE POSITIVE — the file is only in PROJ-491's manifest, not PROJ-494's. No merge work expected on that file from Batch 4.
+
+**Batch 5 ↔ Batch 6 shared files (1 known per Codex audit 2026-05-23)**:
+
+- LOW-severity (textually disjoint regions per Codex spot-check):
+  - tests/unit/simulation/entities/test_ship_serialization.py (PROJ-495 T3.28 parametrize roundtrips at lines :328-415 / :767-879 vs PROJ-498 rejection-log test near :591-598)
+
+Batch 6's other targets — data/modifiers.json, data/components.json, game/simulation/services/modifier_service.py, tests/regression/modifier_ability_snapshots/, save-restore production files, and modifier-related docs — do not overlap with Batch 5.
+
+**Merge-time policy**: Each shared file will need a 3-way merge when branches converge. Batch 4's CAT-6 work tends to rewrite test bodies; Batch 5's CAT-10 work tends to merge multiple tests into one parametrized. These CAN conflict line-for-line. Plan a focused merge session per shared file rather than trying auto-merge.
+
+If a Phase 0 retarget finds that a file in this batch was DELETED by Batch 4 (e.g., a PROJ-491 CAT-6 task replaced a test the PROJ-494 plan still references), drop the affected PROJ-494/495/496 task with a "absorbed by PROJ-491" note. Don't try to re-create the deleted test.
+
+================================================================
+COMMIT POLICY
+================================================================
+
+Do NOT commit unless your environment configuration explicitly authorizes per-batch commits. The original Batch 1 policy was no-commits-from-orchestrator (user inspects converged tree). If this batch runs on a separate machine/branch, the BRANCH OWNER may want batch-end commits to make merge tractable — but that decision belongs to the branch owner, not this orchestrator. Default: no commits.
+
+If your subagents commit (some `/claude-proj-continue` flows do), accept the commits on the current branch and note them in your final report.
+
+================================================================
+WHEN ALL 3 PROJECTS COMPLETE
+================================================================
+
+Produce a final report for the user with:
+- Each project's status (Complete / Blocked / Partial).
+- Files modified across the batch.
+- **Per-project Phase 0 dropped-task counts** (key metric for this batch — high drops indicate plan staleness).
+- Any added Phase N's (per Codex audit remediation) with link to the new checklist.
+- Any /claude-di-log entries you filed.
+- Any user-escalations or stops.
+- For each shared file with Batches 4/6 (list above), the last state your batch left it in — this helps the merge owner.
+
+DO NOT proceed to Batch 4 or Batch 6 work — those are owned by separate orchestrators on separate machines.

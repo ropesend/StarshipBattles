@@ -406,3 +406,47 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-413 | Legacy removal — stars.py + galaxy.py re-export shims (2026-05-13) | 2026-05-15 | PROJ-401-450 |
 | PROJ-414 | Legacy removal — pathfinding.py shim (PROJ-376) (2026-05-13) | 2026-05-15 | PROJ-401-450 |
 | PROJ-415 | Legacy removal — planet.py re-exports (PROJ-210/284 vestige) (2026-05-13) | 2026-05-15 | PROJ-401-450 |
+| PROJ-416 | Legacy removal — race_setup_screen.py shim + Game.running (PROJ-309 vestige) (2026-05-13) | 2026-05-15 | PROJ-401-450 |
+| PROJ-417 | Legacy removal — test_run_details.py shim (2026-05-13) | 2026-05-15 | PROJ-401-450 |
+| PROJ-418 | Legacy removal — to_roman wrapper (2026-05-13) | 2026-05-15 | PROJ-401-450 |
+| PROJ-419 | Legacy removal — light cleanup of stale comments and dead imports (2026-05-13) | 2026-05-15 | PROJ-401-450 |
+| PROJ-420 | Legacy removal — lazy-init registry cache consolidation (2026-05-13) | 2026-05-15 | PROJ-401-450 |
+| PROJ-421 | Legacy removal — Pattern #30 slot cleanup in strategy_event_router (2026-05-13) | 2026-05-13 | PROJ-401-450 |
+| PROJ-422 | Strategy tech-debt #01/10: Split engine interface monolith (TD-09) | 2026-05-17 | PROJ-401-450 |
+| PROJ-423 | Strategy tech-debt #02/10: GameSession lifecycle extraction (TD-02) | 2026-05-17 | PROJ-401-450 |
+| PROJ-424 | Strategy tech-debt #03/10: Order metadata convergence (TD-03) | 2026-05-17 | PROJ-401-450 |
+| PROJ-425 | Strategy tech-debt #04/10: ShipInstance slimming (TD-06) | 2026-05-17 | PROJ-401-450 |
+| PROJ-426 | Strategy tech-debt #05/10: Battle spec assembly pipeline (TD-01) | 2026-05-17 | PROJ-401-450 |
+| PROJ-427 | Strategy tech-debt #06/10: Production/persistence split (TD-05) | 2026-05-17 | PROJ-401-450 |
+| PROJ-428 | Strategy tech-debt #07/10: Phase registry hooks (TD-04) | 2026-05-17 | PROJ-401-450 |
+| PROJ-429 | Strategy tech-debt #08/10: Ability metadata unification (TD-07) | 2026-05-17 | PROJ-401-450 |
+| PROJ-430 | Strategy tech-debt #09/10: Facade API reduction (TD-08) | 2026-05-17 | PROJ-401-450 |
+| PROJ-431 | Strategy tech-debt #10/10: Deployable substrate redesign (TD-10) | 2026-05-17 | PROJ-401-450 |
+| PROJ-432 | Strategy tech-debt follow-up: TurnStateSnapshot rehydrate alignment (PROJ-423 consult) | 2026-05-17 | PROJ-401-450 |
+| PROJ-433 | Strategy tech-debt follow-up: component_inspector split (PROJ-425 consult) | 2026-05-17 | PROJ-401-450 |
+| PROJ-434 | Complete DesignLibrary deletion (PROJ-427 phase 6 follow-up) | 2026-05-17 | PROJ-401-450 |
+| PROJ-435 | Migrate UI _ACTIVATABLE_ABILITIES to AbilityMetadataRegistry | 2026-05-17 | PROJ-401-450 |
+| PROJ-436 | Unified Storage Substrate and Container Unification | 2026-05-23 | PROJ-401-450 |
+| PROJ-437 | Container-Aware Transfer UI | 2026-05-23 | PROJ-401-450 |
+| PROJ-438 | Strategy State Surface and Intent Lifecycle Consolidation | 2026-05-23 | PROJ-401-450 |
+| PROJ-439 | Content Contracts and Loader Validation | 2026-05-23 | PROJ-401-450 |
+| PROJ-440 | Battle Session Convergence | 2026-05-23 | PROJ-401-450 |
+| PROJ-441 | Ambient Defaults Containment | 2026-05-23 | PROJ-401-450 |
+| PROJ-442 | Seam Retirement and Residue Burn-down | 2026-05-23 | PROJ-401-450 |
+| PROJ-443 | Pytest norecursedirs Fix and Hidden-Test Triage | 2026-05-23 | PROJ-401-450 |
+| PROJ-444 | Post-refactor residue: Data+Facade (Bucket A) — Stages 1+2 complete; Stage 3+ replanned as PROJ-449..460 | 2026-05-19 | PROJ-401-450 |
+| PROJ-445 | Post-refactor residue: Engine+Services (Bucket B) — Stages 1+2 complete; Stage 3+ replanned as PROJ-449..460 | 2026-05-19 | PROJ-401-450 |
+| PROJ-446 | Post-refactor residue: UI+Core+Tests (Bucket C) — Stages 1+2 complete; Stage 3+ replanned as PROJ-449..460 | 2026-05-19 | PROJ-401-450 |
+| PROJ-447 | Post-refactor residue: Sim+AI+Research+LowLevelEngine+Docs (Bucket D) — Stages 1+2 complete; Stage 3+ replanned as PROJ-449..460 | 2026-05-19 | PROJ-401-450 |
+| PROJ-449 | Strategy entity wrapper retirement (Planet + ShipInstance legacy-kwarg + property shim cluster) | 2026-05-23 | PROJ-401-450 |
+| PROJ-450 | Typed staging-yard substrate completion | 2026-05-23 | PROJ-401-450 |
+| PROJ-451 | Production resource-consumption semantics (DI-006 + DI-007 engine half) | 2026-05-23 | PROJ-451-500 |
+| PROJ-452 | Catalog-driven resource surfaces (DI-003/004/005 + LABEL_ABBREV) | 2026-05-23 | PROJ-451-500 |
+| PROJ-453 | Engine + services surface polish (annotations + dead skips + stale docstrings) | 2026-05-23 | PROJ-451-500 |
+| PROJ-454 | Engine + services obsolete-surface retirement (effect_ability_metadata + component_inspector + OrderProcessor facade unwinding) | 2026-05-23 | PROJ-451-500 |
+| PROJ-455 | Planet-FMS engine-mediated behavioral coverage (DI-001 ActionExecutionEngine half) | 2026-05-23 | PROJ-451-500 |
+| PROJ-456 | UI back-compat shim retirement sweep (9 shim clusters + transfer_dialog characterization) | 2026-05-23 | PROJ-451-500 |
+| PROJ-457 | UI structural debt extractions (build_queue_screen + planet_list_window + test_lab; F-C-028 dropped per user 2026-05-19) | 2026-05-23 | PROJ-451-500 |
+| PROJ-458 | UIWindow retrofit completion (SettingsWindow + 4 PlanetTargetEditors) | 2026-05-23 | PROJ-451-500 |
+| PROJ-459 | Strategy data LOC extractions (fleet_serde + planet_gen split) | 2026-05-23 | PROJ-451-500 |
+| PROJ-460 | Simulation clean-cut LOC extractions (battle_state_serde + battle_controller spec-in + replay_serialization split) | 2026-05-23 | PROJ-451-500 |

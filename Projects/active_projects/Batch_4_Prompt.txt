@@ -1,0 +1,132 @@
+BATCH 4 ORCHESTRATOR — Cluster D (3 projects, serial) — PROJ-479 follow-through
+
+You are the orchestrator for Batch 4 of a 3-batch parallel execution (Batches 4/5/6 run CONCURRENTLY on separate machines, each on its own branch). The other two batches:
+  - Batch 5 = PROJ-494, PROJ-495, PROJ-496 (PROJ-480 follow-through — test polish CAT-8/9/10/11/12)
+  - Batch 6 = PROJ-497, PROJ-498, PROJ-499 (PROJ-489 blast-radius mitigation + snapshot harness fix)
+
+These three batches were scaffolded on 2026-05-23 by four parallel planning subagents working with Codex consults. The 9 new projects (PROJ-491..499) were partitioned across the batches by file-overlap analysis. Batch 4's scope is the PROJ-479 deferred backlog (the test-side mechanical migrations + HLP sweeps + one production DI seam).
+
+> **Cross-batch file friction (READ THIS):** Batch 4 and Batch 5 are NOT fully disjoint. Roughly 9 UI-screen test files appear in both Batch 4's PROJ-491 (CAT-6 rewrites) and Batch 5's PROJ-494 (CAT-10 parametrize), and 1 colonization-facade test appears in both PROJ-492 (HLP-002 sweep) and PROJ-494. PROJ-492's 37-file `_make_fleet` sweep additionally hits files Batch 5's PROJ-495 also edits. See the PARALLEL-BATCH AWARENESS section near the end of this prompt for the explicit shared-file list. Plan for merge work when the branches converge.
+
+Your 3 projects MUST run in this exact serial order. Do NOT parallelize within the batch — every project's workflow must complete before the next begins.
+
+================================================================
+PROJECT ORDER (run one at a time, in this sequence)
+================================================================
+
+1. PROJ-491 — CAT-6 test-side mechanical migrations (4 phases, ~25 test files; resolves DI-2026-05-23-003 in Task 3.32)
+2. PROJ-492 — HLP mechanical sweeps + setup_tmpdir strategy (3 phases: HLP-002 MockPlanetType 8 files, HLP-004 _make_fleet 37 files exact-match, HLP-005 Paths.SAVES_DIR)
+3. PROJ-493 — SuperweaponValidator DI seam introduction (2 phases: production constructor param + 16 test patch site migrations)
+
+Why this order (do not change without re-running conflict analysis):
+- 491 first: it does in-test CAT-6 rewrites. If 492's `_make_fleet` sweep runs first, those rewrites become merge work on already-touched lines. Running 491 first means 492 sweeps over already-rewritten test bodies — clean state.
+- 492 second: bulk grep-replace + import surgery across ~45 files. After 491's rewrites have settled, the sweep is mechanical.
+- 493 last: narrow production-side change (add `validator` ctor param to `SuperweaponOrderProcessor`, route the static call) + 16 test patch migrations. Independent of 491/492, so place last as smallest-blast-radius work that benefits from a fully-clean tree.
+
+================================================================
+PER-PROJECT WORKFLOW (apply this loop to each project, in order)
+================================================================
+
+For project PROJ-NNN, execute the following steps in sequence:
+
+STEP A — IMPLEMENT
+  Spawn a single subagent via the Agent tool with subagent_type "general-purpose" and the prompt:
+    "Run /claude-proj-continue PROJ-NNN. Implement every phase listed in plan.md per the protocol at Projects/protocols/. Mark each phase Complete in plan.md and the phase checklist when its checkboxes are all checked. Do not commit. When all phases are done, report back with a list of files you modified and a one-line summary of behavioral changes (or 'annotations only' / 'test cleanup only' as applicable)."
+
+  Wait for the subagent's reply. Do NOT spawn the next project's subagent until this step completes.
+
+  Special notes per project:
+  - PROJ-491 Phase 3 includes Task 3.32 which directly resolves DI-2026-05-23-003 (ActionExecutionEngine DI seam already exists at `game/strategy/engine/action_execution_engine.py:55-68`; tests need to inject a stub rather than patch the static method). Include explicit prompt: "Task 3.32 must use the existing DI seam, not introduce a new one."
+  - PROJ-492's 37-file `_make_fleet` sweep is the largest mechanical surface. Tell the subagent: "exact-name match only — `def _make_fleet\b`. Sibling helpers like `_make_fleet_pair`, `_make_fleet_at`, `_make_fleet_with_ship`, `_make_fleet_mock`, `_make_fleet_controller_with_galaxy` are EXCLUDED. tests/integration/strategy/turn_engine/conftest.py is OUT-OF-FAMILY (plain class, not Enum) — skip in the mechanical lane."
+  - PROJ-493: production code change. Tell the subagent: "the constructor change must default to None and lazy-instantiate the canonical SuperweaponValidator if no validator is injected, preserving backward compatibility. Run the broader strategy-engine targeted suite after the production change, before doing the test patch-site migrations."
+
+STEP B — CODEX AUDIT (mid-project review)
+  Use the Skill tool to invoke:
+    Skill: claude-consult
+    args: --with codex --mode mid-project-review --slug audit-PROJ-NNN --question "Audit the just-completed PROJ-NNN. The implementer reported the file set <files>. The project's plan is at Projects/active_projects/PROJ-NNN/plan.md, decisions at decisions.md, manifest at manifest.md. Read the git diff against main for these files and report: (1) any deviation from the project's stated Goals or Scope in plan.md, (2) any introduced regression, layer-violation, or convention violation per docs/01-03, (3) any obvious missed callers / orphan symbols / stale comments left behind, (4) any test that was DELETED that should have been REWRITTEN instead. Be specific (file:line). Do NOT propose new features."
+
+  The consult will write a response.md you can read.
+
+STEP C — VERIFY CODEX FINDINGS
+  For EACH finding in the consult response.md `## Findings` section:
+    1. Open the cited file:line and confirm the finding is real (the code matches the description).
+    2. Decide one of:
+       - VERIFIED + IN-SCOPE: real issue, belongs in this project's scope per plan.md.
+       - VERIFIED + OUT-OF-SCOPE: real issue but outside this project's stated Scope — log via /claude-di-log with link back to PROJ-NNN, then move on.
+       - REJECTED: false positive (contrary evidence in the cited file, or audit-self-retraction pattern). Record rationale.
+
+  Write your verification table to Projects/active_projects/PROJ-NNN/findings/audit_verification.md with rows: id | verdict | evidence | action.
+
+STEP D — REMEDIATE (if verified in-scope findings exist)
+  If any finding is VERIFIED + IN-SCOPE:
+    1. Determine the next phase number N (= current max phase + 1).
+    2. Create Projects/active_projects/PROJ-NNN/phase_N_checklist.md using the PHASE_TEMPLATE format from Projects/scripts/create_project.py:126-158. Title it "Phase N: Audit remediation (Codex consult <date>)". Add one task per verified finding.
+    3. Update Projects/active_projects/PROJ-NNN/plan.md Quick Status table — add a new row for Phase N linking to the new checklist.
+    4. Update Current State to point to Phase N.
+    5. Spawn ANOTHER subagent (same skill: /claude-proj-continue PROJ-NNN) to execute the new phase.
+    6. Wait for completion.
+    7. Do NOT re-audit. One round only.
+
+  Estimate first: if the remediation work would take more than ~15 minutes of LLM time (more than a few file edits + targeted tests), STOP and surface the situation to the user with a summary of findings. Do not unilaterally expand scope.
+
+STEP E — VERIFY DONE
+  Confirm all phases (incl. any added Phase N) are marked Complete in plan.md and their checklists. Then move to the next project in the order list above.
+
+================================================================
+PARALLEL-BATCH AWARENESS
+================================================================
+
+Batches 5 and 6 are editing the working tree concurrently on their own branches. Specific shared-file friction:
+
+**Batch 4 ↔ Batch 5 shared files (15 known per Codex manifest-based audit 2026-05-23)**:
+
+Severity legend: HIGH = both batches modify same helper/test-body surface (manual merge expected); MEDIUM = helper-region + assertion-region collisions (auto-merge likely, review still needed); LOW = textually disjoint regions.
+
+- HIGH-severity (manual reconstruction expected):
+  - tests/integration/ui/test_colonization_facade.py (PROJ-492 HLP-002 vs PROJ-494 T1.7)
+  - tests/unit/ui/screens/test_build_queue_panel_factory.py (PROJ-491 T3.1 vs PROJ-494 T2.3/T5.3)
+  - tests/unit/ui/screens/test_event_log_window.py (PROJ-491 T3.13 vs PROJ-494 T2.6)
+  - tests/unit/ui/screens/test_strategy_game_state_manager.py (PROJ-491 T3.20 vs PROJ-494 T2.14)
+  - tests/unit/ui/test_race_summary_panel.py (PROJ-491 T3.25 vs PROJ-494 T2.17)
+  - tests/unit/ui/screens/test_strategy_screen.py (PROJ-491 T3.33 vs PROJ-494 T2.21)
+  - tests/unit/strategy/turn_engine/test_turn_engine_lazy_properties.py (PROJ-491 T3.21 vs PROJ-496 Phase 1 — covers PROJ-480 T3.29 + T5.14)
+
+- MEDIUM-severity (review needed):
+  - tests/unit/modifiers/test_invalid_operation_handling.py (PROJ-491 T3.2 vs PROJ-495 T3.11)
+  - tests/unit/strategy/engine/order_handlers/test_order_processor_facade.py (PROJ-491 T3.22 vs PROJ-495 T5.15)
+  - tests/unit/strategy/engine/test_resupply_engine.py (PROJ-492 _make_fleet sweep vs PROJ-495 T2.12)
+  - tests/unit/strategy/fleet/test_fleet_pursuer_tracker.py (PROJ-492 _make_fleet sweep vs PROJ-495 T3.35)
+  - tests/unit/strategy/test_engine_event_emission.py (PROJ-492 sweep vs PROJ-495 T3.6)
+  - tests/unit/ui/screens/test_empire_build_queue_window.py (PROJ-491 T3.6 vs PROJ-494 T3.16)
+  - tests/unit/ui/screens/test_fleet_menu_items.py (PROJ-492 sweep vs PROJ-494 T3.14)
+  - tests/unit/ui/screens/test_strategy_input_handler_core.py (PROJ-491 T3.4 vs PROJ-494 T3.15)
+
+NOTE: An earlier draft listed `tests/unit/ui/screens/test_build_queue_list_window.py` as a Batch 4 ↔ Batch 5 overlap. That was a FALSE POSITIVE — the file is only in PROJ-491's manifest, not PROJ-494's. No merge work expected on that file from Batch 5.
+
+**Batch 4 ↔ Batch 6**: no known shared files. Batch 6's PROJ-497/498/499 operate on data/modifiers.json, data/components.json, game/simulation/services/modifier_service.py, and tests/regression/modifier_ability_snapshots/ — none of which Batch 4 touches.
+
+**Merge-time policy**: Each shared file will need a 3-way merge when branches converge. Both batches' edits to those files should be additive/textually disjoint (CAT-6 rewrites tend to replace test bodies; CAT-10 parametrize tends to merge multiple tests into one parametrized — these CAN conflict line-for-line). Plan a focused merge session per shared file rather than trying auto-merge.
+
+If PROJ-492's sweep accidentally edits a sibling helper name (e.g., `_make_fleet_at`) instead of exact-name `_make_fleet`, STOP and surface to the user. The audit verification on PROJ-479 spent significant effort getting the exact-match scope right; don't expand it.
+
+================================================================
+COMMIT POLICY
+================================================================
+
+Do NOT commit unless your environment configuration explicitly authorizes per-batch commits. The original Batch 1 policy was no-commits-from-orchestrator (user inspects converged tree). If this batch runs on a separate machine/branch, the BRANCH OWNER may want batch-end commits to make merge tractable — but that decision belongs to the branch owner, not this orchestrator. Default: no commits.
+
+If your subagents commit (some `/claude-proj-continue` flows do), accept the commits on the current branch and note them in your final report.
+
+================================================================
+WHEN ALL 3 PROJECTS COMPLETE
+================================================================
+
+Produce a final report for the user with:
+- Each project's status (Complete / Blocked / Partial).
+- Files modified across the batch.
+- Any added Phase N's (per Codex audit remediation) with link to the new checklist.
+- Any /claude-di-log entries you filed.
+- Any user-escalations or stops.
+- For each shared file with Batches 5/6 (list above), the last state your batch left it in — this helps the merge owner.
+
+DO NOT proceed to Batch 5 or Batch 6 work — those are owned by separate orchestrators on separate machines.
