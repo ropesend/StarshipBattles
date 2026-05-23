@@ -4,7 +4,6 @@ Shared fixtures for turn engine tests.
 PROJ-55: Updated mock_fleet and mock_planet to include colony pod requirements.
 """
 import pytest
-from enum import Enum
 from unittest.mock import MagicMock
 
 from game.strategy.data.fleet import Fleet
@@ -12,11 +11,10 @@ from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 from game.strategy.data.ship_instance import ShipInstance
+from tests.fixtures.colonization_fixtures import MockPlanetType
 
 
 # PROJ-55: Mock planet type enum for tests
-class MockPlanetType(Enum):
-    CONTINENTAL = "CONTINENTAL"
 
 
 @pytest.fixture

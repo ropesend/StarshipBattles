@@ -216,7 +216,7 @@ class TestConflictEngineBattleResolverBranches:
         )
         assert engine.conflict_engine._battle_resolver is None
 
-    def test_conflict_engine_resolver_guard_present_at_dispatch_site(
+    def test_conflict_engine_raises_when_resolver_absent_at_dispatch_site(
         self, fresh_registries
     ):
         """PROJ-369 Phase 3: ``_NullBattleResolver`` deleted. The
@@ -225,67 +225,66 @@ class TestConflictEngineBattleResolverBranches:
         (just before ``self._battle_resolver.resolve_battle(...)``).
 
         Non-combat ticks (no actual battle) do not raise — only the
-        attempt to dispatch a battle does. We verify the guard is
-        present by inspecting the engine source for the explicit
-        ``ValueError`` and the ``battle_resolver`` reference.
+        attempt to dispatch a battle does. We verify the guard by
+        BEHAVIOR: build the engine with ``ai_factory=None`` so
+        ``conflict_engine._battle_resolver`` is None, then drive
+        ``_resolve_combat_at_hex`` with two empires sharing a hex
+        (each with a non-empty fleet) so the dispatch reaches the
+        resolver call site, and assert ``ValueError`` is raised.
+
+        PROJ-491 Task 1.5: replaces the previous
+        ``inspect.getsource(...) + substring check`` brittle pattern.
         """
-        import inspect
-        from game.strategy.engine import conflict_resolution_engine
+        import pytest
 
-        src = inspect.getsource(
-            conflict_resolution_engine.ConflictResolutionEngine._resolve_combat_at_hex
-        )
-        assert "self._battle_resolver is None" in src, (
-            "PROJ-369 Phase 3 guard missing from _resolve_combat_at_hex: "
-            "expected an explicit `self._battle_resolver is None` check "
-            "before the resolver call site."
-        )
-        assert "ValueError" in src
-        assert "battle_resolver" in src
+        from game.strategy.data.fleet import Fleet
+        from game.strategy.data.ship_instance import ShipInstance
 
-        # Production wiring sanity: with ai_factory=None, the engine's
-        # bound resolver is None.
         engine = build_test_turn_engine(
             fresh_registries, ai_factory=None,
         )
-        assert engine.conflict_engine._battle_resolver is None
+        conflict_engine = engine.conflict_engine
+        assert conflict_engine._battle_resolver is None
+
+        # Two empires, two fleets, same hex, each carrying ≥1 ship so
+        # ``_resolve_combat_at_hex`` does not short-circuit on the
+        # "no participating fleet has any ships" guard above.
+        empire_a = MagicMock()
+        empire_a.id = 1
+        empire_b = MagicMock()
+        empire_b.id = 2
+
+        ship_a = MagicMock(spec=ShipInstance)
+        ship_b = MagicMock(spec=ShipInstance)
+
+        fleet_a = MagicMock(spec=Fleet)
+        fleet_a.id = 10
+        fleet_a.owner_id = 1
+        fleet_a.location = MagicMock(name="hex_loc")
+        fleet_a.ships = [ship_a]
+
+        fleet_b = MagicMock(spec=Fleet)
+        fleet_b.id = 20
+        fleet_b.owner_id = 2
+        fleet_b.location = fleet_a.location
+        fleet_b.ships = [ship_b]
+
+        with pytest.raises(ValueError, match="battle_resolver"):
+            conflict_engine._resolve_combat_at_hex(
+                [(empire_a, fleet_a), (empire_b, fleet_b)]
+            )
 
 
 class TestPlanetModifierEffectEngineLazyProperty:
     """PROJ-428 Phase 1: planet-modifier engine lives on TurnEngine.
 
-    The registry module must not import PlanetModifierEffectEngine; the
-    construction site moves to a lazy property on TurnEngine, accessed
-    through a resolver lambda on the descriptor.
+    PROJ-491 Task 1.5: the AST import-absence guard moved to the canonical
+    static-guard suite at
+    ``tests/static_guards/test_turn_phase_registry_no_planet_modifier_import.py``
+    to preserve architectural intent without keeping in-line AST scans inside
+    a behavioral-test file. This class is intentionally left as a documentation
+    anchor for the wiring contract referenced by PROJ-428 Phase 1.
     """
-
-    def test_registry_module_does_not_import_planet_modifier_effect_engine(self):
-        """AST guard: turn_phase_registry must not import the engine."""
-        import ast
-        from pathlib import Path
-
-        from game.strategy.engine import turn_phase_registry as _reg
-
-        src = Path(_reg.__file__).read_text(encoding="utf-8")
-        tree = ast.parse(src)
-        offenders: list[str] = []
-        for node in ast.walk(tree):
-            if isinstance(node, ast.ImportFrom):
-                module = node.module or ""
-                if "planet_modifier_effect_engine" in module:
-                    offenders.append(f"from {module} import ...")
-                for alias in node.names:
-                    if alias.name == "PlanetModifierEffectEngine":
-                        offenders.append(f"from {module} import {alias.name}")
-            elif isinstance(node, ast.Import):
-                for alias in node.names:
-                    if "planet_modifier_effect_engine" in alias.name:
-                        offenders.append(f"import {alias.name}")
-        assert not offenders, (
-            f"turn_phase_registry must not import PlanetModifierEffectEngine "
-            f"(found: {offenders}). PROJ-428 Phase 1 moves construction to "
-            f"TurnEngine.planet_modifier_effect_engine."
-        )
 
     # PROJ-479 Task 1.11: deleted
     # `test_planet_modifier_effect_engine_property_returns_cached_instance` —

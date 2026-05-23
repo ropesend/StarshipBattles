@@ -21,6 +21,8 @@ from game.strategy.interfaces.battle_resolver import (
     BattleResult,
     IBattleResolver,
 )
+# PROJ-492 Phase 2 (HLP-004): consume canonical _make_mock_fleet.
+from tests.conftest import _make_mock_fleet
 
 
 class _RecordingResolver(IBattleResolver):
@@ -60,17 +62,6 @@ class _RecordingResolver(IBattleResolver):
         )
 
 
-def _make_fleet(fleet_id, owner_id, location, speed=5):
-    fleet = MagicMock()
-    fleet.id = fleet_id
-    fleet.owner_id = owner_id
-    fleet.location = location
-    fleet.speed = speed  # PROJ-320: predicate reads this
-    fleet.ships = [MagicMock()]  # has at least one ship
-    fleet.task_forces = []
-    return fleet
-
-
 def _make_empire(empire_id, fleets):
     empire = MagicMock()
     empire.id = empire_id
@@ -95,9 +86,9 @@ def test_three_empires_at_one_hex_resolve_in_single_battle():
     engine = ConflictResolutionEngine(battle_resolver=resolver)
 
     location = HexCoord(5, 5)
-    fleet_a = _make_fleet(fleet_id=1, owner_id=0, location=location)
-    fleet_b = _make_fleet(fleet_id=2, owner_id=1, location=location)
-    fleet_c = _make_fleet(fleet_id=3, owner_id=2, location=location)
+    fleet_a = _make_mock_fleet(fleet_id=1, owner_id=0, location=location)
+    fleet_b = _make_mock_fleet(fleet_id=2, owner_id=1, location=location)
+    fleet_c = _make_mock_fleet(fleet_id=3, owner_id=2, location=location)
 
     empire_a = _make_empire(empire_id=0, fleets=[fleet_a])
     empire_b = _make_empire(empire_id=1, fleets=[fleet_b])
@@ -125,7 +116,7 @@ def test_three_empire_battle_returns_three_team_battle_result():
     location = HexCoord(0, 0)
     empires = []
     for empire_id in range(3):
-        fleet = _make_fleet(
+        fleet = _make_mock_fleet(
             fleet_id=empire_id + 1, owner_id=empire_id, location=location
         )
         empires.append(_make_empire(empire_id=empire_id, fleets=[fleet]))
@@ -147,9 +138,9 @@ def test_three_empire_battle_reports_destroyed_fleets():
     engine = ConflictResolutionEngine(battle_resolver=resolver)
 
     location = HexCoord(0, 0)
-    fleet_a = _make_fleet(fleet_id=1, owner_id=0, location=location)
-    fleet_b = _make_fleet(fleet_id=2, owner_id=1, location=location)
-    fleet_c = _make_fleet(fleet_id=3, owner_id=2, location=location)
+    fleet_a = _make_mock_fleet(fleet_id=1, owner_id=0, location=location)
+    fleet_b = _make_mock_fleet(fleet_id=2, owner_id=1, location=location)
+    fleet_c = _make_mock_fleet(fleet_id=3, owner_id=2, location=location)
 
     empire_a = _make_empire(empire_id=0, fleets=[fleet_a])
     empire_b = _make_empire(empire_id=1, fleets=[fleet_b])

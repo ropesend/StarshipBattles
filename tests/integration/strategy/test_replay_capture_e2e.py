@@ -89,7 +89,7 @@ class _MockShipInstance:
         return ship
 
 
-def _make_fleet(fleet_id: int, ships: List[_MockShipInstance]):
+def _make_replay_fleet(fleet_id: int, ships: List[_MockShipInstance]):
     """Mock fleet that satisfies the compiler's attribute reads."""
     from game.core.hex_math import HexCoord
 
@@ -237,8 +237,8 @@ class TestNoCapableBranchTruncatedReplayCapture:
         set_default_capture_sink(sink)
         try:
             resolver = SimulationBattleResolver(ai_factory=MagicMock())
-            f1 = _make_fleet(1, [_MockShipInstance("a", combat_capable=False)])
-            f2 = _make_fleet(2, [_MockShipInstance("b", combat_capable=False)])
+            f1 = _make_replay_fleet(1, [_MockShipInstance("a", combat_capable=False)])
+            f2 = _make_replay_fleet(2, [_MockShipInstance("b", combat_capable=False)])
 
             recorded: List[Any] = []
             with patch(
@@ -283,8 +283,8 @@ class TestNoCapableBranchTruncatedReplayCapture:
         )
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
-        f1 = _make_fleet(1, [_MockShipInstance("a", combat_capable=False)])
-        f2 = _make_fleet(2, [_MockShipInstance("b", combat_capable=False)])
+        f1 = _make_replay_fleet(1, [_MockShipInstance("a", combat_capable=False)])
+        f2 = _make_replay_fleet(2, [_MockShipInstance("b", combat_capable=False)])
 
         recorded: List[Any] = []
 
@@ -313,8 +313,8 @@ class TestNoCapableBranchTruncatedReplayCapture:
         )
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
-        f1 = _make_fleet(1, [])
-        f2 = _make_fleet(2, [])
+        f1 = _make_replay_fleet(1, [])
+        f2 = _make_replay_fleet(2, [])
 
         with patch(
             "game.strategy.adapters.simulation_adapter.run_battle"
@@ -337,8 +337,8 @@ class TestSoleSurvivorBranchHonestTooltip:
         )
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
-        f1 = _make_fleet(1, [_MockShipInstance("a", combat_capable=True)])
-        f2 = _make_fleet(2, [])
+        f1 = _make_replay_fleet(1, [_MockShipInstance("a", combat_capable=True)])
+        f2 = _make_replay_fleet(2, [])
 
         with patch(
             "game.strategy.adapters.simulation_adapter.run_battle"
@@ -426,8 +426,8 @@ class TestProductionWiringEndToEnd:
 
         try:
             resolver = SimulationBattleResolver(ai_factory=MagicMock())
-            f1 = _make_fleet(1, [_MockShipInstance("a", combat_capable=True)])
-            f2 = _make_fleet(2, [_MockShipInstance("b", combat_capable=True)])
+            f1 = _make_replay_fleet(1, [_MockShipInstance("a", combat_capable=True)])
+            f2 = _make_replay_fleet(2, [_MockShipInstance("b", combat_capable=True)])
 
             # Drive run_battle with a fake that fires the SAME sink hooks
             # the production start_engine_from_spec + extract_outcome
@@ -499,8 +499,8 @@ class TestProductionWiringEndToEnd:
         reset_default_capture_sink()
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
-        f1 = _make_fleet(1, [_MockShipInstance("a", combat_capable=True)])
-        f2 = _make_fleet(2, [_MockShipInstance("b", combat_capable=True)])
+        f1 = _make_replay_fleet(1, [_MockShipInstance("a", combat_capable=True)])
+        f2 = _make_replay_fleet(2, [_MockShipInstance("b", combat_capable=True)])
 
         from game.simulation.replay import get_default_capture_sink
 

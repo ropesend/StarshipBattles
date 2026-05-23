@@ -13,6 +13,19 @@ Bug shape (verified by planning instance 2026-05-04):
 This test exercises the real handler with a fleet-to-fleet command and asserts
 the dispatch succeeds and a TRANSFER order is queued carrying `target_fleet_id`.
 Currently FAILS with "Planet not found.". Will PASS once T1.1 is fixed.
+
+PROJ-491 Task 1.18 entry-check result:
+  Constructing a minimal real ``GameSession`` requires ``GameConfig`` + a full
+  ``SessionBootstrap.new_game_state(...)`` run, which is far heavier than the
+  scope of a brittle-mock cleanup. The duck-typed ``MagicMock``-backed session
+  below is the right shape for this unit-level handler test — the handler only
+  reads ``_get_fleet_by_id`` / ``_get_planet_by_id`` and the active empire's
+  fleet list, which are all naturally expressible as small lambdas. The real
+  ``Fleet`` upgrade is similarly entangled with the duck-typed session
+  (``fleet.resources.get_fleet_cargo_*`` is read once before validation).
+  Recommendation: defer the upgrade to PROJ-493 once a ``minimal_game_session``
+  fixture exists. Status: BLOCKED — see plan.md Current State entry for the
+  Phase 1 Task 1.18 routing.
 """
 from __future__ import annotations
 
@@ -24,7 +37,7 @@ from game.strategy.engine.commands import IssueTransferCommand
 from game.strategy.engine.handlers.transfer import TransferCommandHandler
 
 
-def _make_fleet(fleet_id: int, owner_id: int, location):
+def _make_transfer_handler_fleet(fleet_id: int, owner_id: int, location):
     """Minimal fleet stub sufficient for the handler's resolver + validator."""
     fleet = MagicMock()
     fleet.id = fleet_id
@@ -44,8 +57,8 @@ def _make_fleet(fleet_id: int, owner_id: int, location):
 def _make_session_with_two_fleets():
     """Session with one empire, two fleets at the same hex, ready to transfer."""
     location = (3, 3)
-    fleet_a = _make_fleet(fleet_id=10, owner_id=0, location=location)
-    fleet_b = _make_fleet(fleet_id=11, owner_id=0, location=location)
+    fleet_a = _make_transfer_handler_fleet(fleet_id=10, owner_id=0, location=location)
+    fleet_b = _make_transfer_handler_fleet(fleet_id=11, owner_id=0, location=location)
 
     empire = MagicMock()
     empire.id = 0

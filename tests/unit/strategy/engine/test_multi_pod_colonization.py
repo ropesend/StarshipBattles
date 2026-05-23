@@ -37,7 +37,7 @@ def _make_ship(num_pods=1):
     return ship
 
 
-def _make_fleet(ships, orders=None):
+def _make_pod_colo_fleet(ships, orders=None):
     fleet = MagicMock()
     fleet.ships = ships
     fleet.orders = list(orders or [])
@@ -59,13 +59,13 @@ class TestMultiPodCounting:
 
     def test_ship_with_three_pods(self):
         ship = _make_ship(num_pods=3)
-        fleet = _make_fleet([ship])
+        fleet = _make_pod_colo_fleet([ship])
         assert ColonizeValidator.count_drop_pods(fleet) == 3
 
     def test_pods_across_multiple_ships(self):
         ship1 = _make_ship(num_pods=2)
         ship2 = _make_ship(num_pods=1)
-        fleet = _make_fleet([ship1, ship2])
+        fleet = _make_pod_colo_fleet([ship1, ship2])
         assert ColonizeValidator.count_drop_pods(fleet) == 3
 
 
@@ -74,7 +74,7 @@ class TestMultiPodChainValidation:
 
     def test_three_pods_allows_three_orders(self):
         ship = _make_ship(num_pods=3)
-        fleet = _make_fleet([ship])
+        fleet = _make_pod_colo_fleet([ship])
 
         # Queue 2 COLONIZE orders
         fleet.orders = [
@@ -92,7 +92,7 @@ class TestMultiPodChainValidation:
 
     def test_three_pods_rejects_fourth_order(self):
         ship = _make_ship(num_pods=3)
-        fleet = _make_fleet([ship])
+        fleet = _make_pod_colo_fleet([ship])
 
         # Queue 3 COLONIZE orders (= all pods)
         fleet.orders = [
@@ -112,7 +112,7 @@ class TestMultiPodChainValidation:
     def test_pod_consumed_allows_new_order(self):
         """After consuming a pod (colonization), a new order can be queued."""
         ship = _make_ship(num_pods=2)
-        fleet = _make_fleet([ship])
+        fleet = _make_pod_colo_fleet([ship])
 
         # Queue 2 orders
         fleet.orders = [
@@ -147,7 +147,7 @@ class TestMultiPodWithDictTarget:
     def test_dict_target_colonize_orders_counted(self):
         """COLONIZE orders with dict targets should still count toward committed pods."""
         ship = _make_ship(num_pods=2)
-        fleet = _make_fleet([ship])
+        fleet = _make_pod_colo_fleet([ship])
 
         # Mix of plain and dict targets
         fleet.orders = [

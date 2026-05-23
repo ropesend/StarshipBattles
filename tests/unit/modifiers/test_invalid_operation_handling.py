@@ -6,7 +6,6 @@ of being silently ignored.
 """
 import pytest
 import logging
-from unittest.mock import MagicMock
 
 from game.simulation.components.modifiers import (
     apply_modifier_effects,
@@ -36,20 +35,40 @@ class TestInvalidOperationWarning:
             "Invalid operation should not modify the stat"
 
     def test_apply_modifier_effects_invalid_operation_logs_warning(self, caplog):
-        """Invalid operation in apply_modifier_effects should log a warning."""
-        # Create a mock modifier definition that returns an effect with invalid operation
-        mock_modifier = MagicMock()
-        mock_effect = MagicMock()
-        mock_effect.stat_key = 'mass_mult'
-        mock_effect.value = 2.0
-        mock_effect.operation = 'bogus_operation'
-        mock_effect.is_targeted.return_value = False
-        mock_modifier.evaluate_effects.return_value = [mock_effect]
+        """Invalid operation in ``apply_modifier_effects`` should log a warning.
+
+        PROJ-491 Task 1.13: replaces the MagicMock-driven modifier/effect
+        with a real ``Modifier`` constructed from a definition dict carrying
+        an invalid ``operation``. The effect-evaluation pipeline thus
+        exercises the real path, and the assertion remains on the public
+        logging surface.
+        """
+        from game.simulation.components.component_constants import Modifier
+
+        modifier_def = {
+            'id': 'test_bogus_op',
+            'name': 'Test Bogus Op',
+            'effects': [
+                {
+                    'stat': 'mass_mult',
+                    'formula': 'param',
+                    'operation': 'bogus_operation',
+                }
+            ],
+            'param': {
+                'name': 'Test',
+                'type': 'linear',
+                'min': 0,
+                'max': 10,
+                'default': 2,
+            },
+        }
+        modifier = Modifier(modifier_def)
 
         stats = {'mass_mult': 1.0}
 
         with caplog.at_level(logging.WARNING):
-            apply_modifier_effects(mock_modifier, 1.0, stats)
+            apply_modifier_effects(modifier, 2.0, stats)
 
         # Should log a warning about the invalid operation
         assert any('bogus_operation' in record.message.lower() or

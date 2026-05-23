@@ -8,7 +8,7 @@ from game.strategy.data.order_types import Order, OrderType
 from game.core.hex_math import HexCoord
 from unittest.mock import MagicMock, patch
 
-from .conftest import MockGalaxy, create_colony_ship, MockPlanetType
+from .conftest import MockGalaxy, create_colony_ship, _MockPlanetTypeNamed
 
 
 @patch('game.strategy.services.galaxy_pathfinding_service.GalaxyPathfindingService.find_hybrid_path')
@@ -121,7 +121,7 @@ def test_order_chaining(fresh_registries):
     planet.owner_id = None
     planet.construction_queue = []
     planet.location = HexCoord(0, 0)  # At system center (relative)
-    planet.planet_type = MockPlanetType("ICE_DWARF")  # PROJ-140: Proper planet type
+    planet.planet_type = _MockPlanetTypeNamed("ICE_DWARF")  # PROJ-140: Proper planet type
     planet.populations = []
 
     # Create mock system containing the planet
@@ -166,7 +166,7 @@ def test_colonize_deletes_fleet(fresh_registries):
     planet.owner_id = None
     planet.construction_queue = []
     planet.location = HexCoord(0, 0)  # At system center (relative)
-    planet.planet_type = MockPlanetType("ICE_DWARF")  # PROJ-140: Proper planet type
+    planet.planet_type = _MockPlanetTypeNamed("ICE_DWARF")  # PROJ-140: Proper planet type
     planet.populations = []
 
     # Create mock system containing the planet

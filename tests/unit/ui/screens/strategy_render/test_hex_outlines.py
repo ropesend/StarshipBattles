@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+import math
 from types import SimpleNamespace
-from unittest.mock import call
 from unittest.mock import MagicMock
 
 import pygame
@@ -128,12 +128,28 @@ def test_draw_dispatches_inner_hex_outlines_by_ownership_state() -> None:
 
     layer.draw(renderer, screen)
 
-    assert renderer._draw_inner_hex.call_args_list == [
-        call(screen, 0.0, 0.0, 0.88, HEX_OUTLINE_PLAYER_OWNED),
-        call(screen, 15.0, 8.660254037844386, 0.88, HEX_OUTLINE_OCCUPIED),
-        call(screen, 30.0, 17.32050807568877, 0.90, HEX_OUTLINE_PLAYER_OWNED),
-        call(screen, 30.0, 17.32050807568877, 0.80, HEX_OUTLINE_OCCUPIED),
+    # PROJ-491 Task 1.1: tolerance-based assertion replaces brittle exact-float
+    # equality. We check call count + per-call structure with math.isclose on
+    # the float coordinates (irrational sqrt(3) values otherwise force fragile
+    # literal copies).
+    expected = [
+        (screen, 0.0, 0.0, 0.88, HEX_OUTLINE_PLAYER_OWNED),
+        (screen, 15.0, 8.660254037844386, 0.88, HEX_OUTLINE_OCCUPIED),
+        (screen, 30.0, 17.32050807568877, 0.90, HEX_OUTLINE_PLAYER_OWNED),
+        (screen, 30.0, 17.32050807568877, 0.80, HEX_OUTLINE_OCCUPIED),
     ]
+    actual_calls = renderer._draw_inner_hex.call_args_list
+    assert len(actual_calls) == len(expected)
+    for actual_call, (exp_screen, exp_x, exp_y, exp_scale, exp_color) in zip(
+        actual_calls, expected
+    ):
+        args, _kwargs = actual_call
+        got_screen, got_x, got_y, got_scale, got_color = args
+        assert got_screen is exp_screen
+        assert math.isclose(got_x, exp_x, abs_tol=1e-9)
+        assert math.isclose(got_y, exp_y, abs_tol=1e-9)
+        assert math.isclose(got_scale, exp_scale, abs_tol=1e-9)
+        assert got_color == exp_color
 
 
 def test_draw_skips_offscreen_outline() -> None:

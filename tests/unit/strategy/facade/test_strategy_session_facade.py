@@ -16,7 +16,7 @@ from game.strategy.facade.strategy_session_facade import StrategySessionFacade
 class TestFleetQueries:
     """Tests for fleet query methods."""
 
-    def _make_mock_fleet(self, fleet_id: int, location: HexCoord = None, owner_id: int = 1):
+    def _make_facade_fleet(self, fleet_id: int, location: HexCoord = None, owner_id: int = 1):
         """Create a mock fleet that FleetInfo.from_fleet can handle."""
         fleet = Mock()
         fleet.id = fleet_id
@@ -67,7 +67,7 @@ class TestFleetQueries:
 
     def test_get_fleet_found(self):
         """Returns FleetInfo DTO when fleet exists."""
-        fleet = self._make_mock_fleet(42)
+        fleet = self._make_facade_fleet(42)
         empire = self._make_mock_empire(1, fleets=[fleet])
         facade = self._make_facade([empire])
 
@@ -88,9 +88,9 @@ class TestFleetQueries:
     def test_get_fleets_at_hex_multiple(self):
         """Returns list of FleetInfo for fleets at hex."""
         target_hex = HexCoord(5, 5)
-        fleet1 = self._make_mock_fleet(1, target_hex)
-        fleet2 = self._make_mock_fleet(2, target_hex)
-        fleet3 = self._make_mock_fleet(3, HexCoord(1, 1))  # Different location
+        fleet1 = self._make_facade_fleet(1, target_hex)
+        fleet2 = self._make_facade_fleet(2, target_hex)
+        fleet3 = self._make_facade_fleet(3, HexCoord(1, 1))  # Different location
 
         empire = self._make_mock_empire(1, fleets=[fleet1, fleet2, fleet3])
         facade = self._make_facade([empire])
@@ -102,7 +102,7 @@ class TestFleetQueries:
 
     def test_get_fleets_at_hex_empty(self):
         """Returns [] when no fleets at hex."""
-        fleet = self._make_mock_fleet(1, HexCoord(0, 0))
+        fleet = self._make_facade_fleet(1, HexCoord(0, 0))
         empire = self._make_mock_empire(1, fleets=[fleet])
         facade = self._make_facade([empire])
 
@@ -112,7 +112,7 @@ class TestFleetQueries:
 
     def test_get_fleet_path_preview_found(self):
         """Delegates to session.preview_fleet_path."""
-        fleet = self._make_mock_fleet(1)
+        fleet = self._make_facade_fleet(1)
         empire = self._make_mock_empire(1, fleets=[fleet])
         session = Mock()
         session.empires = [empire]
@@ -137,7 +137,7 @@ class TestFleetQueries:
 
     def test_get_fleet_path_projection_found(self):
         """Delegates to session.get_fleet_path_projection."""
-        fleet = self._make_mock_fleet(1)
+        fleet = self._make_facade_fleet(1)
         empire = self._make_mock_empire(1, fleets=[fleet])
         session = Mock()
         session.empires = [empire]
@@ -330,7 +330,7 @@ class TestPlanetQueries:
 class TestEmpireQueries:
     """Tests for empire query methods."""
 
-    def _make_mock_fleet(self, fleet_id: int):
+    def _make_facade_fleet(self, fleet_id: int):
         """Create a mock fleet for FleetSummary.from_fleet."""
         fleet = Mock()
         fleet.id = fleet_id
@@ -428,8 +428,8 @@ class TestEmpireQueries:
 
     def test_get_empire_fleets(self):
         """Returns FleetSummary list."""
-        fleet1 = self._make_mock_fleet(1)
-        fleet2 = self._make_mock_fleet(2)
+        fleet1 = self._make_facade_fleet(1)
+        fleet2 = self._make_facade_fleet(2)
         empire = self._make_mock_empire(1, fleets=[fleet1, fleet2])
 
         session = Mock()
@@ -483,7 +483,7 @@ class TestGameStateQueries:
 class TestValidationQueries:
     """Tests for validation query methods."""
 
-    def _make_mock_fleet(self, fleet_id: int, location: HexCoord = None):
+    def _make_facade_fleet(self, fleet_id: int, location: HexCoord = None):
         """Create a mock fleet."""
         fleet = Mock()
         fleet.id = fleet_id
@@ -534,7 +534,7 @@ class TestValidationQueries:
 
     def test_can_colonize_planet_not_found(self):
         """Returns invalid result when planet not found."""
-        fleet = self._make_mock_fleet(1)
+        fleet = self._make_facade_fleet(1)
         empire = self._make_mock_empire(1, fleets=[fleet])
 
         session = self._make_session_with_fleet_lookup([empire])
@@ -550,7 +550,7 @@ class TestValidationQueries:
 
     def test_can_colonize_delegates_to_turn_engine(self):
         """Valid fleet/planet delegates to turn_engine."""
-        fleet = self._make_mock_fleet(1)
+        fleet = self._make_facade_fleet(1)
         empire = self._make_mock_empire(1, fleets=[fleet])
         planet = self._make_mock_planet(42)
 
@@ -585,7 +585,7 @@ class TestValidationQueries:
 
     def test_can_move_to_no_path(self):
         """Returns invalid when no path exists."""
-        fleet = self._make_mock_fleet(1)
+        fleet = self._make_facade_fleet(1)
         empire = self._make_mock_empire(1, fleets=[fleet])
 
         session = self._make_session_with_fleet_lookup([empire])
@@ -600,7 +600,7 @@ class TestValidationQueries:
 
     def test_can_move_to_valid_path(self):
         """Returns valid when path exists."""
-        fleet = self._make_mock_fleet(1)
+        fleet = self._make_facade_fleet(1)
         empire = self._make_mock_empire(1, fleets=[fleet])
 
         session = self._make_session_with_fleet_lookup([empire])

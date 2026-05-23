@@ -17,6 +17,7 @@ from game.core.hex_math import HexCoord
 # =============================================================================
 # Fixtures
 # =============================================================================
+from tests.fixtures.colonization_fixtures import MockPlanetType
 
 @pytest.fixture
 def mock_fleet():
@@ -151,11 +152,8 @@ class TestColonizeProcessing:
     @pytest.fixture
     def mock_planet_continental(self):
         """Create a mock CONTINENTAL planet."""
-        from enum import Enum
         from game.strategy.data.planet import Planet
 
-        class MockPlanetType(Enum):
-            CONTINENTAL = "CONTINENTAL"
 
         planet = MagicMock(spec=Planet)
         planet.name = "Target Planet"
@@ -277,10 +275,7 @@ class TestEndTurnOrderProcessing:
         """Action order processing handles COLONIZE orders."""
         from game.strategy.engine.order_processor import OrderProcessor
         from game.strategy.data.planet import Planet
-        from enum import Enum
 
-        class MockPlanetType(Enum):
-            CONTINENTAL = "CONTINENTAL"
 
         processor = OrderProcessor()
 
@@ -479,10 +474,7 @@ class TestColonizeDropPodDeployment:
     @pytest.fixture
     def mock_planet_ice_dwarf(self):
         """Create a mock ICE_DWARF planet."""
-        from enum import Enum
 
-        class MockPlanetType(Enum):
-            ICE_DWARF = "ICE_DWARF"
 
         planet = MagicMock()
         planet.name = "Frostworld"

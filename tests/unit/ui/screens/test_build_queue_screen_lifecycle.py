@@ -296,7 +296,7 @@ def session_with_planet(galaxy_with_planet, empire, mock_registries):
     )
 
 
-def _make_fleet(fleet_id: int, hex_coord: HexCoord, name: str = "Test Fleet"):
+def _make_build_queue_fleet(fleet_id: int, hex_coord: HexCoord, name: str = "Test Fleet"):
     """Build a MagicMock fleet that satisfies the panel factory's fleet path."""
     fleet = MagicMock()
     fleet.id = fleet_id
@@ -463,7 +463,7 @@ def test_open_for_yard_planet_to_fleet_rebuilds_panels(
     old_panels = screen.panels
     old_background = screen.panels.background
 
-    fleet = _make_fleet(fleet_id=1, hex_coord=hex_b)
+    fleet = _make_build_queue_fleet(fleet_id=1, hex_coord=hex_b)
     galaxy_with_planet._fleets_at_hex[hex_b] = [fleet]
     screen.open_for_yard(fleet, hex_coord=hex_b)
 
@@ -571,7 +571,7 @@ def test_obs2_open_for_yard_fleet_to_planet_rebuilds_panels(
     from game.ui.panels.planet_report_panel import PlanetReportPanel
     from game.ui.screens.build_queue_screen import BuildQueueScreen
 
-    fleet = _make_fleet(fleet_id=1, hex_coord=hex_b)
+    fleet = _make_build_queue_fleet(fleet_id=1, hex_coord=hex_b)
     galaxy_with_planet._fleets_at_hex[hex_b] = [fleet]
     galaxy_with_planet._global_hex_planets[hex_a] = [planet_a]
 
@@ -610,7 +610,7 @@ def test_obs2_open_for_yard_planet_to_fleet_round_trip_back_to_planet(
     from game.ui.screens.build_queue_screen import BuildQueueScreen
 
     fleet_hex = HexCoord(9, 9)
-    fleet = _make_fleet(fleet_id=2, hex_coord=fleet_hex)
+    fleet = _make_build_queue_fleet(fleet_id=2, hex_coord=fleet_hex)
     galaxy_with_planet._fleets_at_hex[fleet_hex] = [fleet]
     galaxy_with_planet._global_hex_planets[hex_b] = [planet_b]
 

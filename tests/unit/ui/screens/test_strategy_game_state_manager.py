@@ -543,29 +543,41 @@ class TestApplyTurnStartState:
     ],
     ids=["per_player_switch", "rollover_branch"],
 )
-def test_advance_turn_helper_invocation(
+def test_advance_turn_focuses_next_empire_home_colony(
     human_player_ids, expected_next_id, need_display_patch
 ):
-    """Parametrized (PROJ-479 Task 1.10): the turn-start helper is
-    invoked with the correct next empire on BOTH the per-player-switch
-    (else) branch and the full-turn-rollover branch."""
+    """Parametrized (PROJ-479 Task 1.10): the turn-start path focuses
+    the NEXT empire's home colony on BOTH branches.
+
+    PROJ-491 Task 1.17: replaced the prior ``patch.object(manager,
+    '_apply_turn_start_state')`` private-method assertion with the
+    observable public turn-advance outcome — the per-player turn-start
+    flow ultimately calls ``screen.on_ui_selection(home_colony)`` for
+    the **incoming** empire (see ``_apply_turn_start_state`` in
+    production). Checking the on_ui_selection target's owner_id is the
+    same regression check at the public-API surface.
+    """
     manager, screen = _make_game_state_manager()
     screen.current_player_index = 0
     screen.human_player_ids = human_player_ids
     screen._facade.events.turn_events.return_value = []
 
-    contexts = [patch.object(manager, "_apply_turn_start_state")]
+    # Tag each empire's home colony with the empire's id so the assertion
+    # can verify which empire's home was focused.
+    for emp in screen.empires:
+        emp.colonies[0].owner_id = emp.id
+
+    contexts = []
     if need_display_patch:
         contexts.append(patch("pygame.display.get_surface", return_value=None))
     with contextlib.ExitStack() as stack:
-        mock_helper = stack.enter_context(contexts[0])
-        for ctx in contexts[1:]:
+        for ctx in contexts:
             stack.enter_context(ctx)
         manager.advance_turn()
 
-    mock_helper.assert_called_once()
-    called_empire = mock_helper.call_args[0][0]
-    assert called_empire.id == expected_next_id
+    screen.on_ui_selection.assert_called_once()
+    selected_colony = screen.on_ui_selection.call_args[0][0]
+    assert selected_colony.owner_id == expected_next_id
 
 
 @pytest.mark.parametrize(
@@ -576,29 +588,48 @@ def test_advance_turn_helper_invocation(
     ],
     ids=["per_player_switch", "rollover_branch"],
 )
-def test_advance_turn_runs_helper_after_sync_active_empire(
+def test_advance_turn_syncs_active_empire_before_event_log_open(
     human_player_ids, need_display_patch
 ):
     """Parametrized (PROJ-479 Task 1.10): on BOTH branches,
-    ``_sync_active_empire`` must run BEFORE ``_apply_turn_start_state``
-    so event-log scoping reads the just-rotated empire (BUG-125)."""
+    ``set_active_empire`` must run BEFORE the per-player event-log popup
+    so event-log scoping reads the just-rotated empire (BUG-125).
+
+    PROJ-491 Task 1.17: replaces the prior ``patch.object`` on
+    ``_sync_active_empire`` / ``_apply_turn_start_state`` with the
+    observable public outcomes:
+    - ``order_writes.set_active_empire`` is invoked (the public effect of
+      ``_sync_active_empire``).
+    - ``ui.open_event_log_with_events`` is invoked (the public effect of
+      ``_apply_turn_start_state`` when events exist).
+    - The active-empire push happens BEFORE the event-log open.
+
+    We give the rotated-in empire one turn event so the popup actually
+    fires; record-by-side-effect on the two public-surface mocks
+    establishes the relative ordering.
+    """
     manager, screen = _make_game_state_manager()
     screen.current_player_index = 0
     screen.human_player_ids = human_player_ids
-    screen._facade.events.turn_events.return_value = []
-    call_order = []
+    # Issue #9: the event-log popup fires when turn_events returns a
+    # non-empty list scoped to the incoming empire. Hand back one event
+    # for any (turn, empire_id) query so both branches reach the popup.
+    screen._facade.events.turn_events.side_effect = (
+        lambda turn, *, empire_id: [MagicMock(name="evt")]
+    )
 
-    def record_sync():
-        call_order.append("sync")
+    call_order: list[str] = []
 
-    def record_helper(empire):
-        call_order.append("helper")
+    def record_active_empire_set(_empire) -> None:
+        call_order.append("set_active_empire")
 
-    contexts = [
-        patch.object(manager, "_sync_active_empire", side_effect=record_sync),
-        patch.object(manager, "_apply_turn_start_state",
-                     side_effect=record_helper),
-    ]
+    def record_event_log_open(*_args, **_kwargs) -> None:
+        call_order.append("open_event_log")
+
+    screen.order_writes.set_active_empire.side_effect = record_active_empire_set
+    screen.ui.open_event_log_with_events.side_effect = record_event_log_open
+
+    contexts = []
     if need_display_patch:
         contexts.append(patch("pygame.display.get_surface", return_value=None))
     with contextlib.ExitStack() as stack:
@@ -606,7 +637,7 @@ def test_advance_turn_runs_helper_after_sync_active_empire(
             stack.enter_context(ctx)
         manager.advance_turn()
 
-    assert call_order == ["sync", "helper"]
+    assert call_order == ["set_active_empire", "open_event_log"]
 
 
 class TestAdvanceTurnPerPlayerSwitch:

@@ -48,13 +48,33 @@ class _FleetStub:
 
 @pytest.fixture
 def patch_domain_classes(monkeypatch):
-    """Patch the runtime imports inside Order.to_dict so isinstance(...)
-    matches our stub classes instead of the heavy real Planet/Fleet."""
+    """Per-test factory installing Planet/Fleet stub *classes* into the
+    production modules so ``Order.to_dict``'s ``isinstance`` dispatch
+    matches our stubs instead of the heavy real Planet/Fleet types.
+
+    PROJ-491 Task 1.14: returns a small ``(planet, fleet)`` factory pair
+    instead of being a side-effect-only fixture. Per-test code can now
+    request the precise stub *instances* it needs while the class-level
+    monkeypatch still ensures ``isinstance`` works — the previous
+    module-level monkeypatch shape made customisation awkward (callers
+    had to construct ``_PlanetStub(...)`` themselves outside the
+    fixture's lifetime tracking).
+
+    Returns:
+        A ``types.SimpleNamespace`` with two callables:
+          - ``planet(planet_id="p1")`` → ``_PlanetStub`` instance
+          - ``fleet(fleet_id="f1")``   → ``_FleetStub`` instance
+    """
     import game.strategy.data.fleet as fleet_module
     import game.strategy.data.planet as planet_module
 
     monkeypatch.setattr(planet_module, "Planet", _PlanetStub)
     monkeypatch.setattr(fleet_module, "Fleet", _FleetStub)
+
+    return SimpleNamespace(
+        planet=lambda planet_id="p1": _PlanetStub(planet_id),
+        fleet=lambda fleet_id="f1": _FleetStub(fleet_id),
+    )
 
 
 # ---------------------------------------------------------------------------

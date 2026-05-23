@@ -13,7 +13,7 @@ from game.strategy.data.order_types import Order, OrderType
 from game.strategy.services.fleet_cargo_projector import FleetCargoProjector
 
 
-def _make_fleet(current: int, capacity: int, orders=None):
+def _make_cargo_projector_fleet(current: int, capacity: int, orders=None):
     """Build a minimal fleet stub that exposes only what the projector reads."""
     fleet = MagicMock()
     fleet.resources = MagicMock()
@@ -33,40 +33,40 @@ def _transfer(direction: str, amount: int, cargo_type: str = "passengers",
 
 class TestEmptyAndPassthrough:
     def test_returns_current_when_order_queue_empty(self):
-        fleet = _make_fleet(current=42, capacity=100, orders=[])
+        fleet = _make_cargo_projector_fleet(current=42, capacity=100, orders=[])
         assert FleetCargoProjector.get_projected_cargo(fleet, "passengers") == 42
 
 
 class TestLoadDirection:
     def test_load_with_explicit_amount_adds_to_projected(self):
-        fleet = _make_fleet(current=10, capacity=100,
+        fleet = _make_cargo_projector_fleet(current=10, capacity=100,
                             orders=[_transfer("load", 30)])
         assert FleetCargoProjector.get_projected_cargo(fleet, "passengers") == 40
 
     def test_load_with_zero_amount_fills_to_capacity(self):
-        fleet = _make_fleet(current=20, capacity=100,
+        fleet = _make_cargo_projector_fleet(current=20, capacity=100,
                             orders=[_transfer("load", 0)])
         assert FleetCargoProjector.get_projected_cargo(fleet, "passengers") == 100
 
     def test_load_clamps_to_capacity_when_amount_exceeds_remaining(self):
-        fleet = _make_fleet(current=80, capacity=100,
+        fleet = _make_cargo_projector_fleet(current=80, capacity=100,
                             orders=[_transfer("load", 9999)])
         assert FleetCargoProjector.get_projected_cargo(fleet, "passengers") == 100
 
 
 class TestUnloadDirection:
     def test_unload_with_explicit_amount_subtracts_from_projected(self):
-        fleet = _make_fleet(current=80, capacity=100,
+        fleet = _make_cargo_projector_fleet(current=80, capacity=100,
                             orders=[_transfer("unload", 30)])
         assert FleetCargoProjector.get_projected_cargo(fleet, "passengers") == 50
 
     def test_unload_with_zero_amount_drains_to_zero(self):
-        fleet = _make_fleet(current=80, capacity=100,
+        fleet = _make_cargo_projector_fleet(current=80, capacity=100,
                             orders=[_transfer("unload", 0)])
         assert FleetCargoProjector.get_projected_cargo(fleet, "passengers") == 0
 
     def test_unload_clamps_to_zero_when_amount_exceeds_projected(self):
-        fleet = _make_fleet(current=20, capacity=100,
+        fleet = _make_cargo_projector_fleet(current=20, capacity=100,
                             orders=[_transfer("unload", 9999)])
         assert FleetCargoProjector.get_projected_cargo(fleet, "passengers") == 0
 
@@ -76,16 +76,16 @@ class TestOrderFiltering:
         # Fleet-target order (e.g. MOVE_TO_FLEET) — target isn't a dict.
         # Must NOT raise; must NOT alter projection.
         bad_order = Order(OrderType.TRANSFER, target=MagicMock())
-        fleet = _make_fleet(current=15, capacity=100, orders=[bad_order])
+        fleet = _make_cargo_projector_fleet(current=15, capacity=100, orders=[bad_order])
         assert FleetCargoProjector.get_projected_cargo(fleet, "passengers") == 15
 
     def test_skips_orders_with_mismatching_cargo_type(self):
-        fleet = _make_fleet(current=10, capacity=100,
+        fleet = _make_cargo_projector_fleet(current=10, capacity=100,
                             orders=[_transfer("load", 50, cargo_type="fuel")])
         assert FleetCargoProjector.get_projected_cargo(fleet, "passengers") == 10
 
     def test_skips_orders_with_unrecognized_direction(self):
-        fleet = _make_fleet(current=10, capacity=100,
+        fleet = _make_cargo_projector_fleet(current=10, capacity=100,
                             orders=[_transfer("sideways", 50)])
         assert FleetCargoProjector.get_projected_cargo(fleet, "passengers") == 10
 
@@ -96,13 +96,13 @@ class TestOrderFiltering:
             OrderType.MOVE,
             target={"direction": "load", "amount": 50, "cargo_type": "passengers"},
         )
-        fleet = _make_fleet(current=10, capacity=100, orders=[move_with_dict])
+        fleet = _make_cargo_projector_fleet(current=10, capacity=100, orders=[move_with_dict])
         assert FleetCargoProjector.get_projected_cargo(fleet, "passengers") == 10
 
 
 class TestComposition:
     def test_multiple_orders_for_same_cargo_type_compose_cumulatively(self):
-        fleet = _make_fleet(
+        fleet = _make_cargo_projector_fleet(
             current=0, capacity=2000,
             orders=[_transfer("load", 1000), _transfer("unload", 400)],
         )
@@ -110,7 +110,7 @@ class TestComposition:
         assert FleetCargoProjector.get_projected_cargo(fleet, "passengers") == 600
 
     def test_load_population_and_unload_population_order_types_processed(self):
-        fleet = _make_fleet(
+        fleet = _make_cargo_projector_fleet(
             current=0, capacity=500,
             orders=[
                 _transfer("load", 200, order_type=OrderType.LOAD_POPULATION),
@@ -138,7 +138,7 @@ class TestNegativeAmountIsolation:
     def test_load_with_negative_amount_fills_to_capacity_like_zero(self):
         # Negative `amount` on load is treated as auto-fill (same as
         # amount=0). Production ignores the sign and the magnitude.
-        fleet = _make_fleet(
+        fleet = _make_cargo_projector_fleet(
             current=100, capacity=2000,
             orders=[_transfer("load", -50)],
         )
@@ -148,7 +148,7 @@ class TestNegativeAmountIsolation:
     def test_unload_with_negative_amount_drains_to_zero_like_zero(self):
         # Negative `amount` on unload is treated as auto-drain (same as
         # amount=0).
-        fleet = _make_fleet(
+        fleet = _make_cargo_projector_fleet(
             current=100, capacity=2000,
             orders=[_transfer("unload", -500)],
         )

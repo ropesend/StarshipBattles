@@ -122,7 +122,15 @@ def create_colony_ship(name="Colony Ship", owner_id=0, pod_type="ICE_DWARF", reg
     return ship
 
 
-class MockPlanetType:
-    """Mock planet type with name attribute."""
+class _MockPlanetTypeNamed:
+    """Mock planet type with a free-form ``name`` attribute.
+
+    PROJ-492 Task 1.10: NOT the canonical ``MockPlanetType`` Enum (see
+    ``tests/fixtures/colonization_fixtures.py``). This is a plain class whose
+    constructor accepts an arbitrary string; the integration turn_engine
+    fixtures pass values like ``"ICE_DWARF"`` directly. Renamed from
+    ``MockPlanetType`` to clear the namespace conflict with the canonical
+    Enum — the two are out-of-family per audit Finding 9.
+    """
     def __init__(self, name):
         self.name = name

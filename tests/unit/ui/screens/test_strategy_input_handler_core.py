@@ -186,15 +186,38 @@ class TestClickHandling:
         mock_scene.ui.handle_click.assert_called_once_with(100, 200, 1)
         assert result is True
 
-    def test_click_in_select_mode_calls_picking(self, mock_scene, mapper):
-        """Left-click in SELECT mode should trigger picking."""
+    def test_click_in_select_mode_invokes_show_sector_info(self, mock_scene, mapper):
+        """Left-click in SELECT mode should run the picking flow and surface
+        sector-info through the UI (observable outcome).
+
+        PROJ-491 Task 1.11: replaces the prior
+        ``handler._click_dispatch._handle_picking = MagicMock(); assert_called_once_with``
+        with the observable public-API outcome: when ``handle_click`` enters
+        SELECT mode it must call ``mock_scene.ui.show_sector_info`` (the
+        observable side-effect of picking).
+        """
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
         handler.input_mode = 'SELECT'
-        handler._click_dispatch._handle_picking = MagicMock()
+
+        # Minimal scene wiring so the real picking flow can execute through
+        # to ``show_sector_info`` without raising.
+        mock_scene.ui.handle_click.return_value = False  # UI did not consume click
+        mock_scene._get_system_at_hex = MagicMock(return_value=None)
+        mock_scene.empires = []
+        mock_scene.galaxy = MagicMock()
+        mock_scene.galaxy.get_zones_at_global_hex = MagicMock(return_value=[])
+        mock_scene.camera.screen_to_world = MagicMock(return_value=MagicMock(x=0, y=0))
+        mock_scene.camera.hex_at_screen = MagicMock(return_value=HexCoord(0, 0))
+        mock_scene.camera.zoom = 1.0
+        mock_scene.ui.show_system_info = MagicMock()
+        mock_scene.ui.show_sector_info = MagicMock()
+        mock_scene.ui.show_detailed_report = MagicMock()
+        mock_scene.on_ui_selection = MagicMock()
 
         handler.handle_click(100, 200, 1)
 
-        handler._click_dispatch._handle_picking.assert_called_once_with(100, 200)
+        # The picking flow's observable outcome is a sector-info UI call.
+        assert mock_scene.ui.show_sector_info.called
 
     def test_click_in_move_mode_dispatches_move(self, mock_scene, mapper):
         """Left-click in MOVE mode should dispatch move command."""
@@ -605,8 +628,14 @@ class TestZoneSelection:
     """Test zone-aware object picking in _handle_picking()."""
 
     def test_picking_finds_star_via_zone_hex(self, mock_scene, mapper):
-        """Clicking a hex in a star's zone should include the star in sector_contents."""
+        """Clicking a hex in a star's zone should include the star in sector_contents.
+
+        PROJ-491 Task 1.11: routes the click through the public
+        ``handle_click`` entry point in SELECT mode instead of calling
+        the private ``_click_dispatch._handle_picking`` directly.
+        """
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+        handler.input_mode = 'SELECT'
 
         # Setup mock galaxy with zone registry
         mock_star = MagicMock()
@@ -628,12 +657,13 @@ class TestZoneSelection:
         mock_scene.camera.zoom = 1.0  # Low zoom, no hit testing
 
         # Mock UI methods
+        mock_scene.ui.handle_click.return_value = False  # UI doesn't consume
         mock_scene.ui.show_system_info = MagicMock()
         mock_scene.ui.show_sector_info = MagicMock()
         mock_scene.ui.show_detailed_report = MagicMock()
         mock_scene.on_ui_selection = MagicMock()
 
-        handler._click_dispatch._handle_picking(100, 200)
+        handler.handle_click(100, 200, 1)
 
         # Verify star was included in sector_contents via zone lookup
         show_sector_call_args = mock_scene.ui.show_sector_info.call_args
@@ -641,8 +671,13 @@ class TestZoneSelection:
         assert mock_star in sector_contents, "Star should be found via zone hex"
 
     def test_picking_finds_dyson_sphere_via_zone_hex(self, mock_scene, mapper):
-        """Clicking a hex in a Dyson Sphere's zone should include it in sector_contents."""
+        """Clicking a hex in a Dyson Sphere's zone should include it in sector_contents.
+
+        PROJ-491 Task 1.11: routes through the public ``handle_click`` entry
+        point in SELECT mode.
+        """
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+        handler.input_mode = 'SELECT'
 
         # Setup mock Dyson Sphere planet with zone
         mock_dyson = MagicMock()
@@ -664,20 +699,26 @@ class TestZoneSelection:
 
         mock_scene.camera.screen_to_world = MagicMock(return_value=MagicMock(x=0, y=0))
         mock_scene.camera.zoom = 1.0  # Low zoom, no hit testing
+        mock_scene.ui.handle_click.return_value = False  # UI doesn't consume
         mock_scene.ui.show_system_info = MagicMock()
         mock_scene.ui.show_sector_info = MagicMock()
         mock_scene.ui.show_detailed_report = MagicMock()
         mock_scene.on_ui_selection = MagicMock()
 
-        handler._click_dispatch._handle_picking(100, 200)
+        handler.handle_click(100, 200, 1)
 
         show_sector_call_args = mock_scene.ui.show_sector_info.call_args
         sector_contents = show_sector_call_args[0][1]
         assert mock_dyson in sector_contents, "Dyson Sphere should be found via zone hex"
 
     def test_picking_priority_fleet_over_zone(self, mock_scene, mapper):
-        """Fleets should have priority over zone objects in sector_contents."""
+        """Fleets should have priority over zone objects in sector_contents.
+
+        PROJ-491 Task 1.11: routes through the public ``handle_click`` entry
+        point in SELECT mode.
+        """
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+        handler.input_mode = 'SELECT'
 
         # Setup fleet at clicked hex
         mock_fleet = MagicMock()
@@ -699,12 +740,13 @@ class TestZoneSelection:
         mock_scene.camera.screen_to_world = MagicMock(return_value=MagicMock(x=0, y=0))
         mock_scene.camera.hex_at_screen = MagicMock(return_value=HexCoord(0, 0))
         mock_scene.camera.zoom = 1.0  # Low zoom, no hit testing
+        mock_scene.ui.handle_click.return_value = False  # UI doesn't consume
         mock_scene.ui.show_system_info = MagicMock()
         mock_scene.ui.show_sector_info = MagicMock()
         mock_scene.ui.show_detailed_report = MagicMock()
         mock_scene.on_ui_selection = MagicMock()
 
-        handler._click_dispatch._handle_picking(100, 200)
+        handler.handle_click(100, 200, 1)
 
         show_sector_call_args = mock_scene.ui.show_sector_info.call_args
         sector_contents = show_sector_call_args[0][1]

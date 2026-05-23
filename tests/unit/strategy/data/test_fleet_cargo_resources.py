@@ -28,7 +28,7 @@ def _make_ship(cargo_capacity=None, cargo_contents=None):
     )
 
 
-def _make_fleet(ships=None):
+def _make_real_fleet(ships=None):
     """Create a fleet with mock ships."""
     fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
     if ships:
@@ -46,7 +46,7 @@ class TestFleetHasCargoResources:
             cargo_capacity={"metals": 1000},
             cargo_contents={"metals": 500},
         )
-        fleet = _make_fleet([ship])
+        fleet = _make_real_fleet([ship])
 
         assert fleet.has_cargo_resources({"metals": 200}) is True
 
@@ -56,7 +56,7 @@ class TestFleetHasCargoResources:
             cargo_capacity={"metals": 1000},
             cargo_contents={"metals": 50},
         )
-        fleet = _make_fleet([ship])
+        fleet = _make_real_fleet([ship])
 
         assert fleet.has_cargo_resources({"metals": 200}) is False
 
@@ -64,7 +64,7 @@ class TestFleetHasCargoResources:
         """Aggregates cargo across all ships in fleet."""
         ship1 = _make_ship(cargo_capacity={"metals": 500}, cargo_contents={"metals": 100})
         ship2 = _make_ship(cargo_capacity={"metals": 500}, cargo_contents={"metals": 150})
-        fleet = _make_fleet([ship1, ship2])
+        fleet = _make_real_fleet([ship1, ship2])
 
         assert fleet.has_cargo_resources({"metals": 250}) is True
         assert fleet.has_cargo_resources({"metals": 251}) is False
@@ -75,20 +75,20 @@ class TestFleetHasCargoResources:
             cargo_capacity={"metals": 1000, "organics": 500},
             cargo_contents={"metals": 300, "organics": 100},
         )
-        fleet = _make_fleet([ship])
+        fleet = _make_real_fleet([ship])
 
         assert fleet.has_cargo_resources({"metals": 200, "organics": 50}) is True
         assert fleet.has_cargo_resources({"metals": 200, "organics": 200}) is False
 
     def test_has_resources_empty_costs(self):
         """Empty costs dict always returns True."""
-        fleet = _make_fleet([])
+        fleet = _make_real_fleet([])
         assert fleet.has_cargo_resources({}) is True
 
     def test_has_resources_missing_type(self):
         """Returns False for cargo type not carried by any ship."""
         ship = _make_ship(cargo_capacity={"metals": 1000}, cargo_contents={"metals": 500})
-        fleet = _make_fleet([ship])
+        fleet = _make_real_fleet([ship])
 
         assert fleet.has_cargo_resources({"exotics": 10}) is False
 
@@ -105,7 +105,7 @@ class TestFleetHasCargoResources:
             cargo_capacity={"metals": 10},
             cargo_contents={"metals": 1},
         )
-        fleet = _make_fleet([ship])
+        fleet = _make_real_fleet([ship])
 
         # 1.4 rounds to 1; we have 1 → affordable.
         assert fleet.has_cargo_resources({"metals": 1.4}) is True
@@ -123,7 +123,7 @@ class TestFleetHasCargoResources:
             cargo_capacity={"metals": 10},
             cargo_contents={"metals": 0},
         )
-        fleet = _make_fleet([ship])
+        fleet = _make_real_fleet([ship])
         # 0.1 rounds to 0; consume would also charge 0; both sides agree.
         assert fleet.has_cargo_resources({"metals": 0.1}) is True
 
@@ -134,7 +134,7 @@ class TestFleetConsumeCargoResource:
     def test_consume_from_single_ship(self):
         """Consumes cargo from a single ship."""
         ship = _make_ship(cargo_capacity={"metals": 1000}, cargo_contents={"metals": 500})
-        fleet = _make_fleet([ship])
+        fleet = _make_real_fleet([ship])
 
         result = fleet.consume_cargo_resource("metals", 200)
 
@@ -144,7 +144,7 @@ class TestFleetConsumeCargoResource:
     def test_consume_fails_insufficient(self):
         """Returns False if insufficient cargo (no partial consumption)."""
         ship = _make_ship(cargo_capacity={"metals": 1000}, cargo_contents={"metals": 50})
-        fleet = _make_fleet([ship])
+        fleet = _make_real_fleet([ship])
 
         result = fleet.consume_cargo_resource("metals", 200)
 
@@ -155,7 +155,7 @@ class TestFleetConsumeCargoResource:
         """Consumes across ships when single ship doesn't have enough."""
         ship1 = _make_ship(cargo_capacity={"metals": 500}, cargo_contents={"metals": 100})
         ship2 = _make_ship(cargo_capacity={"metals": 500}, cargo_contents={"metals": 200})
-        fleet = _make_fleet([ship1, ship2])
+        fleet = _make_real_fleet([ship1, ship2])
 
         result = fleet.consume_cargo_resource("metals", 250)
 
@@ -171,11 +171,11 @@ class TestFleetGetCargoResource:
         """Returns total cargo across all ships."""
         ship1 = _make_ship(cargo_capacity={"metals": 500}, cargo_contents={"metals": 100})
         ship2 = _make_ship(cargo_capacity={"metals": 500}, cargo_contents={"metals": 200})
-        fleet = _make_fleet([ship1, ship2])
+        fleet = _make_real_fleet([ship1, ship2])
 
         assert fleet.get_cargo_resource("metals") == 300
 
     def test_get_cargo_resource_missing_type(self):
         """Returns 0 for cargo type not carried."""
-        fleet = _make_fleet([_make_ship()])
+        fleet = _make_real_fleet([_make_ship()])
         assert fleet.get_cargo_resource("exotics") == 0

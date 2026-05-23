@@ -89,7 +89,7 @@ class _StubShip:
         self._bay_inventory = BayInventory(bay=bay)
 
 
-def _make_fleet(carrier: _StubShip, hex_c: HexCoord) -> Fleet:
+def _make_real_fleet(carrier: _StubShip, hex_c: HexCoord) -> Fleet:
     fleet = Fleet(
         fleet_id=1, owner_id=42, location=hex_c, speed=5.0,
         display_name="Test Fleet",
@@ -129,7 +129,7 @@ def _make_planet(
 def test_fleet_adapter_location_owner_label():
     carrier = _StubShip()
     hex_c = HexCoord(3, -2)
-    fleet = _make_fleet(carrier, hex_c)
+    fleet = _make_real_fleet(carrier, hex_c)
     a = FleetShipIssuerAdapter(fleet, carrier)
     assert a.location == hex_c
     assert a.owner_id == 42
@@ -144,7 +144,7 @@ def test_fleet_adapter_pop_carried_filters_by_type_and_design():
         _fighter_dict(),
         _mine_dict("mine_a"),
     ])
-    fleet = _make_fleet(carrier, HexCoord(0, 0))
+    fleet = _make_real_fleet(carrier, HexCoord(0, 0))
     a = FleetShipIssuerAdapter(fleet, carrier)
 
     popped = a.pop_carried("mine", "mine_a", count=2)
@@ -159,7 +159,7 @@ def test_fleet_adapter_pop_carried_filters_by_type_and_design():
 def test_fleet_adapter_pop_all_when_count_none():
     carrier = _StubShip()
     carrier._seed_bay_dicts([_mine_dict(), _mine_dict(), _fighter_dict()])
-    fleet = _make_fleet(carrier, HexCoord(0, 0))
+    fleet = _make_real_fleet(carrier, HexCoord(0, 0))
     a = FleetShipIssuerAdapter(fleet, carrier)
 
     popped = a.pop_carried("mine", None, count=None)
@@ -174,7 +174,7 @@ def test_fleet_adapter_pop_all_when_count_none():
 def test_fleet_adapter_count_carried():
     carrier = _StubShip()
     carrier._seed_bay_dicts([_mine_dict(), _mine_dict("mine_b"), _fighter_dict()])
-    fleet = _make_fleet(carrier, HexCoord(0, 0))
+    fleet = _make_real_fleet(carrier, HexCoord(0, 0))
     a = FleetShipIssuerAdapter(fleet, carrier)
     assert a.count_carried("mine", None) == 2
     assert a.count_carried("mine", "mine_b") == 1
@@ -184,7 +184,7 @@ def test_fleet_adapter_count_carried():
 
 def test_fleet_adapter_append_carried_roundtrip():
     carrier = _StubShip()
-    fleet = _make_fleet(carrier, HexCoord(0, 0))
+    fleet = _make_real_fleet(carrier, HexCoord(0, 0))
     a = FleetShipIssuerAdapter(fleet, carrier)
     items = [_mine_dict(), _mine_dict()]
     n = a.append_carried(items)
@@ -290,7 +290,7 @@ def test_both_adapters_satisfy_protocol():
     from game.strategy.engine.issuer_adapter import IIssuerAdapter
 
     carrier = _StubShip()
-    fleet = _make_fleet(carrier, HexCoord(0, 0))
+    fleet = _make_real_fleet(carrier, HexCoord(0, 0))
     fleet_a = FleetShipIssuerAdapter(fleet, carrier)
     planet_a = PlanetStagingYardIssuerAdapter(_make_planet())
     assert isinstance(fleet_a, IIssuerAdapter)

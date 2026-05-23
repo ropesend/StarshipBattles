@@ -42,6 +42,17 @@ def test_order_processor_minimal_order_type_references():
 
     Total: <= 2 references. Any more means a new branching ladder has
     been introduced; the registry is the right place for that.
+
+    PROJ-491 Task 1.6 — architectural-guard accept-with-comment:
+    This is an AST-based static guard. False-positive risk: any future
+    refactor that legitimately needs a third literal ``OrderType.X``
+    reference inside ``order_processor.py`` (e.g. a new structural
+    branch that genuinely belongs in the facade rather than the
+    registry) will trigger this cap and require an explicit decision —
+    either raise the cap with rationale or push the branch into the
+    handler registry. The behavioral coverage is the Phase 4 hard
+    gates referenced in the module docstring; this AST cap is the
+    architectural complement, kept deliberately tight.
     """
     tree = ast.parse(ORDER_PROCESSOR.read_text(encoding="utf-8"))
     refs = [

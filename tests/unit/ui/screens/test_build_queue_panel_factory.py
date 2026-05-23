@@ -167,9 +167,26 @@ class TestScopedFastPanelObjectId:
         factory.resource_icons = {}
         return factory
 
-    def test_every_uipanel_in_factory_uses_fast_panel_class_id(self):
-        """Every `ui.UIPanel(...)` call inside the factory passes
-        `object_id="@fast_panel"` so the scoped rectangle shape applies."""
+    def test_all_factory_uipanels_use_fast_panel_class_id(self):
+        """Every ``ui.UIPanel(...)`` call inside the factory passes
+        ``object_id='@fast_panel'`` so the scoped rectangle shape applies.
+
+        PROJ-491 Task 1.12 / Phase 5 Task 5.2: production currently gives
+        every ``UIPanel`` in ``build_queue_panel_factory.py`` the
+        ``@fast_panel`` object_id (verified at
+        ``game/ui/screens/build_queue_panel_factory.py:213-217, 262-267,
+        340-345, 382-387, 401-408, 463-468, 551-556``). The original
+        Task 1.12 rewrite relaxed the assertion to a ``>= 80%`` floor with
+        a ``warnings.warn`` soft fallback — the Codex audit
+        (2026-05-23) flagged this as weakening a hard regression guard
+        below the documented contract, and demoting a real perf
+        regression to a non-fatal warning. Phase 5 Task 5.2 restores the
+        100% contract.
+
+        If a deliberately-themed panel is added later (e.g. a header
+        strip needing a rounded shape), update this test explicitly at
+        that time rather than silently allowing drift.
+        """
         factory = self._build_factory_for_create_all_panels()
         with patch(
             "game.ui.screens.build_queue_panel_factory.ui.UIPanel"
@@ -196,14 +213,26 @@ class TestScopedFastPanelObjectId:
         ):
             factory.create_all_panels(format_empire_resources=lambda _e: "")
 
-        assert mock_panel.call_count >= 5, (
-            f"Expected ≥5 UIPanel constructions; got {mock_panel.call_count}"
+        total = mock_panel.call_count
+        assert total >= 5, (
+            f"Expected >=5 UIPanel constructions; got {total}"
         )
-        for call in mock_panel.call_args_list:
-            assert call.kwargs.get("object_id") == "@fast_panel", (
-                f"UIPanel called without object_id='@fast_panel': "
-                f"args={call.args}, kwargs={call.kwargs}"
-            )
+
+        non_fast_panel_calls = [
+            call for call in mock_panel.call_args_list
+            if call.kwargs.get("object_id") != "@fast_panel"
+        ]
+
+        # Hard contract: 100% of UIPanel constructions must use the
+        # scoped @fast_panel block. Production currently complies; any
+        # drift below 100% is a real regression that should fail loudly.
+        assert not non_fast_panel_calls, (
+            f"{len(non_fast_panel_calls)}/{total} UIPanel constructions in "
+            f"build_queue_panel_factory do NOT use object_id='@fast_panel'. "
+            f"Production contract requires 100% to preserve the scoped "
+            f"rectangle perf optimisation. Offending object_ids: "
+            f"{[c.kwargs.get('object_id') for c in non_fast_panel_calls]}"
+        )
 
     def test_theme_json_has_fast_panel_block_with_rectangle_shape(self):
         """Sanity-check that the data file actually defines the scoped

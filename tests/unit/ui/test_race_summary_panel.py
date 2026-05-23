@@ -330,6 +330,43 @@ def _collect_label_texts(label_constructor_mock) -> list:
     return texts
 
 
+def _build_race_summary_panel_stub(rsp_module, race_config):
+    """Construct a RaceSummaryPanel test stub via ``__new__`` + minimal
+    attribute wiring.
+
+    PROJ-491 Task 2.7: consolidates the previously inline 12+ attribute
+    wirings into a single helper. The pattern is kept (rather than
+    promoted to real ``__init__`` under ``make_ui_widget``) because:
+
+    1. ``RaceSummaryPanel`` is a plain class — the canonical
+       ``bypass_init`` context manager is UIWindow-scoped.
+    2. The real ``__init__._create_content`` reaches ``pygame_gui``
+       internals (container-like-interface validation) that the patch
+       points exposed at module level cannot fully neutralise.
+    """
+    panel = rsp_module.RaceSummaryPanel.__new__(rsp_module.RaceSummaryPanel)
+    panel.race_config = race_config
+    panel.summary_labels = {}
+    panel.summary_flag_images = []
+    panel.summary_portrait_image = None
+    panel.summary_ship_images = []
+    panel.summary_ship_labels = []
+    panel._asset_loader = MagicMock()
+    panel.summary_flag_panel = None
+    panel.summary_portrait_panel = None
+    panel.summary_ship_panel = None
+    panel.ui_manager = MagicMock()
+    panel.panel = MagicMock()
+    panel._env_scroll_container = MagicMock()
+    # ``_rebuild_env_scroll_content`` reads container.get_relative_rect().width
+    # so it can size labels — give it a real int.
+    panel._env_scroll_container.get_relative_rect.return_value = pygame.Rect(
+        0, 0, 800, 400,
+    )
+    panel._dynamic_env_labels = []
+    return panel
+
+
 @pytest.fixture
 def mock_race_config_full():
     """RaceConfig with non-default setpoints on every FACTOR_REGISTRY entry
@@ -373,6 +410,18 @@ class TestFeat14RegistryDrivenSummary:
         ui_scroll_mock = MagicMock()
         ui_scroll_mock.side_effect = lambda *a, **kw: MagicMock()
 
+        # PROJ-491 Task 2.7: ``RaceSummaryPanel`` is a plain class (not a
+        # ``UIWindow`` subclass), so the canonical ``bypass_init`` context
+        # manager does not apply. Per the task's "pick the lower-risk
+        # option" guidance, we keep the ``__new__`` + explicit-attribute
+        # wiring path — running real ``__init__.__call__._create_content``
+        # under a mocked-pygame_gui context drives downstream
+        # pygame_gui internals that are not patchable from outside the
+        # module's UI element import path (the ``container`` argument
+        # validates against ``IContainerLikeInterface`` in a code path
+        # the patch does not reach). The previous in-place ``__new__``
+        # pattern is consolidated into the helper below to keep this
+        # path explicit and centralised.
         with patch.object(rsp_module.pygame_gui.elements, "UILabel", ui_label_mock), \
              patch.object(rsp_module.pygame_gui.elements, "UIPanel", ui_panel_mock), \
              patch.object(
@@ -381,27 +430,7 @@ class TestFeat14RegistryDrivenSummary:
                  ui_scroll_mock,
              ), \
              patch.object(rsp_module, "create_section_header", MagicMock()):
-            panel = rsp_module.RaceSummaryPanel.__new__(rsp_module.RaceSummaryPanel)
-            panel.race_config = race_config
-            panel.summary_labels = {}
-            panel.summary_flag_images = []
-            panel.summary_portrait_image = None
-            panel.summary_ship_images = []
-            panel.summary_ship_labels = []
-            panel._asset_loader = MagicMock()
-            panel.summary_flag_panel = None
-            panel.summary_portrait_panel = None
-            panel.summary_ship_panel = None
-            panel.ui_manager = MagicMock()
-            panel.panel = MagicMock()
-            panel._env_scroll_container = MagicMock()
-            # _rebuild_env_scroll_content reads container.get_relative_rect().width
-            # so it can size labels — give it a real int.
-            panel._env_scroll_container.get_relative_rect.return_value = pygame.Rect(
-                0, 0, 800, 400,
-            )
-            panel._dynamic_env_labels = []
-
+            panel = _build_race_summary_panel_stub(rsp_module, race_config)
             panel.refresh()
 
             return _collect_label_texts(ui_label_mock), panel

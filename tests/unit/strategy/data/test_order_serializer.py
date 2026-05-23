@@ -307,7 +307,7 @@ class TestResolveOrderReferences:
     """Tests for OrderSerializer.resolve_order_references."""
 
     @staticmethod
-    def _make_mock_fleet(fleet_id, orders=None):
+    def _make_order_serializer_fleet(fleet_id, orders=None):
         fleet = MagicMock()
         fleet.id = fleet_id
         fleet.orders = orders if orders is not None else []
@@ -321,10 +321,10 @@ class TestResolveOrderReferences:
         return empire
 
     def test_fleet_ref_resolved_to_actual_fleet(self):
-        target_fleet = self._make_mock_fleet(42)
+        target_fleet = self._make_order_serializer_fleet(42)
         order = Order(OrderType.MOVE_TO_FLEET)
         order.target = {'_fleet_ref': 42}
-        source_fleet = self._make_mock_fleet(1, orders=[order])
+        source_fleet = self._make_order_serializer_fleet(1, orders=[order])
         empire = self._make_mock_empire([source_fleet, target_fleet])
 
         OrderSerializer.resolve_order_references(source_fleet, galaxy=MagicMock(), empires=[empire])
@@ -338,7 +338,7 @@ class TestResolveOrderReferences:
 
         order = Order(OrderType.COLONIZE)
         order.target = {'_planet_ref': 7}
-        fleet = self._make_mock_fleet(1, orders=[order])
+        fleet = self._make_order_serializer_fleet(1, orders=[order])
         empire = self._make_mock_empire([fleet])
 
         OrderSerializer.resolve_order_references(fleet, galaxy=mock_galaxy, empires=[empire])
@@ -349,7 +349,7 @@ class TestResolveOrderReferences:
     def test_unresolvable_fleet_ref_removes_order(self):
         order = Order(OrderType.MOVE_TO_FLEET)
         order.target = {'_fleet_ref': 999}  # No fleet with this id
-        fleet = self._make_mock_fleet(1, orders=[order])
+        fleet = self._make_order_serializer_fleet(1, orders=[order])
         empire = self._make_mock_empire([fleet])
 
         OrderSerializer.resolve_order_references(fleet, galaxy=MagicMock(), empires=[empire])
@@ -362,7 +362,7 @@ class TestResolveOrderReferences:
 
         order = Order(OrderType.COLONIZE)
         order.target = {'_planet_ref': 999}
-        fleet = self._make_mock_fleet(1, orders=[order])
+        fleet = self._make_order_serializer_fleet(1, orders=[order])
         empire = self._make_mock_empire([fleet])
 
         OrderSerializer.resolve_order_references(fleet, galaxy=mock_galaxy, empires=[empire])
@@ -371,7 +371,7 @@ class TestResolveOrderReferences:
 
     def test_non_ref_orders_left_untouched(self):
         order = Order(OrderType.MOVE, HexCoord(1, 2))
-        fleet = self._make_mock_fleet(1, orders=[order])
+        fleet = self._make_order_serializer_fleet(1, orders=[order])
         empire = self._make_mock_empire([fleet])
 
         OrderSerializer.resolve_order_references(fleet, galaxy=MagicMock(), empires=[empire])
@@ -381,14 +381,14 @@ class TestResolveOrderReferences:
 
     def test_mixed_orders_only_unresolvable_removed(self):
         """Valid orders are kept; only unresolvable refs are removed."""
-        target_fleet = self._make_mock_fleet(10)
+        target_fleet = self._make_order_serializer_fleet(10)
         good_order = Order(OrderType.MOVE_TO_FLEET)
         good_order.target = {'_fleet_ref': 10}
         bad_order = Order(OrderType.MOVE_TO_FLEET)
         bad_order.target = {'_fleet_ref': 999}
         hex_order = Order(OrderType.MOVE, HexCoord(0, 0))
 
-        fleet = self._make_mock_fleet(1, orders=[good_order, bad_order, hex_order])
+        fleet = self._make_order_serializer_fleet(1, orders=[good_order, bad_order, hex_order])
         empire = self._make_mock_empire([fleet, target_fleet])
 
         OrderSerializer.resolve_order_references(fleet, galaxy=MagicMock(), empires=[empire])
@@ -399,10 +399,10 @@ class TestResolveOrderReferences:
 
     def test_fleet_ref_resolved_across_empires(self):
         """Fleet refs can point to fleets in other empires."""
-        target_fleet = self._make_mock_fleet(50)
+        target_fleet = self._make_order_serializer_fleet(50)
         order = Order(OrderType.MOVE_TO_FLEET)
         order.target = {'_fleet_ref': 50}
-        source_fleet = self._make_mock_fleet(1, orders=[order])
+        source_fleet = self._make_order_serializer_fleet(1, orders=[order])
 
         empire1 = self._make_mock_empire([source_fleet])
         empire2 = self._make_mock_empire([target_fleet])
@@ -414,6 +414,6 @@ class TestResolveOrderReferences:
         assert order.target is target_fleet
 
     def test_no_orders_no_error(self):
-        fleet = self._make_mock_fleet(1, orders=[])
+        fleet = self._make_order_serializer_fleet(1, orders=[])
         OrderSerializer.resolve_order_references(fleet, galaxy=MagicMock(), empires=[])
         assert len(fleet.orders) == 0

@@ -12,6 +12,7 @@ from game.core.event_logging import EventBus
 from game.strategy.data.order_types import OrderType
 from game.strategy.events import EventType, EventCategory
 from game.strategy.systems.design_repository import DesignLoadResult  # noqa: F401
+from tests.fixtures.colonization_fixtures import MockPlanetType
 
 
 def _wire_catalog_on(engine, empire_id, data):
@@ -435,10 +436,7 @@ class TestColonyFoundedEvent:
         """Create a fleet with a COLONIZE order."""
         from game.strategy.data.fleet import Fleet
         from game.strategy.data.order_types import Order, OrderType
-        from enum import Enum
 
-        class MockPlanetType(Enum):
-            CONTINENTAL = "CONTINENTAL"
 
         fleet = MagicMock(spec=Fleet)
         fleet.id = 3
@@ -535,10 +533,7 @@ class TestColonyFoundedEvent:
         from game.strategy.data.fleet import Fleet
         from game.strategy.data.order_types import Order, OrderType
         from game.strategy.data.planet import Planet
-        from enum import Enum
 
-        class MockPlanetType(Enum):
-            CONTINENTAL = "CONTINENTAL"
 
         calls, fake, bus = _capture_log_event_calls()
         processor = OrderProcessor(event_bus=bus)
@@ -933,10 +928,7 @@ class TestColonizationEventLocationEnrichment:
         from game.strategy.data.fleet import Fleet
         from game.strategy.data.order_types import Order, OrderType
         from game.core.hex_math import HexCoord
-        from enum import Enum
 
-        class MockPlanetType(Enum):
-            CONTINENTAL = "CONTINENTAL"
 
         calls, fake, bus = _capture_log_event_calls()
         processor = OrderProcessor(event_bus=bus)
@@ -994,10 +986,7 @@ class TestColonizationEventLocationEnrichment:
         from game.strategy.data.fleet import Fleet
         from game.strategy.data.order_types import Order, OrderType
         from game.core.hex_math import HexCoord
-        from enum import Enum
 
-        class MockPlanetType(Enum):
-            CONTINENTAL = "CONTINENTAL"
 
         calls, fake, bus = _capture_log_event_calls()
         processor = OrderProcessor(event_bus=bus)

@@ -9,6 +9,7 @@
 | 2026-05-23 | Do NOT modify `SuperweaponValidator.find_ship_with_ability` signature | If it's currently `@staticmethod`, instance calls still work. Avoid scope creep into validator-class refactor. |
 | 2026-05-23 | Extract `StubValidator` to a module-level helper in the test file | Avoids 16 copies. Will not move to a shared fixture unless other test files need it (YAGNI). |
 | 2026-05-23 | This project may grow if PROJ-491 Phase 4 routes Task 3.20 second bullet here | Per PROJ-491 phase_4_checklist.md, the `_per_player_ui_state.load(...)` claim is unverified. If investigation confirms a real seam gap, add a Phase 3 here. |
+| 2026-05-23 | Phase 4 investigation completed in PROJ-491 — Task 3.20 second bullet ROUTED HERE | Finding: ``PerPlayerUiState`` itself exposes fully public ``save/load/has/discard`` methods, but the manager owns the container behind a private attribute ``_per_player_ui_state``. The tests at ``tests/unit/ui/screens/test_strategy_game_state_manager.py`` lines 1287/1288/1307/1347/1456/1457/1480/1488 read through this private name. The production fix is a single ``@property`` on ``StrategyGameStateManager`` exposing the container as ``per_player_ui_state`` (or equivalently a thin ``restore_per_player_state(empire_id, slot)`` method). Add a small phase here when ready; see PROJ-491 decisions.md for the full investigation context. |
 
 ## Reconciliation Notes (My Proposal vs Codex)
 

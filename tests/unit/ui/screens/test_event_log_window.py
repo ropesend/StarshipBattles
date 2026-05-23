@@ -7,8 +7,11 @@ Verifies the event log modal window:
 - Close callback behavior
 - Integration with StrategyUI modal tracking
 """
+import pygame
 import pytest
 from unittest.mock import MagicMock, patch
+
+from tests.fixtures.ui_widget_factory import bypass_init, make_ui_widget
 
 
 # ---------------------------------------------------------------------------
@@ -41,50 +44,54 @@ def _sample_events():
     ]
 
 
-def _make_window(events=None, on_close=None):
-    """Create an EventLogWindow with mocked pygame_gui.
+class _FilterButtonStubBuilder:
+    """Minimal ui_builder seam: populates the filter-button mocks so
+    tests that flip filters and look up buttons by key can run.
 
-    Bypasses UIWindow.__init__ to avoid needing real pygame display.
-    Sets up minimal state for testing business logic.
+    PROJ-491 Task 2.2: lets real ``__init__`` reach its Stage-3
+    ``ui_builder.build(self)`` branch under ``bypass_init`` so tests
+    don't have to manually wire ``win.btn_all`` / ``btn_combat`` /
+    ``filter_buttons`` after-the-fact.
+    """
+
+    def build(self, win) -> None:
+        win.btn_all = MagicMock()
+        win.btn_combat = MagicMock()
+        win.btn_production = MagicMock()
+        win.btn_colonies = MagicMock()
+        win.btn_fleet_ops = MagicMock()
+        win.filter_buttons = {
+            "all": win.btn_all,
+            "combat": win.btn_combat,
+            "production": win.btn_production,
+            "colonies": win.btn_colonies,
+            "fleet_operations": win.btn_fleet_ops,
+        }
+
+
+def _make_window(events=None, on_close=None):
+    """Create an EventLogWindow via the canonical ``bypass_init`` +
+    ``make_ui_widget`` real-constructor path.
+
+    PROJ-491 Task 2.2: replaces the prior
+    ``patch.object(EventLogWindow, '__init__', lambda ...)`` no-op +
+    ``__new__`` + 10+ manually-wired attribute assignments with a real
+    ``__init__`` run under the canonical ``bypass_init`` context. A
+    minimal ``_FilterButtonStubBuilder`` populates the filter-button
+    slots Stage 3 of ``__init__`` would normally build.
     """
     from game.ui.screens.event_log_window import EventLogWindow
 
-    with patch.object(EventLogWindow, '__init__',
-                      lambda self, *a, **kw: None):
-        win = EventLogWindow.__new__(EventLogWindow)
-
-    # Set up minimal state matching constructor
-    win.all_events = events if events is not None else []
-    win.current_filter = "all"
-    win.on_close_callback = on_close
-    win.ui_manager = MagicMock()
-
-    # PROJ-188 Phase 5: VirtualTable components (None for fallback path in tests)
-    win.data_source = None
-    win.column_manager = None
-    win.virtual_table = None
-    win.sidebar = None
-
-    # Issue #28 iteration 2: bypass-init tests don't run the builder, so
-    # ``_default_view_state`` is never captured. Set it explicitly to
-    # ``None`` here; tests that exercise the "restore defaults" path
-    # populate it themselves.
-    win._default_view_state = None
-
-    # Mock UI elements (filter buttons)
-    win.btn_all = MagicMock()
-    win.btn_combat = MagicMock()
-    win.btn_production = MagicMock()
-    win.btn_colonies = MagicMock()
-    win.btn_fleet_ops = MagicMock()
-    win.filter_buttons = {
-        "all": win.btn_all,
-        "combat": win.btn_combat,
-        "production": win.btn_production,
-        "colonies": win.btn_colonies,
-        "fleet_operations": win.btn_fleet_ops,
-    }
-
+    with bypass_init(EventLogWindow):
+        win = make_ui_widget(
+            EventLogWindow,
+            rect=pygame.Rect(0, 0, 800, 600),
+            manager=MagicMock(name="ui_manager"),
+            events=events if events is not None else [],
+            window_manager=MagicMock(name="window_manager"),
+            on_close_callback=on_close,
+            ui_builder=_FilterButtonStubBuilder(),
+        )
     return win
 
 

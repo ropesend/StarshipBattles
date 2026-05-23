@@ -13,15 +13,15 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Add validator DI seam to SuperweaponOrderProcessor (production change) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Migrate 16 test sites from static patching to constructor injection | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Add validator DI seam to SuperweaponOrderProcessor (production change) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Migrate 16 test sites from static patching to constructor injection | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Audit remediation (Codex consult 2026-05-23) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-23
-**Active Phase:** Planning
-**Last Action:** Project scaffolded from PROJ-479 deferred Task 3.14 per Codex consult 20260523T125621Z_plan-PROJ-479-followthrough
-**Next Action:** Phase 1 Task 1.1 — write the failing test that constructs `SuperweaponOrderProcessor` with a stub validator and asserts the validator is consulted.
-**Blockers:** None. This is the ONLY confirmed production DI seam gap from PROJ-479's deferred CAT-6 set per Codex analysis.
+**Active Phase:** All phases complete — pending user verification.
+**Next Action:** User verification (full sharded suite + GitHub Issues `verified` label per the GH-Issues workflow).
+**Blockers:** None.
 **Context:** `SuperweaponOrderProcessor.__init__` accepts `event_bus`, `empire_mutator`, `nav_service` but no validator dep (`game/strategy/engine/superweapon_order_processor.py:62-79`). The processor calls `SuperweaponValidator.find_ship_with_ability(...)` statically at `:275-282`. 16 tests patch this static path (`tests/unit/strategy/engine/test_superweapon_order_processor.py:131,166,201,622,669,708,749,786,854,910,1009,1049,1098,1132,1181,1239`). The fix is to follow the existing constructor-injection pattern used by the other 3 dependencies.
 
 ## Overview
@@ -61,8 +61,8 @@ Introduce a `validator` constructor parameter to `SuperweaponOrderProcessor` fol
 - [findings/source_review.md](findings/source_review.md) - Pointer to PROJ-479 + Codex consult
 
 ## Verification
-- [ ] All phase checklists complete
+- [x] All phase checklists complete
 - [ ] All tests passing (`python Tools/test_sharded/test_sharded.py`)
-- [ ] No remaining `patch('SuperweaponValidator.find_ship_with_ability')` in test_superweapon_order_processor.py
+- [x] No remaining `patch('SuperweaponValidator.find_ship_with_ability')` in test_superweapon_order_processor.py
 - [ ] Audit passed
 - [ ] User verified

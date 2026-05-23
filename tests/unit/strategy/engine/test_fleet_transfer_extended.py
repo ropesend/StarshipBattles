@@ -21,7 +21,7 @@ def processor():
     return OrderProcessor()
 
 
-def _make_fleet(cargo_current=50, cargo_capacity=100):
+def _make_cargo_transfer_fleet(cargo_current=50, cargo_capacity=100):
     """Create a mock fleet with configurable cargo state."""
     fleet = MagicMock()
     fleet.resources = MagicMock()
@@ -65,8 +65,8 @@ class TestExecuteFleetTransfer:
 
     def test_unload_direction_transfers_from_fleet_to_target(self, processor):
         """Unload direction: source=fleet, dest=target_fleet."""
-        fleet = _make_fleet(cargo_current=80, cargo_capacity=100)
-        target = _make_fleet(cargo_current=10, cargo_capacity=100)
+        fleet = _make_cargo_transfer_fleet(cargo_current=80, cargo_capacity=100)
+        target = _make_cargo_transfer_fleet(cargo_current=10, cargo_capacity=100)
         fleet.resources.unload_cargo_from_fleet.return_value = 50
 
         result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_fleet_to_fleet(fleet, target, "metals", "unload", 50)
@@ -77,8 +77,8 @@ class TestExecuteFleetTransfer:
 
     def test_load_direction_transfers_from_target_to_fleet(self, processor):
         """Load direction: source=target_fleet, dest=fleet."""
-        fleet = _make_fleet(cargo_current=10, cargo_capacity=100)
-        target = _make_fleet(cargo_current=80, cargo_capacity=100)
+        fleet = _make_cargo_transfer_fleet(cargo_current=10, cargo_capacity=100)
+        target = _make_cargo_transfer_fleet(cargo_current=80, cargo_capacity=100)
         target.resources.unload_cargo_from_fleet.return_value = 50
 
         result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_fleet_to_fleet(fleet, target, "metals", "load", 50)
@@ -89,8 +89,8 @@ class TestExecuteFleetTransfer:
 
     def test_caps_by_source_cargo(self, processor):
         """Transfer capped by source's available cargo."""
-        fleet = _make_fleet(cargo_current=20, cargo_capacity=100)  # Only 20 available
-        target = _make_fleet(cargo_current=0, cargo_capacity=100)
+        fleet = _make_cargo_transfer_fleet(cargo_current=20, cargo_capacity=100)  # Only 20 available
+        target = _make_cargo_transfer_fleet(cargo_current=0, cargo_capacity=100)
         fleet.resources.unload_cargo_from_fleet.return_value = 20
 
         result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_fleet_to_fleet(fleet, target, "fuel", "unload", 50)
@@ -99,8 +99,8 @@ class TestExecuteFleetTransfer:
 
     def test_caps_by_dest_space(self, processor):
         """Transfer capped by destination's available space."""
-        fleet = _make_fleet(cargo_current=100, cargo_capacity=100)
-        target = _make_fleet(cargo_current=90, cargo_capacity=100)  # Only 10 space
+        fleet = _make_cargo_transfer_fleet(cargo_current=100, cargo_capacity=100)
+        target = _make_cargo_transfer_fleet(cargo_current=90, cargo_capacity=100)  # Only 10 space
         fleet.resources.unload_cargo_from_fleet.return_value = 10
 
         result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_fleet_to_fleet(fleet, target, "fuel", "unload", 50)
@@ -109,8 +109,8 @@ class TestExecuteFleetTransfer:
 
     def test_amount_zero_transfers_all(self, processor):
         """amount=0 means transfer all available cargo."""
-        fleet = _make_fleet(cargo_current=30, cargo_capacity=100)
-        target = _make_fleet(cargo_current=0, cargo_capacity=100)
+        fleet = _make_cargo_transfer_fleet(cargo_current=30, cargo_capacity=100)
+        target = _make_cargo_transfer_fleet(cargo_current=0, cargo_capacity=100)
         fleet.resources.unload_cargo_from_fleet.return_value = 30
 
         result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_fleet_to_fleet(fleet, target, "metals", "unload", 0)
@@ -119,8 +119,8 @@ class TestExecuteFleetTransfer:
 
     def test_zero_space_returns_zero(self, processor):
         """Zero available space returns 0."""
-        fleet = _make_fleet(cargo_current=50, cargo_capacity=100)
-        target = _make_fleet(cargo_current=100, cargo_capacity=100)  # Full
+        fleet = _make_cargo_transfer_fleet(cargo_current=50, cargo_capacity=100)
+        target = _make_cargo_transfer_fleet(cargo_current=100, cargo_capacity=100)  # Full
 
         result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_fleet_to_fleet(fleet, target, "metals", "unload", 50)
 
@@ -128,8 +128,8 @@ class TestExecuteFleetTransfer:
 
     def test_zero_source_returns_zero(self, processor):
         """Zero source cargo returns 0."""
-        fleet = _make_fleet(cargo_current=0, cargo_capacity=100)  # Empty
-        target = _make_fleet(cargo_current=0, cargo_capacity=100)
+        fleet = _make_cargo_transfer_fleet(cargo_current=0, cargo_capacity=100)  # Empty
+        target = _make_cargo_transfer_fleet(cargo_current=0, cargo_capacity=100)
 
         result = processor._handler_registry.get(OrderType.TRANSFER)._dispatch_fleet_to_fleet(fleet, target, "metals", "unload", 50)
 
@@ -146,7 +146,7 @@ class TestExecuteLoadResource:
 
     def test_loads_from_planet_stockpile(self, processor):
         """Loads resource from planet stockpile to fleet."""
-        fleet = _make_fleet(cargo_current=0, cargo_capacity=100)
+        fleet = _make_cargo_transfer_fleet(cargo_current=0, cargo_capacity=100)
         planet = _make_planet(stockpile=200)
         empire = _make_empire()
 
@@ -158,7 +158,7 @@ class TestExecuteLoadResource:
 
     def test_caps_by_fleet_space(self, processor):
         """Capped by fleet available cargo space."""
-        fleet = _make_fleet(cargo_current=90, cargo_capacity=100)  # Only 10 space
+        fleet = _make_cargo_transfer_fleet(cargo_current=90, cargo_capacity=100)  # Only 10 space
         planet = _make_planet(stockpile=200)
         empire = _make_empire()
 
@@ -168,7 +168,7 @@ class TestExecuteLoadResource:
 
     def test_caps_by_stockpile(self, processor):
         """Capped by planet stockpile amount."""
-        fleet = _make_fleet(cargo_current=0, cargo_capacity=100)
+        fleet = _make_cargo_transfer_fleet(cargo_current=0, cargo_capacity=100)
         planet = _make_planet(stockpile=5)  # Only 5 available
         empire = _make_empire()
 
@@ -178,7 +178,7 @@ class TestExecuteLoadResource:
 
     def test_amount_zero_loads_max(self, processor):
         """amount=0 loads maximum possible."""
-        fleet = _make_fleet(cargo_current=0, cargo_capacity=100)
+        fleet = _make_cargo_transfer_fleet(cargo_current=0, cargo_capacity=100)
         planet = _make_planet(stockpile=200)
         empire = _make_empire()
 
@@ -188,7 +188,7 @@ class TestExecuteLoadResource:
 
     def test_zero_stockpile_returns_zero(self, processor):
         """Empty stockpile returns 0."""
-        fleet = _make_fleet(cargo_current=0, cargo_capacity=100)
+        fleet = _make_cargo_transfer_fleet(cargo_current=0, cargo_capacity=100)
         planet = _make_planet(stockpile=0)
         empire = _make_empire()
 
@@ -207,7 +207,7 @@ class TestExecuteUnloadResource:
 
     def test_unloads_to_planet_stockpile(self, processor):
         """Unloads resource from fleet to planet stockpile."""
-        fleet = _make_fleet(cargo_current=80, cargo_capacity=100)
+        fleet = _make_cargo_transfer_fleet(cargo_current=80, cargo_capacity=100)
         fleet.resources.unload_cargo_from_fleet.return_value = 50
         planet = _make_planet()
         empire = _make_empire()
@@ -220,7 +220,7 @@ class TestExecuteUnloadResource:
 
     def test_caps_by_fleet_cargo(self, processor):
         """Capped by fleet's current cargo."""
-        fleet = _make_fleet(cargo_current=20, cargo_capacity=100)
+        fleet = _make_cargo_transfer_fleet(cargo_current=20, cargo_capacity=100)
         fleet.resources.unload_cargo_from_fleet.return_value = 20
         planet = _make_planet()
         empire = _make_empire()
@@ -231,7 +231,7 @@ class TestExecuteUnloadResource:
 
     def test_amount_zero_unloads_all(self, processor):
         """amount=0 unloads all cargo."""
-        fleet = _make_fleet(cargo_current=75, cargo_capacity=100)
+        fleet = _make_cargo_transfer_fleet(cargo_current=75, cargo_capacity=100)
         fleet.resources.unload_cargo_from_fleet.return_value = 75
         planet = _make_planet()
         empire = _make_empire()
@@ -242,7 +242,7 @@ class TestExecuteUnloadResource:
 
     def test_zero_cargo_returns_zero(self, processor):
         """Fleet with no cargo returns 0."""
-        fleet = _make_fleet(cargo_current=0, cargo_capacity=100)
+        fleet = _make_cargo_transfer_fleet(cargo_current=0, cargo_capacity=100)
         planet = _make_planet()
         empire = _make_empire()
 

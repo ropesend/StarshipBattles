@@ -8,10 +8,23 @@ construction pattern. Tests now exercise the real ``__init__`` under
 ``BuildQueueRowCollector``.
 
 PROJ-322 Tasks 5.29 + 3.19 closed by this migration.
+
+PROJ-491 Task 2.4 / Phase 5 Task 5.3: ``_disable_pygame_gui_kill_side_effect``
+is a scoped ``contextlib.contextmanager`` wrapper around
+``patch.object(pygame_gui.elements.UIWindow, "kill", MagicMock())``. The
+patch is process-wide while it is active (any UIWindow subclass running
+in the same xdist worker shard sees the mock), but the context manager
+bounds the patch lifetime to a single ``window.kill()`` call site rather
+than leaving a bare ``patch(...)`` open across an arbitrary test body —
+which is what prevents accidental side-effect chaining when tests are
+extended later. The patch target itself IS
+``pygame_gui.elements.UIWindow.kill``; the scoping is what's load-bearing.
 """
 
-from unittest.mock import MagicMock
+import contextlib
+from unittest.mock import MagicMock, patch
 import pygame
+import pygame_gui
 
 from game.ui.screens.build_queue_list_window import (
     BuildQueueListWindow,
@@ -22,6 +35,34 @@ from tests.fixtures.build_queue_list_ui_builder import (
     NullBuildQueueListUiBuilder,
 )
 from tests.fixtures.ui_widget_factory import bypass_init
+
+
+@contextlib.contextmanager
+def _disable_pygame_gui_kill_side_effect():
+    """Scoped context-manager wrapper around
+    ``patch.object(pygame_gui.elements.UIWindow, "kill", MagicMock())``.
+
+    The patch target IS ``pygame_gui.elements.UIWindow.kill`` — what
+    this helper provides over an inline ``with patch.object(...)`` is
+    *scoping*, not a different patch target. The patch is process-wide
+    for as long as it is active (any UIWindow subclass running in the
+    same xdist worker shard during the ``with`` block sees the mock),
+    so the lifetime of the patch needs to be as narrow as possible.
+
+    PROJ-491 Task 2.4 introduced this helper to bound the patch lifetime
+    to a single ``window.kill()`` call site rather than leaving a bare
+    ``patch.object(...)`` open across an arbitrary test body. This makes
+    it impossible for future test edits to accidentally chain unrelated
+    operations into the same active patch window.
+
+    PROJ-491 Phase 5 Task 5.3: docstring previously claimed this helper
+    avoids "directly patching ``pygame_gui.elements.UIWindow.kill``" —
+    incorrect; the body does exactly that. Corrected here to describe
+    what the helper actually provides (scope), not what it does not (it
+    does not change the patch target).
+    """
+    with patch.object(pygame_gui.elements.UIWindow, "kill", MagicMock()):
+        yield
 
 
 def _make_window(empire, *, ui_builder=None, on_close_callback=None,
@@ -258,10 +299,9 @@ class TestKill:
         labels_before = list(window.row_labels)
         assert labels_before  # sanity: at least the header
 
-        # Stub out the base UIWindow.kill (we're under bypass_init so
-        # super().kill() would still try to interact with pygame state).
-        from unittest.mock import patch
-        with patch('pygame_gui.elements.UIWindow.kill'):
+        # PROJ-491 Task 2.4: use the scoped helper instead of patching
+        # pygame_gui.elements.UIWindow.kill directly inline.
+        with _disable_pygame_gui_kill_side_effect():
             window.kill()
 
         for lbl in labels_before:
@@ -275,8 +315,8 @@ class TestKill:
         callback = MagicMock()
         window = _make_window(empire, on_close_callback=callback)
 
-        from unittest.mock import patch
-        with patch('pygame_gui.elements.UIWindow.kill'):
+        # PROJ-491 Task 2.4: scoped helper.
+        with _disable_pygame_gui_kill_side_effect():
             window.kill()
 
         callback.assert_called_once()

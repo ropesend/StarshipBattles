@@ -450,57 +450,58 @@ class TestOnColonizeClick:
 # ===========================================================================
 
 class TestScreenLifecycle:
-    """Test update(), draw(), handle_event() lifecycle methods."""
+    """Test update(), draw(), handle_event() lifecycle methods.
 
-    def test_update_delegates_to_camera(self):
-        """update() should call camera.update(dt)."""
+    PROJ-491 Task 1.16: the previous 6 delegation tests in this class
+    asserted only individual mock method calls — one test per subordinate
+    (camera/renderer/ui) per lifecycle method. Per PROJ-479 Task 3.33 +
+    PROJ-491 design.md, the regression intent is preserved as ONE
+    consolidated test per lifecycle method, asserting the full set of
+    expected delegations + observable side effects (the BG_BATTLE
+    ``fill`` for ``draw``). The lifecycle methods are pure delegators
+    (no per-screen state mutation worth probing); the observable
+    "did the pipeline run" is the set of subordinate calls plus the
+    framebuffer fill, which we keep as the integration assertion. Moving
+    these to ``tests/integration/ui/`` would not yield richer coverage
+    because the same MagicMock substitutes would be used there.
+    """
+
+    def test_update_drives_camera_renderer_and_ui_with_dt(self):
+        """``update(dt)`` must pump every per-frame subordinate.
+
+        Observable contract: a frame-tick reaches the camera, renderer,
+        and UI manager each exactly once with the supplied ``dt``.
+        Together these three constitute the entire update pipeline; a
+        missing delegate would silently stall the corresponding
+        subsystem (camera scroll / renderer animations / pygame_gui
+        events).
+        """
         screen, mocks = _make_strategy_screen()
 
         screen.update(0.016)
 
         mocks['camera'].update.assert_called_once_with(0.016)
-
-    def test_update_delegates_to_renderer(self):
-        """update() should call renderer.update(dt)."""
-        screen, mocks = _make_strategy_screen()
-
-        screen.update(0.016)
-
         mocks['renderer'].update.assert_called_once_with(0.016)
-
-    def test_update_delegates_to_ui(self):
-        """update() should call ui.update(dt)."""
-        screen, mocks = _make_strategy_screen()
-
-        screen.update(0.016)
-
         mocks['ui'].update.assert_called_once_with(0.016)
 
-    def test_draw_fills_screen(self):
-        """draw() should fill screen with background color."""
-        screen, _ = _make_strategy_screen()
+    def test_draw_fills_background_and_renders_subordinates(self):
+        """``draw(surface)`` must fill the framebuffer and dispatch to
+        the world renderer + the UI manager.
+
+        Observable contract: the supplied surface receives a ``fill``
+        (clearing remnants from prior screens — see ``draw()``'s
+        leading-comment in production), the renderer draws into that
+        surface, and the UI manager draws into the same surface. A
+        missing ``fill`` produces visible smear; missing renderer/UI
+        leaves a black screen.
+        """
+        screen, mocks = _make_strategy_screen()
         mock_surface = MagicMock()
 
         screen.draw(mock_surface)
 
         mock_surface.fill.assert_called_once()
-
-    def test_draw_delegates_to_renderer(self):
-        """draw() should call renderer.draw(screen)."""
-        screen, mocks = _make_strategy_screen()
-        mock_surface = MagicMock()
-
-        screen.draw(mock_surface)
-
         mocks['renderer'].draw.assert_called_once_with(mock_surface)
-
-    def test_draw_delegates_to_ui(self):
-        """draw() should call ui.draw(screen)."""
-        screen, mocks = _make_strategy_screen()
-        mock_surface = MagicMock()
-
-        screen.draw(mock_surface)
-
         mocks['ui'].draw.assert_called_once_with(mock_surface)
 
     def test_draw_shows_processing_overlay_when_processing(self):

@@ -40,7 +40,7 @@ def _make_ship(
 _UNSET = object()
 
 
-def _make_fleet(
+def _make_hazard_fleet(
     *,
     fleet_id: int = 1,
     location=_UNSET,
@@ -121,7 +121,7 @@ class TestProcessEnvironmentalTickHappyPath:
         """One fleet, one ship, one damage row → one EnvironmentalEvent."""
         engine = EnvironmentalHazardEngine()
         ship = _make_ship(current_hp=100, max_hp=100)
-        fleet = _make_fleet(combat_ships=[ship])
+        fleet = _make_hazard_fleet(combat_ships=[ship])
         empire = _make_empire(fleets=[fleet])
         galaxy = _make_galaxy(system=MagicMock())
 
@@ -140,7 +140,7 @@ class TestProcessEnvironmentalTickHappyPath:
         """Single FuelDrain row of 200/turn → 2.0 fuel drained per tick."""
         engine = EnvironmentalHazardEngine()
         ship = _make_ship(fuel=100.0)
-        fleet = _make_fleet(combat_ships=[ship])
+        fleet = _make_hazard_fleet(combat_ships=[ship])
         empire = _make_empire(fleets=[fleet])
         galaxy = _make_galaxy(system=MagicMock())
 
@@ -155,7 +155,7 @@ class TestProcessEnvironmentalTickHappyPath:
         """Two damage rows (50 + 30) → total per-tick damage 0.8."""
         engine = EnvironmentalHazardEngine()
         ship = _make_ship(current_hp=100, max_hp=100)
-        fleet = _make_fleet(combat_ships=[ship])
+        fleet = _make_hazard_fleet(combat_ships=[ship])
         empire = _make_empire(fleets=[fleet])
         galaxy = _make_galaxy(system=MagicMock())
 
@@ -169,7 +169,7 @@ class TestProcessEnvironmentalTickHappyPath:
         """damage_per_turn=300 across 3 ships → 1.0 damage per ship per tick."""
         engine = EnvironmentalHazardEngine()
         ships = [_make_ship(current_hp=100, max_hp=100) for _ in range(3)]
-        fleet = _make_fleet(combat_ships=ships)
+        fleet = _make_hazard_fleet(combat_ships=ships)
         empire = _make_empire(fleets=[fleet])
         galaxy = _make_galaxy(system=MagicMock())
 
@@ -187,7 +187,7 @@ class TestProcessEnvironmentalTickHappyPath:
         """OBS-003: fuel drain is per-ship (not divided across the fleet)."""
         engine = EnvironmentalHazardEngine()
         ships = [_make_ship(fuel=100.0) for _ in range(3)]
-        fleet = _make_fleet(combat_ships=ships)
+        fleet = _make_hazard_fleet(combat_ships=ships)
         empire = _make_empire(fleets=[fleet])
         galaxy = _make_galaxy(system=MagicMock())
 
@@ -212,7 +212,7 @@ class TestProcessEnvironmentalTickSourceLabel:
     def test_process_environmental_tick_uses_first_provider_source_label(self):
         engine = EnvironmentalHazardEngine()
         ship = _make_ship(current_hp=100, max_hp=100)
-        fleet = _make_fleet(combat_ships=[ship])
+        fleet = _make_hazard_fleet(combat_ships=[ship])
         empire = _make_empire(fleets=[fleet])
         galaxy = _make_galaxy(system=MagicMock())
 
@@ -226,7 +226,7 @@ class TestProcessEnvironmentalTickSourceLabel:
     def test_process_environmental_tick_falls_back_to_unknown_hazard_when_no_label(self):
         engine = EnvironmentalHazardEngine()
         ship = _make_ship(current_hp=100, max_hp=100)
-        fleet = _make_fleet(combat_ships=[ship])
+        fleet = _make_hazard_fleet(combat_ships=[ship])
         empire = _make_empire(fleets=[fleet])
         galaxy = _make_galaxy(system=MagicMock())
 
@@ -250,7 +250,7 @@ class TestProcessEnvironmentalTickSkipPaths:
     def test_process_environmental_tick_returns_no_event_when_galaxy_has_no_get_system_at_location(self):
         engine = EnvironmentalHazardEngine()
         ship = _make_ship(current_hp=100, max_hp=100)
-        fleet = _make_fleet(combat_ships=[ship])
+        fleet = _make_hazard_fleet(combat_ships=[ship])
         empire = _make_empire(fleets=[fleet])
         galaxy = _make_galaxy(has_get_system_at_location=False)
 
@@ -263,7 +263,7 @@ class TestProcessEnvironmentalTickSkipPaths:
     def test_process_environmental_tick_returns_no_event_when_fleet_not_in_a_system(self):
         engine = EnvironmentalHazardEngine()
         ship = _make_ship(current_hp=100, max_hp=100)
-        fleet = _make_fleet(combat_ships=[ship])
+        fleet = _make_hazard_fleet(combat_ships=[ship])
         empire = _make_empire(fleets=[fleet])
         galaxy = _make_galaxy(system=None)  # get_system_at_location returns None
 
@@ -276,7 +276,7 @@ class TestProcessEnvironmentalTickSkipPaths:
     def test_process_environmental_tick_returns_no_event_when_no_effects_at_hex(self):
         engine = EnvironmentalHazardEngine()
         ship = _make_ship(current_hp=100, max_hp=100)
-        fleet = _make_fleet(combat_ships=[ship])
+        fleet = _make_hazard_fleet(combat_ships=[ship])
         empire = _make_empire(fleets=[fleet])
         galaxy = _make_galaxy(system=MagicMock())
 
@@ -291,7 +291,7 @@ class TestProcessEnvironmentalTickSkipPaths:
         healing or other side-effect happens."""
         engine = EnvironmentalHazardEngine()
         ship = _make_ship(current_hp=80, max_hp=100)
-        fleet = _make_fleet(combat_ships=[ship])
+        fleet = _make_hazard_fleet(combat_ships=[ship])
         empire = _make_empire(fleets=[fleet])
         galaxy = _make_galaxy(system=MagicMock())
 
@@ -305,7 +305,7 @@ class TestProcessEnvironmentalTickSkipPaths:
 
     def test_process_environmental_tick_returns_no_event_when_fleet_has_no_combat_ships(self):
         engine = EnvironmentalHazardEngine()
-        fleet = _make_fleet(combat_ships=[])
+        fleet = _make_hazard_fleet(combat_ships=[])
         empire = _make_empire(fleets=[fleet])
         galaxy = _make_galaxy(system=MagicMock())
 
@@ -325,7 +325,7 @@ class TestValidateTickInputs:
 
     def test_validate_tick_inputs_raises_validation_exception_when_fleet_location_is_none(self):
         engine = EnvironmentalHazardEngine()
-        fleet = _make_fleet(location=None)
+        fleet = _make_hazard_fleet(location=None)
         empire = _make_empire(empire_id=42, fleets=[fleet])
 
         with pytest.raises(ValidationException) as exc_info:
@@ -339,7 +339,7 @@ class TestValidateTickInputs:
         """Valid fleets return without raising; private helper returns None."""
         engine = EnvironmentalHazardEngine()
         ship = _make_ship(current_hp=100, max_hp=100)
-        fleet = _make_fleet(combat_ships=[ship])
+        fleet = _make_hazard_fleet(combat_ships=[ship])
         empire = _make_empire(fleets=[fleet])
 
         # Direct call: should not raise.

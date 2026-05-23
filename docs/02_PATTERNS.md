@@ -105,6 +105,7 @@ Read/write protocol pair:
 - Mutator protocols answer who may change state: `IFleetMutator`, `IPlanetMutator`, `IEmpireMutator`, `IShipInstanceMutator` in `strategy_mutators.py`.
 - Engines receive mutators by constructor injection via `GameSession.__init__` and `TurnEngineConfig.create_default()`.
 - AST guard: `tests/unit/strategy/data/test_mutator_boundary_ast_guard.py` prevents unauthorized direct mutation of guarded data attributes.
+- Canonical lazy-default DI seams on engine processors (test-substitution targets): `SuperweaponOrderProcessor.__init__(event_bus=, empire_mutator=, nav_service=, validator=)` — each kwarg defaults to `None` and lazy-instantiates the canonical service in a `_get_*` helper. Tests inject stubs via the constructor rather than patching the underlying class methods (PROJ-493).
 
 Use mutator protocols when a data class is mutated from more than two outside files. Do not add mutator twins for frozen value objects, single-writer state, or construction-only fields.
 

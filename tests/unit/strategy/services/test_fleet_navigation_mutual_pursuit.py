@@ -22,7 +22,7 @@ from game.strategy.services.fleet_navigation_service import (
 )
 
 
-def _make_fleet(fleet_id: int, location: HexCoord, head_order: Order | None = None) -> Fleet:
+def _make_pursuit_fleet(fleet_id: int, location: HexCoord, head_order: Order | None = None) -> Fleet:
     """Build a Fleet-like mock with a single head order for mutual-pursuit tests."""
     fleet = MagicMock(spec=Fleet)
     fleet.id = fleet_id
@@ -55,8 +55,8 @@ class TestIsMutualPursuit:
     self_fleet."""
 
     def test_true_when_target_targets_self_via_move_to_fleet(self):
-        a = _make_fleet(1, HexCoord(0, 0))
-        b = _make_fleet(2, HexCoord(10, 0), Order(OrderType.MOVE_TO_FLEET, a))
+        a = _make_pursuit_fleet(1, HexCoord(0, 0))
+        b = _make_pursuit_fleet(2, HexCoord(10, 0), Order(OrderType.MOVE_TO_FLEET, a))
         a.orders = [Order(OrderType.MOVE_TO_FLEET, b)]
         a.get_current_order = MagicMock(return_value=a.orders[0])
 
@@ -64,28 +64,28 @@ class TestIsMutualPursuit:
         assert service._is_mutual_pursuit(a, b) is True
 
     def test_true_when_target_targets_self_via_join_fleet(self):
-        a = _make_fleet(1, HexCoord(0, 0))
-        b = _make_fleet(2, HexCoord(10, 0), Order(OrderType.JOIN_FLEET, a))
+        a = _make_pursuit_fleet(1, HexCoord(0, 0))
+        b = _make_pursuit_fleet(2, HexCoord(10, 0), Order(OrderType.JOIN_FLEET, a))
         service = FleetNavigationService()
         assert service._is_mutual_pursuit(a, b) is True
 
     def test_false_when_target_has_no_orders(self):
-        a = _make_fleet(1, HexCoord(0, 0))
-        b = _make_fleet(2, HexCoord(10, 0), head_order=None)
+        a = _make_pursuit_fleet(1, HexCoord(0, 0))
+        b = _make_pursuit_fleet(2, HexCoord(10, 0), head_order=None)
         service = FleetNavigationService()
         assert service._is_mutual_pursuit(a, b) is False
 
     def test_false_when_target_targets_third_party(self):
-        a = _make_fleet(1, HexCoord(0, 0))
-        c = _make_fleet(3, HexCoord(20, 0))
-        b = _make_fleet(2, HexCoord(10, 0), Order(OrderType.MOVE_TO_FLEET, c))
+        a = _make_pursuit_fleet(1, HexCoord(0, 0))
+        c = _make_pursuit_fleet(3, HexCoord(20, 0))
+        b = _make_pursuit_fleet(2, HexCoord(10, 0), Order(OrderType.MOVE_TO_FLEET, c))
         service = FleetNavigationService()
         assert service._is_mutual_pursuit(a, b) is False
 
     def test_false_when_target_head_order_is_move(self):
         """A MOVE order with hex target is not pursuit, even at the same hex."""
-        a = _make_fleet(1, HexCoord(0, 0))
-        b = _make_fleet(
+        a = _make_pursuit_fleet(1, HexCoord(0, 0))
+        b = _make_pursuit_fleet(
             2, HexCoord(10, 0),
             Order(OrderType.MOVE, HexCoord(0, 0)),
         )
@@ -93,8 +93,8 @@ class TestIsMutualPursuit:
         assert service._is_mutual_pursuit(a, b) is False
 
     def test_false_when_target_head_order_is_colonize(self):
-        a = _make_fleet(1, HexCoord(0, 0))
-        b = _make_fleet(
+        a = _make_pursuit_fleet(1, HexCoord(0, 0))
+        b = _make_pursuit_fleet(
             2, HexCoord(10, 0),
             Order(OrderType.COLONIZE, MagicMock()),
         )
@@ -114,8 +114,8 @@ class TestGetDestinationMutualBranch:
 
     def test_returns_target_location_for_mutual_pursuit(self, galaxy_no_systems):
         """Mutual pursuit: destination is target's current hex (no intercept)."""
-        a = _make_fleet(1, HexCoord(0, 0))
-        b = _make_fleet(2, HexCoord(10, 0), Order(OrderType.JOIN_FLEET, a))
+        a = _make_pursuit_fleet(1, HexCoord(0, 0))
+        b = _make_pursuit_fleet(2, HexCoord(10, 0), Order(OrderType.JOIN_FLEET, a))
         order = Order(OrderType.MOVE_TO_FLEET, b)
         a.orders = [order]
         a.get_current_order = MagicMock(return_value=order)
@@ -131,8 +131,8 @@ class TestGetDestinationMutualBranch:
         """Non-mutual MOVE_TO_FLEET still calls calculate_intercept_point."""
         from unittest.mock import patch
 
-        a = _make_fleet(1, HexCoord(0, 0))
-        b = _make_fleet(2, HexCoord(10, 0))  # no orders → not mutual
+        a = _make_pursuit_fleet(1, HexCoord(0, 0))
+        b = _make_pursuit_fleet(2, HexCoord(10, 0))  # no orders → not mutual
         order = Order(OrderType.MOVE_TO_FLEET, b)
         a.orders = [order]
 
@@ -154,8 +154,8 @@ class TestGetDestinationMutualBranch:
         get_destination falls back to today's intercept-based behavior."""
         from unittest.mock import patch
 
-        a = _make_fleet(1, HexCoord(0, 0))
-        b = _make_fleet(2, HexCoord(10, 0), Order(OrderType.JOIN_FLEET, a))
+        a = _make_pursuit_fleet(1, HexCoord(0, 0))
+        b = _make_pursuit_fleet(2, HexCoord(10, 0), Order(OrderType.JOIN_FLEET, a))
         order = Order(OrderType.MOVE_TO_FLEET, b)
         a.orders = [order]
 

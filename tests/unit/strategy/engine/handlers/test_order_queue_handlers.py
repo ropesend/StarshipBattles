@@ -84,7 +84,7 @@ class _FakeSession:
         self._planets[planet.id] = planet
 
 
-def _make_fleet(
+def _make_real_fleet(
     fleet_id: int = 1,
     *,
     owner_id: int = 0,
@@ -115,7 +115,7 @@ def test_colonize_mission_rejects_missing_fleet() -> None:
 
 
 def test_colonize_mission_returns_move_validation_failure_without_colonize_order() -> None:
-    fleet = _make_fleet()
+    fleet = _make_real_fleet()
     session = _FakeSession([fleet])
 
     with patch(
@@ -137,7 +137,7 @@ def test_colonize_mission_returns_move_validation_failure_without_colonize_order
 
 
 def test_colonize_mission_queues_move_then_colonize_order() -> None:
-    fleet = _make_fleet()
+    fleet = _make_real_fleet()
     session = _FakeSession([fleet])
     planet = SimpleNamespace(id=8, name="Gamma II")
     session.add_planet(planet)
@@ -180,7 +180,7 @@ def test_clear_orders_rejects_missing_fleet() -> None:
 
 
 def test_clear_orders_removes_orders_and_path() -> None:
-    fleet = _make_fleet()
+    fleet = _make_real_fleet()
     fleet.orders = [Order(OrderType.MOVE, target=HexCoord(1, 0))]
     fleet.path = [HexCoord(1, 0)]
     session = _FakeSession([fleet])
@@ -196,7 +196,7 @@ def test_clear_orders_removes_orders_and_path() -> None:
 
 
 def test_split_fleet_rejects_empty_ship_selection() -> None:
-    fleet = _make_fleet()
+    fleet = _make_real_fleet()
     session = _FakeSession([fleet])
 
     result = SplitFleetCommandHandler().execute(
@@ -209,7 +209,7 @@ def test_split_fleet_rejects_empty_ship_selection() -> None:
 
 
 def test_split_fleet_rejects_ship_not_in_source_fleet() -> None:
-    fleet = _make_fleet()
+    fleet = _make_real_fleet()
     fleet.ships = [_FakeShip("ship-a", "Ship A")]
     session = _FakeSession([fleet])
 
@@ -223,7 +223,7 @@ def test_split_fleet_rejects_ship_not_in_source_fleet() -> None:
 
 
 def test_split_fleet_rejects_moving_every_ship() -> None:
-    fleet = _make_fleet()
+    fleet = _make_real_fleet()
     fleet.ships = [_FakeShip("ship-a", "Ship A")]
     session = _FakeSession([fleet])
 
@@ -237,7 +237,7 @@ def test_split_fleet_rejects_moving_every_ship() -> None:
 
 
 def test_split_fleet_rejects_unknown_owner() -> None:
-    source = _make_fleet(fleet_id=10, owner_id=5)
+    source = _make_real_fleet(fleet_id=10, owner_id=5)
     source.ships = [
         _FakeShip("ship-a", "Ship A"),
         _FakeShip("ship-b", "Ship B"),
@@ -260,7 +260,7 @@ def test_split_fleet_rejects_unknown_owner() -> None:
 
 def test_split_fleet_moves_selected_ship_to_new_empire_fleet() -> None:
     empire = Empire(empire_id=0, name="Terrans", color=(1, 2, 3))
-    source = _make_fleet(fleet_id=10, owner_id=0, location=HexCoord(4, 5))
+    source = _make_real_fleet(fleet_id=10, owner_id=0, location=HexCoord(4, 5))
     ship_a = _FakeShip("ship-a", "Ship A")
     ship_b = _FakeShip("ship-b", "Ship B")
     source.ships = [ship_a, ship_b]
@@ -296,7 +296,7 @@ def test_delete_order_rejects_missing_fleet() -> None:
 
 
 def test_delete_order_rejects_invalid_indices() -> None:
-    fleet = _make_fleet()
+    fleet = _make_real_fleet()
     fleet.orders = [Order(OrderType.MOVE, target=HexCoord(1, 0))]
     session = _FakeSession([fleet])
     handler = DeleteOrderCommandHandler()
@@ -318,7 +318,7 @@ def test_delete_order_rejects_invalid_indices() -> None:
 
 
 def test_delete_order_removes_active_order_and_clears_path() -> None:
-    fleet = _make_fleet()
+    fleet = _make_real_fleet()
     fleet.orders = [
         Order(OrderType.MOVE, target=HexCoord(1, 0)),
         Order(OrderType.WARP, target=HexCoord(2, 0)),
@@ -349,7 +349,7 @@ def test_reorder_order_rejects_missing_fleet() -> None:
 
 
 def test_reorder_order_rejects_invalid_order_index_direction_and_bounds() -> None:
-    fleet = _make_fleet()
+    fleet = _make_real_fleet()
     fleet.orders = [
         Order(OrderType.MOVE, target=HexCoord(1, 0)),
         Order(OrderType.WARP, target=HexCoord(2, 0)),
@@ -383,7 +383,7 @@ def test_reorder_order_rejects_invalid_order_index_direction_and_bounds() -> Non
 
 
 def test_reorder_order_swaps_orders_and_clears_path_when_active_changes() -> None:
-    fleet = _make_fleet()
+    fleet = _make_real_fleet()
     fleet.orders = [
         Order(OrderType.MOVE, target=HexCoord(1, 0)),
         Order(OrderType.WARP, target=HexCoord(2, 0)),

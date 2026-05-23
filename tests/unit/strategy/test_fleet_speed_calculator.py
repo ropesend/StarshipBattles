@@ -38,7 +38,7 @@ def _make_mock_ship_with_stats(
     return ship
 
 
-def _make_mock_fleet(ships):
+def _make_speed_calc_fleet(ships):
     fleet = MagicMock()
     fleet.ships = list(ships)
     fleet.get_ship_instances.return_value = list(ships)
@@ -106,7 +106,7 @@ class TestFleetSpeedCalculatorFleetSpeed:
         """Fleet speed should be the minimum of all ship speeds."""
         fast_ship = _make_mock_ship_with_stats(mass=500, strategic_movement=200)
         slow_ship = _make_mock_ship_with_stats(mass=10000, strategic_movement=100)
-        fleet = _make_mock_fleet([fast_ship, slow_ship])
+        fleet = _make_speed_calc_fleet([fast_ship, slow_ship])
 
         speed = FleetSpeedCalculator.calculate_fleet_speed(fleet)
 
@@ -117,7 +117,7 @@ class TestFleetSpeedCalculatorFleetSpeed:
     def test_calculate_fleet_speed_single_ship(self):
         """Fleet with one ship should use that ship's speed."""
         ship = _make_mock_ship_with_stats(mass=1000, strategic_movement=150)
-        fleet = _make_mock_fleet([ship])
+        fleet = _make_speed_calc_fleet([ship])
 
         speed = FleetSpeedCalculator.calculate_fleet_speed(fleet)
 
@@ -126,7 +126,7 @@ class TestFleetSpeedCalculatorFleetSpeed:
 
     def test_calculate_fleet_speed_empty_fleet(self):
         """Empty fleet should return 0."""
-        fleet = _make_mock_fleet([])
+        fleet = _make_speed_calc_fleet([])
         speed = FleetSpeedCalculator.calculate_fleet_speed(fleet)
         assert speed == 0.0
 
@@ -136,7 +136,7 @@ class TestFleetSpeedCalculatorFleetSpeed:
         destroyed_ship = _make_mock_ship_with_stats(
             mass=500, strategic_movement=50, is_combat_capable=False,
         )
-        fleet = _make_mock_fleet([working_ship, destroyed_ship])
+        fleet = _make_speed_calc_fleet([working_ship, destroyed_ship])
 
         speed = FleetSpeedCalculator.calculate_fleet_speed(fleet)
 
@@ -147,7 +147,7 @@ class TestFleetSpeedCalculatorFleetSpeed:
     def test_update_fleet_speed_updates_attribute(self):
         """update_fleet_speed() should update fleet.speed attribute."""
         ship = _make_mock_ship_with_stats(mass=1000, strategic_movement=150)
-        fleet = _make_mock_fleet([ship])
+        fleet = _make_speed_calc_fleet([ship])
 
         FleetSpeedCalculator.update_fleet_speed(fleet)
 
@@ -161,7 +161,7 @@ class TestFleetSpeedCalculatorStrategicMult:
 
     def test_strategic_mult_half_halves_speed(self):
         ship = _make_mock_ship_with_stats(mass=1000, strategic_movement=250)
-        fleet = _make_mock_fleet([ship])
+        fleet = _make_speed_calc_fleet([ship])
 
         base_speed = FleetSpeedCalculator.calculate_fleet_speed(fleet)
         assert base_speed == 6.0
@@ -173,7 +173,7 @@ class TestFleetSpeedCalculatorStrategicMult:
 
     def test_strategic_mult_one_unchanged_speed(self):
         ship = _make_mock_ship_with_stats(mass=1000, strategic_movement=200)
-        fleet = _make_mock_fleet([ship])
+        fleet = _make_speed_calc_fleet([ship])
 
         base_speed = FleetSpeedCalculator.calculate_fleet_speed(fleet)
         storm_speed = FleetSpeedCalculator.calculate_fleet_speed_with_strategic_mult(
@@ -183,7 +183,7 @@ class TestFleetSpeedCalculatorStrategicMult:
 
     def test_strategic_mult_extreme_still_clamps_to_zero(self):
         ship = _make_mock_ship_with_stats(mass=1000, strategic_movement=100)
-        fleet = _make_mock_fleet([ship])
+        fleet = _make_speed_calc_fleet([ship])
 
         storm_speed = FleetSpeedCalculator.calculate_fleet_speed_with_strategic_mult(
             fleet, strategic_mult=0.1,
@@ -193,7 +193,7 @@ class TestFleetSpeedCalculatorStrategicMult:
     def test_default_strategic_mult_same_as_base(self):
         """Default strategic_mult=1.0 returns base speed unchanged."""
         ship = _make_mock_ship_with_stats(mass=1000, strategic_movement=200)
-        fleet = _make_mock_fleet([ship])
+        fleet = _make_speed_calc_fleet([ship])
 
         base_speed = FleetSpeedCalculator.calculate_fleet_speed(fleet)
         env_speed = FleetSpeedCalculator.calculate_fleet_speed_with_strategic_mult(fleet)

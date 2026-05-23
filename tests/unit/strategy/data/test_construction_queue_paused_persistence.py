@@ -37,13 +37,13 @@ def _make_planet() -> Planet:
     )
 
 
-def _make_fleet() -> Fleet:
+def _make_real_fleet() -> Fleet:
     return Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0), speed=5.0)
 
 
 _ENTITY_FACTORIES = {
     "planet": (_make_planet, Planet),
-    "fleet": (_make_fleet, Fleet),
+    "fleet": (_make_real_fleet, Fleet),
 }
 
 

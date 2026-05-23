@@ -22,7 +22,7 @@ def _make_mock_ship(design_id: str, design_name: str, mass: float, cargo=None):
     return ship
 
 
-def _make_mock_fleet(fleet_id=1, owner_id=0, ships=None, orders=None,
+def _make_detail_fmt_fleet(fleet_id=1, owner_id=0, ships=None, orders=None,
                      speed=5.0, fuel_endurance=20):
     """Create a MagicMock fleet with configurable attributes."""
     fleet = MagicMock()
@@ -42,7 +42,7 @@ def _make_mock_fleet(fleet_id=1, owner_id=0, ships=None, orders=None,
 def test_format_fleet_info_with_transfer_order():
     """Verify that TRANSFER orders are formatted correctly in fleet info."""
     # Arrange
-    fleet = _make_mock_fleet(fleet_id=5, owner_id=1, ships=[MagicMock(), MagicMock()])
+    fleet = _make_detail_fmt_fleet(fleet_id=5, owner_id=1, ships=[MagicMock(), MagicMock()])
 
     # Mock a TRANSFER order
     order = MagicMock()
@@ -63,7 +63,7 @@ def test_format_fleet_info_with_transfer_order():
 def test_format_fleet_info_with_transfer_all():
     """Verify that TRANSFER orders with amount 0 are formatted as 'All'."""
     # Arrange
-    fleet = _make_mock_fleet(fleet_id=5, owner_id=1)
+    fleet = _make_detail_fmt_fleet(fleet_id=5, owner_id=1)
 
     order = MagicMock()
     order.type = OrderType.TRANSFER
@@ -88,20 +88,20 @@ class TestFormatFleetInfoTravelRange:
 
     def test_travel_range_normal(self):
         """Fleet with speed=5.0 and fuel_endurance=20 shows both values."""
-        fleet = _make_mock_fleet(speed=5.0, fuel_endurance=20)
+        fleet = _make_detail_fmt_fleet(speed=5.0, fuel_endurance=20)
         html = format_fleet_info(fleet)
         assert "5 hex/turn" in html
         assert "20 hex fuel" in html
 
     def test_unlimited_fuel(self):
         """Fleet with fuel_endurance=-1 shows 'unlimited fuel'."""
-        fleet = _make_mock_fleet(fuel_endurance=-1)
+        fleet = _make_detail_fmt_fleet(fuel_endurance=-1)
         html = format_fleet_info(fleet)
         assert "unlimited fuel" in html.lower()
 
     def test_zero_speed(self):
         """Empty fleet with speed=0 shows '0 hex/turn'."""
-        fleet = _make_mock_fleet(speed=0.0, fuel_endurance=-1)
+        fleet = _make_detail_fmt_fleet(speed=0.0, fuel_endurance=-1)
         html = format_fleet_info(fleet)
         assert "0 hex/turn" in html
 
@@ -118,7 +118,7 @@ class TestFormatFleetInfoShipGrouping:
             _make_mock_ship("Destroyer", "Destroyer", 5000),
             _make_mock_ship("Scout", "Scout", 1000),
         ]
-        fleet = _make_mock_fleet(ships=ships)
+        fleet = _make_detail_fmt_fleet(ships=ships)
         html = format_fleet_info(fleet)
         assert "Destroyer x 2" in html
         assert "Scout" in html
@@ -130,7 +130,7 @@ class TestFormatFleetInfoShipGrouping:
             _make_mock_ship("Scout", "Scout", 1000),
             _make_mock_ship("Destroyer", "Destroyer", 5000),
         ]
-        fleet = _make_mock_fleet(ships=ships)
+        fleet = _make_detail_fmt_fleet(ships=ships)
         html = format_fleet_info(fleet)
         destroyer_pos = html.index("Destroyer")
         scout_pos = html.index("Scout")
@@ -139,14 +139,14 @@ class TestFormatFleetInfoShipGrouping:
     def test_single_ship_no_multiplier(self):
         """A single ship should show name without 'x 1'."""
         ships = [_make_mock_ship("Frigate", "Frigate", 3000)]
-        fleet = _make_mock_fleet(ships=ships)
+        fleet = _make_detail_fmt_fleet(ships=ships)
         html = format_fleet_info(fleet)
         assert "Frigate" in html
         assert "x 1" not in html
 
     def test_empty_fleet(self):
         """Empty fleet shows 'Ships: None' and does not crash."""
-        fleet = _make_mock_fleet(ships=[])
+        fleet = _make_detail_fmt_fleet(ships=[])
         html = format_fleet_info(fleet)
         assert "Ships: None" in html
 
@@ -163,7 +163,7 @@ class TestFormatFleetInfoCargoSummary:
             _make_mock_ship("Transport", "Transport", 2000,
                             cargo={'passengers': 30, 'minerals': 10}),
         ]
-        fleet = _make_mock_fleet(ships=ships)
+        fleet = _make_detail_fmt_fleet(ships=ships)
         html = format_fleet_info(fleet)
         assert "Passengers: 80" in html
         assert "Minerals: 10" in html
@@ -173,7 +173,7 @@ class TestFormatFleetInfoCargoSummary:
         ships = [
             _make_mock_ship("Destroyer", "Destroyer", 5000, cargo={}),
         ]
-        fleet = _make_mock_fleet(ships=ships)
+        fleet = _make_detail_fmt_fleet(ships=ships)
         html = format_fleet_info(fleet)
         assert "Cargo:" not in html
 
@@ -188,7 +188,7 @@ class TestFormatFleetInfoOrders:
         order = MagicMock()
         order.type = OrderType.MOVE
         order.target = MagicMock(__str__=lambda self: "(5, 3)")
-        fleet = _make_mock_fleet(orders=[order])
+        fleet = _make_detail_fmt_fleet(orders=[order])
         html = format_fleet_info(fleet)
         assert "MOVE" in html
         assert "(5, 3)" in html
@@ -197,13 +197,13 @@ class TestFormatFleetInfoOrders:
         """BUILD order shows queue size."""
         order = MagicMock()
         order.type = OrderType.BUILD
-        fleet = _make_mock_fleet(orders=[order])
+        fleet = _make_detail_fmt_fleet(orders=[order])
         fleet.construction_queue = [MagicMock(), MagicMock()]
         html = format_fleet_info(fleet)
         assert "BUILDING (2 items)" in html
 
     def test_no_orders(self):
         """Empty orders list shows '(No Orders)'."""
-        fleet = _make_mock_fleet(orders=[])
+        fleet = _make_detail_fmt_fleet(orders=[])
         html = format_fleet_info(fleet)
         assert "(No Orders)" in html

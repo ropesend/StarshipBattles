@@ -25,7 +25,7 @@ def _make_empire(empire_id: int = 0) -> Empire:
     return Empire(empire_id=empire_id, name="Test Empire", color=(255, 0, 0))
 
 
-def _make_fleet(
+def _make_real_fleet(
     fleet_id: int = 100,
     owner_id: int = 0,
     speed: float = 5.0,
@@ -48,6 +48,27 @@ def _make_mock_galaxy():
     return MagicMock()
 
 
+class StubActionTimeResolver:
+    """Minimal :class:`ActionTimeResolver`-shaped stub.
+
+    PROJ-491 Phase 3 / DI-2026-05-23-003: ``ActionExecutionEngine``
+    already accepts an injectable ``action_time_resolver`` constructor
+    parameter that ``_process_fleet_action_tick`` prefers over the static
+    method (``game/strategy/engine/action_execution_engine.py:55-68`` +
+    ``183-192``). This stub exposes the one method the engine reads —
+    ``resolve_action_time(fleet, order, component_registry)`` — and
+    returns a fixed value supplied at construction time, replacing the
+    prior ``patch('...ActionTimeResolver.resolve_action_time', return_value=N)``
+    static-method patch pattern.
+    """
+
+    def __init__(self, action_time: int):
+        self._action_time = action_time
+
+    def resolve_action_time(self, fleet, order, component_registry):
+        return self._action_time
+
+
 class TestActionTickInterval:
     """Test tick interval calculation based on fleet speed."""
 
@@ -57,7 +78,7 @@ class TestActionTickInterval:
         engine = ActionExecutionEngine(processor)
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=5.0)
+        fleet = _make_real_fleet(speed=5.0)
         fleet.add_order(Order(OrderType.COLONIZE, None))
         empire.fleets.append(fleet)
 
@@ -82,7 +103,7 @@ class TestActionTickInterval:
         engine = ActionExecutionEngine(processor)
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=1.0)
+        fleet = _make_real_fleet(speed=1.0)
         fleet.add_order(Order(OrderType.COLONIZE, None))
         empire.fleets.append(fleet)
 
@@ -97,7 +118,7 @@ class TestActionTickInterval:
         engine = ActionExecutionEngine(processor)
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=1.0)
+        fleet = _make_real_fleet(speed=1.0)
         fleet.add_order(Order(OrderType.COLONIZE, None))
         empire.fleets.append(fleet)
 
@@ -113,7 +134,7 @@ class TestActionTickInterval:
         engine = ActionExecutionEngine(processor)
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=0.0)
+        fleet = _make_real_fleet(speed=0.0)
         fleet.add_order(Order(OrderType.COLONIZE, None))
         empire.fleets.append(fleet)
 
@@ -130,35 +151,38 @@ class TestProgressAccumulation:
     """Test execution_progress accumulation over ticks."""
 
     def test_progress_accumulates_correctly(self):
-        """Progress should increment each time fleet acts."""
+        """Progress should increment each time fleet acts.
+
+        PROJ-491 Phase 3 Task 3.2 (DI-2026-05-23-003): inject a stub
+        ``ActionTimeResolver`` via the production DI seam instead of
+        patching the static method.
+        """
         processor = _make_mock_order_processor()
-        engine = ActionExecutionEngine(processor)
+        engine = ActionExecutionEngine(
+            processor,
+            action_time_resolver=StubActionTimeResolver(action_time=3),
+        )
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=5.0)  # Acts every 20 ticks
+        fleet = _make_real_fleet(speed=5.0)  # Acts every 20 ticks
         fleet.add_order(Order(OrderType.COLONIZE, None))
         empire.fleets.append(fleet)
 
         galaxy = _make_mock_galaxy()
 
-        # Patch action_time resolver to return 3
-        with patch(
-            'game.strategy.engine.action_execution_engine.ActionTimeResolver.resolve_action_time',
-            return_value=3
-        ):
-            # Tick 20: progress = 1
-            engine.process_action_ticks([empire], galaxy, 20)
-            assert fleet.get_current_order().execution_progress == 1
+        # Tick 20: progress = 1
+        engine.process_action_ticks([empire], galaxy, 20)
+        assert fleet.get_current_order().execution_progress == 1
 
-            # Tick 40: progress = 2
-            engine.process_action_ticks([empire], galaxy, 40)
-            assert fleet.get_current_order().execution_progress == 2
+        # Tick 40: progress = 2
+        engine.process_action_ticks([empire], galaxy, 40)
+        assert fleet.get_current_order().execution_progress == 2
 
-            # Tick 60: progress = 3 -> action completes
-            results = engine.process_action_ticks([empire], galaxy, 60)
-            assert len(results) == 1
-            assert results[0].action_completed is True
-            assert results[0].execution_progress == 3
+        # Tick 60: progress = 3 -> action completes
+        results = engine.process_action_ticks([empire], galaxy, 60)
+        assert len(results) == 1
+        assert results[0].action_completed is True
+        assert results[0].execution_progress == 3
 
 
 class TestActionCompletion:
@@ -170,7 +194,7 @@ class TestActionCompletion:
         engine = ActionExecutionEngine(processor)
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=5.0)
+        fleet = _make_real_fleet(speed=5.0)
         fleet.add_order(Order(OrderType.TRANSFER, None))
         empire.fleets.append(fleet)
 
@@ -185,35 +209,38 @@ class TestActionCompletion:
         processor.execute_action_order.assert_called_once()
 
     def test_multi_tick_action_takes_correct_ticks(self):
-        """Action with action_time=3 should take 3 action ticks."""
+        """Action with action_time=3 should take 3 action ticks.
+
+        PROJ-491 Phase 3 Task 3.3 (DI-2026-05-23-003): inject the stub
+        resolver via the production DI seam.
+        """
         processor = _make_mock_order_processor()
-        engine = ActionExecutionEngine(processor)
+        engine = ActionExecutionEngine(
+            processor,
+            action_time_resolver=StubActionTimeResolver(action_time=3),
+        )
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=5.0)  # Acts every 20 ticks
+        fleet = _make_real_fleet(speed=5.0)  # Acts every 20 ticks
         fleet.add_order(Order(OrderType.COLONIZE, None))
         empire.fleets.append(fleet)
 
         galaxy = _make_mock_galaxy()
 
-        with patch(
-            'game.strategy.engine.action_execution_engine.ActionTimeResolver.resolve_action_time',
-            return_value=3
-        ):
-            # Tick 20: progress 1/3 - not complete
-            results = engine.process_action_ticks([empire], galaxy, 20)
-            assert results[0].action_completed is False
-            assert results[0].execution_progress == 1
+        # Tick 20: progress 1/3 - not complete
+        results = engine.process_action_ticks([empire], galaxy, 20)
+        assert results[0].action_completed is False
+        assert results[0].execution_progress == 1
 
-            # Tick 40: progress 2/3 - not complete
-            results = engine.process_action_ticks([empire], galaxy, 40)
-            assert results[0].action_completed is False
-            assert results[0].execution_progress == 2
+        # Tick 40: progress 2/3 - not complete
+        results = engine.process_action_ticks([empire], galaxy, 40)
+        assert results[0].action_completed is False
+        assert results[0].execution_progress == 2
 
-            # Tick 60: progress 3/3 - complete!
-            results = engine.process_action_ticks([empire], galaxy, 60)
-            assert results[0].action_completed is True
-            assert results[0].execution_progress == 3
+        # Tick 60: progress 3/3 - complete!
+        results = engine.process_action_ticks([empire], galaxy, 60)
+        assert results[0].action_completed is True
+        assert results[0].execution_progress == 3
 
     def test_speed_5_completes_action_time_1_on_tick_20(self):
         """Speed 5 fleet with action_time=1 should complete on tick 20."""
@@ -221,7 +248,7 @@ class TestActionCompletion:
         engine = ActionExecutionEngine(processor)
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=5.0)
+        fleet = _make_real_fleet(speed=5.0)
         fleet.add_order(Order(OrderType.TRANSFER, None))
         empire.fleets.append(fleet)
 
@@ -238,7 +265,7 @@ class TestActionCompletion:
         engine = ActionExecutionEngine(processor)
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=1.0)
+        fleet = _make_real_fleet(speed=1.0)
         fleet.add_order(Order(OrderType.TRANSFER, None))
         empire.fleets.append(fleet)
 
@@ -269,7 +296,7 @@ class TestOrderTypeFiltering:
         engine = ActionExecutionEngine(processor)
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=5.0)
+        fleet = _make_real_fleet(speed=5.0)
         fleet.add_order(Order(order_type, HexCoord(1, 1)))
         empire.fleets.append(fleet)
 
@@ -285,7 +312,7 @@ class TestOrderTypeFiltering:
         engine = ActionExecutionEngine(processor)
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=5.0)
+        fleet = _make_real_fleet(speed=5.0)
         fleet.add_order(Order(OrderType.BUILD, None))
         fleet.construction_queue = [{"design_id": "test"}]  # Non-empty queue
         empire.fleets.append(fleet)
@@ -302,7 +329,7 @@ class TestOrderTypeFiltering:
         engine = ActionExecutionEngine(processor)
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=5.0)
+        fleet = _make_real_fleet(speed=5.0)
         fleet.add_order(Order(OrderType.BUILD, None))
         fleet.construction_queue = []  # Empty queue
         empire.fleets.append(fleet)
@@ -324,7 +351,7 @@ class TestFleetConsumption:
         engine = ActionExecutionEngine(processor)
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=5.0)
+        fleet = _make_real_fleet(speed=5.0)
         fleet.add_order(Order(OrderType.STELLERATE_STAR, None))
         empire.fleets.append(fleet)
 
@@ -347,9 +374,9 @@ class TestFleetConsumption:
         engine = ActionExecutionEngine(processor)
 
         empire = _make_empire()
-        fleet1 = _make_fleet(fleet_id=101, speed=5.0)
+        fleet1 = _make_real_fleet(fleet_id=101, speed=5.0)
         fleet1.add_order(Order(OrderType.COLONIZE, None))
-        fleet2 = _make_fleet(fleet_id=102, speed=5.0)
+        fleet2 = _make_real_fleet(fleet_id=102, speed=5.0)
         fleet2.add_order(Order(OrderType.COLONIZE, None))
         empire.fleets.extend([fleet1, fleet2])
 
@@ -370,7 +397,7 @@ class TestOrderPopping:
         engine = ActionExecutionEngine(processor)
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=5.0)
+        fleet = _make_real_fleet(speed=5.0)
         order = Order(OrderType.TRANSFER, None)
         fleet.add_order(order)
         empire.fleets.append(fleet)
@@ -399,7 +426,7 @@ class TestOrderPopping:
         engine = ActionExecutionEngine(processor)
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=5.0)
+        fleet = _make_real_fleet(speed=5.0)
         fleet.add_order(Order(OrderType.TRANSFER, None))
         fleet.add_order(Order(OrderType.COLONIZE, None))
         empire.fleets.append(fleet)
@@ -428,31 +455,34 @@ class TestActionTickResult:
     """Test ActionTickResult dataclass."""
 
     def test_result_contains_correct_data(self):
-        """ActionTickResult should capture all relevant data."""
+        """ActionTickResult should capture all relevant data.
+
+        PROJ-491 Phase 3 Task 3.4 (DI-2026-05-23-003): inject the stub
+        resolver via the production DI seam.
+        """
         processor = _make_mock_order_processor()
-        engine = ActionExecutionEngine(processor)
+        engine = ActionExecutionEngine(
+            processor,
+            action_time_resolver=StubActionTimeResolver(action_time=2),
+        )
 
         empire = _make_empire()
-        fleet = _make_fleet(fleet_id=999, speed=5.0)
+        fleet = _make_real_fleet(fleet_id=999, speed=5.0)
         fleet.add_order(Order(OrderType.COLONIZE, None))
         empire.fleets.append(fleet)
 
         galaxy = _make_mock_galaxy()
 
-        with patch(
-            'game.strategy.engine.action_execution_engine.ActionTimeResolver.resolve_action_time',
-            return_value=2
-        ):
-            results = engine.process_action_ticks([empire], galaxy, 20)
+        results = engine.process_action_ticks([empire], galaxy, 20)
 
-            assert len(results) == 1
-            result = results[0]
-            assert result.fleet_id == 999
-            assert result.order_type == OrderType.COLONIZE
-            assert result.action_completed is False
-            assert result.fleet_consumed is False
-            assert result.execution_progress == 1
-            assert result.action_time == 2
+        assert len(results) == 1
+        result = results[0]
+        assert result.fleet_id == 999
+        assert result.order_type == OrderType.COLONIZE
+        assert result.action_completed is False
+        assert result.fleet_consumed is False
+        assert result.execution_progress == 1
+        assert result.action_time == 2
 
 
 class TestNoOrder:
@@ -464,7 +494,7 @@ class TestNoOrder:
         engine = ActionExecutionEngine(processor)
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=5.0)
+        fleet = _make_real_fleet(speed=5.0)
         # No orders added
         empire.fleets.append(fleet)
 
@@ -485,11 +515,11 @@ class TestMultipleEmpires:
         empire1 = _make_empire(empire_id=0)
         empire2 = _make_empire(empire_id=1)
 
-        fleet1 = _make_fleet(fleet_id=101, owner_id=0, speed=5.0)
+        fleet1 = _make_real_fleet(fleet_id=101, owner_id=0, speed=5.0)
         fleet1.add_order(Order(OrderType.TRANSFER, None))
         empire1.fleets.append(fleet1)
 
-        fleet2 = _make_fleet(fleet_id=102, owner_id=1, speed=5.0)
+        fleet2 = _make_real_fleet(fleet_id=102, owner_id=1, speed=5.0)
         fleet2.add_order(Order(OrderType.TRANSFER, None))
         empire2.fleets.append(fleet2)
 
@@ -521,7 +551,7 @@ class TestAllActionOrderTypes:
         engine = ActionExecutionEngine(processor)
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=5.0)
+        fleet = _make_real_fleet(speed=5.0)
         fleet.add_order(Order(order_type, None))
         empire.fleets.append(fleet)
 

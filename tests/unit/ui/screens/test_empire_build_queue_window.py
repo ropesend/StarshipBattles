@@ -47,15 +47,82 @@ def _make_source(queue_id="planet_1_base", display_name="Alpha - Base",
     )
 
 
-def _make_window(sources=None, on_close=None, on_navigate=None):
-    """Create an EmpireBuildQueueWindow with mocked pygame_gui.
+class _EmpireBuildQueueWidgetStubBuilder:
+    """Minimal ``EmpireBuildQueueUiBuilder``-shaped stub.
 
-    Bypasses UIWindow.__init__ to avoid needing real pygame display.
-    Sets up minimal state for testing business logic.
+    PROJ-491 Task 2.3: replaces the prior 30+ ``win.<attr> = MagicMock()``
+    after-the-fact assignments with a real ui_builder seam — the production
+    code calls ``self._ui_builder.build(self)`` in Stage 3 of ``__init__``,
+    so passing this stub lets the real ``__init__`` finish wiring without a
+    live pygame display.
     """
+
+    def __init__(self, sources):
+        self._sources = sources
+
+    def build(self, win) -> None:
+        from game.strategy.engine.commands import AddToConstructionQueueCommand
+
+        # Mock sidebar with button dicts.
+        win._sidebar = MagicMock()
+        win._sidebar.column_toggle_buttons = {}
+        win._sidebar.tri_state_widgets = {}
+        win._sidebar.search_entry = None
+        win._sidebar.btn_apply_filters = None
+        win._sidebar.handle_button_click = MagicMock(return_value=False)
+        win._sidebar.check_tri_state_presses = MagicMock(return_value=None)
+
+        # Mock UI elements.
+        win.scroll_bar = MagicMock()
+        win.scroll_bar.start_percentage = 0.0
+        win.scroll_bar.visible_percentage = 1.0
+        win.list_panel = MagicMock()
+        win.list_view_rect = MagicMock()
+        win.list_view_rect.height = 500
+        win.main_panel = MagicMock()
+        win.header_container = MagicMock()
+        win.sidebar_panel = MagicMock()
+        win.row_elements = []
+
+        # Column manager (Phase 3 sorting/reordering).
+        win._column_manager = MagicMock()
+        win._column_manager.sort_column_id = None
+        win._column_manager.sort_descending = False
+        win._column_manager.handle_header_clicks = MagicMock(
+            return_value=(False, False)
+        )
+        win._column_manager.rebuild_headers = MagicMock()
+
+        # VirtualTable components (PROJ-188 Phase 4).
+        win._selection = MagicMock()
+        win._selection.get_selected_indices = MagicMock(return_value=set())
+        win._selection.set_selected = MagicMock()
+
+        win._data_source = MagicMock()
+        win._virtual_table = MagicMock()
+        win._virtual_table.scroll_bar = win.scroll_bar
+        win._virtual_table.update_scroll_bar = MagicMock()
+        win._virtual_table.update_visible_rows = MagicMock()
+        win._virtual_table.force_update = MagicMock()
+        win._virtual_table.rebuild_headers = MagicMock()
+        win._virtual_table.rebuild_row_pool = MagicMock()
+        win._virtual_table.kill = MagicMock()
+
+
+def _make_window(sources=None, on_close=None, on_navigate=None):
+    """Create an EmpireBuildQueueWindow via the canonical
+    ``bypass_init`` + ``make_ui_widget`` real-constructor path.
+
+    PROJ-491 Task 2.3: replaces the prior
+    ``patch.object(EmpireBuildQueueWindow, '__init__', lambda ...)`` +
+    ``__new__`` + 30+ manually-wired attribute assignments with a real
+    ``__init__`` run under ``bypass_init`` and a stub ui_builder that
+    wires the Stage-3 widget slots.
+    """
+    import pygame
+
     from game.ui.screens.empire_build_queue_window import EmpireBuildQueueWindow
-    from game.ui.screens.builder.event_bus import WorkshopEventBus
-    from game.ui.screens.empire_build_queue_viewmodel import EmpireBuildQueueViewModel
+    from tests.fixtures.ui_widget_factory import bypass_init, make_ui_widget
 
     if sources is None:
         sources = [
@@ -67,58 +134,12 @@ def _make_window(sources=None, on_close=None, on_navigate=None):
         ]
 
     mock_empire = MagicMock()
-    mock_galaxy = MagicMock()
-
-    with patch.object(EmpireBuildQueueWindow, '__init__',
-                      lambda self, *a, **kw: None):
-        win = EmpireBuildQueueWindow.__new__(EmpireBuildQueueWindow)
-
-    # Set up minimal state matching constructor
-    win.empire = mock_empire
-    win.galaxy = mock_galaxy
-    win.on_close_callback = on_close
-    win.on_navigate_to_hex = on_navigate
-    win.row_height = 50
-    win.header_height = 40
-    win.sidebar_width = 300
-    win.ui_manager = MagicMock()
-
-    # MVVM components - ViewModel owns the state
-    win._event_bus = WorkshopEventBus()
-    win._viewmodel = EmpireBuildQueueViewModel(win._event_bus, sources)
-
-    # Filter manager (for column definitions)
-    from game.ui.screens.empire_build_queue_filter_manager import BuildQueueFilterManager
-    win._filter_mgr = BuildQueueFilterManager()
-
-    # Mock sidebar with button dicts (Window properties delegate to _sidebar)
-    win._sidebar = MagicMock()
-    win._sidebar.column_toggle_buttons = {}
-    win._sidebar.tri_state_widgets = {}
-    win._sidebar.search_entry = None
-    win._sidebar.btn_apply_filters = None
-    win._sidebar.handle_button_click = MagicMock(return_value=False)
-    win._sidebar.check_tri_state_presses = MagicMock(return_value=None)
-
-    # Mock UI elements
-    win.scroll_bar = MagicMock()
-    win.scroll_bar.start_percentage = 0.0
-    win.scroll_bar.visible_percentage = 1.0
-    win.list_panel = MagicMock()
-    win.list_view_rect = MagicMock()
-    win.list_view_rect.height = 500
-    win.main_panel = MagicMock()
-    win.header_container = MagicMock()
-    win.sidebar_panel = MagicMock()
-    win.row_elements = []
+    mock_empire.id = 0
+    mock_world = MagicMock()
 
     # PROJ-208 / PROJ-393: facade is the only command-dispatch surface.
-    # The old None-session fallback that mutated source.construction_queue
-    # in-place was deleted; the test facade mock simulates that behavior so
-    # existing assertions on `source.construction_queue` keep working.
+    # The test facade simulates the queue mutation existing tests expect.
     def _fake_handle_command(cmd):
-        # Locate the source whose queue_id (or entity_id for fleet/planet)
-        # matches the command, and append.
         from game.strategy.engine.commands import AddToConstructionQueueCommand
         if isinstance(cmd, AddToConstructionQueueCommand):
             for src in sources:
@@ -137,37 +158,32 @@ def _make_window(sources=None, on_close=None, on_navigate=None):
                     })
                     return MagicMock(is_valid=True)
         return MagicMock(is_valid=True)
-    win._facade = MagicMock()
-    win._facade.handle_command = MagicMock(side_effect=_fake_handle_command)
 
-    # Column manager (Phase 3 sorting/reordering) - now TableColumnManager
-    win._column_manager = MagicMock()
-    win._column_manager.sort_column_id = None
-    win._column_manager.sort_descending = False
+    facade = MagicMock()
+    facade.handle_command = MagicMock(side_effect=_fake_handle_command)
+    facade.empires.build_queues = MagicMock(return_value=list(sources))
 
-    win._column_manager.handle_header_clicks = MagicMock(return_value=(False, False))
-    win._column_manager.rebuild_headers = MagicMock()
+    with bypass_init(EmpireBuildQueueWindow):
+        win = make_ui_widget(
+            EmpireBuildQueueWindow,
+            rect=pygame.Rect(0, 0, 1200, 800),
+            manager=MagicMock(name="ui_manager"),
+            empire=mock_empire,
+            world=mock_world,
+            window_manager=MagicMock(name="window_manager"),
+            on_close_callback=on_close,
+            on_navigate_to_hex=on_navigate,
+            facade=facade,
+            ui_builder=_EmpireBuildQueueWidgetStubBuilder(sources),
+        )
 
-    # VirtualTable components (PROJ-188 Phase 4)
-    win._selection = MagicMock()
-    win._selection.get_selected_indices = MagicMock(return_value=set())
-    win._selection.set_selected = MagicMock()
-
-    win._data_source = MagicMock()
-    win._virtual_table = MagicMock()
-    win._virtual_table.scroll_bar = win.scroll_bar
-    win._virtual_table.update_scroll_bar = MagicMock()
-    win._virtual_table.update_visible_rows = MagicMock()
-    win._virtual_table.force_update = MagicMock()
-    win._virtual_table.rebuild_headers = MagicMock()
-    win._virtual_table.rebuild_row_pool = MagicMock()
-    win._virtual_table.kill = MagicMock()
-
-    # Issue #28 iteration 2: bypass-init skips the builder, so
-    # ``_default_view_state`` is never captured by the production path.
-    # Set it to None here; tests that exercise the "restore defaults"
-    # path populate it themselves.
+    # Issue #28 iteration 2: bypass-init skips the builder's pristine
+    # ``_default_view_state`` capture; tests that exercise the
+    # "restore defaults" path populate it themselves.
     win._default_view_state = None
+    # Legacy attribute used by existing tests (the prior helper set this
+    # outside the __init__ chain). Mirror that contract.
+    win.galaxy = mock_world
 
     return win
 

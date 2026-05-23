@@ -431,15 +431,47 @@ class TestShipComponentManagerCacheInvalidation:
             registries=fresh_registries
         )
 
-    def test_invalidate_clears_both_caches(self):
-        """_invalidate_components_cache clears components_cache and weapons_cache."""
-        # Populate both caches
-        self.ship.get_all_components()
-        self.ship.get_weapon_components_cached()
+    def test_adding_and_removing_components_surfaces_in_cached_views(self):
+        """``Ship.add_component`` / ``Ship.remove_component`` must surface in
+        the cached ``get_all_components`` view on the very next read.
 
-        # Access the component manager and invalidate
-        self.ship.component_manager._invalidate_components_cache()
+        PROJ-491 Task 1.9: replaces the prior direct
+        ``_invalidate_components_cache`` call + ``_components_dirty`` /
+        ``_weapons_cache_dirty`` private-flag reads with a behavioral
+        assertion on the public Ship API. The cache invalidation is the
+        implementation detail; the observable contract is "mutate
+        composition via public API, then a subsequent cached read returns
+        the updated component set".
 
-        # Both caches should be dirty now
-        assert self.ship.component_manager._components_dirty is True
-        assert self.ship.component_manager._weapons_cache_dirty is True
+        The companion weapon-cache invalidation contract is already
+        covered behaviorally by ``test_weapon_cache_invalidates_on_add``
+        and ``test_weapon_cache_invalidates_on_remove`` in
+        ``TestShipComponentManagerWeaponCache`` above.
+        """
+        # Populate the all-components cache at its initial (empty) state.
+        baseline_all = self.ship.get_all_components()
+
+        # Mutate composition through the public Ship API: add.
+        bridge = create_component('bridge', registries=self.registries)
+        added = self.ship.add_component(bridge, LayerType.CORE)
+        assert added is True
+
+        armor = create_component('armor_plate', registries=self.registries)
+        added = self.ship.add_component(armor, LayerType.ARMOR)
+        assert added is True
+
+        after_add = self.ship.get_all_components()
+        assert bridge in after_add
+        assert armor in after_add
+        assert len(after_add) == len(baseline_all) + 2, (
+            "All-components cached view must reflect freshly-added components."
+        )
+
+        # Remove via public API and confirm the cache reflects the removal.
+        removed = self.ship.remove_component(LayerType.ARMOR, 0)
+        assert removed is armor
+
+        after_remove = self.ship.get_all_components()
+        assert armor not in after_remove
+        assert bridge in after_remove
+        assert len(after_remove) == len(baseline_all) + 1

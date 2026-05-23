@@ -3,7 +3,6 @@ Integration tests for commands.
 
 PROJ-55: Updated to include colony pod data in mock fleets for colonization tests.
 """
-from enum import Enum
 from unittest.mock import MagicMock
 from game.strategy.engine.commands import IssueColonizeCommand, CommandType
 from game.strategy.engine.turn_engine import TurnEngine
@@ -150,9 +149,6 @@ class TestCommands:
 
         # PROJ-140: Fleet needs ships with colony pods for pod validation
         # Create a ship with a matching colony pod
-        from enum import Enum
-        class MockPlanetType(Enum):
-            CONTINENTAL = "CONTINENTAL"
 
         from game.strategy.data.bay_inventory import BayInventory, DropPod
         mock_ship = MagicMock()

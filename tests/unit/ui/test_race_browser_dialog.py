@@ -9,6 +9,32 @@ import pytest
 from unittest.mock import MagicMock, patch, PropertyMock
 import pygame
 
+from tests.fixtures.ui_widget_factory import bypass_init
+
+
+def _make_dialog():
+    """Construct a real ``RaceBrowserDialog`` under the canonical
+    ``bypass_init`` context manager.
+
+    PROJ-491 Task 2.6: replaces the prior ``patch.object(__init__, no-op)
+    + __new__ + manual attribute wiring`` pattern (12 occurrences in this
+    file). Running real ``__init__`` under ``bypass_init`` reaches the
+    Stage-2 ``_window_init_bypassed = True`` early-return path while
+    Stage-1 cheap state (``race_rows``, ``selected_race``,
+    ``selected_row_index``, ``_asset_loader``, widget placeholders) is
+    populated by the real constructor.
+    """
+    from game.ui.screens.race_browser_dialog import RaceBrowserDialog
+
+    with bypass_init(RaceBrowserDialog):
+        return RaceBrowserDialog(
+            pygame.Rect(0, 0, 800, 600),
+            MagicMock(name="ui_manager"),
+            race_library=MagicMock(name="race_library"),
+            on_select_callback=MagicMock(name="on_select"),
+            on_cancel_callback=MagicMock(name="on_cancel"),
+        )
+
 
 # =============================================================================
 # Fixtures
@@ -72,75 +98,59 @@ class TestRaceSelectionLogic:
 
     def test_select_row_updates_selected_race(self, mock_race_config, mock_race_library):
         """Selecting a row updates selected_race attribute."""
-        from game.ui.screens.race_browser_dialog import RaceBrowserDialog
+        dialog = _make_dialog()
+        dialog.btn_load = MagicMock()
 
-        # Create dialog with mocked pygame dependencies
-        with patch.object(RaceBrowserDialog, '__init__', lambda self, *args, **kwargs: None):
-            dialog = RaceBrowserDialog.__new__(RaceBrowserDialog)
-            dialog.race_rows = []
-            dialog.selected_race = None
-            dialog.selected_row_index = -1
-            dialog.btn_load = MagicMock()
+        # Add a mock row
+        mock_button = MagicMock()
+        mock_row = {
+            'race': mock_race_config,
+            'index': 0,
+            'button': mock_button,
+            'elements': []
+        }
+        dialog.race_rows.append(mock_row)
 
-            # Add a mock row
-            mock_button = MagicMock()
-            mock_row = {
-                'race': mock_race_config,
-                'index': 0,
-                'button': mock_button,
-                'elements': []
-            }
-            dialog.race_rows.append(mock_row)
+        # Select the row
+        dialog._select_row(0)
 
-            # Select the row
-            dialog._select_row(0)
-
-            assert dialog.selected_race == mock_race_config
-            assert dialog.selected_row_index == 0
-            dialog.btn_load.enable.assert_called()
+        assert dialog.selected_race == mock_race_config
+        assert dialog.selected_row_index == 0
+        dialog.btn_load.enable.assert_called()
 
     def test_select_row_deselects_previous(self, mock_race_config, mock_race_library):
         """Selecting a new row deselects the previous one."""
-        from game.ui.screens.race_browser_dialog import RaceBrowserDialog
+        dialog = _make_dialog()
+        dialog.selected_row_index = 0  # Previously selected
+        dialog.btn_load = MagicMock()
 
-        with patch.object(RaceBrowserDialog, '__init__', lambda self, *args, **kwargs: None):
-            dialog = RaceBrowserDialog.__new__(RaceBrowserDialog)
-            dialog.race_rows = []
-            dialog.selected_race = None
-            dialog.selected_row_index = 0  # Previously selected
-            dialog.btn_load = MagicMock()
+        # Add two mock rows
+        mock_button1 = MagicMock()
+        mock_button2 = MagicMock()
 
-            # Add two mock rows
-            mock_button1 = MagicMock()
-            mock_button2 = MagicMock()
+        dialog.race_rows = [
+            {'race': mock_race_config, 'index': 0, 'button': mock_button1, 'elements': []},
+            {'race': MagicMock(), 'index': 1, 'button': mock_button2, 'elements': []}
+        ]
 
-            dialog.race_rows = [
-                {'race': mock_race_config, 'index': 0, 'button': mock_button1, 'elements': []},
-                {'race': MagicMock(), 'index': 1, 'button': mock_button2, 'elements': []}
-            ]
+        # Select second row
+        dialog._select_row(1)
 
-            # Select second row
-            dialog._select_row(1)
-
-            mock_button1.unselect.assert_called()
-            mock_button2.select.assert_called()
+        mock_button1.unselect.assert_called()
+        mock_button2.select.assert_called()
 
     def test_select_invalid_row_disables_load(self, mock_race_library):
         """Selecting an invalid row index disables load button."""
-        from game.ui.screens.race_browser_dialog import RaceBrowserDialog
+        dialog = _make_dialog()
+        dialog.selected_race = MagicMock()
+        dialog.selected_row_index = 0
+        dialog.btn_load = MagicMock()
 
-        with patch.object(RaceBrowserDialog, '__init__', lambda self, *args, **kwargs: None):
-            dialog = RaceBrowserDialog.__new__(RaceBrowserDialog)
-            dialog.race_rows = []
-            dialog.selected_race = MagicMock()
-            dialog.selected_row_index = 0
-            dialog.btn_load = MagicMock()
+        # Select invalid index
+        dialog._select_row(-1)
 
-            # Select invalid index
-            dialog._select_row(-1)
-
-            assert dialog.selected_race is None
-            dialog.btn_load.disable.assert_called()
+        assert dialog.selected_race is None
+        dialog.btn_load.disable.assert_called()
 
 
 # =============================================================================
@@ -152,46 +162,28 @@ class TestPreviewLoading:
 
     def test_load_portrait_preview_returns_none_for_none_id(self):
         """_load_portrait_preview returns None when portrait_id is None."""
-        from game.ui.screens.race_browser_dialog import RaceBrowserDialog
-        from game.ui.screens.race_asset_loader import RaceAssetLoader
+        dialog = _make_dialog()
 
-        with patch.object(RaceBrowserDialog, '__init__', lambda self, *args, **kwargs: None):
-            dialog = RaceBrowserDialog.__new__(RaceBrowserDialog)
-            dialog._asset_loader = RaceAssetLoader()
-            dialog.PREVIEW_SIZE = 60
+        result = dialog._load_portrait_preview(None)
 
-            result = dialog._load_portrait_preview(None)
-
-            assert result is None
+        assert result is None
 
     def test_load_flag_preview_returns_none_for_none_id(self):
         """_load_flag_preview returns None when flag_id is None."""
-        from game.ui.screens.race_browser_dialog import RaceBrowserDialog
-        from game.ui.screens.race_asset_loader import RaceAssetLoader
+        dialog = _make_dialog()
 
-        with patch.object(RaceBrowserDialog, '__init__', lambda self, *args, **kwargs: None):
-            dialog = RaceBrowserDialog.__new__(RaceBrowserDialog)
-            dialog._asset_loader = RaceAssetLoader()
-            dialog.PREVIEW_SIZE = 60
+        result = dialog._load_flag_preview(None)
 
-            result = dialog._load_flag_preview(None)
-
-            assert result is None
+        assert result is None
 
     def test_load_portrait_preview_returns_none_for_missing_path(self):
         """_load_portrait_preview returns None when path doesn't exist."""
-        from game.ui.screens.race_browser_dialog import RaceBrowserDialog
-        from game.ui.screens.race_asset_loader import RaceAssetLoader
+        dialog = _make_dialog()
 
-        with patch.object(RaceBrowserDialog, '__init__', lambda self, *args, **kwargs: None):
-            dialog = RaceBrowserDialog.__new__(RaceBrowserDialog)
-            dialog._asset_loader = RaceAssetLoader()
-            dialog.PREVIEW_SIZE = 60
+        with patch('os.path.exists', return_value=False):
+            result = dialog._load_portrait_preview("nonexistent_portrait")
 
-            with patch('os.path.exists', return_value=False):
-                result = dialog._load_portrait_preview("nonexistent_portrait")
-
-            assert result is None
+        assert result is None
 
 
 # =============================================================================
@@ -203,52 +195,43 @@ class TestCallbackHandling:
 
     def test_cancel_callback_invoked_on_cancel_button(self, mock_race_library):
         """Cancel callback is invoked when cancel button pressed."""
-        from game.ui.screens.race_browser_dialog import RaceBrowserDialog
+        dialog = _make_dialog()
+        dialog.on_cancel_callback = MagicMock()
+        dialog.on_select_callback = MagicMock()
+        dialog.btn_cancel = MagicMock()
+        dialog.btn_load = MagicMock()
+        dialog.kill = MagicMock()
 
-        with patch.object(RaceBrowserDialog, '__init__', lambda self, *args, **kwargs: None):
-            dialog = RaceBrowserDialog.__new__(RaceBrowserDialog)
-            dialog.on_cancel_callback = MagicMock()
-            dialog.on_select_callback = MagicMock()
-            dialog.btn_cancel = MagicMock()
-            dialog.btn_load = MagicMock()
-            dialog.race_rows = []
-            dialog.selected_race = None
-            dialog.kill = MagicMock()
+        # Simulate button press event
+        event = MagicMock()
+        event.type = 32866  # pygame_gui.UI_BUTTON_PRESSED value
+        event.ui_element = dialog.btn_cancel
 
-            # Simulate button press event
-            event = MagicMock()
-            event.type = 32866  # pygame_gui.UI_BUTTON_PRESSED value
-            event.ui_element = dialog.btn_cancel
+        # Mock the parent process_event
+        with patch('pygame_gui.elements.UIWindow.process_event', return_value=False):
+            dialog.process_event(event)
 
-            # Mock the parent process_event
-            with patch('pygame_gui.elements.UIWindow.process_event', return_value=False):
-                dialog.process_event(event)
-
-            dialog.on_cancel_callback.assert_called_once()
+        dialog.on_cancel_callback.assert_called_once()
 
     def test_select_callback_invoked_on_load_button(self, mock_race_config, mock_race_library):
         """Select callback is invoked when load button pressed with selection."""
-        from game.ui.screens.race_browser_dialog import RaceBrowserDialog
+        dialog = _make_dialog()
+        dialog.on_cancel_callback = MagicMock()
+        dialog.on_select_callback = MagicMock()
+        dialog.btn_cancel = MagicMock()
+        dialog.btn_load = MagicMock()
+        dialog.selected_race = mock_race_config
+        dialog.kill = MagicMock()
 
-        with patch.object(RaceBrowserDialog, '__init__', lambda self, *args, **kwargs: None):
-            dialog = RaceBrowserDialog.__new__(RaceBrowserDialog)
-            dialog.on_cancel_callback = MagicMock()
-            dialog.on_select_callback = MagicMock()
-            dialog.btn_cancel = MagicMock()
-            dialog.btn_load = MagicMock()
-            dialog.race_rows = []
-            dialog.selected_race = mock_race_config
-            dialog.kill = MagicMock()
+        # Simulate button press event
+        event = MagicMock()
+        event.type = 32866  # pygame_gui.UI_BUTTON_PRESSED
+        event.ui_element = dialog.btn_load
 
-            # Simulate button press event
-            event = MagicMock()
-            event.type = 32866  # pygame_gui.UI_BUTTON_PRESSED
-            event.ui_element = dialog.btn_load
+        with patch('pygame_gui.elements.UIWindow.process_event', return_value=False):
+            dialog.process_event(event)
 
-            with patch('pygame_gui.elements.UIWindow.process_event', return_value=False):
-                dialog.process_event(event)
-
-            dialog.on_select_callback.assert_called_once_with(mock_race_config)
+        dialog.on_select_callback.assert_called_once_with(mock_race_config)
 
 
 # =============================================================================
@@ -260,20 +243,16 @@ class TestEmptyLibraryHandling:
 
     def test_no_races_label_shown_when_library_empty(self, mock_race_library):
         """No races label is shown when library is empty."""
-        from game.ui.screens.race_browser_dialog import RaceBrowserDialog
-
         mock_race_library.get_all_races.return_value = []
 
-        with patch.object(RaceBrowserDialog, '__init__', lambda self, *args, **kwargs: None):
-            dialog = RaceBrowserDialog.__new__(RaceBrowserDialog)
-            dialog.race_library = mock_race_library
-            dialog.race_rows = []
-            dialog.no_races_label = MagicMock()
-            dialog.scroll_container = MagicMock()
+        dialog = _make_dialog()
+        dialog.race_library = mock_race_library
+        dialog.no_races_label = MagicMock()
+        dialog.scroll_container = MagicMock()
 
-            dialog._load_races()
+        dialog._load_races()
 
-            dialog.no_races_label.show.assert_called()
+        dialog.no_races_label.show.assert_called()
 
 
 # =============================================================================
@@ -285,108 +264,87 @@ class TestBrowserDialogEdgeCases:
 
     def test_select_callback_not_invoked_without_selection(self, mock_race_library):
         """Select callback is NOT invoked when no race selected."""
-        from game.ui.screens.race_browser_dialog import RaceBrowserDialog
+        dialog = _make_dialog()
+        dialog.on_cancel_callback = MagicMock()
+        dialog.on_select_callback = MagicMock()
+        dialog.btn_cancel = MagicMock()
+        dialog.btn_load = MagicMock()
+        dialog.kill = MagicMock()
 
-        with patch.object(RaceBrowserDialog, '__init__', lambda self, *args, **kwargs: None):
-            dialog = RaceBrowserDialog.__new__(RaceBrowserDialog)
-            dialog.on_cancel_callback = MagicMock()
-            dialog.on_select_callback = MagicMock()
-            dialog.btn_cancel = MagicMock()
-            dialog.btn_load = MagicMock()
-            dialog.race_rows = []
-            dialog.selected_race = None  # No selection
-            dialog.kill = MagicMock()
+        # Simulate load button press with no selection
+        event = MagicMock()
+        event.type = 32866  # pygame_gui.UI_BUTTON_PRESSED
+        event.ui_element = dialog.btn_load
 
-            # Simulate load button press with no selection
-            event = MagicMock()
-            event.type = 32866  # pygame_gui.UI_BUTTON_PRESSED
-            event.ui_element = dialog.btn_load
+        with patch('pygame_gui.elements.UIWindow.process_event', return_value=False):
+            dialog.process_event(event)
 
-            with patch('pygame_gui.elements.UIWindow.process_event', return_value=False):
-                dialog.process_event(event)
-
-            # Callback should NOT be called without selection
-            dialog.on_select_callback.assert_not_called()
+        # Callback should NOT be called without selection
+        dialog.on_select_callback.assert_not_called()
 
     def test_row_selection_with_invalid_button(self, mock_race_library):
         """Clicking invalid row button doesn't crash."""
-        from game.ui.screens.race_browser_dialog import RaceBrowserDialog
+        dialog = _make_dialog()
+        dialog.btn_load = MagicMock()
 
-        with patch.object(RaceBrowserDialog, '__init__', lambda self, *args, **kwargs: None):
-            dialog = RaceBrowserDialog.__new__(RaceBrowserDialog)
-            dialog.race_rows = []
-            dialog.selected_race = None
-            dialog.selected_row_index = -1
-            dialog.btn_load = MagicMock()
+        # Try to select row with empty race_rows list
+        dialog._select_row(99)  # Out of bounds
 
-            # Try to select row with empty race_rows list
-            dialog._select_row(99)  # Out of bounds
-
-            # Should handle gracefully
-            assert dialog.selected_race is None
+        # Should handle gracefully
+        assert dialog.selected_race is None
 
     def test_row_uses_single_button_with_embedded_image(self, mock_race_config, mock_race_library):
         """BUG-95: Row should use a single UIButton with the composite surface
         set as the button's foreground image. One element = no z-order conflicts."""
-        from game.ui.screens.race_browser_dialog import RaceBrowserDialog
+        dialog = _make_dialog()
+        dialog.ui_manager = MagicMock()
+        dialog.scroll_container = MagicMock()
+        scroll_rect = MagicMock()
+        scroll_rect.width = 500
+        dialog.scroll_container.get_relative_rect.return_value = scroll_rect
+        dialog._asset_loader = MagicMock()
+        dialog._asset_loader.load_portrait_preview.return_value = None
+        dialog._asset_loader.load_flag_preview.return_value = None
+        mock_race_config.theme_id = None
 
-        with patch.object(RaceBrowserDialog, '__init__', lambda self, *args, **kwargs: None):
-            dialog = RaceBrowserDialog.__new__(RaceBrowserDialog)
-            dialog.ui_manager = MagicMock()
-            dialog.scroll_container = MagicMock()
-            scroll_rect = MagicMock()
-            scroll_rect.width = 500
-            dialog.scroll_container.get_relative_rect.return_value = scroll_rect
-            dialog.PREVIEW_SIZE = 60
-            dialog.ROW_HEIGHT = 80
-            dialog._asset_loader = MagicMock()
-            dialog._asset_loader.load_portrait_preview.return_value = None
-            dialog._asset_loader.load_flag_preview.return_value = None
-            mock_race_config.theme_id = None
+        mock_theme_mgr = MagicMock()
 
-            mock_theme_mgr = MagicMock()
+        with patch('pygame.Surface') as MockSurface:
+            with patch('pygame.font.SysFont') as MockFont:
+                mock_font = MagicMock()
+                mock_text = MagicMock()
+                mock_text.get_height.return_value = 20
+                mock_font.render.return_value = mock_text
+                MockFont.return_value = mock_font
 
-            with patch('pygame.Surface') as MockSurface:
-                with patch('pygame.font.SysFont') as MockFont:
-                    mock_font = MagicMock()
-                    mock_text = MagicMock()
-                    mock_text.get_height.return_value = 20
-                    mock_font.render.return_value = mock_text
-                    MockFont.return_value = mock_font
+                with patch('pygame_gui.elements.UIButton') as MockButton:
+                    mock_btn_instance = MockButton.return_value
+                    row = dialog._create_race_row(mock_race_config, 0, 0, mock_theme_mgr)
 
-                    with patch('pygame_gui.elements.UIButton') as MockButton:
-                        mock_btn_instance = MockButton.return_value
-                        row = dialog._create_race_row(mock_race_config, 0, 0, mock_theme_mgr)
-
-            # Row should have exactly 1 element: the button itself
-            assert len(row['elements']) == 1
-            assert row['elements'][0] == row['button']
-            # Button should have the composite surface set as its foreground image
-            assert mock_btn_instance.normal_images is not None
-            assert len(mock_btn_instance.normal_images) == 1
-            mock_btn_instance.rebuild.assert_called_once()
+        # Row should have exactly 1 element: the button itself
+        assert len(row['elements']) == 1
+        assert row['elements'][0] == row['button']
+        # Button should have the composite surface set as its foreground image
+        assert mock_btn_instance.normal_images is not None
+        assert len(mock_btn_instance.normal_images) == 1
+        mock_btn_instance.rebuild.assert_called_once()
 
     def test_dialog_cleanup_on_cancel(self, mock_race_library):
         """Dialog properly cleans up on cancel."""
-        from game.ui.screens.race_browser_dialog import RaceBrowserDialog
+        dialog = _make_dialog()
+        dialog.on_cancel_callback = MagicMock()
+        dialog.on_select_callback = MagicMock()
+        dialog.btn_cancel = MagicMock()
+        dialog.btn_load = MagicMock()
+        dialog.kill = MagicMock()
 
-        with patch.object(RaceBrowserDialog, '__init__', lambda self, *args, **kwargs: None):
-            dialog = RaceBrowserDialog.__new__(RaceBrowserDialog)
-            dialog.on_cancel_callback = MagicMock()
-            dialog.on_select_callback = MagicMock()
-            dialog.btn_cancel = MagicMock()
-            dialog.btn_load = MagicMock()
-            dialog.race_rows = []
-            dialog.selected_race = None
-            dialog.kill = MagicMock()
+        event = MagicMock()
+        event.type = 32866
+        event.ui_element = dialog.btn_cancel
 
-            event = MagicMock()
-            event.type = 32866
-            event.ui_element = dialog.btn_cancel
+        with patch('pygame_gui.elements.UIWindow.process_event', return_value=False):
+            dialog.process_event(event)
 
-            with patch('pygame_gui.elements.UIWindow.process_event', return_value=False):
-                dialog.process_event(event)
-
-            # Should call cancel callback and kill window
-            dialog.on_cancel_callback.assert_called()
-            dialog.kill.assert_called()
+        # Should call cancel callback and kill window
+        dialog.on_cancel_callback.assert_called()
+        dialog.kill.assert_called()

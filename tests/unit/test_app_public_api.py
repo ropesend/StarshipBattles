@@ -20,8 +20,13 @@ Public symbols required by external callers (launcher.py + 4 test files):
 from __future__ import annotations
 
 import inspect
+import os
 
 import pytest
+
+
+# Ensure headless-safe display driver before importing pygame in tests below.
+os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
 
 def test_main_is_callable() -> None:
@@ -36,15 +41,90 @@ def test_game_class_importable() -> None:
     assert inspect.isclass(Game)
 
 
-def test_game_init_signature() -> None:
-    """`Game.__init__` must accept `(self, args=None)` for backward compatibility."""
+def test_game_constructs_with_no_args() -> None:
+    """`Game()` must be constructable with no positional/keyword args.
+
+    PROJ-491 Task 1.4: replace the brittle ``inspect.signature`` parameter
+    introspection on ``Game.__init__`` with a behavioral assertion — the
+    public contract callers (launcher.py + several tests) depend on is that
+    ``Game()`` can be called with no arguments. We verify by attempting the
+    real construction and asserting no exception. Headless-safe pygame setup
+    mirrors ``tests/unit/systems/test_main_integration.py``.
+
+    PROJ-491 Phase 5 Task 5.1: the sibling test
+    ``test_game_constructs_with_args_positional`` exercises the
+    ``Game(args)`` positional path used by ``main()`` at
+    ``game/app.py:510-513``. BOTH calling conventions documented in the
+    module header are now exercised behaviorally.
+    """
+    import pygame
+    from unittest.mock import MagicMock, patch
+
     from game.app import Game
-    sig = inspect.signature(Game.__init__)
-    params = list(sig.parameters.values())
-    assert params[0].name == "self"
-    assert "args" in sig.parameters, "`args` parameter required by launcher.py and tests"
-    args_param = sig.parameters["args"]
-    assert args_param.default is None, "`args` must default to None"
+    from game.simulation.replay.replay_capture import reset_default_capture_sink
+    from game.strategy.services.replay_verification_coordinator import (
+        shutdown_all_coordinators,
+    )
+    from game.strategy.systems.save_game_service import SaveGameService
+
+    try:
+        if not pygame.display.get_surface():
+            pygame.display.set_mode((1440, 900), pygame.NOFRAME)
+        with patch(
+            "pygame.display.Info",
+            return_value=MagicMock(current_w=1920, current_h=1080),
+        ):
+            game = Game()
+            assert game is not None
+    finally:
+        # Drain coordinator threads / reset replay globals to mirror the
+        # cleanup fixture used elsewhere for Game-instantiation tests.
+        shutdown_all_coordinators(timeout=5.0)
+        reset_default_capture_sink()
+        SaveGameService.default().set_replay_store(None)
+
+
+def test_game_constructs_with_args_positional() -> None:
+    """`Game(args)` must be constructable with a positional args object.
+
+    PROJ-491 Phase 5 Task 5.1: production ``main()`` calls
+    ``Game(args)`` positionally with a parsed ``argparse.Namespace`` at
+    ``game/app.py:510-513``. The module header documents the
+    ``__init__(self, args=None)`` contract, so the positional-call path
+    must also be exercised behaviorally — not just ``Game()`` with no
+    args. We construct the args via the production ``parse_args()``
+    helper (the same object ``main()`` passes through), then call
+    ``Game(args)`` positionally — exactly matching the production
+    call site.
+
+    Headless-safe pygame setup + cleanup mirrors
+    ``test_game_constructs_with_no_args``.
+    """
+    import pygame
+    from unittest.mock import MagicMock, patch
+
+    from game.app import Game
+    from game.app_bootstrap import parse_args
+    from game.simulation.replay.replay_capture import reset_default_capture_sink
+    from game.strategy.services.replay_verification_coordinator import (
+        shutdown_all_coordinators,
+    )
+    from game.strategy.systems.save_game_service import SaveGameService
+
+    try:
+        if not pygame.display.get_surface():
+            pygame.display.set_mode((1440, 900), pygame.NOFRAME)
+        with patch(
+            "pygame.display.Info",
+            return_value=MagicMock(current_w=1920, current_h=1080),
+        ):
+            args = parse_args()
+            game = Game(args)
+            assert game is not None
+    finally:
+        shutdown_all_coordinators(timeout=5.0)
+        reset_default_capture_sink()
+        SaveGameService.default().set_replay_store(None)
 
 
 @pytest.mark.parametrize("method_name", [
