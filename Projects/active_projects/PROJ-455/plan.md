@@ -21,9 +21,9 @@
 
 ## Current State
 **Last Updated:** 2026-05-19
-**Active Phase:** Project complete — merging to main
-**Last Action:** End-of-project codex audit landed at `consults/20260519T141330Z_end-of-project-audit/response.md` — verdict "Ready to merge" with one non-blocking branch-hygiene caveat (3 PROJ-452 closure files riding along on `group-c`, classified by codex as "scope noise, not a production-code regression"). All 4 candidate findings rejected as false positives with file:line evidence (phase closure incomplete; production code changed; coverage incomplete; assertion inconsistency; DI update mistargeted). No verified production issues. No extra phase needed. PROJ-455 production scope is closed; Phases 1-3 all on `origin/group-c`, sharded 23433/23433.
-**Next Action:** End-of-project merge to `main` per protocol §3.
+**Active Phase:** Project complete; merged to main at 92e6fa5d2
+**Last Action:** PROJ-455 closed: merged `group-c` into `main` at SHA `92e6fa5d2` (merge commit "Merge group-c through PROJ-455 (end of project)"). Rebase of `group-c` on `main` was a no-op (no other groups had pushed since PROJ-452 merge). Codex end-of-project audit landed at `consults/20260519T141330Z_end-of-project-audit/response.md` with verdict "Ready to merge" — no verified production issues.
+**Next Action:** Advance to PROJ-458 (position 3 of 4 in Group C's serial order).
 **2026-05-19 cross-group resolution (final):** Bookkeeping fix G3-C applied — Scope section's "In" block tightened so `tests/integration/test_fms_planet_lay_mines.py` is now an explicit **READ-ONLY precedent** (the file belongs to PROJ-450 in Group A's staging-yard substrate migration). The earlier loose plan-text mentioning an optional `_planet_fms_fixtures.py` extraction is now CLOSED; copy needed scaffolding into the new test file rather than refactoring the precedent file. Group C execution-context block added to Dependencies.
 
 ## Overview

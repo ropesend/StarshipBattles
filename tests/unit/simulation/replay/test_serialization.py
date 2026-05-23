@@ -333,7 +333,7 @@ class TestModifierSerialization:
 
 class TestSerializationPrivateHelpers:
     def test_list_to_vec_returns_existing_vector2_unchanged(self):
-        from game.simulation.replay.replay_serialization import _list_to_vec
+        from game.simulation.replay.replay_serde_helpers import _list_to_vec
 
         vector = Vector2(3.0, 4.0)
 
@@ -591,7 +591,7 @@ class TestReplayRecord:
 
 class TestComponentsRegistryHash:
     def test_hash_is_stable_for_dict_components(self):
-        from game.simulation.replay.replay_serialization import (
+        from game.simulation.replay.replay_outcome_serde import (
             compute_components_registry_hash,
         )
 
@@ -623,7 +623,7 @@ class TestComponentsRegistryHash:
         assert first_hash != "sha256:unknown"
 
     def test_hash_accepts_objects_and_bad_to_dict_fallback(self):
-        from game.simulation.replay.replay_serialization import (
+        from game.simulation.replay.replay_outcome_serde import (
             compute_components_registry_hash,
         )
 
@@ -651,7 +651,7 @@ class TestComponentsRegistryHash:
         assert result != "sha256:unknown"
 
     def test_hash_returns_unknown_for_invalid_registry_shapes(self):
-        from game.simulation.replay.replay_serialization import (
+        from game.simulation.replay.replay_outcome_serde import (
             compute_components_registry_hash,
         )
 
@@ -679,7 +679,7 @@ def test_component_state_spec_round_trip_includes_max_hp_and_status():
     fields, asserts the to-dict serializer emits them, and asserts the
     from-dict reverse re-creates an equal spec.
     """
-    from game.simulation.replay.replay_serialization import (
+    from game.simulation.replay.replay_serde_helpers import (
         _component_state_from_dict,
         _component_state_to_dict,
     )

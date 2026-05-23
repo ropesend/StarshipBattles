@@ -8,23 +8,101 @@ class auto-registers the window with the ``StrategyWindowManager`` on
 construction (so ``has_modal_open()`` counts it and ``is_blocking`` blocks
 background hover/click) and auto-deregisters in ``kill()``. The registrar
 slot-cleanup ``on_close_callback`` is preserved and invoked from ``kill()``.
+
+PROJ-458 Phase 1: retrofitted with the Pattern #33 two-stage bypass-init
+shape — Stage 1 pure-Python state + ``ui_builder`` seam above the bypass
+guard, Stage 2 ``super().__init__`` + widget tree below. Production never
+sets ``bypass_init``; tests use the ``bypass_init`` context manager from
+``tests/fixtures/ui_widget_factory.py``.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable
+import logging
+from typing import TYPE_CHECKING, Callable, Protocol
 
 import pygame
-from pygame_gui.elements import UIPanel, UILabel, UIHorizontalSlider, UIButton
+from pygame_gui.elements import UILabel, UIHorizontalSlider, UIButton
 
 from game.ui.screens.strategy_modal_window import StrategyModalWindow
 from game.ui.services.game_settings import GameSettings
-import logging
 
 if TYPE_CHECKING:
     import pygame_gui
     from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 logger = logging.getLogger(__name__)
+
+
+class SettingsWindowUiBuilder(Protocol):
+    """Stage-2 widget-tree builder for :class:`SettingsWindow`.
+
+    Pattern #33 retrofit seam: production instantiates
+    :class:`DefaultSettingsWindowUiBuilder` by default; tests may
+    inject a no-op builder under ``bypass_init`` so widget
+    construction is skipped entirely.
+    """
+
+    def build(self, window: "SettingsWindow") -> None:
+        """Populate widget slots on ``window`` using the real pygame_gui
+        widget tree."""
+        ...
+
+
+class DefaultSettingsWindowUiBuilder:
+    """Real pygame_gui widget tree builder for production paths."""
+
+    def build(self, window: "SettingsWindow") -> None:
+        rect = window.rect
+        manager = window.ui_manager
+        settings = window._settings
+
+        y = 20
+        width = rect.width - 40
+
+        # --- Display Section ---
+        UILabel(
+            relative_rect=pygame.Rect(20, y, width, 25),
+            text="DISPLAY",
+            manager=manager,
+            container=window,
+        )
+        y += 35
+
+        # Background Brightness
+        UILabel(
+            relative_rect=pygame.Rect(20, y, 180, 25),
+            text="Background Brightness:",
+            manager=manager,
+            container=window,
+        )
+        window._brightness_slider = UIHorizontalSlider(
+            relative_rect=pygame.Rect(200, y, width - 260, 25),
+            start_value=settings.background_brightness,
+            value_range=(0.0, 1.0),
+            manager=manager,
+            container=window,
+        )
+        window._brightness_label = UILabel(
+            relative_rect=pygame.Rect(width - 40, y, 60, 25),
+            text=f"{settings.background_brightness:.0%}",
+            manager=manager,
+            container=window,
+        )
+        y += 50
+
+        # --- Buttons ---
+        window._btn_reset = UIButton(
+            relative_rect=pygame.Rect(20, y, 120, 30),
+            text="Reset Defaults",
+            manager=manager,
+            container=window,
+        )
+        window._btn_close = UIButton(
+            relative_rect=pygame.Rect(width - 80, y, 100, 30),
+            text="Close",
+            manager=manager,
+            container=window,
+        )
 
 
 class SettingsWindow(StrategyModalWindow):
@@ -37,6 +115,7 @@ class SettingsWindow(StrategyModalWindow):
         *,
         window_manager: "StrategyWindowManager | None",
         on_close_callback: Callable[[], None] | None = None,
+        ui_builder: SettingsWindowUiBuilder | None = None,
     ):
         """Initialize the settings window.
 
@@ -47,12 +126,19 @@ class SettingsWindow(StrategyModalWindow):
                 strategy screen). The base class registers/deregisters here.
             on_close_callback: Optional registrar slot-cleanup callback invoked
                 from ``kill()``.
+            ui_builder: Optional Stage-2 widget builder. Production
+                supplies :class:`DefaultSettingsWindowUiBuilder`; tests
+                inject a no-op builder under ``bypass_init``.
         """
-        # ---- Stage 1: cheap state ----
+        # ---- Stage 1: cheap state + ui-builder seam ----
         self.on_close_callback = on_close_callback
         self._settings = GameSettings()
+        self._ui_builder: SettingsWindowUiBuilder = (
+            ui_builder or DefaultSettingsWindowUiBuilder()
+        )
 
-        # ---- Stage 2: shell (StrategyModalWindow auto-registers) ----
+        # ---- Stage 2: shell (StrategyModalWindow auto-registers and
+        # sets ``_window_init_bypassed`` for tests under bypass_init) ----
         super().__init__(
             rect,
             manager,
@@ -64,53 +150,7 @@ class SettingsWindow(StrategyModalWindow):
         if getattr(self, "_window_init_bypassed", False):
             return
 
-        y = 20
-        width = rect.width - 40
-
-        # --- Display Section ---
-        UILabel(
-            relative_rect=pygame.Rect(20, y, width, 25),
-            text="DISPLAY",
-            manager=manager,
-            container=self,
-        )
-        y += 35
-
-        # Background Brightness
-        UILabel(
-            relative_rect=pygame.Rect(20, y, 180, 25),
-            text="Background Brightness:",
-            manager=manager,
-            container=self,
-        )
-        self._brightness_slider = UIHorizontalSlider(
-            relative_rect=pygame.Rect(200, y, width - 260, 25),
-            start_value=self._settings.background_brightness,
-            value_range=(0.0, 1.0),
-            manager=manager,
-            container=self,
-        )
-        self._brightness_label = UILabel(
-            relative_rect=pygame.Rect(width - 40, y, 60, 25),
-            text=f"{self._settings.background_brightness:.0%}",
-            manager=manager,
-            container=self,
-        )
-        y += 50
-
-        # --- Buttons ---
-        self._btn_reset = UIButton(
-            relative_rect=pygame.Rect(20, y, 120, 30),
-            text="Reset Defaults",
-            manager=manager,
-            container=self,
-        )
-        self._btn_close = UIButton(
-            relative_rect=pygame.Rect(width - 80, y, 100, 30),
-            text="Close",
-            manager=manager,
-            container=self,
-        )
+        self._ui_builder.build(self)
 
     def process_event(self, event) -> bool:
         handled = super().process_event(event)

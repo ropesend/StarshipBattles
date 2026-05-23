@@ -3,6 +3,9 @@
 Provides a single slider for setting a target surface gravity in g-units,
 with conversion to m/s^2 for storage. Includes Species Ideal (with species
 dropdown for multi-species planets), Match Current, Clear, and Apply buttons.
+
+PROJ-458 Phase 3: retrofitted with the Pattern #33 two-stage UIWindow
+bypass-init shape.
 """
 from __future__ import annotations
 
@@ -10,7 +13,7 @@ import logging
 import pygame
 import pygame_gui
 from pygame_gui.elements import UILabel, UIButton, UIHorizontalSlider
-from typing import Any, Optional, Callable, TYPE_CHECKING
+from typing import Any, Optional, Callable, Protocol, TYPE_CHECKING
 
 from game.ui.screens.species_selector_mixin import build_species_selector
 from game.ui.screens.planet_target_editor_base import PlanetTargetEditor
@@ -19,6 +22,19 @@ if TYPE_CHECKING:
     from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 logger = logging.getLogger(__name__)
+
+
+class GravityTargetEditorUiBuilder(Protocol):
+    """Stage-2 widget-tree builder for :class:`GravityTargetEditor`."""
+
+    def build(self, window: "GravityTargetEditor") -> None: ...
+
+
+class DefaultGravityTargetEditorUiBuilder:
+    """Thin wrapper around the editor's existing ``_build_ui()`` method."""
+
+    def build(self, window: "GravityTargetEditor") -> None:
+        window._build_ui()
 
 # Conversion factor
 G_TO_MS2 = 9.81
@@ -44,14 +60,9 @@ class GravityTargetEditor(PlanetTargetEditor):
         on_apply_callback: Optional[Callable[[int, Optional[float]], None]] = None,
         on_close_callback: Optional[Callable[[], None]] = None,
         race_config=None,
+        ui_builder: Optional[GravityTargetEditorUiBuilder] = None,
     ):
-        super().__init__(
-            rect, manager,
-            window_display_title=f"Gravity Target: {planet.name}",
-            resizable=False,
-            window_manager=window_manager,
-        )
-
+        # Stage 1 — pure-Python state + UI-builder seam.
         self.planet = planet
         self.on_apply_callback = on_apply_callback
         self.on_close_callback = on_close_callback
@@ -61,7 +72,26 @@ class GravityTargetEditor(PlanetTargetEditor):
 
         self.current_g = getattr(planet, 'surface_gravity', 0.0) / G_TO_MS2
 
-        self._build_ui()
+        self._ui_builder: GravityTargetEditorUiBuilder = (
+            ui_builder or DefaultGravityTargetEditorUiBuilder()
+        )
+
+        # Bypass guard — type(self) so subclass flags win.
+        if getattr(type(self), "bypass_init", False):
+            self.ui_manager = manager
+            self._window_init_bypassed = True
+            object.__setattr__(self, "_rect", rect)
+            return
+
+        # Stage 2 — heavy widget tree.
+        super().__init__(
+            rect, manager,
+            window_display_title=f"Gravity Target: {planet.name}",
+            resizable=False,
+            window_manager=window_manager,
+        )
+        self._window_init_bypassed = False
+        self._ui_builder.build(self)
 
     def _build_ui(self) -> None:
         """Build the editor UI with species selector, gravity slider, and buttons."""

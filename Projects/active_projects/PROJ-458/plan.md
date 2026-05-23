@@ -15,18 +15,18 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. SettingsWindow (109 LOC, smallest) — characterization tests + two-stage retrofit + F-C-016 docs touch | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. AtmosphereTargetEditor (273 LOC, largest of the 4 planet-target editors) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. GravityTargetEditor (220 LOC) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. WaterTargetEditor (227 LOC) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. RadiationShieldEditor (231 LOC) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 1. SettingsWindow (109 LOC, smallest) — characterization tests + two-stage retrofit + F-C-016 docs touch | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. AtmosphereTargetEditor (273 LOC, largest of the 4 planet-target editors) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. GravityTargetEditor (220 LOC) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. WaterTargetEditor (227 LOC) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. RadiationShieldEditor (231 LOC) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. docs/known-issues.md verification-stamp bump (codex-audit driven) | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-19
-**Active Phase:** Planning
-**Last Action:** Group 3 pre-execution review fixes applied (codex + subagent reviews; see consult artifacts at `AgentCoordination/Scratchpad/Consult/20260519T024637Z_group3-pre-execution-review/` and `.agent_reports/group3_pre_execution_review/`). One fix: rewrote `phase_1_checklist.md:11` objective line to drop the misleading "F-C-016 README docs touch" framing — now states "F-C-016 closure limited to `docs/known-issues.md:37` stale warning; `tests/fixtures/README.md` is already current — see Task 1.4." This removes the risk that a skimming agent reopens the already-resolved README half. Earlier 2026-05-19 codex r5 audit fixes retained: (1) F-C-016 scope narrowed to `docs/known-issues.md:37` only — `tests/fixtures/README.md:22, 310-336` is already updated at HEAD; (2) Phase 1 Task 1.2 vs Task 1.3 inconsistency resolved by ADDING kw-only `ui_builder` parameter; (3) Phase 2 pytest node selector corrected to `::TestWindowManagerSignature::test_strategy_only_windows_require_explicit_window_manager`. Existing pre-flight findings unchanged: 1 owned (F-C-017) + F-C-016 carried; all 5 target windows confirmed unretrofitted at HEAD 2026-05-19.
-**Next Action:** Run agent picks up PROJ-458 Phase 1 after PROJ-452 + PROJ-455 complete (PROJ-458 is **position 3 of 4** in Group C's serial order `452 → 455 → 458 → 460` — see Group C execution context in the Dependencies & Sibling Projects section and `Projects/active_projects/GroupC_execution_prompt.txt`).
-**Blockers:** Serial gate: PROJ-452 + PROJ-455 must complete first within Group C. No external blockers — PROJ-458 is parallel-safe with PROJ-457 (Group B) and PROJ-456 (Group B); Codex r4 confirmed, 2026-05-19 verification re-confirmed disjoint write scopes (PROJ-458 touches 5 files in `game/ui/screens/`; PROJ-457 touches different 3 UI files + `game/core/exceptions.py`).
+**Active Phase:** Project complete; merged to main at 5aaa1039b
+**Last Action:** PROJ-458 closed: merged `group-c` into `main` at SHA `5aaa1039b` (merge commit "Merge group-c through PROJ-458 (end of project)"). Rebase of `group-c` on `main` pulled in Group B's PROJ-457 merge (7 commits ahead of where Group A had left main); no conflicts. Post-rebase sharded: 23471/23471 (23463 from my 6 phases + 8 from Group B). End-of-project codex audit landed at `consults/20260519T145550Z_end-of-project-audit/response.md` with verdict "Extra phases needed... once that doc-freshness issue is fixed, I do not see a remaining production blocker." Phase 6 applied (docs/known-issues.md verification-stamp bump to 2026-05-19 + canonical format).
+**Next Action:** Advance to PROJ-460 (position 4 of 4 — FINAL — in Group C's serial order).
 **2026-05-19 cross-group resolution (final):** No edits required to PROJ-458 beyond the Group C execution-context block. Zero file overlap with Group A or Group B verified.
 
 ## Overview

@@ -3,6 +3,9 @@
 Provides a single slider for setting a target water coverage level (0.0 to 1.0),
 displayed as a percentage. Includes Species Ideal, Match Current, Clear, and
 Apply buttons.
+
+PROJ-458 Phase 4: retrofitted with the Pattern #33 two-stage UIWindow
+bypass-init shape.
 """
 from __future__ import annotations
 
@@ -10,7 +13,7 @@ import logging
 import pygame
 import pygame_gui
 from pygame_gui.elements import UILabel, UIButton, UIHorizontalSlider
-from typing import Optional, Callable, Any, TYPE_CHECKING
+from typing import Optional, Callable, Any, Protocol, TYPE_CHECKING
 
 from game.ui.screens.species_selector_mixin import build_species_selector
 from game.ui.screens.planet_target_editor_base import PlanetTargetEditor
@@ -19,6 +22,19 @@ if TYPE_CHECKING:
     from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
 logger = logging.getLogger(__name__)
+
+
+class WaterTargetEditorUiBuilder(Protocol):
+    """Stage-2 widget-tree builder for :class:`WaterTargetEditor`."""
+
+    def build(self, window: "WaterTargetEditor") -> None: ...
+
+
+class DefaultWaterTargetEditorUiBuilder:
+    """Thin wrapper around the editor's existing ``_build_ui()`` method."""
+
+    def build(self, window: "WaterTargetEditor") -> None:
+        window._build_ui()
 
 # Slider range (fraction)
 MIN_WATER = 0.0
@@ -41,6 +57,7 @@ class WaterTargetEditor(PlanetTargetEditor):
         on_apply_callback: Optional[Callable[[int, Optional[float]], None]] = None,
         on_close_callback: Optional[Callable[[], None]] = None,
         race_config=None,
+        ui_builder: Optional[WaterTargetEditorUiBuilder] = None,
     ):
         """Initialize water target editor.
 
@@ -53,14 +70,9 @@ class WaterTargetEditor(PlanetTargetEditor):
                 water_target is None when clearing, otherwise a float 0.0-1.0.
             on_close_callback: Called when window is closed.
             race_config: Optional RaceConfig; reads `preferences["water"].setpoint` (0.0 to 1.0) for the species-ideal default.
+            ui_builder: Optional Stage-2 widget builder (Pattern #33 retrofit seam).
         """
-        super().__init__(
-            rect, manager,
-            window_display_title=f"Water Target: {planet.name}",
-            resizable=False,
-            window_manager=window_manager,
-        )
-
+        # Stage 1 — pure-Python state + UI-builder seam.
         self.planet = planet
         self.on_apply_callback = on_apply_callback
         self.on_close_callback = on_close_callback
@@ -70,7 +82,26 @@ class WaterTargetEditor(PlanetTargetEditor):
 
         self.current_water = getattr(planet, 'surface_water', 0.0)
 
-        self._build_ui()
+        self._ui_builder: WaterTargetEditorUiBuilder = (
+            ui_builder or DefaultWaterTargetEditorUiBuilder()
+        )
+
+        # Bypass guard — type(self) so subclass flags win.
+        if getattr(type(self), "bypass_init", False):
+            self.ui_manager = manager
+            self._window_init_bypassed = True
+            object.__setattr__(self, "_rect", rect)
+            return
+
+        # Stage 2 — heavy widget tree.
+        super().__init__(
+            rect, manager,
+            window_display_title=f"Water Target: {planet.name}",
+            resizable=False,
+            window_manager=window_manager,
+        )
+        self._window_init_bypassed = False
+        self._ui_builder.build(self)
 
     def _build_ui(self) -> None:
         """Build the editor UI with species selector, water slider, and buttons."""

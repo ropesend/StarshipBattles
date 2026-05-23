@@ -15,17 +15,19 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. F-D-028 — extract `battle_state.py` serde into `battle_state_serde.py` | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. F-D-011 partial — extract `battle_controller.py` `start_from_spec` headless / spec-in flow | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. F-D-011 partial — split `replay_serialization.py` into `replay_capture_serde.py` + `replay_outcome_serde.py` (+ shared helpers) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Document the 10 remaining over-ceiling simulation files as next-touch | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 1. F-D-028 — extract `battle_state.py` serde into `battle_state_serde.py` | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. F-D-011 partial — extract `battle_controller.py` `start_from_spec` headless / spec-in flow | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. F-D-011 partial — split `replay_serialization.py` into `replay_capture_serde.py` + `replay_outcome_serde.py` (+ shared helpers) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Document the 10 remaining over-ceiling simulation files as next-touch | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Codex-audit bookkeeping reconciliation (manual-smoke wording) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Doc consolidation (LAST-runner: apply PROJ-457/459/460 pending blocks) | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-19
-**Active Phase:** Planning
-**Last Action:** Group 3 pre-execution review fixes applied (codex + subagent reviews; see consult artifacts at `AgentCoordination/Scratchpad/Consult/20260519T024637Z_group3-pre-execution-review/` and `.agent_reports/group3_pre_execution_review/`). Three fixes: (a) **`__init__.py` docstring refresh added to Phase 3** as new Task 3.7b — the current package docstring at `game/simulation/replay/__init__.py:12-21` references the soon-deleted `replay_serialization` module and incorrectly claims "Phase 3 adds `replay_capture.py`" (which already existed pre-PROJ-460). Phase 3 already edits this file for re-exports; the docstring touch is bundled into the same edit. (b) **LOC drift refreshed across plan.md + findings file** — the three target files have shrunk since the original 2026-05-18 scan: `battle_state.py` 832 → 715, `battle_controller.py` 831 → 682, `replay_serialization.py` 634 → 516. Cited symbol lines still resolve correctly; the practical consequence is Phase 3's "split at line 407" guidance is stale (actual `def battle_outcome_to_dict(…)` boundary is now near line 540-542). Phase 1's "drop to ~530-580 LOC" target is re-derived from the new baseline to ~430-470 LOC. (c) **Phase 3 Task 3.0 pre-flight added** — re-measure LOC and re-derive the spec/outcome boundary before Task 3.1, recording the result in `decisions.md`. Earlier 2026-05-19 codex Bucket-D fix retained: project respun from Codex r4 redesign (`AgentCoordination/Scratchpad/Consult/20260519T004841Z_stages-1-2-audit-and-redesign/response.md`) as Job 12; PROJ-444..447 archived; F-D-028 and the actionable slice of F-D-011 carried forward from `Projects/archived_projects/PROJ-447/findings/bucket_d_simulation_ai_research_engine_docs_scan.md`.
-**Next Action:** Run agent picks up PROJ-460 Phase 1 after PROJ-452 + PROJ-455 + PROJ-458 all complete (PROJ-460 is **position 4 of 4 — FINAL** in Group C's serial order `452 → 455 → 458 → 460` — see Group C execution context in the Dependencies & Sibling Projects section and `Projects/active_projects/GroupC_execution_prompt.txt`). PROJ-460 has no Phase 0; first phase is Phase 1 (battle_state serde extraction). However, Phase 3 now starts with a Task 3.0 pre-flight (re-measure LOC and re-derive the spec/outcome boundary).
-**Blockers:** Serial gate: PROJ-452 + PROJ-455 + PROJ-458 must complete first within Group C. No external blockers.
+**Active Phase:** End-of-project codex audit + doc-consolidation check (pending)
+**Last Action:** All 4 phases complete on `group-c`. Phase 4 (documentation-only) recorded the 10 over-ceiling simulation files as a next-touch ledger in `decisions.md` (LOC re-measured; none drifted below 500) and finalized the F-D-011 disposition in `findings/PROJ-460_findings.md`. No production code touched in Phase 4 (inherits Phase 3's green sharded baseline 23476/23476). PROJ-460 in-scope LOC outcomes: battle_state.py 832→612; battle_controller.py 831→728; replay_serialization.py 634→DELETED (split into 71+346+256). F-D-028 closed (Phase 1); F-D-011 actionable slice closed (Phases 1-3); F-D-011 next-touch residue documented (Phase 4).
+**Next Action:** (1) End-of-project codex audit per Group C prompt Step 4. (2) Doc-consolidation "am I last?" check: `git fetch origin main && git ls-tree --name-only origin/main Projects/active_projects/_doc_consolidation/` — if PROJ-457_pending + PROJ-459_pending + PROJ-460_pending ALL present, add a doc-consolidation phase (apply all 3 pending blocks to docs/01_ARCHITECTURE.md + docs/02_PATTERNS.md, git rm the 3 pending files). (3) Merge to main per §3. (4) End-of-Group-C report.
+**Blockers:** None.
 **2026-05-19 cross-group resolution (final):** Doc-consolidation rule added (see new "Doc consolidation rule (cross-group)" section above) — PROJ-460's doc additions for `docs/01_ARCHITECTURE.md` + `docs/02_PATTERNS.md` accumulate as a `Pending doc consolidation` block in `decisions.md` rather than landing inline. Same rule lives in PROJ-457 (Group B) and PROJ-459 (Group A). Whichever of the three finishes LAST is responsible for the single consolidated edit. Run agent checks PROJ-457 + PROJ-459 status when this project completes; if both are closed, PROJ-460 is the LAST runner and owns the consolidated doc edit. Group C execution-context block added to Dependencies.
 
 ## Overview
@@ -176,7 +178,7 @@ python Tools/test_sharded/test_sharded.py
 
 `BattleController.start_from_spec` (battle_controller.py:242-368, ~125 LOC) is the spec-in path that constructs the engine from a `BattleSpec`. It's self-contained orchestration that doesn't share state with the visual-mode controller's per-frame update logic. Clean extraction target.
 
-**Manual UI smoke test required.** This is battle-screen-adjacent code; the visual-mode start path goes through `BattleController.start_from_spec(...)`. Even with full test-suite coverage, a manual run of "start a battle in BattleSetupScreen, watch ticks happen" is the gate that catches subtle pre-tick-callback wiring drift.
+**Manual UI smoke test — SUPERSEDED by the automated replay gate (Group C prompt).** This was originally framed as battle-screen-adjacent code requiring a manual `python -m game` smoke. The Group C execution prompt explicitly supersedes it: "automated coverage is now the contract" / "There is no manual UI-smoke STOP. The replay + save_load automated suite is the contract for battle-screen regressions on PROJ-460." The Phase 2 gate was satisfied by `pytest tests/integration/replay/ tests/integration/save_load/ tests/unit/simulation/battle_controller/` = 404 passed (includes `test_headless_visual_equivalence` + `test_start_from_spec`). No manual smoke was performed.
 
 - Identify the natural extraction. Options:
   - **Option A:** Create `game/simulation/battle_controller_spec.py` with a free function `build_controller_from_spec(controller, spec, ai_factory, ship_builder=None, registry_provider=None) -> BattleServiceResult` that holds the body of `start_from_spec`. `BattleController.start_from_spec` becomes a 1-line facade.
@@ -246,6 +248,23 @@ Per Codex r4 risk callout: "Keep the other 10 over-ceiling simulation files as '
 
 **Checkpoint:** `decisions.md` carries 10 next-touch entries. PROJ-460 scope explicitly held to 3 files; the 10 others remain as next-touch.
 
+### Phase 5: Codex-audit bookkeeping reconciliation (manual-smoke wording) [Trivial]
+**Status:** Complete
+Audit-driven doc-only phase. The end-of-project codex audit
+(`consults/20260520T040703Z_end-of-project-audit/response.md`) verified "Ready to
+merge" with one low-severity bookkeeping issue: the Phase 2 manual-UI-smoke wording
+in `phase_2_checklist.md:95` + `plan.md:179` + `plan.md:286` contradicted Task 2.4's
+"SUPERSEDED" note. Phase 5 reconciles all sites. 0 LOC production change; no re-audit.
+See `phase_5_checklist.md`.
+
+### Phase 6: Doc consolidation — LAST-runner responsibility (protocol §9.2) [Simple]
+**Status:** Complete
+PROJ-460 is the LAST of PROJ-457 / PROJ-459 / PROJ-460 to finish (the §9.2 check found
+both sibling pending files already on `origin/main`). Phase 6 applies all three staged
+`_doc_consolidation/PROJ-*_pending.md` blocks to `docs/01_ARCHITECTURE.md` (+
+`docs/systems/strategy_layer.md` per PROJ-459) and `git rm`s the three pending files.
+PROJ-457's block is a no-op. See `phase_6_checklist.md`.
+
 ## Verification Checklist
 
 ### Project Start (REQUIRED)
@@ -265,11 +284,11 @@ Per Codex r4 risk callout: "Keep the other 10 over-ceiling simulation files as '
 - [ ] battle_state.py, battle_controller.py, replay_serialization.py — three Phase 1/2/3 cuts landed
 - [ ] 10 next-touch entries in `decisions.md`
 - [ ] `findings/PROJ-460_findings.md` updated with final status per finding (F-D-028 closed; F-D-011 actionable slice closed; F-D-011 next-touch ledger documented)
-- [ ] Save-load tests green (`pytest tests/integration/save_load/`)
-- [ ] Replay tests green (`pytest tests/integration/replay/`)
-- [ ] Sharded suite green
-- [ ] Manual smoke test: start a battle via BattleSetupScreen, confirm no visual-mode regression
-- [ ] Docs updated if architecture/patterns changed
+- [x] Save-load tests green (`pytest tests/integration/save_load/`)
+- [x] Replay tests green (`pytest tests/integration/replay/`)
+- [x] Sharded suite green (23476/23476)
+- [x] Manual smoke test — SUPERSEDED by the automated replay/save_load gate per the Group C prompt (no `python -m game` run; `test_headless_visual_equivalence` + the replay suite are the contract)
+- [x] Docs updated if architecture/patterns changed — staged to `_doc_consolidation/PROJ-460_pending.md` + applied in the doc-consolidation phase (PROJ-460 is the LAST runner)
 - [ ] User verified
 
 ## Audit Log
@@ -278,11 +297,20 @@ Per Codex r4 risk callout: "Keep the other 10 over-ceiling simulation files as '
 | 1 | | | |
 
 ## Completion Checklist
-- [ ] Phase 1 battle_state_serde extraction landed (F-D-028 closed)
-- [ ] Phase 2 battle_controller spec-in extraction landed (F-D-011 partial closed)
-- [ ] Phase 3 replay_serialization split landed (F-D-011 partial closed)
-- [ ] Phase 4 next-touch documentation written (10 files in decisions.md)
-- [ ] All tests passing
-- [ ] Manual UI smoke test passed
-- [ ] Audit passed (no significant issues; in particular: no "structural omnibus" scope creep into the 10 next-touch files)
+- [x] Phase 1 battle_state_serde extraction landed (F-D-028 closed)
+- [x] Phase 2 battle_controller spec-in extraction landed (F-D-011 partial closed)
+- [x] Phase 3 replay_serialization split landed (F-D-011 partial closed)
+- [x] Phase 4 next-touch documentation written (10 files in decisions.md)
+- [x] All tests passing (sharded 23476/23476; replay/save_load gates green per phase)
+- [x] Manual UI smoke test — SUPERSEDED by the automated replay gate per the Group C prompt
+- [x] Audit passed (codex end-of-project audit verdict "Ready to merge"; no scope creep into the 10 next-touch files; one low-severity bookkeeping issue addressed in Phase 5)
 - [ ] User verified
+
+## Checkpoint Log
+
+### 2026-05-19 — project-460-start (Group C final project) + phase-1-complete
+- **Done so far (Group C overall)**: PROJ-452 merged to main @9b7e3f1a0 (5 phases incl. codex-audit Phase 5); PROJ-455 merged @92e6fa5d2 (3 phases, test-only); PROJ-458 merged @5aaa1039b (6 phases incl. codex-audit Phase 6). Now in PROJ-460 (final). Phase 1 complete: battle_state serde extracted to battle_state_serde.py (832->612 LOC); 5 round-trip tests + 303-test replay/save_load gate green.
+- **Key decisions**: Option B facades (preserve classmethod call sites); delegated the ~220-LOC mechanical extraction to a general-purpose subagent then verified the diff + ran gates myself; LOC target re-derived from the live 832 baseline (plan claimed stale 715).
+- **Open threads**: Phase 1 sharded gate running. Phases 2 (battle_controller spec-in), 3 (replay split), 4 (next-touch ledger) pending. Doc-consolidation: PROJ-457_pending + PROJ-459_pending BOTH already present in _doc_consolidation/ -> PROJ-460 is likely the LAST runner; formal origin/main check at end-of-project.
+- **Next action**: commit Phase 1; start Phase 2 (re-measure battle_controller.py LOC first).
+- **Cross-group state observed**: origin/main has Group A (PROJ-449/450/451/459) and Group B (PROJ-456/454/457) all merged. No group-b branch divergence beyond what is merged. group-c is the only branch still ahead of main.

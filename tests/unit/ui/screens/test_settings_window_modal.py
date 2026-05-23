@@ -35,29 +35,25 @@ def _build_settings_through_production_path(mgr, on_close=None) -> SettingsWindo
 
     This exercises ``StrategyModalWindow.__init__``'s production side-effects
     (``register_modal(self)`` + ``is_blocking = True``) for the SettingsWindow
-    subclass specifically — bypass_init would skip exactly those. The Stage-3
-    widget block is skipped because ``_window_init_bypassed`` is left False by
-    the stub but ``manager`` is a MagicMock so widget construction would call
-    into pygame_gui; we stub the widget element classes the same way the
-    base-class test does by relying on the no-op UIWindow init and Mock manager.
+    subclass specifically — bypass_init would skip exactly those. Stage-3
+    widget construction is short-circuited by injecting a no-op ``ui_builder``
+    (PROJ-458 retrofit seam): the production path runs register_modal +
+    is_blocking via ``StrategyModalWindow.__init__`` without needing a real
+    pygame display or attempting to read ``window.rect`` from a half-initialised
+    sprite.
     """
     from unittest.mock import patch
 
     def _stub_init(self, *args, **kwargs):  # noqa: ANN001 — pygame_gui shim
         return None
 
-    # Stub the heavy UIWindow init AND the pygame_gui element classes the
-    # Stage-3 widget block constructs, so the production __init__ path runs
-    # register_modal + is_blocking without a real display.
-    with patch("pygame_gui.elements.UIWindow.__init__", _stub_init), \
-         patch("game.ui.screens.settings_window.UILabel"), \
-         patch("game.ui.screens.settings_window.UIHorizontalSlider"), \
-         patch("game.ui.screens.settings_window.UIButton"):
+    with patch("pygame_gui.elements.UIWindow.__init__", _stub_init):
         win = SettingsWindow(
             pygame.Rect(0, 0, 500, 200),
             MagicMock(name="ui_manager"),
             window_manager=mgr,
             on_close_callback=on_close,
+            ui_builder=MagicMock(spec=["build"]),
         )
     return win
 

@@ -18,11 +18,11 @@ from game.simulation.battle_runner import run_battle
 from game.simulation.battle_spec import BattleSpec
 from game.simulation.combat.telemetry import TelemetryLevel
 from game.simulation.replay import ReplaySpec
-from game.simulation.replay.replay_serialization import (
-    battle_outcome_to_dict,
+from game.simulation.replay.replay_capture_serde import (
     battle_spec_from_dict,
     battle_spec_to_dict,
 )
+from game.simulation.replay.replay_outcome_serde import battle_outcome_to_dict
 from game.simulation.systems.battle_end_conditions import TickLimitCondition
 from tests.fixtures.battle import make_minimal_spec
 from tests.fixtures.ships import create_test_ship
