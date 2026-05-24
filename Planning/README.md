@@ -11,6 +11,7 @@ Use these documents to preserve the evolving roadmap, cross-stage dependencies, 
 | 0 | `gitrepoV2/` | Clean canonical V2 repository, artifact policy, LFS rules, multi-machine workflow | Do before major Stage 1 implementation |
 | 1 | `01_information_boundary_and_fog_of_war/` | Player-visible state, sensors, intel memory, fog of war | First major game architecture stage |
 | 2 | `02_server_style_turn_packages_and_commands/` | Server-authoritative player packages and command batches | Do early, alongside Stage 1 |
+| 2.5 | `02_5_developer_cheat_test_control_plane/` | Server-authoritative cheat/debug/test scenario command surface | Plan after Stage 2 contracts; implement skeleton after the Stage 2 `GameSession` command facade exists; expand continuously |
 | 3 | `03_migration_readiness_standards/` | Coding standards that make later Rust/C++ migration easier | Start immediately and continue through all stages |
 | 4 | `04_research_integration/` | Fully integrated research, leveled tech, component generation | After visibility foundation starts |
 | 5 | `05_computer_player_ai/` | Strategic and operational AI for computer empires | After fog/research command model is stable |
@@ -30,6 +31,14 @@ Before major architecture implementation begins, create and validate a clean V2 
 
 Stage 0 is repository hygiene and workflow migration, not a game rewrite. The detailed Stage 0 plan lives in `gitrepoV2/STAGE_0_PLAN.md`, and settled user decisions live in `gitrepoV2/STAGE_0_DECISIONS.md`.
 
+## Stage 2.5 Principle
+
+Stage 2.5 adds a server-authoritative developer cheat and test control plane. It is not a client-side debug shortcut layer.
+
+Cheat/debug/scenario controls should be privileged admin commands submitted to the authoritative session, validated server-side, logged, and kept distinct from normal player orders. Developer UI, a future console, automated tests, and human-editable scenario preset files should all call the same typed command surface.
+
+Stage 2.5 depends on Stage 2's command/package boundary and Stage 3's DTO/stable-ID/serialization discipline. Visibility cheats such as omniscient view also depend on Stage 1's information-boundary model and should alter server-built player packages rather than giving hidden raw state to the UI.
+
 ## How These Documents Should Evolve
 
 Each stage folder should contain planning notes, decisions, open questions, risks, and objective acceptance criteria. Keep implementation tasks out of these files except as links or references to project tickets.
@@ -46,6 +55,7 @@ Recommended workflow:
 0. Create and validate the clean V2 repository so future work happens in the canonical repo.
 1. Build the player information boundary and fog-of-war foundation.
 2. Introduce local server-style player turn packages and command batches.
+2.5. Add the server-authoritative developer cheat/test control plane after the command facade skeleton exists.
 3. Enforce migration-readiness standards continuously.
 4. Integrate research into the empire economy, turn engine, and component/design systems.
 5. Build computer-player AI on top of the same information and command surface used by human players.
