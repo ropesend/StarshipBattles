@@ -31,6 +31,35 @@ The language choice should remain deferred until the core interfaces are stable.
 | Strict layer dependency direction | Prevents circular rewrite traps. |
 | Serialization-first thinking | Forces clear boundaries and schema discipline. |
 
+## Stage 2.5 Cheat/Admin Command Standards
+
+Stage 2.5 developer cheat, debug, and scenario controls are not exempt from migration-readiness standards.
+
+Cheat/admin commands should be treated as future server-core boundary candidates. They should be as explicit and portable as normal gameplay commands, even though they are privileged and may bypass normal game costs or limits.
+
+Rules for Stage 2.5 work:
+
+- Use explicit DTOs for `AdminCommandSubmission`, cheat command payloads, validation results, audit events, and scenario presets.
+- Use stable IDs for empires, fleets, colonies, planets, systems, ships, battles, contacts, and technologies.
+- Do not pass live Python object references through cheat command payloads.
+- Do not implement cheat controls as UI-side mutations of authoritative state.
+- Do not implement the developer console as arbitrary Python `eval` or an unrestricted script execution surface.
+- Console commands, debug buttons, scenario presets, automated tests, and future tools should all submit the same typed admin command DTOs.
+- Keep scenario presets data-driven and schema-validated before execution.
+- Keep cheat-mode state and save metadata explicit rather than hidden in globals.
+- Keep omniscient/debug visibility inside the authoritative package-building path, not the UI rendering path.
+- Add serialization round-trip tests for important cheat/admin DTOs before relying on them as long-term boundaries.
+
+Recommended boundary mindset:
+
+```text
+Human-editable preset / console text / debug UI
+  -> typed AdminCommandSubmission DTO
+  -> server-side validation and handler
+  -> authoritative state mutation or debug package mode
+  -> structured result and CheatAuditEvent
+```
+
 ## Python-Specific Guidance
 
 - Prefer dataclasses or small explicit classes for DTOs.
@@ -53,6 +82,8 @@ A likely migration path is not a single full rewrite. A better path is increment
 5. Use a serialization boundary between Python and Rust/C++ modules.
 6. Eventually move the authoritative server core if justified.
 
+Stage 2.5 admin/cheat DTOs should remain compatible with this path. If the authoritative server core later moves to Rust or C++, the cheat/test control plane should still work by sending typed command DTOs across the same boundary rather than relying on Python-only object mutation.
+
 ## Initial Non-Goals
 
 - Immediate Rust/C++ implementation.
@@ -60,6 +91,7 @@ A likely migration path is not a single full rewrite. A better path is increment
 - Rewriting every data model.
 - Premature FFI work.
 - Optimizing without profiling.
+- Implementing Stage 2.5 cheat commands as a migration-readiness shortcut.
 
 ## Design Questions
 
@@ -69,6 +101,7 @@ A likely migration path is not a single full rewrite. A better path is increment
 4. Should deterministic simulation become a hard requirement for all server-side systems?
 5. How strict should Python type checking become before migration?
 6. Should code style start avoiding Python-only idioms in portable modules?
+7. Should Stage 2.5 scenario preset schemas use JSON Schema, custom validation dataclasses, or a later shared schema system?
 
 ## Acceptance Criteria
 
@@ -79,6 +112,7 @@ This stage is active when:
 - New commands and player-facing data use stable IDs.
 - Services are testable without full application boot.
 - Migration concerns are captured without forcing premature rewrite work.
+- Stage 2.5 cheat/admin commands follow the same DTO, stable-ID, serialization, and no-UI-mutation standards as normal gameplay commands.
 
 ## Implementation Project Guidance
 
@@ -89,3 +123,4 @@ Use the existing `Projects/` system for enforcement projects. Suggested slices:
 3. Convert save/network candidates to stable ID references.
 4. Add deterministic RNG seams where needed.
 5. Add serialization round-trip tests for player package and command DTOs.
+6. Add serialization/schema tests for Stage 2.5 admin command DTOs and scenario preset files once they exist.
