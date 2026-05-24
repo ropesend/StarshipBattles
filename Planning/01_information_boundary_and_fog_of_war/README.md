@@ -36,6 +36,33 @@ The authoritative session owns the truth. Each empire owns an intelligence/memor
 
 Stars are the special case: star positions should be visible across the galaxy. The open design question is whether spectral class, name, system radius, or star image are also globally visible.
 
+## Relationship To Stage 2.5 Developer Cheat And Test Control Plane
+
+Stage 2.5 adds privileged debug visibility controls such as global omniscience, per-empire omniscience, reveal-system, reveal-galaxy, reveal-contact, and reset-intel commands.
+
+Those controls must not be implemented as UI-side hidden-state access. They should alter server-built player packages or Stage 1 intel/visibility state through the authoritative session.
+
+Stage 1 should therefore preserve a clean distinction between:
+
+```text
+Normal player-visible package mode
+  Uses regular visibility and intel rules.
+
+Debug global omniscient package mode
+  Server packages full authoritative visibility for debug use.
+
+Debug per-empire omniscient package mode
+  Server packages full visibility for selected empires only.
+```
+
+Required Stage 1 support for Stage 2.5:
+
+- Omniscient view must be reversible.
+- Global omniscience and per-empire omniscience must be independently toggleable.
+- Turning omniscience off must restore normal fog/intel package behavior.
+- The UI should never receive hidden raw truth in normal package mode.
+- Debug package modes should be explicit and should not become the default player package path.
+
 ## First Objectives
 
 1. Define the vocabulary and DTO shape for player-visible information.
@@ -46,6 +73,7 @@ Stars are the special case: star positions should be visible across the galaxy. 
 6. Add player-specific snapshots that show different results for different empires.
 7. Add stale memory/ghost contacts for fleets, planets, and other detected objects.
 8. Gradually route strategy UI reads through player-visible DTOs rather than raw game state.
+9. Keep a future debug package mode seam available for Stage 2.5 omniscient and reveal controls.
 
 ## Initial Non-Goals
 
@@ -56,6 +84,7 @@ Stars are the special case: star positions should be visible across the galaxy. 
 - Cloaking.
 - Network transport.
 - Full AI exploitation of fog.
+- Stage 2.5 cheat command implementation.
 
 ## Design Questions
 
@@ -65,10 +94,13 @@ Stars are the special case: star positions should be visible across the galaxy. 
 4. Should planets, colonies, and warp points remain permanently remembered once discovered?
 5. Should combat reveal all participants to all combatants, or only objects detected by combat sensors?
 6. Should sensor range be hex distance only, or modified by storms, nebulae, stealth, emissions, and object size?
+7. Should debug omniscience be represented as a package-building mode, a visibility resolver override, or a separate debug snapshot builder?
 
 ## Acceptance Criteria
 
 This stage is ready for implementation projects when there is a documented visibility model, per-empire intel plan, current-contact/ghost-contact plan, sensor/detectability plan, and a test strategy proving two empires can receive different views of the same galaxy.
+
+The design should also leave an explicit seam for Stage 2.5 debug visibility modes without weakening normal hidden-information guarantees.
 
 ## Implementation Project Guidance
 
