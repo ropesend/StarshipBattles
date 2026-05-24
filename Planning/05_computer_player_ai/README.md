@@ -28,9 +28,36 @@ This stage should follow or at least depend on stable planning from:
 
 - Stage 1: information boundary and fog of war.
 - Stage 2: command batches and player turn packages.
+- Stage 2.5: developer cheat/test control plane for AI debug controls and explicit cheating-AI test modes.
 - Stage 4: research integration.
 
 AI can start with partial systems, but it should not be built around hidden raw-state access that will later need to be removed.
+
+## Relationship To Stage 2.5 Developer Cheat And Test Control Plane
+
+Stage 2.5 may provide AI debug controls, but those controls should be explicit, logged, and separate from default fair AI behavior.
+
+Likely Stage 2.5 AI/debug controls:
+
+```text
+FreezeAI
+UnfreezeAI
+ForceAIPlanRecompute
+SetAIPersonality
+SetAIDifficultyDebug
+GiveAIOmniscienceForTesting
+ShowAIReasoningReport
+ForceAICommandSubmission
+DisableEmpireAI
+EnableEmpireAI
+```
+
+Rules:
+
+- Default AI should consume the same fog-limited package type as human players.
+- Cheating/omniscient AI modes are allowed for testing only, not as the default AI model.
+- AI debug controls should use the Stage 2.5 admin command surface rather than direct UI or test mutations.
+- Any AI access to authoritative hidden state should be explicit, logged, and easy to disable.
 
 ## First Objectives
 
@@ -42,6 +69,7 @@ AI can start with partial systems, but it should not be built around hidden raw-
 6. Add deterministic test hooks for AI planning.
 7. Ensure AI can function with incomplete/fogged information.
 8. Keep tactical AI separate from empire-level strategy AI.
+9. Identify narrow Stage 2.5 AI debug controls needed for fast AI playtesting.
 
 ## Initial Non-Goals
 
@@ -51,6 +79,7 @@ AI can start with partial systems, but it should not be built around hidden raw-
 - Cheating/omniscient default AI.
 - Real-time adaptive learning.
 - Full ship-design optimization.
+- Implementing the Stage 2.5 cheat command framework inside Stage 5.
 
 ## Design Questions
 
@@ -62,6 +91,7 @@ AI can start with partial systems, but it should not be built around hidden raw-
 6. Should AI orders be generated before or after human players submit their orders?
 7. Should debug AI be allowed to inspect authoritative state for testing only?
 8. Should AI maintain its own memory, or rely entirely on `EmpireIntelState`?
+9. Which AI debug controls should be implemented through Stage 2.5 first: freeze/unfreeze, reasoning report, force plan, or testing-only omniscience?
 
 ## Acceptance Criteria
 
@@ -73,6 +103,7 @@ This stage is ready for implementation projects when there is a documented plan 
 - Strategy/operational/tactical separation.
 - Difficulty and personality knobs.
 - Logging/debugging of AI decisions.
+- Stage 2.5 AI debug hooks needed for deterministic and fast playtesting.
 
 ## Implementation Project Guidance
 
@@ -85,3 +116,4 @@ Use the existing `Projects/` system for implementation. Suggested project slices
 5. Add debug decision reports.
 6. Add personality/difficulty profiles.
 7. Add tactical/operational integration hooks.
+8. Add Stage 2.5 AI debug controls only through the shared admin command surface once that framework exists.
