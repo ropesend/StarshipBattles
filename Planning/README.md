@@ -8,9 +8,10 @@ Use these documents to preserve the evolving roadmap, cross-stage dependencies, 
 
 | Stage | Folder | Theme | Recommended Status |
 |---|---|---|---|
-| 1 | `01_information_boundary_and_fog_of_war/` | Player-visible state, sensors, intel memory, fog of war | Do first |
+| 0 | `gitrepoV2/` | Clean canonical V2 repository, artifact policy, LFS rules, multi-machine workflow | Do before major Stage 1 implementation |
+| 1 | `01_information_boundary_and_fog_of_war/` | Player-visible state, sensors, intel memory, fog of war | First major game architecture stage |
 | 2 | `02_server_style_turn_packages_and_commands/` | Server-authoritative player packages and command batches | Do early, alongside Stage 1 |
-| 3 | `03_migration_readiness_standards/` | Coding standards that make later Rust/C++ migration easier | Start immediately |
+| 3 | `03_migration_readiness_standards/` | Coding standards that make later Rust/C++ migration easier | Start immediately and continue through all stages |
 | 4 | `04_research_integration/` | Fully integrated research, leveled tech, component generation | After visibility foundation starts |
 | 5 | `05_computer_player_ai/` | Strategic and operational AI for computer empires | After fog/research command model is stable |
 | 6 | `06_tactical_combat_persistence_and_formations/` | Better tactical formations, AI, and same-turn sector battle persistence | After command/intel model is designed |
@@ -22,6 +23,12 @@ Use these documents to preserve the evolving roadmap, cross-stage dependencies, 
 The authoritative game state and the player-visible game state must become separate things. The server/session should own the full truth. Each human or AI player should receive only the information their empire is entitled to know.
 
 This single principle supports fog of war, fair AI, multiplayer security, replay/debugging, and eventual migration to a faster simulation core.
+
+## Stage 0 Principle
+
+Before major architecture implementation begins, create and validate a clean V2 repository so future work happens in the canonical repo rather than in the historical `StarshipBattles` repository.
+
+Stage 0 is repository hygiene and workflow migration, not a game rewrite. The detailed Stage 0 plan lives in `gitrepoV2/STAGE_0_PLAN.md`, and settled user decisions live in `gitrepoV2/STAGE_0_DECISIONS.md`.
 
 ## How These Documents Should Evolve
 
@@ -36,6 +43,7 @@ Recommended workflow:
 
 ## Current Recommended Sequence
 
+0. Create and validate the clean V2 repository so future work happens in the canonical repo.
 1. Build the player information boundary and fog-of-war foundation.
 2. Introduce local server-style player turn packages and command batches.
 3. Enforce migration-readiness standards continuously.
