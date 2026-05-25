@@ -9,47 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import patch, MagicMock
 
 from game.ui.renderer.sprites import SpriteManager, get_default_sprite_manager, set_default_sprite_manager
-from tests.fixtures.paths import get_project_root, get_assets_dir
 
-
-class TestSprites:
-
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
-        # Initialize display for convert() calls
-        pygame.display.set_mode((1, 1), pygame.NOFRAME)
-        # Point to the project root
-        self.base_path = str(get_project_root())
-
-        yield
-
-        # Always reset singleton after test
-        set_default_sprite_manager(SpriteManager())
-
-    def test_load_sprites(self):
-        """Test loading sprites using the new directory method."""
-        components_dir = str(get_assets_dir() / "Images" / "Components")
-        if not os.path.exists(components_dir):
-            pytest.skip(f"Components directory not found at {components_dir}")
-
-        mgr = SpriteManager()
-        # Initialize display for convert() calls in load_sprites
-        if pygame.display.get_surface() is None:
-             pygame.display.set_mode((1, 1), pygame.NOFRAME)
-
-        mgr.load_sprites(self.base_path)
-
-        # Check that we loaded some sprites
-        # In the real directory we saw 467 files, indices up to 234 approx?
-        # Let's just check we have something at index 0
-        assert mgr.get_sprite(0) is not None, "Should have loaded Bridge sprite at index 0"
-        assert mgr.get_sprite(18) is not None, "Should have loaded Railgun sprite at index 18"
-
-        # Ensure we have a decent number of sprites
-        count = sum(1 for s in mgr.sprites if s is not None)
-        assert count > 10, "Should have loaded multiple sprites"
 
 class TestSpriteManagerSingletonLifecycle:
     """Test singleton pattern for SpriteManager."""
@@ -284,13 +244,27 @@ class TestSpriteManagerThreadSafety:
         for r in results[1:]:
             assert r is first, "All threads should get same singleton instance"
 
-    def test_concurrent_load_sprites_no_corruption(self):
-        """Test concurrent load_sprites() calls don't corrupt state."""
-        base_path = str(get_project_root())
-        components_dir = str(get_assets_dir() / "Images" / "Components")
-        if not os.path.exists(components_dir):
-            pytest.skip(f"Components directory not found")
+    def test_concurrent_load_sprites_no_corruption(self, tmp_path):
+        """Concurrent load_sprites() calls must not corrupt the sprites list.
 
+        Uses a synthetic component sprite directory under tmp_path so the
+        test does not depend on generated derivative files in the real
+        asset tree (those are produced by
+        game.assets.image_derivatives at startup and intentionally
+        gitignored).
+        """
+        from PIL import Image
+
+        # Build base_path/assets/Images/Components/64/<NN>Portrait_Comp_<NNN>.png.
+        # SpriteManager.load_sprites(base_path) resolves
+        # base_path/assets/Images/Components/64/ as the sprite source.
+        sprite_dir = tmp_path / "assets" / "Images" / "Components" / "64"
+        sprite_dir.mkdir(parents=True)
+        for idx in range(5):
+            png_path = sprite_dir / f"64Portrait_Comp_{idx:03d}.png"
+            Image.new("RGBA", (64, 64), (idx * 50, 0, 0, 255)).save(png_path)
+
+        base_path = str(tmp_path)
         mgr = get_default_sprite_manager()
         errors = []
 

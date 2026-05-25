@@ -255,28 +255,57 @@ class TestIssue11FlagModuleCache:
     per-open filesystem scan + smoothscale on Setup Species reopen."""
 
     def test_discover_assets_uses_module_level_cache_across_instances(
-        self, mock_race_config
+        self, mock_race_config, tmp_path, monkeypatch
     ):
         """Two gallery instances share thumbnails — second open does no
-        filesystem scan."""
+        filesystem scan.
+
+        Uses a synthetic flags tree under tmp_path so the test does not
+        depend on generated derivative files in the real asset tree
+        (the 256/ / 128/ size-folder content is produced by
+        game.assets.flag_derivatives at startup and intentionally
+        gitignored). Mirrors the tmp_path pattern used by sibling
+        ``TestIssue11FlagReads256.test_discover_assets_prefers_256_path``.
+        """
+        from unittest.mock import patch, MagicMock
+
         from game.ui.panels import race_flag_gallery as rfg
 
-        # Reset module cache so this test isn't polluted by other tests.
+        # Build a fake flags directory: one flag_<id>/ with a 256/rectangle.png
+        # (the loader's preferred-path entry; 128/ + root fallbacks not needed
+        # for this test).
+        processed = tmp_path / "Images" / "Flags" / "Processed"
+        flag_dir = processed / "flag_x"
+        (flag_dir / "256").mkdir(parents=True)
+        (flag_dir / "256" / "rectangle.png").write_bytes(b"x")
+
+        monkeypatch.setattr(rfg.Paths, "ASSET_DIR", str(tmp_path))
         rfg._clear_thumbnail_caches()
 
-        gallery_a = _bypass_init_gallery(mock_race_config)
-        first_pass = gallery_a._discover_assets()
-        assert first_pass, "fixture expects flags directory to exist with content"
+        # Stub the disk-touching pieces so the scan succeeds against the
+        # 1-byte PNG placeholder. The cache-behavior assertions don't care
+        # about pixel content.
+        def fake_load(path):
+            surf = MagicMock()
+            surf.convert_alpha.return_value = surf
+            return surf
 
-        # Patch scandir on the second build: if the cache is per-instance
-        # (bug), the second gallery will call scandir again. With the
-        # module cache fix, it must not.
-        from unittest.mock import patch
+        with patch("pygame.image.load", side_effect=fake_load), patch(
+            "pygame.transform.smoothscale", side_effect=lambda surf, _size: surf
+        ):
+            gallery_a = _bypass_init_gallery(mock_race_config)
+            rfg._clear_thumbnail_caches()  # discard the production-scan cache
+            gallery_a._asset_cache = None  # discard any instance cache from _bypass
+            first_pass = gallery_a._discover_assets()
+            assert first_pass, "first scan should populate the cache"
 
-        with patch("os.scandir") as mock_scandir:
-            gallery_b = _bypass_init_gallery(mock_race_config)
-            second_pass = gallery_b._discover_assets()
-            mock_scandir.assert_not_called()
+            # Second build: if the cache is per-instance (bug), the second
+            # gallery will call scandir again. With the module cache fix,
+            # it must not.
+            with patch("os.scandir") as mock_scandir:
+                gallery_b = _bypass_init_gallery(mock_race_config)
+                second_pass = gallery_b._discover_assets()
+                mock_scandir.assert_not_called()
 
         assert second_pass is first_pass, (
             "Second gallery instance must return the SAME cached list, "
