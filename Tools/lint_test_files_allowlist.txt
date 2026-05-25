@@ -19,6 +19,7 @@
 
 # --- Tools tests (test repo tooling, not game internals) -----------------
 tests/unit/tools/**/*.py
+tests/tooling/**/*.py
 
 # --- Combat lab service tests --------------------------------------------
 tests/unit/combat_lab/**/*.py
@@ -53,6 +54,8 @@ tests/unit/simulation/mocks/**/*.py
 # Architecture / layer-rule AST guards — they scan game/ source via the
 # filesystem rather than importing it.
 tests/regression/test_services_layer_rule.py
+tests/static_guards/test_codex_consult_skills.py
+tests/static_guards/test_codex_interagent_discussion_skills.py
 tests/static_guards/test_facade_bypass_guard.py
 tests/static_guards/test_facade_read_path_imports_guard.py
 tests/static_guards/test_facade_read_path_property_guard.py
@@ -117,3 +120,5 @@ tests/unit/research/test_research_renderer_drawing.py
 tests/unit/services/llm/test_http_block.py
 # battle-controller fixtures arrive via tests/unit/simulation/battle_controller/conftest.py
 tests/unit/simulation/battle_controller/test_utilities.py
+# compare_snapshots() / get_snapshots_dir() helpers arrive via tests/regression/modifier_ability_snapshots/conftest.py (which imports game.simulation.components.component); test pins the PROJ-499 strictness contract of those helpers
+tests/regression/modifier_ability_snapshots/test_compare_snapshots_strictness.py
