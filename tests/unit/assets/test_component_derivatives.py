@@ -40,7 +40,7 @@ def test_generates_missing_derivatives_and_manifest(tmp_path: Path) -> None:
         assert image.size == (64, 64)
 
     manifest = json.loads((root / MANIFEST_NAME).read_text(encoding="utf-8"))
-    assert "1024Portrait_Comp_001.png" in manifest["sources"]
+    assert "1024/1024Portrait_Comp_001.png" in manifest["sources"]
 
 
 def test_skips_when_hash_and_outputs_are_current(tmp_path: Path) -> None:
@@ -93,8 +93,8 @@ def test_fast_path_skips_sha_and_decode_when_mtime_unchanged(tmp_path: Path) -> 
         raise AssertionError("must not be called on the cached-hit fast path")
 
     with (
-        patch("game.assets.component_derivatives._sha256", side_effect=_boom),
-        patch("game.assets.component_derivatives.Image.open", side_effect=_boom),
+        patch("game.assets.image_derivatives._sha256", side_effect=_boom),
+        patch("game.assets.image_derivatives.Image.open", side_effect=_boom),
     ):
         second = ensure_component_derivatives(root, sizes=(64,))
 
@@ -114,15 +114,15 @@ def test_fast_path_invalidated_when_source_mtime_changes(tmp_path: Path) -> None
     os.utime(master, ns=(new_mtime, new_mtime))
 
     calls: list[Path] = []
-    from game.assets import component_derivatives as cd_module
+    from game.assets import image_derivatives as img_mod
 
-    real_sha256 = cd_module._sha256
+    real_sha256 = img_mod._sha256
 
     def _tracking_sha256(path: Path) -> str:
         calls.append(path)
         return real_sha256(path)
 
-    with patch.object(cd_module, "_sha256", side_effect=_tracking_sha256):
+    with patch.object(img_mod, "_sha256", side_effect=_tracking_sha256):
         result = ensure_component_derivatives(root, sizes=(64,))
 
     assert calls, "mtime change must invalidate the fast path and force a rehash"

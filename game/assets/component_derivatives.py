@@ -1,21 +1,26 @@
+"""Component-portrait derivative generation.
+
+Thin per-family wrapper over ``game.assets.image_derivatives``. Components
+are special in that the resolution is encoded in the filename
+(``1024Portrait_Comp_001.png`` becomes ``64Portrait_Comp_001.png``), so a
+custom ``filename_transform`` is supplied to the shared engine.
+
+See ``docs/03_CONVENTIONS.md`` for the canonical asset-derivative pattern.
+"""
 from __future__ import annotations
 
-import hashlib
-import json
-import logging
-import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Iterable
 
-from PIL import Image
-
+from game.assets.image_derivatives import (
+    DerivativeFamilySpec,
+    ensure_image_derivatives,
+)
 from game.core.paths import Paths
 
-logger = logging.getLogger(__name__)
-
 MASTER_SIZE = 1024
-DERIVATIVE_SIZES = (2048, 512, 256, 128, 64)
+DERIVATIVE_SIZES: tuple[int, ...] = (2048, 512, 256, 128, 64)
 MANIFEST_NAME = ".component_derivatives_manifest.json"
 
 
@@ -28,10 +33,32 @@ class ComponentDerivativeResult:
 
 
 def component_filename(source_name: str, size: int) -> str:
+    """Compute derivative filename for a component master at a target size.
+
+    Components encode the size in the filename: a master named
+    ``1024Portrait_Comp_007.png`` produces ``64Portrait_Comp_007.png`` at
+    the 64px derivative. Files that don't match the canonical prefix are
+    given a ``<size>_`` prefix as a defensive fallback.
+    """
     prefix = f"{MASTER_SIZE}Portrait_Comp_"
     if source_name.startswith(prefix):
         return source_name.replace(str(MASTER_SIZE), str(size), 1)
     return f"{size}_{source_name}"
+
+
+def _component_spec(
+    components_root: Path | str | None,
+    sizes: Iterable[int],
+) -> DerivativeFamilySpec:
+    return DerivativeFamilySpec(
+        name="component",
+        root_dir=components_root if components_root is not None else Paths.COMPONENTS_IMAGES_DIR,
+        master_size=MASTER_SIZE,
+        derivative_sizes=sizes,
+        master_glob="{master_size}/" + f"{MASTER_SIZE}Portrait_Comp_*.png",
+        manifest_name=MANIFEST_NAME,
+        filename_transform=component_filename,
+    )
 
 
 def ensure_component_derivatives(
@@ -39,145 +66,20 @@ def ensure_component_derivatives(
     sizes: Iterable[int] = DERIVATIVE_SIZES,
 ) -> ComponentDerivativeResult:
     """Create or refresh generated component image sizes from tracked 1024px masters."""
-    root = Path(components_root or Paths.COMPONENTS_IMAGES_DIR)
-    source_dir = root / str(MASTER_SIZE)
-    if not source_dir.exists():
-        raise FileNotFoundError(f"Component master directory not found: {source_dir}")
-
-    manifest_path = root / MANIFEST_NAME
-    manifest = _read_manifest(manifest_path)
-    manifest.setdefault("version", 1)
-    manifest.setdefault("sources", {})
-    generated = 0
-    skipped = 0
-
-    sizes_tuple = tuple(sizes)
-    source_paths = sorted(source_dir.glob(f"{MASTER_SIZE}Portrait_Comp_*.png"))
-    for source_path in source_paths:
-        source_key = source_path.name
-        source_entry = manifest["sources"].setdefault(source_key, {})
-        source_stat = source_path.stat()
-
-        if _source_fast_path_hit(root, source_path, source_entry, sizes_tuple, source_stat):
-            skipped += len(sizes_tuple)
-            continue
-
-        source_hash = _sha256(source_path)
-        previous_hash = source_entry.get("sha256")
-
-        with Image.open(source_path).convert("RGBA") as master:
-            for size in sizes_tuple:
-                target_dir = root / str(size)
-                target_path = target_dir / component_filename(source_path.name, size)
-                needs_generation = (
-                    previous_hash != source_hash
-                    or not target_path.exists()
-                    or not _has_expected_size(target_path, size)
-                )
-
-                if needs_generation:
-                    _write_derivative(master, target_path, size)
-                    generated += 1
-                else:
-                    skipped += 1
-
-        source_entry["sha256"] = source_hash
-        source_entry["size"] = source_stat.st_size
-        source_entry["mtime_ns"] = source_stat.st_mtime_ns
-
-    manifest["sizes"] = list(sizes)
-    manifest["source_dir"] = str(source_dir)
-    _write_manifest(manifest_path, manifest)
-    logger.info(
-        "Component derivatives ready: generated=%s skipped=%s sources=%s",
-        generated,
-        skipped,
-        len(source_paths),
-    )
+    spec = _component_spec(components_root, sizes)
+    if not spec.root_dir.exists():
+        raise FileNotFoundError(
+            f"Component root directory not found: {spec.root_dir}"
+        )
+    master_dir = spec.root_dir / str(MASTER_SIZE)
+    if not master_dir.exists():
+        raise FileNotFoundError(
+            f"Component master directory not found: {master_dir}"
+        )
+    result = ensure_image_derivatives(spec)
     return ComponentDerivativeResult(
-        generated=generated,
-        skipped=skipped,
-        sources=len(source_paths),
-        manifest_path=manifest_path,
+        generated=result.generated,
+        skipped=result.skipped,
+        sources=result.sources,
+        manifest_path=result.manifest_path,
     )
-
-
-def _read_manifest(path: Path) -> dict[str, Any]:
-    if not path.exists():
-        return {}
-    try:
-        result: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
-        return result
-    except json.JSONDecodeError:
-        logger.warning("Ignoring invalid component derivative manifest: %s", path)
-        return {}
-
-
-def _write_manifest(path: Path, manifest: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temp_path = path.with_suffix(path.suffix + ".tmp")
-    temp_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    os.replace(temp_path, path)
-
-
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-def _source_fast_path_hit(
-    root: Path,
-    source_path: Path,
-    source_entry: dict[str, Any],
-    sizes: tuple[int, ...],
-    source_stat: os.stat_result,
-) -> bool:
-    """Return True when the manifest already records this source up-to-date.
-
-    A hit means we can skip SHA hashing and PIL decode entirely. We trust the
-    manifest's recorded size+mtime as a proxy for "content unchanged" — a
-    cheap stat is enough; a content-changing edit (or git checkout) updates
-    mtime, which forces the slow path.
-    """
-    if not source_entry.get("sha256"):
-        return False
-    if source_entry.get("size") != source_stat.st_size:
-        return False
-    if source_entry.get("mtime_ns") != source_stat.st_mtime_ns:
-        return False
-    for size in sizes:
-        target = root / str(size) / component_filename(source_path.name, size)
-        try:
-            if target.stat().st_size <= 0:
-                return False
-        except FileNotFoundError:
-            return False
-    return True
-
-
-def _has_expected_size(path: Path, size: int) -> bool:
-    try:
-        with Image.open(path) as image:
-            return image.size == (size, size)
-    except OSError:
-        return False
-
-
-def _write_derivative(master: Image.Image, target_path: Path, size: int) -> None:
-    target_path.parent.mkdir(parents=True, exist_ok=True)
-    if master.size == (size, size):
-        derivative = master.copy()
-    else:
-        derivative = master.resize((size, size), Image.Resampling.LANCZOS)
-
-    temp_path = target_path.with_suffix(target_path.suffix + ".tmp")
-    try:
-        derivative.save(temp_path, format="PNG")
-        os.replace(temp_path, target_path)
-    finally:
-        derivative.close()
-        if temp_path.exists():
-            temp_path.unlink()

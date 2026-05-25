@@ -95,12 +95,38 @@ assets/Images/Components/_ai_recreate_enhanced_fixes_preview/*
 assets/Images/Components/_ai_recreate_enhanced_repaired_preview/*
 assets/Images/Components/_ai_recreate_enhanced_corrected_preview/*
 assets/Images/Components/.component_derivatives_manifest.json
-# Component derivative size folders (regenerated at startup; only 1024/ is tracked).
+# Image-derivative manifests + generated size folders. See
+# docs/03_CONVENTIONS.md "Image Asset Derivatives" for the pattern:
+# each family stores one master size in source control; all other sizes
+# are regenerated locally at startup by game.assets.image_derivatives.
+
+# Components: master is 1024/; all others are derivatives.
 assets/Images/Components/2048/*
 assets/Images/Components/512/*
 assets/Images/Components/256/*
 assets/Images/Components/128/*
 assets/Images/Components/64/*
+
+# Flags: master is flag_*/1024/; all others are derivatives.
+assets/Images/Flags/Processed/.flag_derivatives_manifest.json
+assets/Images/Flags/Processed/flag_*/512/*
+assets/Images/Flags/Processed/flag_*/256/*
+assets/Images/Flags/Processed/flag_*/128/*
+assets/Images/Flags/Processed/flag_*/64/*
+assets/Images/Flags/Processed/flag_*/32/*
+
+# Stars: master is 1024/; all others are derivatives.
+assets/Images/Stellar Objects/Stars/.star_derivatives_manifest.json
+assets/Images/Stellar Objects/Stars/512/*
+assets/Images/Stellar Objects/Stars/256/*
+assets/Images/Stellar Objects/Stars/128/*
+
+# Planets: master is 2048/; all others are derivatives.
+assets/Images/Stellar Objects/Planets/.planet_derivatives_manifest.json
+assets/Images/Stellar Objects/Planets/1024/*
+assets/Images/Stellar Objects/Planets/512/*
+assets/Images/Stellar Objects/Planets/256/*
+assets/Images/Stellar Objects/Planets/128/*
 
 # PROJ-314: ship-portrait regeneration manifest (per-run, ephemeral).
 Tools/regenerate_ship_portraits/last_run.json

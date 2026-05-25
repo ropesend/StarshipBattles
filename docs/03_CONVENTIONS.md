@@ -245,27 +245,37 @@ Hardcoded checkout paths are allowed only in ignored machine-local files or hist
 - Existing JPG assets should migrate to PNG only when touched or during focused asset work.
 - New code should construct PNG filenames. Temporary multi-format filters are acceptable during transition.
 
-Component images live under `assets/Images/Components/`:
+#### Image Asset Derivatives — canonical pattern
 
-| Directory | Resolution | Filename pattern | Usage |
-|---|---:|---|---|
-| `64/` | 64x64 | `64Portrait_Comp_{NNN}.png` | SpriteManager tile grid |
-| `128/` | 128x128 | `128Portrait_Comp_{NNN}.png` | Small icons |
-| `256/` | 256x256 | `256Portrait_Comp_{NNN}.png` | Medium thumbnails |
-| `512/` | 512x512 | `512Portrait_Comp_{NNN}.png` | Large thumbnails |
-| `1024/` | 1024x1024 | `1024Portrait_Comp_{NNN}.png` | Tracked source-of-truth set |
-| `2048/` | 2048x2048 | `2048Portrait_Comp_{NNN}.png` | Detail panel portraits |
+**Each multi-size image-asset family stores exactly one master size in source control. All other sizes are regenerated locally at startup.**
+
+This applies to every size-tiered image family in the repo:
+
+| Family | Root | Master | Generated sizes | Wrapper module |
+|---|---|---:|---|---|
+| Components | `assets/Images/Components/` | `1024/` | `2048`, `512`, `256`, `128`, `64` | [`game/assets/component_derivatives.py`](game/assets/component_derivatives.py) |
+| Flags | `assets/Images/Flags/Processed/` | `flag_*/1024/` | `512`, `256`, `128`, `64`, `32` (per flag) | [`game/assets/flag_derivatives.py`](game/assets/flag_derivatives.py) |
+| Stars | `assets/Images/Stellar Objects/Stars/` | `1024/` | `512`, `256`, `128` | [`game/assets/star_derivatives.py`](game/assets/star_derivatives.py) |
+| Planets | `assets/Images/Stellar Objects/Planets/` | `2048/` | `1024`, `512`, `256`, `128` | [`game/assets/planet_derivatives.py`](game/assets/planet_derivatives.py) |
+
+The shared engine lives at [`game/assets/image_derivatives.py`](game/assets/image_derivatives.py). Each per-family module is a thin wrapper that configures a `DerivativeFamilySpec` (root dir, master size, derivative sizes, master glob, optional filename transform) and calls `ensure_image_derivatives(spec)`. The bootstrap sequence calls every wrapper in turn (see [`game/app_bootstrap.py`](game/app_bootstrap.py)).
 
 Contracts:
 
-- Use `Paths.COMPONENTS_64_DIR` through `Paths.COMPONENTS_2048_DIR`.
-- `1024/` is tracked source. `2048`, `512`, `256`, `128`, and `64` are generated derivatives and must not be committed.
-- Startup runs `game.assets.component_derivatives.ensure_component_derivatives()` before component sprites load.
-- Derivative hash manifest: `assets/Images/Components/.component_derivatives_manifest.json`; it is intentionally ignored.
+- The master directory is the only tracked size for each family.
+- Derivative size directories and the per-family `.<family>_derivatives_manifest.json` hash manifest are intentionally `.gitignore`'d.
+- A SHA-256-keyed manifest fast-paths runs where the master is unchanged on disk. A content change (or a `git checkout` of new master bytes) bumps mtime, invalidates the manifest entry, and triggers regeneration of every size for that master.
+- Derivatives have the same image format and aspect as the master (square assumed). The engine resizes with `PIL.Image.Resampling.LANCZOS`.
+- Generated derivative files are written atomically (`<file>.tmp` → `os.replace`).
+- Components encode the size in the filename (`1024Portrait_Comp_001.png` → `64Portrait_Comp_001.png`); all other families keep the filename unchanged.
 
-#### Planet portraits and special stellar-object portraits
+**Adding a new size-tiered family.** Add a wrapper module that imports the engine, declares `MASTER_SIZE` / `DERIVATIVE_SIZES` / `MANIFEST_NAME`, builds a `DerivativeFamilySpec`, and exposes an `ensure_<family>_derivatives()` function. Wire that function into `app_bootstrap.py`. Add the master directory to the `Paths` registry and the derivative sizes + manifest to `.gitignore`. Add tests for the wrapper in `tests/unit/assets/`.
 
-Planet portraits live in `assets/Images/Stellar Objects/Planets/<size>/` (128/256/512/1024/2048; all tracked, hand-curated). Special stellar-object portraits (e.g., the Dyson Sphere) live in dedicated `assets/Images/Stellar Objects/<thing>/` folders (e.g., `Sphere world/Sphereworld_Portrait.png`) — one resolution per object, not size-tiered. `AssetManager.load_planet_image()` searches the planet size chain first, then falls back to the stellar-object directories listed in its `_STELLAR_OBJECT_FALLBACK_DIRS` tuple. To add a new special stellar-object portrait, place the PNG in its own `Stellar Objects/<thing>/` folder, expose a `Paths.<THING>_DIR` constant, and append it to `_STELLAR_OBJECT_FALLBACK_DIRS` — no asset duplication into the planet pool.
+**Adding a new asset to an existing family.** Drop the new master PNG into the master directory. Startup will generate the derivatives on next run. No code change needed.
+
+#### Special stellar-object portraits
+
+Special stellar-object portraits (e.g., the Dyson Sphere) live in dedicated `assets/Images/Stellar Objects/<thing>/` folders (e.g., `Sphere world/Sphereworld_Portrait.png`) — one resolution per object, not size-tiered, so they do not participate in the derivative pipeline. `AssetManager.load_planet_image()` searches the planet size chain first, then falls back to the stellar-object directories listed in its `_STELLAR_OBJECT_FALLBACK_DIRS` tuple. To add a new special stellar-object portrait, place the PNG in its own `Stellar Objects/<thing>/` folder, expose a `Paths.<THING>_DIR` constant, and append it to `_STELLAR_OBJECT_FALLBACK_DIRS` — no asset duplication into the planet pool.
 
 ## Test Conventions
 
