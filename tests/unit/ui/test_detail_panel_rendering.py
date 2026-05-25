@@ -15,30 +15,25 @@ class TestDetailPanelRendering:
 
     def setup_method(self):
         # Clear module from cache to ensure patches take effect
-        import importlib
         module_name = 'game.ui.screens.builder.detail_panel'
         if module_name in sys.modules:
             del sys.modules[module_name]
 
-        # Patch UI elements at pygame_gui level (applied before module import)
-        # NOTE: Must also patch the module-level import in detail_panel.py
-        self.uipanel_patch = patch('pygame_gui.elements.UIPanel')
-        self.uilabel_patch = patch('pygame_gui.elements.UILabel')
-        self.uiimage_patch = patch('pygame_gui.elements.UIImage')
-        self.uibutton_patch = patch('pygame_gui.elements.UIButton')
-        self.uitextbox_patch = patch('pygame_gui.elements.UITextBox')
-        self.modifier_grid_patch = patch('game.ui.panels.modifier_impact_grid.ModifierImpactGrid')
-        # Also patch at the module's namespace where UITextBox is actually used
-        self.uitextbox_module_patch = patch('game.ui.screens.builder.detail_panel.UITextBox')
-
-        self.MockUIPanel = self.uipanel_patch.start()
-        self.MockUILabel = self.uilabel_patch.start()
-        self.MockUIImage = self.uiimage_patch.start()
-        self.MockUIButton = self.uibutton_patch.start()
-        self.MockUITextBox = self.uitextbox_patch.start()
-        self.MockModifierGrid = self.modifier_grid_patch.start()
-        # Start module-level patch for UITextBox
-        self.MockUITextBoxModule = self.uitextbox_module_patch.start()
+        # PROJ-494 T2.2: collapsed 7 individual `patch(...).start()` setups
+        # into a single loop iterating a `_PATCH_TARGETS` table. `patch.stopall()`
+        # in teardown_method handles cleanup uniformly.
+        _PATCH_TARGETS = [
+            ('MockUIPanel', 'pygame_gui.elements.UIPanel'),
+            ('MockUILabel', 'pygame_gui.elements.UILabel'),
+            ('MockUIImage', 'pygame_gui.elements.UIImage'),
+            ('MockUIButton', 'pygame_gui.elements.UIButton'),
+            ('MockUITextBox', 'pygame_gui.elements.UITextBox'),
+            ('MockModifierGrid', 'game.ui.panels.modifier_impact_grid.ModifierImpactGrid'),
+            # Patch UITextBox in the module's own namespace where it's actually used.
+            ('MockUITextBoxModule', 'game.ui.screens.builder.detail_panel.UITextBox'),
+        ]
+        for attr, target in _PATCH_TARGETS:
+            setattr(self, attr, patch(target).start())
 
         # Configure mock grid
         self.mock_grid_instance = self.MockModifierGrid.return_value

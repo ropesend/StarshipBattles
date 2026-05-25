@@ -30,7 +30,7 @@ from game.strategy.combat.battle_assembly import (
 )
 
 
-def _make_fleet(
+def _make_combat_fleet(
     fleet_id: int,
     owner_id: int,
     *,
@@ -109,8 +109,8 @@ def test_build_strategy_battle_assembly_returns_typed_wrapper_around_existing_sp
     current side-channels (combat_fleets, mine_groups, owner_to_team_id,
     engine_ref).
     """
-    fleet_a = _make_fleet(1, owner_id=10, ships=(_make_ship("a-1"),))
-    fleet_b = _make_fleet(2, owner_id=20, ships=(_make_ship("b-1"),))
+    fleet_a = _make_combat_fleet(1, owner_id=10, ships=(_make_ship("a-1"),))
+    fleet_b = _make_combat_fleet(2, owner_id=20, ships=(_make_ship("b-1"),))
 
     assembly = build_strategy_battle_assembly(
         [fleet_a, fleet_b],
@@ -148,9 +148,9 @@ def test_build_strategy_battle_assembly_includes_mine_group_extension(
     from game.strategy.data.deployed_group import MineGroup
 
     hex_c = HexCoord(0, 0)
-    fleet = _make_fleet(1, owner_id=10, ships=(_make_ship("a-1"),))
+    fleet = _make_combat_fleet(1, owner_id=10, ships=(_make_ship("a-1"),))
     fleet.location = hex_c
-    enemy = _make_fleet(2, owner_id=20, ships=(_make_ship("b-1"),))
+    enemy = _make_combat_fleet(2, owner_id=20, ships=(_make_ship("b-1"),))
     enemy.location = hex_c
     mg = MineGroup(group_id=3, owner_id=10, location=hex_c)
 
@@ -196,8 +196,8 @@ def test_owner_to_team_mapping_is_single_sourced_between_assembler_and_hook(
         captured["owner_to_team_id"] = kwargs.get("owner_to_team_id")
         return original_build(self, fleets, empires, **kwargs)
 
-    fleet_a = _make_fleet(1, owner_id=10, ships=(_make_ship("a-1"),))
-    fleet_b = _make_fleet(2, owner_id=20, ships=(_make_ship("b-1"),))
+    fleet_a = _make_combat_fleet(1, owner_id=10, ships=(_make_ship("a-1"),))
+    fleet_b = _make_combat_fleet(2, owner_id=20, ships=(_make_ship("b-1"),))
 
     monkeypatched = False
     try:

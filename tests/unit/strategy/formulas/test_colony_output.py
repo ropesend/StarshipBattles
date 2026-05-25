@@ -436,19 +436,46 @@ class TestProjectedGrowthRate:
     def test_high_happiness_scales_logistic_term(self):
         """`happiness > 1` is allowed (HappinessEngine produces [0, 3]).
         Helper applies `max(0, happiness)` defensive floor but no upper
-        clamp — the rate scales linearly with happiness."""
+        clamp — the rate scales linearly with happiness.
+
+        PROJ-496 Phase 3 Task 3.2 (origin PROJ-480 T5.17): assertion now
+        pins the external formula value, not a relational ratio. Calling
+        `projected_growth_rate` twice and comparing ratios is exactly the
+        re-derivation PROJ-480 wanted replaced — both calls go through the
+        same production code, so the assertion only proves the function is
+        consistent with itself rather than with the documented formula.
+        """
         from game.strategy.formulas.colony_output import projected_growth_rate
-        pop_normal = SpeciesPopulation(race_id="human", count=10, happiness=1.0)
-        pop_giddy  = SpeciesPopulation(race_id="human", count=10, happiness=2.0)
-        planet = _planet_with_max_pop(1_000_000, populations=[pop_normal])
+        pop_giddy = SpeciesPopulation(race_id="human", count=10, happiness=2.0)
+        planet = _planet_with_max_pop(1_000_000, populations=[pop_giddy])
         race = _race("human")
         cfg = _config(food_ratio=1.0)
 
-        rate_normal = projected_growth_rate(planet, pop_normal, race, cfg)
-        rate_giddy  = projected_growth_rate(planet, pop_giddy, race, cfg)
+        rate_giddy = projected_growth_rate(planet, pop_giddy, race, cfg)
 
-        # 2.0 / 1.0 = 2.0x scaling on the (only) logistic term.
-        assert rate_giddy == pytest.approx(rate_normal * 2.0, rel=1e-9)
+        # Precomputed expected value for the fixture inputs above.
+        # Inputs:
+        #   race.base_reproduction_rate = 0.03  (RaceConfig default)
+        #   last_food_ratio             = 1.0
+        #   pop.count                   = 10
+        #   pop.happiness               = 2.0
+        #   planet.max_population       = 1_000_000  (surface_area = 1e13)
+        #   habitability(Earth-like, default-prefs race)
+        #                               ≈ 0.9364905866063465
+        #
+        # Formula (from game/strategy/formulas/colony_output.py):
+        #   effective_r     = 0.03 * 1.0                       = 0.03
+        #   K_eff           = max(1.0, 1_000_000 * 0.93649...) ≈ 936_490.59
+        #   logistic_factor = 1.0 - (10 / 936_490.59)          ≈ 0.99998932
+        #   happiness'      = max(0.0, 2.0)                    = 2.0
+        #   logistic_term   = 0.03 * 0.99998932 * 2.0          ≈ 0.05999936
+        #   decline_term    = 0.0   (food_ratio == 1.0)
+        #   rate            = logistic_term + decline_term     ≈ 0.05999935931
+        #
+        # Sanity (kept as documentation only — not used in the assertion):
+        #   rate at happiness=1.0 would be ≈ 0.02999967965, exactly half.
+        EXPECTED_RATE_GIDDY = 0.059999359310164375
+        assert rate_giddy == pytest.approx(EXPECTED_RATE_GIDDY, rel=1e-9)
 
     def test_negative_happiness_clamped_to_zero(self):
         """Defensive floor: a pre-turn pathological happiness < 0 must not

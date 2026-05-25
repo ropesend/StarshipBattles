@@ -4,13 +4,22 @@ Verifies that drop_pod transfers work correctly through the TransferValidator,
 including transfers from uncolonized planets with staging yards.
 """
 from unittest.mock import MagicMock
+from game.strategy.data.planet import Planet
 from game.strategy.validation.transfer_validator import TransferValidator
 from game.core.validation import ValidationResult
 
 
 def _make_planet(owner_id=None, staging_items=None):
-    # Use spec-free mock but delete fleet attributes so is_fleet() returns False
-    planet = MagicMock()
+    """Build a Planet-spec'd MagicMock so ``is_fleet()`` correctly returns
+    False without needing the prior ``del planet.ships`` / ``del planet.orders``
+    hack.
+
+    PROJ-491 Task 1.19: ``MagicMock(spec=Planet)`` constrains attribute access
+    to the real Planet's public surface, so accessing ``.ships`` or ``.orders``
+    on the stub raises ``AttributeError`` — the same observable behaviour the
+    old ``del`` hack provided, but without poking at the auto-mock internals.
+    """
+    planet = MagicMock(spec=Planet)
     planet.id = 1
     planet.name = "TestPlanet"
     planet.owner_id = owner_id
@@ -18,13 +27,10 @@ def _make_planet(owner_id=None, staging_items=None):
     planet.staging_yard = list(staging_items or [])
     planet.total_population = 0
     planet.populations = []
-    # Remove fleet-like attributes so is_fleet() returns False
-    del planet.ships
-    del planet.orders
     return planet
 
 
-def _make_fleet(pod_capacity=2000.0, pod_mass_used=0.0):
+def _make_drop_pod_fleet(pod_capacity=2000.0, pod_mass_used=0.0):
     fleet = MagicMock()
     fleet.id = 10
     fleet.location = MagicMock()
@@ -53,7 +59,7 @@ class TestDropPodTransferValidation:
     def test_drop_pod_load_from_uncolonized_planet_succeeds(self):
         """Loading a drop_pod from an uncolonized planet's staging yard should succeed."""
         planet = _make_planet(owner_id=None, staging_items=[_pod_item()])
-        fleet = _make_fleet(pod_capacity=2000.0)
+        fleet = _make_drop_pod_fleet(pod_capacity=2000.0)
         galaxy = _make_galaxy(fleet, planet)
 
         result = TransferValidator.validate(
@@ -65,7 +71,7 @@ class TestDropPodTransferValidation:
     def test_drop_pod_load_from_colonized_planet_succeeds(self):
         """Loading a drop_pod from a colonized planet should also succeed."""
         planet = _make_planet(owner_id=0, staging_items=[_pod_item()])
-        fleet = _make_fleet(pod_capacity=2000.0)
+        fleet = _make_drop_pod_fleet(pod_capacity=2000.0)
         galaxy = _make_galaxy(fleet, planet)
 
         result = TransferValidator.validate(
@@ -77,7 +83,7 @@ class TestDropPodTransferValidation:
     def test_drop_pod_load_empty_staging_yard_fails(self):
         """Loading a drop_pod from empty staging yard should fail."""
         planet = _make_planet(owner_id=0, staging_items=[])
-        fleet = _make_fleet(pod_capacity=2000.0)
+        fleet = _make_drop_pod_fleet(pod_capacity=2000.0)
         galaxy = _make_galaxy(fleet, planet)
 
         result = TransferValidator.validate(
@@ -90,7 +96,7 @@ class TestDropPodTransferValidation:
     def test_drop_pod_load_no_fleet_capacity_fails(self):
         """Loading a drop_pod when fleet has no pod capacity should fail."""
         planet = _make_planet(owner_id=0, staging_items=[_pod_item()])
-        fleet = _make_fleet(pod_capacity=0.0)
+        fleet = _make_drop_pod_fleet(pod_capacity=0.0)
         galaxy = _make_galaxy(fleet, planet)
 
         result = TransferValidator.validate(
@@ -103,7 +109,7 @@ class TestDropPodTransferValidation:
     def test_drop_pod_load_fleet_full_fails(self):
         """Loading when fleet pod storage is full should fail."""
         planet = _make_planet(owner_id=0, staging_items=[_pod_item()])
-        fleet = _make_fleet(pod_capacity=1000.0, pod_mass_used=1000.0)
+        fleet = _make_drop_pod_fleet(pod_capacity=1000.0, pod_mass_used=1000.0)
         galaxy = _make_galaxy(fleet, planet)
 
         result = TransferValidator.validate(
@@ -116,7 +122,7 @@ class TestDropPodTransferValidation:
     def test_regular_cargo_from_uncolonized_planet_still_fails(self):
         """Non-drop_pod transfers from uncolonized planets should still fail."""
         planet = _make_planet(owner_id=None)
-        fleet = _make_fleet()
+        fleet = _make_drop_pod_fleet()
         galaxy = _make_galaxy(fleet, planet)
 
         result = TransferValidator.validate(
@@ -129,7 +135,7 @@ class TestDropPodTransferValidation:
         """Unloading a drop_pod to a planet should succeed."""
         from game.strategy.data.bay_inventory import BayInventory, DropPod
         planet = _make_planet(owner_id=0)
-        fleet = _make_fleet()
+        fleet = _make_drop_pod_fleet()
         fleet.ships = [MagicMock()]
         pod = _pod_item()
         fleet.ships[0].bay_inventory = BayInventory(bay=[], pods=[DropPod(
@@ -192,7 +198,7 @@ class TestDropPodTransferAgainstRealPlanet:
         assert isinstance(real_planet.staging_yard, tuple)
         assert len(real_planet.staging_yard) == 1
 
-        fleet = _make_fleet(pod_capacity=2000.0)
+        fleet = _make_drop_pod_fleet(pod_capacity=2000.0)
         galaxy = _make_galaxy(fleet, real_planet)
 
         result = TransferValidator.validate(

@@ -97,8 +97,10 @@ def _make_colony(facilities=None):
 from .conftest import make_mock_empire as _make_mock_empire_canonical  # noqa: E402
 
 
-def _make_empire(colonies=None):
-    return _make_mock_empire_canonical(empire_id=0, colonies=colonies)
+def _make_empire(colonies=None, fleets=None, empire_id=0):
+    return _make_mock_empire_canonical(
+        empire_id=empire_id, colonies=colonies, fleets=fleets
+    )
 
 
 # ===========================================================================
@@ -338,7 +340,7 @@ def _make_mock_ship(
     return ship
 
 
-def _make_mock_fleet(owner_id: int = 0, location=None, ships=None):
+def _make_resupply_fleet(owner_id: int = 0, location=None, ships=None):
     """Create a mock Fleet with specified ships and location."""
     fleet = MagicMock()
     fleet.id = 1
@@ -395,7 +397,7 @@ class TestFuelDistributionEdges:
         registries = _make_mock_registries()
         engine = ResupplyEngine(registries=registries)
         ship = _make_mock_ship(combat_capable=False)
-        fleet = _make_mock_fleet(ships=[ship])
+        fleet = _make_resupply_fleet(ships=[ship])
 
         distribution = engine._calculate_fuel_distribution(fleet, available_fuel=100.0)
 
@@ -410,7 +412,7 @@ class TestFuelDistributionEdges:
             current_fuel=0.0,
             fuel_cost_per_hex=0.0,
         )
-        fleet = _make_mock_fleet(ships=[ship])
+        fleet = _make_resupply_fleet(ships=[ship])
 
         distribution = engine._calculate_fuel_distribution(fleet, available_fuel=100.0)
 
@@ -425,7 +427,7 @@ class TestFuelDistributionEdges:
             current_fuel=0.0,
             fuel_cost_per_hex=5.0,
         )
-        fleet = _make_mock_fleet(ships=[ship])
+        fleet = _make_resupply_fleet(ships=[ship])
 
         distribution = engine._calculate_fuel_distribution(fleet, available_fuel=0.0)
 
@@ -444,7 +446,7 @@ class TestFuelDistributionEdges:
             current_fuel=0.0,
             fuel_cost_per_hex=10.0,
         )
-        fleet = _make_mock_fleet(ships=[capped, roomy])
+        fleet = _make_resupply_fleet(ships=[capped, roomy])
 
         distribution = engine._calculate_fuel_distribution(fleet, available_fuel=200.0)
 
@@ -464,7 +466,7 @@ class TestFuelDistributionEdges:
             current_fuel=0.0,
             fuel_cost_per_hex=10.0,
         )
-        fleet = _make_mock_fleet(ships=[full, empty])
+        fleet = _make_resupply_fleet(ships=[full, empty])
 
         distribution = engine._calculate_fuel_distribution(fleet, available_fuel=100.0)
 
@@ -547,7 +549,7 @@ class TestFleetResupply:
         # Ship with half fuel
         ship = _make_mock_ship(fuel_capacity=500.0, current_fuel=250.0, fuel_cost_per_hex=5.0)
         location = HexCoord(3, 4)
-        fleet = _make_mock_fleet(owner_id=0, location=location, ships=[ship])
+        fleet = _make_resupply_fleet(owner_id=0, location=location, ships=[ship])
 
         # Planet with fuel at same location
         facility = _make_fuel_facility(consumable_levels={"fuel": 300.0})
@@ -557,8 +559,7 @@ class TestFleetResupply:
 
         galaxy = _make_mock_galaxy(planets_at_hex={location: [planet]})
 
-        empire = MagicMock()
-        empire.fleets = [fleet]
+        empire = _make_empire(fleets=[fleet])
 
         events = engine.process_fleet_resupply(tick=1, empires=[empire], galaxy=galaxy)
 
@@ -575,7 +576,7 @@ class TestFleetResupply:
 
         ship = _make_mock_ship(fuel_capacity=500.0, current_fuel=250.0)
         fleet_loc = HexCoord(3, 4)
-        fleet = _make_mock_fleet(owner_id=0, location=fleet_loc, ships=[ship])
+        fleet = _make_resupply_fleet(owner_id=0, location=fleet_loc, ships=[ship])
 
         # Planet at different location
         facility = _make_fuel_facility(consumable_levels={"fuel": 300.0})
@@ -586,8 +587,7 @@ class TestFleetResupply:
         planet_loc = HexCoord(10, 10)
         galaxy = _make_mock_galaxy(planets_at_hex={planet_loc: [planet]})
 
-        empire = MagicMock()
-        empire.fleets = [fleet]
+        empire = _make_empire(fleets=[fleet])
 
         events = engine.process_fleet_resupply(tick=1, empires=[empire], galaxy=galaxy)
 
@@ -604,11 +604,11 @@ class TestFleetResupply:
 
         # Owner's fleet (empire 0)
         owner_ship = _make_mock_ship(fuel_capacity=500.0, current_fuel=200.0)
-        owner_fleet = _make_mock_fleet(owner_id=0, location=location, ships=[owner_ship])
+        owner_fleet = _make_resupply_fleet(owner_id=0, location=location, ships=[owner_ship])
 
         # Other empire's fleet (empire 1)
         other_ship = _make_mock_ship(fuel_capacity=500.0, current_fuel=200.0)
-        other_fleet = _make_mock_fleet(owner_id=1, location=location, ships=[other_ship])
+        other_fleet = _make_resupply_fleet(owner_id=1, location=location, ships=[other_ship])
 
         # Planet owned by empire 0
         facility = _make_fuel_facility(consumable_levels={"fuel": 300.0})
@@ -618,10 +618,8 @@ class TestFleetResupply:
 
         galaxy = _make_mock_galaxy(planets_at_hex={location: [planet]})
 
-        empire_0 = MagicMock()
-        empire_0.fleets = [owner_fleet]
-        empire_1 = MagicMock()
-        empire_1.fleets = [other_fleet]
+        empire_0 = _make_empire(fleets=[owner_fleet], empire_id=0)
+        empire_1 = _make_empire(fleets=[other_fleet], empire_id=1)
 
         events = engine.process_fleet_resupply(
             tick=1, empires=[empire_0, empire_1], galaxy=galaxy
@@ -654,7 +652,7 @@ class TestFleetResupply:
         # Ship B: low consumption, empty (cost=2/hex, capacity=200, current=0)
         ship_b = _make_mock_ship(fuel_capacity=200.0, current_fuel=0.0, fuel_cost_per_hex=2.0)
 
-        fleet = _make_mock_fleet(owner_id=0, location=location, ships=[ship_a, ship_b])
+        fleet = _make_resupply_fleet(owner_id=0, location=location, ships=[ship_a, ship_b])
 
         facility = _make_fuel_facility(consumable_levels={"fuel": 240.0})
         planet = MagicMock()
@@ -663,8 +661,7 @@ class TestFleetResupply:
 
         galaxy = _make_mock_galaxy(planets_at_hex={location: [planet]})
 
-        empire = MagicMock()
-        empire.fleets = [fleet]
+        empire = _make_empire(fleets=[fleet])
 
         engine.process_fleet_resupply(tick=1, empires=[empire], galaxy=galaxy)
 
@@ -696,7 +693,7 @@ class TestFleetResupply:
             fuel_capacity=1000.0, current_fuel=0.0, fuel_cost_per_hex=1.0
         )
 
-        fleet = _make_mock_fleet(
+        fleet = _make_resupply_fleet(
             owner_id=0, location=location, ships=[combat_ship, tanker]
         )
 
@@ -710,8 +707,7 @@ class TestFleetResupply:
 
         galaxy = _make_mock_galaxy(planets_at_hex={location: [planet]})
 
-        empire = MagicMock()
-        empire.fleets = [fleet]
+        empire = _make_empire(fleets=[fleet])
 
         events = engine.process_fleet_resupply(tick=1, empires=[empire], galaxy=galaxy)
 
@@ -730,7 +726,7 @@ class TestFleetResupply:
 
         location = HexCoord(0, 0)
         ship = _make_mock_ship(fuel_capacity=500.0, current_fuel=200.0)
-        fleet = _make_mock_fleet(owner_id=0, location=location, ships=[ship])
+        fleet = _make_resupply_fleet(owner_id=0, location=location, ships=[ship])
 
         # Empty facility
         facility = _make_fuel_facility(consumable_levels={"fuel": 0.0})
@@ -740,8 +736,7 @@ class TestFleetResupply:
 
         galaxy = _make_mock_galaxy(planets_at_hex={location: [planet]})
 
-        empire = MagicMock()
-        empire.fleets = [fleet]
+        empire = _make_empire(fleets=[fleet])
 
         events = engine.process_fleet_resupply(tick=1, empires=[empire], galaxy=galaxy)
 

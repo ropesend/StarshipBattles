@@ -32,12 +32,12 @@ from game.strategy.engine.conflict_resolution_engine import (
 )
 
 
-# PROJ-479 Task 5.1 (DUP-001): _make_fleet moved to tests/conftest.py.
+# PROJ-479 Task 5.1 (DUP-001): _make_conflict_round_fleet moved to tests/conftest.py.
 # Local wrapper preserves the `orders=None` kwarg semantic.
 from tests.conftest import _make_mock_fleet as _make_mock_fleet_canonical  # noqa: E402
 
 
-def _make_fleet(fleet_id: int, owner_id: int, location, speed: float, orders=None):
+def _make_conflict_round_fleet(fleet_id: int, owner_id: int, location, speed: float, orders=None):
     """Local thin wrapper delegating to canonical conftest helper.
     Preserves the `orders=None → []` semantic this file used."""
     return _make_mock_fleet_canonical(
@@ -65,7 +65,7 @@ def test_opportunity_tick_with_no_orders_triggers_combat():
     combat must fire. The fleet is "staying put" by inaction.
     """
     engine = _make_engine()
-    fleet = _make_fleet(
+    fleet = _make_conflict_round_fleet(
         fleet_id=1, owner_id=0, location=HexCoord(0, 0), speed=5, orders=[]
     )
 
@@ -83,7 +83,7 @@ def test_opportunity_tick_with_action_order_triggers_combat():
     """
     engine = _make_engine()
     colonize = Order(order_type=OrderType.COLONIZE, target=HexCoord(0, 0))
-    fleet = _make_fleet(
+    fleet = _make_conflict_round_fleet(
         fleet_id=1, owner_id=0, location=HexCoord(0, 0), speed=5,
         orders=[colonize],
     )
@@ -98,7 +98,7 @@ def test_opportunity_tick_when_fleet_leaves_skips_combat():
     combat does NOT fire. The fleet exercised its movement option.
     """
     engine = _make_engine()
-    fleet = _make_fleet(
+    fleet = _make_conflict_round_fleet(
         fleet_id=1, owner_id=0, location=HexCoord(1, 0), speed=5,
     )
 
@@ -113,7 +113,7 @@ def test_non_opportunity_tick_skips_combat():
     combat does NOT fire. The fleet has no movement opportunity this tick.
     """
     engine = _make_engine()
-    fleet = _make_fleet(
+    fleet = _make_conflict_round_fleet(
         fleet_id=1, owner_id=0, location=HexCoord(0, 0), speed=5,
     )
 
@@ -131,7 +131,7 @@ def test_blocked_pathfind_still_triggers_combat():
     """
     engine = _make_engine()
     blocked_move = Order(order_type=OrderType.MOVE, target=HexCoord(99, 99))
-    fleet = _make_fleet(
+    fleet = _make_conflict_round_fleet(
         fleet_id=1, owner_id=0, location=HexCoord(0, 0), speed=5,
         orders=[blocked_move],
     )

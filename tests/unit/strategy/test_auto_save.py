@@ -1,36 +1,45 @@
 """
 Tests for auto-save functionality after turn processing.
-"""
-import pytest
-import tempfile
-import shutil
-import os
-from unittest.mock import MagicMock
 
-from game.strategy.engine.game_config import GameConfig
+PROJ-492 Phase 3 (HLP-005): rewritten to drop ``os.chdir(tmpdir)``. The
+production contract is ``Paths.SAVES_DIR``, not cwd
+(``game/strategy/systems/save_game_service.py:107-121``). The canonical
+``setup_tmpdir`` fixture lives at
+``tests/unit/strategy/save_game_service/conftest.py`` and is imported here;
+pytest registers fixtures imported into test modules at module level.
+"""
+import os
+import pytest
+
 from game.strategy.systems.save_game_service import SaveGameService
 
 
 # PROJ-479 Task 6.1 (HLP-001): MockGameSession moved to
 # tests/unit/strategy/save_game_service/conftest.py. The canonical version
 # was extended with the `save_path` kwarg this file uses.
-from tests.unit.strategy.save_game_service.conftest import (  # noqa: E402
+# PROJ-492 Phase 3 (HLP-005): also pull in the canonical ``setup_tmpdir``
+# fixture (imported here, then re-exported through a thin autouse wrapper
+# below so existing tests inherit the patch without parameter changes).
+from tests.unit.strategy.save_game_service.conftest import (  # noqa: E402,F401
     MockGameSession,
+    setup_tmpdir as _setup_tmpdir,
 )
+
+
+@pytest.fixture(autouse=True)
+def setup_tmpdir(_setup_tmpdir):
+    """Autouse wrapper around the canonical ``setup_tmpdir`` fixture.
+
+    Depends on the imported canonical fixture (registered in this module's
+    namespace under the alias ``_setup_tmpdir``) and re-yields the value
+    so tests in this file remain free of ``os.chdir`` and instead rely on
+    the production ``Paths.SAVES_DIR`` contract.
+    """
+    yield _setup_tmpdir
 
 
 class TestAutoSave:
     """Tests for auto-save after turn processing."""
-
-    @pytest.fixture(autouse=True)
-    def setup_tmpdir(self):
-        """Create temporary directory for tests."""
-        tmpdir = tempfile.mkdtemp()
-        original_cwd = os.getcwd()
-        os.chdir(tmpdir)
-        yield tmpdir
-        os.chdir(original_cwd)
-        shutil.rmtree(tmpdir)
 
     def test_turn_processing_triggers_auto_save(self):
         """Processing turn automatically saves new turn file."""

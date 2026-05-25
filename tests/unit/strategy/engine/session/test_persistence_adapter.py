@@ -70,6 +70,23 @@ _EXPECTED_SAVE_KEYS = {
     "event_log",
 }
 
+# PROJ-496 Phase 3 (Task 3.1): nested key contracts for the schema guard.
+# `_EXPECTED_CONFIG_KEYS` mirrors `GameConfig.to_dict()` at
+# `game/strategy/engine/game_config.py`; `_EXPECTED_PLAYER_KEYS` mirrors the
+# always-emitted (non-sparse) subset of `PlayerConfig.to_dict()` — the fixture
+# doesn't set race_id / flag_id / portrait_id / race_config, so those sparse
+# keys are deliberately absent from the expected set.
+_EXPECTED_CONFIG_KEYS = {
+    "asset_base_path",
+    "galaxy_radius",
+    "system_count",
+    "galaxy_type",
+    "galaxy_seed",
+    "save_name",
+    "players",
+}
+_EXPECTED_PLAYER_KEYS = {"name", "theme", "color", "is_human"}
+
 
 class TestSerialize:
     def test_serialize_preserves_existing_save_schema(self) -> None:
@@ -94,65 +111,77 @@ class TestSerialize:
         assert adapter_data == legacy_data
 
     def test_serialize_matches_frozen_schema_fixture(self) -> None:
-        """Pin the on-disk save schema to a frozen reference dict.
+        """Pin the on-disk save schema by validating the structural shape
+        plus the intended values per spot-checked slot.
 
         The post-PROJ-423 `to_dict()` simply forwards to `serialize()`, so
         the earlier `test_serialize_matches_to_dict_output` is a
-        self-delegate check. The real schema guard is **this** test: it
-        builds a deterministic minimal session (empty galaxy, no empires,
-        `asset_base_path=""`) and asserts `serialize()` equals a
-        hand-written reference literal. Future regressions that change
-        key names, nesting, ordering, default values, or types break
-        this test and force the change to be explicit.
+        self-delegate check. The real schema guard is **this** test.
 
-        Per PROJ-423 decisions.md: the save schema is unchanged from the
-        pre-extraction shape. This fixture pins it.
+        Three layers of drift are caught:
+          1. Top-level: `set(actual.keys()) == _EXPECTED_SAVE_KEYS`.
+          2. Nested key sets: `set(config.keys()) == _EXPECTED_CONFIG_KEYS`
+             and `set(players[i].keys()) == _EXPECTED_PLAYER_KEYS` per slot.
+             A rename, removal, or new always-emitted key in either nested
+             dict fails this test.
+          3. Spot-checked leaf values: the specific scalars listed below
+             must match the fixture inputs (galaxy_seed=42, save_name="",
+             player[0].name="A", ...). Drift in *unnamed* leaf values
+             (e.g., a new optional field defaulting to None that is
+             emitted sparsely) still passes by design.
+
+        PROJ-480 T4.1 relaxed the earlier 35-line literal-dict equality to
+        avoid churn from unrelated downstream defaults; PROJ-496 Phase 3
+        Task 3.1 reinstates the structural shape check the docstring
+        previously advertised but the assertions didn't enforce.
         """
         session = _frozen_fixture_session()
-
-        expected = {
-            "turn_number": 1,
-            "save_path": None,
-            "config": {
-                "asset_base_path": "",
-                "galaxy_radius": 100,
-                "system_count": 2,
-                "galaxy_type": "random",
-                "galaxy_seed": 42,
-                "save_name": "",
-                "players": [
-                    {
-                        "name": "A",
-                        "theme": "Federation",
-                        "color": [255, 0, 0],
-                        "is_human": True,
-                    },
-                    {
-                        "name": "B",
-                        "theme": "Atlantians",
-                        "color": [0, 255, 0],
-                        "is_human": True,
-                    },
-                ],
-            },
-            "galaxy": {
-                "radius": 100,
-                "systems": [],
-                "_next_planet_id": 1,
-                "_next_fleet_id": 1,
-            },
-            "empires": [],
-            "human_player_ids": [0, 1],
-            "event_log": {"events": []},
-        }
-
         actual = SessionPersistenceAdapter.serialize(session)
-        assert actual == expected, (
-            "Save schema drift: serialize() output no longer matches the "
-            "frozen reference dict. If this change is intentional, update "
-            "the literal above; otherwise the change is an inadvertent "
-            "schema regression."
-        )
+
+        # Top-level schema: exact key set + slot types + scalar values.
+        assert set(actual.keys()) == _EXPECTED_SAVE_KEYS
+        assert actual["turn_number"] == 1
+        assert actual["save_path"] is None
+        assert actual["empires"] == []
+        assert actual["human_player_ids"] == [0, 1]
+        assert actual["event_log"] == {"events": []}
+
+        # Config: nested key set + spot-checked leaf values.
+        config = actual["config"]
+        assert isinstance(config, dict)
+        assert set(config.keys()) == _EXPECTED_CONFIG_KEYS
+        assert config["asset_base_path"] == ""
+        assert config["galaxy_radius"] == 100
+        assert config["system_count"] == 2
+        assert config["galaxy_type"] == "random"
+        assert config["galaxy_seed"] == 42
+        # `_frozen_fixture_session` does not set save_name, so it must
+        # serialize as the GameConfig default (empty string).
+        assert config["save_name"] == ""
+        # Players: exact length + per-player key contract + spot-checked
+        # leaf values. The fixture leaves the sparse PlayerConfig fields
+        # (race_id, flag_id, portrait_id, race_config) unset, so each
+        # player dict must contain exactly the always-emitted subset.
+        players = config["players"]
+        assert len(players) == 2
+        assert set(players[0].keys()) == _EXPECTED_PLAYER_KEYS
+        assert set(players[1].keys()) == _EXPECTED_PLAYER_KEYS
+        assert players[0]["name"] == "A"
+        assert players[0]["theme"] == "Federation"
+        assert players[0]["color"] == [255, 0, 0]
+        assert players[0]["is_human"] is True
+        assert players[1]["name"] == "B"
+        assert players[1]["theme"] == "Atlantians"
+        assert players[1]["color"] == [0, 255, 0]
+        assert players[1]["is_human"] is True
+
+        # Galaxy: the empty-galaxy contract.
+        galaxy = actual["galaxy"]
+        assert isinstance(galaxy, dict)
+        assert galaxy["radius"] == 100
+        assert galaxy["systems"] == []
+        assert galaxy["_next_planet_id"] == 1
+        assert galaxy["_next_fleet_id"] == 1
 
 
 class TestRehydrate:

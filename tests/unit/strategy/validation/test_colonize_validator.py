@@ -11,18 +11,11 @@ and the legacy ``carried_items`` list so tests that assert on either
 shape keep working until the broader test sweep (sub-phase 1e).
 """
 import pytest
-from enum import Enum
 from unittest.mock import MagicMock
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.bay_inventory import BayInventory, DropPod
-
-
-class MockPlanetType(Enum):
-    """Shared mock planet type enum for colonize validator tests."""
-    CONTINENTAL = "CONTINENTAL"
-    ICE_DWARF = "ICE_DWARF"
-    DYSON_SPHERE = "DYSON_SPHERE"
+from tests.fixtures.colonization_fixtures import MockPlanetType
 
 
 # Helper to create a standard drop pod item dict
@@ -404,7 +397,6 @@ class TestColonizeValidatorColonyPods:
     @pytest.fixture
     def mock_planet_ice_dwarf(self):
         """Create a mock ICE_DWARF planet."""
-        from enum import Enum
         from game.strategy.data.planet import Planet
 
         # PROJ-193: Use spec=Planet but set all IPlanet protocol properties
@@ -429,7 +421,6 @@ class TestColonizeValidatorColonyPods:
     @pytest.fixture
     def mock_planet_continental(self):
         """Create a mock CONTINENTAL planet."""
-        from enum import Enum
         from game.strategy.data.planet import Planet
 
         # PROJ-193: Use spec=Planet but set all IPlanet protocol properties

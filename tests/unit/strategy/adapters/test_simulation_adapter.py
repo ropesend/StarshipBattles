@@ -30,7 +30,7 @@ class _MockShipInstance:
         return ship
 
 
-def _make_fleet(fleet_id, ships):
+def _make_adapter_fleet(fleet_id, ships):
     """Build a fleet stand-in that satisfies the compiler's reads."""
     fleet = MagicMock()
     fleet.id = fleet_id
@@ -70,8 +70,8 @@ class TestSimulationBattleResolverBehavior:
         from game.strategy.interfaces.battle_resolver import BattleResult
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
-        fleet1 = _make_fleet(1, [_MockShipInstance("a")])
-        fleet2 = _make_fleet(2, [_MockShipInstance("b")])
+        fleet1 = _make_adapter_fleet(1, [_MockShipInstance("a")])
+        fleet2 = _make_adapter_fleet(2, [_MockShipInstance("b")])
 
         with patch(
             "game.strategy.adapters.simulation_adapter.run_battle",
@@ -87,8 +87,8 @@ class TestSimulationBattleResolverBehavior:
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
-        fleet1 = _make_fleet(1, [_MockShipInstance("a")])
-        fleet2 = _make_fleet(2, [_MockShipInstance("b")])
+        fleet1 = _make_adapter_fleet(1, [_MockShipInstance("a")])
+        fleet2 = _make_adapter_fleet(2, [_MockShipInstance("b")])
 
         seen_spec = {}
 
@@ -109,8 +109,8 @@ class TestSimulationBattleResolverBehavior:
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
-        fleet1 = _make_fleet(1, [_MockShipInstance("a1")])
-        fleet2 = _make_fleet(2, [_MockShipInstance("b1")])
+        fleet1 = _make_adapter_fleet(1, [_MockShipInstance("a1")])
+        fleet2 = _make_adapter_fleet(2, [_MockShipInstance("b1")])
 
         seen_spec = {}
 
@@ -134,8 +134,8 @@ class TestSimulationBattleResolverBehavior:
         from game.strategy.interfaces.battle_resolver import BattleResult
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
-        fleet1 = _make_fleet(1, [_MockShipInstance("a")])
-        fleet2 = _make_fleet(2, [])
+        fleet1 = _make_adapter_fleet(1, [_MockShipInstance("a")])
+        fleet2 = _make_adapter_fleet(2, [])
 
         result = resolver.resolve_battle([fleet1, fleet2])
 
@@ -148,8 +148,8 @@ class TestSimulationBattleResolverBehavior:
         from game.strategy.interfaces.battle_resolver import BattleResult
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
-        fleet1 = _make_fleet(1, [])
-        fleet2 = _make_fleet(2, [])
+        fleet1 = _make_adapter_fleet(1, [])
+        fleet2 = _make_adapter_fleet(2, [])
 
         result = resolver.resolve_battle([fleet1, fleet2])
 
@@ -162,8 +162,8 @@ class TestSimulationBattleResolverBehavior:
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
-        fleet1 = _make_fleet(1, [])
-        fleet2 = _make_fleet(2, [_MockShipInstance("b")])
+        fleet1 = _make_adapter_fleet(1, [])
+        fleet2 = _make_adapter_fleet(2, [_MockShipInstance("b")])
 
         with patch(
             "game.strategy.adapters.simulation_adapter.run_battle",
@@ -177,8 +177,8 @@ class TestSimulationBattleResolverBehavior:
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
-        fleet1 = _make_fleet(1, [_MockShipInstance("a")])
-        fleet2 = _make_fleet(2, [_MockShipInstance("b")])
+        fleet1 = _make_adapter_fleet(1, [_MockShipInstance("a")])
+        fleet2 = _make_adapter_fleet(2, [_MockShipInstance("b")])
 
         with patch(
             "game.strategy.adapters.simulation_adapter.run_battle",
@@ -236,8 +236,8 @@ class TestSimulationBattleResolverDependencyInjection:
 
         mock_factory = MagicMock()
         resolver = SimulationBattleResolver(ai_factory=mock_factory)
-        fleet1 = _make_fleet(1, [_MockShipInstance("a")])
-        fleet2 = _make_fleet(2, [_MockShipInstance("b")])
+        fleet1 = _make_adapter_fleet(1, [_MockShipInstance("a")])
+        fleet2 = _make_adapter_fleet(2, [_MockShipInstance("b")])
 
         seen = {}
 
@@ -282,8 +282,8 @@ class TestSimulationAdapterReplayId:
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
-        fleet1 = _make_fleet(1, [_MockShipInstance("a")])
-        fleet2 = _make_fleet(2, [_MockShipInstance("b")])
+        fleet1 = _make_adapter_fleet(1, [_MockShipInstance("a")])
+        fleet2 = _make_adapter_fleet(2, [_MockShipInstance("b")])
 
         outcome = _make_outcome_with_replay_id(
             replay_id="captured-uuid-string", winner_team_id=0
@@ -302,8 +302,8 @@ class TestSimulationAdapterReplayId:
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
-        fleet1 = _make_fleet(1, [_MockShipInstance("a")])
-        fleet2 = _make_fleet(2, [_MockShipInstance("b")])
+        fleet1 = _make_adapter_fleet(1, [_MockShipInstance("a")])
+        fleet2 = _make_adapter_fleet(2, [_MockShipInstance("b")])
 
         outcome = _make_outcome_with_replay_id(replay_id=None, winner_team_id=0)
         with patch(
@@ -321,8 +321,8 @@ class TestSimulationAdapterReplayId:
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
-        fleet1 = _make_fleet(1, [])
-        fleet2 = _make_fleet(2, [])
+        fleet1 = _make_adapter_fleet(1, [])
+        fleet2 = _make_adapter_fleet(2, [])
 
         result = resolver.resolve_battle([fleet1, fleet2])
 
@@ -337,8 +337,8 @@ class TestSimulationAdapterReplayId:
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
-        fleet1 = _make_fleet(1, [_MockShipInstance("a")])
-        fleet2 = _make_fleet(2, [])
+        fleet1 = _make_adapter_fleet(1, [_MockShipInstance("a")])
+        fleet2 = _make_adapter_fleet(2, [])
 
         result = resolver.resolve_battle([fleet1, fleet2])
 
@@ -352,8 +352,8 @@ class TestSimulationAdapterReplayId:
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
-        fleet1 = _make_fleet(1, [_MockShipInstance("a", combat_capable=False)])
-        fleet2 = _make_fleet(2, [_MockShipInstance("b", combat_capable=False)])
+        fleet1 = _make_adapter_fleet(1, [_MockShipInstance("a", combat_capable=False)])
+        fleet2 = _make_adapter_fleet(2, [_MockShipInstance("b", combat_capable=False)])
 
         outcome = _make_outcome_with_replay_id(
             replay_id="brief-replay-uuid", winner_team_id=0, duration=2000,
@@ -386,10 +386,10 @@ class TestSimulationAdapterBattleContextPreservation:
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
-        fleet1 = _make_fleet(1, [_MockShipInstance("a")])
+        fleet1 = _make_adapter_fleet(1, [_MockShipInstance("a")])
         fleet1.owner_id = 7
         fleet1.hex_coord = (3, 4)
-        fleet2 = _make_fleet(2, [_MockShipInstance("b")])
+        fleet2 = _make_adapter_fleet(2, [_MockShipInstance("b")])
         fleet2.owner_id = 9
         fleet2.hex_coord = (3, 4)
 
@@ -418,10 +418,10 @@ class TestSimulationAdapterBattleContextPreservation:
         from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
 
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
-        fleet1 = _make_fleet(1, [_MockShipInstance("a")])
+        fleet1 = _make_adapter_fleet(1, [_MockShipInstance("a")])
         fleet1.owner_id = 7
         fleet1.hex_coord = (3, 4)
-        fleet2 = _make_fleet(2, [_MockShipInstance("b")])
+        fleet2 = _make_adapter_fleet(2, [_MockShipInstance("b")])
         fleet2.owner_id = 9
         fleet2.hex_coord = (3, 4)
 

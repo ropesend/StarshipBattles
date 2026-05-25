@@ -171,28 +171,33 @@ class TestBuildGameConfig:
 
 
 class TestRaceModalCallbacks:
-    def test_on_race_selected_sets_race_and_clears_modal(self):
+    # PROJ-494 T3.16: 2 callback tests parametrized on
+    # `(callback_method, player_index, needs_modal_setup)`.
+    @pytest.mark.parametrize(
+        "callback_method,player_index,needs_modal_setup",
+        [
+            pytest.param('on_race_selected', 1, True, id='race_selected'),
+            pytest.param('on_race_created', 0, False, id='race_created'),
+        ],
+    )
+    def test_race_callback_sets_race_and_clears_modal(
+        self, callback_method, player_index, needs_modal_setup,
+    ):
+        """on_race_selected/on_race_created both store the race on the VM,
+        clear the active modal, and notify the screen to refresh the display."""
         controller, screen, vm = _make_controller()
-        modal = MagicMock(name="modal")
-        vm.open_race_modal(modal, 1)
-        race = _make_race()
+        if needs_modal_setup:
+            modal = MagicMock(name="modal")
+            vm.open_race_modal(modal, player_index)
+        race = _make_race(name="New Race" if not needs_modal_setup else "Test Race")
 
-        controller.on_race_selected(1, race)
+        getattr(controller, callback_method)(player_index, race)
 
-        assert vm.get_race(1) is race
+        assert vm.get_race(player_index) is race
         assert vm.active_race_modal is None
-        assert vm.race_modal_player_index == -1
-        screen._update_race_display.assert_called_once_with(1)
-
-    def test_on_race_created_sets_race_and_clears_modal(self):
-        controller, screen, vm = _make_controller()
-        race = _make_race(name="New Race")
-
-        controller.on_race_created(0, race)
-
-        assert vm.get_race(0) is race
-        assert vm.active_race_modal is None
-        screen._update_race_display.assert_called_once_with(0)
+        if needs_modal_setup:
+            assert vm.race_modal_player_index == -1
+        screen._update_race_display.assert_called_once_with(player_index)
 
     def test_on_race_dialog_cancelled_clears_modal_only(self):
         controller, screen, vm = _make_controller()

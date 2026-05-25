@@ -389,44 +389,33 @@ class TestShipIOLoadOperations:
 # TestShipIORoundTrip
 # =============================================================================
 
+def _roundtrip_ship(ship, registries, tmp_path):
+    """PROJ-494 T3.12: shared save→json→load helper used by all round-trip
+    tests in this file. Returns the freshly-loaded ship."""
+    from game.simulation.entities.ship import Ship
+    save_file = tmp_path / "round_trip.json"
+    with open(save_file, 'w') as f:
+        json.dump(ship.to_dict(), f)
+    with open(save_file, 'r') as f:
+        loaded_data = json.load(f)
+    return Ship.from_dict(loaded_data, registries=registries)
+
+
 class TestShipIORoundTrip:
-    """Tests for save/load round-trip consistency."""
+    """Tests for save/load round-trip consistency.
 
-    def test_round_trip_preserves_ship_name(self, mock_ship, fresh_registries, tmp_path):
-        """Ship name should be preserved after save/load cycle."""
-        # Serialize ship data
-        ship_data = mock_ship.to_dict()
+    PROJ-494 T3.12: the 2 property-preservation tests that use the shared
+    mock_ship fixture (name, ship_class) are parametrized on the attribute
+    name. The other round-trip tests build bespoke ships and stay distinct.
+    """
 
-        # Save to file
-        save_file = tmp_path / "round_trip.json"
-        with open(save_file, 'w') as f:
-            json.dump(ship_data, f)
-
-        # Load from file
-        with open(save_file, 'r') as f:
-            loaded_data = json.load(f)
-
-        # Recreate ship
-        from game.simulation.entities.ship import Ship
-        loaded_ship = Ship.from_dict(loaded_data, registries=fresh_registries)
-
-        assert loaded_ship.name == mock_ship.name
-
-    def test_round_trip_preserves_ship_class(self, mock_ship, fresh_registries, tmp_path):
-        """Ship class should be preserved after save/load cycle."""
-        ship_data = mock_ship.to_dict()
-
-        save_file = tmp_path / "round_trip.json"
-        with open(save_file, 'w') as f:
-            json.dump(ship_data, f)
-
-        with open(save_file, 'r') as f:
-            loaded_data = json.load(f)
-
-        from game.simulation.entities.ship import Ship
-        loaded_ship = Ship.from_dict(loaded_data, registries=fresh_registries)
-
-        assert loaded_ship.ship_class == mock_ship.ship_class
+    @pytest.mark.parametrize("attr_name", ['name', 'ship_class'])
+    def test_round_trip_preserves_mock_ship_attr(
+        self, mock_ship, fresh_registries, tmp_path, attr_name,
+    ):
+        """Mock-ship attribute {attr_name} should be preserved after save/load."""
+        loaded_ship = _roundtrip_ship(mock_ship, fresh_registries, tmp_path)
+        assert getattr(loaded_ship, attr_name) == getattr(mock_ship, attr_name)
 
     def test_round_trip_preserves_team_id(self, fresh_registries, tmp_path):
         """Team ID should be preserved after save/load cycle."""

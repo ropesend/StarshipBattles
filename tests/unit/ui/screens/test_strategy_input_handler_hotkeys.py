@@ -67,37 +67,22 @@ class TestInputHandlerAcceptsMapper:
 class TestFleetActionsViaMapper:
     """Fleet-specific hotkeys resolved via InputMapper."""
 
-    def test_m_triggers_move_mode(self, mock_scene, mapper):
-        """Pressing M sets input mode to MOVE when fleet selected."""
+    # PROJ-494 T3.9 cluster 1: M/J/C/T mode-activation (4 → 1 parametrized).
+    @pytest.mark.parametrize(
+        "key,expected_mode",
+        [
+            pytest.param(pygame.K_m, 'MOVE', id='m_move'),
+            pytest.param(pygame.K_j, 'JOIN', id='j_join'),
+            pytest.param(pygame.K_c, 'COLONIZE_TARGET', id='c_colonize'),
+            pytest.param(pygame.K_t, 'TRANSFER', id='t_transfer'),
+        ],
+    )
+    def test_fleet_hotkey_triggers_mode(self, mock_scene, mapper, key, expected_mode):
+        """Pressing each fleet hotkey sets the matching input mode when fleet selected."""
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
         mock_scene.selected_fleet = MagicMock()
-        result = handler.handle_event(_keydown(pygame.K_m))
-        assert handler.input_mode == 'MOVE'
-        # Verify UI event handling was invoked
-        mock_scene.ui.handle_event.assert_called()
-
-    def test_j_triggers_join_mode(self, mock_scene, mapper):
-        """Pressing J sets input mode to JOIN when fleet selected."""
-        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
-        mock_scene.selected_fleet = MagicMock()
-        result = handler.handle_event(_keydown(pygame.K_j))
-        assert handler.input_mode == 'JOIN'
-        mock_scene.ui.handle_event.assert_called()
-
-    def test_c_triggers_colonize_mode(self, mock_scene, mapper):
-        """Pressing C sets input mode to COLONIZE_TARGET when fleet selected."""
-        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
-        mock_scene.selected_fleet = MagicMock()
-        result = handler.handle_event(_keydown(pygame.K_c))
-        assert handler.input_mode == 'COLONIZE_TARGET'
-        mock_scene.ui.handle_event.assert_called()
-
-    def test_t_sets_transfer_mode(self, mock_scene, mapper):
-        """Pressing T sets input mode to TRANSFER when fleet selected."""
-        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
-        mock_scene.selected_fleet = MagicMock()
-        result = handler.handle_event(_keydown(pygame.K_t))
-        assert handler.input_mode == 'TRANSFER'
+        handler.handle_event(_keydown(key))
+        assert handler.input_mode == expected_mode
         mock_scene.ui.handle_event.assert_called()
 
     def test_escape_cancels_mode(self, mock_scene, mapper):
@@ -108,28 +93,18 @@ class TestFleetActionsViaMapper:
         assert handler.input_mode == 'SELECT'
         mock_scene.ui.handle_event.assert_called()
 
-    def test_fleet_keys_ignored_without_fleet(self, mock_scene, mapper):
+    # PROJ-494 T3.9 cluster 2: fleet-keys-ignored-without-fleet (3 → 1 parametrized).
+    @pytest.mark.parametrize(
+        "key",
+        [pygame.K_m, pygame.K_j, pygame.K_c],
+        ids=['m', 'j', 'c'],
+    )
+    def test_fleet_keys_ignored_without_fleet(self, mock_scene, mapper, key):
         """Fleet-specific keys should be ignored when no fleet selected."""
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
         mock_scene.selected_fleet = None
         initial_mode = handler.input_mode
-        result = handler.handle_event(_keydown(pygame.K_m))
-        assert handler.input_mode == 'SELECT'  # Still in SELECT
-        assert handler.input_mode == initial_mode  # Mode unchanged
-
-    def test_fleet_keys_ignored_without_fleet_join(self, mock_scene, mapper):
-        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
-        mock_scene.selected_fleet = None
-        initial_mode = handler.input_mode
-        result = handler.handle_event(_keydown(pygame.K_j))
-        assert handler.input_mode == 'SELECT'
-        assert handler.input_mode == initial_mode
-
-    def test_fleet_keys_ignored_without_fleet_colonize(self, mock_scene, mapper):
-        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
-        mock_scene.selected_fleet = None
-        initial_mode = handler.input_mode
-        result = handler.handle_event(_keydown(pygame.K_c))
+        handler.handle_event(_keydown(key))
         assert handler.input_mode == 'SELECT'
         assert handler.input_mode == initial_mode
 
@@ -178,33 +153,24 @@ class TestFleetActionsViaMapper:
 class TestZoomViaMapper:
     """Zoom hotkeys resolved via InputMapper."""
 
-    def test_shift_g_zooms_galaxy(self, mock_scene, mapper):
-        """Shift+G triggers galaxy zoom."""
+    # PROJ-494 T3.9 cluster 3: 4 zoom-key tests parametrized on
+    # `(key, modifiers, camera_method_name)`.
+    @pytest.mark.parametrize(
+        "key,modifiers,camera_method",
+        [
+            pytest.param(pygame.K_g, pygame.KMOD_SHIFT, 'zoom_to_galaxy', id='shift_g'),
+            pytest.param(pygame.K_s, pygame.KMOD_SHIFT, 'zoom_to_system', id='shift_s'),
+            pytest.param(pygame.K_KP_PLUS, 0, 'zoom_in_step', id='kp_plus'),
+            pytest.param(pygame.K_KP_MINUS, 0, 'zoom_out_step', id='kp_minus'),
+        ],
+    )
+    def test_zoom_hotkey_calls_camera_method(
+        self, mock_scene, mapper, key, modifiers, camera_method,
+    ):
+        """Each zoom hotkey calls the matching CameraNavigator method."""
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
-        result = handler.handle_event(_keydown(pygame.K_g, pygame.KMOD_SHIFT))
-        mock_scene._camera_nav.zoom_to_galaxy.assert_called_once()
-        # Verify UI event handling was invoked
-        mock_scene.ui.handle_event.assert_called()
-
-    def test_shift_s_zooms_system(self, mock_scene, mapper):
-        """Shift+S triggers system zoom."""
-        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
-        result = handler.handle_event(_keydown(pygame.K_s, pygame.KMOD_SHIFT))
-        mock_scene._camera_nav.zoom_to_system.assert_called_once()
-        mock_scene.ui.handle_event.assert_called()
-
-    def test_kp_plus_zooms_in(self, mock_scene, mapper):
-        """Numpad + triggers keyboard zoom-in step (FEAT-21)."""
-        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
-        handler.handle_event(_keydown(pygame.K_KP_PLUS))
-        mock_scene._camera_nav.zoom_in_step.assert_called_once()
-        mock_scene.ui.handle_event.assert_called()
-
-    def test_kp_minus_zooms_out(self, mock_scene, mapper):
-        """Numpad - triggers keyboard zoom-out step (FEAT-21)."""
-        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
-        handler.handle_event(_keydown(pygame.K_KP_MINUS))
-        mock_scene._camera_nav.zoom_out_step.assert_called_once()
+        handler.handle_event(_keydown(key, modifiers))
+        getattr(mock_scene._camera_nav, camera_method).assert_called_once()
         mock_scene.ui.handle_event.assert_called()
 
 

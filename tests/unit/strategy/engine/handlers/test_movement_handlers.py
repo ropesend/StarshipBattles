@@ -82,7 +82,7 @@ class _FakeSession:
         self._preview_paths[target_hex] = path
 
 
-def _make_fleet(
+def _make_real_fleet(
     fleet_id: int = 1,
     *,
     owner_id: int = 0,
@@ -114,7 +114,7 @@ def test_move_command_rejects_missing_fleet() -> None:
 
 
 def test_move_command_rejects_unreachable_target_without_queuing_order() -> None:
-    fleet = _make_fleet()
+    fleet = _make_real_fleet()
     target = HexCoord(5, 0)
     session = _FakeSession([fleet])
     session.set_preview_path(target, [])
@@ -130,7 +130,7 @@ def test_move_command_rejects_unreachable_target_without_queuing_order() -> None
 
 
 def test_move_command_at_current_hex_is_noop() -> None:
-    fleet = _make_fleet(location=HexCoord(2, 3))
+    fleet = _make_real_fleet(location=HexCoord(2, 3))
     session = _FakeSession([fleet])
     session.set_preview_path(fleet.location, [])
 
@@ -145,7 +145,7 @@ def test_move_command_at_current_hex_is_noop() -> None:
 
 
 def test_move_command_queues_order_and_sets_active_path() -> None:
-    fleet = _make_fleet()
+    fleet = _make_real_fleet()
     target = HexCoord(2, 0)
     path = [fleet.location, HexCoord(1, 0), target]
     session = _FakeSession([fleet])
@@ -163,7 +163,7 @@ def test_move_command_queues_order_and_sets_active_path() -> None:
 
 
 def test_colonize_validation_failure_does_not_queue_orders() -> None:
-    fleet = _make_fleet()
+    fleet = _make_real_fleet()
     planet = SimpleNamespace(id=7, name="Beta III")
     session = _FakeSession([fleet])
     session.add_planet(planet)
@@ -182,8 +182,8 @@ def test_colonize_validation_failure_does_not_queue_orders() -> None:
 
 
 def test_intercept_allows_cross_empire_target_and_registers_pursuer() -> None:
-    source = _make_fleet(fleet_id=1, owner_id=0)
-    target = _make_fleet(fleet_id=2, owner_id=1, location=HexCoord(4, 0))
+    source = _make_real_fleet(fleet_id=1, owner_id=0)
+    target = _make_real_fleet(fleet_id=2, owner_id=1, location=HexCoord(4, 0))
     session = _FakeSession([source, target], active_empire_id=0)
 
     result = InterceptCommandHandler().execute(
@@ -198,7 +198,7 @@ def test_intercept_allows_cross_empire_target_and_registers_pursuer() -> None:
 
 
 def test_intercept_rejects_self_target() -> None:
-    fleet = _make_fleet()
+    fleet = _make_real_fleet()
     session = _FakeSession([fleet])
 
     result = InterceptCommandHandler().execute(
@@ -212,7 +212,7 @@ def test_intercept_rejects_self_target() -> None:
 
 
 def test_intercept_rejects_missing_target_fleet() -> None:
-    source = _make_fleet()
+    source = _make_real_fleet()
     session = _FakeSession([source])
 
     result = InterceptCommandHandler().execute(
@@ -226,7 +226,7 @@ def test_intercept_rejects_missing_target_fleet() -> None:
 
 
 def test_join_rejects_missing_target_fleet() -> None:
-    source = _make_fleet()
+    source = _make_real_fleet()
     session = _FakeSession([source])
 
     result = JoinCommandHandler().execute(
@@ -240,7 +240,7 @@ def test_join_rejects_missing_target_fleet() -> None:
 
 
 def test_join_rejects_self_target() -> None:
-    fleet = _make_fleet()
+    fleet = _make_real_fleet()
     session = _FakeSession([fleet])
 
     result = JoinCommandHandler().execute(
@@ -254,8 +254,8 @@ def test_join_rejects_self_target() -> None:
 
 
 def test_join_rejects_target_from_other_empire() -> None:
-    source = _make_fleet(fleet_id=1, owner_id=0)
-    target = _make_fleet(fleet_id=2, owner_id=1)
+    source = _make_real_fleet(fleet_id=1, owner_id=0)
+    target = _make_real_fleet(fleet_id=2, owner_id=1)
     session = _FakeSession([source, target], active_empire_id=0)
 
     result = JoinCommandHandler().execute(
@@ -270,8 +270,8 @@ def test_join_rejects_target_from_other_empire() -> None:
 
 
 def test_join_same_empire_queues_pursuit_then_join_order() -> None:
-    source = _make_fleet(fleet_id=1, owner_id=0)
-    target = _make_fleet(fleet_id=2, owner_id=0, location=HexCoord(2, 0))
+    source = _make_real_fleet(fleet_id=1, owner_id=0)
+    target = _make_real_fleet(fleet_id=2, owner_id=0, location=HexCoord(2, 0))
     session = _FakeSession([source, target], active_empire_id=0)
 
     result = JoinCommandHandler().execute(
@@ -290,7 +290,7 @@ def test_join_same_empire_queues_pursuit_then_join_order() -> None:
 
 def test_warp_rejects_fleet_without_warp_capability() -> None:
     limiting_ship = SimpleNamespace(name="Slow Boat")
-    fleet = _make_fleet(can_warp=False, limiting_ship=limiting_ship)
+    fleet = _make_real_fleet(can_warp=False, limiting_ship=limiting_ship)
     session = _FakeSession([fleet])
 
     result = WarpCommandHandler().execute(
@@ -306,7 +306,7 @@ def test_warp_rejects_fleet_without_warp_capability() -> None:
 
 
 def test_warp_rejects_missing_warp_point() -> None:
-    fleet = _make_fleet()
+    fleet = _make_real_fleet()
     session = _FakeSession([fleet])
     warp_hex = HexCoord(1, 0)
 
@@ -322,7 +322,7 @@ def test_warp_rejects_missing_warp_point() -> None:
 
 def test_warp_at_warp_point_queues_warp_only() -> None:
     warp_hex = HexCoord(1, 0)
-    fleet = _make_fleet(location=warp_hex)
+    fleet = _make_real_fleet(location=warp_hex)
     session = _FakeSession([fleet])
     session.galaxy.state.global_hex_warp_points[warp_hex] = object()
 
@@ -338,7 +338,7 @@ def test_warp_at_warp_point_queues_warp_only() -> None:
 
 def test_warp_returns_move_validation_failure_without_queuing_warp() -> None:
     warp_hex = HexCoord(3, 0)
-    fleet = _make_fleet(location=HexCoord(0, 0))
+    fleet = _make_real_fleet(location=HexCoord(0, 0))
     session = _FakeSession([fleet])
     session.galaxy.state.global_hex_warp_points[warp_hex] = object()
 
@@ -358,7 +358,7 @@ def test_warp_returns_move_validation_failure_without_queuing_warp() -> None:
 
 def test_warp_off_warp_point_auto_queues_move_then_warp() -> None:
     warp_hex = HexCoord(3, 0)
-    fleet = _make_fleet(location=HexCoord(0, 0))
+    fleet = _make_real_fleet(location=HexCoord(0, 0))
     session = _FakeSession([fleet])
     session.galaxy.state.global_hex_warp_points[warp_hex] = object()
 

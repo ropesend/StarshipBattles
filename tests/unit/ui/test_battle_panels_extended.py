@@ -37,13 +37,33 @@ def _install_battle_panels_pygame_mock(test_obj, *, with_keys: bool = False,
                                        scene_attrs: dict | None = None):
     """Shared setup helper for battle-panels-extended test classes.
 
-    Installs a MagicMock pygame, reloads `game.ui.panels.battle_panels`
-    against it, and exposes `self.module`, `self.mock_pygame` and
-    `self.mock_scene`. Returns the active `patch.dict` so the caller can
-    stop it on teardown.
+    Installs a MagicMock pygame, reloads ``game.ui.panels.battle_panels``
+    against it, and exposes ``self.module``, ``self.mock_pygame`` and
+    ``self.mock_scene``. Returns the active ``patch.dict`` so the caller
+    can stop it on teardown.
 
     PROJ-322 Task 1.17 (S11-CAT4-001): consolidates 3 copy-pasted
-    `setup_mocks` blocks into one helper.
+    ``setup_mocks`` blocks into one helper.
+
+    **Reload hazard (PROJ-491 Task 1.15):** this helper performs an
+    ``importlib.reload(battle_panels)`` against a ``patch.dict(sys.modules,
+    {'pygame': mock_pygame})`` injection. The reload re-binds **every**
+    name inside ``battle_panels`` (classes, module-level singletons,
+    decorators-applied-to-class-bodies, etc.). Any other test that has
+    already imported ``ShipStatsPanel`` / ``SeekerMonitorPanel`` /
+    ``BattleControlPanel`` from ``battle_panels`` is left holding the
+    pre-reload bindings, which will then fail ``isinstance`` checks
+    against the new bindings. To prevent that leakage:
+
+    1. The caller MUST stop the patcher in fixture teardown (existing
+       contract; see the ``yield`` block in each ``setup_mocks`` fixture
+       below).
+    2. The module-scope ``_restore_battle_panels_after_session`` fixture
+       at the bottom of this file performs a final
+       ``importlib.reload(battle_panels)`` against the **real** pygame
+       after the last test in this file finishes, undoing the residue
+       of the mocked-pygame reload so downstream test files don't
+       inherit a battle_panels module bound against MagicMock pygame.
     """
     mock_pygame = MagicMock()
     mock_pygame.K_LSHIFT = 1
@@ -67,6 +87,30 @@ def _install_battle_panels_pygame_mock(test_obj, *, with_keys: bool = False,
         mock_pygame.key.get_pressed.return_value = mock_keys
     test_obj.mock_pygame = mock_pygame
     return modules_patcher
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _restore_battle_panels_after_session():
+    """Session-end teardown: re-import ``battle_panels`` against the real
+    pygame after the last test in this module runs.
+
+    PROJ-491 Task 1.15: prevents leakage of the mocked-pygame reload into
+    downstream test files. The per-test ``setup_mocks`` fixtures stop
+    their ``patch.dict`` patchers correctly, but each call to
+    ``_install_battle_panels_pygame_mock`` still issues
+    ``importlib.reload(battle_panels)`` against the mock pygame; the
+    final reload here resets the module to its real-pygame state so the
+    next test file starts clean.
+    """
+    yield
+    # After all tests in this module finish, restore battle_panels to its
+    # real-pygame binding. The mocked pygame should no longer be in
+    # sys.modules at this point (per-test teardown has stopped its
+    # patcher), so this reload picks up the genuine pygame module.
+    import importlib
+
+    from game.ui.panels import battle_panels  # type: ignore[import-not-found]
+    importlib.reload(battle_panels)
 
 
 class TestShipStatsPanelExtended:

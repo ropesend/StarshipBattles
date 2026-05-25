@@ -323,42 +323,35 @@ class TestFromDictDeserialization:
 # =============================================================================
 
 class TestRoundTrip:
-    """Tests for serialize/deserialize round-trip consistency."""
+    """Tests for serialize/deserialize round-trip consistency.
 
-    def test_roundtrip_preserves_name(self, basic_ship, registries):
-        """Round-trip should preserve ship name."""
+    PROJ-495 T3.12: parametrized the 5 simple roundtrip tests
+    (name / ship_class / theme_id / team_id / color) on the field name.
+    Each calls ``ShipSerializer.to_dict`` then ``from_dict`` and asserts
+    the restored attribute equals the original. The ``color`` case needs
+    a tuple cast because the serialiser round-trips as list. Other
+    roundtrip tests below (movement_policy, component_count, etc.) have
+    materially different bodies and are kept separate.
+    """
+
+    @pytest.mark.parametrize(
+        "field,compare",
+        [
+            ("name", lambda a, b: a == b),
+            ("ship_class", lambda a, b: a == b),
+            ("theme_id", lambda a, b: a == b),
+            ("team_id", lambda a, b: a == b),
+            ("color", lambda a, b: tuple(a) == tuple(b)),
+        ],
+    )
+    def test_roundtrip_preserves_basic_field(
+        self, basic_ship, registries, field: str, compare
+    ):
+        """Round-trip should preserve the given basic field on ``basic_ship``."""
         data = ShipSerializer.to_dict(basic_ship)
         restored = ShipSerializer.from_dict(data, registries=registries)
 
-        assert restored.name == basic_ship.name
-
-    def test_roundtrip_preserves_ship_class(self, basic_ship, registries):
-        """Round-trip should preserve ship class."""
-        data = ShipSerializer.to_dict(basic_ship)
-        restored = ShipSerializer.from_dict(data, registries=registries)
-
-        assert restored.ship_class == basic_ship.ship_class
-
-    def test_roundtrip_preserves_theme_id(self, basic_ship, registries):
-        """Round-trip should preserve theme_id."""
-        data = ShipSerializer.to_dict(basic_ship)
-        restored = ShipSerializer.from_dict(data, registries=registries)
-
-        assert restored.theme_id == basic_ship.theme_id
-
-    def test_roundtrip_preserves_team_id(self, basic_ship, registries):
-        """Round-trip should preserve team_id."""
-        data = ShipSerializer.to_dict(basic_ship)
-        restored = ShipSerializer.from_dict(data, registries=registries)
-
-        assert restored.team_id == basic_ship.team_id
-
-    def test_roundtrip_preserves_color(self, basic_ship, registries):
-        """Round-trip should preserve color."""
-        data = ShipSerializer.to_dict(basic_ship)
-        restored = ShipSerializer.from_dict(data, registries=registries)
-
-        assert tuple(restored.color) == tuple(basic_ship.color)
+        assert compare(getattr(restored, field), getattr(basic_ship, field))
 
     def test_roundtrip_preserves_movement_policy(self, equipped_ship, registries):
         """Round-trip should preserve movement_policy."""

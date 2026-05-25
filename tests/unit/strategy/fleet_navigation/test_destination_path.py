@@ -14,68 +14,55 @@ from game.strategy.data.order_types import Order, OrderType
 
 
 class TestGetDestination:
-    """Tests for FleetNavigationService.get_destination()."""
+    """Tests for FleetNavigationService.get_destination().
 
-    def test_get_destination_move_order_returns_target(self):
-        """MOVE order should return the target HexCoord."""
+    PROJ-495 T3.8: parametrized the three identical-setup destination
+    lookups on ``(order_factory, expected_result_factory)``. The setups
+    were structurally identical (same NavigationState) — only the order
+    type / target and expected return value differed.
+    """
+
+    @pytest.mark.parametrize(
+        "make_order,expected_factory,label",
+        [
+            (
+                lambda: Order(OrderType.MOVE, HexCoord(5, 5)),
+                lambda: HexCoord(5, 5),
+                "MOVE returns target HexCoord",
+            ),
+            (
+                lambda: Order(OrderType.COLONIZE, MagicMock()),
+                lambda: None,
+                "COLONIZE returns None (not a movement order)",
+            ),
+            (
+                lambda: Order(OrderType.JOIN_FLEET, MagicMock()),
+                lambda: None,
+                "JOIN_FLEET returns None (handled separately)",
+            ),
+        ],
+        ids=["move", "colonize", "join_fleet"],
+    )
+    def test_get_destination_for_order_type(
+        self, make_order, expected_factory, label
+    ):
         from game.strategy.services.fleet_navigation_service import (
             FleetNavigationService, NavigationState
         )
 
         service = FleetNavigationService()
-        order = Order(OrderType.MOVE, HexCoord(5, 5))
+        order = make_order()
         state = NavigationState(
             location=HexCoord(0, 0),
             path=(),
             orders=(order,),
             speed=5.0,
-            can_warp=True
+            can_warp=True,
         )
 
         result = service.get_destination(state, order, galaxy=None)
 
-        assert result == HexCoord(5, 5)
-
-    def test_get_destination_colonize_order_returns_none(self):
-        """COLONIZE order should return None (not a movement order)."""
-        from game.strategy.services.fleet_navigation_service import (
-            FleetNavigationService, NavigationState
-        )
-
-        service = FleetNavigationService()
-        order = Order(OrderType.COLONIZE, MagicMock())
-        state = NavigationState(
-            location=HexCoord(0, 0),
-            path=(),
-            orders=(order,),
-            speed=5.0,
-            can_warp=True
-        )
-
-        result = service.get_destination(state, order, galaxy=None)
-
-        assert result is None
-
-    def test_get_destination_join_fleet_returns_none(self):
-        """JOIN_FLEET order should return None (handled separately)."""
-        from game.strategy.services.fleet_navigation_service import (
-            FleetNavigationService, NavigationState
-        )
-
-        service = FleetNavigationService()
-        target_fleet = MagicMock()
-        order = Order(OrderType.JOIN_FLEET, target_fleet)
-        state = NavigationState(
-            location=HexCoord(0, 0),
-            path=(),
-            orders=(order,),
-            speed=5.0,
-            can_warp=True
-        )
-
-        result = service.get_destination(state, order, galaxy=None)
-
-        assert result is None
+        assert result == expected_factory(), label
 
     def test_get_destination_move_to_fleet_calls_intercept(self):
         """MOVE_TO_FLEET order should call calculate_intercept_point."""

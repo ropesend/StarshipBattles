@@ -30,7 +30,7 @@ from game.strategy.combat.battle_assembly import build_strategy_battle_assembly
 from game.strategy.data.deployed_group import MineGroup
 
 
-def _make_fleet(fleet_id: int, owner_id: int, location, ships) -> MagicMock:
+def _make_combat_fleet(fleet_id: int, owner_id: int, location, ships) -> MagicMock:
     fleet = MagicMock(spec_set=[
         "id", "owner_id", "ships", "task_forces", "location",
     ])
@@ -64,8 +64,8 @@ def test_third_party_mine_owner_gets_synthetic_team_id(fresh_registries):
     """
     hex_c = HexCoord(0, 0)
 
-    fleet_10 = _make_fleet(1, owner_id=10, location=hex_c, ships=[_make_ship("a")])
-    fleet_20 = _make_fleet(2, owner_id=20, location=hex_c, ships=[_make_ship("b")])
+    fleet_10 = _make_combat_fleet(1, owner_id=10, location=hex_c, ships=[_make_ship("a")])
+    fleet_20 = _make_combat_fleet(2, owner_id=20, location=hex_c, ships=[_make_ship("b")])
 
     mg_third_party = MineGroup(group_id=999, owner_id=99, location=hex_c)
     # Give it at least one mine so it isn't an empty-inventory edge case.
@@ -111,8 +111,8 @@ def test_third_party_mine_resolver_setup_wires_resolver_with_team_id(
     """
     hex_c = HexCoord(0, 0)
 
-    fleet_10 = _make_fleet(1, owner_id=10, location=hex_c, ships=[_make_ship("a")])
-    fleet_20 = _make_fleet(2, owner_id=20, location=hex_c, ships=[_make_ship("b")])
+    fleet_10 = _make_combat_fleet(1, owner_id=10, location=hex_c, ships=[_make_ship("a")])
+    fleet_20 = _make_combat_fleet(2, owner_id=20, location=hex_c, ships=[_make_ship("b")])
 
     mg_third_party = MineGroup(group_id=999, owner_id=99, location=hex_c)
     # mines list must be truthy so battle_assembly collects it. Content

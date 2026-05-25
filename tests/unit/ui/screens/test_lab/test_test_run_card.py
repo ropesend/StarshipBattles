@@ -144,10 +144,24 @@ def test_header_default_path_prioritizes_failed_validation(card_factory) -> None
 
     card._draw_header(surface)
 
+    # PROJ-494 T4.3: relax exact-substring asserts to regex/structural so
+    # cosmetic format tweaks (e.g. extra whitespace, label rename) don't
+    # break the test for no behavioral reason.
+    import re
     texts = _blitted_text(surface)
-    assert "Failed Metric:" in texts
-    assert "Passing Metric:" not in texts
-    assert "1P 1F 0W" in texts
+    joined = "\n".join(texts)
+    # "Failed Metric:" header appears in the failed-validation path.
+    assert re.search(r"Failed\s*Metric\s*:", joined), (
+        f"expected a 'Failed Metric' label; got texts: {texts!r}"
+    )
+    assert not re.search(r"Passing\s*Metric\s*:", joined), (
+        f"unexpected 'Passing Metric' label in failed-validation path"
+    )
+    # 1 pass / 1 fail / 0 warn counter — match digits-then-letter pattern,
+    # not the exact "1P 1F 0W" literal.
+    assert re.search(r"\b1\s*P\b.*\b1\s*F\b.*\b0\s*W\b", joined), (
+        f"expected '1P 1F 0W'-style validation counter; got: {texts!r}"
+    )
 
 
 def test_header_default_path_draws_hit_rate_and_p_value_when_no_validation(card_factory) -> None:

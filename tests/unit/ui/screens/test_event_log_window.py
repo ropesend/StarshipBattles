@@ -7,8 +7,11 @@ Verifies the event log modal window:
 - Close callback behavior
 - Integration with StrategyUI modal tracking
 """
+import pygame
 import pytest
 from unittest.mock import MagicMock, patch
+
+from tests.fixtures.ui_widget_factory import bypass_init, make_ui_widget
 
 
 # ---------------------------------------------------------------------------
@@ -41,50 +44,54 @@ def _sample_events():
     ]
 
 
-def _make_window(events=None, on_close=None):
-    """Create an EventLogWindow with mocked pygame_gui.
+class _FilterButtonStubBuilder:
+    """Minimal ui_builder seam: populates the filter-button mocks so
+    tests that flip filters and look up buttons by key can run.
 
-    Bypasses UIWindow.__init__ to avoid needing real pygame display.
-    Sets up minimal state for testing business logic.
+    PROJ-491 Task 2.2: lets real ``__init__`` reach its Stage-3
+    ``ui_builder.build(self)`` branch under ``bypass_init`` so tests
+    don't have to manually wire ``win.btn_all`` / ``btn_combat`` /
+    ``filter_buttons`` after-the-fact.
+    """
+
+    def build(self, win) -> None:
+        win.btn_all = MagicMock()
+        win.btn_combat = MagicMock()
+        win.btn_production = MagicMock()
+        win.btn_colonies = MagicMock()
+        win.btn_fleet_ops = MagicMock()
+        win.filter_buttons = {
+            "all": win.btn_all,
+            "combat": win.btn_combat,
+            "production": win.btn_production,
+            "colonies": win.btn_colonies,
+            "fleet_operations": win.btn_fleet_ops,
+        }
+
+
+def _make_window(events=None, on_close=None):
+    """Create an EventLogWindow via the canonical ``bypass_init`` +
+    ``make_ui_widget`` real-constructor path.
+
+    PROJ-491 Task 2.2: replaces the prior
+    ``patch.object(EventLogWindow, '__init__', lambda ...)`` no-op +
+    ``__new__`` + 10+ manually-wired attribute assignments with a real
+    ``__init__`` run under the canonical ``bypass_init`` context. A
+    minimal ``_FilterButtonStubBuilder`` populates the filter-button
+    slots Stage 3 of ``__init__`` would normally build.
     """
     from game.ui.screens.event_log_window import EventLogWindow
 
-    with patch.object(EventLogWindow, '__init__',
-                      lambda self, *a, **kw: None):
-        win = EventLogWindow.__new__(EventLogWindow)
-
-    # Set up minimal state matching constructor
-    win.all_events = events if events is not None else []
-    win.current_filter = "all"
-    win.on_close_callback = on_close
-    win.ui_manager = MagicMock()
-
-    # PROJ-188 Phase 5: VirtualTable components (None for fallback path in tests)
-    win.data_source = None
-    win.column_manager = None
-    win.virtual_table = None
-    win.sidebar = None
-
-    # Issue #28 iteration 2: bypass-init tests don't run the builder, so
-    # ``_default_view_state`` is never captured. Set it explicitly to
-    # ``None`` here; tests that exercise the "restore defaults" path
-    # populate it themselves.
-    win._default_view_state = None
-
-    # Mock UI elements (filter buttons)
-    win.btn_all = MagicMock()
-    win.btn_combat = MagicMock()
-    win.btn_production = MagicMock()
-    win.btn_colonies = MagicMock()
-    win.btn_fleet_ops = MagicMock()
-    win.filter_buttons = {
-        "all": win.btn_all,
-        "combat": win.btn_combat,
-        "production": win.btn_production,
-        "colonies": win.btn_colonies,
-        "fleet_operations": win.btn_fleet_ops,
-    }
-
+    with bypass_init(EventLogWindow):
+        win = make_ui_widget(
+            EventLogWindow,
+            rect=pygame.Rect(0, 0, 800, 600),
+            manager=MagicMock(name="ui_manager"),
+            events=events if events is not None else [],
+            window_manager=MagicMock(name="window_manager"),
+            on_close_callback=on_close,
+            ui_builder=_FilterButtonStubBuilder(),
+        )
     return win
 
 
@@ -253,57 +260,71 @@ class TestCloseCallback:
 # Task 4.4-4.5: StrategyUI Integration
 # ---------------------------------------------------------------------------
 
+def _make_strategy_ui(overrides=None):
+    """Create a StrategyUI with mocked dependencies.
+
+    PROJ-494 T2.3: hoisted from `TestStrategyUIEventLogIntegration._make_strategy_ui`
+    to module level so the method body (25+ attribute wirings) lives in one place.
+    `overrides` is an optional dict of attribute overrides applied to the UI
+    instance after the default wiring is complete.
+    """
+    from game.ui.screens.strategy_ui import StrategyUI
+
+    with patch.object(StrategyUI, '__init__', lambda self, *a, **kw: None):
+        ui = StrategyUI.__new__(StrategyUI)
+
+    scene = MagicMock()
+    scene._facade = MagicMock()
+    scene._facade.events.all.return_value = _sample_events()
+    scene._facade.events.turn_events.return_value = _sample_events()[:2]
+    # _has_modal_open checks this scene attribute
+    scene.build_queue_screen = None
+
+    ui.scene = scene
+    ui.width = 1920
+    ui.height = 1080
+    ui.manager = MagicMock()
+    ui._mapper = None
+
+    # Local window tracking (kept on StrategyUI)
+    ui.planet_report_panel = None
+    ui.menu_panel = None
+
+    # PROJ-86: Window manager mock for modal tracking
+    ui.window_manager = MagicMock()
+    # All managed windows default to None (closed). Listed explicitly so any
+    # missing slot surfaces as a real attribute error instead of a silent
+    # MagicMock truthy value.
+    for slot in (
+        'fleet_orders_window', 'planet_list_window', 'star_list_window',
+        'build_queue_list_window', 'empire_build_queue_window',
+        'fleet_report_window', 'transfer_dialog', 'event_log_window',
+        'empire_panel_window', 'move_choice_window', 'cargo_quick_dialog',
+        'planet_selection_window', 'system_selection_window',
+        'fleet_selection_window',
+        # PROJ-309 sub-phase 3.10: was previously omitted from this scan.
+        'planet_abilities_window',
+    ):
+        setattr(ui.window_manager, slot, None)
+
+    # PROJ-86 Phase 7: Event router
+    from game.ui.screens.strategy_event_router import StrategyEventRouter
+    ui._event_router = StrategyEventRouter(ui)
+
+    if overrides:
+        for key, value in overrides.items():
+            setattr(ui, key, value)
+
+    return ui, scene
+
+
 class TestStrategyUIEventLogIntegration:
     """Verify StrategyUI has event_log_window tracking."""
 
     def _make_strategy_ui(self):
-        """Create a StrategyUI with mocked dependencies."""
-        from game.ui.screens.strategy_ui import StrategyUI
-
-        with patch.object(StrategyUI, '__init__', lambda self, *a, **kw: None):
-            ui = StrategyUI.__new__(StrategyUI)
-
-        scene = MagicMock()
-        scene._facade = MagicMock()
-        scene._facade.events.all.return_value = _sample_events()
-        scene._facade.events.turn_events.return_value = _sample_events()[:2]
-        # _has_modal_open checks this scene attribute
-        scene.build_queue_screen = None
-
-        ui.scene = scene
-        ui.width = 1920
-        ui.height = 1080
-        ui.manager = MagicMock()
-        ui._mapper = None
-
-        # Local window tracking (kept on StrategyUI)
-        ui.planet_report_panel = None
-        ui.menu_panel = None
-
-        # PROJ-86: Window manager mock for modal tracking
-        ui.window_manager = MagicMock()
-        ui.window_manager.fleet_orders_window = None
-        ui.window_manager.planet_list_window = None
-        ui.window_manager.star_list_window = None
-        ui.window_manager.build_queue_list_window = None
-        ui.window_manager.empire_build_queue_window = None
-        ui.window_manager.fleet_report_window = None
-        ui.window_manager.transfer_dialog = None
-        ui.window_manager.event_log_window = None
-        ui.window_manager.empire_panel_window = None
-        ui.window_manager.move_choice_window = None
-        ui.window_manager.cargo_quick_dialog = None
-        ui.window_manager.planet_selection_window = None
-        ui.window_manager.system_selection_window = None
-        ui.window_manager.fleet_selection_window = None
-        # PROJ-309 sub-phase 3.10: was previously omitted from this scan.
-        ui.window_manager.planet_abilities_window = None
-
-        # PROJ-86 Phase 7: Event router
-        from game.ui.screens.strategy_event_router import StrategyEventRouter
-        ui._event_router = StrategyEventRouter(ui)
-
-        return ui, scene
+        """Thin pass-through to the module-level factory (kept so the existing
+        method-call sites remain valid). PROJ-494 T2.3."""
+        return _make_strategy_ui()
 
     def test_event_log_window_attr_exists(self):
         """StrategyUI._window_manager should have event_log_window attribute."""

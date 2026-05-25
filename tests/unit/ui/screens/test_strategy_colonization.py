@@ -8,6 +8,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from game.core.hex_math import HexCoord
+from tests.fixtures.colonization_fixtures import MockPlanetType
 
 
 class TestColonizationSystemZone:
@@ -16,10 +17,7 @@ class TestColonizationSystemZone:
     def test_on_colonize_click_finds_dyson_sphere_via_zone(self):
         """Should find Dyson Sphere when fleet is in its zone."""
         from game.ui.screens.strategy_colonization import ColonizationSystem
-        from enum import Enum
 
-        class MockPlanetType(Enum):
-            DYSON_SPHERE = "DYSON_SPHERE"
 
         # Create mock Dyson Sphere at center (0,0)
         mock_dyson = MagicMock()

@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from game.core.input_actions import InputAction
 from game.ui.screens.fleet_menu_items import (
     FleetMenuItem,
@@ -48,7 +50,7 @@ def _make_capabilities(
     )
 
 
-def _make_fleet(
+def _make_menu_fleet(
     *,
     abilities: set[str] | None = None,
     can_warp: bool = False,
@@ -110,12 +112,12 @@ class TestCapabilityMatrix:
     """Each fleet shape produces exactly the menu items its capabilities allow."""
 
     def test_T1_empty_placeholder_fleet_shows_only_move_and_join(self) -> None:
-        fleet = _make_fleet()
+        fleet = _make_menu_fleet()
         items = build_menu_items(fleet, _make_galaxy(), _mapper())
         assert _actions(items) == [InputAction.FLEET_MOVE, InputAction.FLEET_JOIN]
 
     def test_T2_cargo_plus_warp_shows_cargo_group_and_warp(self) -> None:
-        fleet = _make_fleet(abilities={"CargoStorage"}, can_warp=True)
+        fleet = _make_menu_fleet(abilities={"CargoStorage"}, can_warp=True)
         items = build_menu_items(fleet, _make_galaxy(), _mapper())
         assert _actions(items) == [
             InputAction.FLEET_MOVE,
@@ -127,7 +129,7 @@ class TestCapabilityMatrix:
         ]
 
     def test_T3_colonize_hidden_when_no_unowned_planet_at_hex(self) -> None:
-        fleet = _make_fleet(
+        fleet = _make_menu_fleet(
             abilities={"CargoStorage", "ColonizePlanet"},
             can_warp=True,
         )
@@ -136,7 +138,7 @@ class TestCapabilityMatrix:
         assert InputAction.FLEET_COLONIZE not in _actions(items)
 
     def test_T4_colonize_visible_when_at_unowned_planet_hex(self) -> None:
-        fleet = _make_fleet(
+        fleet = _make_menu_fleet(
             abilities={"CargoStorage", "ColonizePlanet"},
             can_warp=True,
         )
@@ -145,7 +147,7 @@ class TestCapabilityMatrix:
         assert InputAction.FLEET_COLONIZE in _actions(items)
 
     def test_T5_every_superweapon_fleet(self) -> None:
-        fleet = _make_fleet(
+        fleet = _make_menu_fleet(
             abilities={
                 "OpenWarpPoint",
                 "CloseWarpPoint",
@@ -169,7 +171,7 @@ class TestCapabilityMatrix:
         ]
 
     def test_T6_self_destruct_visible_with_ships(self) -> None:
-        fleet = _make_fleet(
+        fleet = _make_menu_fleet(
             abilities={"SelfDestruct"},
             self_destruct_ships=1,
         )
@@ -180,7 +182,7 @@ class TestCapabilityMatrix:
         # Capability flag claims SelfDestruct but no ship actually has the
         # component — emulates a degenerate fleet. Builder uses
         # ships_with_ability for SelfDestruct, so the row is hidden.
-        fleet = _make_fleet(
+        fleet = _make_menu_fleet(
             abilities=set(),  # has_ability returns False
             self_destruct_ships=0,
         )
@@ -188,7 +190,7 @@ class TestCapabilityMatrix:
         assert InputAction.FLEET_SELF_DESTRUCT not in _actions(items)
 
     def test_T8_colonize_hidden_when_planets_at_hex_are_owned(self) -> None:
-        fleet = _make_fleet(abilities={"ColonizePlanet"})
+        fleet = _make_menu_fleet(abilities={"ColonizePlanet"})
         # Owned planet -> filtered out, no colonisable target here.
         galaxy = _make_galaxy(unowned_planets_at=[_planet(owner_id=42)])
         items = build_menu_items(fleet, galaxy, _mapper())
@@ -202,7 +204,7 @@ class TestCapabilityMatrix:
 
 class TestShortcutDisplay:
     def test_T9_shortcuts_carried_through_from_mapper(self) -> None:
-        fleet = _make_fleet(abilities={"OpenWarpPoint"})
+        fleet = _make_menu_fleet(abilities={"OpenWarpPoint"})
         mapper = _mapper(
             {
                 InputAction.FLEET_MOVE: "M",
@@ -216,7 +218,7 @@ class TestShortcutDisplay:
         assert by_action[InputAction.FLEET_OPEN_WARP_POINT] == "Ctrl+W"
 
     def test_T10_unbound_action_yields_empty_shortcut_string(self) -> None:
-        fleet = _make_fleet()
+        fleet = _make_menu_fleet()
         mapper = _mapper()  # returns "" for everything
         items = build_menu_items(fleet, _make_galaxy(), mapper)
         # Items still appear; the UI is responsible for hiding the
@@ -246,10 +248,10 @@ class TestOrderingAndStability:
     def test_T12_stable_ordering_independent_of_capability_call_sequence(self) -> None:
         # Build identical fleets in two orderings of capability hashing —
         # builder must return items in the SAME declared order.
-        fleet1 = _make_fleet(
+        fleet1 = _make_menu_fleet(
             abilities={"CargoStorage", "DestroyPlanet"}, can_warp=True
         )
-        fleet2 = _make_fleet(
+        fleet2 = _make_menu_fleet(
             abilities={"DestroyPlanet", "CargoStorage"}, can_warp=True
         )
         items1 = build_menu_items(fleet1, _make_galaxy(), _mapper())
@@ -262,7 +264,7 @@ class TestOrderingAndStability:
         )
 
     def test_T13_builder_is_deterministic(self) -> None:
-        fleet = _make_fleet(abilities={"CargoStorage"})
+        fleet = _make_menu_fleet(abilities={"CargoStorage"})
         galaxy = _make_galaxy()
         mapper = _mapper()
         a = build_menu_items(fleet, galaxy, mapper)
@@ -278,7 +280,7 @@ class TestOrderingAndStability:
 
 class TestFleetMenuItemShape:
     def test_item_carries_label_action_and_shortcut(self) -> None:
-        fleet = _make_fleet()
+        fleet = _make_menu_fleet()
         mapper = _mapper({InputAction.FLEET_MOVE: "M"})
         items = build_menu_items(fleet, _make_galaxy(), mapper)
         move = next(it for it in items if it.action == InputAction.FLEET_MOVE)
@@ -409,87 +411,49 @@ def _fms_callbacks() -> dict[str, object]:
 class TestFMSRows:
     """Phase 7: five FMS rows added to the fleet right-click menu."""
 
-    # --- Lay Mines ---
-
-    def test_lay_mines_visible_with_layer_and_mine_inventory(self) -> None:
-        fleet = _make_fleet_for_fms(
-            abilities={"StrategicMineLayer"},
-            carried=[_carried("mine")],
-        )
+    # PROJ-494 T3.5: 9 launch-row visibility tests
+    # (LayMines/LaunchFighters/LaunchSatellites × visible-with-ability-and-inventory /
+    # hidden-no-ability / hidden-no-inventory) collapsed into a single
+    # parametrized test.
+    @pytest.mark.parametrize(
+        "abilities,carried_type,expected_label,should_be_visible",
+        [
+            # Lay Mines
+            pytest.param({"StrategicMineLayer"}, "mine", "Lay Mines", True,
+                         id="lay_mines_visible"),
+            pytest.param(set(), "mine", "Lay Mines", False,
+                         id="lay_mines_hidden_no_ability"),
+            pytest.param({"StrategicMineLayer"}, None, "Lay Mines", False,
+                         id="lay_mines_hidden_no_inventory"),
+            # Launch Fighters
+            pytest.param({"StrategicFighterLaunch"}, "fighter", "Launch Fighters", True,
+                         id="launch_fighters_visible"),
+            pytest.param(set(), "fighter", "Launch Fighters", False,
+                         id="launch_fighters_hidden_no_ability"),
+            pytest.param({"StrategicFighterLaunch"}, None, "Launch Fighters", False,
+                         id="launch_fighters_hidden_no_inventory"),
+            # Launch Satellites
+            pytest.param({"StrategicSatelliteLaunch"}, "satellite", "Launch Satellites", True,
+                         id="launch_satellites_visible"),
+            pytest.param(set(), "satellite", "Launch Satellites", False,
+                         id="launch_satellites_hidden_no_ability"),
+            pytest.param({"StrategicSatelliteLaunch"}, None, "Launch Satellites", False,
+                         id="launch_satellites_hidden_no_inventory"),
+        ],
+    )
+    def test_launch_row_visibility(
+        self, abilities, carried_type, expected_label, should_be_visible,
+    ) -> None:
+        carried = [_carried(carried_type)] if carried_type else []
+        fleet = _make_fleet_for_fms(abilities=abilities, carried=carried)
         items = build_menu_items(
             fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
         )
         labels = [it.label for it in items]
-        assert "Lay Mines" in labels
-
-    def test_lay_mines_hidden_without_ability(self) -> None:
-        fleet = _make_fleet_for_fms(carried=[_carried("mine")])
-        items = build_menu_items(
-            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
-        )
-        assert "Lay Mines" not in [it.label for it in items]
-
-    def test_lay_mines_hidden_when_no_mine_inventory(self) -> None:
-        fleet = _make_fleet_for_fms(
-            abilities={"StrategicMineLayer"},
-            carried=[],
-        )
-        items = build_menu_items(
-            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
-        )
-        assert "Lay Mines" not in [it.label for it in items]
-
-    # --- Launch Fighters ---
-
-    def test_launch_fighters_visible_with_ability_and_fighter_inventory(self) -> None:
-        fleet = _make_fleet_for_fms(
-            abilities={"StrategicFighterLaunch"},
-            carried=[_carried("fighter")],
-        )
-        items = build_menu_items(
-            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
-        )
-        assert "Launch Fighters" in [it.label for it in items]
-
-    def test_launch_fighters_hidden_without_ability(self) -> None:
-        fleet = _make_fleet_for_fms(carried=[_carried("fighter")])
-        items = build_menu_items(
-            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
-        )
-        assert "Launch Fighters" not in [it.label for it in items]
-
-    def test_launch_fighters_hidden_when_no_fighter_inventory(self) -> None:
-        fleet = _make_fleet_for_fms(abilities={"StrategicFighterLaunch"})
-        items = build_menu_items(
-            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
-        )
-        assert "Launch Fighters" not in [it.label for it in items]
-
-    # --- Launch Satellites ---
-
-    def test_launch_satellites_visible_with_ability_and_satellite_inventory(self) -> None:
-        fleet = _make_fleet_for_fms(
-            abilities={"StrategicSatelliteLaunch"},
-            carried=[_carried("satellite")],
-        )
-        items = build_menu_items(
-            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
-        )
-        assert "Launch Satellites" in [it.label for it in items]
-
-    def test_launch_satellites_hidden_without_ability(self) -> None:
-        fleet = _make_fleet_for_fms(carried=[_carried("satellite")])
-        items = build_menu_items(
-            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
-        )
-        assert "Launch Satellites" not in [it.label for it in items]
-
-    def test_launch_satellites_hidden_when_no_satellite_inventory(self) -> None:
-        fleet = _make_fleet_for_fms(abilities={"StrategicSatelliteLaunch"})
-        items = build_menu_items(
-            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
-        )
-        assert "Launch Satellites" not in [it.label for it in items]
+        if should_be_visible:
+            assert expected_label in labels
+        else:
+            assert expected_label not in labels
 
     # --- Recover Fighters ---
 

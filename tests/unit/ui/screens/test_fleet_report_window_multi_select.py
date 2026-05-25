@@ -238,27 +238,34 @@ class TestShipRemoval:
 
         assert len(window.selection.get_selected_indices()) == 0
 
-    def test_remove_does_nothing_without_empire(self, window_with_ships_and_empire):
+    # PROJ-494 T3.2: 3 null-guard tests collapsed into 1 parametrized test.
+    @pytest.mark.parametrize(
+        "guard_name,apply_guard",
+        [
+            pytest.param(
+                'no_empire',
+                lambda w: (setattr(w, 'empire', None),
+                          w.selection._selected.update({0, 1})),
+                id='no_empire',
+            ),
+            pytest.param(
+                'no_callback',
+                lambda w: (setattr(w, '_split_fleet_callback', None),
+                          w.selection._selected.update({0, 1})),
+                id='no_callback',
+            ),
+            pytest.param(
+                'empty_selection',
+                lambda w: w.selection.clear(),
+                id='empty_selection',
+            ),
+        ],
+    )
+    def test_remove_does_nothing_when_guarded(
+        self, window_with_ships_and_empire, guard_name, apply_guard,
+    ):
         window, fleet, empire, ships, callback = window_with_ships_and_empire
-        window.empire = None
-        window.selection._selected = {0, 1}
-
-        window._on_remove_selected_ships()
-
-        callback.assert_not_called()
-
-    def test_remove_does_nothing_without_callback(self, window_with_ships_and_empire):
-        window, fleet, empire, ships, callback = window_with_ships_and_empire
-        window._split_fleet_callback = None
-        window.selection._selected = {0, 1}
-
-        window._on_remove_selected_ships()
-
-        callback.assert_not_called()
-
-    def test_remove_does_nothing_with_empty_selection(self, window_with_ships_and_empire):
-        window, fleet, empire, ships, callback = window_with_ships_and_empire
-        window.selection.clear()
+        apply_guard(window)
 
         window._on_remove_selected_ships()
 

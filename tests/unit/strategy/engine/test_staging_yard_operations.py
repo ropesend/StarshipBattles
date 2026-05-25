@@ -81,7 +81,7 @@ def _make_planet_with_yard(pods=None):
     return planet
 
 
-def _make_fleet(ships=None):
+def _make_staging_fleet(ships=None):
     fleet = MagicMock()
     fleet.ships = ships or []
     return fleet
@@ -100,7 +100,7 @@ class TestLoadPodFromStagingYard:
         pod = _make_pod()
         ship = _make_ship(can_carry=True, carried_items=[])
         planet = _make_planet_with_yard(pods=[pod])
-        fleet = _make_fleet(ships=[ship])
+        fleet = _make_staging_fleet(ships=[ship])
 
         result = processor._dispatch_drop_pod_load(fleet, planet)
 
@@ -118,7 +118,7 @@ class TestLoadPodFromStagingYard:
         right_pod = _make_pod(name="Target Pod")
         ship = _make_ship(can_carry=True, carried_items=[])
         planet = _make_planet_with_yard(pods=[wrong_pod, right_pod])
-        fleet = _make_fleet(ships=[ship])
+        fleet = _make_staging_fleet(ships=[ship])
 
         result = processor._dispatch_drop_pod_load(fleet, planet, pod_name="Target Pod")
 
@@ -133,7 +133,7 @@ class TestLoadPodFromStagingYard:
         pods = [_make_pod(name=f"Pod {i}") for i in range(5)]
         ship = _make_ship(can_carry=True, carried_items=[])
         planet = _make_planet_with_yard(pods=pods)
-        fleet = _make_fleet(ships=[ship])
+        fleet = _make_staging_fleet(ships=[ship])
 
         result = processor._dispatch_drop_pod_load(fleet, planet, amount=2)
 
@@ -146,7 +146,7 @@ class TestLoadPodFromStagingYard:
         pods = [_make_pod(name=f"Pod {i}") for i in range(3)]
         ship = _make_ship(can_carry=True, carried_items=[])
         planet = _make_planet_with_yard(pods=pods)
-        fleet = _make_fleet(ships=[ship])
+        fleet = _make_staging_fleet(ships=[ship])
 
         result = processor._dispatch_drop_pod_load(fleet, planet, amount=0)
 
@@ -158,7 +158,7 @@ class TestLoadPodFromStagingYard:
         pod = _make_pod()
         ship = _make_ship(can_carry=False, carried_items=[])
         planet = _make_planet_with_yard(pods=[pod])
-        fleet = _make_fleet(ships=[ship])
+        fleet = _make_staging_fleet(ships=[ship])
 
         result = processor._dispatch_drop_pod_load(fleet, planet)
 
@@ -171,7 +171,7 @@ class TestLoadPodFromStagingYard:
         ship1 = _make_ship(can_carry=False, carried_items=[])  # No capacity
         ship2 = _make_ship(can_carry=True, carried_items=[])   # Has capacity
         planet = _make_planet_with_yard(pods=[pod])
-        fleet = _make_fleet(ships=[ship1, ship2])
+        fleet = _make_staging_fleet(ships=[ship1, ship2])
 
         result = processor._dispatch_drop_pod_load(fleet, planet)
 
@@ -193,7 +193,7 @@ class TestUnloadPodToStagingYard:
         pod = _make_pod()
         ship = _make_ship(carried_items=[pod])
         planet = _make_planet_with_yard()
-        fleet = _make_fleet(ships=[ship])
+        fleet = _make_staging_fleet(ships=[ship])
 
         result = processor._dispatch_drop_pod_unload(fleet, planet)
 
@@ -215,7 +215,7 @@ class TestUnloadPodToStagingYard:
         right_pod = _make_pod(name="Target Pod")
         ship = _make_ship(carried_items=[wrong_pod, right_pod])
         planet = _make_planet_with_yard()
-        fleet = _make_fleet(ships=[ship])
+        fleet = _make_staging_fleet(ships=[ship])
 
         result = processor._dispatch_drop_pod_unload(fleet, planet, pod_name="Target Pod")
 
@@ -229,7 +229,7 @@ class TestUnloadPodToStagingYard:
         pods = [_make_pod(name=f"Pod {i}") for i in range(3)]
         ship = _make_ship(carried_items=pods)
         planet = _make_planet_with_yard()
-        fleet = _make_fleet(ships=[ship])
+        fleet = _make_staging_fleet(ships=[ship])
 
         result = processor._dispatch_drop_pod_unload(fleet, planet, amount=0)
 
@@ -241,7 +241,7 @@ class TestUnloadPodToStagingYard:
         pods = [_make_pod(name=f"Pod {i}") for i in range(5)]
         ship = _make_ship(carried_items=pods)
         planet = _make_planet_with_yard()
-        fleet = _make_fleet(ships=[ship])
+        fleet = _make_staging_fleet(ships=[ship])
 
         result = processor._dispatch_drop_pod_unload(fleet, planet, amount=2)
 
@@ -255,7 +255,7 @@ class TestUnloadPodToStagingYard:
         ship1 = _make_ship(carried_items=[pod1])
         ship2 = _make_ship(carried_items=[pod2])
         planet = _make_planet_with_yard()
-        fleet = _make_fleet(ships=[ship1, ship2])
+        fleet = _make_staging_fleet(ships=[ship1, ship2])
 
         result = processor._dispatch_drop_pod_unload(fleet, planet, amount=0)
 
@@ -269,7 +269,7 @@ class TestUnloadPodToStagingYard:
         ship = _make_ship(carried_items=[pod])
         planet = _make_planet_with_yard()
         planet.add_to_staging_yard.return_value = False  # Yard refuses
-        fleet = _make_fleet(ships=[ship])
+        fleet = _make_staging_fleet(ships=[ship])
 
         result = processor._dispatch_drop_pod_unload(fleet, planet)
 

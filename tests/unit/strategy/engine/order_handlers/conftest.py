@@ -44,8 +44,12 @@ def _captured() -> Tuple[Any, list]:
 
 
 @pytest.fixture
-def make_fleet():
-    """Factory fixture returning a real Fleet with N MagicMock ships."""
+def make_real_fleet_fixture():
+    """Factory fixture returning a real Fleet with N MagicMock ships.
+
+    PROJ-492 Phase 2 (HLP-004): renamed from ``make_fleet`` so it no longer
+    collides with the canonical ``tests.conftest._make_mock_fleet`` namespace.
+    """
     return _real_fleet
 
 

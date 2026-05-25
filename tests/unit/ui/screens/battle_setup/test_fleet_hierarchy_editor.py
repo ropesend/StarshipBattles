@@ -12,7 +12,7 @@ from unittest.mock import MagicMock
 import pytest
 
 
-def _make_fleet():
+def _make_real_fleet():
     from game.core.hex_math import HexCoord
     from game.strategy.data.fleet import Fleet
     return Fleet(1, 0, HexCoord(0, 0))
@@ -38,7 +38,7 @@ class TestCreateTaskForce:
         from game.ui.screens.battle_setup.fleet_hierarchy_editor import (
             FleetHierarchyEditor,
         )
-        fleet = _make_fleet()
+        fleet = _make_real_fleet()
         tf = FleetHierarchyEditor.create_task_force(fleet, "TF-Alpha")
         assert tf in fleet.task_forces
         assert tf.name == "TF-Alpha"
@@ -49,7 +49,7 @@ class TestCreateTaskForce:
         from game.ui.screens.battle_setup.fleet_hierarchy_editor import (
             FleetHierarchyEditor,
         )
-        fleet = _make_fleet()
+        fleet = _make_real_fleet()
         FleetHierarchyEditor.create_task_force(fleet)
         tf2 = FleetHierarchyEditor.create_task_force(fleet)
         assert tf2.name == "Task Force 2"
@@ -60,7 +60,7 @@ class TestCreateSquadron:
         from game.ui.screens.battle_setup.fleet_hierarchy_editor import (
             FleetHierarchyEditor,
         )
-        fleet = _make_fleet()
+        fleet = _make_real_fleet()
         tf = FleetHierarchyEditor.create_task_force(fleet, "TF-1")
         sq = FleetHierarchyEditor.create_squadron(tf, "Alpha Squadron")
         assert sq in tf.squadrons
@@ -70,7 +70,7 @@ class TestCreateSquadron:
         from game.ui.screens.battle_setup.fleet_hierarchy_editor import (
             FleetHierarchyEditor,
         )
-        fleet = _make_fleet()
+        fleet = _make_real_fleet()
         tf = FleetHierarchyEditor.create_task_force(fleet, "TF-1")
         FleetHierarchyEditor.create_squadron(tf)
         sq2 = FleetHierarchyEditor.create_squadron(tf)
@@ -107,7 +107,7 @@ class TestDuplicateSquadron:
         )
         from game.strategy.data.squadron import Squadron
 
-        fleet = _make_fleet()
+        fleet = _make_real_fleet()
         tf = FleetHierarchyEditor.create_task_force(fleet, "TF")
         original_sq = Squadron(name="Original")
         tf.add_squadron(original_sq)
@@ -140,7 +140,7 @@ class TestDuplicateSquadron:
         from game.strategy.data.fleet_hierarchy import BattleRole, CombatPolicy
         from game.strategy.data.squadron import Squadron
 
-        fleet = _make_fleet()
+        fleet = _make_real_fleet()
         tf = FleetHierarchyEditor.create_task_force(fleet, "TF")
         policy = CombatPolicy(targeting="focus_strongest", movement="advance")
         original_sq = Squadron(
@@ -162,7 +162,7 @@ class TestDuplicateTaskForce:
         )
         from game.strategy.data.squadron import Squadron
 
-        fleet = _make_fleet()
+        fleet = _make_real_fleet()
         tf = FleetHierarchyEditor.create_task_force(fleet, "TF-Original")
         sq = Squadron(name="SQ-1")
         tf.add_squadron(sq)
@@ -197,7 +197,7 @@ class TestDeleteOperations:
         )
         from game.strategy.data.squadron import Squadron
 
-        fleet = _make_fleet()
+        fleet = _make_real_fleet()
         tf = FleetHierarchyEditor.create_task_force(fleet, "TF")
         sq = Squadron(name="SQ")
         tf.add_squadron(sq)
@@ -216,7 +216,7 @@ class TestDeleteOperations:
         )
         from game.strategy.data.squadron import Squadron
 
-        fleet = _make_fleet()
+        fleet = _make_real_fleet()
         tf = FleetHierarchyEditor.create_task_force(fleet, "TF")
         sq = Squadron(name="SQ")
         tf.add_squadron(sq)

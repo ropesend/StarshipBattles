@@ -18,10 +18,23 @@ from game.simulation.systems.tech_preset_loader import TechPresetLoader, TECH_PR
 
 @pytest.fixture
 def temp_presets_dir(tmp_path):
-    """Create a temporary directory with test preset files."""
+    """Create a temporary directory with test preset files AND patch
+    ``TECH_PRESETS_DIR`` to point at it for the duration of the test.
+
+    PROJ-495 T2.6: the previous form returned only the path and made every
+    consumer test wrap its body in
+    ``with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):``.
+    Folding the patch into the fixture removes 30 wrapper sites with no
+    behaviour change — tests that want the real presets directory simply
+    don't request this fixture (e.g. ``test_load_real_default_preset``).
+    """
     presets_dir = tmp_path / "tech_presets"
     presets_dir.mkdir()
-    return presets_dir
+    with patch(
+        'game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR',
+        str(presets_dir),
+    ):
+        yield presets_dir
 
 
 @pytest.fixture
@@ -85,15 +98,13 @@ class TestListPresets:
             TechPresetLoader, 'list_presets',
             wraps=TechPresetLoader.list_presets
         ):
-            with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-                result = TechPresetLoader.list_presets()
+            result = TechPresetLoader.list_presets()
 
         assert result == ["alpha_preset", "mid_preset", "zebra_preset"]
 
     def test_list_presets_empty_directory(self, temp_presets_dir):
         """list_presets returns empty list when no presets exist."""
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            result = TechPresetLoader.list_presets()
+        result = TechPresetLoader.list_presets()
 
         assert result == []
 
@@ -105,8 +116,7 @@ class TestListPresets:
         (temp_presets_dir / "readme.txt").write_text("Not a preset")
         (temp_presets_dir / "backup.json.bak").write_text("{}")
 
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            result = TechPresetLoader.list_presets()
+        result = TechPresetLoader.list_presets()
 
         assert result == ["valid_preset"]
 
@@ -133,16 +143,14 @@ class TestLoadPreset:
         """load_preset returns the preset data dictionary."""
         create_preset("test_preset", sample_preset_data)
 
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            result = TechPresetLoader.load_preset("test_preset")
+        result = TechPresetLoader.load_preset("test_preset")
 
         assert result == sample_preset_data
 
     def test_load_preset_raises_for_missing(self, temp_presets_dir):
         """load_preset raises FileNotFoundError for nonexistent preset."""
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            with pytest.raises(FileNotFoundError) as exc_info:
-                TechPresetLoader.load_preset("nonexistent_preset")
+        with pytest.raises(FileNotFoundError) as exc_info:
+            TechPresetLoader.load_preset("nonexistent_preset")
 
         assert "nonexistent_preset" in str(exc_info.value)
 
@@ -157,8 +165,7 @@ class TestLoadPreset:
         }
         create_preset("full_preset", preset_data)
 
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            result = TechPresetLoader.load_preset("full_preset")
+        result = TechPresetLoader.load_preset("full_preset")
 
         assert result["name"] == "Full Preset"
         assert result["extra_field"] == "custom_value"
@@ -202,8 +209,7 @@ class TestGetAvailableComponentsAndModifiers:
         getter_name, sample_expected
     ):
         create_preset("test_preset", sample_preset_data)
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            result = getattr(TechPresetLoader, getter_name)("test_preset")
+        result = getattr(TechPresetLoader, getter_name)("test_preset")
         assert result == sample_expected
 
     @pytest.mark.parametrize(
@@ -215,8 +221,7 @@ class TestGetAvailableComponentsAndModifiers:
         self, temp_presets_dir, create_preset, minimal_preset_data, getter_name
     ):
         create_preset("minimal", minimal_preset_data)
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            result = getattr(TechPresetLoader, getter_name)("minimal")
+        result = getattr(TechPresetLoader, getter_name)("minimal")
         assert result == []
 
     @pytest.mark.parametrize(
@@ -228,16 +233,14 @@ class TestGetAvailableComponentsAndModifiers:
         self, temp_presets_dir, create_preset, wildcard_preset_data, getter_name
     ):
         create_preset("wildcard", wildcard_preset_data)
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            result = getattr(TechPresetLoader, getter_name)("wildcard")
+        result = getattr(TechPresetLoader, getter_name)("wildcard")
         assert result == ["*"]
 
     def test_get_components_raises_for_missing_preset(self, temp_presets_dir):
         """get_available_components raises FileNotFoundError for missing preset
         (components-only — modifiers has no equivalent test in the original)."""
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            with pytest.raises(FileNotFoundError):
-                TechPresetLoader.get_available_components("nonexistent")
+        with pytest.raises(FileNotFoundError):
+            TechPresetLoader.get_available_components("nonexistent")
 
 
 # =============================================================================
@@ -252,8 +255,7 @@ class TestIsComponentAvailable:
         """is_component_available returns True when component is in list."""
         create_preset("test_preset", sample_preset_data)
 
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            result = TechPresetLoader.is_component_available("laser_cannon", "test_preset")
+        result = TechPresetLoader.is_component_available("laser_cannon", "test_preset")
 
         assert result is True
 
@@ -261,8 +263,7 @@ class TestIsComponentAvailable:
         """is_component_available returns False when component is not in list."""
         create_preset("test_preset", sample_preset_data)
 
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            result = TechPresetLoader.is_component_available("plasma_cannon", "test_preset")
+        result = TechPresetLoader.is_component_available("plasma_cannon", "test_preset")
 
         assert result is False
 
@@ -270,18 +271,16 @@ class TestIsComponentAvailable:
         """is_component_available returns True for any component with wildcard."""
         create_preset("wildcard", wildcard_preset_data)
 
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            # Any component should be available with wildcard
-            assert TechPresetLoader.is_component_available("any_component", "wildcard") is True
-            assert TechPresetLoader.is_component_available("another_one", "wildcard") is True
-            assert TechPresetLoader.is_component_available("", "wildcard") is True
+        # Any component should be available with wildcard
+        assert TechPresetLoader.is_component_available("any_component", "wildcard") is True
+        assert TechPresetLoader.is_component_available("another_one", "wildcard") is True
+        assert TechPresetLoader.is_component_available("", "wildcard") is True
 
     def test_empty_component_list_returns_false(self, temp_presets_dir, create_preset, minimal_preset_data):
         """is_component_available returns False when component list is empty."""
         create_preset("minimal", minimal_preset_data)
 
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            result = TechPresetLoader.is_component_available("any_component", "minimal")
+        result = TechPresetLoader.is_component_available("any_component", "minimal")
 
         assert result is False
 
@@ -308,8 +307,7 @@ class TestIsModifierAvailable:
         """is_modifier_available returns True when modifier is in list."""
         create_preset("test_preset", sample_preset_data)
 
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            result = TechPresetLoader.is_modifier_available("simple_size_mount", "test_preset")
+        result = TechPresetLoader.is_modifier_available("simple_size_mount", "test_preset")
 
         assert result is True
 
@@ -317,8 +315,7 @@ class TestIsModifierAvailable:
         """is_modifier_available returns False when modifier is not in list."""
         create_preset("test_preset", sample_preset_data)
 
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            result = TechPresetLoader.is_modifier_available("advanced_mod", "test_preset")
+        result = TechPresetLoader.is_modifier_available("advanced_mod", "test_preset")
 
         assert result is False
 
@@ -326,16 +323,14 @@ class TestIsModifierAvailable:
         """is_modifier_available returns True for any modifier with wildcard."""
         create_preset("wildcard", wildcard_preset_data)
 
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            assert TechPresetLoader.is_modifier_available("any_modifier", "wildcard") is True
-            assert TechPresetLoader.is_modifier_available("another_mod", "wildcard") is True
+        assert TechPresetLoader.is_modifier_available("any_modifier", "wildcard") is True
+        assert TechPresetLoader.is_modifier_available("another_mod", "wildcard") is True
 
     def test_empty_modifier_list_returns_false(self, temp_presets_dir, create_preset, minimal_preset_data):
         """is_modifier_available returns False when modifier list is empty."""
         create_preset("minimal", minimal_preset_data)
 
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            result = TechPresetLoader.is_modifier_available("any_modifier", "minimal")
+        result = TechPresetLoader.is_modifier_available("any_modifier", "minimal")
 
         assert result is False
 
@@ -364,11 +359,10 @@ class TestEdgeCases:
         }
         create_preset("empty_lists", preset_data)
 
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            components = TechPresetLoader.get_available_components("empty_lists")
-            modifiers = TechPresetLoader.get_available_modifiers("empty_lists")
-            is_comp_available = TechPresetLoader.is_component_available("test", "empty_lists")
-            is_mod_available = TechPresetLoader.is_modifier_available("test", "empty_lists")
+        components = TechPresetLoader.get_available_components("empty_lists")
+        modifiers = TechPresetLoader.get_available_modifiers("empty_lists")
+        is_comp_available = TechPresetLoader.is_component_available("test", "empty_lists")
+        is_mod_available = TechPresetLoader.is_modifier_available("test", "empty_lists")
 
         assert components == []
         assert modifiers == []
@@ -379,8 +373,7 @@ class TestEdgeCases:
         """Preset names with underscores and numbers work correctly."""
         create_preset("preset_v2_beta", sample_preset_data)
 
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            result = TechPresetLoader.load_preset("preset_v2_beta")
+        result = TechPresetLoader.load_preset("preset_v2_beta")
 
         assert result["name"] == "Test Preset"
 
@@ -394,9 +387,8 @@ class TestEdgeCases:
         }
         create_preset("mixed_wildcard", preset_data)
 
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            # Wildcard should still work even if other entries exist
-            assert TechPresetLoader.is_component_available("any_component", "mixed_wildcard") is True
+        # Wildcard should still work even if other entries exist
+        assert TechPresetLoader.is_component_available("any_component", "mixed_wildcard") is True
 
     def test_unicode_in_preset_content(self, temp_presets_dir, create_preset):
         """Preset with unicode characters in name/description works."""
@@ -408,8 +400,7 @@ class TestEdgeCases:
         }
         create_preset("unicode_preset", preset_data)
 
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            result = TechPresetLoader.load_preset("unicode_preset")
+        result = TechPresetLoader.load_preset("unicode_preset")
 
         assert result["name"] == "Preset with accents"
 
@@ -536,22 +527,20 @@ class TestAvailabilityCheckBehavior:
         """is_component_available is case-sensitive."""
         create_preset("test_preset", sample_preset_data)
 
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            # Exact match should work
-            assert TechPresetLoader.is_component_available("laser_cannon", "test_preset") is True
-            # Case mismatch should fail
-            assert TechPresetLoader.is_component_available("Laser_Cannon", "test_preset") is False
-            assert TechPresetLoader.is_component_available("LASER_CANNON", "test_preset") is False
+        # Exact match should work
+        assert TechPresetLoader.is_component_available("laser_cannon", "test_preset") is True
+        # Case mismatch should fail
+        assert TechPresetLoader.is_component_available("Laser_Cannon", "test_preset") is False
+        assert TechPresetLoader.is_component_available("LASER_CANNON", "test_preset") is False
 
     def test_is_modifier_available_case_sensitive(self, temp_presets_dir, create_preset, sample_preset_data):
         """is_modifier_available is case-sensitive."""
         create_preset("test_preset", sample_preset_data)
 
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            # Exact match should work
-            assert TechPresetLoader.is_modifier_available("simple_size_mount", "test_preset") is True
-            # Case mismatch should fail
-            assert TechPresetLoader.is_modifier_available("Simple_Size_Mount", "test_preset") is False
+        # Exact match should work
+        assert TechPresetLoader.is_modifier_available("simple_size_mount", "test_preset") is True
+        # Case mismatch should fail
+        assert TechPresetLoader.is_modifier_available("Simple_Size_Mount", "test_preset") is False
 
     def test_availability_check_with_whitespace_id(self, temp_presets_dir, create_preset):
         """Availability checks handle IDs with whitespace correctly."""
@@ -563,16 +552,14 @@ class TestAvailabilityCheckBehavior:
         }
         create_preset("whitespace", preset_data)
 
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            # Exact match including whitespace
-            assert TechPresetLoader.is_component_available("comp_with_space ", "whitespace") is True
-            assert TechPresetLoader.is_component_available("comp_with_space", "whitespace") is False
+        # Exact match including whitespace
+        assert TechPresetLoader.is_component_available("comp_with_space ", "whitespace") is True
+        assert TechPresetLoader.is_component_available("comp_with_space", "whitespace") is False
 
     def test_wildcard_check_is_efficient(self, temp_presets_dir, create_preset, wildcard_preset_data):
         """Wildcard check should be O(1) - just checks for '*' in list."""
         create_preset("wildcard", wildcard_preset_data)
 
-        with patch('game.simulation.systems.tech_preset_loader.TECH_PRESETS_DIR', str(temp_presets_dir)):
-            # Even very long component IDs should work instantly with wildcard
-            long_id = "x" * 1000
-            assert TechPresetLoader.is_component_available(long_id, "wildcard") is True
+        # Even very long component IDs should work instantly with wildcard
+        long_id = "x" * 1000
+        assert TechPresetLoader.is_component_available(long_id, "wildcard") is True

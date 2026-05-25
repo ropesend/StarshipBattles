@@ -45,7 +45,7 @@ class _MockShipInstance:
         return ship
 
 
-def _make_fleet(fleet_id, ships):
+def _make_adapter_fleet(fleet_id, ships):
     fleet = MagicMock()
     fleet.id = fleet_id
     fleet.ships = ships
@@ -97,8 +97,8 @@ class TestRegistryThreadingToRunBattle:
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
         ship_a = _MockShipInstance("a")
         ship_b = _MockShipInstance("b")
-        fleet1 = _make_fleet(1, [ship_a])
-        fleet2 = _make_fleet(2, [ship_b])
+        fleet1 = _make_adapter_fleet(1, [ship_a])
+        fleet2 = _make_adapter_fleet(2, [ship_b])
 
         captured = {}
 
@@ -170,8 +170,8 @@ class TestRegistryThreadingToRunBattle:
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
         ship_a = _MockShipInstance("a")
         ship_b = _MockShipInstance("b")
-        fleet1 = _make_fleet(1, [ship_a])
-        fleet2 = _make_fleet(2, [ship_b])
+        fleet1 = _make_adapter_fleet(1, [ship_a])
+        fleet2 = _make_adapter_fleet(2, [ship_b])
 
         captured = {}
 
@@ -219,8 +219,8 @@ class TestRegistryThreadingToRunBattle:
         # the sole-survivor shortcut without invoking ``run_battle``.
         ship_a = _MockShipInstance("a", combat_capable=True)
         ship_b = _MockShipInstance("b", combat_capable=False)
-        fleet1 = _make_fleet(1, [ship_a])
-        fleet2 = _make_fleet(2, [ship_b])
+        fleet1 = _make_adapter_fleet(1, [ship_a])
+        fleet2 = _make_adapter_fleet(2, [ship_b])
 
         result = resolver.resolve_battle(
             [fleet1, fleet2], registries=fresh_registries
@@ -242,8 +242,8 @@ class TestRegistryThreadingToRunBattle:
         resolver = SimulationBattleResolver(ai_factory=MagicMock())
         ship_a = _MockShipInstance("a", combat_capable=True)
         ship_b = _MockShipInstance("b", combat_capable=False)
-        fleet1 = _make_fleet(1, [ship_a])
-        fleet2 = _make_fleet(2, [ship_b])
+        fleet1 = _make_adapter_fleet(1, [ship_a])
+        fleet2 = _make_adapter_fleet(2, [ship_b])
 
         result = resolver.resolve_battle([fleet1, fleet2], registries=None)
 

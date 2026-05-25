@@ -8,6 +8,21 @@ import pytest
 from game.ui.screens import strategy_screen_selection as selection
 
 
+def _patch_selection_predicates(*, is_star_system=False, is_planet=False,
+                                 is_warp_point=False, is_fleet=False):
+    """PROJ-494 T2.17: replace the 4×`with patch.object(selection, "is_*",
+    return_value=...)` stack used by 6 tests with a single `patch.multiple`
+    context manager parametrised on the four return values.
+    """
+    return patch.multiple(
+        selection,
+        is_star_system=MagicMock(return_value=is_star_system),
+        is_planet=MagicMock(return_value=is_planet),
+        is_warp_point=MagicMock(return_value=is_warp_point),
+        is_fleet=MagicMock(return_value=is_fleet),
+    )
+
+
 def _make_screen():
     screen = MagicMock()
     screen.selected_object = None
@@ -45,10 +60,7 @@ class TestOnUiSelection:
     def test_assigns_selected_object(self):
         screen = _make_screen()
         obj = MagicMock()
-        with patch.object(selection, "is_star_system", return_value=False), \
-             patch.object(selection, "is_planet", return_value=False), \
-             patch.object(selection, "is_warp_point", return_value=False), \
-             patch.object(selection, "is_fleet", return_value=False):
+        with _patch_selection_predicates(is_star_system=False, is_planet=False, is_warp_point=False, is_fleet=False):
             selection.on_ui_selection(screen, obj)
         assert screen.selected_object is obj
         screen.ui.show_detailed_report.assert_called_once_with(obj, "IMG")
@@ -56,10 +68,7 @@ class TestOnUiSelection:
     def test_star_system_updates_last_selected(self):
         screen = _make_screen()
         sys_obj = MagicMock()
-        with patch.object(selection, "is_star_system", return_value=True), \
-             patch.object(selection, "is_planet", return_value=False), \
-             patch.object(selection, "is_warp_point", return_value=False), \
-             patch.object(selection, "is_fleet", return_value=False):
+        with _patch_selection_predicates(is_star_system=True, is_planet=False, is_warp_point=False, is_fleet=False):
             selection.on_ui_selection(screen, sys_obj)
         assert screen.last_selected_system is sys_obj
 
@@ -73,20 +82,14 @@ class TestOnUiSelection:
         sys_b.planets = [planet]
         sys_b.warp_points = []
         screen.systems = [sys_a, sys_b]
-        with patch.object(selection, "is_star_system", return_value=False), \
-             patch.object(selection, "is_planet", return_value=True), \
-             patch.object(selection, "is_warp_point", return_value=False), \
-             patch.object(selection, "is_fleet", return_value=False):
+        with _patch_selection_predicates(is_star_system=False, is_planet=True, is_warp_point=False, is_fleet=False):
             selection.on_ui_selection(screen, planet)
         assert screen.last_selected_system is sys_b
 
     def test_friendly_fleet_sets_selected_fleet(self):
         screen = _make_screen()
         fleet = MagicMock(owner_id=0)
-        with patch.object(selection, "is_star_system", return_value=False), \
-             patch.object(selection, "is_planet", return_value=False), \
-             patch.object(selection, "is_warp_point", return_value=False), \
-             patch.object(selection, "is_fleet", return_value=True):
+        with _patch_selection_predicates(is_star_system=False, is_planet=False, is_warp_point=False, is_fleet=True):
             selection.on_ui_selection(screen, fleet)
         assert screen.selected_fleet is fleet
 
@@ -94,10 +97,7 @@ class TestOnUiSelection:
         screen = _make_screen()
         screen.selected_fleet = "PRIOR"
         fleet = MagicMock(owner_id=99)
-        with patch.object(selection, "is_star_system", return_value=False), \
-             patch.object(selection, "is_planet", return_value=False), \
-             patch.object(selection, "is_warp_point", return_value=False), \
-             patch.object(selection, "is_fleet", return_value=True):
+        with _patch_selection_predicates(is_star_system=False, is_planet=False, is_warp_point=False, is_fleet=True):
             selection.on_ui_selection(screen, fleet)
         # Enemy fleet — selected_fleet untouched (is_fleet True path)
         assert screen.selected_fleet == "PRIOR"
@@ -105,10 +105,7 @@ class TestOnUiSelection:
     def test_non_fleet_clears_selected_fleet(self):
         screen = _make_screen()
         screen.selected_fleet = "PRIOR"
-        with patch.object(selection, "is_star_system", return_value=False), \
-             patch.object(selection, "is_planet", return_value=False), \
-             patch.object(selection, "is_warp_point", return_value=False), \
-             patch.object(selection, "is_fleet", return_value=False):
+        with _patch_selection_predicates(is_star_system=False, is_planet=False, is_warp_point=False, is_fleet=False):
             selection.on_ui_selection(screen, MagicMock())
         assert screen.selected_fleet is None
 
@@ -116,10 +113,7 @@ class TestOnUiSelection:
         screen = _make_screen()
         screen.ui.window_manager.transfer_dialog = MagicMock()
         obj = MagicMock()
-        with patch.object(selection, "is_star_system", return_value=False), \
-             patch.object(selection, "is_planet", return_value=False), \
-             patch.object(selection, "is_warp_point", return_value=False), \
-             patch.object(selection, "is_fleet", return_value=False):
+        with _patch_selection_predicates(is_star_system=False, is_planet=False, is_warp_point=False, is_fleet=False):
             selection.on_ui_selection(screen, obj)
         screen.ui.window_manager.transfer_dialog.handle_external_selection.assert_called_once_with(obj)
 

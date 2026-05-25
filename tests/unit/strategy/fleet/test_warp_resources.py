@@ -67,37 +67,41 @@ class TestWarpResourceMethods:
             )
         return _make
 
-    def test_warp_resource_costs_single_ship(self, make_warp_ship):
-        """Test warp resource costs with a single ship."""
+    # PROJ-495 T3.14: parametrized the 3 warp_resource_costs tests on
+    # (ship_configs, expected_costs). All three share the same Fleet
+    # construction + ``fleet.resources.get_warp_resource_costs()`` call.
+    @pytest.mark.parametrize(
+        "ship_configs,expected_costs",
+        [
+            (
+                [{'energy': 500.0}],
+                {'energy': 500.0},
+            ),
+            (
+                [{'energy': 500.0}, {'energy': 300.0}],
+                {'energy': 800.0},
+            ),
+            (
+                [
+                    {'energy': 500.0, 'fuel': 100.0},
+                    {'energy': 300.0, 'fuel': 50.0},
+                ],
+                {'energy': 800.0, 'fuel': 150.0},
+            ),
+        ],
+        ids=["single_ship", "multiple_ships", "mixed_resource_types"],
+    )
+    def test_warp_resource_costs_aggregates(
+        self, make_warp_ship, ship_configs, expected_costs
+    ):
+        """get_warp_resource_costs aggregates across the fleet's ships."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
-        ship = make_warp_ship(warp_resource_costs={'energy': 500.0})
-        fleet.ships.append(ship)
+        for cfg in ship_configs:
+            fleet.ships.append(make_warp_ship(warp_resource_costs=cfg))
 
         costs = fleet.resources.get_warp_resource_costs()
 
-        assert costs == {'energy': 500.0}
-
-    def test_warp_resource_costs_multiple_ships(self, make_warp_ship):
-        """Test warp resource costs aggregate across multiple ships."""
-        fleet = Fleet("f1", 0, HexCoord(0, 0))
-        ship1 = make_warp_ship(warp_resource_costs={'energy': 500.0})
-        ship2 = make_warp_ship(warp_resource_costs={'energy': 300.0})
-        fleet.ships.extend([ship1, ship2])
-
-        costs = fleet.resources.get_warp_resource_costs()
-
-        assert costs == {'energy': 800.0}
-
-    def test_warp_resource_costs_mixed_resource_types(self, make_warp_ship):
-        """Test warp costs with different resource types (energy and fuel)."""
-        fleet = Fleet("f1", 0, HexCoord(0, 0))
-        ship1 = make_warp_ship(warp_resource_costs={'energy': 500.0, 'fuel': 100.0})
-        ship2 = make_warp_ship(warp_resource_costs={'energy': 300.0, 'fuel': 50.0})
-        fleet.ships.extend([ship1, ship2])
-
-        costs = fleet.resources.get_warp_resource_costs()
-
-        assert costs == {'energy': 800.0, 'fuel': 150.0}
+        assert costs == expected_costs
 
     def test_warp_resource_costs_empty_fleet(self):
         """Test warp resource costs for empty fleet returns empty dict."""

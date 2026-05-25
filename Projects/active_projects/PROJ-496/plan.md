@@ -13,15 +13,16 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Retarget / prune | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. Risky unit files | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Non-UI integration | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 0. Retarget / prune | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
+| 1. Risky unit files | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Non-UI integration | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Audit remediation (Codex 2026-05-23) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-23
-**Active Phase:** Planning complete; ready for Phase 0
-**Last Action:** Project scaffolded from PROJ-480 deferred backlog (Codex consult 2026-05-23 — locality-first split). All listed file paths re-verified against current tree.
-**Next Action:** Run Phase 0 (retarget/prune) — re-grep every task's target pattern before TDD.
+**Active Phase:** All 4 phases (Phases 0-3) complete; awaiting user verification.
+**Last Action:** Phase 3 audit-remediation complete. Task 3.1: persistence_adapter schema guard tightened with `_EXPECTED_CONFIG_KEYS` + `_EXPECTED_PLAYER_KEYS`, `save_name` and nested-key-set asserts added, docstring rewritten. Task 3.2: colony_output happiness test now asserts against a precomputed literal `EXPECTED_RATE_GIDDY = 0.059999359310164375` with full derivation comment block; the second `projected_growth_rate` call is gone. Task 3.3: `test_multiple_ticks_increment_counter` + `test_rapid_succession_ticks` consolidated into one `@pytest.mark.parametrize("n", [1, 10, 100])` test with `TickLimitCondition(max_ticks=n + 1)`. All 78 tests across the 3 touched files pass.
+**Next Action:** User verification.
 **Blockers:** None.
 
 ## Overview

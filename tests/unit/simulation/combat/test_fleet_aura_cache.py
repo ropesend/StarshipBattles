@@ -5,13 +5,17 @@ Verifies that:
 - FleetAuraManager uses the shared _aggregate_ability_groups function
 - Provider-state caching prevents redundant recalculation
 """
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from game.simulation.combat.fleet_aura_manager import FleetAuraManager
 from game.simulation.components.abilities.base import AbilityScope
 
 
 def _mock_ship(team_id=0, alive=True, name="Ship1", abilities=None):
-    """Create a mock ship with optional aura abilities."""
+    """Create a mock ship with optional aura abilities.
+
+    ``abilities`` is a list of ``(name, value, scope)`` tuples (all with
+    ``stack_group=None``) OR ``(name, value, scope, stack_group)`` 4-tuples.
+    """
     ship = MagicMock()
     ship.team_id = team_id
     ship.is_alive = alive
@@ -22,7 +26,12 @@ def _mock_ship(team_id=0, alive=True, name="Ship1", abilities=None):
 
     comps = []
     if abilities:
-        for ab_name, value, scope in abilities:
+        for entry in abilities:
+            if len(entry) == 4:
+                ab_name, value, scope, stack_group = entry
+            else:
+                ab_name, value, scope = entry
+                stack_group = None
             comp = MagicMock()
             comp.is_operational = True
             comp.name = f"comp_{ab_name}"
@@ -30,7 +39,7 @@ def _mock_ship(team_id=0, alive=True, name="Ship1", abilities=None):
             type(ab).__name__ = ab_name
             ab.scope = scope
             ab.value = value
-            ab.stack_group = None
+            ab.stack_group = stack_group
             comp.ability_instances = [ab]
             comps.append(comp)
 
@@ -68,16 +77,39 @@ class TestFleetAuraCaching:
         mgr.invalidate_aura_cache()
         assert mgr._providers_dirty is True
 
-    def test_uses_shared_aggregator(self):
-        """_recalculate should delegate to the shared _aggregate_ability_groups."""
-        mgr = FleetAuraManager()
-        ship = _mock_ship(abilities=[
-            ("ToHitAttackModifier", 5.0, AbilityScope.FLEET),
-        ])
+    def test_aggregates_same_stack_group_via_max_and_distinct_groups_via_sum(self):
+        """Behavioral coverage of the shared aggregator's two-phase
+        MAX-within-group / SUM-across-groups rule.
 
-        with patch(
-            'game.simulation.combat.fleet_aura_manager._aggregate_ability_groups'
-        ) as mock_agg:
-            mock_agg.return_value = {'ToHitAttackModifier': 5.0}
-            mgr.initialize([ship])
-            mock_agg.assert_called()
+        PROJ-491 Task 1.7: replaces the prior ``patch('..._aggregate_ability_groups')``
+        + ``assert_called`` smoke. Three same-team ships provide
+        ``ToHitAttackModifier`` auras:
+
+        - Ship A: value 3.0 under stack_group ``"alpha"``
+        - Ship B: value 5.0 under stack_group ``"alpha"`` (same group as A)
+        - Ship C: value 2.0 under stack_group ``"beta"``
+
+        Within ``"alpha"`` the aggregator picks ``MAX(3.0, 5.0) = 5.0``.
+        Across groups it ``SUM``s: ``5.0 + 2.0 = 7.0``. Every alive
+        same-team ship observes the team total via ``fleet_attack_bonus``.
+        """
+        mgr = FleetAuraManager()
+        ship_a = _mock_ship(
+            name="A",
+            abilities=[("ToHitAttackModifier", 3.0, AbilityScope.FLEET, "alpha")],
+        )
+        ship_b = _mock_ship(
+            name="B",
+            abilities=[("ToHitAttackModifier", 5.0, AbilityScope.FLEET, "alpha")],
+        )
+        ship_c = _mock_ship(
+            name="C",
+            abilities=[("ToHitAttackModifier", 2.0, AbilityScope.FLEET, "beta")],
+        )
+
+        mgr.initialize([ship_a, ship_b, ship_c])
+
+        # MAX(3, 5) = 5; 5 + 2 = 7 — same team bonus on all participants.
+        assert ship_a.fleet_attack_bonus == 7.0
+        assert ship_b.fleet_attack_bonus == 7.0
+        assert ship_c.fleet_attack_bonus == 7.0

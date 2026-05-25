@@ -13,18 +13,21 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Behavior/assertion rewrites (19 tasks) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. UI-window/panel constructor-smoke + bypass_init cleanup (7 tasks) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Task 3.32 ActionExecutionEngine test rewrite (DI seam already exists) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Task 3.20 second bullet investigation (may shift to PROJ-493) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 1. Behavior/assertion rewrites (19 tasks) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. UI-window/panel constructor-smoke + bypass_init cleanup (7 tasks) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Task 3.32 ActionExecutionEngine test rewrite (DI seam already exists) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Task 3.20 second bullet investigation (may shift to PROJ-493) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Audit remediation (Codex consult 2026-05-23) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-23
-**Active Phase:** Planning
-**Last Action:** Project scaffolded from PROJ-479 deferred CAT-6 test-side cluster per Codex consult 20260523T125621Z_plan-PROJ-479-followthrough
-**Next Action:** Start Phase 1. Pick the lowest-risk task (likely 3.10 or 3.30 — pure substring/literal assertion swaps) and TDD it.
-**Blockers:** None
+**Active Phase:** All phases complete — pending user verification.
+**Last Action:** Phase 5 audit remediation done. Task 5.1 added `test_game_constructs_with_args_positional` (uses production `parse_args()` to match `main()`'s call site). Task 5.2 tightened `test_build_queue_panel_factory` to a 100% `@fast_panel` assertion (renamed to `test_all_factory_uipanels_use_fast_panel_class_id`, dropped the `warnings.warn` soft fallback). Task 5.3 rewrote the `_disable_pygame_gui_kill_side_effect` module + helper docstrings to accurately describe the scoped-wrapper purpose. Targeted pytest passed for all three files (32 / 5 / 18).
+**Next Action:** User verification (run the full sharded suite + apply `verified` label per the GitHub Issues workflow).
+**Blockers:** None. Task 1.18 (transfer_handler_fleet_to_fleet) was marked BLOCKED with rationale (no minimal GameSession fixture exists); routing to PROJ-493 is documented in the test docstring and phase checklist.
 **Context:** This project carries the test-side mechanical subset of PROJ-479's 27 deferred CAT-6 tasks. Per Codex's analysis, the original PROJ-479 handoff language ("requires DI introduction") was overbroad — most deferred CAT-6 items are pure test-side rewrites (private-call assertions, `inspect.getsource` checks, AST guards, ad hoc `__new__` wiring) and can be done without touching production code. The genuinely production-DI-blocked items live in PROJ-493.
+
+DI-2026-05-23-003 was resolved by Phase 3 (3 test methods in ``test_action_execution_engine.py`` now inject a stub ``ActionTimeResolver`` via the existing constructor parameter).
 
 ## Overview
 Replace the remaining brittle-mock test patterns deferred by PROJ-479 Phase 3, using existing test seams: the canonical `bypass_init` fixture (`tests/fixtures/ui_widget_factory.py`), behavior-based assertions on public APIs, and the already-injected `action_time_resolver` constructor parameter on `ActionExecutionEngine`. No production code changes.

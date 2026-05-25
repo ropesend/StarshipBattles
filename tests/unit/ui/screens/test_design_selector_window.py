@@ -2,11 +2,39 @@
 
 Tests initialization, filtering, selection, and event handling for the
 design selection UI. Uses bypass-init pattern to avoid UIWindow dependencies.
+
+PROJ-494 T2.13: 6-deep `with patch(...): with patch(...): ...` stack used by
+`test_design_row_layout` / `_with_spaces_in_design_id` / `_with_fullstops_in_design_id`
+extracted into `_patched_design_row_render(window)` (returns a context manager).
 """
 
+from contextlib import ExitStack, contextmanager
 import pytest
 from unittest.mock import MagicMock, patch, PropertyMock
 import pygame
+
+
+@contextmanager
+def _patched_design_row_render(window):
+    """PROJ-494 T2.13: shared 6-deep patch stack used by three
+    `test_design_row_*` tests. Yields the captured `UIPanel` mock so callers
+    can assert on the `object_id` kwarg passed to it.
+    """
+    with ExitStack() as stack:
+        mock_panel = stack.enter_context(
+            patch('game.ui.screens.design_selector_window.UIPanel')
+        )
+        mock_panel.return_value = MagicMock()
+        stack.enter_context(patch('game.ui.screens.design_selector_window.UILabel'))
+        stack.enter_context(patch('game.ui.screens.design_selector_window.UIButton'))
+        stack.enter_context(patch('game.ui.screens.design_selector_window.UIImage'))
+        stack.enter_context(
+            patch.object(window, '_load_portrait_thumbnail', return_value=MagicMock())
+        )
+        stack.enter_context(
+            patch.object(window, '_load_topdown_thumbnail', return_value=None)
+        )
+        yield mock_panel
 
 
 # --- Helpers ---
@@ -484,66 +512,38 @@ class TestDesignSelectorUICreation:
         window, _ = _make_selector_window()
         design = _make_design_metadata("ship_001", "Test Ship", "Cruiser", "Ship", 150.0)
 
-        # We can't fully test UI creation without pygame_gui, but we can verify
-        # the method accepts correct parameters
-        # Just verify it doesn't raise with mock setup
-        with patch('game.ui.screens.design_selector_window.UIPanel') as mock_panel:
-            mock_panel.return_value = MagicMock()
-            with patch('game.ui.screens.design_selector_window.UILabel'):
-                with patch('game.ui.screens.design_selector_window.UIButton'):
-                    with patch('game.ui.screens.design_selector_window.UIImage'):
-                        with patch.object(window, '_load_portrait_thumbnail', return_value=MagicMock()):
-                            with patch.object(window, '_load_topdown_thumbnail', return_value=None):
-                                row = window._create_design_row(design, 0, 400)
-                                assert row is not None
+        with _patched_design_row_render(window):
+            row = window._create_design_row(design, 0, 400)
+            assert row is not None
 
-    def test_design_row_with_spaces_in_design_id(self):
-        """Test _create_design_row sanitizes design_id for object_id (spaces).
+    # PROJ-494 T3.8: 2 ID-sanitization tests parametrized on
+    # `(design_id, forbidden_chars)`. pygame_gui rejects spaces, dots, etc.
+    # in object_id strings, so `_create_design_row` must sanitize.
+    @pytest.mark.parametrize(
+        "design_id,forbidden_chars",
+        [
+            pytest.param("BS Battleship GC", (' ', '.'), id="spaces"),
+            pytest.param("v2.0_cruiser", ('.',), id="fullstops"),
+        ],
+    )
+    def test_design_row_sanitizes_object_id(self, design_id, forbidden_chars):
+        """Test _create_design_row sanitizes design_id for object_id.
 
-        Regression test: design IDs from filenames can contain spaces
-        (e.g. 'BS Battleship GC'), which pygame_gui rejects in object_id.
+        Regression test: design IDs from filenames can contain spaces or
+        fullstops, which pygame_gui rejects in object_id.
         """
         window, _ = _make_selector_window()
-        design = _make_design_metadata("BS Battleship GC", "BS Battleship GC")
+        design = _make_design_metadata(design_id, design_id)
 
-        with patch('game.ui.screens.design_selector_window.UIPanel') as mock_panel:
-            mock_panel.return_value = MagicMock()
-            with patch('game.ui.screens.design_selector_window.UILabel'):
-                with patch('game.ui.screens.design_selector_window.UIButton'):
-                    with patch('game.ui.screens.design_selector_window.UIImage'):
-                        with patch.object(window, '_load_portrait_thumbnail', return_value=MagicMock()):
-                            with patch.object(window, '_load_topdown_thumbnail', return_value=None):
-                                row = window._create_design_row(design, 0, 400)
-                                assert row is not None
+        with _patched_design_row_render(window) as mock_panel:
+            row = window._create_design_row(design, 0, 400)
+            assert row is not None
 
-                                # Verify object_id passed to UIPanel has no spaces
-                                panel_call = mock_panel.call_args
-                                object_id = panel_call[1]['object_id']
-                                assert ' ' not in object_id
-                                assert '.' not in object_id
-
-    def test_design_row_with_fullstops_in_design_id(self):
-        """Test _create_design_row sanitizes design_id for object_id (fullstops).
-
-        Regression test: design IDs could contain fullstops (e.g. 'v2.0_cruiser'),
-        which pygame_gui rejects in object_id.
-        """
-        window, _ = _make_selector_window()
-        design = _make_design_metadata("v2.0_cruiser", "V2.0 Cruiser")
-
-        with patch('game.ui.screens.design_selector_window.UIPanel') as mock_panel:
-            mock_panel.return_value = MagicMock()
-            with patch('game.ui.screens.design_selector_window.UILabel'):
-                with patch('game.ui.screens.design_selector_window.UIButton'):
-                    with patch('game.ui.screens.design_selector_window.UIImage'):
-                        with patch.object(window, '_load_portrait_thumbnail', return_value=MagicMock()):
-                            with patch.object(window, '_load_topdown_thumbnail', return_value=None):
-                                row = window._create_design_row(design, 0, 400)
-                                assert row is not None
-
-                                panel_call = mock_panel.call_args
-                                object_id = panel_call[1]['object_id']
-                                assert '.' not in object_id
+            object_id = mock_panel.call_args[1]['object_id']
+            for ch in forbidden_chars:
+                assert ch not in object_id, (
+                    f"object_id {object_id!r} contains forbidden char {ch!r}"
+                )
 
 
 # --- Mode-Specific Tests ---

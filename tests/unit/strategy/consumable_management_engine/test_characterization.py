@@ -81,24 +81,40 @@ def test_per_tick_consumption_is_one_hundredth_of_per_turn_total(
 
 
 def test_failed_consume_resource_triggers_auto_disable_and_returns_depletion(
-    mock_registries, mock_empire, mock_fleet, mock_ship,
+    mock_empire, mock_fleet, mock_ship,
 ):
-    """`consume_resource → False` produces a `ResourceDepletion` entry."""
+    """`consume_resource → False` produces a `ResourceDepletion` entry whose
+    ``components_disabled`` reflects the real auto-disable scan.
+
+    PROJ-491 Task 1.10: removed the prior
+    ``patch.object(engine, '_auto_disable_components_for_resource')`` mock;
+    instead, wire a real component definition with a ``ResourceConsumption``
+    per_turn fuel ability into the registry and let the engine perform the
+    real disable scan. Public-surface assertions verify both the
+    ``ResourceDepletion`` shape and that ``set_component_enabled`` fired
+    for the matching component.
+    """
     mock_ship.name = "Argo"
     mock_ship.get_all_resource_costs_per_turn.return_value = {"fuel": 100.0}
     mock_ship.consume_resource.return_value = False
-    engine = ConsumableManagementEngine(registries=mock_registries)
 
-    with patch.object(engine, "_auto_disable_components_for_resource",
-                      return_value=["engine_1"]) as mock_dis:
-        result = engine.process_per_turn_consumption(1, [mock_empire])
+    # Real component definition that the auto-disable scan should pick up.
+    engine_comp_def = MagicMock()
+    engine_comp_def.abilities = {
+        "ResourceConsumption": [{"trigger": "per_turn", "resource": "fuel"}],
+    }
+    mock_ship.design_data = {"layers": {"core": [{"id": "engine_1"}]}}
 
-    mock_dis.assert_called_once_with(mock_ship, "fuel")
+    engine = _make_engine_with_components({"engine_1": engine_comp_def})
+
+    result = engine.process_per_turn_consumption(1, [mock_empire])
+
     assert len(result) == 1
     assert isinstance(result[0], ResourceDepletion)
     assert result[0].ship_name == "Argo"
     assert result[0].resource_type == "fuel"
     assert result[0].components_disabled == ["engine_1"]
+    mock_ship.set_component_enabled.assert_called_with("engine_1", False)
 
 
 # ---------------------------------------------------------------------------

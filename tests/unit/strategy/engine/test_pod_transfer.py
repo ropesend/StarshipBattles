@@ -110,7 +110,7 @@ def _make_ship(carried_items=None, pod_capacity=2000.0):
     return ship
 
 
-def _make_fleet(ships):
+def _make_pod_transfer_fleet(ships):
     fleet = MagicMock()
     fleet.ships = ships
     return fleet
@@ -126,7 +126,7 @@ class TestLoadPodFromStagingYard:
     def test_load_single_pod(self):
         planet = _make_planet([_pod_item()])
         ship = _make_ship(pod_capacity=2000.0)
-        fleet = _make_fleet([ship])
+        fleet = _make_pod_transfer_fleet([ship])
 
         proc = TransferHandler()
         loaded = proc._dispatch_drop_pod_load(fleet, planet, amount=1)
@@ -138,7 +138,7 @@ class TestLoadPodFromStagingYard:
     def test_load_all_pods(self):
         planet = _make_planet([_pod_item(), _pod_item(), _pod_item()])
         ship = _make_ship(pod_capacity=2000.0)
-        fleet = _make_fleet([ship])
+        fleet = _make_pod_transfer_fleet([ship])
 
         proc = TransferHandler()
         loaded = proc._dispatch_drop_pod_load(fleet, planet, amount=0)
@@ -150,7 +150,7 @@ class TestLoadPodFromStagingYard:
     def test_load_respects_ship_capacity(self):
         planet = _make_planet([_pod_item(mass=500), _pod_item(mass=500), _pod_item(mass=500)])
         ship = _make_ship(pod_capacity=1000.0)  # Can only fit 2
-        fleet = _make_fleet([ship])
+        fleet = _make_pod_transfer_fleet([ship])
 
         proc = TransferHandler()
         loaded = proc._dispatch_drop_pod_load(fleet, planet, amount=0)
@@ -165,7 +165,7 @@ class TestLoadPodFromStagingYard:
             _pod_item("Large Pod", mass=2000),
         ])
         ship = _make_ship(pod_capacity=5000.0)
-        fleet = _make_fleet([ship])
+        fleet = _make_pod_transfer_fleet([ship])
 
         proc = TransferHandler()
         loaded = proc._dispatch_drop_pod_load(fleet, planet, pod_name="Small Pod", amount=1)
@@ -178,7 +178,7 @@ class TestLoadPodFromStagingYard:
     def test_load_no_capacity(self):
         planet = _make_planet([_pod_item()])
         ship = _make_ship(pod_capacity=0.0)
-        fleet = _make_fleet([ship])
+        fleet = _make_pod_transfer_fleet([ship])
 
         proc = TransferHandler()
         loaded = proc._dispatch_drop_pod_load(fleet, planet, amount=1)
@@ -190,7 +190,7 @@ class TestLoadPodFromStagingYard:
         planet = _make_planet([_pod_item(mass=500), _pod_item(mass=500), _pod_item(mass=500)])
         ship1 = _make_ship(pod_capacity=1000.0)  # Fits 2
         ship2 = _make_ship(pod_capacity=1000.0)  # Fits 2
-        fleet = _make_fleet([ship1, ship2])
+        fleet = _make_pod_transfer_fleet([ship1, ship2])
 
         proc = TransferHandler()
         loaded = proc._dispatch_drop_pod_load(fleet, planet, amount=0)
@@ -206,7 +206,7 @@ class TestUnloadPodToStagingYard:
     def test_unload_single_pod(self):
         pod = _pod_item()
         ship = _make_ship(carried_items=[pod])
-        fleet = _make_fleet([ship])
+        fleet = _make_pod_transfer_fleet([ship])
         planet = _make_planet()
 
         proc = TransferHandler()
@@ -218,7 +218,7 @@ class TestUnloadPodToStagingYard:
 
     def test_unload_all_pods(self):
         ship = _make_ship(carried_items=[_pod_item(), _pod_item()])
-        fleet = _make_fleet([ship])
+        fleet = _make_pod_transfer_fleet([ship])
         planet = _make_planet()
 
         proc = TransferHandler()
@@ -233,7 +233,7 @@ class TestUnloadPodToStagingYard:
             _pod_item("Small Pod", mass=500),
             _pod_item("Large Pod", mass=2000),
         ])
-        fleet = _make_fleet([ship])
+        fleet = _make_pod_transfer_fleet([ship])
         planet = _make_planet()
 
         proc = TransferHandler()
@@ -246,7 +246,7 @@ class TestUnloadPodToStagingYard:
 
     def test_unload_respects_staging_capacity(self):
         ship = _make_ship(carried_items=[_pod_item(mass=500), _pod_item(mass=500)])
-        fleet = _make_fleet([ship])
+        fleet = _make_pod_transfer_fleet([ship])
         planet = _make_planet()
         planet.max_staging_mass = 500.0  # Only fits 1
 

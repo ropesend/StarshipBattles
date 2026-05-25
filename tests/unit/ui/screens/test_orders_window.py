@@ -31,7 +31,7 @@ from tests.fixtures.orders_ui_builder import (
     MockOrdersUiBuilder,
     NullOrdersUiBuilder,
 )
-from tests.fixtures.ui_widget_factory import bypass_init
+from tests.fixtures.ui_widget_factory import bypass_init, make_ui_widget
 
 
 def _make_entity(orders=None, *, name="Test Fleet", entity_id=42):
@@ -145,6 +145,36 @@ class TestOrderDescriberDescribeAll:
 
 
 class TestOrdersWindowConstruction:
+    def test_constructor_smoke_via_make_ui_widget(self):
+        """PROJ-491 Task 2.1: real-construction constructor-smoke test.
+
+        Runs ``OrdersWindow.__init__`` through ``make_ui_widget`` (the
+        canonical real-constructor entry point with pygame_gui element
+        mocks installed) so constructor regressions are caught at this
+        level even though the rest of the file uses ``bypass_init`` to
+        skip the heavy ``pygame_gui.elements.UIWindow.__init__`` chain.
+
+        We still need ``bypass_init`` here because OrdersWindow inherits
+        from ``UIWindow`` which requires a real pygame display to
+        construct fully — that piece is unavoidable for unit-level
+        testing — but unlike ``_make_window`` above we run ``__init__``
+        end-to-end so the Stage-1/Stage-2 wiring is exercised.
+        """
+        entity = _make_entity()
+        with bypass_init(OrdersWindow):
+            window = make_ui_widget(
+                OrdersWindow,
+                rect=pygame.Rect(0, 0, 400, 500),
+                manager=MagicMock(name="ui_manager"),
+                entity=entity,
+                window_manager=None,
+                ui_builder=MockOrdersUiBuilder(),
+            )
+        assert window.entity is entity
+        assert window._window_init_bypassed is True
+        # Stage-2 wiring should have completed via the MockOrdersUiBuilder.
+        assert window.list_container is not None
+
     def test_stage1_state_survives_bypass(self):
         entity = _make_entity()
         callback = MagicMock()

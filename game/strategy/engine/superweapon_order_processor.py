@@ -64,6 +64,7 @@ class SuperweaponOrderProcessor:
         event_bus: Optional[Any] = None,
         empire_mutator: Optional[Any] = None,
         nav_service: Optional[Any] = None,
+        validator: Optional[Any] = None,
     ) -> None:
         """Initialize the superweapon order processor.
 
@@ -73,10 +74,17 @@ class SuperweaponOrderProcessor:
             nav_service: ``FleetNavigationService`` used by warp-graph
                 mutation handlers (#31) to broadcast path invalidation.
                 Lazy-defaulted.
+            validator: PROJ-493 superweapon ability-lookup seam. Any object
+                with a ``find_ship_with_ability(fleet, ability_name,
+                component_registry)`` method (the canonical
+                ``SuperweaponValidator`` API). Lazy-defaulted to the
+                canonical ``SuperweaponValidator``. Tests inject a stub
+                to avoid patching the static class method.
         """
         self._event_bus = event_bus
         self._empire_mutator = empire_mutator
         self._nav_service = nav_service
+        self._validator = validator
 
     def _get_empire_mutator(self) -> "IEmpireMutator":
         if self._empire_mutator is None:
@@ -93,6 +101,15 @@ class SuperweaponOrderProcessor:
             )
             self._nav_service = FleetNavigationService()
         return self._nav_service
+
+    def _get_validator(self) -> Any:
+        """Return the injected validator, lazily defaulting to the canonical
+        ``SuperweaponValidator`` (PROJ-493). The default has no side effects
+        in ``__init__`` — see PROJ-493 design.md "Risks".
+        """
+        if self._validator is None:
+            self._validator = SuperweaponValidator()
+        return self._validator
 
     def _finalize_superweapon(
         self,
@@ -274,10 +291,12 @@ class SuperweaponOrderProcessor:
 
         # Step 5: ability-ship lookup (skipped for STELLERATE_STAR, which
         # has ability_name=None and dispatches via system_destroyer).
+        # PROJ-493: route through the injected/defaulted validator instead
+        # of the static SuperweaponValidator.find_ship_with_ability call.
         ship = None
         if spec.ability_name is not None:
             if component_registry:
-                ship = SuperweaponValidator.find_ship_with_ability(
+                ship = self._get_validator().find_ship_with_ability(
                     fleet, spec.ability_name, component_registry
                 )
             if ship is None:

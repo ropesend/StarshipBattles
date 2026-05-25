@@ -11,79 +11,103 @@ that `OrderProcessor._execute_fleet_merge` did not recalculate the
 target fleet's speed after merging in the source fleet's ships.
 
 **This bug does not exist.** Verified by reading
-`game/strategy/data/fleet.py::Fleet.merge_with` — line 459 calls
+`game/strategy/data/fleet.py::Fleet.merge_with` — line 522 calls
 `other_fleet.trigger_speed_recalculation()` after transferring ships,
 which dispatches to
-`FleetSpeedCalculator.update_fleet_speed(self)` (`fleet.py:181`).
+`FleetSpeedCalculator.update_fleet_speed(self)`.
 
-This test locks the existing correct behavior so a future refactor
-can't regress it. It is a PASSING test, not a failing one — the
-documentation cost (this file) is the price of certainty.
+PROJ-491 Task 1.8: switched from patching ``trigger_speed_recalculation``
+to verify the **observable** outcome — after merging, the target fleet's
+``speed`` attribute equals ``min(participating ship speeds)``. The recalc
+is therefore exercised end-to-end rather than asserted via mock call count.
 """
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
 from game.strategy.data.order_types import OrderType
+from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator
 from tests.fixtures.strategy_entities import create_test_empire, create_test_fleet
 
 
-def test_fleet_merge_recalculates_target_speed():
-    """`Fleet.merge_with(other)` must end by recalculating `other.speed`.
+def _make_ship_with_calculated_speed(speed: int):
+    """Build a ship-like MagicMock that ``FleetSpeedCalculator`` will read
+    a deterministic speed off of via ``calculate_ship_speed``.
 
-    This is the core invariant: any code path that mutates a fleet's
-    `ships` list must trigger a speed recalc, otherwise the cached
-    `fleet.speed` field drifts away from the actual slowest-ship value.
+    The calculator routes through ``calculate_ship_speed`` for each ship
+    in ``calculate_fleet_speed``; patching that single method at the class
+    level lets us drive per-ship speeds without setting up
+    ``get_calculated_stats`` mass / strategic_movement combos.
+    """
+    ship = MagicMock()
+    ship.is_combat_capable.return_value = True
+    ship._test_speed = speed
+    return ship
+
+
+def test_fleet_merge_recalculates_target_speed_to_slowest_ship():
+    """``Fleet.merge_with(other)`` produces a target fleet whose ``speed``
+    equals the slowest combat-capable ship across the merged composition.
+
+    Set up two fleets each carrying one ship with a known per-ship speed,
+    merge them, and assert ``target.speed == min(speeds)``. This is the
+    observable invariant the recalc protects.
     """
     target = create_test_fleet(fleet_id=1, num_ships=0, owner_id=0, speed=5.0)
     source = create_test_fleet(fleet_id=2, num_ships=0, owner_id=0, speed=3.0)
 
-    # Patch trigger_speed_recalculation on the TARGET only — the source
-    # fleet is being emptied and removed, so its speed doesn't matter.
-    with patch.object(type(target), "trigger_speed_recalculation") as mock_recalc:
+    fast_ship = _make_ship_with_calculated_speed(7)
+    slow_ship = _make_ship_with_calculated_speed(2)
+    target.ships.append(fast_ship)
+    source.ships.append(slow_ship)
+
+    def _per_ship_speed(ship):
+        return ship._test_speed
+
+    with patch.object(
+        FleetSpeedCalculator, "calculate_ship_speed", side_effect=_per_ship_speed
+    ):
         source.merge_with(target)
 
-    # The recalc was called on `target` exactly once (last line of merge_with).
-    # Either flavor counts: bound-method assertion on instance OR
-    # call_args check on the patched type-level descriptor.
-    mock_recalc.assert_called()
-    # Confirm the recalc was invoked with `target` as `self` (it's the
-    # target's method that should fire, not the source's).
-    target_called = any(
-        call.args and call.args[0] is target for call in mock_recalc.call_args_list
-    ) or any(
-        # When patching at the class level, `self` may be implicit; verify
-        # by checking that target.trigger_speed_recalculation was on the
-        # call stack rather than source.trigger_speed_recalculation.
-        True for _ in mock_recalc.call_args_list  # at least one call landed
-    )
-    assert target_called, (
-        "Fleet.merge_with(other) must call other.trigger_speed_recalculation() "
-        "so the merged fleet's cached speed reflects the new (slowest) ship."
+    assert target.speed == 2.0, (
+        f"After merging a speed-2 ship into a fleet with a speed-7 ship, "
+        f"target.speed must equal min(2, 7) == 2.0; got {target.speed}."
     )
 
 
-def test_order_processor_merge_path_invokes_speed_recalc():
-    """End-to-end check via `OrderProcessor._execute_fleet_merge`.
+def test_order_processor_merge_path_recalculates_target_speed():
+    """End-to-end check via ``OrderProcessor._execute_fleet_merge``.
 
-    The OrderProcessor wraps `Fleet.merge_with` plus event logging and
-    `Empire.remove_fleet` cleanup. This test confirms the wrapper
-    delegates to `merge_with` (which carries the speed-recalc) — i.e.
-    no future refactor can short-circuit the recalc by inlining the
-    ship transfer.
+    Same min-speed invariant as the direct ``Fleet.merge_with`` test, but
+    driven through the OrderProcessor wrapper to confirm no future
+    refactor can short-circuit the recalc by inlining the ship transfer.
     """
     from game.strategy.engine.order_processor import OrderProcessor
 
     target = create_test_fleet(fleet_id=10, num_ships=0, owner_id=0, speed=5.0)
     source = create_test_fleet(fleet_id=11, num_ships=0, owner_id=0, speed=3.0)
 
+    fast_ship = _make_ship_with_calculated_speed(8)
+    slow_ship = _make_ship_with_calculated_speed(4)
+    target.ships.append(fast_ship)
+    source.ships.append(slow_ship)
+
     empire = MagicMock()
     empire.id = 0
     empire.fleets = [target, source]
 
     processor = OrderProcessor()
+    handler = processor._handler_registry.get(OrderType.JOIN_FLEET)
 
-    with patch.object(type(target), "trigger_speed_recalculation") as mock_recalc:
-        processor._handler_registry.get(OrderType.JOIN_FLEET)._execute_fleet_merge(source, target, empire)
+    def _per_ship_speed(ship):
+        return ship._test_speed
 
-    mock_recalc.assert_called()
+    with patch.object(
+        FleetSpeedCalculator, "calculate_ship_speed", side_effect=_per_ship_speed
+    ):
+        handler._execute_fleet_merge(source, target, empire)
+
+    assert target.speed == 4.0, (
+        f"After OrderProcessor merge of a speed-4 ship into a speed-8 fleet, "
+        f"target.speed must equal min(4, 8) == 4.0; got {target.speed}."
+    )

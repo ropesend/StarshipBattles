@@ -63,7 +63,7 @@ def component_registry():
     }
 
 
-def _make_fleet(loc=HexCoord(10, 10)) -> MagicMock:
+def _make_superweapon_fleet(loc=HexCoord(10, 10)) -> MagicMock:
     fleet = MagicMock(spec=Fleet)
     fleet.id = 1
     fleet.owner_id = 0
@@ -118,7 +118,7 @@ def _make_planet(name="Alpha III", loc=HexCoord(2, 0)) -> MagicMock:
 
 class TestImplodePlanetOrderPop:
     def test_success_pops_order(self, component_registry):
-        fleet = _make_fleet()
+        fleet = _make_superweapon_fleet()
         system = _make_system()
         planet = _make_planet()
         ship = _make_ship('planet_imploder')
@@ -148,7 +148,7 @@ class TestImplodePlanetOrderPop:
         fleet.pop_order.assert_called()
 
     def test_failure_no_target_pops_order(self, component_registry):
-        fleet = _make_fleet()
+        fleet = _make_superweapon_fleet()
         order = Order(OrderType.IMPLODE_PLANET, target=None)
         fleet.get_current_order.return_value = order
         galaxy = _make_galaxy()
@@ -163,7 +163,7 @@ class TestImplodePlanetOrderPop:
         fleet.pop_order.assert_called_once()
 
     def test_failure_no_ship_pops_order(self, component_registry):
-        fleet = _make_fleet()
+        fleet = _make_superweapon_fleet()
         system = _make_system()
         planet = _make_planet()
         fleet.ships = []  # No ship with ability
@@ -204,7 +204,7 @@ class TestStellerateStarOrderPop:
         """Success path: SystemDestroyer destroys all fleets in system; no
         explicit pop_order on the acting fleet. ``fleet_consumed=True``.
         """
-        fleet = _make_fleet()
+        fleet = _make_superweapon_fleet()
         system = _make_system()
         ship = _make_ship('stellerator')
         fleet.ships = [ship]
@@ -234,7 +234,7 @@ class TestStellerateStarOrderPop:
         fleet.pop_order.assert_not_called()
 
     def test_failure_no_system_pops_order(self, component_registry):
-        fleet = _make_fleet(loc=HexCoord(999, 999))  # Not at any system
+        fleet = _make_superweapon_fleet(loc=HexCoord(999, 999))  # Not at any system
         ship = _make_ship('stellerator')
         fleet.ships = [ship]
 
@@ -263,7 +263,7 @@ class TestStellerateStarOrderPop:
 
 class TestOpenWarpPointOrderPop:
     def test_success_pops_order(self, component_registry):
-        fleet = _make_fleet()
+        fleet = _make_superweapon_fleet()
         ship = _make_ship('quantum_tunneler')
         fleet.ships = [ship]
 
@@ -292,7 +292,7 @@ class TestOpenWarpPointOrderPop:
         fleet.pop_order.assert_called()
 
     def test_failure_no_target_pops_order(self, component_registry):
-        fleet = _make_fleet()
+        fleet = _make_superweapon_fleet()
         order = Order(OrderType.OPEN_WARP_POINT, target="not_a_dict")
         fleet.get_current_order.return_value = order
         galaxy = _make_galaxy()
@@ -307,7 +307,7 @@ class TestOpenWarpPointOrderPop:
         fleet.pop_order.assert_called_once()
 
     def test_failure_no_ship_pops_order(self, component_registry):
-        fleet = _make_fleet()
+        fleet = _make_superweapon_fleet()
         fleet.ships = []  # No ship with ability
 
         current_system = _make_system("Alpha", HexCoord(10, 10))
@@ -344,7 +344,7 @@ class TestOpenWarpPointOrderPop:
 
 class TestCloseWarpPointOrderPop:
     def test_success_pops_order(self, component_registry):
-        fleet = _make_fleet()
+        fleet = _make_superweapon_fleet()
         ship = _make_ship('quantum_disruptor')
         fleet.ships = [ship]
 
@@ -374,7 +374,7 @@ class TestCloseWarpPointOrderPop:
         fleet.pop_order.assert_called()
 
     def test_failure_no_target_pops_order(self, component_registry):
-        fleet = _make_fleet()
+        fleet = _make_superweapon_fleet()
         # Empty/missing destination
         order = Order(
             OrderType.CLOSE_WARP_POINT,
@@ -393,7 +393,7 @@ class TestCloseWarpPointOrderPop:
         fleet.pop_order.assert_called_once()
 
     def test_failure_no_ship_pops_order(self, component_registry):
-        fleet = _make_fleet()
+        fleet = _make_superweapon_fleet()
         fleet.ships = []  # No ship with ability
 
         current_system = _make_system("Alpha", HexCoord(10, 10))
@@ -433,7 +433,7 @@ class TestCloseWarpPointOrderPop:
 
 class TestCreateDysonSphereOrderPop:
     def test_success_pops_order(self, component_registry):
-        fleet = _make_fleet()
+        fleet = _make_superweapon_fleet()
         ship = _make_ship('dyson_constructor')
         fleet.ships = [ship]
 
@@ -464,7 +464,7 @@ class TestCreateDysonSphereOrderPop:
 
     def test_failure_no_target_pops_order(self, component_registry):
         """No 'target' for Dyson Sphere — analogue is 'fleet not at a system'."""
-        fleet = _make_fleet(loc=HexCoord(999, 999))
+        fleet = _make_superweapon_fleet(loc=HexCoord(999, 999))
         order = Order(OrderType.CREATE_DYSON_SPHERE)
         fleet.get_current_order.return_value = order
 
@@ -482,7 +482,7 @@ class TestCreateDysonSphereOrderPop:
         fleet.pop_order.assert_called_once()
 
     def test_failure_no_ship_pops_order(self, component_registry):
-        fleet = _make_fleet()
+        fleet = _make_superweapon_fleet()
         fleet.ships = []
         system = _make_system()
         fleet.location = system.global_location
@@ -518,7 +518,7 @@ class TestCreateDysonSphereOrderPop:
 
 class TestSelfDestructOrderPop:
     def test_success_pops_order(self):
-        fleet = _make_fleet()
+        fleet = _make_superweapon_fleet()
         ship = MagicMock()
         ship.id = "ship-a"
         ship.name = "Doomed"
@@ -538,7 +538,7 @@ class TestSelfDestructOrderPop:
         fleet.pop_order.assert_called_once()
 
     def test_failure_no_target_pops_order(self):
-        fleet = _make_fleet()
+        fleet = _make_superweapon_fleet()
         order = Order(OrderType.SELF_DESTRUCT, target=[])  # Empty list
         fleet.get_current_order.return_value = order
 

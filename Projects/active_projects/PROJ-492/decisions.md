@@ -9,6 +9,7 @@
 | 2026-05-23 | HLP-005 strategy decision goes in decisions.md, not as a blocker | Per Codex consult — Phases 1 (HLP-002) and 2 (HLP-004) are independent of the tmpdir strategy. The decision is recorded and Phase 3 implements it; no need to block 1/2 on it. |
 | 2026-05-23 | _make_fleet sweep uses 4-category triage (A/B/C/D) | Codex consult noted "remaining ~40 sites have signature/kwarg variation that requires per-site triage". The triage classification makes the work tractable without forcing semantically-different fleets into one shape. |
 | 2026-05-23 | Reject dual-mode setup_tmpdir fixture | Codex consult: no evidence cwd-relative contract serves a real production caller need. Adding dual-mode doubles maintenance surface; can be added later if a real case emerges. |
+| 2026-05-23 | Task 1.10: rename plain-class `MockPlanetType` to `_MockPlanetTypeNamed` in `tests/integration/strategy/turn_engine/conftest.py` | Out-of-family per audit Finding 9: it is a plain class with a free-form `.name` constructor, NOT an Enum. Canonical Enum cannot accept `MockPlanetType("ICE_DWARF")`-style construction. Renaming clears the global namespace conflict and makes intent explicit; the two call sites in `test_basics.py` were updated to import the renamed symbol. |
 
 ## Permanently Deferred Items (NOT in PROJ-492)
 

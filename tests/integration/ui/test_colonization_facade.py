@@ -2,11 +2,29 @@
 
 These tests verify that ColonizationSystem correctly delegates to the facade
 instead of directly accessing session internals.
+
+PROJ-494 Task 1.3a: the 8 inline `class MockPlanetType(Enum)` definitions
+scattered across individual test methods are consolidated into a single
+module-level enum with the union of all member names used across the file.
 """
+from enum import Enum
+
 import pytest
 from unittest.mock import Mock, MagicMock
 from game.core.hex_math import HexCoord
 from game.core.validation import ValidationResult
+from tests.fixtures.colonization_fixtures import MockPlanetType
+
+
+class MockPlanetType(Enum):
+    """Module-level mock planet-type enum used by every test in this file.
+
+    PROJ-494 T1.3a: consolidated from 8 inline definitions. Carries every
+    member name that any individual test referenced; tests that only used
+    a subset still work because they only reference the names they need.
+    """
+    CONTINENTAL = "CONTINENTAL"
+    ICE_DWARF = "ICE_DWARF"
 
 
 class TestColonizationSystemInit:
@@ -66,11 +84,6 @@ class TestOnColonizeClick:
     def test_on_colonize_uses_facade_validation(self):
         """on_colonize_click uses facade.validation.can_colonize for validation."""
         from game.ui.screens.strategy_colonization import ColonizationSystem
-        from enum import Enum
-
-        class MockPlanetType(Enum):
-            CONTINENTAL = "CONTINENTAL"
-
         mock_scene = Mock()
         mock_scene.systems = []
         # PROJ-477 Phase 4: live system/zone reads via scene.world.
@@ -375,11 +388,6 @@ class TestFacadeColonyPodMethods:
         """Remaining pods = available - committed."""
         from game.strategy.facade.strategy_session_facade import StrategySessionFacade
         from game.strategy.data.order_types import Order, OrderType
-        from enum import Enum
-
-        class MockPlanetType(Enum):
-            ICE_DWARF = "ICE_DWARF"
-
         # PROJ-436 Phase 9: ColonizeValidator reads pods from the typed
         # ``ship.bay_inventory.pods`` slot. The legacy ``carried_items``
         # projection is gone.
@@ -436,12 +444,6 @@ class TestOnColonizeClickPodFiltering:
     def test_on_colonize_shows_all_planets_with_universal_pods(self):
         """on_colonize_click returns all unowned planets when fleet has universal pods."""
         from game.ui.screens.strategy_colonization import ColonizationSystem
-        from enum import Enum
-
-        class MockPlanetType(Enum):
-            ICE_DWARF = "ICE_DWARF"
-            CONTINENTAL = "CONTINENTAL"
-
         # Setup planets - one Ice Dwarf, one Continental
         mock_ice_planet = Mock()
         mock_ice_planet.id = 1
@@ -489,11 +491,6 @@ class TestOnColonizeClickPodFiltering:
     def test_on_colonize_ignores_pod_count_at_command_time(self):
         """Pod count no longer filters planets at command time — deferred to execution."""
         from game.ui.screens.strategy_colonization import ColonizationSystem
-        from enum import Enum
-
-        class MockPlanetType(Enum):
-            CONTINENTAL = "CONTINENTAL"
-
         # Two Continental planets
         mock_planet1 = Mock()
         mock_planet1.id = 1
@@ -578,12 +575,6 @@ class TestHandleColonizeDesignationPodFiltering:
         """Designation no longer filters by pod count — deferred to execution."""
         from game.ui.screens.strategy_colonization import ColonizationSystem
         from game.core.hex_math import HexCoord
-        from enum import Enum
-
-        class MockPlanetType(Enum):
-            ICE_DWARF = "ICE_DWARF"
-            CONTINENTAL = "CONTINENTAL"
-
         # Setup: ICE_DWARF planet at target hex
         mock_planet = Mock()
         mock_planet.id = 1
@@ -637,11 +628,6 @@ class TestHandleColonizeDesignationPodFiltering:
         from game.ui.screens.strategy_colonization import ColonizationSystem
         from game.core.hex_math import HexCoord
         from game.core.validation import ValidationResult
-        from enum import Enum
-
-        class MockPlanetType(Enum):
-            ICE_DWARF = "ICE_DWARF"
-
         mock_planet = Mock()
         mock_planet.id = 1
         mock_planet.location = HexCoord(0, 0)
@@ -692,11 +678,6 @@ class TestHandleColonizeDesignationPodFiltering:
         """Designation prompts even without pods — pod check deferred to execution."""
         from game.ui.screens.strategy_colonization import ColonizationSystem
         from game.core.hex_math import HexCoord
-        from enum import Enum
-
-        class MockPlanetType(Enum):
-            CONTINENTAL = "CONTINENTAL"
-
         mock_planet = Mock()
         mock_planet.id = 1
         mock_planet.location = HexCoord(0, 0)
@@ -746,12 +727,6 @@ class TestHandleColonizeDesignationPodFiltering:
         from game.ui.screens.strategy_colonization import ColonizationSystem
         from game.core.hex_math import HexCoord
         from game.core.validation import ValidationResult
-        from enum import Enum
-
-        class MockPlanetType(Enum):
-            ICE_DWARF = "ICE_DWARF"
-            CONTINENTAL = "CONTINENTAL"
-
         # Two planets at same location, different types
         mock_ice_planet = Mock()
         mock_ice_planet.id = 1
@@ -814,12 +789,6 @@ class TestPlanetTypeDisplay:
     def test_prompt_result_includes_planet_type_display(self):
         """When prompting for planet selection, planet type info is available."""
         from game.ui.screens.strategy_colonization import ColonizationSystem
-        from enum import Enum
-
-        class MockPlanetType(Enum):
-            ICE_DWARF = "ICE_DWARF"
-            CONTINENTAL = "CONTINENTAL"
-
         mock_ice_planet = Mock()
         mock_ice_planet.id = 1
         mock_ice_planet.location = HexCoord(0, 0)

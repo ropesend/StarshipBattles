@@ -46,7 +46,14 @@ class MockGameSession:
 
 @pytest.fixture
 def setup_tmpdir():
-    """Create temporary directory for tests and patch Paths.SAVES_DIR."""
+    """Per-test tmpdir + ``Paths.SAVES_DIR`` patch.
+
+    Patches ``Paths.SAVES_DIR`` to a per-test tmpdir. This is the canonical
+    save-path test harness; mirrors production save resolution
+    (``game/strategy/systems/save_game_service.py:107-121``). Do not use
+    chdir-based variants - the production contract is ``Paths.SAVES_DIR``,
+    not cwd. (PROJ-492 decisions.md)
+    """
     tmpdir = tempfile.mkdtemp()
     saves_dir = os.path.join(tmpdir, "saves")
     os.makedirs(saves_dir, exist_ok=True)

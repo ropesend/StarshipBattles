@@ -42,6 +42,17 @@ def test_order_processor_minimal_order_type_references():
 
     Total: <= 2 references. Any more means a new branching ladder has
     been introduced; the registry is the right place for that.
+
+    PROJ-491 Task 1.6 — architectural-guard accept-with-comment:
+    This is an AST-based static guard. False-positive risk: any future
+    refactor that legitimately needs a third literal ``OrderType.X``
+    reference inside ``order_processor.py`` (e.g. a new structural
+    branch that genuinely belongs in the facade rather than the
+    registry) will trigger this cap and require an explicit decision —
+    either raise the cap with rationale or push the branch into the
+    handler registry. The behavioral coverage is the Phase 4 hard
+    gates referenced in the module docstring; this AST cap is the
+    architectural complement, kept deliberately tight.
     """
     tree = ast.parse(ORDER_PROCESSOR.read_text(encoding="utf-8"))
     refs = [
@@ -57,19 +68,14 @@ def test_order_processor_minimal_order_type_references():
     )
 
 
-def test_phase_4_gates_still_pass():
-    """Re-runs the Phase 4 hard gates as a regression check.
-
-    Importing the gate test modules causes their assertions to be
-    discovered by pytest. They run as separate test items; this test
-    just confirms the modules import cleanly so a missing file or
-    rename is caught here too.
-    """
-    import tests.unit.strategy.engine.test_order_processor_no_legacy_helpers as gate_no_legacy
-    import tests.unit.strategy.engine.order_handlers.test_handler_registry_completeness as gate_completeness
-
-    # Sanity: the gate modules expose the expected named tests.
-    assert hasattr(gate_no_legacy, "test_no_legacy_private_helpers_on_order_processor")
-    assert hasattr(gate_no_legacy, "test_order_processor_facade_under_200_loc")
-    assert hasattr(gate_no_legacy, "test_no_order_type_branching_in_facade")
-    assert hasattr(gate_completeness, "test_every_action_order_type_has_a_handler")
+# PROJ-495 T4.4: deleted ``test_phase_4_gates_still_pass``. Importing the gate
+# test modules and asserting ``hasattr`` on their named tests added nothing —
+# pytest discovery already fails naturally if those tests are renamed or
+# removed, and the hasattr assertions duplicated that failure with no extra
+# diagnostic value. The Phase 4 gate test names are listed for traceability:
+# - tests/unit/strategy/engine/test_order_processor_no_legacy_helpers.py::
+#     test_no_legacy_private_helpers_on_order_processor
+#     test_order_processor_facade_under_200_loc
+#     test_no_order_type_branching_in_facade
+# - tests/unit/strategy/engine/order_handlers/test_handler_registry_completeness.py::
+#     test_every_action_order_type_has_a_handler

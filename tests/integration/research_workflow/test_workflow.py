@@ -34,20 +34,38 @@ class TestFullResearchWorkflow:
         assert tracker.get_total_allocated() == 150
 
     def test_process_turn_accumulates_chance(self, simple_tech_tree, tracker):
-        """Processing a turn accumulates breakthrough chance."""
+        """Processing a turn accumulates breakthrough chance.
+
+        PROJ-496 T2.3 (origin PROJ-480 T5.11): replaced the
+        ``if breakthrough then... else assert chance went up`` two-arm
+        conditional (which silently passed in either branch and could
+        not catch a regression that broke the accumulation path) with
+        a seeded RNG forcing the no-breakthrough path. Verified against
+        ``random.Random(0)`` at allocation=100: no breakthrough, chance
+        rises from 0.0 to ~0.46.
+        """
+        from unittest.mock import patch
+        import random
+
         tracker.set_allocation('root_tech', 100)
         initial_chance = tracker.get_state('root_tech').current_chance
 
-        events = ResearchService.process_turn(simple_tech_tree, tracker)
+        seeded_rng = random.Random(0)
+        with patch(
+            'game.research.systems.research_service.random.Random',
+            return_value=seeded_rng,
+        ):
+            events = ResearchService.process_turn(simple_tech_tree, tracker)
 
-        # Chance should have increased (unless breakthrough occurred)
+        # With seed=0 the roll is high enough that breakthrough does
+        # not fire — the accumulation path is taken.
+        assert not any(
+            e['event'] == 'breakthrough' and e['node_id'] == 'root_tech'
+            for e in events
+        )
         state = tracker.get_state('root_tech')
-        # If breakthrough occurred, chance resets to 0, otherwise it increases
-        if any(e['event'] == 'breakthrough' and e['node_id'] == 'root_tech' for e in events):
-            assert state.current_level == 1
-            assert state.current_chance == 0.0
-        else:
-            assert state.current_chance > initial_chance
+        assert state.current_level == 0
+        assert state.current_chance > initial_chance
 
     def test_multiple_turns_lead_to_breakthrough(self, simple_tech_tree, tracker):
         """Sustained investment eventually leads to breakthrough.
@@ -109,24 +127,41 @@ class TestMultiTurnProgression:
     """Tests for multi-turn research progression."""
 
     def test_chance_accumulates_over_turns(self, simple_tech_tree, tracker):
-        """Chance accumulates with consistent investment."""
+        """Chance accumulates with consistent investment.
+
+        PROJ-496 T2.3 (origin PROJ-480 T5.11): replaced the silent
+        ``if len(chances) >= 3:`` early-breakthrough escape hatch (which
+        would silently pass if breakthrough happened on turn 1 or 2 and
+        leave the accumulation property untested) with a seeded RNG that
+        guarantees >= 3 non-breakthrough turns. Verified against
+        ``random.Random(17)`` at allocation=50.
+        """
+        from unittest.mock import patch
+        import random
+
         tracker.set_allocation('root_tech', 50)
+        seeded_rng = random.Random(17)
 
         chances = []
-        for _ in range(10):
-            ResearchService.process_turn(simple_tech_tree, tracker)
-            state = tracker.get_state('root_tech')
-            if state.current_level == 0:  # No breakthrough yet
-                chances.append(state.current_chance)
-            else:
-                break  # Stop if breakthrough occurred
+        with patch(
+            'game.research.systems.research_service.random.Random',
+            return_value=seeded_rng,
+        ):
+            for _ in range(10):
+                ResearchService.process_turn(simple_tech_tree, tracker)
+                state = tracker.get_state('root_tech')
+                if state.current_level == 0:  # No breakthrough yet
+                    chances.append(state.current_chance)
+                else:
+                    break  # Stop if breakthrough occurred
 
-        # If we have enough data points, verify accumulation
-        if len(chances) >= 3:
-            # Later chances should generally be higher (net of decay)
-            # With volatility 0.1 and 50 RP, added_chance ~ 0.39 per turn
-            # Decay is 0.01, so net gain ~ 0.38 per turn
-            assert chances[-1] > chances[0]
+        # With seed=17 the first 3 turns produce no breakthrough.
+        # No more silent-pass on early breakthrough.
+        assert len(chances) >= 3
+        # Later chances should be higher (net of decay).
+        # With volatility 0.1 and 50 RP, added_chance ~ 0.39 per turn,
+        # decay 0.01, net gain ~ 0.38 per turn.
+        assert chances[-1] > chances[0]
 
     def test_decay_applies_without_investment(self, simple_tech_tree, tracker):
         """Accumulated chance decays without investment."""

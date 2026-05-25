@@ -60,7 +60,7 @@ def _capturing_bus() -> tuple[EventBus, list]:
     return EventBus(_handler), captured
 
 
-def _make_fleet(loc=HexCoord(10, 10)) -> MagicMock:
+def _make_superweapon_fleet(loc=HexCoord(10, 10)) -> MagicMock:
     fleet = MagicMock(spec=Fleet)
     fleet.id = 1
     fleet.owner_id = 0
@@ -113,7 +113,7 @@ class TestStarDestroyedPayload:
         bus, captured = _capturing_bus()
         proc = SuperweaponOrderProcessor(event_bus=bus)
 
-        fleet = _make_fleet()
+        fleet = _make_superweapon_fleet()
         system = _make_system("Vega", HexCoord(10, 10))
         ship = _make_ship('stellerator')
         fleet.ships = [ship]
@@ -157,7 +157,7 @@ class TestWarpPointOpenedPayload:
         bus, captured = _capturing_bus()
         proc = SuperweaponOrderProcessor(event_bus=bus)
 
-        fleet = _make_fleet()
+        fleet = _make_superweapon_fleet()
         ship = _make_ship('quantum_tunneler')
         fleet.ships = [ship]
 
@@ -203,7 +203,7 @@ class TestWarpPointClosedPayload:
         bus, captured = _capturing_bus()
         proc = SuperweaponOrderProcessor(event_bus=bus)
 
-        fleet = _make_fleet()
+        fleet = _make_superweapon_fleet()
         ship = _make_ship('quantum_disruptor')
         fleet.ships = [ship]
 
@@ -250,7 +250,7 @@ class TestDysonSphereCreatedPayload:
         bus, captured = _capturing_bus()
         proc = SuperweaponOrderProcessor(event_bus=bus)
 
-        fleet = _make_fleet()
+        fleet = _make_superweapon_fleet()
         ship = _make_ship('dyson_constructor')
         fleet.ships = [ship]
 

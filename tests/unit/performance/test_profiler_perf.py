@@ -51,14 +51,35 @@ class TestProfilingJsonUtils:
     """Test that Profiler uses centralized json_utils for file operations."""
 
     def test_profiling_does_not_use_direct_json_calls(self, json_utils_setup):
-        """Profiler.save_history should use json_utils, not direct json.dump/loads."""
-        import game.core.profiling as prof_module
-        import inspect
-        source = inspect.getsource(prof_module)
+        """Profiler.save_history should use json_utils, not direct json.dump/loads.
 
-        # The file should use load_json/save_json from json_utils
-        assert "json.dump(" not in source, "Should use save_json from game.core.json_utils"
-        assert "json.loads(" not in source, "Should use load_json from game.core.json_utils"
+        PROJ-491 Task 1.2: replace brittle ``inspect.getsource`` substring
+        check with a behavioral assertion at the patchpoint — if profiling
+        regressed to call ``json.dump`` / ``json.loads`` directly, those would
+        have to be imported into the module namespace as ``game.core.profiling.json``.
+        We patch that namespace (creating the attribute if missing so the patch
+        succeeds) and verify the patched callables are never invoked during a
+        real save_history flow.
+        """
+        test_file = json_utils_setup
+        from game.core.profiling import _default_profiler
+        import game.core.profiling as prof_module
+
+        profiler = _default_profiler
+        profiler.start()
+        profiler.record("test_action", 0.1)
+
+        # Patch the would-be call sites in the production module's namespace.
+        # ``create=True`` lets the patch attach to attributes that do not yet
+        # exist; if the production code never imports ``json``, the mocks
+        # naturally stay uncalled.
+        with patch.object(
+            prof_module, "json", create=True
+        ) as mock_json:
+            profiler.save_history(test_file)
+
+            mock_json.dump.assert_not_called()
+            mock_json.loads.assert_not_called()
 
     @patch("game.core.profiling.save_json")
     def test_save_history_uses_save_json(self, mock_save_json, json_utils_setup):

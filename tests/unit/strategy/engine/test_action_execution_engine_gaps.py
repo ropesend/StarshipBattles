@@ -31,7 +31,7 @@ def _make_empire(empire_id: int = 0) -> Empire:
     return Empire(empire_id=empire_id, name="Test Empire", color=(255, 0, 0))
 
 
-def _make_fleet(
+def _make_real_fleet(
     *,
     fleet_id: int = 100,
     owner_id: int = 0,
@@ -65,7 +65,7 @@ class TestValidateTickInputs:
         engine = ActionExecutionEngine(proc)
 
         empire = _make_empire(empire_id=42)
-        fleet = _make_fleet(speed=5.0, location=HexCoord(0, 0))
+        fleet = _make_real_fleet(speed=5.0, location=HexCoord(0, 0))
         fleet.add_order(Order(OrderType.COLONIZE, None))
         # Force None location AFTER construction (constructor requires HexCoord).
         fleet.location = None
@@ -86,7 +86,7 @@ class TestValidateTickInputs:
         engine = ActionExecutionEngine(proc)
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=5.0)
+        fleet = _make_real_fleet(speed=5.0)
         fleet.add_order(Order(OrderType.COLONIZE, None))
         empire.fleets.append(fleet)
 
@@ -101,12 +101,12 @@ class TestValidateTickInputs:
         engine = ActionExecutionEngine(proc)
 
         empire1 = _make_empire(empire_id=0)
-        fleet1 = _make_fleet(fleet_id=101, speed=5.0)
+        fleet1 = _make_real_fleet(fleet_id=101, speed=5.0)
         fleet1.add_order(Order(OrderType.COLONIZE, None))
         empire1.fleets.append(fleet1)
 
         empire2 = _make_empire(empire_id=1)
-        fleet2 = _make_fleet(fleet_id=102, speed=5.0)
+        fleet2 = _make_real_fleet(fleet_id=102, speed=5.0)
         fleet2.add_order(Order(OrderType.COLONIZE, None))
         fleet2.location = None  # Triggers raise
         empire2.fleets.append(fleet2)
@@ -139,7 +139,7 @@ class TestActionTimeResolverInjection:
         assert engine._action_time_resolver is custom_resolver
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=5.0)
+        fleet = _make_real_fleet(speed=5.0)
         order = Order(OrderType.COLONIZE, None)
         fleet.add_order(order)
         empire.fleets.append(fleet)
@@ -176,7 +176,7 @@ class TestActionTimeResolverInjection:
         assert engine._action_time_resolver is None
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=5.0)
+        fleet = _make_real_fleet(speed=5.0)
         fleet.add_order(Order(OrderType.COLONIZE, None))
         empire.fleets.append(fleet)
 
@@ -211,7 +211,7 @@ class TestOrderPoppingResponsibility:
         engine = ActionExecutionEngine(proc)
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=5.0)
+        fleet = _make_real_fleet(speed=5.0)
         original_order = Order(OrderType.TRANSFER, None)
         fleet.add_order(original_order)
         empire.fleets.append(fleet)
@@ -232,7 +232,7 @@ class TestOrderPoppingResponsibility:
         engine = ActionExecutionEngine(proc)
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=5.0)
+        fleet = _make_real_fleet(speed=5.0)
         order = Order(OrderType.COLONIZE, None)
         fleet.add_order(order)
         empire.fleets.append(fleet)
@@ -265,7 +265,7 @@ class TestExecuteActionKwargThreading:
         engine = ActionExecutionEngine(proc)
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=5.0)
+        fleet = _make_real_fleet(speed=5.0)
         fleet.add_order(Order(OrderType.TRANSFER, None))
         empire.fleets.append(fleet)
 
@@ -293,7 +293,7 @@ class TestExecuteActionKwargThreading:
         engine = ActionExecutionEngine(proc)
 
         empire = _make_empire()
-        fleet = _make_fleet(speed=5.0)
+        fleet = _make_real_fleet(speed=5.0)
         fleet.add_order(Order(OrderType.TRANSFER, None))
         empire.fleets.append(fleet)
 
@@ -325,7 +325,7 @@ class TestMultipleConsumedFleetsIterationSafety:
         empire = _make_empire()
         fleets = []
         for i in range(3):
-            f = _make_fleet(fleet_id=200 + i, speed=5.0)
+            f = _make_real_fleet(fleet_id=200 + i, speed=5.0)
             f.add_order(Order(OrderType.STELLERATE_STAR, None))
             empire.fleets.append(f)
             fleets.append(f)

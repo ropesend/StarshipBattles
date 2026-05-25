@@ -26,7 +26,7 @@ from game.strategy.services.fleet_navigation_service import (
 from game.strategy.data.order_types import Order, OrderType
 
 
-def _make_mock_fleet(
+def _make_navigation_fleet(
     *,
     location=None,
     path=None,
@@ -414,13 +414,13 @@ class TestProjectPath:
     @pytest.mark.parametrize("speed", [0.0, -5.0], ids=["zero", "negative"])
     def test_project_path_non_positive_speed_returns_empty(self, service, speed):
         """project_path with zero or negative speed should return empty list."""
-        fleet = _make_mock_fleet(path=[HexCoord(1, 0)], speed=speed)
+        fleet = _make_navigation_fleet(path=[HexCoord(1, 0)], speed=speed)
         galaxy = MagicMock()
         assert service.project_path(fleet, galaxy) == []
 
     def test_project_path_empty_path_and_orders(self, service):
         """project_path with no path or orders should return empty list."""
-        fleet = _make_mock_fleet(speed=5.0)
+        fleet = _make_navigation_fleet(speed=5.0)
         galaxy = MagicMock()
         assert service.project_path(fleet, galaxy) == []
 
@@ -442,7 +442,7 @@ class TestProjectPathAsDicts:
 
     def test_returns_list_of_dicts(self, service):
         """project_path_as_dicts should return list of dicts."""
-        fleet = _make_mock_fleet(path=[HexCoord(1, 0)], speed=5.0)
+        fleet = _make_navigation_fleet(path=[HexCoord(1, 0)], speed=5.0)
         galaxy = MagicMock()
         result = service.project_path_as_dicts(fleet, galaxy)
         # May be empty if no movement orders, but should be list
@@ -450,7 +450,7 @@ class TestProjectPathAsDicts:
 
     def test_empty_with_zero_speed(self, service):
         """project_path_as_dicts with zero speed should return empty list."""
-        fleet = _make_mock_fleet(speed=0.0)
+        fleet = _make_navigation_fleet(speed=0.0)
         galaxy = MagicMock()
         assert service.project_path_as_dicts(fleet, galaxy) == []
 
@@ -464,7 +464,7 @@ class TestCalculateFleetNextHex:
 
     def test_no_orders_returns_none(self, service):
         """Fleet with no orders should return None."""
-        fleet = _make_mock_fleet(speed=5.0, current_order=None)
+        fleet = _make_navigation_fleet(speed=5.0, current_order=None)
         galaxy = MagicMock()
         assert service.calculate_fleet_next_hex(fleet, galaxy) is None
 
@@ -474,7 +474,7 @@ class TestCalculateFleetNextHex:
         order.type = OrderType.MOVE_TO_FLEET
         order.target = None  # Invalid target
 
-        fleet = _make_mock_fleet(orders=[order], speed=5.0, current_order=order)
+        fleet = _make_navigation_fleet(orders=[order], speed=5.0, current_order=order)
         galaxy = MagicMock()
         assert service.calculate_fleet_next_hex(fleet, galaxy) is None
         fleet.pop_order.assert_called_once()

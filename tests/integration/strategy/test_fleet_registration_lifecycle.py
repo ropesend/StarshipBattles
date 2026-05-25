@@ -99,7 +99,7 @@ def small_game_session():
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _make_fleet(fleet_id, owner_id, location, ship_count=1, registries=None):
+def _make_real_fleet(fleet_id, owner_id, location, ship_count=1, registries=None):
     """Create a fleet with mock ships."""
     fleet = Fleet(fleet_id, owner_id, location, speed=15.0)
     for i in range(ship_count):
@@ -141,8 +141,8 @@ class TestCombatUnregistersDestroyedFleet:
         loc = HexCoord(10, 10)
 
         # Create fleets at same location (conflict)
-        fleet1 = _make_fleet(100, emp1.id, loc, ship_count=1, registries=fresh_registries)
-        fleet2 = _make_fleet(200, emp2.id, loc, ship_count=1, registries=fresh_registries)
+        fleet1 = _make_real_fleet(100, emp1.id, loc, ship_count=1, registries=fresh_registries)
+        fleet2 = _make_real_fleet(200, emp2.id, loc, ship_count=1, registries=fresh_registries)
         emp1.add_fleet(fleet1)
         emp2.add_fleet(fleet2)
 
@@ -195,8 +195,8 @@ class TestJoinFleetUnregistersMergedFleet:
         loc = HexCoord(20, 20)
 
         # Create target and source fleets at same location
-        target_fleet = _make_fleet(300, emp1.id, loc, ship_count=2, registries=fresh_registries)
-        source_fleet = _make_fleet(301, emp1.id, loc, ship_count=1, registries=fresh_registries)
+        target_fleet = _make_real_fleet(300, emp1.id, loc, ship_count=2, registries=fresh_registries)
+        source_fleet = _make_real_fleet(301, emp1.id, loc, ship_count=1, registries=fresh_registries)
         emp1.add_fleet(target_fleet)
         emp1.add_fleet(source_fleet)
 
@@ -228,8 +228,8 @@ class TestJoinFleetUnregistersMergedFleet:
         emp1, _ = two_empires
         loc = HexCoord(25, 25)
 
-        target_fleet = _make_fleet(400, emp1.id, loc, ship_count=1, registries=fresh_registries)
-        source_fleet = _make_fleet(401, emp1.id, loc, ship_count=1, registries=fresh_registries)
+        target_fleet = _make_real_fleet(400, emp1.id, loc, ship_count=1, registries=fresh_registries)
+        source_fleet = _make_real_fleet(401, emp1.id, loc, ship_count=1, registries=fresh_registries)
         emp1.add_fleet(target_fleet)
         emp1.add_fleet(source_fleet)
 

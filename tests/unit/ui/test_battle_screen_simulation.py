@@ -172,27 +172,32 @@ class TestBattleScreenWinLossDetection:
             self.fresh_registries = fresh_registries
             yield
 
-    def test_get_winner_returns_1_when_team0_all_dead(self):
-        """Test get_winner() returns 1 when team 0 ships are all dead."""
+    # PROJ-494 T5.1: 3 single-target winner-determination tests parametrized
+    # on `(kill_indices, expected_winner, expect_battle_over)`. The
+    # `test_is_battle_over_with_partial_deaths` test stays distinct (it adds
+    # a third ship and asserts the opposite observable: NOT battle-over).
+    @pytest.mark.parametrize(
+        "kill_indices,expected_winner,expect_battle_over",
+        [
+            pytest.param((0,), 1, True, id='team0_dead_team1_wins'),
+            pytest.param((1,), 0, True, id='team1_dead_team0_wins'),
+            pytest.param((0, 1), -1, True, id='all_dead_draw'),
+        ],
+    )
+    def test_get_winner_for_team_deaths(
+        self, kill_indices, expected_winner, expect_battle_over
+    ):
+        """get_winner()/is_battle_over() classify single-ship-per-team outcomes."""
         start_battle_screen_with_minimal_spec(
             self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=True,
         )
 
-        # Kill team 0
-        self.ship1.is_alive = False
+        ships = (self.ship1, self.ship2)
+        for idx in kill_indices:
+            ships[idx].is_alive = False
 
-        assert self.scene.get_winner() == 1
-
-    def test_get_winner_returns_0_when_team1_all_dead(self):
-        """Test get_winner() returns 0 when team 1 ships are all dead."""
-        start_battle_screen_with_minimal_spec(
-            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=True,
-        )
-
-        # Kill team 1
-        self.ship2.is_alive = False
-
-        assert self.scene.get_winner() == 0
+        assert self.scene.is_battle_over() is expect_battle_over
+        assert self.scene.get_winner() == expected_winner
 
     def test_is_battle_over_with_partial_deaths(self, ship_templates):
         """Test is_battle_over() with some ships dead but not all."""
@@ -207,19 +212,6 @@ class TestBattleScreenWinLossDetection:
         self.ship1.is_alive = False
 
         assert not self.scene.is_battle_over()  # ship3 still alive
-
-    def test_draw_condition_all_ships_dead(self):
-        """Test draw condition when all ships dead simultaneously."""
-        start_battle_screen_with_minimal_spec(
-            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=True,
-        )
-
-        # Kill all ships
-        self.ship1.is_alive = False
-        self.ship2.is_alive = False
-
-        assert self.scene.is_battle_over()
-        assert self.scene.get_winner() == -1  # Draw
 
 
 class TestBattleScreenEventHandling:
@@ -259,65 +251,32 @@ class TestBattleScreenEventHandling:
         self.scene.handle_event(event)
         assert self.scene.sim_paused is False
 
-    def test_handle_event_keyboard_comma_decreases_speed(self):
-        """Test handle_event() with COMMA key decreases speed."""
+    # PROJ-494 T3.14: 4 speed-multiplier-key tests parametrized on
+    # `(key, start_speed, expected_speed)`. The M key reads NORMAL_SPEED and
+    # SLASH reads UI_PAUSE_SPEED — those constants are imported above.
+    @pytest.mark.parametrize(
+        "key,start_speed,get_expected",
+        [
+            pytest.param(pygame.K_COMMA, 1.0, lambda: 0.5, id='comma_decreases'),
+            pytest.param(pygame.K_PERIOD, 1.0, lambda: 2.0, id='period_increases'),
+            pytest.param(pygame.K_m, 4.0, lambda: NORMAL_SPEED, id='m_resets'),
+            pytest.param(pygame.K_SLASH, 1.0, lambda: UI_PAUSE_SPEED, id='slash_ui_pause'),
+        ],
+    )
+    def test_handle_event_speed_multiplier_keys(self, key, start_speed, get_expected):
+        """Each speed-multiplier key sets sim_speed_multiplier to the matching value."""
         start_battle_screen_with_minimal_spec(
             self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
         )
-        self.scene.sim_speed_multiplier = 1.0
+        self.scene.sim_speed_multiplier = start_speed
 
         event = MagicMock()
         event.type = pygame.KEYDOWN
-        event.key = pygame.K_COMMA
+        event.key = key
 
         self.scene.handle_event(event)
 
-        assert self.scene.sim_speed_multiplier == 0.5
-
-    def test_handle_event_keyboard_period_increases_speed(self):
-        """Test handle_event() with PERIOD key increases speed."""
-        start_battle_screen_with_minimal_spec(
-            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
-        )
-        self.scene.sim_speed_multiplier = 1.0
-
-        event = MagicMock()
-        event.type = pygame.KEYDOWN
-        event.key = pygame.K_PERIOD
-
-        self.scene.handle_event(event)
-
-        assert self.scene.sim_speed_multiplier == 2.0
-
-    def test_handle_event_keyboard_m_resets_speed(self):
-        """Test handle_event() with M key resets speed to normal."""
-        start_battle_screen_with_minimal_spec(
-            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
-        )
-        self.scene.sim_speed_multiplier = 4.0
-
-        event = MagicMock()
-        event.type = pygame.KEYDOWN
-        event.key = pygame.K_m
-
-        self.scene.handle_event(event)
-
-        assert self.scene.sim_speed_multiplier == NORMAL_SPEED
-
-    def test_handle_event_keyboard_slash_sets_ui_pause_speed(self):
-        """Test handle_event() with SLASH key sets UI pause speed."""
-        start_battle_screen_with_minimal_spec(
-            self.scene, {0: [self.ship1], 1: [self.ship2]}, headless=False,
-        )
-        self.scene.sim_speed_multiplier = 1.0
-
-        event = MagicMock()
-        event.type = pygame.KEYDOWN
-        event.key = pygame.K_SLASH
-
-        self.scene.handle_event(event)
-
-        assert self.scene.sim_speed_multiplier == UI_PAUSE_SPEED
+        assert self.scene.sim_speed_multiplier == get_expected()
 
     def test_handle_event_forwards_to_battle_ui(self):
         """Test handle_event() forwards mouse clicks to BattleUI."""

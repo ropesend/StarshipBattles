@@ -9,11 +9,16 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 
-def _make_game_state_manager():
-    """Create a StrategyGameStateManager with mocked screen dependency."""
+def _build_state_manager(empires, *, attach_fleets: bool = False):
+    """PROJ-494 T2.8: shared core of `_make_game_state_manager` and
+    `_make_n_player_state_manager`. Wires the mock screen + facade against the
+    supplied empire list and returns `(manager, mock_screen)`.
+
+    `attach_fleets=True` attaches a single mock fleet per empire — needed by
+    the Issue #25 elimination tests so `is_eliminated()` defaults to False.
+    """
     from game.ui.screens.strategy_game_state_manager import StrategyGameStateManager
 
-    # Create mock screen
     mock_screen = MagicMock()
     mock_screen.session = MagicMock()
     mock_screen._facade = MagicMock()
@@ -34,39 +39,25 @@ def _make_game_state_manager():
     mock_screen.selected_fleet = None
     mock_screen.last_selected_system = None
 
-    # Setup empire mocking
-    empire0 = MagicMock()
-    empire0.id = 0
-    empire0.name = "Empire Zero"
-    empire0.colonies = [MagicMock(name="empire0_home")]
-    # Issue #25: defeat detection runs at the top of
-    # `_apply_turn_start_state`; explicitly stub `is_eliminated` so the
-    # existing live-empire tests don't trip the defeat path because of
-    # MagicMock's auto-truthy return.
-    empire0.is_eliminated = MagicMock(return_value=False)
-    empire1 = MagicMock()
-    empire1.id = 1
-    empire1.name = "Empire One"
-    empire1.colonies = [MagicMock(name="empire1_home")]
-    empire1.is_eliminated = MagicMock(return_value=False)
-    mock_screen.empires = [empire0, empire1]
-    mock_screen.session.empires = [empire0, empire1]
-    # PROJ-477 Phase 4: the manager iterates next/current empires through
-    # scene.world.iter_empires; mirror the same list tests configure.
+    if attach_fleets:
+        for emp in empires:
+            if not hasattr(emp, 'fleets') or not getattr(emp, '_has_fleet_assignment', False):
+                emp.fleets = [MagicMock(name=f"empire{emp.id}_fleet")]
+                emp._has_fleet_assignment = True
+
+    ids = [emp.id for emp in empires]
+    mock_screen.empires = list(empires)
+    mock_screen.session.empires = list(empires)
+    # PROJ-477 Phase 4: manager iterates empires via scene.world.iter_empires.
     mock_screen.world.iter_empires.side_effect = lambda: iter(mock_screen.empires)
-    mock_screen.session.human_player_ids = [0, 1]
-    mock_screen.human_player_ids = [0, 1]
-    # PROJ-475 Phase 3: the manager reads human-player ids through
-    # ``screen.facade.session_meta.human_player_ids()`` (the screen
-    # pass-through was retired). Many tests reassign ``screen.human_player_ids``
-    # after construction, so source the facade surface dynamically from that
-    # attribute (a test-helper shorthand) to keep both in lockstep. Both
-    # ``mock_screen.facade`` and ``mock_screen._facade`` are wired since they
-    # are distinct MagicMock children.
+    mock_screen.session.human_player_ids = ids
+    mock_screen.human_player_ids = ids
+    # PROJ-475 Phase 3: facade-sourced human-player ids — sourced dynamically
+    # so tests that reassign ``screen.human_player_ids`` stay in lockstep.
     _hpi = lambda: mock_screen.human_player_ids
     mock_screen._facade.session_meta.human_player_ids.side_effect = _hpi
     mock_screen.facade.session_meta.human_player_ids.side_effect = _hpi
-    mock_screen.active_empire = empire0
+    mock_screen.active_empire = empires[0]
 
     # Property mock for current_empire — tracks current_player_index so
     # rollover-branch tests can observe the post-rotation empire.
@@ -84,6 +75,28 @@ def _make_game_state_manager():
     manager = StrategyGameStateManager(mock_screen)
 
     return manager, mock_screen
+
+
+def _make_game_state_manager():
+    """Create a StrategyGameStateManager with mocked screen dependency.
+
+    Backed by `_build_state_manager` (PROJ-494 T2.8).
+    """
+    empire0 = MagicMock()
+    empire0.id = 0
+    empire0.name = "Empire Zero"
+    empire0.colonies = [MagicMock(name="empire0_home")]
+    # Issue #25: defeat detection runs at the top of
+    # `_apply_turn_start_state`; explicitly stub `is_eliminated` so the
+    # existing live-empire tests don't trip the defeat path because of
+    # MagicMock's auto-truthy return.
+    empire0.is_eliminated = MagicMock(return_value=False)
+    empire1 = MagicMock()
+    empire1.id = 1
+    empire1.name = "Empire One"
+    empire1.colonies = [MagicMock(name="empire1_home")]
+    empire1.is_eliminated = MagicMock(return_value=False)
+    return _build_state_manager([empire0, empire1])
 
 
 class TestGameStateManagerInit:
@@ -543,29 +556,41 @@ class TestApplyTurnStartState:
     ],
     ids=["per_player_switch", "rollover_branch"],
 )
-def test_advance_turn_helper_invocation(
+def test_advance_turn_focuses_next_empire_home_colony(
     human_player_ids, expected_next_id, need_display_patch
 ):
-    """Parametrized (PROJ-479 Task 1.10): the turn-start helper is
-    invoked with the correct next empire on BOTH the per-player-switch
-    (else) branch and the full-turn-rollover branch."""
+    """Parametrized (PROJ-479 Task 1.10): the turn-start path focuses
+    the NEXT empire's home colony on BOTH branches.
+
+    PROJ-491 Task 1.17: replaced the prior ``patch.object(manager,
+    '_apply_turn_start_state')`` private-method assertion with the
+    observable public turn-advance outcome — the per-player turn-start
+    flow ultimately calls ``screen.on_ui_selection(home_colony)`` for
+    the **incoming** empire (see ``_apply_turn_start_state`` in
+    production). Checking the on_ui_selection target's owner_id is the
+    same regression check at the public-API surface.
+    """
     manager, screen = _make_game_state_manager()
     screen.current_player_index = 0
     screen.human_player_ids = human_player_ids
     screen._facade.events.turn_events.return_value = []
 
-    contexts = [patch.object(manager, "_apply_turn_start_state")]
+    # Tag each empire's home colony with the empire's id so the assertion
+    # can verify which empire's home was focused.
+    for emp in screen.empires:
+        emp.colonies[0].owner_id = emp.id
+
+    contexts = []
     if need_display_patch:
         contexts.append(patch("pygame.display.get_surface", return_value=None))
     with contextlib.ExitStack() as stack:
-        mock_helper = stack.enter_context(contexts[0])
-        for ctx in contexts[1:]:
+        for ctx in contexts:
             stack.enter_context(ctx)
         manager.advance_turn()
 
-    mock_helper.assert_called_once()
-    called_empire = mock_helper.call_args[0][0]
-    assert called_empire.id == expected_next_id
+    screen.on_ui_selection.assert_called_once()
+    selected_colony = screen.on_ui_selection.call_args[0][0]
+    assert selected_colony.owner_id == expected_next_id
 
 
 @pytest.mark.parametrize(
@@ -576,29 +601,48 @@ def test_advance_turn_helper_invocation(
     ],
     ids=["per_player_switch", "rollover_branch"],
 )
-def test_advance_turn_runs_helper_after_sync_active_empire(
+def test_advance_turn_syncs_active_empire_before_event_log_open(
     human_player_ids, need_display_patch
 ):
     """Parametrized (PROJ-479 Task 1.10): on BOTH branches,
-    ``_sync_active_empire`` must run BEFORE ``_apply_turn_start_state``
-    so event-log scoping reads the just-rotated empire (BUG-125)."""
+    ``set_active_empire`` must run BEFORE the per-player event-log popup
+    so event-log scoping reads the just-rotated empire (BUG-125).
+
+    PROJ-491 Task 1.17: replaces the prior ``patch.object`` on
+    ``_sync_active_empire`` / ``_apply_turn_start_state`` with the
+    observable public outcomes:
+    - ``order_writes.set_active_empire`` is invoked (the public effect of
+      ``_sync_active_empire``).
+    - ``ui.open_event_log_with_events`` is invoked (the public effect of
+      ``_apply_turn_start_state`` when events exist).
+    - The active-empire push happens BEFORE the event-log open.
+
+    We give the rotated-in empire one turn event so the popup actually
+    fires; record-by-side-effect on the two public-surface mocks
+    establishes the relative ordering.
+    """
     manager, screen = _make_game_state_manager()
     screen.current_player_index = 0
     screen.human_player_ids = human_player_ids
-    screen._facade.events.turn_events.return_value = []
-    call_order = []
+    # Issue #9: the event-log popup fires when turn_events returns a
+    # non-empty list scoped to the incoming empire. Hand back one event
+    # for any (turn, empire_id) query so both branches reach the popup.
+    screen._facade.events.turn_events.side_effect = (
+        lambda turn, *, empire_id: [MagicMock(name="evt")]
+    )
 
-    def record_sync():
-        call_order.append("sync")
+    call_order: list[str] = []
 
-    def record_helper(empire):
-        call_order.append("helper")
+    def record_active_empire_set(_empire) -> None:
+        call_order.append("set_active_empire")
 
-    contexts = [
-        patch.object(manager, "_sync_active_empire", side_effect=record_sync),
-        patch.object(manager, "_apply_turn_start_state",
-                     side_effect=record_helper),
-    ]
+    def record_event_log_open(*_args, **_kwargs) -> None:
+        call_order.append("open_event_log")
+
+    screen.order_writes.set_active_empire.side_effect = record_active_empire_set
+    screen.ui.open_event_log_with_events.side_effect = record_event_log_open
+
+    contexts = []
     if need_display_patch:
         contexts.append(patch("pygame.display.get_surface", return_value=None))
     with contextlib.ExitStack() as stack:
@@ -606,7 +650,7 @@ def test_advance_turn_runs_helper_after_sync_active_empire(
             stack.enter_context(ctx)
         manager.advance_turn()
 
-    assert call_order == ["sync", "helper"]
+    assert call_order == ["set_active_empire", "open_event_log"]
 
 
 class TestAdvanceTurnPerPlayerSwitch:
@@ -858,27 +902,9 @@ def _make_n_player_state_manager(n_players: int):
 
     Each empire has one fleet and one colony so ``is_eliminated()`` is
     False by default. Tests then strip assets to flip a specific empire.
+
+    Backed by `_build_state_manager` (PROJ-494 T2.8).
     """
-    from game.ui.screens.strategy_game_state_manager import StrategyGameStateManager
-
-    mock_screen = MagicMock()
-    mock_screen.session = MagicMock()
-    mock_screen._facade = MagicMock()
-    # PROJ-475 Phase 2 Task 2.4: auto-save routes through
-    # facade.session_meta.save_current_game(); concrete triple for the unpack.
-    mock_screen._facade.session_meta.save_current_game.return_value = (
-        True, "Saved", "/tmp/save.json"
-    )
-    mock_screen.ui = MagicMock()
-    mock_screen.ui.manager = MagicMock()
-    mock_screen.ui.width = 1920
-    mock_screen.ui.height = 1080
-    mock_screen.turn_processing = False
-    mock_screen.current_player_index = 0
-    mock_screen.selected_object = None
-    mock_screen.selected_fleet = None
-    mock_screen.last_selected_system = None
-
     empires = []
     for i in range(n_players):
         emp = MagicMock()
@@ -886,33 +912,11 @@ def _make_n_player_state_manager(n_players: int):
         emp.name = f"Empire {i}"
         emp.colonies = [MagicMock(name=f"empire{i}_home")]
         emp.fleets = [MagicMock(name=f"empire{i}_fleet")]
+        emp._has_fleet_assignment = True
         emp.is_eliminated = MagicMock(return_value=False)
         empires.append(emp)
 
-    mock_screen.empires = empires
-    mock_screen.session.empires = empires
-    # PROJ-477 Phase 4: manager iterates empires via scene.world.iter_empires.
-    mock_screen.world.iter_empires.side_effect = lambda: iter(mock_screen.empires)
-    ids = list(range(n_players))
-    mock_screen.session.human_player_ids = ids
-    mock_screen.human_player_ids = ids
-    # PROJ-475 Phase 3: facade-sourced human-player ids (see _make_game_state_manager).
-    _hpi = lambda: mock_screen.human_player_ids
-    mock_screen._facade.session_meta.human_player_ids.side_effect = _hpi
-    mock_screen.facade.session_meta.human_player_ids.side_effect = _hpi
-    mock_screen.active_empire = empires[0]
-
-    def _current_empire(self):
-        idx = self.human_player_ids[self.current_player_index]
-        return next(e for e in self.empires if e.id == idx)
-
-    type(mock_screen).current_empire = property(_current_empire)
-
-    mock_screen.draw = MagicMock()
-    mock_screen.center_camera_on = MagicMock()
-    mock_screen.on_ui_selection = MagicMock()
-
-    manager = StrategyGameStateManager(mock_screen)
+    manager, mock_screen = _build_state_manager(empires)
     return manager, mock_screen, empires
 
 

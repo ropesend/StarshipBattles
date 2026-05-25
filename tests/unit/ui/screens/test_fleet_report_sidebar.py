@@ -2,13 +2,28 @@
 from unittest.mock import Mock, patch
 
 from game.ui.filters.filter_state import FilterState
+from tests.fixtures.ui_widget_factory import make_ui_widget
 
 
 def _create_sidebar(**overrides):
-    """Create a FleetReportSidebar with mocked dependencies.
+    """Create a FleetReportSidebar via the canonical ``make_ui_widget``
+    real-constructor factory.
+
+    PROJ-491 Task 2.5: replaces the prior 4-patch nested stack
+    (UILabel + UIButton ×2 + TriStateFilterWidget) with a
+    ``make_ui_widget(FleetReportSidebar, extra_modules=(...))`` call that
+    patches every ``pygame_gui.elements.UI*`` binding across the sidebar
+    module + the shared ``column_toggle_section`` module in one step. The
+    one remaining patch is ``TriStateFilterWidget`` — that's a
+    project-local widget (not a pygame_gui element), so the factory
+    does not cover it; a single in-line patch is the minimum surface.
 
     Returns (sidebar, mocks_dict).
     """
+    import game.ui.screens.fleet_report_sidebar as sidebar_module
+    import game.ui.widgets.column_toggle_section as column_toggle_module
+    from game.ui.screens.fleet_report_sidebar import FleetReportSidebar
+
     mock_panel = Mock()
     mock_panel.get_relative_rect.return_value = Mock(width=300)
     mock_manager = Mock()
@@ -32,50 +47,50 @@ def _create_sidebar(**overrides):
 
     mock_empire = overrides.get('empire', Mock())
 
-    # PROJ-319 DUP-X-08: column toggles moved to game.ui.widgets.column_toggle_section,
-    # so patch UILabel/UIButton on BOTH the sidebar module (for filter rows) and
-    # the shared widget (for the column section).
-    with patch('game.ui.screens.fleet_report_sidebar.UILabel'), \
-         patch('game.ui.widgets.column_toggle_section.UILabel'):
-        with patch('game.ui.screens.fleet_report_sidebar.UIButton') as mock_btn_cls, \
-             patch('game.ui.widgets.column_toggle_section.UIButton') as _shared_btn_cls:
-            # UIButton mocks default check_pressed to False
-            def _make_btn(**kw):
-                btn = Mock()
-                btn.check_pressed.return_value = False
-                return btn
-            mock_btn_cls.side_effect = _make_btn
-            _shared_btn_cls.side_effect = _make_btn
-            with patch('game.ui.screens.fleet_report_sidebar.TriStateFilterWidget') as mock_tsw_cls:
-                # Each call to TriStateFilterWidget returns a unique mock
-                mock_tsw_cls.side_effect = lambda **kw: Mock(
-                    attribute_name=kw.get('attribute_name', 'unknown'),
-                    current_state=FilterState.IGNORE,
-                    check_pressed=Mock(return_value=None),
-                    set_state=Mock(),
-                    kill=Mock(),
-                )
+    # The shared ``make_ui_widget`` factory patches every pygame_gui ``UI*``
+    # binding across the sidebar + column_toggle_section modules in one go.
+    # We then layer a tighter ``UIButton`` patch on top so each button
+    # instance defaults ``check_pressed`` to False (mirroring the pre-PROJ-491
+    # 4-patch stack's contract). TriStateFilterWidget is project-local, so
+    # the factory does not cover it — a single in-line patch is the minimum.
+    with patch.object(sidebar_module, 'TriStateFilterWidget') as mock_tsw_cls:
+        mock_tsw_cls.side_effect = lambda **kw: Mock(
+            attribute_name=kw.get('attribute_name', 'unknown'),
+            current_state=FilterState.IGNORE,
+            check_pressed=Mock(return_value=None),
+            set_state=Mock(),
+            kill=Mock(),
+        )
+        sidebar = make_ui_widget(
+            FleetReportSidebar,
+            extra_modules=(column_toggle_module,),
+            panel=mock_panel,
+            manager=mock_manager,
+            view_model=mock_view_model,
+            column_manager=mock_column_manager,
+            empire=mock_empire,
+        )
 
-                sidebar = None
-                from game.ui.screens.fleet_report_sidebar import FleetReportSidebar
-                sidebar = FleetReportSidebar(
-                    panel=mock_panel,
-                    manager=mock_manager,
-                    view_model=mock_view_model,
-                    column_manager=mock_column_manager,
-                    empire=mock_empire,
-                )
+    # Post-init UIButton normalisation: the factory's MagicMock-returned
+    # buttons default ``check_pressed`` to a truthy MagicMock; the pre-PROJ-491
+    # behaviour returned False. Re-stub each button's ``check_pressed`` so
+    # tests can selectively flip a single button to True and observe it.
+    for btn in sidebar.filter_buttons.values():
+        btn.check_pressed = Mock(return_value=False)
 
-                mocks = {
-                    'panel': mock_panel,
-                    'manager': mock_manager,
-                    'view_model': mock_view_model,
-                    'column_manager': mock_column_manager,
-                    'empire': mock_empire,
-                    'TriStateFilterWidget': mock_tsw_cls,
-                    'UIButton': mock_btn_cls,
-                }
-                return sidebar, mocks
+    mocks = {
+        'panel': mock_panel,
+        'manager': mock_manager,
+        'view_model': mock_view_model,
+        'column_manager': mock_column_manager,
+        'empire': mock_empire,
+        'TriStateFilterWidget': mock_tsw_cls,
+        # UIButton is now patched by the factory; expose the factory-bound
+        # patch via the sidebar module so legacy tests that look up the
+        # button mock keep working.
+        'UIButton': getattr(sidebar_module, 'UIButton'),
+    }
+    return sidebar, mocks
 
 
 class TestSidebarTriStateWidgets:
