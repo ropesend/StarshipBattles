@@ -7,7 +7,7 @@ parsed dicts or `None` when the sidecar is missing or malformed.
 Sidecar locations:
 - Flag:     `<assets>/Images/Flags/Processed/<flag_id>/<flag_id>.caption.json`
 - Portrait: `<assets>/Images/Race Portraits/<portrait_filename>.caption.json`
-- Theme:    `<assets>/ShipThemes/<theme_id>/theme.caption.json`
+- Theme:    `<assets>/Images/ShipThemes/<theme_id>/theme.caption.json`
 
 Graceful degradation: missing or malformed sidecars do not raise; they
 log a debug/warning and return `None`. The downstream prompt builder
@@ -70,7 +70,7 @@ class RaceCaptionLoader:
 
     def load_theme(self, theme_id: str) -> Optional[dict]:
         """Load the caption for a ship theme, or None on missing/malformed."""
-        sidecar = self.assets_dir / "ShipThemes" / theme_id / "theme.caption.json"
+        sidecar = self.assets_dir / "Images" / "ShipThemes" / theme_id / "theme.caption.json"
         return self._load(sidecar, asset_type="theme", asset_id=theme_id)
 
     # -- Private -------------------------------------------------------------

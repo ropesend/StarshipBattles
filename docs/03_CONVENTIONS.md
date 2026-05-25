@@ -214,7 +214,7 @@ Rules:
 ### Production Paths
 
 - Production code must use `game.core.paths.Paths` constants for repo file paths.
-- Do not hardcode paths such as `"data/components.json"` or `os.path.join("assets", "ShipThemes", ...)`.
+- Do not hardcode paths such as `"data/components.json"` or `os.path.join("assets", "Images", "ShipThemes", ...)`.
 - For path default arguments, use `None` and resolve inside the body.
 - Tests may use relative paths to test-specific data.
 - CLI scripts with explicit path arguments such as `--output` are exempt.
@@ -536,7 +536,7 @@ Rules:
 
 ### Canonical Theme Schema
 
-Every `assets/ShipThemes/<Theme>/` directory declares art through `theme.json`. Legacy flat image maps and hardcoded portrait filenames are retired.
+Every `assets/Images/ShipThemes/<Theme>/` directory declares art through `theme.json`. Legacy flat image maps and hardcoded portrait filenames are retired.
 
 ```json
 {
@@ -578,7 +578,7 @@ Contracts:
 
 ### Adding a Theme
 
-1. Create `assets/ShipThemes/<NewTheme>/Skins/` and `assets/ShipThemes/<NewTheme>/Portraits/`.
+1. Create `assets/Images/ShipThemes/<NewTheme>/Skins/` and `assets/Images/ShipThemes/<NewTheme>/Portraits/`.
 2. Add 19 lowercase PNG skins, one per canonical ship class.
 3. Optionally add 19 portraits with matching basenames, or run `python -m Tools.regenerate_ship_portraits.cli --theme <NewTheme>`.
 4. Author `theme.json`.

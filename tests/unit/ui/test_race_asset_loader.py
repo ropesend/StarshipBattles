@@ -298,7 +298,7 @@ class TestEmpireAssetLoading:
         from game.ui.screens.race_asset_loader import RaceAssetLoader
 
         # Force a fresh manager instance so disk discovery runs against the
-        # real assets/ShipThemes/ tree (test fixtures reset the singleton).
+        # real assets/Images/ShipThemes/ tree (test fixtures reset the singleton).
         manager = ShipThemeManager()
         manager.initialize()
         set_default_ship_theme_manager(manager)

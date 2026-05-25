@@ -33,7 +33,7 @@ def _shared_pygame_display():
 
 
 class TestNewThemes:
-    """Smoke tests against the real assets/ShipThemes/ directory."""
+    """Smoke tests against the real assets/Images/ShipThemes/ directory."""
 
     @pytest.fixture(autouse=True)
     def setup(self):

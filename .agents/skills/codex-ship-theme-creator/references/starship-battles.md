@@ -1,6 +1,6 @@
 # Starship Battles Theme Notes
 
-`ShipThemeManager` discovers themes from `assets/ShipThemes/<ThemeName>/theme.json`.
+`ShipThemeManager` discovers themes from `assets/Images/ShipThemes/<ThemeName>/theme.json`.
 
 Use the legacy-compatible manifest schema:
 

@@ -2,7 +2,7 @@
 """Validate caption sidecar JSON files for the visual assets (PROJ-299).
 
 Walks `assets/Images/Flags/Processed/`, `assets/Images/Race Portraits/`,
-and `assets/ShipThemes/`, looks up the canonical sidecar location for
+and `assets/Images/ShipThemes/`, looks up the canonical sidecar location for
 each asset, and validates the sidecar against the appropriate schema in
 `Tools/captioning/schemas/`.
 

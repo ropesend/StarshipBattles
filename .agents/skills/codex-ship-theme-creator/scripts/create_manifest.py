@@ -50,7 +50,7 @@ def _build_assets(include_portraits: bool) -> dict[str, dict[str, object]]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Create a Starship Battles ship theme scaffold.")
-    parser.add_argument("--theme-root", required=True, help="Output theme directory, e.g. assets/ShipThemes/Voidforged")
+    parser.add_argument("--theme-root", required=True, help="Output theme directory, e.g. assets/Images/ShipThemes/Voidforged")
     parser.add_argument("--name", required=True, help="Theme display name")
     parser.add_argument("--description", default="", help="Short theme description")
     parser.add_argument(

@@ -1,6 +1,6 @@
 ---
 name: codex-ship-theme-creator
-description: Create complete Starship Battles ship themes under assets/ShipThemes. Use when the user wants a new faction/theme with generated top-down ship skins, off-axis space-view portraits, theme.json manifests, contact sheets, source preservation, and validation. This Codex-prefixed skill is repo-local and replaces the unprefixed user-level ship-theme-creator workflow for this project.
+description: Create complete Starship Battles ship themes under assets/Images/ShipThemes. Use when the user wants a new faction/theme with generated top-down ship skins, off-axis space-view portraits, theme.json manifests, contact sheets, source preservation, and validation. This Codex-prefixed skill is repo-local and replaces the unprefixed user-level ship-theme-creator workflow for this project.
 ---
 
 # Codex Ship Theme Creator
@@ -25,7 +25,7 @@ If the user gives a broad answer, make reasonable art-direction choices and proc
 Create this folder shape:
 
 ```text
-assets/ShipThemes/<ThemeName>/
+assets/Images/ShipThemes/<ThemeName>/
 |-- theme.json
 |-- Skins/
 |-- Portraits/
@@ -58,7 +58,7 @@ Generate exactly these 19 classes:
 
 ## Workflow
 
-1. Inspect `assets/ShipThemes` and `game/ui/assets/ship_theme_manager.py` if working in a Starship Battles repo you have not seen before.
+1. Inspect `assets/Images/ShipThemes` and `game/ui/assets/ship_theme_manager.py` if working in a Starship Battles repo you have not seen before.
 2. Scaffold the new theme with `scripts/create_manifest.py`.
 3. Write `Production/art_direction.md` with the theme brief, palette, motifs, avoid list, and prompt templates.
    - Define a **Theme Lock** block: exact palette, 3-5 repeated silhouette motifs, 3-5 repeated material details, glow placement rules, and weapon visibility rules.

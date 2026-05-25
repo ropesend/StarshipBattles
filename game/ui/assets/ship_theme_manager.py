@@ -1,7 +1,7 @@
 """Ship-theme asset loader (PROJ-314).
 
 Reads the canonical ``assets:`` schema from
-``assets/ShipThemes/<Theme>/theme.json`` and lazy-loads skin + portrait
+``assets/Images/ShipThemes/<Theme>/theme.json`` and lazy-loads skin + portrait
 :class:`pygame.Surface` instances on demand.
 
 Schema (PROJ-314)::
@@ -102,7 +102,7 @@ class ShipThemeManager:
                 logger.info("ShipThemeManager caches cleared.")
 
     def initialize(self) -> None:
-        """Discover all themes from assets/ShipThemes without loading images."""
+        """Discover all themes from assets/Images/ShipThemes without loading images."""
         with self._init_lock:
             if self.discovery_complete and self.theme_data:
                 return  # Already initialized.

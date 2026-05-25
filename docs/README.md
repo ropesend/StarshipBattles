@@ -159,7 +159,7 @@ Forbidden shortcuts:
 - New starter race: create `data/races/qs_<name>.json` with race id, flag,
   portrait, theme, homeworld preferences, and aptitudes; cover it in quickstart
   tests.
-- New ship theme: create `assets/ShipThemes/<Theme>/theme.json`, 19 PNG skins,
+- New ship theme: create `assets/Images/ShipThemes/<Theme>/theme.json`, 19 PNG skins,
   optional matching portraits, then run the portrait audit and race-setup smoke
   test.
 

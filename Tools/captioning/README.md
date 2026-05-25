@@ -39,7 +39,7 @@ them by hand:
 4. **Save Gemini's JSON output** to the sidecar location next to the asset:
    - Flag: `assets/Images/Flags/Processed/<flag_id>/<flag_id>.caption.json`
    - Portrait: `assets/Images/Race Portraits/<portrait_filename>.caption.json`
-   - Theme: `assets/ShipThemes/<theme_name>/theme.caption.json`
+   - Theme: `assets/Images/ShipThemes/<theme_name>/theme.caption.json`
 5. **Validate** with `python Tools/captioning/validate_captions.py`. The
    tool reports any sidecars that are missing, malformed, or fail schema
    validation.

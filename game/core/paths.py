@@ -72,7 +72,7 @@ class Paths:
     STARTER_RACES_DIR: str = os.path.join(DATA_DIR, "races")
 
     # === Asset Subdirectories ===
-    SHIP_THEMES_DIR: str = os.path.join(ASSET_DIR, "ShipThemes")
+    SHIP_THEMES_DIR: str = os.path.join(ASSET_DIR, "Images", "ShipThemes")
     # Expected square art resolution for ship-theme PNGs (PROJ-314).
     SHIP_THEMES_TARGET_SIZE: int = 2048
     COMPONENTS_IMAGES_DIR: str = os.path.join(ASSET_DIR, "Images", "Components")

@@ -83,14 +83,14 @@ combat_lab/battle.log
 # Codex repo config is tracked; local Codex artifacts stay ignored.
 .codex/*
 !.codex/config.toml
-assets/ShipThemes/Ossivine/Production/*
-assets/ShipThemes/Prismsteel/Production/*
+assets/Images/ShipThemes/Ossivine/Production/*
+assets/Images/ShipThemes/Prismsteel/Production/*
 assets/Images/Components/_ai_recreate_enhanced_preview/*
 assets/Images/Components/_ai_recreate_preview/*
 assets/Images/Components/_processed_preview/*
 assets/Images/Components/_processed_preview_v2/*
 assets/Images/Components/_processed_preview_v3/*
-assets/ShipThemes/Aetherwake/Production/*
+assets/Images/ShipThemes/Aetherwake/Production/*
 assets/Images/Components/_ai_recreate_enhanced_fixes_preview/*
 assets/Images/Components/_ai_recreate_enhanced_repaired_preview/*
 assets/Images/Components/_ai_recreate_enhanced_corrected_preview/*
@@ -127,6 +127,27 @@ assets/Images/Stellar Objects/Planets/1024/*
 assets/Images/Stellar Objects/Planets/512/*
 assets/Images/Stellar Objects/Planets/256/*
 assets/Images/Stellar Objects/Planets/128/*
+
+# Legacy pre-rename size-folder names. The asset rename pass moved
+# tracked content from "Components <N>/", "Stars/Stars_<N>/", and
+# "Planets/Planets_V3/Planets_V3_<N>/" into bare numeric folder names
+# (1024/, 64/, etc.). Untracked derivative files that pre-dated the
+# rename can linger at the old paths on machines that ran the
+# derivative engine before pulling these commits; these patterns keep
+# them out of `git status` until they're manually deleted. Safe to
+# remove the old-named folders from disk at any time — the engine
+# regenerates everything under the new (numeric-only) paths.
+assets/Images/Components/Components 64/
+assets/Images/Components/Components 128/
+assets/Images/Components/Components 256/
+assets/Images/Components/Components 512/
+assets/Images/Components/Components 1024/
+assets/Images/Components/Components 2048/
+assets/Images/Stellar Objects/Stars/Stars_128/
+assets/Images/Stellar Objects/Stars/Stars_256/
+assets/Images/Stellar Objects/Stars/Stars_512/
+assets/Images/Stellar Objects/Stars/Stars_1024/
+assets/Images/Stellar Objects/Planets/Planets_V3/
 
 # PROJ-314: ship-portrait regeneration manifest (per-run, ephemeral).
 Tools/regenerate_ship_portraits/last_run.json

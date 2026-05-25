@@ -62,10 +62,10 @@ There are exactly three categories. For each, the rule is: enumerate the directo
 
 #### 3. Ship themes — 9 expected
 
-- **Source directory:** `assets/ShipThemes/`
+- **Source directory:** `assets/Images/ShipThemes/`
 - **Per-asset rule:** the nine theme subdirectories are: `Aetherwake`, `Atlantians`, `Federation`, `Klingons`, `Ossivine`, `Prismsteel`, `Romulans`, `Thoraliens`, `Voidforged`. Each contains a `theme.json`.
-- **Image to view:** `assets/ShipThemes/<theme_id>/Skins/battleship.png` is the canonical representative ship and is present in every theme (case-insensitive match — `Atlantians/Skins/Battleship.png` is also valid). If for any reason that file is missing, fall back to the largest `.png` or `.jpg` in `Skins/` whose name suggests a capital ship (`dreadnought`, `dreadnaught`, `battlecruiser`, `cruiser`, in that priority).
-- **Sidecar path:** `assets/ShipThemes/<theme_id>/theme.caption.json` (always literally named `theme.caption.json`).
+- **Image to view:** `assets/Images/ShipThemes/<theme_id>/Skins/battleship.png` is the canonical representative ship and is present in every theme (case-insensitive match — `Atlantians/Skins/Battleship.png` is also valid). If for any reason that file is missing, fall back to the largest `.png` or `.jpg` in `Skins/` whose name suggests a capital ship (`dreadnought`, `dreadnaught`, `battlecruiser`, `cruiser`, in that priority).
+- **Sidecar path:** `assets/Images/ShipThemes/<theme_id>/theme.caption.json` (always literally named `theme.caption.json`).
 - **Schema:**
   ```json
   {

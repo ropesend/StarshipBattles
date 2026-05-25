@@ -7,7 +7,7 @@ schema.
 
 This tool backfills missing ship portraits through the `ImageProvider`
 abstraction, using OpenAI `gpt-image-2` by default. It is intended for
-ship themes under `assets/ShipThemes/<Theme>/` that already use the
+ship themes under `assets/Images/ShipThemes/<Theme>/` that already use the
 canonical `assets:` manifest schema.
 
 ## Requirements

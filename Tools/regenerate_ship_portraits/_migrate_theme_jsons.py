@@ -1,6 +1,6 @@
 """One-shot migration script for PROJ-314 Phase 5.
 
-Re-emits every theme.json under assets/ShipThemes/ in the new
+Re-emits every theme.json under assets/Images/ShipThemes/ in the new
 canonical schema. Assumes Phase 4's filename normalisation + the Phase 5
 skin/portrait basename canonicalisation step have run, so every ship
 class shares a single canonical basename across the whole project.
@@ -12,7 +12,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-ROOT = Path("assets/ShipThemes")
+ROOT = Path("assets/Images/ShipThemes")
 
 # Canonical basename per ship-class display name. Used for BOTH skin and
 # portrait file lookups. Phase 5 normalises every theme to this set.

@@ -1,7 +1,7 @@
 """Race-Setup Ships tab smoke test (PROJ-314).
 
 Validates the end-to-end loader contract against the live
-``assets/ShipThemes/`` filesystem: every theme registers all 19
+``assets/Images/ShipThemes/`` filesystem: every theme registers all 19
 canonical ship classes, every skin renders as a non-fallback Surface,
 and every declared portrait file exists.
 """

@@ -35,7 +35,7 @@ def _resolve_theme_root(theme_ref: str | None, explicit_root: str | None) -> Pat
     ref_path = Path(theme_ref)
     if ref_path.exists():
         return ref_path.resolve()
-    return PROJECT_ROOT / "assets" / "ShipThemes" / theme_ref
+    return PROJECT_ROOT / "assets" / "Images" / "ShipThemes" / theme_ref
 
 
 def _validate_registry_alignment(errors: list[str]) -> None:
