@@ -236,9 +236,9 @@
   },
   "warp_points": {
     "default": [
-      "assets/Images/Stellar Objects/Warp Points/Warp_Point_1.jpg",
-      "assets/Images/Stellar Objects/Warp Points/Warp_Point_2.jpg",
-      "assets/Images/Stellar Objects/Warp Points/Warp_Point_3.jpg"
+      "assets/Images/Stellar Objects/Warp Points/Warp_Point_1.png",
+      "assets/Images/Stellar Objects/Warp Points/Warp_Point_2.png",
+      "assets/Images/Stellar Objects/Warp Points/Warp_Point_3.png"
     ]
   },
   "star_colors": {
