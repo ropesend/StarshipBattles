@@ -98,42 +98,28 @@ class TestRunner:
 
     def load_data_for_scenario(self, scenario):
         """
-        Reload global game data based on scenario requirements.
+        Hydrate the global registry from the scenario's data directory.
 
-        Uses ``registry.unfrozen()`` so the registry is temporarily writable
-        during clear/hydrate and is restored to its prior frozen state on
-        exit (even if hydration raises). Safe to call from any context
-        whether the registry is currently frozen or not.
+        Delegates to ``game.data_loader.load_data_from_path`` so the same
+        mode-scoped lifecycle hook (registry clear + hydrate + downstream
+        cache invalidation) that fires on main-game data transitions
+        fires here too. The scenario's three legacy file-path attributes
+        (``components_path``, ``modifiers_path``, ``vehicle_classes_path``)
+        all share a common parent directory; that directory is the data
+        set the scenario runs against.
         """
         logger.info(f"Loading data for scenario: {scenario.name}")
 
+        from game.data_loader import load_data_from_path
+
         paths = scenario.get_data_paths()
-        registry = get_default_registry_manager()
+        data_dir = os.path.dirname(paths['components'])
+        try:
+            load_data_from_path(data_dir)
+        except Exception as e:
+            logger.critical(f"Failed to load test data: {e}", exc_info=True)
+            raise
 
-        with registry.unfrozen():
-            logger.debug("Clearing registry")
-            registry.clear()
-
-            # Load New Data
-            try:
-                # PROJ-211: Pass registry_provider explicitly (no fallback)
-                provider = get_default_registry_provider()
-
-                logger.debug(f"Loading modifiers from {paths['modifiers']}")
-                load_modifiers(paths['modifiers'], registry_provider=provider)
-
-                logger.debug(f"Loading components from {paths['components']}")
-                load_components(paths['components'], registry_provider=provider)
-
-                # Helper needed in ship.py to accept direct path
-                from game.simulation.entities.ship_loader import load_vehicle_classes
-                logger.debug(f"Loading vehicle classes from {paths['vehicle_classes']}")
-                load_vehicle_classes(paths['vehicle_classes'], registry_provider=provider)
-
-            except Exception as e:
-                logger.critical(f"Failed to load test data: {e}", exc_info=True)
-                raise e
-            
     def run_scenario(self, scenario_cls, headless=True, render_callback=None, log_results=True):
         """Execute a scenario through the unified `run_battle(spec)` entry.
 

@@ -35,12 +35,18 @@ class SessionPersistenceAdapter:
     def serialize(session: "GameSession") -> dict[str, Any]:
         """Return the canonical save-dict shape for `session`.
 
-        Pinned by `test_serialize_preserves_existing_save_schema`. The
-        returned shape is:
+        Includes the registry's `active_data_path` so loading the save
+        re-hydrates the right data set (stock / Combat Lab / mod) before
+        reconstructing the session graph. Missing `data_path` on legacy
+        saves resolves to `Paths.DEFAULT_GAME_DATA_DIR` via the load-
+        side `dict.get(...)` default — no migration shim per CLAUDE.md
+        "old saves are disposable".
 
+        Shape:
             {
                 'turn_number': int,
                 'save_path': str | None,
+                'data_path': str | None,
                 'config': dict,
                 'galaxy': dict,
                 'empires': list[dict],
@@ -48,9 +54,26 @@ class SessionPersistenceAdapter:
                 'event_log': dict,
             }
         """
+        from game.core.paths import Paths
+        from game.core.registry import get_default_registry_manager
+
+        mgr = get_default_registry_manager()
+        active_data_path = getattr(mgr, "active_data_path", None) if mgr else None
+        # Canonicalise None → default game data path. A serialisable
+        # GameSession references component IDs that must be resolvable
+        # in the registry, so in production `active_data_path` is always
+        # set by the time we get here. The fallback covers test sessions
+        # constructed via direct `mgr.hydrate(...)` (the conftest
+        # session-cache path) which doesn't go through
+        # `game.data_loader.load_data_from_path` and therefore leaves
+        # `active_data_path` unset.
+        if active_data_path is None:
+            active_data_path = Paths.DEFAULT_GAME_DATA_DIR
+
         return {
             "turn_number": session.turn_number,
             "save_path": session.save_path,
+            "data_path": active_data_path,
             "config": session.config.to_dict(),
             "galaxy": session.galaxy.to_dict(),
             "empires": [e.to_dict() for e in session.empires],

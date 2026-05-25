@@ -461,6 +461,12 @@ class SaveGameService:
         """
         Reconstruct GameSession from loaded game state.
 
+        Loads the save's recorded data path into the global registry
+        BEFORE rehydration so the empire/galaxy deserialisation reads
+        component definitions from the same data set the save was
+        produced against. Legacy saves missing `data_path` default to
+        `Paths.DEFAULT_GAME_DATA_DIR` — no migration shim.
+
         Args:
             game_state: Validated game state dictionary
             save_path: Absolute path to save folder (for restoring save_path reference)
@@ -470,7 +476,12 @@ class SaveGameService:
             Tuple of (GameSession, None) on success or (None, error_msg) on failure
         """
         try:
+            from game.data_loader import load_data_from_path
             from game.strategy.engine.game_session import GameSession
+
+            data_path = game_state.get("data_path") or Paths.DEFAULT_GAME_DATA_DIR
+            load_data_from_path(data_path)
+
             game_session = GameSession.from_dict(game_state, ai_factory=ai_factory)
             game_session.save_path = save_path
             return game_session, None

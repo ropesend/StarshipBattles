@@ -1,9 +1,14 @@
 """FEAT-22: bootstrap startup phase profiling.
 
-Locks the contract that `bootstrap()` records timing data for 14 named
-sub-phases into `ctx.profiler.records`, emits one `[startup] <name>: X.XXs`
+Locks the contract that `bootstrap()` records timing data for each named
+sub-phase into `ctx.profiler.records`, emits one `[startup] <name>: X.XXs`
 log line per phase, finishes with a `[startup] total bootstrap` line, and
 eagerly persists the records via `Profiler.save_history()` before returning.
+
+Post mode-scoped data lifecycle: bootstrap no longer loads game data, so
+the four `registry.load_*` / `registry.initialize_ship_data` phases were
+removed. Game data is loaded by `game.data_loader.load_data_from_path`
+when a mode is entered, not at boot.
 """
 from __future__ import annotations
 
@@ -24,10 +29,6 @@ EXPECTED_PHASE_NAMES = [
     "startup: font.preload",
     "startup: display.detect_resolution",
     "startup: display.set_mode",
-    "startup: registry.load_components",
-    "startup: registry.load_modifiers",
-    "startup: registry.load_resources",
-    "startup: registry.initialize_ship_data",
     "startup: registry.build_game_registries",
     "startup: assets.ensure_component_derivatives",
     "startup: assets.load_sprites",
@@ -85,7 +86,7 @@ def _run_bootstrap_with_save_history_patched():
         return result, save_history_mock
 
 
-def test_bootstrap_records_all_14_subphases():
+def test_bootstrap_records_all_subphases():
     """Every named sub-phase appears in ctx.profiler.records."""
     result, _ = _run_bootstrap_with_save_history_patched()
     recorded = [r["name"] for r in result.ctx.profiler.records]

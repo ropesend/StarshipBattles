@@ -1,6 +1,6 @@
 # Save / Load Compact Reference
 
-> **Last verified:** 2026-05-08 - Balanced compact replacement checked against `docs/systems/save_load.md`, the compact alternate, `SaveGameService`, `GameSession` serialization, replay bootstrap wiring, and current save/load tests.
+> **Last verified:** 2026-05-24 — added `data_path` to the save schema: `SessionPersistenceAdapter.serialize` writes the registry's active data path; `SaveGameService._reconstruct_game_session` loads it via `game.data_loader.load_data_from_path` before rehydrating. Legacy saves missing `data_path` default to `Paths.DEFAULT_GAME_DATA_DIR`. Earlier: 2026-05-08 — balanced compact replacement.
 
 `SaveGameService` owns strategy save/load persistence. Saves are disposable, turn-based snapshots of the current `GameSession`; the service supports exactly one current schema and rejects incompatible versions instead of migrating them.
 
@@ -16,7 +16,9 @@
 | JSON I/O | `game/core/json_utils.py::save_json`, `load_json`, `load_json_required`. |
 | Replay coupling | `game/strategy/services/replay_store.py`, wired in `game/app_bootstrap.py`. |
 
-`GameSession.to_dict()` currently writes `turn_number`, `save_path`, `config`, `galaxy`, `empires`, `human_player_ids`, and `event_log`. `GameSession.from_dict()` reconstructs config first, resolves registries, rebuilds the turn engine and event bus, loads the galaxy before empires, resolves fleet order references, rebuilds pursuer tracking, and restores active/enemy empire pointers.
+`GameSession.to_dict()` currently writes `turn_number`, `save_path`, `data_path`, `config`, `galaxy`, `empires`, `human_player_ids`, and `event_log`. `GameSession.from_dict()` reconstructs config first, resolves registries, rebuilds the turn engine and event bus, loads the galaxy before empires, resolves fleet order references, rebuilds pursuer tracking, and restores active/enemy empire pointers.
+
+`data_path` records the registry's active data path at save time (mode-scoped data lifecycle — see `docs/01_ARCHITECTURE.md` "JSON To Gameplay"). `SaveGameService._reconstruct_game_session` reads it from the turn file and calls `game.data_loader.load_data_from_path(...)` BEFORE rehydrating the session graph so empire/galaxy deserialization sees the right component definitions. Saves missing the field (pre-feature) default to `Paths.DEFAULT_GAME_DATA_DIR` via `dict.get(...)` — no migration shim per "old saves are disposable".
 
 PROJ-423 split this serialization out into a dedicated adapter under `game/strategy/engine/session/persistence_adapter.py::SessionPersistenceAdapter`. `GameSession.to_dict()` and `GameSession.from_dict()` are thin delegates:
 

@@ -1,25 +1,25 @@
 """Invariant tests for `game.app_bootstrap`.
 
 These lock the initialization-order invariants identified in the
-PROJ-309 sub-phase 3.9 design doc, plus PROJ-366's two new invariants:
+PROJ-309 sub-phase 3.9 design doc, plus PROJ-366's replay invariants:
 
 1. `pygame.init()` MUST run before `pygame.display.Info()` /
    `pygame.display.set_mode()` / pygame_gui.
 2. `pygame.font.init()` MUST run before any `get_font()` call (MenuScene
    constructor).
-3. `ApplicationContext.create_production()` MUST run before
-   `get_default_registry_provider()`.
-4. `load_components` / `load_modifiers` MUST run before
-   `initialize_ship_data`.
-5. `SpriteManager.load_sprites` MUST run after registries but before scene
-   constructors.
-6. `MenuScene` constructor MUST run before any overlay-dialog code path.
-7. (PROJ-366 Phase 1) `set_default_capture_sink(replay_store)` and
+3. `ApplicationContext.create_production()` MUST be called by bootstrap.
+4. `ensure_component_derivatives()` MUST precede
+   `SpriteManager.load_sprites` (the latter reads PNGs the former
+   generates).
+5. `MenuScene` constructor MUST run before any overlay-dialog code path.
+6. (PROJ-366 Phase 1) `set_default_capture_sink(replay_store)` and
    `set_replay_store(replay_store)` MUST run after `InputMapper.load(...)`
    and before `bootstrap()` returns.
-8. (PROJ-366 Phase 2) `BootstrapResult.replay_verification_coordinator`
+7. (PROJ-366 Phase 2) `BootstrapResult.replay_verification_coordinator`
    MUST be present and `.start()`-ed (worker thread spawned + listener
    registered).
+8. Bootstrap MUST leave the registry empty (mode-scoped data lifecycle).
+   Game data is loaded only when a mode is entered.
 
 The strategy here is to record the sequence of "ordering-relevant" calls
 during `bootstrap()` and assert their relative ordering. We do NOT mock
@@ -94,32 +94,11 @@ def _patched_bootstrap(call_order: list[str]):
         call_order.append("ApplicationContext.create_production")
         return real_create_production()
 
-    # Patch the registry provider lookup in app_bootstrap's namespace.
-    from game.core import registry as registry_mod
-    real_get_provider = registry_mod.get_default_registry_provider
-
-    def record_get_provider():
-        call_order.append("get_default_registry_provider")
-        return real_get_provider()
-
-    from game.simulation.components import component as component_mod
-    real_load_components = component_mod.load_components
-    real_load_modifiers = component_mod.load_modifiers
-
-    def record_load_components(*args, **kwargs):
-        call_order.append("load_components")
-        return real_load_components(*args, **kwargs)
-
-    def record_load_modifiers(*args, **kwargs):
-        call_order.append("load_modifiers")
-        return real_load_modifiers(*args, **kwargs)
-
-    from game.simulation.entities import ship_loader
-    real_init_ship = ship_loader.initialize_ship_data
-
-    def record_init_ship(*args, **kwargs):
-        call_order.append("initialize_ship_data")
-        return real_init_ship(*args, **kwargs)
+    # Bootstrap no longer loads game data (it's mode-scoped, in
+    # `game.data_loader.load_data_from_path`). The old ordering-pin
+    # patches for `get_default_registry_provider` / `load_components`
+    # / `load_modifiers` / `initialize_ship_data` are gone — those
+    # invariants now belong to the data loader, not bootstrap.
 
     from game.ui.renderer import sprites as sprites_mod
     real_load_sprites = sprites_mod.SpriteManager.load_sprites
@@ -169,11 +148,6 @@ def _patched_bootstrap(call_order: list[str]):
          patch.object(pygame.font, "init", record_font_init), \
          patch.object(ApplicationContext, "create_production",
                       record_create_production), \
-         patch.object(boot, "get_default_registry_provider",
-                      record_get_provider), \
-         patch.object(boot, "load_components", record_load_components), \
-         patch.object(boot, "load_modifiers", record_load_modifiers), \
-         patch.object(boot, "initialize_ship_data", record_init_ship), \
          patch.object(sprites_mod.SpriteManager, "load_sprites",
                       record_load_sprites), \
          patch.object(boot, "ensure_component_derivatives",
@@ -217,35 +191,33 @@ def test_pygame_font_init_before_create_production(call_order: list[str]) -> Non
            call_order.index("ApplicationContext.create_production")
 
 
-def test_create_production_before_registry_provider_lookup(call_order: list[str]) -> None:
-    """Invariant 3: ApplicationContext.create_production precedes any
-    `get_default_registry_provider` call (which reads the now-populated
-    module-level default).
+def test_create_production_is_called(call_order: list[str]) -> None:
+    """Invariant 3: ApplicationContext.create_production is called by
+    bootstrap (after pygame/font init). Game data is loaded mode-scoped
+    via `game.data_loader.load_data_from_path`, NOT by bootstrap.
     """
     _patched_bootstrap(call_order)
-    assert call_order.index("ApplicationContext.create_production") < \
-           call_order.index("get_default_registry_provider")
+    assert "ApplicationContext.create_production" in call_order
+    assert call_order.index("pygame.font.init") < \
+           call_order.index("ApplicationContext.create_production")
 
 
-def test_load_components_before_initialize_ship_data(call_order: list[str]) -> None:
-    """Invariant 4: components + modifiers are loaded before ship-data init."""
-    _patched_bootstrap(call_order)
-    assert call_order.index("load_components") < \
-           call_order.index("initialize_ship_data")
-    assert call_order.index("load_modifiers") < \
-           call_order.index("initialize_ship_data")
-
-
-def test_load_sprites_after_initialize_ship_data(call_order: list[str]) -> None:
-    """Invariant 5: SpriteManager.load_sprites runs AFTER registries are
-    fully loaded (i.e. after initialize_ship_data) but before any scene
-    constructor (scenes are not built inside `bootstrap()` itself in the
-    new design — they are built by `ScreenRouter`, so this test is the
-    strongest assertion bootstrap can make).
+def test_bootstrap_leaves_registry_empty(call_order: list[str]) -> None:
+    """Invariant 8 (mode-scoped data lifecycle): bootstrap does NOT load
+    game data. The registry is empty when bootstrap returns. Data is
+    loaded only when a mode is entered (New Game / Combat Lab / Workshop /
+    Load Game) via `game.data_loader.load_data_from_path`.
     """
-    _patched_bootstrap(call_order)
-    assert call_order.index("initialize_ship_data") < \
-           call_order.index("SpriteManager.load_sprites")
+    result = _patched_bootstrap(call_order)
+    mgr = result.ctx.registry_manager
+    assert len(mgr.components) == 0, (
+        f"bootstrap leaked component data into the registry: "
+        f"{list(mgr.components.keys())[:5]} ..."
+    )
+    assert len(mgr.modifiers) == 0
+    assert len(mgr.vehicle_classes) == 0
+    assert len(mgr.resources) == 0
+    assert mgr.active_data_path is None
 
 
 def test_ensure_derivatives_before_load_sprites(call_order: list[str]) -> None:

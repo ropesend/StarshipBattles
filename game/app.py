@@ -440,6 +440,11 @@ class Game:
                 self.start_replay(record)
         elif action == "quit_to_menu":
             logger.info("Returning to main menu from strategy")
+            # Mode-scoped data lifecycle: the strategy mode owned the
+            # registry while it was running; clear it on exit so the
+            # main menu has no data loaded.
+            from game.data_loader import unload_data
+            unload_data()
             self._switch_scene(GameState.MENU, self.menu_scene)
         elif action == "quit_game":
             logger.info("Quitting game from strategy menu")
@@ -490,6 +495,14 @@ class Game:
     def _handle_test_lab_action(self, action: str, **kwargs: Any) -> None:
         """Handle scene actions from TestLabScreen."""
         if action == "return_to_menu":
+            # Mode-scoped data lifecycle: Combat Lab loaded its test-fixture
+            # data set on entry (per-scenario); on exit back to the main menu
+            # we clear the registry so a subsequent New Game / Load Game
+            # starts from a clean slate. Prevents the Combat-Lab → New-Game
+            # harvest-zero bug by guaranteeing no test fixtures leak across
+            # mode boundaries.
+            from game.data_loader import unload_data
+            unload_data()
             self._switch_scene(GameState.MENU, self.menu_scene)
         elif action == "start_test_battle":
             self._switch_scene(GameState.BATTLE, self.battle_scene)

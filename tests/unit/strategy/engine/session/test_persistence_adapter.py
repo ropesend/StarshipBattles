@@ -63,6 +63,7 @@ def _frozen_fixture_session() -> GameSession:
 _EXPECTED_SAVE_KEYS = {
     "turn_number",
     "save_path",
+    "data_path",
     "config",
     "galaxy",
     "empires",

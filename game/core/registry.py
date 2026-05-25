@@ -148,6 +148,17 @@ class RegistryManager:
         self.resources: Dict[str, Any] = {}
         self._validator: Optional[Callable[..., Any]] = None
         self._frozen: bool = False
+        # Mode-scoped data lifecycle: records which data directory is
+        # currently hydrated into this registry. None when no data set
+        # is loaded (boot, between modes). Set by `game.data_loader.
+        # load_data_from_path`, cleared by `unload_data`.
+        self.active_data_path: Optional[str] = None
+        # Optional ResourceCatalog hydrated from the active data path's
+        # resources.json. Held alongside the dict-backed `resources`
+        # registry so callers (notably `GameSession._resolve_registries`)
+        # can read the catalog tied to the current data context without
+        # rebuilding from disk.
+        self._resource_catalog: Optional[Any] = None
 
     def freeze(self) -> None:
         """
@@ -244,6 +255,29 @@ class RegistryManager:
         self.vehicle_classes.clear()
         self.resources.clear()
         self._validator = None
+        self._resource_catalog = None
+
+    def get_resource_catalog(self) -> Optional[Any]:
+        """Return the ResourceCatalog associated with the active data
+        path, or None if no data set is loaded.
+
+        Held alongside the dict-backed `resources` registry so mode-
+        scoped data switches (`game.data_loader.load_data_from_path`)
+        can rehydrate the catalog from the active path's
+        `resources.json` without forcing every catalog reader to
+        rebuild from disk.
+        """
+        return self._resource_catalog
+
+    def set_resource_catalog(self, catalog: Optional[Any]) -> None:
+        """Attach a ResourceCatalog to this manager.
+
+        Called by `game.data_loader.load_data_from_path` after parsing
+        the active data path's `resources.json`. Sits outside the
+        freeze contract — the catalog is a derived cache, not source-
+        of-truth data.
+        """
+        self._resource_catalog = catalog
 
     def get_validator(self) -> Optional[Callable[..., Any]]:
         """Get the ship design validator (may be None if not initialized)."""

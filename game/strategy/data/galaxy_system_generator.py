@@ -273,6 +273,19 @@ def _load_json_or_empty(path_value: Any, dict_key: Optional[str] = None) -> Dict
 _PLANET_TYPES_CACHE: Optional[Dict[str, Dict[str, Any]]] = None
 
 
+def _reset_galaxy_generator_caches() -> None:
+    """Drop the three JSON-backed caches in this module.
+
+    Wired into `game.data_loader` so a mod that ships its own
+    planet_types.json / star_types.json / system_archetypes.json takes
+    effect after a data-set switch.
+    """
+    global _PLANET_TYPES_CACHE, _STAR_TYPES_CACHE, _SYSTEM_ARCHETYPES_CACHE
+    _PLANET_TYPES_CACHE = None
+    _STAR_TYPES_CACHE = None
+    _SYSTEM_ARCHETYPES_CACHE = None
+
+
 def _load_planet_types() -> Dict[str, Dict[str, Any]]:
     global _PLANET_TYPES_CACHE
     if _PLANET_TYPES_CACHE is None:
@@ -388,3 +401,9 @@ def _apply_system_archetype(system: Any, rng: random.Random) -> None:
     template = archetypes[pick].get('abilities', {})
     if template:
         system.intrinsic_abilities = roll_intrinsic_abilities(template, rng)
+
+
+# Self-register the cache reset with the data lifecycle (mode-scoped
+# data-set switches reset planet/star/archetype JSON caches).
+from game.data_loader import register_data_cache_invalidator as _register_data_cache_invalidator
+_register_data_cache_invalidator(_reset_galaxy_generator_caches)

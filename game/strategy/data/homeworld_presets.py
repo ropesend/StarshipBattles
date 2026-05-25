@@ -16,6 +16,16 @@ from game.strategy.data.race_config import RaceConfig
 _presets_cache: Optional[Dict[str, dict]] = None
 
 
+def reset_homeworld_presets_cache() -> None:
+    """Drop the cached homeworld presets.
+
+    Wired into `game.data_loader` so a mod that ships its own
+    homeworld_presets.json takes effect after a data-set switch.
+    """
+    global _presets_cache
+    _presets_cache = None
+
+
 def _get_presets_path() -> str:
     """Get the path to the homeworld_presets.json file."""
     return Paths.HOMEWORLD_PRESETS_FILE
@@ -133,5 +143,9 @@ def get_preset_id_from_name(display_name: str) -> Optional[str]:
 
 def clear_cache() -> None:
     """Clear the presets cache. Useful for testing."""
-    global _presets_cache
-    _presets_cache = None
+    reset_homeworld_presets_cache()
+
+
+# Self-register the cache reset with the data lifecycle.
+from game.data_loader import register_data_cache_invalidator as _register_data_cache_invalidator
+_register_data_cache_invalidator(reset_homeworld_presets_cache)

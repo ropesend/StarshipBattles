@@ -155,6 +155,16 @@ class Paths:
     # === Combat Lab Output ===
     COMBAT_LAB_OUTPUT_DIR: str = os.path.join(ROOT_DIR, "combat_lab", "output")
 
+    # === Data Source Paths ===
+    # Symmetric path constants for the mode-scoped data lifecycle. The
+    # default game data path and the Combat Lab data path are both just
+    # directories containing the canonical JSON files (components.json,
+    # modifiers.json, vehicleclasses.json, resources.json). Neither is
+    # privileged by the loader — each mode picks which to load. Future
+    # mod paths plug in as additional constants of the same kind.
+    DEFAULT_GAME_DATA_DIR: str = DATA_DIR
+    COMBAT_LAB_DATA_DIR: str = os.path.join(ROOT_DIR, "combat_lab", "data")
+
     # === pathlib.Path Accessors ===
     @classmethod
     def get_root(cls) -> Path:

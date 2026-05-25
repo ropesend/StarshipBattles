@@ -5,20 +5,22 @@ becomes a slim orchestrator. This module owns the *deterministic* init
 sequence — everything from `pygame.init()` through registry hydration,
 ship-data loading, sprite loading, and font construction.
 
-Six initialization-order invariants enforced by `bootstrap()` (see also
+Initialization-order invariants enforced by `bootstrap()` (see also
 `tests/unit/test_app_bootstrap_invariants.py`):
 
 1. `pygame.init()` BEFORE `pygame.display.Info()` / `set_mode()` / pygame_gui.
 2. `pygame.font.init()` BEFORE any `get_font()` call (MenuScene constructor).
-3. `ApplicationContext.create_production()` BEFORE
-   `get_default_registry_provider()`.
-4. `load_components` / `load_modifiers` BEFORE `initialize_ship_data`.
-5. `ensure_component_derivatives()` BEFORE `SpriteManager.load_sprites` (the
-   manager reads PNGs derived in this step), and the latter AFTER registries
-   but BEFORE scene constructors.
-6. `MenuScene` constructor BEFORE any overlay-dialog code path. (Scenes are
+3. `ApplicationContext.create_production()` BEFORE any registry access.
+4. `ensure_component_derivatives()` BEFORE `SpriteManager.load_sprites` (the
+   manager reads PNGs derived in this step), and the latter BEFORE scene
+   constructors.
+5. `MenuScene` constructor BEFORE any overlay-dialog code path. (Scenes are
    constructed by `ScreenRouter` after `bootstrap()` returns; the rule is
    thereby enforced by composition order in `Game.__init__`.)
+
+Game data is NOT loaded here. The registry is empty at the end of
+`bootstrap()`; modes load their own data via `game.data_loader.
+load_data_from_path` on entry and clear via `unload_data()` on exit.
 """
 from __future__ import annotations
 
@@ -36,10 +38,7 @@ from game.assets.component_derivatives import ensure_component_derivatives
 from game.context import ApplicationContext
 from game.core.config import DisplayConfig
 from game.core.paths import Paths
-from game.core.registry import GameRegistries, get_default_registry_provider
-from game.core.resources import ResourceCatalog
-from game.simulation.components.component import load_components, load_modifiers
-from game.simulation.entities.ship_loader import initialize_ship_data
+from game.core.registry import GameRegistries
 from game.ui.fonts import get_font
 from game.ui.services.input_mapper import InputMapper
 
@@ -210,37 +209,19 @@ def bootstrap(args: argparse.Namespace | None = None) -> BootstrapResult:
 
     clock = pygame.time.Clock()
 
-    # Invariant 4: components + modifiers BEFORE ship-data. The ship loader
-    # resolves component refs against the registry — a flipped order yields
-    # silent ref misses.
-    # PROJ-211: pass registry_provider explicitly (no fallback).
-    provider = get_default_registry_provider()
-    with _timed_phase("registry.load_components", ctx.profiler):
-        load_components(Paths.COMPONENTS_FILE, registry_provider=provider)
-    with _timed_phase("registry.load_modifiers", ctx.profiler):
-        load_modifiers(Paths.MODIFIERS_FILE, registry_provider=provider)
-
-    # Hydrate the resources registry from the canonical ResourceCatalog.
-    # PROJ-309 §6: ResourceCatalog.from_json() was called twice in the
-    # original `app.py`; hold a single instance and reuse for both
-    # registry hydration and `GameRegistries`.
-    with _timed_phase("registry.load_resources", ctx.profiler):
-        catalog = ResourceCatalog.from_json(Paths.RESOURCES_FILE)
-        resources_registry = ctx.registry_manager.resources
-        for defn in catalog.all_definitions():
-            resources_registry[defn.id] = {
-                'id': defn.id,
-                'name': defn.name,
-                'description': defn.description,
-                'display_group': defn.display_group,
-                'has_quality': defn.has_quality,
-            }
-
-    with _timed_phase("registry.initialize_ship_data", ctx.profiler):
-        initialize_ship_data(Paths.ROOT_DIR, registry_provider=provider)
-
-    # Build the GameRegistries DI container (PROJ-38 / PROJ-181). Reuses
-    # the already-loaded catalog rather than calling `from_json()` again.
+    # Mode-scoped data lifecycle (see `game/data_loader.py`): boot does
+    # NOT load game data. The registry stays empty until the user
+    # enters a mode (New Game / Load Game / Combat Lab / Workshop),
+    # which calls `load_data_from_path(...)` to hydrate the registry
+    # from the chosen data set. Exit clears it. The main menu has no
+    # data loaded — this is the invariant that fixes the Combat-Lab →
+    # New-Game data-pollution bug at its root.
+    #
+    # The `GameRegistries` DI container is still built here so scenes
+    # constructed at boot (Workshop, etc.) get a live reference. The
+    # dicts inside are SHARED with `RegistryManager`, so when a mode
+    # loads data later, the same dict objects are populated and every
+    # existing reference sees the new contents.
     with _timed_phase("registry.build_game_registries", ctx.profiler):
         registry_mgr = ctx.registry_manager
         registries = GameRegistries(
@@ -248,19 +229,22 @@ def bootstrap(args: argparse.Namespace | None = None) -> BootstrapResult:
             modifiers=registry_mgr.modifiers,
             vehicle_classes=registry_mgr.vehicle_classes,
             resources=registry_mgr.resources,
-            resource_catalog=catalog,
+            # `__post_init__` will substitute an empty ResourceCatalog
+            # when `resource_catalog=None`. The real catalog is built
+            # by `load_data_from_path` and held on the RegistryManager
+            # for the lifetime of the active data set.
+            resource_catalog=None,
         )
 
-    # Generated component resolutions are derived from tracked 1024px masters.
-    # Must precede sprite loading because the sprite manager reads the
-    # files generated by this step.
+    # File-system asset prep — does NOT depend on registry data. Scans
+    # tracked 1024px PNG sources and generates derivatives at the size
+    # tiers ship code reads. Idempotent across runs; must precede sprite
+    # loading because the sprite manager reads files generated here.
     with _timed_phase("assets.ensure_component_derivatives", ctx.profiler):
         ensure_component_derivatives()
 
-    # Invariant 5: sprites loaded AFTER registries (some sprite metadata
-    # may resolve registry IDs) and AFTER component-derivative generation
-    # (the manager reads the just-derived PNGs), but BEFORE scene
-    # constructors (which build rendering pipelines).
+    # Sprites load from disk by filename — also data-set-independent.
+    # Reads files generated by `ensure_component_derivatives` above.
     with _timed_phase("assets.load_sprites", ctx.profiler):
         sprite_mgr = ctx.sprite_manager
         sprite_mgr.load_sprites(Paths.ROOT_DIR)
@@ -300,6 +284,7 @@ def bootstrap(args: argparse.Namespace | None = None) -> BootstrapResult:
     with _timed_phase("replay.start_coordinator", ctx.profiler):
         from combat_lab.design_loader import load_combat_lab_design
         from game.ai.ai_factory import AIControllerFactory
+        from game.core.registry import get_default_registry_provider
         from game.simulation.services.ship_materializer import DesignOnlyMaterializer
         from game.strategy.services.replay_verification_coordinator import (
             ReplayVerificationCoordinator,
@@ -313,7 +298,7 @@ def bootstrap(args: argparse.Namespace | None = None) -> BootstrapResult:
         replay_verification_coordinator = ReplayVerificationCoordinator(
             replay_store=replay_store,
             ai_factory=AIControllerFactory(),
-            registry_provider=provider,
+            registry_provider=get_default_registry_provider(),
             settings=replay_settings,
             fallback_ship_builder=_replay_combat_lab_fallback,
         )

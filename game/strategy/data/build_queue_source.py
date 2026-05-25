@@ -29,6 +29,18 @@ if TYPE_CHECKING:
 _production_rates_cache: Optional[Dict[str, Dict[str, float]]] = None
 
 
+def reset_production_rates_cache() -> None:
+    """Drop the cached production-rates JSON.
+
+    Wired into `game.data_loader` so the cache resets whenever the
+    active data set changes (Combat Lab entry/exit, mod switch). Same
+    `data/production_rates.json` content today, but if a mod ships
+    different rates the cache no longer survives the switch.
+    """
+    global _production_rates_cache
+    _production_rates_cache = None
+
+
 def _load_production_rates() -> Dict[str, Dict[str, float]]:
     """Load production rates from JSON file with caching.
 
@@ -42,6 +54,13 @@ def _load_production_rates() -> Dict[str, Dict[str, float]]:
         except (FileNotFoundError, ValueError):
             _production_rates_cache = {}
     return _production_rates_cache
+
+
+# Self-register the cache reset with the data lifecycle. Local import
+# avoids any chance of a strategy → composition-root import landing
+# during early bootstrap before this module is otherwise touched.
+from game.data_loader import register_data_cache_invalidator as _register_data_cache_invalidator
+_register_data_cache_invalidator(reset_production_rates_cache)
 
 
 def get_default_production_rates(yard_type: str) -> Dict[str, float]:

@@ -1,6 +1,6 @@
 # Starship Battles - Architecture Compact Reference
 
-> **Last verified:** 2026-05-22 — Group B + Group C parallel-batch merge integration. PROJ-468 (Group B): added a New-Game Initialization (GameInitializer) subsection documenting `game/strategy/engine/game_initializer.py`. PROJ-467 (Group B) foundation doc-drift sweep: added the `game/strategy/` prefix to the `galaxy_protocols.py` listing and moved "pathfinding" out of the `data/` listing (it lives in `services/galaxy_pathfinding_service.py`). PROJ-457/459/460 (Group C) consolidated doc update: noted the sibling-module serde extractions — `fleet_serde.py` (PROJ-459) in `game/strategy/data/`, and `battle_state_serde.py` + `battle_controller_spec.py` + the direction-split `replay/` serde modules (`replay_serde_helpers.py` / `replay_capture_serde.py` / `replay_outcome_serde.py`) (PROJ-460) in `game/simulation/`. Earlier (2026-05-18): PROJ-436 Phase 10 doc refresh: `game/strategy/data/` listing now flags the unified `Container` storage substrate (`container.py`, `containable.py`, `bay_inventory.py`'s four-slot widening), the `Empire.resource_pool` pure-aggregation contract, and the `IProductionResourceSource` Protocol seam that replaced the `ProductionEngine.context_type` dispatch. Earlier (2026-05-08): balanced compact replacement derived from `docs/01_ARCHITECTURE.md` and `AgentCoordination/Scratchpad/reports/01_ARCHITECTURE_ALT_compact.md`, with source checks for current exports, protocol modules, turn-engine phases, and recent strategy decomposition paths.
+> **Last verified:** 2026-05-24 — added "JSON To Gameplay" mode-scoped data lifecycle section: boot leaves the registry empty, modes load/unload via `game/data_loader.py`, downstream caches self-register invalidators, save files record the active `data_path`. Earlier: 2026-05-22 — Group B + Group C parallel-batch merge integration. PROJ-468 (Group B): added a New-Game Initialization (GameInitializer) subsection documenting `game/strategy/engine/game_initializer.py`. PROJ-467 (Group B) foundation doc-drift sweep: added the `game/strategy/` prefix to the `galaxy_protocols.py` listing and moved "pathfinding" out of the `data/` listing (it lives in `services/galaxy_pathfinding_service.py`). PROJ-457/459/460 (Group C) consolidated doc update: noted the sibling-module serde extractions — `fleet_serde.py` (PROJ-459) in `game/strategy/data/`, and `battle_state_serde.py` + `battle_controller_spec.py` + the direction-split `replay/` serde modules (`replay_serde_helpers.py` / `replay_capture_serde.py` / `replay_outcome_serde.py`) (PROJ-460) in `game/simulation/`. Earlier (2026-05-18): PROJ-436 Phase 10 doc refresh: `game/strategy/data/` listing now flags the unified `Container` storage substrate (`container.py`, `containable.py`, `bay_inventory.py`'s four-slot widening), the `Empire.resource_pool` pure-aggregation contract, and the `IProductionResourceSource` Protocol seam that replaced the `ProductionEngine.context_type` dispatch. Earlier (2026-05-08): balanced compact replacement derived from `docs/01_ARCHITECTURE.md` and `AgentCoordination/Scratchpad/reports/01_ARCHITECTURE_ALT_compact.md`, with source checks for current exports, protocol modules, turn-engine phases, and recent strategy decomposition paths.
 
 This is the agent-facing architecture reference. It preserves current contracts, paths, invariants, extension rules, and high-value test references while dropping release-note chronology and repeated prose.
 
@@ -294,13 +294,22 @@ Allowed late imports:
 ### JSON To Gameplay
 
 ```text
-data/*.json
-  -> RegistryLoader (game/simulation/services/registry_loader.py)
+data/*.json (or combat_lab/data/*.json, or future mods/<name>/data/*.json)
+  -> game/data_loader.py::load_data_from_path(data_dir)
+       (mode-scoped lifecycle: load on mode entry, unload on mode exit)
   -> RegistryManager (game/core/registry.py, managed by ApplicationContext)
   -> GameRegistries(components, modifiers, vehicle_classes, resources, resource_catalog)
   -> IRegistryProvider
   -> Component/create_component, Ship/ShipSerializer, calculate_design_stats, VehicleDesignService
 ```
+
+Mode-scoped data lifecycle:
+
+- Boot leaves the registry empty. `game.app_bootstrap.bootstrap()` initialises pygame, fonts, display, sprite manager, keybindings, and replay store — but does NOT load components/modifiers/vehicle_classes/resources. The main menu has no game data loaded.
+- Mode entry hydrates the registry. `game.data_loader.load_data_from_path(data_dir)` is called by `start_test_lab`, `_on_new_game_start`, `_start_quickstart`, `_on_load_game`, and `start_builder` (standalone Workshop) before the corresponding scene runs.
+- Mode exit clears the registry. `game.data_loader.unload_data()` is called from `_handle_test_lab_action("return_to_menu")`, `_handle_strategy_action("quit_to_menu")`, and `on_builder_return` (standalone Workshop). Sibling JSON-backed module caches (`_production_rates_cache`, `_presets_cache`, `_specs_cache`, galaxy generator caches) self-register an invalidator with `data_loader.register_data_cache_invalidator(fn)` so they reset on every load/unload.
+- Save files record the active `data_path`. `SessionPersistenceAdapter.serialize()` writes `data_path` into the save dict; `SaveGameService._reconstruct_game_session` reads it (with `Paths.DEFAULT_GAME_DATA_DIR` as the default for legacy saves) and calls `load_data_from_path(...)` before rehydrating the session graph. Future mod-selection UI sets a per-game `data_path` to drive the same path symmetrically.
+- The Combat Lab is the canonical "alternative data source" today — `combat_lab/data/` is a stripped fixture set used by scenarios. Production uses `data/`. Both flow through the same loader; neither is privileged.
 
 Registry DI invariant:
 

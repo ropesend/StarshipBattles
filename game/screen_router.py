@@ -146,8 +146,19 @@ class ScreenRouter:
     @profile_action("App: Start Builder")
     def start_builder(self, return_to: Any = None,
                       context: Optional[WorkshopContext] = None) -> None:
-        """Enter design workshop. Uses state stack for return-to-previous."""
+        """Enter design workshop. Uses state stack for return-to-previous.
+
+        Standalone entries (Workshop launched directly from main menu)
+        load the default game data set before constructing the screen so
+        the component palette is populated. Integrated entries (Workshop
+        launched from inside a running strategy session) inherit that
+        session's already-loaded data and skip the load.
+        """
         if context is None:
+            from game.core.paths import Paths
+            from game.data_loader import load_data_from_path
+
+            load_data_from_path(Paths.DEFAULT_GAME_DATA_DIR)
             context = WorkshopContext.standalone(
                 tech_preset_name="default", registries=self.registries
             )
@@ -158,7 +169,13 @@ class ScreenRouter:
         self.active_scene = self.builder_scene
 
     def on_builder_return(self, custom_ship: Any = None) -> None:
-        """Return from design workshop to caller (via state stack)."""
+        """Return from design workshop to caller (via state stack).
+
+        When returning to the main menu (standalone Workshop session), the
+        data set the Workshop loaded on entry is cleared so the menu has
+        no data loaded. When returning to a strategy session, leave the
+        registry alone — strategy still owns it.
+        """
         if hasattr(self, 'builder_scene') and hasattr(self.builder_scene, 'cleanup'):
             self.builder_scene.cleanup()
 
@@ -168,6 +185,8 @@ class ScreenRouter:
                 self.strategy_scene.handle_resize(self.width, self.height)
             self.active_scene = self.strategy_scene
         else:
+            from game.data_loader import unload_data
+            unload_data()
             self.active_scene = self._menu_scene
 
     @profile_action("App: Start Battle Setup")
@@ -199,12 +218,21 @@ class ScreenRouter:
     def _on_new_game_start(self, config: Any) -> None:
         """Handle new game start from setup screen."""
         from game.ai.ai_factory import AIControllerFactory
+        from game.core.paths import Paths
+        from game.data_loader import load_data_from_path
         from game.strategy.engine.game_session import GameSession
         from game.strategy.systems.save_game_service import SaveGameService
 
         logger.info(
             f"Starting new game: {config.save_name} with {len(config.players)} players"
         )
+        # Mode-scoped data lifecycle: load the game data set into the
+        # global registry BEFORE constructing GameSession. Today every
+        # new game uses the default data path; a future mod-selection
+        # UI can supply `getattr(config, 'data_path', None)` to drive
+        # the same load against an alternative path.
+        data_path = getattr(config, "data_path", None) or Paths.DEFAULT_GAME_DATA_DIR
+        load_data_from_path(data_path)
         # PROJ-239: AI factory created here (UI layer) and injected into strategy layer.
         # PROJ-466 Phase 4: do NOT catch SessionInitializationError here. The
         # new-game path runs inside NewGameSetupController.on_start_clicked,
@@ -279,11 +307,17 @@ class ScreenRouter:
             player_count: Number of players (1 or 2).
         """
         from game.core.exceptions import SessionInitializationError
+        from game.core.paths import Paths
+        from game.data_loader import load_data_from_path
         from game.strategy.engine.game_session import GameSession
         from game.strategy.quickstart_builder import QuickstartBuilder
         from game.strategy.systems.save_game_service import SaveGameService
 
         logger.info(f"Starting Quickstart {player_count}P")
+
+        # Mode-scoped data lifecycle: load the default game data set
+        # into the global registry before constructing GameSession.
+        load_data_from_path(Paths.DEFAULT_GAME_DATA_DIR)
 
         # Build config based on player count.
         if player_count == 1:
@@ -396,7 +430,18 @@ class ScreenRouter:
         logger.debug("Load game cancelled")
 
     def start_test_lab(self) -> None:
-        """Enter Combat Lab."""
+        """Enter Combat Lab.
+
+        Loads the Combat Lab data set into the global registry on entry.
+        TestRunner.load_data_for_scenario may later re-load a per-scenario
+        subset; either way the matching ``unload_data()`` on return-to-menu
+        clears the registry so no test fixtures leak into a subsequent
+        New Game or Load Game session.
+        """
+        from game.core.paths import Paths
+        from game.data_loader import load_data_from_path
+
+        load_data_from_path(Paths.COMBAT_LAB_DATA_DIR)
         self.return_state = GameState.TEST_LAB
         self._switch_scene(GameState.TEST_LAB, self.test_lab_scene)
 

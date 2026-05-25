@@ -32,9 +32,18 @@ _specs_cache: Optional[Dict[str, "CommandSpec"]] = None
 
 
 def _invalidate_specs_cache() -> None:
-    """Test seam: drop the cached spec lookup."""
+    """Drop the cached spec lookup.
+
+    Wired into `game.data_loader` so the cache resets whenever the
+    active data set changes — command specs may differ across mods.
+    """
     global _specs_cache
     _specs_cache = None
+
+
+# Self-register the cache reset with the data lifecycle.
+from game.data_loader import register_data_cache_invalidator as _register_data_cache_invalidator
+_register_data_cache_invalidator(_invalidate_specs_cache)
 
 
 class CommandDispatchSlice:
