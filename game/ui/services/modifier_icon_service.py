@@ -42,7 +42,7 @@ class ModifierIconService:
         """
         self.icon_size = icon_size
         self._cache: Dict[str, pygame.Surface] = {}
-        self._base_path = os.path.join(Paths.ASSET_DIR, "Images", "Modifier Icons")
+        self._base_path = Paths.MODIFIER_ICONS_DIR
 
     def get_icon(self, modifier_id: str) -> Optional[pygame.Surface]:
         """

@@ -9,7 +9,6 @@ See ``docs/03_CONVENTIONS.md`` for the canonical asset-derivative pattern.
 """
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
@@ -27,10 +26,6 @@ MASTER_SIZE = 1024
 DERIVATIVE_SIZES: tuple[int, ...] = (512, 256, 128, 64, 32)
 MANIFEST_NAME = ".flag_derivatives_manifest.json"
 
-FLAGS_PROCESSED_DIR = os.path.join(
-    Paths.ASSET_DIR, "Images", "Flags", "Processed"
-)
-
 
 @dataclass(frozen=True)
 class FlagDerivativeResult:
@@ -46,7 +41,7 @@ def _flag_spec(
 ) -> DerivativeFamilySpec:
     return DerivativeFamilySpec(
         name="flag",
-        root_dir=flags_root if flags_root is not None else FLAGS_PROCESSED_DIR,
+        root_dir=flags_root if flags_root is not None else Paths.FLAGS_PROCESSED_DIR,
         master_size=MASTER_SIZE,
         derivative_sizes=sizes,
         master_glob="flag_*/{master_size}/*.png",

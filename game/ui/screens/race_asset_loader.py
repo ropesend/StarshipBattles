@@ -43,8 +43,7 @@ class RaceAssetLoader:
             List of [rectangle, shield, triangle] surfaces (original size, caller scales)
         """
         shapes = []
-        flags_dir = os.path.join(Paths.ASSET_DIR, "Images", "Flags", "Processed")
-        flag_dir = os.path.join(flags_dir, flag_id)
+        flag_dir = os.path.join(Paths.FLAGS_PROCESSED_DIR, flag_id)
 
         for shape in ["rectangle", "shield", "triangle"]:
             # Try 1024px first for best quality, then 512, 256, then root
@@ -80,8 +79,7 @@ class RaceAssetLoader:
         Returns:
             Surface (original size, caller scales as needed) or None
         """
-        portraits_dir = os.path.join(Paths.ASSET_DIR, "Images", "Race Portraits")
-        portrait_path = os.path.join(portraits_dir, portrait_id)
+        portrait_path = os.path.join(Paths.RACE_PORTRAITS_DIR, portrait_id)
 
         if os.path.exists(portrait_path):
             try:

@@ -77,6 +77,10 @@ class Paths:
     SHIP_THEMES_TARGET_SIZE: int = 2048
     COMPONENTS_IMAGES_DIR: str = os.path.join(ASSET_DIR, "Images", "Components")
     RESOURCE_PORTRAITS_DIR: str = os.path.join(ASSET_DIR, "Images", "Resource Portraits")
+    RESOURCE_ICONS_DIR: str = os.path.join(ASSET_DIR, "Images", "Resource Icons")
+    RACE_PORTRAITS_DIR: str = os.path.join(ASSET_DIR, "Images", "Race Portraits")
+    MODIFIER_ICONS_DIR: str = os.path.join(ASSET_DIR, "Images", "Modifier Icons")
+    FLAGS_PROCESSED_DIR: str = os.path.join(ASSET_DIR, "Images", "Flags", "Processed")
 
     # Resolution subdirectories within Components/ (only 1024 is tracked;
     # the others are regenerated at startup by game.assets.component_derivatives).

@@ -125,7 +125,7 @@ class RacePortraitGallery(BaseGallery):
             return _PORTRAIT_THUMBNAIL_CACHE
 
         portraits: List[Tuple[str, pygame.Surface]] = []
-        portraits_dir = os.path.join(Paths.ASSET_DIR, "Images", "Race Portraits")
+        portraits_dir = Paths.RACE_PORTRAITS_DIR
 
         if not os.path.exists(portraits_dir):
             logger.warning(f"Portraits directory not found: {portraits_dir}")

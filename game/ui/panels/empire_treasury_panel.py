@@ -358,7 +358,7 @@ def load_resource_icons() -> Dict[str, pygame.Surface]:
         return _RESOURCE_ICON_CACHE
 
     icons = {}
-    resource_icons_dir = os.path.join(Paths.ASSET_DIR, "Images", "Resource Icons")
+    resource_icons_dir = Paths.RESOURCE_ICONS_DIR
 
     for resource in _get_planetary_ids():
         filename = f"resource_{resource.lower()}_icon.png"

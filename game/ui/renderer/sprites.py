@@ -37,9 +37,11 @@ class SpriteManager:
             base_path: Optional project root override. Uses Paths.COMPONENTS_64_DIR if None.
         """
         if base_path is not None:
-            sprite_dir = os.path.join(
-                base_path, "assets", "Images", "Components", "64"
-            )
+            # Compose against the override root using the canonical
+            # COMPONENTS_64_DIR suffix, so renames of the underlying
+            # folder layout require no edits here.
+            suffix = os.path.relpath(Paths.COMPONENTS_64_DIR, Paths.ROOT_DIR)
+            sprite_dir = os.path.join(base_path, suffix)
         else:
             sprite_dir = Paths.COMPONENTS_64_DIR
 
