@@ -38,7 +38,7 @@ class SpriteManager:
         """
         if base_path is not None:
             sprite_dir = os.path.join(
-                base_path, "assets", "Images", "Components", "Components 64"
+                base_path, "assets", "Images", "Components", "64"
             )
         else:
             sprite_dir = Paths.COMPONENTS_64_DIR

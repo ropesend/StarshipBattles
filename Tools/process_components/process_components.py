@@ -556,7 +556,7 @@ def main() -> None:
     parser.add_argument("--review-threshold", type=int, default=DEFAULT_REVIEW_THRESHOLD)
     parser.add_argument("--feather", type=float, default=1.5)
     parser.add_argument("--limit", type=int, default=0, help="Process only the first N images.")
-    parser.add_argument("--masters-only", action="store_true", help="Write only Components 1024 output.")
+    parser.add_argument("--masters-only", action="store_true", help="Write only the 1024 master output.")
     parser.add_argument("--force-manifest", action="store_true", help="Reset existing review decisions.")
     parser.add_argument("--promote", action="store_true", help="Copy staged files into live component folders.")
     parser.add_argument("--backup", action="store_true", help="Backup live component folders before promotion.")

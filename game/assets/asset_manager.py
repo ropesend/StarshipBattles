@@ -221,7 +221,7 @@ class AssetManager:
 
     def _get_planet_folder_for_size(self, size: int) -> str:
         """
-        Map a resolution size to the corresponding Planets_V3 folder path.
+        Map a resolution size to the corresponding Planets folder path.
 
         Args:
             size: Target resolution (128, 256, 512, 1024, or 2048)
@@ -233,11 +233,11 @@ class AssetManager:
             ResourceException: If size is not a valid resolution
         """
         size_to_path = {
-            128: Paths.PLANETS_V3_128_DIR,
-            256: Paths.PLANETS_V3_256_DIR,
-            512: Paths.PLANETS_V3_512_DIR,
-            1024: Paths.PLANETS_V3_1024_DIR,
-            2048: Paths.PLANETS_V3_2048_DIR,
+            128: Paths.PLANETS_128_DIR,
+            256: Paths.PLANETS_256_DIR,
+            512: Paths.PLANETS_512_DIR,
+            1024: Paths.PLANETS_1024_DIR,
+            2048: Paths.PLANETS_2048_DIR,
         }
 
         if size not in size_to_path:
@@ -261,10 +261,11 @@ class AssetManager:
             raise ResourceException(f"Invalid star image size: {size}")
         return size_to_path[size]
 
-    # Special stellar-object portraits live outside Planets_V3_* in their own
-    # dedicated directories. See docs/03_CONVENTIONS.md (Image Assets) for the
-    # split convention. Append new entries here to support future special
-    # stellar objects (ringworlds, etc.) without duplicating assets.
+    # Special stellar-object portraits live outside the Planets size folders
+    # in their own dedicated directories. See docs/03_CONVENTIONS.md
+    # (Image Assets) for the split convention. Append new entries here to
+    # support future special stellar objects (ringworlds, etc.) without
+    # duplicating assets.
     _STELLAR_OBJECT_FALLBACK_DIRS: tuple[str, ...] = (Paths.SPHERE_WORLD_DIR,)
 
     def load_planet_image(self, image_filename: str, requested_size: int = 512) -> pygame.Surface:
@@ -274,7 +275,7 @@ class AssetManager:
         Implements fallback chain: requested size → higher resolutions →
         stellar-object directories → missing texture.
 
-        Most planet portraits live in `Planets_V3_<size>/` size folders. A few
+        Most planet portraits live in `Planets/<size>/` size folders. A few
         special stellar objects (e.g., the Dyson Sphere) live in dedicated
         `Stellar Objects/<thing>/` folders and have only one resolution. When
         the size-chain probe fails, the loader falls back to those directories
@@ -329,7 +330,8 @@ class AssetManager:
                 continue
 
         # Size chain exhausted — try stellar-object fallback directories for
-        # special portraits (e.g., Dyson Sphere) that live outside Planets_V3_*.
+        # special portraits (e.g., Dyson Sphere) that live outside the
+        # Planets size folders.
         for stellar_dir in self._STELLAR_OBJECT_FALLBACK_DIRS:
             try:
                 image_path = os.path.join(stellar_dir, image_filename)

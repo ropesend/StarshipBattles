@@ -20,7 +20,7 @@ def find_project_root() -> Path:
 
 PROJECT_ROOT = find_project_root()
 COMPONENTS_ROOT = PROJECT_ROOT / "assets" / "Images" / "Components"
-SOURCE_DIR = COMPONENTS_ROOT / "Components 1024"
+SOURCE_DIR = COMPONENTS_ROOT / "1024"
 OUTPUT_ROOT = COMPONENTS_ROOT / "_ai_recreate_preview"
 
 CODEX_HOME = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex"))
@@ -232,7 +232,7 @@ def main() -> None:
         raise FileNotFoundError(REMOVE_CHROMA)
 
     output_root = args.output_root
-    output_dir = output_root / "Components 1024"
+    output_dir = output_root / "1024"
     chroma_dir = output_root / "_chroma"
     reports_dir = output_root / "reports"
     manifest_path = output_root / "review_manifest.json"

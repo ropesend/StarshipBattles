@@ -40,7 +40,7 @@ def ensure_component_derivatives(
 ) -> ComponentDerivativeResult:
     """Create or refresh generated component image sizes from tracked 1024px masters."""
     root = Path(components_root or Paths.COMPONENTS_IMAGES_DIR)
-    source_dir = root / f"Components {MASTER_SIZE}"
+    source_dir = root / str(MASTER_SIZE)
     if not source_dir.exists():
         raise FileNotFoundError(f"Component master directory not found: {source_dir}")
 
@@ -67,7 +67,7 @@ def ensure_component_derivatives(
 
         with Image.open(source_path).convert("RGBA") as master:
             for size in sizes_tuple:
-                target_dir = root / f"Components {size}"
+                target_dir = root / str(size)
                 target_path = target_dir / component_filename(source_path.name, size)
                 needs_generation = (
                     previous_hash != source_hash
@@ -149,7 +149,7 @@ def _source_fast_path_hit(
     if source_entry.get("mtime_ns") != source_stat.st_mtime_ns:
         return False
     for size in sizes:
-        target = root / f"Components {size}" / component_filename(source_path.name, size)
+        target = root / str(size) / component_filename(source_path.name, size)
         try:
             if target.stat().st_size <= 0:
                 return False

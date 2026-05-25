@@ -31,29 +31,29 @@ class TestGetPlanetFolderForSize:
     """Test _get_planet_folder_for_size() helper method."""
 
     def test_get_folder_128px(self, asset_manager):
-        """Test that 128px maps to PLANETS_V3_128_DIR."""
+        """Test that 128px maps to PLANETS_128_DIR."""
         result = asset_manager._get_planet_folder_for_size(128)
-        assert result == Paths.PLANETS_V3_128_DIR
+        assert result == Paths.PLANETS_128_DIR
 
     def test_get_folder_256px(self, asset_manager):
-        """Test that 256px maps to PLANETS_V3_256_DIR."""
+        """Test that 256px maps to PLANETS_256_DIR."""
         result = asset_manager._get_planet_folder_for_size(256)
-        assert result == Paths.PLANETS_V3_256_DIR
+        assert result == Paths.PLANETS_256_DIR
 
     def test_get_folder_512px(self, asset_manager):
-        """Test that 512px maps to PLANETS_V3_512_DIR."""
+        """Test that 512px maps to PLANETS_512_DIR."""
         result = asset_manager._get_planet_folder_for_size(512)
-        assert result == Paths.PLANETS_V3_512_DIR
+        assert result == Paths.PLANETS_512_DIR
 
     def test_get_folder_1024px(self, asset_manager):
-        """Test that 1024px maps to PLANETS_V3_1024_DIR."""
+        """Test that 1024px maps to PLANETS_1024_DIR."""
         result = asset_manager._get_planet_folder_for_size(1024)
-        assert result == Paths.PLANETS_V3_1024_DIR
+        assert result == Paths.PLANETS_1024_DIR
 
     def test_get_folder_2048px(self, asset_manager):
-        """Test that 2048px maps to PLANETS_V3_2048_DIR."""
+        """Test that 2048px maps to PLANETS_2048_DIR."""
         result = asset_manager._get_planet_folder_for_size(2048)
-        assert result == Paths.PLANETS_V3_2048_DIR
+        assert result == Paths.PLANETS_2048_DIR
 
     def test_invalid_size_raises_error(self, asset_manager):
         """Test that invalid size raises ResourceException."""
@@ -173,7 +173,7 @@ class TestLoadPlanetImage:
         """Test loading image at requested resolution when it exists."""
         # Use a real planet image from the 512px folder
         test_filename = "planet_5_994_1769750020702.png"
-        expected_path = os.path.join(Paths.PLANETS_V3_512_DIR, test_filename)
+        expected_path = os.path.join(Paths.PLANETS_512_DIR, test_filename)
 
         # Only run if file actually exists
         if os.path.exists(expected_path):
@@ -241,7 +241,7 @@ class TestLoadPlanetImage:
         """Test that planet images are cached after first load."""
         # Use a real planet image
         test_filename = "planet_5_994_1769750020702.png"
-        expected_path = os.path.join(Paths.PLANETS_V3_512_DIR, test_filename)
+        expected_path = os.path.join(Paths.PLANETS_512_DIR, test_filename)
 
         # Only run if file actually exists
         if os.path.exists(expected_path):
@@ -257,7 +257,7 @@ class TestLoadPlanetImage:
     def test_default_requested_size_is_512(self, asset_manager):
         """Test that default requested_size parameter is 512."""
         test_filename = "planet_5_994_1769750020702.png"
-        expected_path = os.path.join(Paths.PLANETS_V3_512_DIR, test_filename)
+        expected_path = os.path.join(Paths.PLANETS_512_DIR, test_filename)
 
         # Only run if file actually exists
         if os.path.exists(expected_path):
@@ -269,10 +269,10 @@ class TestLoadPlanetImage:
             assert surface != asset_manager.get_missing_texture()
 
     def test_load_planet_image_finds_sphere_world_portrait(self, asset_manager):
-        """Dyson Sphere portrait lives in Stellar Objects/Sphere world/, not Planets_V3_*.
+        """Dyson Sphere portrait lives in Stellar Objects/Sphere world/, not Planets/<size>.
 
         Regression for issue #27: load_planet_image() must fall back to
-        Paths.SPHERE_WORLD_DIR for filenames not present in any Planets_V3_*
+        Paths.SPHERE_WORLD_DIR for filenames not present in any Planets/<size>
         size folder. Asserts the acceptance criterion from the issue body.
         """
         sphere_path = os.path.join(
@@ -282,13 +282,13 @@ class TestLoadPlanetImage:
         assert os.path.exists(sphere_path), (
             f"Test prerequisite missing: {sphere_path}"
         )
-        # And NOT in any Planets_V3_* size folder.
+        # And NOT in any Planets/<size> size folder.
         for size_dir in (
-            Paths.PLANETS_V3_128_DIR,
-            Paths.PLANETS_V3_256_DIR,
-            Paths.PLANETS_V3_512_DIR,
-            Paths.PLANETS_V3_1024_DIR,
-            Paths.PLANETS_V3_2048_DIR,
+            Paths.PLANETS_128_DIR,
+            Paths.PLANETS_256_DIR,
+            Paths.PLANETS_512_DIR,
+            Paths.PLANETS_1024_DIR,
+            Paths.PLANETS_2048_DIR,
         ):
             assert not os.path.exists(
                 os.path.join(size_dir, "Sphereworld_Portrait.png")
@@ -306,7 +306,7 @@ class TestLoadPlanetImage:
         """Stellar-objects fallback must NOT mask genuinely missing files.
 
         Negative guard for issue #27: a filename that exists in neither the
-        Planets_V3_* size folders nor the stellar-objects fallback directories
+        Planets/<size> size folders nor the stellar-objects fallback directories
         must still return the missing-texture placeholder.
         """
         surface = asset_manager.load_planet_image(

@@ -249,23 +249,23 @@ Component images live under `assets/Images/Components/`:
 
 | Directory | Resolution | Filename pattern | Usage |
 |---|---:|---|---|
-| `Components 64/` | 64x64 | `64Portrait_Comp_{NNN}.png` | SpriteManager tile grid |
-| `Components 128/` | 128x128 | `128Portrait_Comp_{NNN}.png` | Small icons |
-| `Components 256/` | 256x256 | `256Portrait_Comp_{NNN}.png` | Medium thumbnails |
-| `Components 512/` | 512x512 | `512Portrait_Comp_{NNN}.png` | Large thumbnails |
-| `Components 1024/` | 1024x1024 | `1024Portrait_Comp_{NNN}.png` | Tracked source-of-truth set |
-| `Components 2048/` | 2048x2048 | `2048Portrait_Comp_{NNN}.png` | Detail panel portraits |
+| `64/` | 64x64 | `64Portrait_Comp_{NNN}.png` | SpriteManager tile grid |
+| `128/` | 128x128 | `128Portrait_Comp_{NNN}.png` | Small icons |
+| `256/` | 256x256 | `256Portrait_Comp_{NNN}.png` | Medium thumbnails |
+| `512/` | 512x512 | `512Portrait_Comp_{NNN}.png` | Large thumbnails |
+| `1024/` | 1024x1024 | `1024Portrait_Comp_{NNN}.png` | Tracked source-of-truth set |
+| `2048/` | 2048x2048 | `2048Portrait_Comp_{NNN}.png` | Detail panel portraits |
 
 Contracts:
 
 - Use `Paths.COMPONENTS_64_DIR` through `Paths.COMPONENTS_2048_DIR`.
-- `Components 1024/` is tracked source. `2048`, `512`, `256`, `128`, and `64` are generated derivatives and must not be committed.
+- `1024/` is tracked source. `2048`, `512`, `256`, `128`, and `64` are generated derivatives and must not be committed.
 - Startup runs `game.assets.component_derivatives.ensure_component_derivatives()` before component sprites load.
 - Derivative hash manifest: `assets/Images/Components/.component_derivatives_manifest.json`; it is intentionally ignored.
 
 #### Planet portraits and special stellar-object portraits
 
-Planet portraits live in `assets/Images/Stellar Objects/Planets/Planets_V3/Planets_V3_<size>/` (128/256/512/1024/2048; all tracked, hand-curated). Special stellar-object portraits (e.g., the Dyson Sphere) live in dedicated `assets/Images/Stellar Objects/<thing>/` folders (e.g., `Sphere world/Sphereworld_Portrait.png`) — one resolution per object, not size-tiered. `AssetManager.load_planet_image()` searches the `Planets_V3_*` size chain first, then falls back to the stellar-object directories listed in its `_STELLAR_OBJECT_FALLBACK_DIRS` tuple. To add a new special stellar-object portrait, place the PNG in its own `Stellar Objects/<thing>/` folder, expose a `Paths.<THING>_DIR` constant, and append it to `_STELLAR_OBJECT_FALLBACK_DIRS` — no asset duplication into the planet pool.
+Planet portraits live in `assets/Images/Stellar Objects/Planets/<size>/` (128/256/512/1024/2048; all tracked, hand-curated). Special stellar-object portraits (e.g., the Dyson Sphere) live in dedicated `assets/Images/Stellar Objects/<thing>/` folders (e.g., `Sphere world/Sphereworld_Portrait.png`) — one resolution per object, not size-tiered. `AssetManager.load_planet_image()` searches the planet size chain first, then falls back to the stellar-object directories listed in its `_STELLAR_OBJECT_FALLBACK_DIRS` tuple. To add a new special stellar-object portrait, place the PNG in its own `Stellar Objects/<thing>/` folder, expose a `Paths.<THING>_DIR` constant, and append it to `_STELLAR_OBJECT_FALLBACK_DIRS` — no asset duplication into the planet pool.
 
 ## Test Conventions
 

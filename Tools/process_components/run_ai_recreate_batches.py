@@ -22,7 +22,7 @@ def timestamp() -> str:
 
 
 def validate_outputs(output_root: Path) -> dict:
-    output_dir = output_root / "Components 1024"
+    output_dir = output_root / "1024"
     files = sorted(output_dir.glob("*.png"))
     bad_dimensions = []
     for path in files:

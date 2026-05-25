@@ -78,28 +78,29 @@ class Paths:
     COMPONENTS_IMAGES_DIR: str = os.path.join(ASSET_DIR, "Images", "Components")
     RESOURCE_PORTRAITS_DIR: str = os.path.join(ASSET_DIR, "Images", "Resource Portraits")
 
-    # Resolution subdirectories within Components/
-    COMPONENTS_2048_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "Components 2048")
-    COMPONENTS_1024_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "Components 1024")
-    COMPONENTS_512_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "Components 512")
-    COMPONENTS_256_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "Components 256")
-    COMPONENTS_128_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "Components 128")
-    COMPONENTS_64_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "Components 64")
-    PLANETS_V3_DIR: str = os.path.join(ASSET_DIR, "Images", "Stellar Objects", "Planets", "Planets_V3")
+    # Resolution subdirectories within Components/ (only 1024 is tracked;
+    # the others are regenerated at startup by game.assets.component_derivatives).
+    COMPONENTS_2048_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "2048")
+    COMPONENTS_1024_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "1024")
+    COMPONENTS_512_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "512")
+    COMPONENTS_256_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "256")
+    COMPONENTS_128_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "128")
+    COMPONENTS_64_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "64")
+    PLANETS_DIR: str = os.path.join(ASSET_DIR, "Images", "Stellar Objects", "Planets")
 
-    # Resolution subdirectories within Planets_V3/ (PROJ-54 Phase 7)
-    PLANETS_V3_2048_DIR: str = os.path.join(PLANETS_V3_DIR, "Planets_V3_2048")
-    PLANETS_V3_1024_DIR: str = os.path.join(PLANETS_V3_DIR, "Planets_V3_1024")
-    PLANETS_V3_512_DIR: str = os.path.join(PLANETS_V3_DIR, "Planets_V3_512")
-    PLANETS_V3_256_DIR: str = os.path.join(PLANETS_V3_DIR, "Planets_V3_256")
-    PLANETS_V3_128_DIR: str = os.path.join(PLANETS_V3_DIR, "Planets_V3_128")
+    # Resolution subdirectories within Planets/
+    PLANETS_2048_DIR: str = os.path.join(PLANETS_DIR, "2048")
+    PLANETS_1024_DIR: str = os.path.join(PLANETS_DIR, "1024")
+    PLANETS_512_DIR: str = os.path.join(PLANETS_DIR, "512")
+    PLANETS_256_DIR: str = os.path.join(PLANETS_DIR, "256")
+    PLANETS_128_DIR: str = os.path.join(PLANETS_DIR, "128")
 
-    # Star subdirectories (PROJ-231 star image variant support)
+    # Star subdirectories
     STARS_DIR: str = os.path.join(ASSET_DIR, "Images", "Stellar Objects", "Stars")
-    STARS_1024_DIR: str = os.path.join(STARS_DIR, "Stars_1024")
-    STARS_512_DIR: str = os.path.join(STARS_DIR, "Stars_512")
-    STARS_256_DIR: str = os.path.join(STARS_DIR, "Stars_256")
-    STARS_128_DIR: str = os.path.join(STARS_DIR, "Stars_128")
+    STARS_1024_DIR: str = os.path.join(STARS_DIR, "1024")
+    STARS_512_DIR: str = os.path.join(STARS_DIR, "512")
+    STARS_256_DIR: str = os.path.join(STARS_DIR, "256")
+    STARS_128_DIR: str = os.path.join(STARS_DIR, "128")
 
     # Stellar Objects subdirectories
     SPHERE_WORLD_DIR: str = os.path.join(ASSET_DIR, "Images", "Stellar Objects", "Sphere world")
@@ -145,7 +146,7 @@ class Paths:
     # === Asset Files ===
     ASSET_MANIFEST_FILE: str = os.path.join(ASSET_DIR, "asset_manifest.json")
     DEFAULT_SHIP_PORTRAIT: str = os.path.join(ASSET_DIR, "Images", "Default_Ship_Portrait.png")
-    PLANET_CLASSIFICATIONS_FILE: str = os.path.join(PLANETS_V3_DIR, "planet_classifications.json")
+    PLANET_CLASSIFICATIONS_FILE: str = os.path.join(PLANETS_DIR, "planet_classifications.json")
 
     # === Log Files ===
     BATTLE_LOG: str = os.path.join(LOGS_DIR, "battle.log")
@@ -195,8 +196,8 @@ class Paths:
         return _PROJECT_ROOT / "output" / "logs"
 
     @classmethod
-    def get_planets_v3_dir(cls) -> Path:
-        return _PROJECT_ROOT / "assets" / "Images" / "Stellar Objects" / "Planets" / "Planets_V3"
+    def get_planets_dir(cls) -> Path:
+        return _PROJECT_ROOT / "assets" / "Images" / "Stellar Objects" / "Planets"
 
     @classmethod
     def get_stars_dir(cls) -> Path:

@@ -21,14 +21,14 @@ def find_project_root() -> Path:
 PROJECT_ROOT = find_project_root()
 BASE_DIR = Path(__file__).resolve().parent
 COMPONENTS_ROOT = PROJECT_ROOT / "assets" / "Images" / "Components"
-SOURCE_DIR = COMPONENTS_ROOT / "Components 1024"
+SOURCE_DIR = COMPONENTS_ROOT / "1024"
 STAGING_ROOT = Path(
     os.environ.get(
         "COMPONENT_TRANSPARENCY_STAGING",
         str(COMPONENTS_ROOT / "_processed_preview"),
     )
 )
-STAGED_1024 = STAGING_ROOT / "Components 1024"
+STAGED_1024 = STAGING_ROOT / "1024"
 MANIFEST_PATH = STAGING_ROOT / "review_manifest.json"
 
 app = FastAPI()

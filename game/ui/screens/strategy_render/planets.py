@@ -18,9 +18,9 @@ def draw_planet_sprite(r: Any, screen: Any, planet: Any, center_pos: Any, size: 
     """Draw a single planet sprite with colony marker if owned."""
     img = None
 
-    # Load planet image from Planets_V3 using image_id
+    # Load planet image using image_id
     if planet.image_id:
-        img = load_planet_v3_image(r, planet.image_id)
+        img = load_planet_image(r, planet.image_id)
 
     if img:
         scaled = pygame.transform.smoothscale(img, (size * 2, size * 2))
@@ -54,8 +54,8 @@ def draw_planet_sprite(r: Any, screen: Any, planet: Any, center_pos: Any, size: 
                 pygame.draw.circle(screen, WHITE, marker_pos, max(3, int(size / 3)) + 1, 1)
 
 
-def load_planet_v3_image(r: Any, image_id: str) -> Any:
-    """Load a planet image from the Planets_V3 directory.
+def load_planet_image(r: Any, image_id: str) -> Any:
+    """Load a planet image from the Planets/<size>/ directories.
 
     Args:
         r: Renderer (for asset_manager access).
@@ -68,7 +68,7 @@ def load_planet_v3_image(r: Any, image_id: str) -> Any:
         return None
 
     # Load planet image at 512px resolution (optimal for portraits)
-    # Uses resolution-aware loading with fallback chain (PROJ-54 Phase 10)
+    # Uses resolution-aware loading with fallback chain.
     img = r._asset_manager.load_planet_image(image_id, requested_size=512)
 
     # Check if we got the missing texture placeholder

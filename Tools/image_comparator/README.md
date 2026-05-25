@@ -23,7 +23,7 @@ Then open `http://localhost:8001` in a browser.
 
 The server scans two directories for images:
 
-- **Original**: `assets/Images/Components/Components 1024/`
+- **Original**: `assets/Images/Components/1024/`
 - **Recreated**: `assets/Images/altcomponents/Recreated/`
 
 It extracts the 3-digit component ID from each filename (e.g., `Comp_007`), matches originals to recreations, and presents them side-by-side in rows.

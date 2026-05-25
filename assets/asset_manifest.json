@@ -1,60 +1,60 @@
 {
   "stars": {
     "black": [
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarBlackAsset.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarBlackVariant_1.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarBlackVariant_2.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarBlackVariant_3.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarBlackVariant_4.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarBlackVariant_5.png"
+      "assets/Images/Stellar Objects/Stars/1024/StarBlackAsset.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarBlackVariant_1.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarBlackVariant_2.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarBlackVariant_3.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarBlackVariant_4.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarBlackVariant_5.png"
     ],
     "blue": [
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarBlueAsset.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarBlueVariant_1.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarBlueVariant_2.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarBlueVariant_3.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarBlueVariant_4.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarBlueVariant_5.png"
+      "assets/Images/Stellar Objects/Stars/1024/StarBlueAsset.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarBlueVariant_1.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarBlueVariant_2.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarBlueVariant_3.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarBlueVariant_4.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarBlueVariant_5.png"
     ],
     "neutron": [
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarNeutronAsset.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarNeutronVariant_1.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarNeutronVariant_2.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarNeutronVariant_3.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarNeutronVariant_4.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarNeutronVariant_5.png"
+      "assets/Images/Stellar Objects/Stars/1024/StarNeutronAsset.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarNeutronVariant_1.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarNeutronVariant_2.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarNeutronVariant_3.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarNeutronVariant_4.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarNeutronVariant_5.png"
     ],
     "orange": [
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarOrangeAsset.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarOrangeVariant_1.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarOrangeVariant_2.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarOrangeVariant_3.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarOrangeVariant_4.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarOrangeVariant_5.png"
+      "assets/Images/Stellar Objects/Stars/1024/StarOrangeAsset.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarOrangeVariant_1.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarOrangeVariant_2.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarOrangeVariant_3.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarOrangeVariant_4.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarOrangeVariant_5.png"
     ],
     "red": [
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarRedAsset.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarRedVariant_1.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarRedVariant_2.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarRedVariant_3.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarRedVariant_4.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarRedVariant_5.png"
+      "assets/Images/Stellar Objects/Stars/1024/StarRedAsset.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarRedVariant_1.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarRedVariant_2.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarRedVariant_3.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarRedVariant_4.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarRedVariant_5.png"
     ],
     "white": [
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarWhiteAsset.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarWhiteVariant_1.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarWhiteVariant_2.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarWhiteVariant_3.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarWhiteVariant_4.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarWhiteVariant_5.png"
+      "assets/Images/Stellar Objects/Stars/1024/StarWhiteAsset.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarWhiteVariant_1.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarWhiteVariant_2.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarWhiteVariant_3.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarWhiteVariant_4.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarWhiteVariant_5.png"
     ],
     "yellow": [
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarYellowAsset.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarYellowVariant_1.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarYellowVariant_2.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarYellowVariant_3.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarYellowVariant_4.png",
-      "assets/Images/Stellar Objects/Stars/Stars_1024/StarYellowVariant_5.png"
+      "assets/Images/Stellar Objects/Stars/1024/StarYellowAsset.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarYellowVariant_1.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarYellowVariant_2.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarYellowVariant_3.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarYellowVariant_4.png",
+      "assets/Images/Stellar Objects/Stars/1024/StarYellowVariant_5.png"
     ]
   },
   "star_type_assets": {

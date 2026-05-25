@@ -25,7 +25,7 @@ except ImportError:
     class Paths:
         ASSET_DIR = os.path.join(str(PROJECT_ROOT), "assets")
         STARS_DIR = os.path.join(ASSET_DIR, "Images", "Stellar Objects", "Stars")
-        STARS_1024_DIR = os.path.join(STARS_DIR, "Stars_1024")
+        STARS_1024_DIR = os.path.join(STARS_DIR, "1024")
 
 def resize_image(source_path: Path, target_path: Path, target_size: int) -> bool:
     try:
@@ -56,7 +56,7 @@ def main():
     print(f"Target resolutions: {resolutions}")
 
     for res in resolutions:
-        target_dir = Path(Paths.STARS_DIR) / f"Stars_{res}"
+        target_dir = Path(Paths.STARS_DIR) / str(res)
         target_dir.mkdir(exist_ok=True)
         print(f"Generating {res}px images...")
         

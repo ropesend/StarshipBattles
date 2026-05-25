@@ -100,12 +100,12 @@ class TestPathConstants:
 
     def test_component_resolution_dirs_defined(self):
         """Component image resolution subdirectories point to correct locations."""
-        assert Paths.COMPONENTS_2048_DIR == os.path.join(Paths.COMPONENTS_IMAGES_DIR, "Components 2048")
-        assert Paths.COMPONENTS_1024_DIR == os.path.join(Paths.COMPONENTS_IMAGES_DIR, "Components 1024")
-        assert Paths.COMPONENTS_512_DIR == os.path.join(Paths.COMPONENTS_IMAGES_DIR, "Components 512")
-        assert Paths.COMPONENTS_256_DIR == os.path.join(Paths.COMPONENTS_IMAGES_DIR, "Components 256")
-        assert Paths.COMPONENTS_128_DIR == os.path.join(Paths.COMPONENTS_IMAGES_DIR, "Components 128")
-        assert Paths.COMPONENTS_64_DIR == os.path.join(Paths.COMPONENTS_IMAGES_DIR, "Components 64")
+        assert Paths.COMPONENTS_2048_DIR == os.path.join(Paths.COMPONENTS_IMAGES_DIR, "2048")
+        assert Paths.COMPONENTS_1024_DIR == os.path.join(Paths.COMPONENTS_IMAGES_DIR, "1024")
+        assert Paths.COMPONENTS_512_DIR == os.path.join(Paths.COMPONENTS_IMAGES_DIR, "512")
+        assert Paths.COMPONENTS_256_DIR == os.path.join(Paths.COMPONENTS_IMAGES_DIR, "256")
+        assert Paths.COMPONENTS_128_DIR == os.path.join(Paths.COMPONENTS_IMAGES_DIR, "128")
+        assert Paths.COMPONENTS_64_DIR == os.path.join(Paths.COMPONENTS_IMAGES_DIR, "64")
 
 
 class TestPathlibAccessors:

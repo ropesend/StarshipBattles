@@ -95,11 +95,12 @@ assets/Images/Components/_ai_recreate_enhanced_fixes_preview/*
 assets/Images/Components/_ai_recreate_enhanced_repaired_preview/*
 assets/Images/Components/_ai_recreate_enhanced_corrected_preview/*
 assets/Images/Components/.component_derivatives_manifest.json
-assets/Images/Components/Components 2048/*
-assets/Images/Components/Components 512/*
-assets/Images/Components/Components 256/*
-assets/Images/Components/Components 128/*
-assets/Images/Components/Components 64/*
+# Component derivative size folders (regenerated at startup; only 1024/ is tracked).
+assets/Images/Components/2048/*
+assets/Images/Components/512/*
+assets/Images/Components/256/*
+assets/Images/Components/128/*
+assets/Images/Components/64/*
 
 # PROJ-314: ship-portrait regeneration manifest (per-run, ephemeral).
 Tools/regenerate_ship_portraits/last_run.json

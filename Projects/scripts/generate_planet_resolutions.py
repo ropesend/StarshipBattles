@@ -7,7 +7,7 @@ Uses PIL/Pillow with LANCZOS resampling for high quality.
 
 Usage:
     python Projects/scripts/generate_planet_resolutions.py
-    python Projects/scripts/generate_planet_resolutions.py --source Planets_V3_2048 --resolutions 1024,512,256,128
+    python Projects/scripts/generate_planet_resolutions.py --source 2048 --resolutions 1024,512,256,128
 """
 
 import argparse
@@ -45,8 +45,8 @@ def get_args():
     )
     parser.add_argument(
         '--source',
-        default='Planets_V3_2048',
-        help='Source folder name containing 2048px images (default: Planets_V3_2048)'
+        default='2048',
+        help='Source folder name containing 2048px images (default: 2048)'
     )
     parser.add_argument(
         '--resolutions',
@@ -108,7 +108,7 @@ def main():
         sys.exit(1)
 
     # Determine source folder
-    source_folder = Path(Paths.PLANETS_V3_DIR) / args.source
+    source_folder = Path(Paths.PLANETS_DIR) / args.source
 
     if not source_folder.exists():
         print(f"ERROR: Source folder not found: {source_folder}")
@@ -116,7 +116,7 @@ def main():
         print(f"\nDid you move the 2048px images to {args.source}/ subdirectory?")
         print("If not, run:")
         print(f"  mkdir \"{source_folder}\"")
-        print(f"  mv \"{Paths.PLANETS_V3_DIR}/planet_*.png\" \"{source_folder}/\"")
+        print(f"  mv \"{Paths.PLANETS_DIR}/planet_*.png\" \"{source_folder}/\"")
         sys.exit(1)
 
     # Find all planet images
@@ -139,7 +139,7 @@ def main():
     # Process each resolution
     for resolution in resolutions:
         # Create target folder
-        target_folder = Path(Paths.PLANETS_V3_DIR) / f"Planets_V3_{resolution}"
+        target_folder = Path(Paths.PLANETS_DIR) / str(resolution)
 
         if args.dry_run:
             print(f"[DRY RUN] Would create: {target_folder}")
@@ -197,7 +197,7 @@ def main():
         # Show folder sizes
         print("\nGenerated folders:")
         for resolution in resolutions:
-            target_folder = Path(Paths.PLANETS_V3_DIR) / f"Planets_V3_{resolution}"
+            target_folder = Path(Paths.PLANETS_DIR) / str(resolution)
             if target_folder.exists():
                 file_count = len(list(target_folder.glob('planet_*.png')))
                 print(f"  {target_folder.name}: {file_count} files")

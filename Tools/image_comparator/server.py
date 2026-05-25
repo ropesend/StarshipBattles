@@ -11,7 +11,7 @@ app = FastAPI(title="Image Comparison Tool")
 # Configuration
 REPO_ROOT = r"C:\Developer\StarshipBattles"
 RECREATED_DIR = os.path.join(REPO_ROOT, "assets", "Images", "altcomponents", "Recreated")
-ORIGINAL_DIR = os.path.join(REPO_ROOT, "assets", "Images", "Components", "Components 1024")
+ORIGINAL_DIR = os.path.join(REPO_ROOT, "assets", "Images", "Components", "1024")
 
 # Mount directories for static serving
 if os.path.exists(RECREATED_DIR):

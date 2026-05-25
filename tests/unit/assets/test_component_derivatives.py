@@ -26,17 +26,17 @@ def test_component_filename_replaces_leading_resolution() -> None:
 
 def test_generates_missing_derivatives_and_manifest(tmp_path: Path) -> None:
     root = tmp_path / "Components"
-    _write_master(root / "Components 1024" / "1024Portrait_Comp_001.png", (255, 0, 0, 255))
+    _write_master(root / "1024" / "1024Portrait_Comp_001.png", (255, 0, 0, 255))
 
     result = ensure_component_derivatives(root, sizes=(64, 128))
 
     assert result.sources == 1
     assert result.generated == 2
     assert result.skipped == 0
-    assert (root / "Components 64" / "64Portrait_Comp_001.png").exists()
-    assert (root / "Components 128" / "128Portrait_Comp_001.png").exists()
+    assert (root / "64" / "64Portrait_Comp_001.png").exists()
+    assert (root / "128" / "128Portrait_Comp_001.png").exists()
 
-    with Image.open(root / "Components 64" / "64Portrait_Comp_001.png") as image:
+    with Image.open(root / "64" / "64Portrait_Comp_001.png") as image:
         assert image.size == (64, 64)
 
     manifest = json.loads((root / MANIFEST_NAME).read_text(encoding="utf-8"))
@@ -45,10 +45,10 @@ def test_generates_missing_derivatives_and_manifest(tmp_path: Path) -> None:
 
 def test_skips_when_hash_and_outputs_are_current(tmp_path: Path) -> None:
     root = tmp_path / "Components"
-    _write_master(root / "Components 1024" / "1024Portrait_Comp_001.png", (255, 0, 0, 255))
+    _write_master(root / "1024" / "1024Portrait_Comp_001.png", (255, 0, 0, 255))
 
     first = ensure_component_derivatives(root, sizes=(64,))
-    target = root / "Components 64" / "64Portrait_Comp_001.png"
+    target = root / "64" / "64Portrait_Comp_001.png"
     first_mtime = target.stat().st_mtime_ns
 
     second = ensure_component_derivatives(root, sizes=(64,))
@@ -61,11 +61,11 @@ def test_skips_when_hash_and_outputs_are_current(tmp_path: Path) -> None:
 
 def test_regenerates_when_master_hash_changes(tmp_path: Path) -> None:
     root = tmp_path / "Components"
-    master = root / "Components 1024" / "1024Portrait_Comp_001.png"
+    master = root / "1024" / "1024Portrait_Comp_001.png"
     _write_master(master, (255, 0, 0, 255))
     ensure_component_derivatives(root, sizes=(64,))
 
-    target = root / "Components 64" / "64Portrait_Comp_001.png"
+    target = root / "64" / "64Portrait_Comp_001.png"
     first_mtime = target.stat().st_mtime_ns
     # PROJ-322 Task 4.2 (S06-CAT7-001): use os.utime to backdate the
     # master file so the rebuild's mtime is unambiguously newer,
@@ -85,7 +85,7 @@ def test_regenerates_when_master_hash_changes(tmp_path: Path) -> None:
 
 def test_fast_path_skips_sha_and_decode_when_mtime_unchanged(tmp_path: Path) -> None:
     root = tmp_path / "Components"
-    _write_master(root / "Components 1024" / "1024Portrait_Comp_001.png", (255, 0, 0, 255))
+    _write_master(root / "1024" / "1024Portrait_Comp_001.png", (255, 0, 0, 255))
 
     ensure_component_derivatives(root, sizes=(64,))
 
@@ -104,7 +104,7 @@ def test_fast_path_skips_sha_and_decode_when_mtime_unchanged(tmp_path: Path) -> 
 
 def test_fast_path_invalidated_when_source_mtime_changes(tmp_path: Path) -> None:
     root = tmp_path / "Components"
-    master = root / "Components 1024" / "1024Portrait_Comp_001.png"
+    master = root / "1024" / "1024Portrait_Comp_001.png"
     _write_master(master, (255, 0, 0, 255))
 
     ensure_component_derivatives(root, sizes=(64,))
@@ -132,11 +132,11 @@ def test_fast_path_invalidated_when_source_mtime_changes(tmp_path: Path) -> None
 
 def test_fast_path_invalidated_when_target_missing(tmp_path: Path) -> None:
     root = tmp_path / "Components"
-    _write_master(root / "Components 1024" / "1024Portrait_Comp_001.png", (255, 0, 0, 255))
+    _write_master(root / "1024" / "1024Portrait_Comp_001.png", (255, 0, 0, 255))
 
     ensure_component_derivatives(root, sizes=(64, 128))
 
-    missing = root / "Components 64" / "64Portrait_Comp_001.png"
+    missing = root / "64" / "64Portrait_Comp_001.png"
     missing.unlink()
 
     result = ensure_component_derivatives(root, sizes=(64, 128))
