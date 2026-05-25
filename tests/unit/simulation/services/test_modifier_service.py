@@ -1037,3 +1037,143 @@ class TestArcSetEffectDetection:
         min_val, max_val = service.get_local_min_max('damage_only', mock_weapon_component)
         assert min_val == 1.0  # from modifier definition
         assert max_val == 10.0
+
+
+# =============================================================================
+# Test: check_allowance (PROJ-498 Phase 1)
+# =============================================================================
+
+class TestCheckAllowance:
+    """Tests for the reason-bearing ``check_allowance`` API (PROJ-498).
+
+    ``check_allowance(mod_id, component)`` returns an ``AllowanceResult`` with
+    an ``allowed: bool`` and an ``AllowanceReason`` enum so save-restore
+    boundaries can emit diagnostic warnings.
+
+    Reason enum is LOCKED to what the live service enforces today
+    (`modifier_service.py:79-106`):
+    ``UNKNOWN_MODIFIER_ID``, ``TYPE_NOT_ALLOWED``, ``TYPE_DENIED``,
+    ``ABILITY_NOT_ALLOWED``, ``ALLOWED``. No ``ABILITY_DENIED`` —
+    ``deny_abilities`` is NOT enforced by the live service (see
+    `decisions.md`, Codex mid-project review Q5).
+    """
+
+    def test_unknown_modifier_id_reason(self, basic_registry, mock_weapon_component):
+        """check_allowance returns UNKNOWN_MODIFIER_ID for unknown id."""
+        from game.simulation.services.modifier_service import (
+            AllowanceReason,
+            AllowanceResult,
+        )
+        service = ModifierService(modifier_registry=basic_registry)
+        result = service.check_allowance('nonexistent_mod', mock_weapon_component)
+        assert isinstance(result, AllowanceResult)
+        assert result.allowed is False
+        assert result.reason is AllowanceReason.UNKNOWN_MODIFIER_ID
+
+    def test_allowed_modifier_reason(self, basic_registry, mock_weapon_component):
+        """check_allowance returns ALLOWED for an unrestricted modifier."""
+        from game.simulation.services.modifier_service import (
+            AllowanceReason,
+            AllowanceResult,
+        )
+        service = ModifierService(modifier_registry=basic_registry)
+        result = service.check_allowance('test_unrestricted', mock_weapon_component)
+        assert isinstance(result, AllowanceResult)
+        assert result.allowed is True
+        assert result.reason is AllowanceReason.ALLOWED
+
+    def test_type_not_allowed_reason(self, full_registry, mock_engine_component):
+        """check_allowance returns TYPE_NOT_ALLOWED when allow_types excludes."""
+        from game.simulation.services.modifier_service import AllowanceReason
+        service = ModifierService(modifier_registry=full_registry)
+        # weapon_only has allow_types=['weapon']; engine is not weapon
+        result = service.check_allowance('weapon_only', mock_engine_component)
+        assert result.allowed is False
+        assert result.reason is AllowanceReason.TYPE_NOT_ALLOWED
+
+    def test_type_denied_reason(self, full_registry, mock_armor_component):
+        """check_allowance returns TYPE_DENIED when deny_types includes type."""
+        from game.simulation.services.modifier_service import AllowanceReason
+        service = ModifierService(modifier_registry=full_registry)
+        # not_for_armor has deny_types=['armor', 'shield']
+        result = service.check_allowance('not_for_armor', mock_armor_component)
+        assert result.allowed is False
+        assert result.reason is AllowanceReason.TYPE_DENIED
+
+    def test_ability_not_allowed_reason(self, full_registry, mock_weapon_component):
+        """check_allowance returns ABILITY_NOT_ALLOWED when allow_abilities lacks match."""
+        from game.simulation.services.modifier_service import AllowanceReason
+        service = ModifierService(modifier_registry=full_registry)
+        # beam_only requires BeamWeaponAbility; mock_weapon_component has ProjectileWeaponAbility
+        result = service.check_allowance('beam_only', mock_weapon_component)
+        assert result.allowed is False
+        assert result.reason is AllowanceReason.ABILITY_NOT_ALLOWED
+
+    def test_check_allowance_result_str_includes_reason(
+        self, basic_registry, mock_weapon_component
+    ):
+        """AllowanceResult.__str__ exposes reason for ad-hoc debugging."""
+        from game.simulation.services.modifier_service import AllowanceReason
+        service = ModifierService(modifier_registry=basic_registry)
+        result = service.check_allowance('nonexistent_mod', mock_weapon_component)
+        # Production logging in battle_state.py / ship_serialization.py
+        # uses ``allowance.reason.name`` directly, NOT ``str(allowance)`` —
+        # so this string form is purely a debugging convenience (repr-like).
+        # Pinning that it still includes the reason name keeps interactive
+        # inspection useful and prevents an accidentally empty __str__.
+        assert 'UNKNOWN_MODIFIER_ID' in str(result)
+
+    def test_no_ability_denied_reason_exists(self):
+        """Codex Q5 guard: AllowanceReason must NOT define ABILITY_DENIED.
+
+        The live service does NOT enforce ``deny_abilities``; introducing
+        the reason here would silently expand semantics. See
+        `decisions.md` 2026-05-23 mid-project review Q5.
+        """
+        from game.simulation.services.modifier_service import AllowanceReason
+        existing = {r.name for r in AllowanceReason}
+        assert existing == {
+            'UNKNOWN_MODIFIER_ID',
+            'TYPE_NOT_ALLOWED',
+            'TYPE_DENIED',
+            'ABILITY_NOT_ALLOWED',
+            'ALLOWED',
+        }
+        assert 'ABILITY_DENIED' not in existing
+
+
+# =============================================================================
+# Test: bool-semantics regression guard (PROJ-498 Phase 1, Codex Q4)
+# =============================================================================
+
+class TestIsModifierAllowedBoolRegressionGuard:
+    """Pin the bool-shape contract of ``is_modifier_allowed`` (PROJ-498).
+
+    Three downstream callers in production rely on a bare ``bool`` return:
+    - ``game/simulation/components/modifier_manager.py:124``
+    - ``game/ui/services/component_service.py:104``
+    - ``game/ui/screens/builder/modifier_logic.py:54``
+    All use ``if not service.is_modifier_allowed(...)``-style checks; an
+    accidental switch to a truthy ``AllowanceResult`` return would silently
+    pass these checks even on rejection. Assert ``is True`` / ``is False``,
+    not truthiness.
+    """
+
+    def test_allowed_returns_exact_true(self, basic_registry, mock_weapon_component):
+        """A known-allowed pair returns the bool True exactly."""
+        service = ModifierService(modifier_registry=basic_registry)
+        result = service.is_modifier_allowed('test_unrestricted', mock_weapon_component)
+        assert result is True  # NOT just truthy
+
+    def test_rejected_returns_exact_false(self, full_registry, mock_engine_component):
+        """A known-rejected pair returns the bool False exactly."""
+        service = ModifierService(modifier_registry=full_registry)
+        # weapon_only excludes engine
+        result = service.is_modifier_allowed('weapon_only', mock_engine_component)
+        assert result is False  # NOT just falsy
+
+    def test_unknown_id_returns_exact_false(self, basic_registry, mock_weapon_component):
+        """An unknown modifier id returns the bool False exactly."""
+        service = ModifierService(modifier_registry=basic_registry)
+        result = service.is_modifier_allowed('does_not_exist', mock_weapon_component)
+        assert result is False  # NOT just falsy

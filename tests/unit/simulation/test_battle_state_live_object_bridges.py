@@ -533,3 +533,83 @@ class TestBattleResultsQueries:
             destroyed_ships=[s0, s1],
         )
         assert results.get_team_losses(1) == [s1]
+
+
+# ---------------------------------------------------------------------------
+# ShipState.to_ship rejection logging (PROJ-498 Phase 2)
+# ---------------------------------------------------------------------------
+
+
+class TestShipStateToShipRejectionLogging:
+    """Pin the PROJ-498 rejection warning in ``ShipState.to_ship``.
+
+    When a saved modifier exists in the registry but ``ModifierService``
+    rejects it for the component, ``to_ship`` must emit
+    ``logger.warning`` including modifier id, component id, and the
+    ``AllowanceReason`` so save-restore drift is diagnosable. Logging at
+    the save-restore boundary (not inside ``Component.add_modifier``)
+    avoids noising builder/UI rejection paths.
+    """
+
+    def test_to_ship_logs_rejection_with_reason(self, caplog):
+        from game.simulation.components.component_constants import Modifier
+        # Real modifier definition so check_allowance can evaluate it.
+        precision_mount = Modifier({
+            'id': 'precision_mount',
+            'name': 'Precision',
+            'param': {'min': 0.0, 'max': 5.0, 'default': 0.0},
+            'restrictions': {'allow_abilities': ['BeamWeaponAbility']},
+            'effects': [],
+        })
+
+        comp_state = ComponentState(
+            component_id="bridge",
+            current_hp=10,
+            max_hp=10,
+            is_active=True,
+            layer="CORE",
+            modifiers=[{"id": "precision_mount", "value": 1.0}],
+        )
+        state = _basic_ship_state(components={"CORE": [comp_state]})
+
+        # Mock component the registry returns from .clone(): looks like a
+        # bridge — no BeamWeaponAbility → ABILITY_NOT_ALLOWED.
+        new_comp = MagicMock()
+        new_comp.id = "bridge"
+        new_comp.type_str = "Bridge"
+        new_comp.abilities = {"CommandAndControl": {}, "RequiresMaintenance": {}}
+        new_comp.data = {"abilities": {"CommandAndControl": True}}
+        # add_modifier returns False to mirror the live behavior on rejection.
+        new_comp.add_modifier = MagicMock(return_value=False)
+
+        comp_registry_entry = MagicMock()
+        comp_registry_entry.clone.return_value = new_comp
+
+        registries = MagicMock()
+        registries.components = {"bridge": comp_registry_entry}
+        registries.modifiers = {"precision_mount": precision_mount}
+
+        fake_ship = MagicMock()
+        fake_ship.layers = {LayerType.CORE: MagicMock()}
+        fake_ship.resources = None
+
+        with patch(
+            "game.simulation.entities.ship.Ship", return_value=fake_ship
+        ):
+            with caplog.at_level("WARNING", logger="game.simulation.battle_state"):
+                state.to_ship(registries=registries)
+
+        rejection = [
+            r for r in caplog.records
+            if "precision_mount" in r.message
+            and "bridge" in r.message
+            and r.levelname == "WARNING"
+        ]
+        assert rejection, (
+            "Expected save-restore rejection warning for precision_mount on "
+            f"bridge; got messages: {[r.message for r in caplog.records]}"
+        )
+        # Reason must be included for diagnosability.
+        assert any("ABILITY_NOT_ALLOWED" in r.message for r in rejection), (
+            f"Reason missing from rejection log: {[r.message for r in rejection]}"
+        )

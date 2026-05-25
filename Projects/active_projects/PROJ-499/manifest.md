@@ -18,6 +18,8 @@
 | `tests/regression/snapshots/thruster_*.json` | Baseline data (1 file) | Re-shoot |
 | `Projects/active_projects/PROJ-499/findings/source_review.md` | Doc (NEW) | Phase 0 baseline-drift census |
 | `Projects/active_projects/PROJ-499/findings/harness_survey.md` | Doc (NEW) | Phase 5 survey of other harnesses (already strict) |
+| `tests/README.md` | Doc (modified) | Phase 5 — corrected stale "skip on first run" claim at lines 552-555; added PROJ-499 symmetric-comparator note |
+| `Projects/projects_index.md` | Index | Updated PROJ-499 row status from `Planning` to `Awaiting Verification` |
 
 ## Files explicitly NOT touched
 

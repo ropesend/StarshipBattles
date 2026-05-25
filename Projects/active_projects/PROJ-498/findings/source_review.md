@@ -49,4 +49,24 @@ PROJ-498 adds `check_allowance() -> AllowanceResult` to make save-restore logs d
 
 ## PROJ-497 outcomes
 
-(To be appended by PROJ-497 Phase 3 Task 3.3.)
+Filed by PROJ-497 Phase 3 Task 3.3 on 2026-05-23. Full decisions log:
+`Projects/active_projects/PROJ-497/decisions.md`.
+
+**Final data surface relevant to PROJ-498's rejection-matrix test:**
+
+| Row | Action taken in PROJ-497 | Effect on PROJ-498 matrix |
+|-----|---------------------------|---------------------------|
+| `efficient_engines` (modifier) | Decision 1 = DELETE (user reversed an earlier REDESIGN choice on 2026-05-23 with rationale: "too specific to a specific type of component/ability"). The modifier row was removed from `data/modifiers.json`. Stale icon-map entry in `game/ui/services/modifier_icon_service.py:30` also removed. DI-2026-05-23-004 pruned. | The modifier no longer exists in the live registry, so PROJ-498's matrix test simply will not generate any `(efficient_engines, *)` pairs. Nothing to plan around. The recommendation to derive expected pairs from live data (rather than from a hard-coded list at PROJ-489 audit time) still stands as good defensive practice. |
+| `mini_capital_missile` (component) | Decision 2 = RETYPE. Edited BOTH the `type` field (`BeamWeaponAbility` -> `SeekerWeaponAbility`) AND the ability-payload key (`abilities.BeamWeaponAbility` removed, `abilities.SeekerWeaponAbility` added with seeker-shaped payload mirroring `capital_missile`). | Cascade: `seeker_endurance/damage/armored/stealth` each gain `mini_capital_missile` (1 -> 2). `range_mount` loses it (6 -> 5). `precision_mount` loses it (5 -> 4). `turret_mount`, `facing`, `rapid_fire` unchanged. PROJ-498's matrix test, if derived from live data at collection time, will pick up the cascade automatically. |
+| `facing` and `turret_mount` (modifiers) | Decision 3 = KEEP `SeekerWeaponAbility` in `allow_abilities`. Documented as intentional. User clarified semantics: seekers do honor firing-arc/facing for **launch direction**, but ignore arc for **target acquisition**. | No data edit. PROJ-498's matrix test should NOT mark `(facing, seeker)` or `(turret_mount, seeker)` as expected-reject pairs. The doc claim in `docs/systems/ability_reference.md:287` ("seekers ignore firing arc") is ambiguous and may benefit from a future doc clarification (out of PROJ-497 scope). |
+| Override pairs (PROJ-498 pre-question) | Decision 4 = NONE. User pre-confirmed no override pairs for PROJ-498. | PROJ-498 may skip its "override pairs" follow-up question. |
+
+**PROJ-499 coordination:** PROJ-497 Phase 2 did NOT pre-empt PROJ-499's bulk
+snapshot re-shoot. No snapshots under `tests/regression/snapshots/` were
+re-shot because (a) no existing snapshot references `mini_capital_missile`,
+and (b) no existing snapshot referenced `efficient_engines`.
+
+**Open follow-up that affects PROJ-498:** None. All three PROJ-497 data
+decisions are final and applied. PROJ-498 may proceed with its rejection-
+matrix work against the live `data/modifiers.json` + `data/components.json`
+surface as of 2026-05-23.

@@ -13,16 +13,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. User-decision gating (block until decisions captured) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Apply approved data edits (TDD) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Doc + decisions update | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. User-decision gating (block until decisions captured) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Apply approved data edits (TDD) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Doc + decisions update | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Audit remediation (Codex consult 2026-05-23) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-23
-**Active Phase:** Planning complete; awaiting user decisions
-**Last Action:** Project created from PROJ-489 audit follow-up. Codex consult complete (`AgentCoordination/Scratchpad/Consult/20260523T120100Z_plan-PROJ-489-blast-radius/response.md`).
-**Next Action:** User answers Phase 1 decision points (see `phase_1_checklist.md`). Do NOT edit data files until user has answered.
-**Blockers:** Phase 2 is blocked on Phase 1 user decisions.
+**Active Phase:** Done — all phases complete, audit remediated, awaiting user verification
+**Last Action:** Phase 4 audit remediation complete. Task 4.1: TDD-applied endurance reduction (3.0 -> 0.05) at `data/components.json:1079`, yielding effective range = 240 (per user: "close to 200"); 2 new tests in `TestMiniCapitalMissileEffectiveRange`. Task 4.2: `Projects/projects_index.md:8` PROJ-497 status updated `Planning` -> `Awaiting Verification`. Task 4.3: DI-2026-05-23-007 logged for `docs/systems/ability_reference.md:287` (stale "seekers ignore firing arc" claim). Task 4.4: DI-2026-05-23-008 logged for inert `"Weapon"` tokens in `data/modifiers.json:58, 284` (turret_mount, rapid_fire). Full sharded suite stable: **24659 / 24658 passed / 0 failed / 0 errors / 1 skipped**. All four `validate_phase.py` checks PASSED; `validate_close_ready.py` PASSED.
+**Next Action:** Project ready for user verification. After user-verified label applied, run archive workflow.
+**Blockers:** None.
 
 ## Overview
 PROJ-489 consolidated ModifierService into one canonical implementation and fixed a long-standing bug where `ModifierManager.add_modifier` silently bypassed the `allow_abilities` check. The fix surfaced latent data smells in `data/modifiers.json` that were previously masked. This project captures user decisions on those smells and (only after sign-off) applies the data edits. Engineering hardening — rejection logging, reason-bearing API, rejection-matrix test coverage — is the sibling project PROJ-498 and depends on the data surface chosen here.

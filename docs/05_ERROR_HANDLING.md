@@ -191,6 +191,31 @@ Use `game/core/json_utils.py` for normal file-based JSON operations in `game/`.
 - Constructors: `ok`, `not_found`, `corrupt`, `invalid_schema`, `permission_denied`, `io_error`.
 - Current `DesignRepository.load_design_data()` returns `ok`, `not_found`, `corrupt_json`, `permission_denied`, or `io_error`; it does not currently perform schema validation.
 
+## Save-Restore Modifier Rejection (PROJ-498)
+
+When ship or battle saves are restored, a serialized modifier may exist in
+the modifier registry yet fail `ModifierService.check_allowance()` for the
+component it was attached to (allow_types / deny_types / allow_abilities).
+Both restore paths silently drop the modifier (no save migration — old saves
+are disposable per the project policy) and emit `logger.warning` including
+the modifier id, component id, ship identifier, and the
+`AllowanceReason` name so the drift is diagnosable:
+
+- `game/simulation/battle_state.py` `ShipState.to_ship` — battle save restore.
+  Message form: `"BattleState restore: Modifier '{mid}' rejected for
+  component '{cid}' on ship '{ship_id}': {REASON}; skipping"`.
+- `game/simulation/entities/ship_serialization.py`
+  `ShipSerializer._load_components` — ship save restore. Message form:
+  `"ShipSerializer: Modifier '{mid}' rejected for component '{cid}' on
+  ship '{ship_name}': {REASON}; skipping"`. Distinct from the
+  pre-existing unknown-id warning (`"not found in registry, skipping"`).
+
+The check is at the save-restore boundary, NOT inside
+`Component.add_modifier()`. Builder, regression-snapshot, and UI flows
+intentionally probe rejection conditions; logging there would generate
+noise. See `docs/04_SERVICES.md` "Modifiers" for the `check_allowance()`
+API surface and the locked reason set.
+
 ## Turn Engine Boundary
 
 Turn processing is fail-fast with snapshot rollback.

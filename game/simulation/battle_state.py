@@ -271,12 +271,24 @@ class ShipState:
                     # against component.ship.max_mass_budget.
                     new_comp.ship = ship
 
-                    # Apply modifiers
+                    # PROJ-498: shared save-restore helper (dedupes with
+                    # ship_serialization.py). Local import avoids the
+                    # Ship -> battle_state -> services cycle.
+                    from game.simulation.services.modifier_save_restore import (
+                        apply_modifier_with_rejection_logging,
+                    )
                     for mod_data in comp_state.modifiers:
                         mid = mod_data['id']
                         mval = mod_data['value']
                         if mid in mod_registry:
-                            new_comp.add_modifier(mid, mval)
+                            apply_modifier_with_rejection_logging(
+                                modifier_id=mid,
+                                modifier_value=mval,
+                                component=new_comp,
+                                modifier_registry=mod_registry,
+                                context_label="BattleState restore",
+                                target_label=f"ship '{self.ship_id}'",
+                            )
 
                     ship.add_component(new_comp, layer_type)
 

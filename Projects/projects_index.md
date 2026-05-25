@@ -4,9 +4,9 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-498 | ModifierService allow_abilities engineering hardening: rejection logging, reason API, rejection-matrix coverage | Planning | 2026-05-23 | 2026-05-23 |
-| PROJ-497 | ModifierService data-intent decisions: efficient_engines and seeker/beam allowance review | Planning | 2026-05-23 | 2026-05-23 |
-| PROJ-499 | Regression-snapshot harness: symmetric key comparison + baseline cleanup | Planning | 2026-05-23 | 2026-05-23 |
+| PROJ-498 | ModifierService allow_abilities engineering hardening: rejection logging, reason API, rejection-matrix coverage | Awaiting Verification | 2026-05-23 | 2026-05-23 |
+| PROJ-497 | ModifierService data-intent decisions: efficient_engines and seeker/beam allowance review | Awaiting Verification | 2026-05-23 | 2026-05-23 |
+| PROJ-499 | Regression-snapshot harness: symmetric key comparison + baseline cleanup | Awaiting Verification | 2026-05-23 | 2026-05-23 |
 | PROJ-496 | Test polish risky + non-UI integration (PROJ-480 follow-through) | Planning | 2026-05-23 | 2026-05-23 |
 | PROJ-495 | Test polish core mechanical (PROJ-480 follow-through) | Planning | 2026-05-23 | 2026-05-23 |
 | PROJ-494 | Test polish UI-family (PROJ-480 follow-through) | Planning | 2026-05-23 | 2026-05-23 |

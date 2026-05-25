@@ -550,9 +550,15 @@ Check that:
 Some tests are conditionally skipped. This is intentional:
 
 ### Snapshot Regression Tests (`tests/regression/`)
-- Tests in `modifier_ability_snapshots/` skip on first run to create baselines
-- Re-running the test after baseline creation runs the actual comparison
-- Normal behavior, no action needed
+- Tests in `modifier_ability_snapshots/` LOUDLY FAIL on missing baselines via
+  `fail_missing_baseline()` (see
+  `tests/regression/modifier_ability_snapshots/conftest.py:210-226`); the
+  helper writes the fresh baseline to disk so the maintainer can inspect,
+  accept, and commit before re-running. There is no silent skip — the
+  "skip on first run" wording predates PROJ-446 Phase 1 Task 1.4 (F-C-025).
+- Comparator is symmetric (PROJ-499): unexpected keys in actual produce a
+  diff just like missing keys; bulk-accept schema drift is no longer
+  possible. Re-shoots are deliberate, reviewed events.
 
 ### Missing Component/Data Skips
 - Various tests skip if expected components/modifiers not in registry

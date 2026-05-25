@@ -6,11 +6,55 @@ PROJ-27: Added registry injection for testability.
 PROJ-38: Added constructor-based DI with GameRegistries support.
 PROJ-42: Simplified DI pattern with _get_modifiers_fallback().
 PROJ-50: Removed fallback pattern - strict DI required.
+PROJ-498: Added reason-bearing ``check_allowance()`` (and supporting
+    ``AllowanceReason`` enum + ``AllowanceResult`` dataclass) so
+    save-restore boundaries can emit diagnostic warnings on rejection.
+    ``is_modifier_allowed()`` becomes a thin bool-returning wrapper.
 """
+from dataclasses import dataclass
+from enum import Enum
 from typing import Dict, Any
 
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
+
+
+class AllowanceReason(Enum):
+    """Reason a modifier was (or was not) allowed for a component.
+
+    The set of values is LOCKED to what the live service enforces today
+    (`is_modifier_allowed` body below). In particular there is NO
+    ``ABILITY_DENIED`` reason — ``deny_abilities`` is declared on some
+    modifier rows but is NOT enforced by the runtime
+    (see ``docs/guides/modifier_system.md`` restrictions caveat).
+    Introducing the reason here would silently expand semantics
+    (PROJ-498 decisions.md, Codex mid-project review Q5).
+    """
+
+    ALLOWED = "ALLOWED"
+    UNKNOWN_MODIFIER_ID = "UNKNOWN_MODIFIER_ID"
+    TYPE_NOT_ALLOWED = "TYPE_NOT_ALLOWED"
+    TYPE_DENIED = "TYPE_DENIED"
+    ABILITY_NOT_ALLOWED = "ABILITY_NOT_ALLOWED"
+
+
+@dataclass(frozen=True)
+class AllowanceResult:
+    """Result of ``ModifierService.check_allowance``.
+
+    Attributes:
+        allowed: True iff the modifier passes every restriction for the
+            component. Aligns 1:1 with ``ModifierService.is_modifier_allowed``.
+        reason: Why the result has its current ``allowed`` value. When
+            ``allowed`` is True the reason is ``ALLOWED``; when False it
+            names the specific restriction that rejected the pair.
+    """
+
+    allowed: bool
+    reason: AllowanceReason
+
+    def __str__(self) -> str:  # pragma: no cover - trivial
+        return f"AllowanceResult(allowed={self.allowed}, reason={self.reason.name})"
 
 
 class ModifierService:
@@ -64,6 +108,10 @@ class ModifierService:
         Check if a modifier is allowed for the given component.
 
         PROJ-42: Simplified to instance-only method.
+        PROJ-498: Thin bool-returning wrapper around ``check_allowance``.
+        The bool contract is preserved exactly for the three production
+        callers (`modifier_manager.py:124`, `component_service.py:104`,
+        `modifier_logic.py:54`).
 
         Usage:
             service = ModifierService(modifier_registry=...)
@@ -76,22 +124,46 @@ class ModifierService:
         Returns:
             True if the modifier is allowed for this component
         """
+        return self.check_allowance(mod_id, component).allowed
+
+    def check_allowance(self, mod_id: str, component) -> AllowanceResult:
+        """Check whether a modifier is allowed and report the reason.
+
+        Reason-bearing companion to ``is_modifier_allowed`` (PROJ-498). The
+        save-restore boundaries in ``battle_state.py`` and
+        ``ship_serialization.py`` use the returned reason to emit
+        diagnostic warnings when a saved modifier is silently dropped.
+
+        The set of restrictions evaluated here is identical to the legacy
+        ``is_modifier_allowed`` body: ``allow_types`` (TYPE_NOT_ALLOWED),
+        ``deny_types`` (TYPE_DENIED), ``allow_abilities``
+        (ABILITY_NOT_ALLOWED). ``deny_abilities`` is intentionally not
+        enforced (see ``AllowanceReason`` docstring and
+        ``docs/guides/modifier_system.md`` restrictions caveat).
+
+        Args:
+            mod_id: The modifier ID to check.
+            component: The component to check against.
+
+        Returns:
+            AllowanceResult with ``allowed`` and ``reason`` populated.
+        """
         modifier_registry = self._modifiers
 
         if mod_id not in modifier_registry:
-            return False
+            return AllowanceResult(allowed=False, reason=AllowanceReason.UNKNOWN_MODIFIER_ID)
 
         mod_def = modifier_registry[mod_id]
         if not mod_def.restrictions:
-            return True
+            return AllowanceResult(allowed=True, reason=AllowanceReason.ALLOWED)
 
         if 'allow_types' in mod_def.restrictions:
             if component.type_str not in mod_def.restrictions['allow_types']:
-                return False
+                return AllowanceResult(allowed=False, reason=AllowanceReason.TYPE_NOT_ALLOWED)
 
         if 'deny_types' in mod_def.restrictions:
             if component.type_str in mod_def.restrictions['deny_types']:
-                return False
+                return AllowanceResult(allowed=False, reason=AllowanceReason.TYPE_DENIED)
 
         if 'allow_abilities' in mod_def.restrictions:
             required = mod_def.restrictions['allow_abilities']
@@ -101,9 +173,11 @@ class ModifierService:
                     has_ability = True
                     break
             if not has_ability:
-                return False
+                return AllowanceResult(
+                    allowed=False, reason=AllowanceReason.ABILITY_NOT_ALLOWED
+                )
 
-        return True
+        return AllowanceResult(allowed=True, reason=AllowanceReason.ALLOWED)
 
     def get_mandatory_modifiers(self, component) -> list:
         """

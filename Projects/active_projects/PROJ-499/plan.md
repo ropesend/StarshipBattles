@@ -13,20 +13,20 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 0. Pre-flight survey + baseline-drift census | Not Started | [phase_0_checklist.md](phase_0_checklist.md) |
-| 1. Strict-TDD failing test for symmetric comparator | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Tighten `compare_snapshots()` to symmetric key equality | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Re-baseline all 65 modifier-ability snapshots | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Negative-test guard (deliberately broken snapshot must fail) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Survey + document other regression harnesses (no propagation needed) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 0. Pre-flight survey + baseline-drift census | Complete | [phase_0_checklist.md](phase_0_checklist.md) |
+| 1. Strict-TDD failing test for symmetric comparator | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Tighten `compare_snapshots()` to symmetric key equality | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Re-baseline all 65 modifier-ability snapshots | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Negative-test guard (deliberately broken snapshot must fail) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Survey + document other regression harnesses (no propagation needed) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Audit remediation (Codex consult 2026-05-23) | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-23
-**Active Phase:** Planning (scaffolding only — no execution yet)
-**Last Action:** Project created from PROJ-489 F4 informational finding. Two Codex consults landed: planning consult at `AgentCoordination/Scratchpad/Consult/20260523T125809Z_plan-snapshot-harness-fix/response.md` (recommended symmetric set-equality, opened contract-scope question) and mid-project-review audit at `AgentCoordination/Scratchpad/Consult/20260523T131241Z_audit-PROJ-499/response.md` (confirmed 58-of-65 stale prediction, no missed harnesses, no writer hardening; four actionable refinements applied — see decisions.md row 2026-05-23 mid-project audit).
-**Next Action:** Phase 0 — confirm Codex's inference that ALL 65 baselines are stale, not just the 7 PROJ-489 reshots. Prototype symmetric comparator and run the modifier-snapshot suite once to count actual failures.
+**Active Phase:** DONE — all 7 phases complete; awaiting orchestrator commit + user verification
+**Last Action:** Phase 6 complete. F2 wording-precision remediation applied to `phase_3_checklist.md` Task 3.2 Notes and `findings/source_review.md` Section 4 — both now describe the size_* family `_mult` scaling (size_16 → 16.0, etc.) alongside the default-case 1.0/0.0 values from `create_default_stats_dict()`. Substantive "additive only, no value drift on pre-existing keys" conclusion preserved. F7 README line-span fixed (`conftest.py:201-217` → `:210-226`). All validators PASS.
+**Next Action:** Orchestrator owns commit + user verification. Suggested commit split is unchanged from Phase 5 closeout (comparator+tests, baseline re-shoot, docs+project meta).
 **Blockers:** None.
-**Context for Next Agent:** PROJ-489 closed without addressing this — F4 was flagged INFORMATIONAL with "No action — harness masks; pre-existing schema-drift behavior unrelated to PROJ-489" (PROJ-489 audit_verification.md). This project is the follow-up. The Codex planning consult, decisions.md, and design.md are the binding artifacts; do not re-litigate the strategy choice without explicit cause.
 
 ## Overview
 The modifier-ability snapshot harness at `tests/regression/modifier_ability_snapshots/conftest.py:147-173` has an asymmetric comparator that only iterates expected-JSON keys. Extra keys in actual output are silently dropped. PROJ-489's 7 re-shot baselines picked up 4 new `StatKey` enum members (`launch_rate_mult`, `recovery_rate_mult`, `bay_capacity_mult`, `shield_bonus_add`) that the unchanged 58 sibling baselines still lack — yet the suite is green. This project hardens the comparator and brings all 65 baselines back to the current schema.

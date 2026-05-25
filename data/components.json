@@ -1056,7 +1056,7 @@
         {
             "id": "mini_capital_missile",
             "name": "Mini Capital Missile",
-            "type": "BeamWeaponAbility",
+            "type": "SeekerWeaponAbility",
             "mass": 3,
             "hp": 3,
             "allowed_vehicle_types": [
@@ -1071,13 +1071,14 @@
                         "trigger": "activation"
                     }
                 ],
-                "BeamWeaponAbility": {
+                "SeekerWeaponAbility": {
                     "damage": 60,
-                    "range": 200,
                     "reload": 15.0,
                     "firing_arc": 10,
-                    "base_accuracy": 2.0,
-                    "accuracy_falloff": 0.0
+                    "projectile_speed": 6000,
+                    "endurance": 0.05,
+                    "turn_rate": 200,
+                    "to_hit_defense": 0.0
                 },
                 "RequiresCommandAndControl": true
             },

@@ -129,6 +129,21 @@ Current runtime caveat: `ModifierService.is_modifier_allowed()` and `ComponentSe
 
 Ability names must match the keys/classes the component actually carries. Check `data/components.json` and `game/simulation/components/abilities/` before choosing names.
 
+**Namespace warning.** `allow_abilities` keys are matched against the ability-class names that appear as keys inside each component's `abilities` dict (e.g., `CombatPropulsion`, `ResourceGeneration`, `ManeuveringThruster`, `ProjectileWeaponAbility`, `BeamWeaponAbility`, `SeekerWeaponAbility`, `ResourceConsumption`). Using a category label such as `"Engine"`, `"Generator"`, `"Weapon"`, or `"Thruster"` silently matches zero components, because those strings are not real ability keys anywhere in `data/components.json`. The historical `efficient_engines` row carried exactly that bug (see `Projects/active_projects/PROJ-497/decisions.md` for the resolution).
+
+Example of a silent-zero row (anti-pattern — do NOT do this):
+
+```json
+{
+  "id": "broken_engine_mod",
+  "restrictions": {
+    "allow_abilities": ["Engine", "Generator", "Thruster"]
+  }
+}
+```
+
+This will pass schema validation and silently match no components; the modifier becomes inert. Always validate against the ability-key namespace before shipping a row, e.g. via a static scan that joins `data/modifiers.json` with `data/components.json` and asserts every restricted row matches at least one component.
+
 ## Targeted Effects
 
 Use `target_ability` when one modifier needs different behavior per ability:

@@ -266,6 +266,36 @@ Stats panel extension:
 `ModifierService` in `game/simulation/services/modifier_service.py` owns
 low-level modifier rules and requires `modifier_registry: dict[str, Any]`.
 
+Public API:
+
+- `is_modifier_allowed(mod_id, component) -> bool` — bool-returning
+  convenience used by `ModifierManager.add_modifier()`,
+  `ComponentService.is_modifier_allowed()`, and `ModifierLogicService`.
+- `check_allowance(mod_id, component) -> AllowanceResult` (PROJ-498) —
+  reason-bearing companion. Returns a frozen `AllowanceResult` with
+  `allowed: bool` plus `reason: AllowanceReason`. The reason set is
+  locked to what the live service enforces today: `ALLOWED`,
+  `UNKNOWN_MODIFIER_ID`, `TYPE_NOT_ALLOWED`, `TYPE_DENIED`,
+  `ABILITY_NOT_ALLOWED`. There is no `ABILITY_DENIED` reason —
+  `deny_abilities` is declared on some modifier rows but NOT enforced
+  by the runtime; see `docs/guides/modifier_system.md` restrictions
+  caveat. `is_modifier_allowed()` is a one-liner wrapper over
+  `check_allowance().allowed` so the bool contract used by the three
+  existing callers is preserved exactly.
+- `get_mandatory_modifiers(component) -> list`,
+  `is_modifier_mandatory(mod_id, component) -> bool`,
+  `get_initial_value(mod_id, component) -> float`,
+  `ensure_mandatory_modifiers(component) -> None`,
+  `get_local_min_max(mod_id, component) -> tuple`.
+
+Save-restore boundaries (`game/simulation/battle_state.py` and
+`game/simulation/entities/ship_serialization.py`) call `check_allowance()`
+before `Component.add_modifier()` so they can emit a diagnostic
+`logger.warning` (modifier id + component id + reason) when a saved
+modifier is silently dropped. Logging is intentionally NOT inside
+`Component.add_modifier()` — builder and snapshot-regression rejections
+are expected and should not produce log noise. See `docs/05_ERROR_HANDLING.md`.
+
 `ModifierLogicService` in `game/ui/screens/builder/modifier_logic.py` is a
 thin UI facade over `ModifierService` (post-PROJ-489 consolidation). It takes
 a `ModifierService` instance via constructor injection (no longer an

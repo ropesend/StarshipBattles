@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Introduce a reason-bearing allowance check on `ModifierService` without changing existing callers' bool-returning contract.
 
 **Precondition:** PROJ-497 closed.
@@ -20,46 +20,46 @@
 
 > **CONSTRAINT (Codex mid-project review Q5):** The reason set is strictly limited to what the live service enforces today (`game/simulation/services/modifier_service.py:79-106`). **No `ABILITY_DENIED` reason.** `deny_abilities` is declared on some modifier rows but is NOT enforced by the service. Including the reason would silently expand semantics from "wrap current behavior" to "behavior change", outside this project's scope.
 
-- [ ] Decide enum/dataclass shape — locked values: `UNKNOWN_MODIFIER_ID`, `TYPE_NOT_ALLOWED`, `TYPE_DENIED`, `ABILITY_NOT_ALLOWED`, `ALLOWED`
-- [ ] Document the shape in `decisions.md`
+- [x] Decide enum/dataclass shape — locked values: `UNKNOWN_MODIFIER_ID`, `TYPE_NOT_ALLOWED`, `TYPE_DENIED`, `ABILITY_NOT_ALLOWED`, `ALLOWED`
+- [x] Document the shape in `decisions.md`
 
-**Notes:** [Filled during implementation]
+**Notes:** `AllowanceReason` is a `str`-valued `Enum`, `AllowanceResult` is a frozen dataclass with `allowed: bool` + `reason: AllowanceReason`. Codex Q5 guard test `TestCheckAllowance::test_no_ability_denied_reason_exists` pins the set so future drift fails loudly.
 
 ### Task 1.2: Failing tests for `check_allowance()` [Medium]
 **File:** `tests/unit/simulation/services/test_modifier_service.py`
 **Tests:** `pytest tests/unit/simulation/services/test_modifier_service.py -k allowance`
 
-- [ ] Write tests asserting each rejection reason resolves correctly: unknown id, type-not-allowed, type-denied, ability-not-allowed, allowed
-- [ ] Add a regression-guard test asserting `is_modifier_allowed()` returns the same bool as before for representative cases (matches `tests/unit/simulation/services/test_modifier_service.py:300-376,752-770` coverage). Per Codex Q4 — Phase 1 must not change bool semantics.
-- [ ] Confirm tests fail (`check_allowance` does not exist yet)
+- [x] Write tests asserting each rejection reason resolves correctly: unknown id, type-not-allowed, type-denied, ability-not-allowed, allowed
+- [x] Add a regression-guard test asserting `is_modifier_allowed()` returns the same bool as before for representative cases (matches `tests/unit/simulation/services/test_modifier_service.py:300-376,752-770` coverage). Per Codex Q4 — Phase 1 must not change bool semantics.
+- [x] Confirm tests fail (`check_allowance` does not exist yet)
 
-**Notes:** [Filled during implementation]
+**Notes:** 7 new `TestCheckAllowance` tests + 3 `TestIsModifierAllowedBoolRegressionGuard` tests. Pre-implementation: 7 failed (`ImportError: cannot import name 'AllowanceReason'`), 3 passed (bool semantics already true). Post-implementation: all 10 green.
 
 ### Task 1.3: Implement `check_allowance()` [Medium]
 **File:** `game/simulation/services/modifier_service.py`
 **Tests:** `pytest tests/unit/simulation/services/test_modifier_service.py -k allowance`
 
-- [ ] Add `check_allowance(component, modifier_id) -> AllowanceResult`
-- [ ] Refactor `is_modifier_allowed()` to call `check_allowance()` and return `.allowed`
-- [ ] Verify all existing `is_modifier_allowed()` callers still pass (no contract change)
-- [ ] Verify new tests pass
+- [x] Add `check_allowance(component, modifier_id) -> AllowanceResult`
+- [x] Refactor `is_modifier_allowed()` to call `check_allowance()` and return `.allowed`
+- [x] Verify all existing `is_modifier_allowed()` callers still pass (no contract change)
+- [x] Verify new tests pass
 
-**Notes:** [Filled during implementation]
+**Notes:** `is_modifier_allowed()` body is now a single line: `return self.check_allowance(mod_id, component).allowed`. All 81 modifier_service tests pass.
 
 ### Task 1.4: Spot-check delegations still pass [Simple]
 **File:** N/A
 **Tests:** `pytest tests/unit/ui/screens/builder/test_modifier_logic_service.py tests/unit/simulation/components/test_modifier_manager.py tests/unit/ui/services/test_component_service.py`
 
-- [ ] Run the three downstream consumer test suites
-- [ ] Confirm all green
+- [x] Run the three downstream consumer test suites
+- [x] Confirm all green
 
-**Notes:** [Filled during implementation]
+**Notes:** 63/63 passing across the three caller suites.
 
 ---
 
 ## Phase Completion Checklist
-- [ ] All task checkboxes above are checked
-- [ ] `check_allowance()` exists with reason enum; `is_modifier_allowed()` is a thin wrapper
-- [ ] No existing caller broken
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
+- [x] All task checkboxes above are checked
+- [x] `check_allowance()` exists with reason enum; `is_modifier_allowed()` is a thin wrapper
+- [x] No existing caller broken
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`

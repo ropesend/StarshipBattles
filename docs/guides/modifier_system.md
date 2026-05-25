@@ -97,6 +97,8 @@ Effect fields:
 
 Restrictions caveat: `modifier_schema.py` validates `allow_abilities`, `deny_abilities`, and `require_mode`, but the current runtime service checks only `allow_types`, `deny_types`, and `allow_abilities`. `ModifierManager.add_modifier()` enforces `allow_types`, `deny_types`, AND `allow_abilities` (delegates to `ModifierService.is_modifier_allowed`). Do not assume `deny_abilities` or `require_mode` are enforced without adding tests and implementation.
 
+`allow_abilities` keys MUST match the ability-class names used as keys inside a component's `abilities` dict (the keys in `data/components.json`). Using a category label such as `"Engine"`, `"Generator"`, `"Weapon"`, or `"Thruster"` silently matches zero components because those strings never appear as ability keys (real keys: `CombatPropulsion`, `ResourceGeneration`, `ProjectileWeaponAbility`/`BeamWeaponAbility`/`SeekerWeaponAbility`, `ManeuveringThruster`, etc.). For data-intent decisions made about specific rows (e.g., `efficient_engines`, `mini_capital_missile` retype, `facing`/`turret_mount` seeker allowance), see `Projects/active_projects/PROJ-497/decisions.md`.
+
 ## ModifierEffect
 
 `ModifierEffect` is the evaluated unit.
@@ -269,12 +271,15 @@ service.ensure_mandatory_modifiers(component)
 Surface:
 
 - `__init__(modifier_registry: dict[str, Any])`; `None` raises `ValidationException`.
-- `is_modifier_allowed(mod_id, component) -> bool`
+- `is_modifier_allowed(mod_id, component) -> bool` — bool convenience over `check_allowance`.
+- `check_allowance(mod_id, component) -> AllowanceResult` (PROJ-498) — reason-bearing companion. Returns `AllowanceResult(allowed: bool, reason: AllowanceReason)`. Reason values: `ALLOWED`, `UNKNOWN_MODIFIER_ID`, `TYPE_NOT_ALLOWED`, `TYPE_DENIED`, `ABILITY_NOT_ALLOWED`. No `ABILITY_DENIED` — `deny_abilities` is intentionally not enforced (see restrictions caveat above).
 - `get_mandatory_modifiers(component) -> list`
 - `is_modifier_mandatory(mod_id, component) -> bool`
 - `get_initial_value(mod_id, component) -> float`
 - `ensure_mandatory_modifiers(component) -> None`
 - `get_local_min_max(mod_id, component) -> tuple`
+
+Diagnosing rejections: if a saved ship or battle silently drops a modifier on load, look for a `logger.warning` from `game.simulation.battle_state` (battle save) or `game.simulation.entities.ship_serialization` (ship save). Both warnings include the modifier id, component id, and the `AllowanceReason` name, which maps 1:1 to a specific restriction key in `data/modifiers.json` (`allow_types`/`deny_types`/`allow_abilities`). Builder and snapshot-regression rejections do NOT log — by design — because they intentionally probe rejection conditions. To inspect the rule in isolation outside a save, call `ModifierService.check_allowance(mod_id, component)` directly and read `result.reason`. See `docs/05_ERROR_HANDLING.md` "Save-Restore Modifier Rejection" for log line wording.
 
 Important current behavior:
 

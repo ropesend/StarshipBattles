@@ -639,6 +639,81 @@ class TestLoadComponents:
 
 
 # =============================================================================
+# Test: _load_components rejection logging (PROJ-498 Phase 2)
+# =============================================================================
+
+class TestLoadComponentsRejectionLogging:
+    """Tests for the PROJ-498 rejection warning in ``_load_components``.
+
+    When a saved modifier exists in the registry but ``ModifierService``
+    rejects it for the component (allow_types / deny_types / allow_abilities),
+    ``_load_components`` must emit a ``logger.warning`` distinct from the
+    pre-existing ``unknown modifier id`` warning, so save-restore drift is
+    diagnosable. Logging at the save-restore boundary (not inside
+    ``add_modifier``) avoids noising builder/UI rejection paths.
+    """
+
+    def test_load_components_logs_rejection_with_reason(
+        self, basic_ship, registries, caplog
+    ):
+        """Modifier present in registry but rejected for component emits warning."""
+        # ``precision_mount`` requires ``BeamWeaponAbility``; bridge has
+        # ``CommandAndControl`` / ``RequiresMaintenance`` — ABILITY_NOT_ALLOWED.
+        data = {
+            "layers": {
+                "CORE": [
+                    {
+                        "id": "bridge",
+                        "modifiers": [{"id": "precision_mount", "value": 1.0}],
+                    }
+                ]
+            }
+        }
+
+        with caplog.at_level("WARNING", logger="game.simulation.entities.ship_serialization"):
+            ShipSerializer._load_components(basic_ship, data, registries)
+
+        matches = [
+            r for r in caplog.records
+            if "precision_mount" in r.message and "bridge" in r.message
+            and r.levelname == "WARNING"
+        ]
+        assert matches, (
+            "Expected save-restore rejection warning for precision_mount on "
+            f"bridge; got messages: {[r.message for r in caplog.records]}"
+        )
+        # Reason must be included for diagnosability.
+        assert any("ABILITY_NOT_ALLOWED" in r.message for r in matches), (
+            f"Reason missing from rejection log: {[r.message for r in matches]}"
+        )
+
+    def test_load_components_rejection_log_distinct_from_unknown_id(
+        self, basic_ship, registries, caplog
+    ):
+        """Rejection warning must be a NEW message, not the unknown-id one."""
+        data = {
+            "layers": {
+                "CORE": [
+                    {
+                        "id": "bridge",
+                        "modifiers": [{"id": "precision_mount", "value": 1.0}],
+                    }
+                ]
+            }
+        }
+
+        with caplog.at_level("WARNING", logger="game.simulation.entities.ship_serialization"):
+            ShipSerializer._load_components(basic_ship, data, registries)
+
+        # Should NOT trigger the old "not found in registry" wording.
+        for rec in caplog.records:
+            if "precision_mount" in rec.message:
+                assert "not found in registry" not in rec.message, (
+                    f"Rejection log collided with unknown-id wording: {rec.message}"
+                )
+
+
+# =============================================================================
 # Test: _restore_resources Helper
 # =============================================================================
 

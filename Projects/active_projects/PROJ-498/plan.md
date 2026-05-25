@@ -13,17 +13,18 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. `is_modifier_allowed` reason-bearing API (TDD) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Save-restore path rejection logging (TDD) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Rejection-matrix test coverage (data-driven) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Doc update | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 1. `is_modifier_allowed` reason-bearing API (TDD) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Save-restore path rejection logging (TDD) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Rejection-matrix test coverage (data-driven) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Doc update | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Audit remediation (Codex consult 2026-05-23) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-05-23
-**Active Phase:** Not Started
-**Last Action:** Project created from PROJ-489 audit follow-up. Codex consult `AgentCoordination/Scratchpad/Consult/20260523T120100Z_plan-PROJ-489-blast-radius/response.md` recommended this scope.
-**Next Action:** **DO NOT START** until PROJ-497 completes (Phase 1 of PROJ-498's matrix test must encode the final data surface, not today's accidental surface).
-**Blockers:** Hard dependency on PROJ-497 closure.
+**Active Phase:** Done — all phases complete; audit findings remediated.
+**Last Action:** Phase 5 complete. F1 remediation: extracted `apply_modifier_with_rejection_logging()` to new `game/simulation/services/modifier_save_restore.py` (80 LOC) and rewired both call sites; battle_state.py 630 -> 624 (-6), ship_serialization.py 285 -> 283 (-2). Helper import is local-in-function in both callers to dodge the `services.__init__` -> VehicleDesignService -> Ship cycle. F2: plan.md Scope/In now lists `docs/guides/modifier_system.md` and the new helper module. F9a: matrix test now uses modern `list[dict]` syntax; legacy `typing` imports removed. F9b: stale comment at test_modifier_service.py:~1119 rewritten to accurately describe `AllowanceResult.__str__` as a debugging convenience. Targeted suite: 2494 passed. Full sharded suite: 26869/26870 passed, 1 skipped (the documented known case), 152.8s wall.
+**Next Action:** Project Done. Orchestrator handles archival when ready.
+**Blockers:** None.
 
 ## Overview
 PROJ-489 fixed `ModifierManager.add_modifier` to enforce `allow_abilities`. Two production callers — `battle_state.py` (battle save restore) and `ship_serialization.py` (ship save restore) — now silently drop modifiers when allow_abilities rejects them, with no log. Test coverage for the rejection paths is thin: only 7 re-shot snapshots assert rejection, against ~580 theoretical mismatch pairs. This project adds (1) a reason-bearing allowance API, (2) warning logs at the save-restore boundaries, and (3) a data-driven parametrized test that asserts the full rejection matrix from `data/modifiers.json` x `data/components.json`.
@@ -36,11 +37,13 @@ PROJ-489 fixed `ModifierManager.add_modifier` to enforce `allow_abilities`. Two 
 ## Scope
 **In:**
 - `game/simulation/services/modifier_service.py` — reason-bearing return.
-- `game/simulation/battle_state.py` — warning log on rejection.
-- `game/simulation/entities/ship_serialization.py` — warning log on rejection (different from existing unknown-id warning).
+- `game/simulation/services/modifier_save_restore.py` — NEW shared helper (added in Phase 5 audit remediation F1 to dedupe save-restore rejection-logging blocks across the two call sites).
+- `game/simulation/battle_state.py` — warning log on rejection (Phase 2), then helper-call refactor (Phase 5).
+- `game/simulation/entities/ship_serialization.py` — warning log on rejection (different from existing unknown-id warning; Phase 2), then helper-call refactor (Phase 5).
 - New test file under `tests/regression/modifier_ability_snapshots/` — parametrized matrix.
 - `docs/05_ERROR_HANDLING.md` reference update.
 - `docs/04_SERVICES.md` (if PROJ-489's Phase 2 didn't already cover ModifierService API).
+- `docs/guides/modifier_system.md` — Surface listing for `check_allowance()` / `AllowanceReason` + new "Diagnosing rejections" paragraph (added during Phase 4; retroactively added to scope in Phase 5 audit remediation F2).
 
 **Out:**
 - Any data edit to `data/modifiers.json` or `data/components.json` — that's PROJ-497.

@@ -220,10 +220,27 @@ class ShipSerializer:
                 # constructed with the wrong values.
                 new_comp.ship = ship
 
+                # PROJ-498 Phase 5: rejection-logging block extracted to
+                # game/simulation/services/modifier_save_restore.py to
+                # dedupe with battle_state.py. The unknown-id else branch
+                # stays here because its message ("not found in registry")
+                # is intentionally distinct from the rejection wording.
+                # Local import: services/__init__ imports VehicleDesignService
+                # which depends on Ship, creating a cycle via Ship serialization.
+                from game.simulation.services.modifier_save_restore import (
+                    apply_modifier_with_rejection_logging,
+                )
                 for m_dat in c_entry.get("modifiers", []):
                     mid = m_dat['id']
                     if mid in mods:
-                        new_comp.add_modifier(mid, m_dat['value'])
+                        apply_modifier_with_rejection_logging(
+                            modifier_id=mid,
+                            modifier_value=m_dat['value'],
+                            component=new_comp,
+                            modifier_registry=mods,
+                            context_label="ShipSerializer",
+                            target_label=f"ship '{ship.name}'",
+                        )
                     else:
                         logger.warning(f"ShipSerializer: Modifier '{mid}' not found in registry, skipping")
 

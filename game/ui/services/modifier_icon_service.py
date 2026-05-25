@@ -27,7 +27,6 @@ MODIFIER_ICON_MAP = {
     "seeker_armored": "mod_seeker_armored.png",
     "seeker_stealth": "mod_seeker_stealth.png",
     "automation": "mod_automation.png",
-    "efficient_engines": "mod_efficient_engines.png",
     "efficiency_mount": "mod_efficiency_mount.png"
 }
 

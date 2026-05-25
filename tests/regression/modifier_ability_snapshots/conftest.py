@@ -149,9 +149,18 @@ def compare_snapshots(actual: Dict, expected: Dict, tolerance: float = 1e-6) -> 
             if not isinstance(actual_val, dict):
                 differences.append(f"{path}: expected dict, got {type(actual_val).__name__}")
                 return
-            for key in expected_val:
+            # PROJ-499: symmetric key comparison. Walk union(expected, actual)
+            # so extra keys in actual are reported (not silently dropped).
+            # Mirrors tests/infrastructure/deep_compare.py:87-88. Sorted for
+            # deterministic diff ordering (audit F1, response.md:17).
+            for key in sorted(set(expected_val) | set(actual_val)):
                 if key not in actual_val:
                     differences.append(f"{path}.{key}: missing in actual")
+                elif key not in expected_val:
+                    differences.append(
+                        f"{path}.{key}: unexpected key in actual "
+                        f"(value={actual_val[key]!r})"
+                    )
                 else:
                     compare_values(f"{path}.{key}", actual_val[key], expected_val[key])
         elif isinstance(expected_val, list):
