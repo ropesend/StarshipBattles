@@ -2,12 +2,29 @@
 
 These tests verify that ColonizationSystem correctly delegates to the facade
 instead of directly accessing session internals.
+
+PROJ-494 Task 1.3a: the 8 inline `class MockPlanetType(Enum)` definitions
+scattered across individual test methods are consolidated into a single
+module-level enum with the union of all member names used across the file.
 """
+from enum import Enum
+
 import pytest
 from unittest.mock import Mock, MagicMock
 from game.core.hex_math import HexCoord
 from game.core.validation import ValidationResult
 from tests.fixtures.colonization_fixtures import MockPlanetType
+
+
+class MockPlanetType(Enum):
+    """Module-level mock planet-type enum used by every test in this file.
+
+    PROJ-494 T1.3a: consolidated from 8 inline definitions. Carries every
+    member name that any individual test referenced; tests that only used
+    a subset still work because they only reference the names they need.
+    """
+    CONTINENTAL = "CONTINENTAL"
+    ICE_DWARF = "ICE_DWARF"
 
 
 class TestColonizationSystemInit:

@@ -11,6 +11,27 @@ from game.core.math import Vector2
 from game.core.constants import AttackType, LayerType
 
 
+def _make_ship_mock(**overrides):
+    """Factory for the recurring 9-attribute mock-ship setup (PROJ-495 T1.1).
+
+    Defaults model a live, non-derelict team-0 ship at the origin with no
+    target and a single-target tracker. Override any attribute via kwargs.
+    """
+    ship = MagicMock()
+    ship.is_alive = True
+    ship.is_derelict = False
+    ship.team_id = 0
+    ship.position = Vector2(0, 0)
+    ship.velocity = Vector2(0, 0)
+    ship.angle = 0
+    ship.total_shots_fired = 0
+    ship.max_targets = 1
+    ship.secondary_targets = []
+    for key, value in overrides.items():
+        setattr(ship, key, value)
+    return ship
+
+
 class TestWeaponFiringSystemCreation:
     """Tests for WeaponFiringSystem instantiation."""
 
@@ -44,9 +65,7 @@ class TestFireWeaponsBasic:
         targeting = TargetingSystem()
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = False
-        ship.is_derelict = False
+        ship = _make_ship_mock(is_alive=False)
 
         attacks = system.fire_weapons(ship)
         assert attacks == []
@@ -59,9 +78,7 @@ class TestFireWeaponsBasic:
         targeting = TargetingSystem()
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = True
+        ship = _make_ship_mock(is_derelict=True)
 
         attacks = system.fire_weapons(ship)
         assert attacks == []
@@ -74,10 +91,7 @@ class TestFireWeaponsBasic:
         targeting = TargetingSystem()
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.iter_components = MagicMock(return_value=[])
+        ship = _make_ship_mock(iter_components=MagicMock(return_value=[]))
 
         attacks = system.fire_weapons(ship)
         assert attacks == []
@@ -94,16 +108,7 @@ class TestBeamWeaponFiring:
         targeting = TargetingSystem()
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-        ship.velocity = Vector2(0, 0)
-        ship.angle = 0
-        ship.total_shots_fired = 0
-        ship.max_targets = 1
-        ship.secondary_targets = []
+        ship = _make_ship_mock()
 
         # Target
         target = MagicMock()
@@ -156,16 +161,7 @@ class TestProjectileWeaponFiring:
         targeting = TargetingSystem()
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-        ship.velocity = Vector2(0, 0)
-        ship.angle = 0
-        ship.total_shots_fired = 0
-        ship.max_targets = 1
-        ship.secondary_targets = []
+        ship = _make_ship_mock()
 
         target = MagicMock()
         target.is_alive = True
@@ -218,16 +214,7 @@ class TestSeekerWeaponFiring:
         targeting = TargetingSystem()
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-        ship.velocity = Vector2(0, 0)
-        ship.angle = 0
-        ship.total_shots_fired = 0
-        ship.max_targets = 1
-        ship.secondary_targets = []
+        ship = _make_ship_mock()
 
         target = MagicMock()
         target.is_alive = True
@@ -296,10 +283,7 @@ class TestWeaponFiringConditions:
         targeting = TargetingSystem()
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.iter_components = MagicMock(return_value=[])
+        ship = _make_ship_mock(iter_components=MagicMock(return_value=[]))
 
         weapon_ab = MagicMock()
 
@@ -323,9 +307,7 @@ class TestWeaponFiringConditions:
         targeting = TargetingSystem()
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
+        ship = _make_ship_mock()
 
         weapon_ab = MagicMock()
         weapon_ab.can_fire = MagicMock(return_value=False)
@@ -350,13 +332,7 @@ class TestWeaponFiringConditions:
         targeting = TargetingSystem()
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.team_id = 0
-        ship.current_target = None
-        ship.secondary_targets = []
-        ship.max_targets = 1
+        ship = _make_ship_mock(current_target=None)
 
         weapon_ab = MagicMock()
         weapon_ab.can_fire = MagicMock(return_value=True)
@@ -391,16 +367,7 @@ class TestMultipleWeaponsFiring:
         targeting = TargetingSystem()
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-        ship.velocity = Vector2(0, 0)
-        ship.angle = 0
-        ship.total_shots_fired = 0
-        ship.max_targets = 1
-        ship.secondary_targets = []
+        ship = _make_ship_mock()
 
         target = MagicMock()
         target.is_alive = True
@@ -452,16 +419,7 @@ class TestMultipleWeaponsFiring:
         targeting = TargetingSystem()
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-        ship.velocity = Vector2(0, 0)
-        ship.angle = 0
-        ship.total_shots_fired = 0
-        ship.max_targets = 1
-        ship.secondary_targets = []
+        ship = _make_ship_mock()
 
         target = MagicMock()
         target.is_alive = True
@@ -516,16 +474,7 @@ class TestMultipleWeaponsFiring:
         targeting = TargetingSystem()
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-        ship.velocity = Vector2(0, 0)
-        ship.angle = 0
-        ship.total_shots_fired = 0
-        ship.max_targets = 1
-        ship.secondary_targets = []
+        ship = _make_ship_mock()
 
         target = MagicMock()
         target.is_alive = True
@@ -603,16 +552,7 @@ class TestInactiveWeapons:
         targeting = TargetingSystem()
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-        ship.velocity = Vector2(0, 0)
-        ship.angle = 0
-        ship.total_shots_fired = 0
-        ship.max_targets = 1
-        ship.secondary_targets = []
+        ship = _make_ship_mock()
 
         target = MagicMock()
         target.is_alive = True
@@ -647,16 +587,7 @@ class TestInactiveWeapons:
         targeting = TargetingSystem()
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-        ship.velocity = Vector2(0, 0)
-        ship.angle = 0
-        ship.total_shots_fired = 0
-        ship.max_targets = 1
-        ship.secondary_targets = []
+        ship = _make_ship_mock()
 
         target = MagicMock()
         target.is_alive = True
@@ -710,16 +641,7 @@ class TestPointDefenseWeapons:
         targeting = TargetingSystem()
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-        ship.velocity = Vector2(0, 0)
-        ship.angle = 0
-        ship.total_shots_fired = 0
-        ship.max_targets = 1
-        ship.secondary_targets = []
+        ship = _make_ship_mock()
 
         # Regular ship target (not a fighter)
         target = MagicMock()
@@ -767,11 +689,7 @@ class TestPointDefenseWeapons:
         targeting.find_valid_target.return_value = selected_target
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.team_id = 7
-        ship.current_target = None
-        ship.max_targets = 1
-        ship.secondary_targets = []
+        ship = _make_ship_mock(team_id=7, current_target=None)
 
         def projectile(is_alive, team_id, attack_type):
             item = MagicMock()
@@ -823,16 +741,7 @@ class TestWeaponFireFails:
         targeting = TargetingSystem()
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-        ship.velocity = Vector2(0, 0)
-        ship.angle = 0
-        ship.total_shots_fired = 0
-        ship.max_targets = 1
-        ship.secondary_targets = []
+        ship = _make_ship_mock()
 
         target = MagicMock()
         target.is_alive = True
@@ -876,14 +785,7 @@ class TestWeaponFireFails:
         )
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.team_id = 0
-        ship.current_target = target
-        ship.total_shots_fired = 0
-        ship.max_targets = 1
-        ship.secondary_targets = []
+        ship = _make_ship_mock(current_target=target)
 
         weapon_ab = MagicMock()
         weapon_ab.can_fire.return_value = True
@@ -927,16 +829,7 @@ class TestWeaponShotTracking:
         targeting = TargetingSystem()
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-        ship.velocity = Vector2(0, 0)
-        ship.angle = 0
-        ship.total_shots_fired = 0
-        ship.max_targets = 1
-        ship.secondary_targets = []
+        ship = _make_ship_mock()
 
         target = MagicMock()
         target.is_alive = True
@@ -977,16 +870,7 @@ class TestWeaponShotTracking:
         targeting = TargetingSystem()
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-        ship.velocity = Vector2(0, 0)
-        ship.angle = 0
-        ship.total_shots_fired = 0
-        ship.max_targets = 1
-        ship.secondary_targets = []
+        ship = _make_ship_mock()
 
         target = MagicMock()
         target.is_alive = True
@@ -1027,16 +911,7 @@ class TestWeaponShotTracking:
         targeting = TargetingSystem()
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-        ship.velocity = Vector2(0, 0)
-        ship.angle = 0
-        ship.total_shots_fired = 0
-        ship.max_targets = 1
-        ship.secondary_targets = []
+        ship = _make_ship_mock()
 
         target = MagicMock()
         target.is_alive = True
@@ -1086,15 +961,7 @@ class TestSecondaryTargets:
         targeting = MagicMock(spec=TargetingSystem)
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-        ship.velocity = Vector2(0, 0)
-        ship.angle = 0
-        ship.total_shots_fired = 0
-        ship.max_targets = 3  # Can target multiple
+        ship = _make_ship_mock(max_targets=3)  # Can target multiple
 
         # Primary target
         primary = MagicMock()
@@ -1159,16 +1026,7 @@ class TestSeekerProjectileCreation:
         targeting = TargetingSystem()
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-        ship.velocity = Vector2(0, 0)
-        ship.angle = 0
-        ship.total_shots_fired = 0
-        ship.max_targets = 1
-        ship.secondary_targets = []
+        ship = _make_ship_mock()
 
         target = MagicMock()
         target.is_alive = True
@@ -1223,16 +1081,7 @@ class TestSeekerProjectileCreation:
         targeting = TargetingSystem()
         system = WeaponFiringSystem(targeting)
 
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.is_derelict = False
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-        ship.velocity = Vector2(0, 0)
-        ship.angle = 0  # Facing right
-        ship.total_shots_fired = 0
-        ship.max_targets = 1
-        ship.secondary_targets = []
+        ship = _make_ship_mock()  # angle=0 (facing right)
 
         # Target directly ahead (in arc)
         target = MagicMock()

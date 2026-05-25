@@ -4,6 +4,8 @@ Unit tests for full atmosphere generation.
 Tests the main generate_atmosphere function and edge cases.
 """
 
+import random
+
 import pytest
 
 from game.strategy.data.planet_atmosphere import generate_atmosphere
@@ -145,26 +147,33 @@ class TestGenerateAtmosphere:
             assert abs(partial_sum - total_pressure) < 1.0  # Small tolerance
 
     def test_greenhouse_warming(self):
-        """Greenhouse gases increase temperature above base."""
-        # Force high CO2 atmosphere
+        """Greenhouse gases increase temperature above base.
+
+        PROJ-496 T1.7 (origin PROJ-480 T5.9): the previous form ran
+        ``range(20)`` stochastic draws and accepted ``len(temps) == 0``
+        as a silent pass, which could mask a real regression that
+        prevented CO2 from ever being retained. We now use a seeded RNG
+        (``random.Random(0)``) chosen so this fixture deterministically
+        produces a CO2-rich, warming atmosphere; the assertion now fires
+        in every run.
+        """
         params = {
             "mass": EARTH_MASS * 2,  # Bigger to retain more
             "escape_vel": 15000.0,
             "base_temp": 200.0,
             "flux_wm2": 1000.0,
         }
+        rng = random.Random(0)
+        composition, pressure, temperature = generate_atmosphere(rng=rng, **params)
 
-        # Run multiple times to find one with CO2
-        temps = []
-        for _ in range(20):
-            composition, pressure, temperature = generate_atmosphere(**params)
-            if "CO2" in composition and pressure > ATM_TO_PA * 0.1:
-                temps.append((params["base_temp"], temperature))
-
-        if temps:
-            # At least one should show warming
-            warming_found = any(final > base for base, final in temps)
-            assert warming_found or len(temps) == 0  # Skip if no valid runs
+        # With seed=0 + these params, the draw is CO2-rich and
+        # well above the 0.1 atm pressure threshold. If this fixture
+        # regresses, that's a real semantic change and the assertion
+        # below will fire.
+        assert "CO2" in composition
+        assert pressure > ATM_TO_PA * 0.1
+        # The greenhouse path must produce strictly positive warming.
+        assert temperature > params["base_temp"]
 
     def test_retention_temp_calculation(self, earth_like_params):
         """Retention temp is 1.5x base temp or 50K for zero."""

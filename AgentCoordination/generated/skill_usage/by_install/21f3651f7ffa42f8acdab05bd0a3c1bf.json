@@ -4,10 +4,10 @@
   "skills": {
     "claude-consult": {
       "agents": {
-        "claude": 7
+        "claude": 8
       },
-      "count": 7,
-      "last_used": "2026-05-18T03:49:04Z"
+      "count": 8,
+      "last_used": "2026-05-23T14:43:07Z"
     },
     "claude-delegate-review": {
       "agents": {
@@ -137,10 +137,10 @@
     },
     "codex-starship-consult-respond": {
       "agents": {
-        "codex": 6
+        "codex": 7
       },
-      "count": 6,
-      "last_used": "2026-05-23T04:28:21Z"
+      "count": 7,
+      "last_used": "2026-05-23T15:24:15Z"
     },
     "codex-starship-design-assets": {
       "agents": {

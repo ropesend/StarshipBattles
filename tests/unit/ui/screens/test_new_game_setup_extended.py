@@ -371,6 +371,21 @@ class TestCreateUiConstructionPath:
         screen.get_container = MagicMock(return_value=container)
         return screen
 
+    @staticmethod
+    def _wire_pygame_gui_elements_to_magicmocks(elements):
+        """PROJ-494 T2.7: shared widget-stub side_effect wiring.
+
+        Was duplicated as 5 `elements.<Class>.side_effect = lambda **kw: MagicMock(...)`
+        blocks across two test methods. Centralised here.
+        """
+        for cls_name in (
+            'UILabel', 'UITextEntryLine', 'UIDropDownMenu',
+            'UIHorizontalSlider', 'UIButton',
+        ):
+            getattr(elements, cls_name).side_effect = (
+                lambda _cls=cls_name, **kw: MagicMock(name=_cls)
+            )
+
     def test_create_ui_completes_without_attribute_error(self):
         """``_create_ui()`` must run end-to-end without
         ``AttributeError``. Pre-fix this fails at line 348 with
@@ -383,18 +398,7 @@ class TestCreateUiConstructionPath:
         # the real _create_ui body executes without instantiating live
         # widgets.
         with patch("game.ui.screens.new_game_setup_screen.pygame_gui.elements") as elements:
-            elements.UILabel.side_effect = lambda **kw: MagicMock(name="UILabel")
-            elements.UITextEntryLine.side_effect = lambda **kw: MagicMock(
-                name="UITextEntryLine"
-            )
-            elements.UIDropDownMenu.side_effect = lambda **kw: MagicMock(
-                name="UIDropDownMenu"
-            )
-            elements.UIHorizontalSlider.side_effect = lambda **kw: MagicMock(
-                name="UIHorizontalSlider"
-            )
-            elements.UIButton.side_effect = lambda **kw: MagicMock(name="UIButton")
-
+            self._wire_pygame_gui_elements_to_magicmocks(elements)
             # The real assertion: this call must not raise.
             screen._create_ui()
 
@@ -422,18 +426,7 @@ class TestCreateUiConstructionPath:
                  "generate_default_save_name",
                  return_value=sentinel,
              ) as gen:
-            elements.UILabel.side_effect = lambda **kw: MagicMock(name="UILabel")
-            elements.UITextEntryLine.side_effect = lambda **kw: MagicMock(
-                name="UITextEntryLine"
-            )
-            elements.UIDropDownMenu.side_effect = lambda **kw: MagicMock(
-                name="UIDropDownMenu"
-            )
-            elements.UIHorizontalSlider.side_effect = lambda **kw: MagicMock(
-                name="UIHorizontalSlider"
-            )
-            elements.UIButton.side_effect = lambda **kw: MagicMock(name="UIButton")
-
+            self._wire_pygame_gui_elements_to_magicmocks(elements)
             screen._create_ui()
 
         gen.assert_called_once()

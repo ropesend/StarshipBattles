@@ -260,57 +260,71 @@ class TestCloseCallback:
 # Task 4.4-4.5: StrategyUI Integration
 # ---------------------------------------------------------------------------
 
+def _make_strategy_ui(overrides=None):
+    """Create a StrategyUI with mocked dependencies.
+
+    PROJ-494 T2.3: hoisted from `TestStrategyUIEventLogIntegration._make_strategy_ui`
+    to module level so the method body (25+ attribute wirings) lives in one place.
+    `overrides` is an optional dict of attribute overrides applied to the UI
+    instance after the default wiring is complete.
+    """
+    from game.ui.screens.strategy_ui import StrategyUI
+
+    with patch.object(StrategyUI, '__init__', lambda self, *a, **kw: None):
+        ui = StrategyUI.__new__(StrategyUI)
+
+    scene = MagicMock()
+    scene._facade = MagicMock()
+    scene._facade.events.all.return_value = _sample_events()
+    scene._facade.events.turn_events.return_value = _sample_events()[:2]
+    # _has_modal_open checks this scene attribute
+    scene.build_queue_screen = None
+
+    ui.scene = scene
+    ui.width = 1920
+    ui.height = 1080
+    ui.manager = MagicMock()
+    ui._mapper = None
+
+    # Local window tracking (kept on StrategyUI)
+    ui.planet_report_panel = None
+    ui.menu_panel = None
+
+    # PROJ-86: Window manager mock for modal tracking
+    ui.window_manager = MagicMock()
+    # All managed windows default to None (closed). Listed explicitly so any
+    # missing slot surfaces as a real attribute error instead of a silent
+    # MagicMock truthy value.
+    for slot in (
+        'fleet_orders_window', 'planet_list_window', 'star_list_window',
+        'build_queue_list_window', 'empire_build_queue_window',
+        'fleet_report_window', 'transfer_dialog', 'event_log_window',
+        'empire_panel_window', 'move_choice_window', 'cargo_quick_dialog',
+        'planet_selection_window', 'system_selection_window',
+        'fleet_selection_window',
+        # PROJ-309 sub-phase 3.10: was previously omitted from this scan.
+        'planet_abilities_window',
+    ):
+        setattr(ui.window_manager, slot, None)
+
+    # PROJ-86 Phase 7: Event router
+    from game.ui.screens.strategy_event_router import StrategyEventRouter
+    ui._event_router = StrategyEventRouter(ui)
+
+    if overrides:
+        for key, value in overrides.items():
+            setattr(ui, key, value)
+
+    return ui, scene
+
+
 class TestStrategyUIEventLogIntegration:
     """Verify StrategyUI has event_log_window tracking."""
 
     def _make_strategy_ui(self):
-        """Create a StrategyUI with mocked dependencies."""
-        from game.ui.screens.strategy_ui import StrategyUI
-
-        with patch.object(StrategyUI, '__init__', lambda self, *a, **kw: None):
-            ui = StrategyUI.__new__(StrategyUI)
-
-        scene = MagicMock()
-        scene._facade = MagicMock()
-        scene._facade.events.all.return_value = _sample_events()
-        scene._facade.events.turn_events.return_value = _sample_events()[:2]
-        # _has_modal_open checks this scene attribute
-        scene.build_queue_screen = None
-
-        ui.scene = scene
-        ui.width = 1920
-        ui.height = 1080
-        ui.manager = MagicMock()
-        ui._mapper = None
-
-        # Local window tracking (kept on StrategyUI)
-        ui.planet_report_panel = None
-        ui.menu_panel = None
-
-        # PROJ-86: Window manager mock for modal tracking
-        ui.window_manager = MagicMock()
-        ui.window_manager.fleet_orders_window = None
-        ui.window_manager.planet_list_window = None
-        ui.window_manager.star_list_window = None
-        ui.window_manager.build_queue_list_window = None
-        ui.window_manager.empire_build_queue_window = None
-        ui.window_manager.fleet_report_window = None
-        ui.window_manager.transfer_dialog = None
-        ui.window_manager.event_log_window = None
-        ui.window_manager.empire_panel_window = None
-        ui.window_manager.move_choice_window = None
-        ui.window_manager.cargo_quick_dialog = None
-        ui.window_manager.planet_selection_window = None
-        ui.window_manager.system_selection_window = None
-        ui.window_manager.fleet_selection_window = None
-        # PROJ-309 sub-phase 3.10: was previously omitted from this scan.
-        ui.window_manager.planet_abilities_window = None
-
-        # PROJ-86 Phase 7: Event router
-        from game.ui.screens.strategy_event_router import StrategyEventRouter
-        ui._event_router = StrategyEventRouter(ui)
-
-        return ui, scene
+        """Thin pass-through to the module-level factory (kept so the existing
+        method-call sites remain valid). PROJ-494 T2.3."""
+        return _make_strategy_ui()
 
     def test_event_log_window_attr_exists(self):
         """StrategyUI._window_manager should have event_log_window attribute."""

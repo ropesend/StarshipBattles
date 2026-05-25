@@ -195,25 +195,31 @@ class TestInitialization:
 
         composition = RecordingComposition()
 
-        with patch(
-            "game.ui.screens.strategy_screen.StrategySessionFacade",
-            return_value=facade,
-        ) as facade_cls, patch(
-            "game.ui.screens.strategy_screen.Camera",
-            return_value=camera,
-        ) as camera_cls, patch(
-            "game.ui.screens.strategy_screen.StrategyUI",
-            return_value=ui,
-        ) as ui_cls, patch(
-            "game.ui.screens.strategy_screen.RaceAssetLoader",
-            return_value=race_loader,
-        ) as race_loader_cls, patch(
-            "game.ui.screens.strategy_screen.StrategyScreenCompositionFactory"
-        ) as default_factory_cls, patch.object(
+        # PROJ-494 T2.15: 7-patch nesting → patch.multiple(DEFAULT=...) for the
+        # 5 module-level ctor targets, plus 2 patch.object calls for the
+        # unbound methods that patch.multiple can't address by attribute name.
+        from unittest.mock import DEFAULT
+        with patch.multiple(
+            "game.ui.screens.strategy_screen",
+            StrategySessionFacade=DEFAULT,
+            Camera=DEFAULT,
+            StrategyUI=DEFAULT,
+            RaceAssetLoader=DEFAULT,
+            StrategyScreenCompositionFactory=DEFAULT,
+        ) as mocks, patch.object(
             StrategyScreen, "_focus_on_player_home"
         ) as focus_home, patch.object(
             StrategyScreen, "_load_assets"
         ) as load_assets:
+            facade_cls = mocks['StrategySessionFacade']
+            facade_cls.return_value = facade
+            camera_cls = mocks['Camera']
+            camera_cls.return_value = camera
+            ui_cls = mocks['StrategyUI']
+            ui_cls.return_value = ui
+            race_loader_cls = mocks['RaceAssetLoader']
+            race_loader_cls.return_value = race_loader
+            default_factory_cls = mocks['StrategyScreenCompositionFactory']
             screen = StrategyScreen(
                 1600,
                 900,

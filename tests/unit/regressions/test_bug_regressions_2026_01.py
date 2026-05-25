@@ -41,12 +41,16 @@ class TestBugFixRegressions:
         assert ab.amount == 10, "Should read 'amount' correctly (Fix applied)"
 
         # 2. Simulate Modifier Calculation
-        # We manually inject stats to simulate a modifier (e.g. Size Mod)
-        # Recalculate logic: amount = base * sqrt(mass_mult) * crew_req_mult
+        # We manually inject stats to simulate a modifier (e.g. Size Mod).
+        # Recalculate logic:
+        #     amount = base_amount * sqrt(mass_mult) * crew_req_mult
+        base_amount = 10
+        mass_mult = 1.0
+        crew_req_mult = 2.5  # The modifier effect
         stats = {
-            'mass_mult': 1.0,
+            'mass_mult': mass_mult,
             'hp_mult': 1.0,
-            'crew_req_mult': 2.5,  # The modifier effect
+            'crew_req_mult': crew_req_mult,
             'properties': {},
             'mass_add': 0.0, 'cost_mult': 1.0, 'consumption_mult': 1.0, 'capacity_mult': 1.0, 'energy_gen_mult': 1.0
         }
@@ -55,9 +59,11 @@ class TestBugFixRegressions:
         c.stats = stats
         ComponentStatsCalculator.apply_base_stats(c, stats, 100)  # This triggers ab.recalculate()
 
-        # Verify update
-        # 10 * 1.0 * 2.5 = 25
-        assert ab.amount == 25, "Crew requirement should update based on multipliers"
+        # PROJ-496 T1.4 (origin PROJ-480 T4.11): replace the opaque
+        # `assert ab.amount == 25` with the formula re-derivation so a
+        # future reader can see *why* 25 is the expected value.
+        expected = base_amount * math.sqrt(mass_mult) * crew_req_mult
+        assert ab.amount == expected, "Crew requirement should update based on multipliers"
 
     def test_bug3_resource_validation_logic(self, fresh_registries):
         """

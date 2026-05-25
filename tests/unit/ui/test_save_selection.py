@@ -18,12 +18,14 @@ from game.strategy.engine.game_config import GameConfig
 from game.core import paths as paths_module
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def _patched_saves_tmpdir():
     """Per-test temporary saves directory + Paths.SAVES_DIR patch.
 
     PROJ-322 Task 2.18 (S09-CAT5-001): hoisted from three duplicate
     class-local autouse fixtures.
+    PROJ-494 Task 1.1: promoted to module-level autouse so per-class
+    thin wrappers can be deleted.
     """
     tmpdir = tempfile.mkdtemp()
     saves_dir = os.path.join(tmpdir, "saves")
@@ -31,6 +33,24 @@ def _patched_saves_tmpdir():
     with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
         yield tmpdir
     shutil.rmtree(tmpdir, ignore_errors=True)
+
+
+@pytest.fixture
+def _pygame_manager(request):
+    """Set up pygame + pygame_gui UIManager and attach to the test instance.
+
+    PROJ-494 Task 1.1: extracted from TestSaveSelectionWindowButtons and
+    TestSaveSelectionTimestampParsing setup_tmpdir fixtures so they no
+    longer duplicate this block.
+    """
+    import pygame
+    import pygame_gui
+    os.environ.setdefault('SDL_VIDEODRIVER', 'dummy')
+    if not pygame.get_init():
+        pygame.init()
+    pygame.display.set_mode((1440, 900), pygame.NOFRAME)
+    request.instance.manager = pygame_gui.UIManager((1440, 900))
+    yield request.instance.manager
 
 
 # PROJ-479 Task 6.1 (HLP-001): MockGameSession moved to
@@ -44,11 +64,6 @@ from tests.unit.strategy.save_game_service.conftest import (  # noqa: E402
 
 class TestSaveSelectionTurnList:
     """Tests for turn list functionality in save selection."""
-
-    @pytest.fixture(autouse=True)
-    def setup_tmpdir(self, _patched_saves_tmpdir):
-        """Use the shared module-level _patched_saves_tmpdir fixture."""
-        yield _patched_saves_tmpdir
 
     def test_list_turns_returns_all_turns(self):
         """list_turns() returns metadata for each turn file."""
@@ -141,11 +156,6 @@ class TestSaveSelectionTurnList:
 class TestSaveSelectionListSaves:
     """Tests for save listing functionality."""
 
-    @pytest.fixture(autouse=True)
-    def setup_tmpdir(self, _patched_saves_tmpdir):
-        """Use the shared module-level _patched_saves_tmpdir fixture."""
-        yield _patched_saves_tmpdir
-
     def test_list_saves_returns_all_saves(self):
         """list_saves() returns all available saves."""
         # Create multiple saves - each needs a fresh session to avoid save_path reuse
@@ -218,11 +228,6 @@ class TestSaveSelectionListSaves:
 class TestSaveSelectionEmpireInfo:
     """Tests for empire information in save metadata."""
 
-    @pytest.fixture(autouse=True)
-    def setup_tmpdir(self, _patched_saves_tmpdir):
-        """Use the shared module-level _patched_saves_tmpdir fixture."""
-        yield _patched_saves_tmpdir
-
     def test_save_metadata_includes_empire_count(self):
         """Metadata includes number of empires."""
         session = MockGameSession(turn_number=1, num_empires=3)
@@ -250,25 +255,10 @@ class TestSaveSelectionWindowButtons:
     """Tests for SaveSelectionWindow button enable/disable behavior (BUG-30)."""
 
     @pytest.fixture(autouse=True)
-    def setup_tmpdir(self):
-        """Create temporary directory for tests and patch Paths.SAVES_DIR."""
-        tmpdir = tempfile.mkdtemp()
-        saves_dir = os.path.join(tmpdir, "saves")
-        os.makedirs(saves_dir, exist_ok=True)
-
-        # Set up pygame and pygame_gui
-        import pygame
-        import pygame_gui
-        os.environ.setdefault('SDL_VIDEODRIVER', 'dummy')
-        if not pygame.get_init():
-            pygame.init()
-        pygame.display.set_mode((1440, 900), pygame.NOFRAME)
-
-        self.manager = pygame_gui.UIManager((1440, 900))
-
-        with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
-            yield tmpdir
-        shutil.rmtree(tmpdir)
+    def _setup(self, _pygame_manager):
+        """PROJ-494 T1.1: pygame+manager init now lives in `_pygame_manager`
+        module fixture; `_patched_saves_tmpdir` is module-level autouse."""
+        yield
 
     def test_buttons_enable_after_selection(self):
         """BUG-30: Load/Show Turns/Delete buttons should enable when save is selected."""
@@ -330,25 +320,10 @@ class TestSaveSelectionTimestampParsing:
     """Tests for timestamp parsing in save selection window (ERR-001)."""
 
     @pytest.fixture(autouse=True)
-    def setup_tmpdir(self):
-        """Create temporary directory for tests and patch Paths.SAVES_DIR."""
-        tmpdir = tempfile.mkdtemp()
-        saves_dir = os.path.join(tmpdir, "saves")
-        os.makedirs(saves_dir, exist_ok=True)
-
-        # Set up pygame and pygame_gui
-        import pygame
-        import pygame_gui
-        os.environ.setdefault('SDL_VIDEODRIVER', 'dummy')
-        if not pygame.get_init():
-            pygame.init()
-        pygame.display.set_mode((1440, 900), pygame.NOFRAME)
-
-        self.manager = pygame_gui.UIManager((1440, 900))
-
-        with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
-            yield tmpdir
-        shutil.rmtree(tmpdir)
+    def _setup(self, _pygame_manager):
+        """PROJ-494 T1.1: pygame+manager init now lives in `_pygame_manager`
+        module fixture; `_patched_saves_tmpdir` is module-level autouse."""
+        yield
 
     def test_malformed_timestamp_handled_gracefully(self):
         """Malformed timestamp should not crash, should log warning."""

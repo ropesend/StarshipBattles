@@ -104,17 +104,29 @@ def test_weapons_renderer_verbose_tooltip_renders_detailed_lines(
         verbose=True,
     )
 
+    # PROJ-494 T4.4: was an exact-ordered-list assertion against 9 format
+    # strings. Replaced with structural assertions (each line contains the
+    # expected key→value pair) so cosmetic format tweaks don't break the
+    # test for no behavioral reason. Order is still verified.
     rendered_lines = [text for text, _ in renderer.small_font.rendered]
-    assert rendered_lines == [
-        "Range: 42",
-        "Base Score: 0.50",
-        "Attack Score: +2.00",
-        "Range Penalty: -0.25",
-        "Defense Score: -1.00",
-        "Net Score: 1.25",
-        "----------------",
-        "Final Accuracy: 75%",
-        "Damage: 16",
+    expected_pairs = [
+        ("Range", "42"),
+        ("Base Score", "0.50"),
+        ("Attack Score", "+2.00"),
+        ("Range Penalty", "-0.25"),
+        ("Defense Score", "-1.00"),
+        ("Net Score", "1.25"),
+        (None, "----"),  # divider line: just contains dashes
+        ("Final Accuracy", "75%"),
+        ("Damage", "16"),
     ]
+    assert len(rendered_lines) == len(expected_pairs), (
+        f"expected {len(expected_pairs)} lines; got {len(rendered_lines)}: {rendered_lines!r}"
+    )
+    for i, (label, value) in enumerate(expected_pairs):
+        line = rendered_lines[i]
+        if label is not None:
+            assert label in line, f"line {i}: missing label {label!r} in {line!r}"
+        assert value in line, f"line {i}: missing value {value!r} in {line!r}"
     assert draw_rect.call_count == 2
     assert len(screen.blits) == len(rendered_lines)

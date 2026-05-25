@@ -8,7 +8,7 @@
 
 | File | Type | Notes |
 |------|------|-------|
-| tests/unit/ui/screens/test_save_selection.py | Test | Phase 1 (T1.5 setup_tmpdir → autouse fixture); may overlap with HLP-005 in PROJ-479 |
+| tests/unit/ui/test_save_selection.py | Test | Phase 1 (T1.5 setup_tmpdir → autouse fixture); path retargeted from `tests/unit/ui/screens/`. Partially absorbed by PROJ-322/PROJ-479 — `_patched_saves_tmpdir` already module-level; 3 thin-wrapper fixtures + 2 fuller fixtures remain. |
 | tests/unit/ui/screens/test_strategy_input_handler_transfer.py | Test | Phase 1 (T1.11 consolidate 3 mode-test classes — LARGEST single task, ~230 LOC) |
 | tests/unit/ui/screens/test_race_setup_screen.py | Test | Phase 1 (T1.14 race_setup inline mock factories) — path retargeted from `tests/unit/ui/test_race_setup_screen.py` |
 | tests/integration/ui/test_colonization_facade.py | Test | Phase 1 (T1.7 8 inline MockPlanetType defs → module-level Enum) — path retargeted from PROJ-480's `tests/unit/strategy/services/test_colonization_facade.py` |

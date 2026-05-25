@@ -38,39 +38,26 @@ class TestEmpireValidation:
         assert empire.name == 'Federation'
         assert empire.color == (0, 100, 255)
 
-    def test_missing_id_raises_persistence_exception(self):
-        """Missing id raises PersistenceException."""
+    # PROJ-495 T3.19: parametrized the 3 missing-required-key tests on
+    # ``missing_key``. The original ``test_missing_id_...`` additionally
+    # asserted ``'missing_keys' in exc_info.value.context``; that
+    # invariant is checked for every key here since
+    # ``Empire.from_dict`` raises the same shape regardless of which key
+    # is missing.
+    @pytest.mark.parametrize("missing_key", ["id", "name", "color"])
+    def test_missing_required_key_raises_persistence_exception(
+        self, missing_key: str
+    ) -> None:
+        """Missing required key raises PersistenceException."""
         data = make_valid_empire_data()
-        del data['id']
+        del data[missing_key]
 
         with pytest.raises(PersistenceException) as exc_info:
             Empire.from_dict(data)
 
-        assert 'id' in str(exc_info.value)
+        assert missing_key in str(exc_info.value)
         assert 'Empire' in str(exc_info.value)
         assert 'missing_keys' in exc_info.value.context
-
-    def test_missing_name_raises_persistence_exception(self):
-        """Missing name raises PersistenceException."""
-        data = make_valid_empire_data()
-        del data['name']
-
-        with pytest.raises(PersistenceException) as exc_info:
-            Empire.from_dict(data)
-
-        assert 'name' in str(exc_info.value)
-        assert 'Empire' in str(exc_info.value)
-
-    def test_missing_color_raises_persistence_exception(self):
-        """Missing color raises PersistenceException."""
-        data = make_valid_empire_data()
-        del data['color']
-
-        with pytest.raises(PersistenceException) as exc_info:
-            Empire.from_dict(data)
-
-        assert 'color' in str(exc_info.value)
-        assert 'Empire' in str(exc_info.value)
 
     def test_valid_empire_with_fleets(self):
         """Empire with valid fleets loads correctly."""

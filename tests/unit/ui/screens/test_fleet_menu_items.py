@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from game.core.input_actions import InputAction
 from game.ui.screens.fleet_menu_items import (
     FleetMenuItem,
@@ -409,87 +411,49 @@ def _fms_callbacks() -> dict[str, object]:
 class TestFMSRows:
     """Phase 7: five FMS rows added to the fleet right-click menu."""
 
-    # --- Lay Mines ---
-
-    def test_lay_mines_visible_with_layer_and_mine_inventory(self) -> None:
-        fleet = _make_fleet_for_fms(
-            abilities={"StrategicMineLayer"},
-            carried=[_carried("mine")],
-        )
+    # PROJ-494 T3.5: 9 launch-row visibility tests
+    # (LayMines/LaunchFighters/LaunchSatellites × visible-with-ability-and-inventory /
+    # hidden-no-ability / hidden-no-inventory) collapsed into a single
+    # parametrized test.
+    @pytest.mark.parametrize(
+        "abilities,carried_type,expected_label,should_be_visible",
+        [
+            # Lay Mines
+            pytest.param({"StrategicMineLayer"}, "mine", "Lay Mines", True,
+                         id="lay_mines_visible"),
+            pytest.param(set(), "mine", "Lay Mines", False,
+                         id="lay_mines_hidden_no_ability"),
+            pytest.param({"StrategicMineLayer"}, None, "Lay Mines", False,
+                         id="lay_mines_hidden_no_inventory"),
+            # Launch Fighters
+            pytest.param({"StrategicFighterLaunch"}, "fighter", "Launch Fighters", True,
+                         id="launch_fighters_visible"),
+            pytest.param(set(), "fighter", "Launch Fighters", False,
+                         id="launch_fighters_hidden_no_ability"),
+            pytest.param({"StrategicFighterLaunch"}, None, "Launch Fighters", False,
+                         id="launch_fighters_hidden_no_inventory"),
+            # Launch Satellites
+            pytest.param({"StrategicSatelliteLaunch"}, "satellite", "Launch Satellites", True,
+                         id="launch_satellites_visible"),
+            pytest.param(set(), "satellite", "Launch Satellites", False,
+                         id="launch_satellites_hidden_no_ability"),
+            pytest.param({"StrategicSatelliteLaunch"}, None, "Launch Satellites", False,
+                         id="launch_satellites_hidden_no_inventory"),
+        ],
+    )
+    def test_launch_row_visibility(
+        self, abilities, carried_type, expected_label, should_be_visible,
+    ) -> None:
+        carried = [_carried(carried_type)] if carried_type else []
+        fleet = _make_fleet_for_fms(abilities=abilities, carried=carried)
         items = build_menu_items(
             fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
         )
         labels = [it.label for it in items]
-        assert "Lay Mines" in labels
-
-    def test_lay_mines_hidden_without_ability(self) -> None:
-        fleet = _make_fleet_for_fms(carried=[_carried("mine")])
-        items = build_menu_items(
-            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
-        )
-        assert "Lay Mines" not in [it.label for it in items]
-
-    def test_lay_mines_hidden_when_no_mine_inventory(self) -> None:
-        fleet = _make_fleet_for_fms(
-            abilities={"StrategicMineLayer"},
-            carried=[],
-        )
-        items = build_menu_items(
-            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
-        )
-        assert "Lay Mines" not in [it.label for it in items]
-
-    # --- Launch Fighters ---
-
-    def test_launch_fighters_visible_with_ability_and_fighter_inventory(self) -> None:
-        fleet = _make_fleet_for_fms(
-            abilities={"StrategicFighterLaunch"},
-            carried=[_carried("fighter")],
-        )
-        items = build_menu_items(
-            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
-        )
-        assert "Launch Fighters" in [it.label for it in items]
-
-    def test_launch_fighters_hidden_without_ability(self) -> None:
-        fleet = _make_fleet_for_fms(carried=[_carried("fighter")])
-        items = build_menu_items(
-            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
-        )
-        assert "Launch Fighters" not in [it.label for it in items]
-
-    def test_launch_fighters_hidden_when_no_fighter_inventory(self) -> None:
-        fleet = _make_fleet_for_fms(abilities={"StrategicFighterLaunch"})
-        items = build_menu_items(
-            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
-        )
-        assert "Launch Fighters" not in [it.label for it in items]
-
-    # --- Launch Satellites ---
-
-    def test_launch_satellites_visible_with_ability_and_satellite_inventory(self) -> None:
-        fleet = _make_fleet_for_fms(
-            abilities={"StrategicSatelliteLaunch"},
-            carried=[_carried("satellite")],
-        )
-        items = build_menu_items(
-            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
-        )
-        assert "Launch Satellites" in [it.label for it in items]
-
-    def test_launch_satellites_hidden_without_ability(self) -> None:
-        fleet = _make_fleet_for_fms(carried=[_carried("satellite")])
-        items = build_menu_items(
-            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
-        )
-        assert "Launch Satellites" not in [it.label for it in items]
-
-    def test_launch_satellites_hidden_when_no_satellite_inventory(self) -> None:
-        fleet = _make_fleet_for_fms(abilities={"StrategicSatelliteLaunch"})
-        items = build_menu_items(
-            fleet, _make_galaxy(), _mapper(), callbacks=_fms_callbacks(),
-        )
-        assert "Launch Satellites" not in [it.label for it in items]
+        if should_be_visible:
+            assert expected_label in labels
+        else:
+            assert expected_label not in labels
 
     # --- Recover Fighters ---
 

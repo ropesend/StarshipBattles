@@ -25,15 +25,20 @@ class TestStructureVisibility:
         # Note: pygame and registry initialization is handled by conftest fixtures
         # (enforce_headless, pygame_display_reset, and reset_game_state)
 
-        # Patch UI elements in the structure_list_items namespace
-        with patch('game.ui.screens.builder.structure_list_items.UIPanel') as item_uipanel_patch, \
-             patch('game.ui.screens.builder.structure_list_items.UILabel') as item_uilabel_patch, \
-             patch('game.ui.screens.builder.structure_list_items.UIImage') as item_uiimage_patch, \
-             patch('game.ui.screens.builder.structure_list_items.UIButton') as item_uibutton_patch, \
-             patch('game.ui.screens.builder.layer_panel.UIPanel') as panel_uipanel_patch, \
-             patch('game.ui.screens.builder.layer_panel.UILabel') as panel_uilabel_patch, \
-             patch('game.ui.screens.builder.layer_panel.UIScrollingContainer') as panel_uiscroll_patch, \
-             patch('game.ui.screens.builder.layer_panel.UIDropDownMenu') as panel_uidropdown_patch:
+        # PROJ-494 T2.16: 8-patch with-stack → 2× patch.multiple, one per module group.
+        with patch.multiple(
+            'game.ui.screens.builder.structure_list_items',
+            UIPanel=MagicMock(),
+            UILabel=MagicMock(),
+            UIImage=MagicMock(),
+            UIButton=MagicMock(),
+        ), patch.multiple(
+            'game.ui.screens.builder.layer_panel',
+            UIPanel=MagicMock(),
+            UILabel=MagicMock(),
+            UIScrollingContainer=MagicMock(),
+            UIDropDownMenu=MagicMock(),
+        ):
 
             # Mock UIManager
             mock_manager = MagicMock(spec=pygame_gui.UIManager)

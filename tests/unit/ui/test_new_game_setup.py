@@ -152,17 +152,17 @@ class TestSystemCountSliderCurve:
         assert system_count_slider_curve(2000) == 150
 
     def test_curve_low_end_fine_grained(self):
-        """Adjacent t values near 0 must yield single-system increments."""
+        """Adjacent t values near 0 must yield single-system increments.
+
+        PROJ-494 T4.7: was a for-loop with manual `max_jump` accumulation;
+        replaced with the equivalent `all(...)` quantifier idiom that reads
+        the same property directly off the curve without re-deriving it.
+        """
         from game.ui.screens.new_game_setup_screen import system_count_slider_curve
-        prev = system_count_slider_curve(0)
-        max_jump = 0
-        for t in range(0, 100):
-            v = system_count_slider_curve(t)
-            max_jump = max(max_jump, v - prev)
-            prev = v
-        assert max_jump <= 1, (
-            f"Low-end curve must give 1-system increments; saw a {max_jump}-system jump"
-        )
+        assert all(
+            system_count_slider_curve(t + 1) - system_count_slider_curve(t) <= 1
+            for t in range(0, 99)
+        ), "Low-end curve must give 1-system increments; one or more 2+ jumps detected"
 
     def test_curve_high_end_traverses_more_systems_than_low_end(self):
         """Equal slider-travel deltas should cover more systems at the high
@@ -183,12 +183,14 @@ class TestSystemCountSliderCurve:
         )
 
     def test_curve_is_monotonic_non_decreasing(self):
+        """PROJ-494 T4.7: was a for-loop with manual `prev` accumulator;
+        replaced with an `all(curve(t) >= curve(t-1) ...)` quantifier
+        that reads the monotonicity property directly off the curve."""
         from game.ui.screens.new_game_setup_screen import system_count_slider_curve
-        prev = system_count_slider_curve(0)
-        for t in range(1, 1001):
-            v = system_count_slider_curve(t)
-            assert v >= prev, f"curve regressed at t={t}: {prev} -> {v}"
-            prev = v
+        assert all(
+            system_count_slider_curve(t) >= system_count_slider_curve(t - 1)
+            for t in range(1, 1001)
+        ), "curve must be non-decreasing across t ∈ [0, 1000]"
 
     def test_curve_landings_cover_full_range(self):
         """Every system_count in [1, 150] must be reachable by some t."""

@@ -94,31 +94,31 @@ class TestInvalidOperationWarning:
 
 
 class TestValidOperationsStillWork:
-    """Tests that valid operations continue to work correctly."""
+    """Tests that valid operations continue to work correctly.
 
-    def test_multiply_operation(self):
-        """Multiply operation should multiply the existing value."""
-        target_dict = {'damage_mult': 2.0}
-        _apply_effect_to_dict('damage_mult', 3.0, 'multiply', target_dict)
-        assert target_dict['damage_mult'] == 6.0
+    PROJ-495 T3.6: parametrized the 4 identical bodies on
+    ``(stat, initial, value, operation, expected)``.
+    """
 
-    def test_add_operation(self):
-        """Add operation should add to the existing value."""
-        target_dict = {'accuracy_add': 1.0}
-        _apply_effect_to_dict('accuracy_add', 0.5, 'add', target_dict)
-        assert target_dict['accuracy_add'] == 1.5
-
-    def test_set_operation(self):
-        """Set operation should replace the value."""
-        target_dict = {'arc_set': 90}
-        _apply_effect_to_dict('arc_set', 180, 'set', target_dict)
-        assert target_dict['arc_set'] == 180
-
-    def test_add_to_mult_operation(self):
-        """Add_to_mult operation should add to multiplier."""
-        target_dict = {'mass_mult': 1.0}
-        _apply_effect_to_dict('mass_mult', 0.5, 'add_to_mult', target_dict)
-        assert target_dict['mass_mult'] == 1.5
+    @pytest.mark.parametrize(
+        "stat,initial,value,operation,expected",
+        [
+            # multiply: 2.0 * 3.0 = 6.0
+            ("damage_mult", 2.0, 3.0, "multiply", 6.0),
+            # add: 1.0 + 0.5 = 1.5
+            ("accuracy_add", 1.0, 0.5, "add", 1.5),
+            # set: replace value
+            ("arc_set", 90, 180, "set", 180),
+            # add_to_mult: 1.0 + 0.5 = 1.5 (additive into multiplier)
+            ("mass_mult", 1.0, 0.5, "add_to_mult", 1.5),
+        ],
+    )
+    def test_operation_applies_correctly(
+        self, stat, initial, value, operation, expected
+    ) -> None:
+        target_dict = {stat: initial}
+        _apply_effect_to_dict(stat, value, operation, target_dict)
+        assert target_dict[stat] == expected
 
 
 class TestSchemaValidation:

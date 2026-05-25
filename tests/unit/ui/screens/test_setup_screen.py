@@ -386,26 +386,14 @@ class TestBattleSetupScreenISceneProtocol:
                 self.BattleSetupScreen = BattleSetupScreen
                 yield
 
-    def test_handle_event_method_exists(self):
-        """Test handle_event method exists (IScene protocol)."""
+    # PROJ-494 T3.11: 3 IScene-protocol method-existence tests
+    # parametrized on method name.
+    @pytest.mark.parametrize("method_name", ['handle_event', 'update', 'draw'])
+    def test_iscene_method_exists(self, method_name):
+        """Test {method_name} method exists (IScene protocol)."""
         screen = self.BattleSetupScreen(800, 600)
-
-        assert hasattr(screen, 'handle_event')
-        assert callable(screen.handle_event)
-
-    def test_update_method_exists(self):
-        """Test update method exists (IScene protocol)."""
-        screen = self.BattleSetupScreen(800, 600)
-
-        assert hasattr(screen, 'update')
-        assert callable(screen.update)
-
-    def test_draw_method_exists(self):
-        """Test draw method exists (IScene protocol)."""
-        screen = self.BattleSetupScreen(800, 600)
-
-        assert hasattr(screen, 'draw')
-        assert callable(screen.draw)
+        assert hasattr(screen, method_name)
+        assert callable(getattr(screen, method_name))
 
     def test_handle_resize_updates_dimensions(self):
         """Test handle_resize updates screen dimensions."""

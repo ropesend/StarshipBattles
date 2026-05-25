@@ -53,96 +53,60 @@ class TestCooldownUpdateBasics:
 
 
 class TestShieldRegeneration:
-    """Tests for shield regeneration during cooldown updates."""
+    """Tests for shield regeneration during cooldown updates.
 
-    def test_shield_regen_applies_when_below_max(self):
-        """Shield regeneration applies when shields are below maximum."""
+    PROJ-495 T3.5: parametrized the 5 shield-regen tests on
+    ``(initial_shields, max_shields, regen_rate, ticks, expected_shields)``.
+    All five share the same is_alive=True / shield_regen_cost=0 /
+    repair_rate=0 setup; only the four numerical params and the tick count
+    vary.
+    """
+
+    @pytest.mark.parametrize(
+        "initial_shields,max_shields,regen_rate,ticks,expected_shields",
+        [
+            # below-max: rate 100.0/tick interval gives +1.0 per tick
+            (80, 100, 100.0, 1, pytest.approx(81.0)),
+            # cap at max even when rate would overshoot
+            (99.5, 100, 100.0, 1, 100),
+            # at max: no regen
+            (100, 100, 100.0, 1, 100),
+            # zero rate: no regen
+            (50, 100, 0.0, 1, 50),
+            # 10 ticks at 50.0 (0.5/tick) accumulates to 5.0
+            (0, 100, 50.0, 10, pytest.approx(5.0)),
+        ],
+        ids=[
+            "below_max_increments",
+            "caps_at_max",
+            "no_regen_at_max",
+            "zero_rate_no_regen",
+            "multi_tick_accumulates",
+        ],
+    )
+    def test_shield_regen(
+        self,
+        initial_shields,
+        max_shields,
+        regen_rate,
+        ticks,
+        expected_shields,
+    ):
         from game.simulation.entities.ship_combat_engine import ShipCombatEngine
 
         ship = MagicMock()
         ship.is_alive = True
-        ship.current_shields = 80
-        ship.max_shields = 100
-        ship.shield_regen_rate = 100.0  # 1.0 per tick (100/100)
+        ship.current_shields = initial_shields
+        ship.max_shields = max_shields
+        ship.shield_regen_rate = regen_rate
         ship.shield_regen_cost = 0.0
         ship.repair_rate = 0
 
         engine = ShipCombatEngine(ship)
-        engine.update_combat_cooldowns()
-
-        assert ship.current_shields == pytest.approx(81.0)
-
-    def test_shield_regen_does_not_exceed_max(self):
-        """Shield regeneration caps at max shields."""
-        from game.simulation.entities.ship_combat_engine import ShipCombatEngine
-
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.current_shields = 99.5
-        ship.max_shields = 100
-        ship.shield_regen_rate = 100.0  # Would add 1.0
-        ship.shield_regen_cost = 0.0
-        ship.repair_rate = 0
-
-        engine = ShipCombatEngine(ship)
-        engine.update_combat_cooldowns()
-
-        # Should be capped at max
-        assert ship.current_shields == 100
-
-    def test_shield_regen_does_nothing_when_at_max(self):
-        """No regeneration occurs when shields are at maximum."""
-        from game.simulation.entities.ship_combat_engine import ShipCombatEngine
-
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.current_shields = 100
-        ship.max_shields = 100
-        ship.shield_regen_rate = 100.0
-        ship.shield_regen_cost = 0.0
-        ship.repair_rate = 0
-
-        engine = ShipCombatEngine(ship)
-        engine.update_combat_cooldowns()
-
-        assert ship.current_shields == 100
-
-    def test_shield_regen_does_nothing_with_zero_rate(self):
-        """No regeneration occurs when regen rate is zero."""
-        from game.simulation.entities.ship_combat_engine import ShipCombatEngine
-
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.current_shields = 50
-        ship.max_shields = 100
-        ship.shield_regen_rate = 0.0
-        ship.shield_regen_cost = 0.0
-        ship.repair_rate = 0
-
-        engine = ShipCombatEngine(ship)
-        engine.update_combat_cooldowns()
-
-        assert ship.current_shields == 50
-
-    def test_shield_regen_multiple_ticks_accumulate(self):
-        """Multiple cooldown updates accumulate shield regeneration."""
-        from game.simulation.entities.ship_combat_engine import ShipCombatEngine
-
-        ship = MagicMock()
-        ship.is_alive = True
-        ship.current_shields = 0
-        ship.max_shields = 100
-        ship.shield_regen_rate = 50.0  # 0.5 per tick
-        ship.shield_regen_cost = 0.0
-        ship.repair_rate = 0
-
-        engine = ShipCombatEngine(ship)
-
-        # Simulate 10 ticks
-        for _ in range(10):
+        for _ in range(ticks):
             engine.update_combat_cooldowns()
 
-        assert ship.current_shields == pytest.approx(5.0)
+        assert ship.current_shields == expected_shields
 
 
 class TestShieldRegenEnergyCost:

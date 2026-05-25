@@ -125,7 +125,13 @@ class TestCommandExecution:
         assert fleet.location != HexCoord(0, 0)
 
     def test_order_cleared_on_completion(self, turn_engine, two_empire_setup):
-        """Orders are removed from queue when completed."""
+        """Orders are removed from queue when completed.
+
+        PROJ-496 T2.4 (origin PROJ-480 T5.12): replaced the
+        ``for _ in range(5): ... if break`` retry loop with a single
+        deterministic ``process_turn`` call. At speed=100.0 and a
+        1-hex MOVE, the order completes in one turn — no retry needed.
+        """
         empire1, empire2, galaxy = two_empire_setup
         empires = [empire1, empire2]
 
@@ -134,13 +140,9 @@ class TestCommandExecution:
 
         empire1.add_fleet(fleet)
 
-        initial_orders = len(fleet.orders)
-
-        # Process until order complete or timeout
-        for _ in range(5):
-            turn_engine.process_turn(empires, galaxy)
-            if len(fleet.orders) < initial_orders:
-                break
+        # speed=100.0 (deliberately high) + 1-hex target = order completes
+        # within a single turn. One process_turn() suffices.
+        turn_engine.process_turn(empires, galaxy)
 
         # Order should have been removed
         assert len(fleet.orders) == 0

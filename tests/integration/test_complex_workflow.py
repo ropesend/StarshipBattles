@@ -345,16 +345,14 @@ def test_multiple_complexes_on_planet(empire_with_colony, fresh_registries):
 
     assert len(planet.construction_queue) == 3
 
-    # Process turns - with carry-over capacity, all 3 items complete in 1 turn
-    # (100 Metals each at 20/tick = 5 ticks each = 15 ticks total, well under 100)
+    # PROJ-496 T2.5 (origin PROJ-480 T5.13): replaced the two-step
+    # `if len(planet.construction_queue) > 0:` retry guards with a fixed
+    # number of process_turn calls. The queue has 3 items at 100 Metals
+    # each and Metals stockpile produces 20/tick; one turn = 100 ticks
+    # which is more than enough for all 3 (5*3 = 15 ticks needed). If
+    # the per-tick rate changes such that 1 turn no longer suffices,
+    # this assertion fails loudly rather than silently retrying.
     _process_one_turn(engine, [empire], save_path=save_path)
-    assert len(planet.facilities) >= 2  # Starter yard + at least 1 new
-
-    # Continue if needed
-    if len(planet.construction_queue) > 0:
-        _process_one_turn(engine, [empire], save_path=save_path)
-    if len(planet.construction_queue) > 0:
-        _process_one_turn(engine, [empire], save_path=save_path)
 
     # Verify all facilities (starter yard + 3 built = 4)
     assert len(planet.construction_queue) == 0
