@@ -1283,11 +1283,16 @@ New repo: TBD, likely ropesend/StellarHegemony
 # Current status
 
 ```text
-Status: Planning created
+Status: Planning created; proposed decisions in STAGE_0_DECISIONS.md not yet confirmed
+Last reviewed: 2026-05-24
 Next phase: Phase 0 — Safety and scope freeze
-Blocking user decisions:
-- Exact V2 repository name
-- Public vs private initial V2 repo visibility
-- Whether to archive old repo after validation
-- External artifact vault provider/location
+Blocking user decisions (proposed direction documented in STAGE_0_DECISIONS.md):
+- Exact V2 repository name (proposed: StellarHegemony)
+- Public vs private initial V2 repo visibility (proposed: Private)
+- Whether to archive old repo after validation (proposed: only after user approval)
+- External artifact vault provider/location (proposed: Google Drive)
+- Asset / LFS policy (proposed: LFS for canonical images & audio, local cache for scaled variants)
+- Issue migration policy (proposed: resolve/archive most old issues first, minimal migration)
 ```
+
+`STAGE_0_DECISIONS.md` is the canonical place to track per-item status (`settled` / `proposed` / `deferred`). Keep this status block in sync with that file when items move from `proposed` to `settled`.

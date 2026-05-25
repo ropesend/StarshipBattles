@@ -43,6 +43,8 @@ Stage 2.5 depends on Stage 2's command/package boundary and Stage 3's DTO/stable
 
 Each stage folder should contain planning notes, decisions, open questions, risks, and objective acceptance criteria. Keep implementation tasks out of these files except as links or references to project tickets.
 
+Each stage folder also has a **`CURRENT_STATE.md`** scaffold. These are intentionally empty templates: future agents should fill them in by surveying the actual codebase, so each stage's plan can be grounded in reality (what exists, what overlaps, what's missing, what blocks the planned design) rather than being purely aspirational. Update the "As of" date when refreshing. Stages 0 and 2.5 also have settled-vs-proposed **`*_DECISIONS.md`** files — that pattern should propagate to other stages as decisions firm up.
+
 Recommended workflow:
 
 1. Update the relevant stage planning document when design decisions change.

@@ -8,18 +8,20 @@ This plan is intended for future agents and human continuation. It documents the
 
 ## Stage 0 summary
 
-| Field | Value |
-|---|---|
-| Stage name | GitRepoV2 / Stellar Hegemony repository migration |
-| Stage number | 0 |
-| New repository | `ropesend/StellarHegemony` |
-| Initial visibility | Private |
-| Old repository | `ropesend/StarshipBattles` |
-| Old repository status during migration | Keep unarchived and available |
-| Old repository status after validation | Archive only after user approval |
-| External artifact provider | Prefer Google Drive |
-| Git LFS policy | Use for canonical runtime image/audio assets |
-| Generated scaled assets | Local cache only; ignored by Git |
+> **Status note (2026-05-24):** All "proposed direction" rows below remain open pending final user confirmation. See `STAGE_0_DECISIONS.md` for the canonical status of each item. Do not treat values as binding until the user confirms.
+
+| Field | Proposed direction | Status |
+|---|---|---|
+| Stage name | GitRepoV2 / Stellar Hegemony repository migration | settled |
+| Stage number | 0 | settled |
+| New repository | `ropesend/StellarHegemony` | proposed |
+| Initial visibility | Private | proposed |
+| Old repository | `ropesend/StarshipBattles` | settled |
+| Old repository status during migration | Keep unarchived and available | settled |
+| Old repository status after validation | Archive only after user approval | settled |
+| External artifact provider | Prefer Google Drive | proposed |
+| Git LFS policy | Use for canonical runtime image/audio assets | proposed |
+| Generated scaled assets | Local cache only; ignored by Git | proposed |
 
 ## Why this is Stage 0
 
@@ -39,21 +41,21 @@ Do not rewrite gameplay systems as part of Stage 0 unless a tiny compatibility o
 
 The goal is to preserve the current working source/design state while removing repository bloat, separating external artifacts, clarifying asset policy, and improving multi-machine development.
 
-## User-approved decisions
+## Proposed direction (still open)
 
-The following decisions are approved and should not be reopened unless the user explicitly changes them.
+The following items remain **proposed** as of 2026-05-24. Re-confirm with the user before executing any irreversible Stage 0 phase that depends on them.
 
-1. The V2 repository name is `StellarHegemony`.
-2. The V2 repository should initially be private.
-3. The old `StarshipBattles` repository should remain unarchived until V2 is validated.
-4. The old repository may be archived later, but only after user approval.
-5. Google Drive is the preferred external artifact vault provider, provided the active Git repo is not stored inside Google Drive.
-6. The user intends to resolve/archive most old GitHub issues before migration. Expect little or no issue migration unless active high-value issues remain.
-7. Canonical runtime image and audio assets should be tracked with Git LFS.
-8. Scaled versions of images should not be stored in Git. Store originals in Git LFS and generate scaled versions locally.
-9. Local scaled-image caches should be retained on each machine and regenerated only if the source original changes.
+1. The V2 repository name is `StellarHegemony`. *(proposed — name itself is worth re-examining; downstream URLs, branding, and documentation depend on it)*
+2. The V2 repository should initially be private. *(proposed)*
+3. The old `StarshipBattles` repository should remain unarchived until V2 is validated. *(settled)*
+4. The old repository may be archived later, but only after user approval. *(settled)*
+5. Google Drive is the preferred external artifact vault provider, provided the active Git repo is not stored inside Google Drive. *(proposed)*
+6. The user intends to resolve/archive most old GitHub issues before migration. Expect little or no issue migration unless active high-value issues remain. *(proposed)*
+7. Canonical runtime image and audio assets should be tracked with Git LFS. *(proposed)*
+8. Scaled versions of images should not be stored in Git. Store originals in Git LFS and generate scaled versions locally. *(proposed)*
+9. Local scaled-image caches should be retained on each machine and regenerated only if the source original changes. *(proposed)*
 
-See `STAGE_0_DECISIONS.md` for the concise decision record.
+See `STAGE_0_DECISIONS.md` for the canonical status of each item. When the user confirms any of these, update both files at the same time.
 
 ## Non-goals
 
