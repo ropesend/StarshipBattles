@@ -1,6 +1,13 @@
 # V2 Import Checklist
 
-> **Drafted:** 2026-05-25 against V1 HEAD `bc755f012`. Status: **draft, pending user review.**
+> **Drafted:** 2026-05-25 against V1 HEAD `bc755f012`.
+> **Status: executed 2026-05-25/26 from V1 SHA `05c5b248c` → V2 commit chain `bd98571..098514f` on `ropesend/StellarHegemony`.** See `POST_MIGRATION_VALIDATION.md` in the V2 checkout for the run receipt (V1 does not ship that file; it was authored fresh in V2).
+>
+> **Four checklist corrections** were applied during execution and have been folded back into the Phase 13 blocks below (the original wording missed them; the corrected commands are inline). Marked with `[CORRECTION 2026-05-26]` comments next to each affected line:
+> 1. `Projects/projects_index.md` (original said `Projects/index.md` — the actual filename has the `projects_` prefix).
+> 2. `Projects/deep_archive_index.md` (not enumerated; useful as the forensic catalog of vault-bound deep archive).
+> 3. `Projects/scripts/` (not enumerated; load-bearing — referenced by archive_project workflows).
+> 4. `AgentCoordination/agent_surface_policy.json` (not enumerated; load-bearing — read by `Tools/agent_coordination/validate_agent_surfaces.py` and tested by `tests/unit/tools/test_validate_agent_surfaces.py`).
 >
 > Action-ordered companion to [`MIGRATION_CLASSIFICATION.md`](MIGRATION_CLASSIFICATION.md). When the user runs Phases 11–13 of `STAGE_0_PLAN.md` (source import → asset import → planning/agent-config import), this is the source of truth for what to copy from V1, what to curate, and what to omit. Classification still answers "what bucket?"; this answers "what's the actual import command for this phase?"
 >
@@ -157,13 +164,19 @@ Per settled Task D decisions: keep the project-system infrastructure (`README.md
 ```bash
 # Scaffolding only — no V1 active-project content.
 mkdir -p <v2-checkout>/Projects/active_projects   # empty placeholder
-cp <v1-checkout>/Projects/README.md   <v2-checkout>/Projects/
-cp <v1-checkout>/Projects/index.md    <v2-checkout>/Projects/
+cp <v1-checkout>/Projects/README.md             <v2-checkout>/Projects/
+cp <v1-checkout>/Projects/projects_index.md     <v2-checkout>/Projects/  # [CORRECTION 2026-05-26] was "index.md"; actual filename is projects_index.md
+cp <v1-checkout>/Projects/deep_archive_index.md <v2-checkout>/Projects/  # [CORRECTION 2026-05-26] forensic catalog of vault-bound deep_archive
 if [ -d <v1-checkout>/Projects/protocols ]; then
   cp -r <v1-checkout>/Projects/protocols     <v2-checkout>/Projects/
 fi
 if [ -d <v1-checkout>/Projects/gp_protocols ]; then
   cp -r <v1-checkout>/Projects/gp_protocols  <v2-checkout>/Projects/
+fi
+if [ -d <v1-checkout>/Projects/scripts ]; then    # [CORRECTION 2026-05-26] load-bearing Python helpers (archive_project.py, etc.)
+  cp -r <v1-checkout>/Projects/scripts        <v2-checkout>/Projects/
+  find <v2-checkout>/Projects/scripts -type d -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null || true
+  find <v2-checkout>/Projects/scripts -type f -name '*.pyc' -delete 2>/dev/null || true
 fi
 
 # Drop a brief README into Projects/active_projects/ so V2 doesn't ship
@@ -203,10 +216,11 @@ cp -r <v1-checkout>/Projects/active_projects/_doc_consolidation  "$VAULT/old_rep
 
 ```bash
 mkdir -p <v2-checkout>/AgentCoordination
-cp <v1-checkout>/AgentCoordination/README.md       <v2-checkout>/AgentCoordination/
-cp <v1-checkout>/AgentCoordination/SCRATCHPAD.md   <v2-checkout>/AgentCoordination/
-cp -r <v1-checkout>/AgentCoordination/protocols    <v2-checkout>/AgentCoordination/
-cp -r <v1-checkout>/AgentCoordination/discovered_issues <v2-checkout>/AgentCoordination/
+cp <v1-checkout>/AgentCoordination/README.md                  <v2-checkout>/AgentCoordination/
+cp <v1-checkout>/AgentCoordination/SCRATCHPAD.md              <v2-checkout>/AgentCoordination/
+cp <v1-checkout>/AgentCoordination/agent_surface_policy.json  <v2-checkout>/AgentCoordination/  # [CORRECTION 2026-05-26] load-bearing — read by Tools/agent_coordination/validate_agent_surfaces.py
+cp -r <v1-checkout>/AgentCoordination/protocols               <v2-checkout>/AgentCoordination/
+cp -r <v1-checkout>/AgentCoordination/discovered_issues       <v2-checkout>/AgentCoordination/
 
 # Explicitly NOT copied:
 # - <v1-checkout>/AgentCoordination/legacy_tickets   (VAULT)
