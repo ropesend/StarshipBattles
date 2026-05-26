@@ -214,7 +214,7 @@ Rules:
 ### Production Paths
 
 - Production code must use `game.core.paths.Paths` constants for repo file paths.
-- Do not hardcode paths such as `"data/components.json"` or `os.path.join("assets", "Images", "ship_themes", ...)`.
+- Do not hardcode paths such as `"data/components.json"` or `os.path.join("assets", "images", "ship_themes", ...)`.
 - For path default arguments, use `None` and resolve inside the body.
 - Tests may use relative paths to test-specific data.
 - CLI scripts with explicit path arguments such as `--output` are exempt.
@@ -223,7 +223,7 @@ Rules:
 from game.core.paths import Paths
 
 path = Paths.COMPONENTS_FILE
-theme_dir = os.path.join(Paths.SHIP_THEMES_DIR, theme, "Portraits")
+theme_dir = os.path.join(Paths.SHIP_THEMES_DIR, theme, "portraits")
 ```
 
 ### Agent and Tool Paths
@@ -255,8 +255,8 @@ This applies to every size-tiered image family in the repo:
 |---|---|---:|---|---|
 | Components | `assets/images/components/` | `1024/` | `2048`, `512`, `256`, `128`, `64` | [`game/assets/component_derivatives.py`](game/assets/component_derivatives.py) |
 | Flags | `assets/images/flags/` | `flag_*/1024/` | `512`, `256`, `128`, `64`, `32` (per flag) | [`game/assets/flag_derivatives.py`](game/assets/flag_derivatives.py) |
-| Stars | `assets/images/Stars/` | `1024/` | `512`, `256`, `128` | [`game/assets/star_derivatives.py`](game/assets/star_derivatives.py) |
-| Planets | `assets/images/Planets/` | `2048/` | `1024`, `512`, `256`, `128` | [`game/assets/planet_derivatives.py`](game/assets/planet_derivatives.py) |
+| Stars | `assets/images/stars/` | `1024/` | `512`, `256`, `128` | [`game/assets/star_derivatives.py`](game/assets/star_derivatives.py) |
+| Planets | `assets/images/planets/` | `2048/` | `1024`, `512`, `256`, `128` | [`game/assets/planet_derivatives.py`](game/assets/planet_derivatives.py) |
 
 The shared engine lives at [`game/assets/image_derivatives.py`](game/assets/image_derivatives.py). Each per-family module is a thin wrapper that configures a `DerivativeFamilySpec` (root dir, master size, derivative sizes, master glob, optional filename transform) and calls `ensure_image_derivatives(spec)`. The bootstrap sequence calls every wrapper in turn (see [`game/app_bootstrap.py`](game/app_bootstrap.py)).
 
@@ -275,7 +275,7 @@ Contracts:
 
 #### Special stellar-object portraits
 
-Special stellar-object portraits (e.g., the Dyson Sphere) live in dedicated `assets/images/<thing>/` folders (e.g., `sphere_world/Sphereworld_Portrait.png`) — one resolution per object, not size-tiered, so they do not participate in the derivative pipeline. `AssetManager.load_planet_image()` searches the planet size chain first, then falls back to the stellar-object directories listed in its `_STELLAR_OBJECT_FALLBACK_DIRS` tuple. To add a new special stellar-object portrait, place the PNG in its own `stellar_objects/<thing>/` folder, expose a `Paths.<THING>_DIR` constant, and append it to `_STELLAR_OBJECT_FALLBACK_DIRS` — no asset duplication into the planet pool.
+Special stellar-object portraits (e.g., the Dyson Sphere) live in dedicated `assets/images/<thing>/` folders (e.g., `assets/images/sphere_world/Sphereworld_Portrait.png`) — one resolution per object, not size-tiered, so they do not participate in the derivative pipeline. `AssetManager.load_planet_image()` searches the planet size chain first, then falls back to the stellar-object directories listed in its `_STELLAR_OBJECT_FALLBACK_DIRS` tuple. To add a new special stellar-object portrait, place the PNG in its own `assets/images/<thing>/` folder, expose a `Paths.<THING>_DIR` constant, and append it to `_STELLAR_OBJECT_FALLBACK_DIRS` — no asset duplication into the planet pool.
 
 ## Test Conventions
 
@@ -574,7 +574,7 @@ Contracts:
 - Ship-theme assets are PNG only.
 - Standard size is 2048x2048 square, exposed as `Paths.SHIP_THEMES_TARGET_SIZE`.
 - Filenames must be `lowercase_with_underscores.png`.
-- Skin and portrait basenames must match for each ship class, for example `Skins/battle_cruiser.png` and `Portraits/battle_cruiser.png`.
+- Skin and portrait basenames must match for each ship class, for example `skins/battle_cruiser.png` and `portraits/battle_cruiser.png`.
 
 ### Adding a Theme
 

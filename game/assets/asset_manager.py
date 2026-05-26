@@ -275,12 +275,13 @@ class AssetManager:
         Implements fallback chain: requested size → higher resolutions →
         stellar-object directories → missing texture.
 
-        Most planet portraits live in `Planets/<size>/` size folders. A few
-        special stellar objects (e.g., the Dyson Sphere) live in dedicated
-        `stellar_objects/<thing>/` folders and have only one resolution. When
-        the size-chain probe fails, the loader falls back to those directories
-        (see `_STELLAR_OBJECT_FALLBACK_DIRS` and
-        docs/03_CONVENTIONS.md Image Assets section).
+        Most planet portraits live in `assets/images/planets/<size>/` size
+        folders. A few special stellar objects (e.g., the Dyson Sphere) live
+        in dedicated `assets/images/<thing>/` folders (e.g.,
+        `assets/images/sphere_world/`) and have only one resolution. When the
+        size-chain probe fails, the loader falls back to those directories
+        (see `_STELLAR_OBJECT_FALLBACK_DIRS` and `docs/03_CONVENTIONS.md`
+        "Image Asset Derivatives" / "Special stellar-object portraits").
 
         Args:
             image_filename: The planet image filename (e.g., "planet_5_994_1769750020702.png")

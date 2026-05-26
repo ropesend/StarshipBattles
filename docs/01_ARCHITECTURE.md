@@ -120,8 +120,8 @@ Important modules:
 
 ### `game/assets/`
 
-- `asset_manager.py`: `AssetManager` and default accessors for external images, generated component derivatives, race/planet/star images, and missing-texture fallback.
-- `component_derivatives.py`: startup generation/refresh of component image derivatives from tracked 1024px source images.
+- `asset_manager.py`: `AssetManager` and default accessors for external images, generated component/planet/star derivatives, race/planet/star/flag images, and missing-texture fallback.
+- `image_derivatives.py`: generic startup-time master+regenerate engine. Per-family wrappers (`component_derivatives.py`, `flag_derivatives.py`, `star_derivatives.py`, `planet_derivatives.py`) configure spec (master size, derivative sizes, glob, optional filename transform). `app_bootstrap.py` calls each family's `ensure_*_derivatives()` in sequence before sprite loading. See `docs/03_CONVENTIONS.md` "Image Asset Derivatives — canonical pattern".
 
 ### `game/engine/`
 

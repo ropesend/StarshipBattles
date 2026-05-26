@@ -369,9 +369,10 @@ StellarHegemony/
     README.md
     index.md
   assets/
-    Images/
-    Audio/
-    Fonts/
+    asset_manifest.json
+    images/                 # post-reorg layout: snake_case, flat under images/
+    audio/                  # placeholder
+    fonts/                  # placeholder; license-gated tracking
   Tools/
     setup/
     migration/
@@ -563,35 +564,9 @@ ExternalArtifacts/
 
 Define how large binary assets will be tracked before importing assets.
 
-## Initial LFS draft
+## LFS draft — path-scoped (NOT extension-scoped)
 
-```gitattributes
-# Images
-*.png filter=lfs diff=lfs merge=lfs -text
-*.jpg filter=lfs diff=lfs merge=lfs -text
-*.jpeg filter=lfs diff=lfs merge=lfs -text
-*.webp filter=lfs diff=lfs merge=lfs -text
-*.psd filter=lfs diff=lfs merge=lfs -text
-*.kra filter=lfs diff=lfs merge=lfs -text
-*.xcf filter=lfs diff=lfs merge=lfs -text
-
-# Audio
-*.wav filter=lfs diff=lfs merge=lfs -text
-*.ogg filter=lfs diff=lfs merge=lfs -text
-*.mp3 filter=lfs diff=lfs merge=lfs -text
-*.flac filter=lfs diff=lfs merge=lfs -text
-
-# Video and packaged artifacts
-*.mp4 filter=lfs diff=lfs merge=lfs -text
-*.mov filter=lfs diff=lfs merge=lfs -text
-*.zip filter=lfs diff=lfs merge=lfs -text
-*.7z filter=lfs diff=lfs merge=lfs -text
-*.rar filter=lfs diff=lfs merge=lfs -text
-
-# Fonts, if licensing permits tracking them
-*.ttf filter=lfs diff=lfs merge=lfs -text
-*.otf filter=lfs diff=lfs merge=lfs -text
-```
+**Superseded:** the earlier extension-scoped draft (`*.png filter=lfs`, etc.) would LFS-track generated derivative PNGs alongside masters, which the per-family `image_derivatives` engine produces on every startup. Use path-scoped rules instead. See `STAGE_0_PLAN.md` Phase 5 for the canonical skeleton; the new agent generates `V2_GITATTRIBUTES_DRAFT.md` from that.
 
 ## Important font warning
 
@@ -1283,16 +1258,32 @@ New repo: TBD, likely ropesend/StellarHegemony
 # Current status
 
 ```text
-Status: Planning created; proposed decisions in STAGE_0_DECISIONS.md not yet confirmed
-Last reviewed: 2026-05-24
-Next phase: Phase 0 — Safety and scope freeze
+Status: Planning created; V1 asset cleanup substantially done in-place (2026-05-27);
+        Stage 0 V2-repo work has not started.
+Last reviewed: 2026-05-27
+Next phase: Phase 0 — Safety and scope freeze (record source SHA, take backup snapshot)
+Pre-migration asset cleanup (already complete in V1):
+- snake_case asset folder names throughout (commits 327d6824b → 9aab233d7).
+- stellar_objects/ grouping flattened (827a75124).
+- flags/Processed/ collapsed (169e46b92).
+- Master+regenerate derivative pipeline applied to components / flags / stars /
+  planets (10829b2ed) and refactored into a shared engine (then per-family
+  wrappers).
+- ShipThemes moved under assets/images/ (8eb25514d); non-runtime
+  Production/Original Art/processed_output/etc. dropped (e46116350).
+- Stale asset_manifest.json sections + workflow leftovers (altcomponents,
+  Cursor source image) cleaned up (9aab233d7).
+- Test suite is derivative-state-independent (96df30384): unit tests pass on
+  a fresh checkout without first running ensure_*_derivatives().
 Blocking user decisions (proposed direction documented in STAGE_0_DECISIONS.md):
 - Exact V2 repository name (proposed: StellarHegemony)
 - Public vs private initial V2 repo visibility (proposed: Private)
 - Whether to archive old repo after validation (proposed: only after user approval)
 - External artifact vault provider/location (proposed: Google Drive)
-- Asset / LFS policy (proposed: LFS for canonical images & audio, local cache for scaled variants)
-- Issue migration policy (proposed: resolve/archive most old issues first, minimal migration)
+- Asset / LFS policy (proposed: LFS for canonical images & audio, local cache
+  for scaled variants — note: master sizes only; derivatives regenerate locally)
+- Issue migration policy (proposed: resolve/archive most old issues first,
+  minimal migration)
 ```
 
 `STAGE_0_DECISIONS.md` is the canonical place to track per-item status (`settled` / `proposed` / `deferred`). Keep this status block in sync with that file when items move from `proposed` to `settled`.

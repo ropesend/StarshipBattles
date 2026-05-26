@@ -116,17 +116,17 @@ assets/images/flags/flag_*/64/*
 assets/images/flags/flag_*/32/*
 
 # Stars: master is 1024/; all others are derivatives.
-assets/images/Stars/.star_derivatives_manifest.json
-assets/images/Stars/512/*
-assets/images/Stars/256/*
-assets/images/Stars/128/*
+assets/images/stars/.star_derivatives_manifest.json
+assets/images/stars/512/*
+assets/images/stars/256/*
+assets/images/stars/128/*
 
 # Planets: master is 2048/; all others are derivatives.
-assets/images/Planets/.planet_derivatives_manifest.json
-assets/images/Planets/1024/*
-assets/images/Planets/512/*
-assets/images/Planets/256/*
-assets/images/Planets/128/*
+assets/images/planets/.planet_derivatives_manifest.json
+assets/images/planets/1024/*
+assets/images/planets/512/*
+assets/images/planets/256/*
+assets/images/planets/128/*
 
 # Legacy pre-rename size-folder names. The asset rename pass moved
 # tracked content from "Components <N>/", "Stars/Stars_<N>/", and

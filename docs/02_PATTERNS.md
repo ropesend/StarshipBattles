@@ -5,7 +5,7 @@
 Balanced compact derivative of `docs/02_PATTERNS.md` and
 `AgentCoordination/Scratchpad/reports/02_PATTERNS_ALT_compact.md`.
 This version removes release-note archaeology, preserves current
-contracts and extension recipes, and the current pattern count is 43.
+contracts and extension recipes, and the current pattern count is 46.
 Patterns #37, #38, #41 came from the PROJ-FMS series + Round 4 QA:
 group-kind discriminator, CarriedVehicle substrate, polymorphic
 `IIssuerAdapter`. Patterns #39 (typed-sidecar extensions on frozen
@@ -431,13 +431,13 @@ Strategy/core event logging:
 
 > **Last verified:** 2026-05-12 — issue #17 follow-up: `invalidate_widget_caches()` now also hides each `row["bg"]`, and `BuildQueueScreen.show()` re-runs `force_update() + update_visible_rows()` after `panels.background.show()` so the per-row visibility invariant survives pygame_gui's recursive un-hide. PROJ-411 Phase 1 extension: per-turn UI caches on `FacadeSessionState` for data-gathering panels (planet/star/design/economy snapshots), cleared by `FacadeSessionState.invalidate_all()` from `StrategySessionFacade.process_turn`. PROJ-411 Phase 2 added: window-reuse for strategy modals (`hide()` instead of `kill()`; instance preserved across opens). PROJ-411 Phase 3 added: `StarshipUIAppearanceTheme` subclass with tuple-keyed `_combined_ids_cache` working around pygame_gui 0.6.14's pathological `build_all_combined_ids` cache key.
 
-Where: `game/ui/renderer/sprites.py::SpriteManager`, `game/assets/asset_manager.py`, `game/assets/component_derivatives.py`, `game/ui/panels/race_flag_gallery.py`, `game/ui/panels/race_portrait_gallery.py`, `game/ui/panels/race_theme_gallery.py`, `game/ui/components/table/virtual_table.py`.
+Where: `game/ui/renderer/sprites.py::SpriteManager`, `game/assets/asset_manager.py`, `game/assets/image_derivatives.py` (+ per-family wrappers: `component_derivatives.py`, `flag_derivatives.py`, `star_derivatives.py`, `planet_derivatives.py`), `game/ui/panels/race_flag_gallery.py`, `game/ui/panels/race_portrait_gallery.py`, `game/ui/panels/race_theme_gallery.py`, `game/ui/components/table/virtual_table.py`.
 
 Contract:
 - Cache loaded/scaled pygame surfaces by stable asset key and dimensions.
 - `SpriteManager` loads 64px component sprites from `Paths.COMPONENTS_64_DIR` and parses `{resolution}Portrait_Comp_{number}.png` filenames; `tile_size = 36`.
 - Use fallback/missing textures through asset managers rather than ad hoc loads.
-- Component derivative images are generated/refreshed by asset tooling from the tracked 1024px source set.
+- Image derivatives are generated/refreshed at startup by the shared `image_derivatives` engine (one master size tracked per family — 1024 for components/flags/stars, 2048 for planets — smaller sizes regenerated locally and gitignored). See `docs/03_CONVENTIONS.md` "Image Asset Derivatives — canonical pattern" for the full per-family table and the "adding a new family" recipe.
 - Individual UI panels may keep local `Dict[str, Surface]` caches with `invalidate_cache()` methods for rotated text and scaled surfaces.
 - Cross-instance thumbnail caches use a module-level singleton + `_clear_thumbnail_caches()` reset hook (mirrors `ShipThemeManager.clear()`). Used by `RaceFlagGallery`, `RacePortraitGallery`, `RaceThemeGallery` so re-opening Setup Species reuses decoded thumbnails instead of re-scanning + re-decoding 28 × 2048-px portraits and 18 ship-theme thumbs every time.
 - Do not cache color fills or line drawing; they are fast and position-dependent.

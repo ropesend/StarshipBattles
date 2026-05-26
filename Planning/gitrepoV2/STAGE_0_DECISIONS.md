@@ -82,24 +82,31 @@ Recommended categories:
 
 | Category | Location | Git treatment |
 |---|---|---|
-| Canonical runtime images | `assets/Images/` or approved equivalent | Git LFS |
-| Canonical runtime audio | `assets/Audio/` or approved equivalent | Git LFS |
+| Canonical runtime images | `assets/images/` (snake_case, flat layout after the 2026-05 asset reorg) | Git LFS |
+| Canonical runtime audio | `assets/audio/` (placeholder; no tracked audio yet) | Git LFS when populated |
 | Fonts | Only if license permits redistribution | Git LFS if tracked |
-| Generated scaled images | Local cache outside tracked source, such as `asset_cache/scaled_images/` | Ignored by Git |
+| Generated scaled images | In-place sibling size folders next to each family's master (e.g. `assets/images/components/{64,128,256,512,2048}/`, `assets/images/planets/{128,256,512,1024}/`, `assets/images/flags/<flag_id>/{32,64,128,256,512}/`) | Ignored by Git |
 | Generated previews / AI iterations | Google Drive vault unless explicitly promoted | Not tracked |
 | Raw source art | Google Drive vault, separate private asset repo, or LFS only after review | Needs classification |
 
-Scaled images should be regenerated locally only when the source/original changes. Use a local manifest based on file hash, timestamp, source path, target size, and generator version.
+Scaled images are regenerated locally at startup by the shared
+`game.assets.image_derivatives` engine (per-family wrappers:
+`component_derivatives`, `flag_derivatives`, `star_derivatives`,
+`planet_derivatives`). Each family stores **only its canonical master
+size** in source control (1024 for components/flags/stars, 2048 for
+planets). All other sibling sizes are generated locally on first
+startup and refreshed when the master file's hash/mtime changes. A
+per-family hidden hash manifest fast-paths subsequent runs.
 
-Suggested local cache shape:
+This replaces the earlier draft proposal of a central
+`asset_cache/scaled_images/` tree — that scheme was never implemented;
+the in-place per-family layout is what shipped and what V2 should
+preserve. See `docs/03_CONVENTIONS.md` "Image Asset Derivatives —
+canonical pattern" for the full per-family table and contracts.
 
-```text
-asset_cache/
-  scaled_images/
-  scaled_images_manifest.json
-```
-
-`asset_cache/` should be ignored by Git.
+The V2 `.gitignore` must ignore every per-family derivative size folder
+(see the live V1 `.gitignore` entries under "Image-derivative manifests
++ generated size folders" for the pattern set).
 
 ## Stage 0 exit criteria
 

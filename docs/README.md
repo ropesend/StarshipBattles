@@ -95,8 +95,11 @@ Forbidden shortcuts:
   compatibility shims, fallback systems, or field-rename adapters.
 - Use `game.core.paths.Paths` for production paths. Do not hardcode checkout roots
   in agent skills, protocols, prompts, or coordination tools.
-- All new image assets are PNG. Component 1024px images are the tracked source set;
-  other component sizes are generated derivatives.
+- All new image assets are PNG. Each multi-size image family stores only its
+  canonical master size in source control (1024 for components/flags/stars,
+  2048 for planets); sibling sizes are regenerated locally at startup by
+  `game.assets.image_derivatives`. See `docs/03_CONVENTIONS.md` "Image Asset
+  Derivatives — canonical pattern".
 - A star system is a radius-50 region around a star; a sector is one `HexCoord`.
   Orders targeting a warp point/planet must validate sector precision, not just
   system membership.
