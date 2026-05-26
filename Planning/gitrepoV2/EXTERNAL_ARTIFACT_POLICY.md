@@ -154,11 +154,12 @@ Not in scope: artwork iterations (those go to `generated_previews/`); promotiona
 - Subfolders per V1 SKIP-to-VAULT bucket from `MIGRATION_CLASSIFICATION.md`:
   - `v1_projects_deep_archive/` (335.8 MiB, 3,997 files)
   - `v1_projects_archived/` (if `Projects/archived_projects/` exists in V1; verify)
+  - `v1_active_projects/` (~16 MiB, all 19 V1 PROJ-481..499 + Batch_*_Prompt.txt + _doc_consolidation/ per Task D decision to start V2's project tracker clean)
   - `v1_legacy_tickets/` (72.5 MiB, 195 files)
   - `v1_reviews_results/` (40.1 MiB, 2,479 files)
   - `v1_full_clone/` (optional) — a bare clone of V1 captured at the migration SHA, for forensic access without spinning up V1 GitHub access
 
-Total seed: ~512 MiB / ~6,700 files.
+Total seed: ~528 MiB / ~6,800 files.
 
 ## What does NOT go in the vault
 
@@ -177,10 +178,13 @@ The vault gets populated **before** V1 is archived, never after. Order:
 3. Copy V1's SKIP-to-VAULT buckets into `old_repo_exports/` and `repro_bundles/`:
    ```bash
    # Pseudocode; actual paths per machine
-   cp -r Projects/deep_archive               <vault>/old_repo_exports/v1_projects_deep_archive
-   cp -r AgentCoordination/legacy_tickets    <vault>/old_repo_exports/v1_legacy_tickets
-   cp -r Reviews/results                     <vault>/old_repo_exports/v1_reviews_results
-   cp -r tracking-assets/logs                <vault>/repro_bundles/v1_tracking_logs
+   cp -r Projects/deep_archive                            <vault>/old_repo_exports/v1_projects_deep_archive
+   cp -r Projects/active_projects/PROJ-*                  <vault>/old_repo_exports/v1_active_projects/
+   cp    Projects/active_projects/Batch_*_Prompt.txt      <vault>/old_repo_exports/v1_active_projects/ 2>/dev/null || true
+   cp -r Projects/active_projects/_doc_consolidation      <vault>/old_repo_exports/v1_active_projects/ 2>/dev/null || true
+   cp -r AgentCoordination/legacy_tickets                 <vault>/old_repo_exports/v1_legacy_tickets
+   cp -r Reviews/results                                  <vault>/old_repo_exports/v1_reviews_results
+   cp -r tracking-assets/logs                             <vault>/repro_bundles/v1_tracking_logs
    ```
 4. **[provider-sensitive]** Confirm sync to the cloud completes; note the upload time as a sanity figure for future cutover planning.
 5. On the second machine (if multi-machine in scope), wait for the vault to sync down; verify the V1 dumps are visible.

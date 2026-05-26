@@ -1,15 +1,16 @@
 # V2 Folder Structure — StellarHegemony Target Tree
 
-> **Drafted:** 2026-05-25 against V1 HEAD `bc755f012`. Status: **draft, pending user review.**
+> **Drafted:** 2026-05-25 against V1 HEAD `bc755f012`. Status: **draft, post-Task-D updates applied.**
 >
-> The target tree is **a verbatim copy of the current cleaned V1 shape**, minus the SKIP buckets enumerated in [`MIGRATION_CLASSIFICATION.md`](MIGRATION_CLASSIFICATION.md) (when that file lands). Stage 0 is repo hygiene; it does not redesign the source tree. If anything below diverges from the live V1 layout, the live V1 layout wins and this file is the bug.
+> The target tree is **a verbatim copy of the current cleaned V1 shape**, minus the SKIP/VAULT buckets enumerated in [`MIGRATION_CLASSIFICATION.md`](MIGRATION_CLASSIFICATION.md). Stage 0 is repo hygiene; it does not redesign the source tree. If anything below diverges from the live V1 layout, the live V1 layout wins and this file is the bug.
 >
-> **Decision-sensitive assumptions** (settle these via Task D before the V2 import):
+> **Settled (Task D 2026-05-25):**
 >
-> - V2 repository name: assumed `StellarHegemony`. If the user picks a different name, only the literal `StellarHegemony/` token at the root of the tree below changes; structure is identical.
-> - Curation boundary for `Projects/active_projects/`: assumed every current `PROJ-481`..`PROJ-499` folder is in-scope. If the user wants to drop some, the in-scope list shrinks; the directory itself stays.
-> - Curation boundary for `AgentCoordination/protocols/`: assumed all six files (`consult_prompt_block.md`, `group_execution_protocol.md`, `interagent_discussion.md`, `partner_cli.md`, `ticket_deep_dive.md`, `ticket_workflow.md`) are load-bearing. If any are stale, they get dropped at import; the directory itself stays.
-> - **Prompt errata noted:** `STAGE_0_NEW_AGENT_PROMPT.md:87` and `STAGE_0_PLAN.md` Phase 3 list `AgentCoordination/templates/`. **That directory does not exist** in V1 HEAD. Either the prompt is stale (drop the reference) or the directory needs to be created in V2. Surface this in Task D.
+> - V2 repository name: `StellarHegemony`.
+> - `Projects/active_projects/` content: **drop all V1 PROJ-XXX content + Batch + _doc_consolidation** to vault. `Projects/active_projects/` ships empty in V2 (scaffolding only).
+> - `Projects/` infrastructure (README, index, protocols, gp_protocols): **keep as scaffolding**.
+> - `AgentCoordination/protocols/`: **all six files** imported as-is.
+> - `AgentCoordination/templates/`: **does not exist in V1; references removed from prompts/plans**. V2 does NOT create this directory.
 
 ## Target tree
 
@@ -149,13 +150,16 @@ StellarHegemony/
   Projects/
     README.md
     index.md
-    active_projects/
-      PROJ-481/ ... PROJ-499/         # in-scope set TBD by Task D curation
-      Batch_*_Prompt.txt              # batch-execution prompts (keep if active)
-      _doc_consolidation/             # keep if active
+    protocols/                        # Settled Task D: keep as scaffolding
+    gp_protocols/                     # Settled Task D: keep as scaffolding
+    active_projects/                  # Settled Task D: empty at V2 import.
+                                      #   V1 PROJ-481..499 + Batch_* + _doc_consolidation
+                                      #   went to <vault>/old_repo_exports/v1_active_projects/.
+                                      #   New V2 projects land here when started.
 
-    # NOT imported (frozen archives):
+    # NOT imported (frozen archives / V1 content):
     # deep_archive/, archived_projects/
+    # active_projects/PROJ-* (vaulted)
 
   AgentCoordination/
     README.md
@@ -316,8 +320,8 @@ StellarHegemony/
 
 ## Open structure questions
 
-1. **`AgentCoordination/templates/`** — referenced by the Stage 0 prompt as a curate-with target, but does not exist in V1. Drop the reference from the prompt, or create the folder in V2 with a `README.md` placeholder? Recommendation: **drop the reference** until a real template needs a home.
-2. **`Reviews/` import scope.** Top-level review docs (README, prompts/, protocols/, scripts/, reviews_index.md) sum to ~1 MiB; `results/` is 40 MiB / 2,435 files of archival output. Import the top-level and drop `results/` (recommended), or drop `Reviews/` entirely and store all review history in the vault?
+1. ~~**`AgentCoordination/templates/`**~~ **Settled Task D 2026-05-25:** drop the reference from prompts/plans; V2 does not create this directory.
+2. ~~**`Reviews/` import scope.**~~ **Settled Task D 2026-05-25:** import top-level only; `Reviews/results/` to vault.
 3. **`combat_lab/test_history.json.migrated`** — sentinel file from a per-test-id history shard migration, currently in `.gitignore` line 78. Drop from V2 (V2 starts post-migration so the marker is irrelevant).
 4. **Top-level `README.md`** — V1 has no top-level `README.md`. V2 should ship with one explaining what Stellar Hegemony is, how to run it, and where to find docs. Defer authoring to post-import; flag as a Phase 17 follow-up.
 

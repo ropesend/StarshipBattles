@@ -82,23 +82,23 @@ These rows are best-guess defaults. If the user changes a decision, flagged rows
 | `Planning/README.md` | `IMPORT_GIT` | Staged-planning overview. | `StellarHegemony/Planning/README.md` |
 | `Planning/gitrepoV2/` | `IMPORT_GIT` | Migration history (this very pass). Excludes `STAGE_0_NEW_AGENT_PROMPT.md` (V1 onboarding artifact, not applicable post-V2). | `StellarHegemony/Planning/gitrepoV2/` |
 | `Planning/0[1-8]_*/` (Stages 1–8) | `IMPORT_GIT` | Long-range stage planning. Drop empty `CURRENT_STATE.md` scaffolds at import (per `STAGE_0_NEW_AGENT_PROMPT.md:87`). | `StellarHegemony/Planning/0[1-8]_*/` |
-| `Projects/active_projects/PROJ-481..499/` | `IMPORT_GIT` | **Decision-sensitive** — assumed all 19 active projects in scope; user confirms in Task D. | `StellarHegemony/Projects/active_projects/` |
-| `Projects/active_projects/Batch_*_Prompt.txt` | `IMPORT_GIT` | Batch-execution prompts. **Decision-sensitive** — confirm still active. | `StellarHegemony/Projects/active_projects/` |
-| `Projects/active_projects/_doc_consolidation/` | `IMPORT_GIT` | **Decision-sensitive** — confirm still active. | `StellarHegemony/Projects/active_projects/` |
-| `Projects/{README.md, index.md}` | `IMPORT_GIT` | Project-system entry docs. | `StellarHegemony/Projects/` |
+| `Projects/active_projects/PROJ-481..499/` | `VAULT` | **Settled Task D 2026-05-25:** all 19 V1 projects vaulted, not migrated. Vault: `StellarHegemonyVault/old_repo_exports/v1_active_projects/`. V2's `Projects/active_projects/` is empty at import. | external |
+| `Projects/active_projects/Batch_*_Prompt.txt` | `VAULT` | **Settled Task D 2026-05-25:** vaulted with the PROJ folders. | external |
+| `Projects/active_projects/_doc_consolidation/` | `VAULT` | **Settled Task D 2026-05-25:** vaulted with the PROJ folders. | external |
+| `Projects/{README.md, index.md}` | `IMPORT_GIT` | Project-system entry docs. **Settled Task D 2026-05-25:** keep as scaffolding (V2 retains the project-system infrastructure even with no V1 content carried forward). | `StellarHegemony/Projects/` |
 | `Projects/deep_archive/` | `VAULT` | 335.8 MiB / 3,997 files of historical project material. Includes the 317 MiB of accidentally-committed PROJ-295 dryrun wheels. Vault location: `StellarHegemonyVault/old_repo_exports/v1_projects_deep_archive/`. | external |
 | `Projects/archived_projects/` (if exists) | `VAULT` | Same disposition as deep_archive. **Verify at import** — not seen in `git ls-files | awk` output but the prompt's SKIP list mentions it. | external |
-| `Projects/protocols/`, `Projects/gp_protocols/` | `IMPORT_GIT` (verify) | Protocol templates per CLAUDE.md. **Verify at import.** | `StellarHegemony/Projects/` |
+| `Projects/protocols/`, `Projects/gp_protocols/` | `IMPORT_GIT` (verify) | Protocol templates per CLAUDE.md. **Settled Task D 2026-05-25:** keep as part of the Projects scaffolding. **Verify content at import.** | `StellarHegemony/Projects/` |
 | `AgentCoordination/README.md`, `SCRATCHPAD.md` | `IMPORT_GIT` | Top-level coordination docs. | `StellarHegemony/AgentCoordination/` |
-| `AgentCoordination/protocols/` (6 files) | `IMPORT_GIT` | Workflow protocols (canonical TDD / consult / discuss / partner-CLI / ticket-workflow). **Decision-sensitive** — user confirms full curation set. | `StellarHegemony/AgentCoordination/protocols/` |
+| `AgentCoordination/protocols/` (6 files) | `IMPORT_GIT` | Workflow protocols (canonical TDD / consult / discuss / partner-CLI / ticket-workflow). **Settled Task D 2026-05-25:** all six files imported as-is. | `StellarHegemony/AgentCoordination/protocols/` |
 | `AgentCoordination/discovered_issues/` | `IMPORT_GIT` | Shared discovered-issues inbox (tracked log + README). | `StellarHegemony/AgentCoordination/discovered_issues/` |
-| `AgentCoordination/templates/` | **N/A — does not exist in V1** | Referenced by Stage 0 prompt + plan but no such directory. **Task D errata fix.** | — |
+| `AgentCoordination/templates/` | **N/A — does not exist in V1** | **Settled Task D 2026-05-25:** path does not exist in V1; references in `STAGE_0_NEW_AGENT_PROMPT.md`, `STAGE_0_PLAN.md`, and `DETAILED_MIGRATION_PLAN.md` were dropped. V2 does NOT create this directory. | — |
 | `AgentCoordination/legacy_tickets/` | `VAULT` | 72.5 MiB / 195 files of frozen historical tickets including 71.7 MiB of bug logs. Vault: `StellarHegemonyVault/old_repo_exports/v1_legacy_tickets/`. | external |
 | `AgentCoordination/Scratchpad/` | `SKIP` | Gitignored transient working area. | — |
 | `AgentCoordination/local/` | `SKIP` | Gitignored per-checkout state. | — |
 | `AgentCoordination/generated/` | `SKIP` (mostly) | Per-install counters; summary.json gitignored. The per-install JSON files under `by_install/` are tracked but each agent's installation generates its own; for V2, start clean — don't carry V1 install IDs. | — (regenerated on first skill use) |
 | `AgentCoordination/opencodereview/local/` | `SKIP` | Gitignored. | — |
-| `Reviews/{README.md, Review_Report_2026_01_27.md, prompts, protocols, scripts, reviews_index.md}` | `IMPORT_GIT` | Review infrastructure. **Decision-sensitive** — could drop entire `Reviews/` to VAULT. | `StellarHegemony/Reviews/` |
+| `Reviews/{README.md, Review_Report_2026_01_27.md, prompts, protocols, scripts, reviews_index.md}` | `IMPORT_GIT` | Review infrastructure. **Settled Task D 2026-05-25:** import top-level only; results/ to vault. | `StellarHegemony/Reviews/` |
 | `Reviews/results/` | `VAULT` | 40.1 MiB / 2,479 files of historical audit reports. Vault: `StellarHegemonyVault/old_repo_exports/v1_reviews_results/`. | external |
 | `tracking-assets/{README.md, projects/, screenshots/}` | `IMPORT_GIT` (screenshots LFS-tracked via `.gitattributes`) | GH-issue support material; current `GP-<n>/` projects + current screenshots. **Audit screenshot directory at import** to verify LFS is correct disposition vs vault. | `StellarHegemony/tracking-assets/` |
 | `tracking-assets/logs/` | `VAULT` | 64.1 MiB / 14 files; battle logs from closed issues (#17, #19, #8, #31). Vault: `StellarHegemonyVault/repro_bundles/v1_tracking_logs/`. Could alternatively be `RELEASE_ARTIFACT` if these are still relevant to open issues; current assumption "resolve/archive most issues first" + the related issues being closed makes VAULT correct. | external |

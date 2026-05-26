@@ -6,15 +6,16 @@
 >
 > The V1 `.git` pack history (15.95 GiB, including all the pre-cleanup blobs) is **deliberately not preserved**. V2 starts with a fresh `git init` and a clean cutover — that's the entire point of Stage 0.
 
-## Decision-sensitive assumptions
+## Settled Task D decisions (2026-05-25)
 
-If the user changes a Task D decision, the following rows shift; the checklist's structure is unaffected.
+The following inputs to this checklist are now settled. See [`STAGE_0_DECISIONS.md`](STAGE_0_DECISIONS.md) for full rationale.
 
-1. **V2 root directory name:** `StellarHegemony/` (assumed). One global token swap if the user picks a different name.
-2. **`Projects/active_projects/` curation set:** assumed every current `PROJ-481`..`PROJ-499` folder + `Batch_*_Prompt.txt` + `_doc_consolidation/` are in scope. Task D should narrow if appropriate.
-3. **`AgentCoordination/protocols/` curation set:** assumed all six files in scope. Task D should narrow if appropriate.
-4. **`Reviews/` import scope:** assumed `IMPORT_GIT` for top-level (`README.md`, `Review_Report_2026_01_27.md`, `prompts/`, `protocols/`, `scripts/`, `reviews_index.md`) and `VAULT` for `Reviews/results/`. Task D alternative: drop the entire folder to vault.
-5. **`AgentCoordination/templates/`:** the Stage 0 prompt and STAGE_0_PLAN.md Phase 3 reference this path; it does not exist in V1. Task D should resolve "drop the reference" vs "create the folder in V2 with a README placeholder."
+1. **V2 root directory name:** `StellarHegemony/`. Settled.
+2. **`Projects/active_projects/` content:** **drop all V1 content** (PROJ-481..499 + `Batch_*_Prompt.txt` + `_doc_consolidation/`). Vault under `<vault>/old_repo_exports/v1_active_projects/`. V2 ships with an empty `Projects/active_projects/` directory.
+3. **`Projects/` infrastructure (README, index, protocols, gp_protocols):** keep as scaffolding.
+4. **`AgentCoordination/protocols/` curation set:** all six files imported as-is.
+5. **`Reviews/` import scope:** import top-level only; `Reviews/results/` to vault.
+6. **`AgentCoordination/templates/`:** path does not exist in V1; references dropped from `STAGE_0_NEW_AGENT_PROMPT.md`, `STAGE_0_PLAN.md`, and `DETAILED_MIGRATION_PLAN.md`. V2 does NOT create this directory.
 
 ## Phase 11 — Source import (run after `.gitignore` + `.gitattributes` first-hygiene commit)
 
@@ -151,11 +152,13 @@ rm -f <v2-checkout>/Planning/gitrepoV2/STAGE_0_NEW_AGENT_PROMPT.md
 
 ### Copy with curation: Projects/
 
+Per settled Task D decisions: keep the project-system infrastructure (`README.md`, `index.md`, `protocols/`, `gp_protocols/`); ship `active_projects/` empty. The V1 PROJ-XXX content + Batch + _doc_consolidation moves to the vault, not V2.
+
 ```bash
-mkdir -p <v2-checkout>/Projects/active_projects
+# Scaffolding only — no V1 active-project content.
+mkdir -p <v2-checkout>/Projects/active_projects   # empty placeholder
 cp <v1-checkout>/Projects/README.md   <v2-checkout>/Projects/
 cp <v1-checkout>/Projects/index.md    <v2-checkout>/Projects/
-# Optionally if Projects/protocols/ and Projects/gp_protocols/ exist:
 if [ -d <v1-checkout>/Projects/protocols ]; then
   cp -r <v1-checkout>/Projects/protocols     <v2-checkout>/Projects/
 fi
@@ -163,15 +166,37 @@ if [ -d <v1-checkout>/Projects/gp_protocols ]; then
   cp -r <v1-checkout>/Projects/gp_protocols  <v2-checkout>/Projects/
 fi
 
-# Active projects: the curated set (DECISION-SENSITIVE; defaults to ALL of the
-# currently-listed PROJ folders + Batch + doc consolidation).
-cp -r <v1-checkout>/Projects/active_projects/PROJ-* <v2-checkout>/Projects/active_projects/
-cp    <v1-checkout>/Projects/active_projects/Batch_*_Prompt.txt <v2-checkout>/Projects/active_projects/ 2>/dev/null || true
-cp -r <v1-checkout>/Projects/active_projects/_doc_consolidation <v2-checkout>/Projects/active_projects/ 2>/dev/null || true
+# Drop a brief README into Projects/active_projects/ so V2 doesn't ship
+# with a bare empty directory (Git won't track empty dirs anyway):
+cat > <v2-checkout>/Projects/active_projects/README.md <<'EOF'
+# Active Projects
 
-# Explicitly NOT copied (VAULT-bucketed):
-# - <v1-checkout>/Projects/deep_archive
-# - <v1-checkout>/Projects/archived_projects (if exists)
+V2 starts with no carried-forward active projects. V1's PROJ-481..499,
+Batch_*_Prompt.txt, and _doc_consolidation/ folders are preserved in
+the external artifact vault at
+`<vault>/old_repo_exports/v1_active_projects/` for forensic access.
+
+New V2 projects land here as `PROJ-NNN/` folders following the
+protocols in `../protocols/` and `../gp_protocols/`.
+EOF
+
+# Explicitly NOT copied:
+# - <v1-checkout>/Projects/deep_archive               (VAULT)
+# - <v1-checkout>/Projects/archived_projects           (VAULT, if exists)
+# - <v1-checkout>/Projects/active_projects/PROJ-*      (VAULT: v1_active_projects/)
+# - <v1-checkout>/Projects/active_projects/Batch_*     (VAULT: v1_active_projects/)
+# - <v1-checkout>/Projects/active_projects/_doc_*      (VAULT: v1_active_projects/)
+```
+
+**Vault step (before this Phase-13 commit):** copy the dropped V1 active-project content to the vault:
+
+```bash
+# Run once, before the V2 active_projects/ Phase-13 commit lands.
+VAULT="<absolute-path-to-vault-root>"
+mkdir -p "$VAULT/old_repo_exports/v1_active_projects"
+cp -r <v1-checkout>/Projects/active_projects/PROJ-*              "$VAULT/old_repo_exports/v1_active_projects/"
+cp    <v1-checkout>/Projects/active_projects/Batch_*_Prompt.txt  "$VAULT/old_repo_exports/v1_active_projects/" 2>/dev/null || true
+cp -r <v1-checkout>/Projects/active_projects/_doc_consolidation  "$VAULT/old_repo_exports/v1_active_projects/" 2>/dev/null || true
 ```
 
 ### Copy with curation: AgentCoordination/
@@ -192,9 +217,9 @@ cp -r <v1-checkout>/AgentCoordination/discovered_issues <v2-checkout>/AgentCoord
 #                                                     per-installation and the
 #                                                     summary.json is gitignored)
 # - <v1-checkout>/AgentCoordination/opencodereview   (SKIP, gitignored)
-# - <v1-checkout>/AgentCoordination/templates        (Stage 0 prompt erratum;
-#                                                     this path does not exist
-#                                                     in V1, do not synthesize it)
+# - <v1-checkout>/AgentCoordination/templates        (does not exist in V1;
+#                                                     references dropped from
+#                                                     prompts/plans per Task D)
 ```
 
 ### Copy with curation: Reviews/

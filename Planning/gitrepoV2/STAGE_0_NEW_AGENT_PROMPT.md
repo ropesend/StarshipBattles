@@ -88,7 +88,7 @@ Items currently `proposed`. Re-confirm (or revise) with the user before any Phas
 Not in `STAGE_0_DECISIONS.md` yet; surface to the user when relevant:
 
 - **GitHub plan tier for V2.** Free/Pro (10 GiB LFS storage + bandwidth) vs Team/Enterprise (250 GiB). Free/Pro fits the current curated set but leaves little headroom.
-- **Curation boundaries:** which `Projects/active_projects/` PROJ-XXX folders make the V2 cut; which `AgentCoordination/protocols/` and `AgentCoordination/templates/` files are still load-bearing; whether any non-runtime art deserves a private *asset* repo rather than Google Drive only.
+- **Curation boundaries:** which `Projects/active_projects/` PROJ-XXX folders make the V2 cut; which `AgentCoordination/protocols/` files are still load-bearing; whether any non-runtime art deserves a private *asset* repo rather than Google Drive only.
 
 ## Your concrete preparation tasks
 
@@ -118,7 +118,7 @@ These are tracked Planning artifacts that the user reviews before any V2-import 
 Generate `Planning/gitrepoV2/V2_IMPORT_CHECKLIST.md`:
 
 - **Copy verbatim:** everything under `game/`, `tests/`, `data/`, `docs/`, and the live parts of `Tools/`.
-- **Copy with curation:** `Planning/` (drop empty `CURRENT_STATE.md` scaffolds unless they have real content), `Projects/active_projects/` (current PROJ-XXX folders only), `AgentCoordination/protocols/`, `AgentCoordination/templates/`, `.github/` configs if they exist. For `.claude/`, `.agents/`, `.codex/`, `.opencode/`: copy reusable instructions/skills, not session state.
+- **Copy with curation:** `Planning/` (drop empty `CURRENT_STATE.md` scaffolds unless they have real content), `Projects/active_projects/` (current PROJ-XXX folders only), `AgentCoordination/protocols/`, `.github/` configs if they exist. For `.claude/`, `.agents/`, `.codex/`, `.opencode/`: copy reusable instructions/skills, not session state.
 - **Do not copy:** `Projects/deep_archive/`, `Projects/archived_projects/`, `AgentCoordination/legacy_tickets/`, `AgentCoordination/Scratchpad/`, `Reviews/results/_archive_*`, anything under `output/`, `_marked_for_deletion_*`, `tracking-assets/logs/`, `combat_lab/test_history/`, `.agent_reports/`, `.testmondata*`, `.coverage*`, `.pytest_cache/`.
 - The V1 `.git` pack history (~16 GB historical) is deliberately not preserved. Clean cutover.
 

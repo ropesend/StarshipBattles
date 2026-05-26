@@ -379,7 +379,8 @@ StellarHegemony/
     qa/
   AgentCoordination/
     README.md
-    templates/
+    protocols/
+    discovered_issues/
   .github/
     ISSUE_TEMPLATE/
     workflows/
