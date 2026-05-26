@@ -277,7 +277,7 @@ class AssetManager:
 
         Most planet portraits live in `Planets/<size>/` size folders. A few
         special stellar objects (e.g., the Dyson Sphere) live in dedicated
-        `Stellar Objects/<thing>/` folders and have only one resolution. When
+        `stellar_objects/<thing>/` folders and have only one resolution. When
         the size-chain probe fails, the loader falls back to those directories
         (see `_STELLAR_OBJECT_FALLBACK_DIRS` and
         docs/03_CONVENTIONS.md Image Assets section).

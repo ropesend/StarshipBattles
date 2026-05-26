@@ -269,7 +269,7 @@ class TestLoadPlanetImage:
             assert surface != asset_manager.get_missing_texture()
 
     def test_load_planet_image_finds_sphere_world_portrait(self, asset_manager):
-        """Dyson Sphere portrait lives in Stellar Objects/Sphere world/, not Planets/<size>.
+        """Dyson Sphere portrait lives in stellar_objects/sphere_world/, not Planets/<size>.
 
         Regression for issue #27: load_planet_image() must fall back to
         Paths.SPHERE_WORLD_DIR for filenames not present in any Planets/<size>
@@ -278,7 +278,7 @@ class TestLoadPlanetImage:
         sphere_path = os.path.join(
             Paths.SPHERE_WORLD_DIR, "Sphereworld_Portrait.png"
         )
-        # Sanity: asset is in the canonical Sphere world directory on disk.
+        # Sanity: asset is in the canonical sphere_world directory on disk.
         assert os.path.exists(sphere_path), (
             f"Test prerequisite missing: {sphere_path}"
         )

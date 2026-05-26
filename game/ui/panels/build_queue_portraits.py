@@ -24,7 +24,7 @@ from game.ui.colors import (
 
 logger = logging.getLogger(__name__)
 
-# Resource portrait filenames in assets/Images/Resource Portraits/
+# Resource portrait filenames in assets/images/resource_portraits/
 RESOURCE_PORTRAIT_FILES = {
     "metals": "resource_metals_portrait.png",
     "organics": "resource_organics_portrait.png",

@@ -12,8 +12,8 @@ app = FastAPI(title="Star Masking Tool v2.3")
 
 # Paths
 BASE_DIR = r"C:\Developer\StarshipBattles"
-BLACK_BG_DIR = os.path.join(BASE_DIR, "assets", "Images", "Stellar Objects", "Stars", "BlackBackground")
-OUTPUT_DIR = os.path.join(BASE_DIR, "assets", "Images", "Stellar Objects", "Stars")
+BLACK_BG_DIR = os.path.join(BASE_DIR, "assets", "Images", "stellar_objects", "Stars", "BlackBackground")
+OUTPUT_DIR = os.path.join(BASE_DIR, "assets", "Images", "stellar_objects", "Stars")
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), "mask_configs.json")
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 

@@ -72,15 +72,15 @@ class Paths:
     STARTER_RACES_DIR: str = os.path.join(DATA_DIR, "races")
 
     # === Asset Subdirectories ===
-    SHIP_THEMES_DIR: str = os.path.join(ASSET_DIR, "Images", "ShipThemes")
+    SHIP_THEMES_DIR: str = os.path.join(ASSET_DIR, "images", "ship_themes")
     # Expected square art resolution for ship-theme PNGs (PROJ-314).
     SHIP_THEMES_TARGET_SIZE: int = 2048
-    COMPONENTS_IMAGES_DIR: str = os.path.join(ASSET_DIR, "Images", "Components")
-    RESOURCE_PORTRAITS_DIR: str = os.path.join(ASSET_DIR, "Images", "Resource Portraits")
-    RESOURCE_ICONS_DIR: str = os.path.join(ASSET_DIR, "Images", "Resource Icons")
-    RACE_PORTRAITS_DIR: str = os.path.join(ASSET_DIR, "Images", "Race Portraits")
-    MODIFIER_ICONS_DIR: str = os.path.join(ASSET_DIR, "Images", "Modifier Icons")
-    FLAGS_PROCESSED_DIR: str = os.path.join(ASSET_DIR, "Images", "Flags", "Processed")
+    COMPONENTS_IMAGES_DIR: str = os.path.join(ASSET_DIR, "images", "components")
+    RESOURCE_PORTRAITS_DIR: str = os.path.join(ASSET_DIR, "images", "resource_portraits")
+    RESOURCE_ICONS_DIR: str = os.path.join(ASSET_DIR, "images", "resource_icons")
+    RACE_PORTRAITS_DIR: str = os.path.join(ASSET_DIR, "images", "race_portraits")
+    MODIFIER_ICONS_DIR: str = os.path.join(ASSET_DIR, "images", "modifier_icons")
+    FLAGS_PROCESSED_DIR: str = os.path.join(ASSET_DIR, "images", "flags", "Processed")
 
     # Resolution subdirectories within Components/ (only 1024 is tracked;
     # the others are regenerated at startup by game.assets.component_derivatives).
@@ -90,7 +90,7 @@ class Paths:
     COMPONENTS_256_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "256")
     COMPONENTS_128_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "128")
     COMPONENTS_64_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "64")
-    PLANETS_DIR: str = os.path.join(ASSET_DIR, "Images", "Stellar Objects", "Planets")
+    PLANETS_DIR: str = os.path.join(ASSET_DIR, "images", "stellar_objects", "planets")
 
     # Resolution subdirectories within Planets/
     PLANETS_2048_DIR: str = os.path.join(PLANETS_DIR, "2048")
@@ -100,14 +100,14 @@ class Paths:
     PLANETS_128_DIR: str = os.path.join(PLANETS_DIR, "128")
 
     # Star subdirectories
-    STARS_DIR: str = os.path.join(ASSET_DIR, "Images", "Stellar Objects", "Stars")
+    STARS_DIR: str = os.path.join(ASSET_DIR, "images", "stellar_objects", "stars")
     STARS_1024_DIR: str = os.path.join(STARS_DIR, "1024")
     STARS_512_DIR: str = os.path.join(STARS_DIR, "512")
     STARS_256_DIR: str = os.path.join(STARS_DIR, "256")
     STARS_128_DIR: str = os.path.join(STARS_DIR, "128")
 
-    # Stellar Objects subdirectories
-    SPHERE_WORLD_DIR: str = os.path.join(ASSET_DIR, "Images", "Stellar Objects", "Sphere world")
+    # stellar_objects subdirectories
+    SPHERE_WORLD_DIR: str = os.path.join(ASSET_DIR, "images", "stellar_objects", "sphere_world")
 
     # === Core Data Files ===
     COMPONENTS_FILE: str = os.path.join(DATA_DIR, "components.json")
@@ -149,7 +149,7 @@ class Paths:
 
     # === Asset Files ===
     ASSET_MANIFEST_FILE: str = os.path.join(ASSET_DIR, "asset_manifest.json")
-    DEFAULT_SHIP_PORTRAIT: str = os.path.join(ASSET_DIR, "Images", "Default_Ship_Portrait.png")
+    DEFAULT_SHIP_PORTRAIT: str = os.path.join(ASSET_DIR, "images", "default_ship_portrait.png")
     PLANET_CLASSIFICATIONS_FILE: str = os.path.join(PLANETS_DIR, "planet_classifications.json")
 
     # === Log Files ===
@@ -201,11 +201,11 @@ class Paths:
 
     @classmethod
     def get_planets_dir(cls) -> Path:
-        return _PROJECT_ROOT / "assets" / "Images" / "Stellar Objects" / "Planets"
+        return _PROJECT_ROOT / "assets" / "images" / "stellar_objects" / "planets"
 
     @classmethod
     def get_stars_dir(cls) -> Path:
-        return _PROJECT_ROOT / "assets" / "Images" / "Stellar Objects" / "Stars"
+        return _PROJECT_ROOT / "assets" / "images" / "stellar_objects" / "stars"
 
     @classmethod
     def get_starter_designs_dir(cls) -> Path:

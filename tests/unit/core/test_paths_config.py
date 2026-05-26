@@ -75,10 +75,14 @@ class TestPathConstants:
         assert Paths.RACE_NAMES_FILE == os.path.join(Paths.DATA_DIR, "race_names.json")
 
     def test_new_asset_constants_defined(self):
-        """PROJ-256: New asset directory constants point to correct locations."""
-        assert Paths.COMPONENTS_IMAGES_DIR == os.path.join(Paths.ASSET_DIR, "Images", "Components")
-        assert Paths.RESOURCE_PORTRAITS_DIR == os.path.join(Paths.ASSET_DIR, "Images", "Resource Portraits")
-        assert Paths.DEFAULT_SHIP_PORTRAIT == os.path.join(Paths.ASSET_DIR, "Images", "Default_Ship_Portrait.png")
+        """Asset directory constants point to correct snake_case locations."""
+        assert Paths.COMPONENTS_IMAGES_DIR == os.path.join(Paths.ASSET_DIR, "images", "components")
+        assert Paths.RESOURCE_PORTRAITS_DIR == os.path.join(Paths.ASSET_DIR, "images", "resource_portraits")
+        assert Paths.RESOURCE_ICONS_DIR == os.path.join(Paths.ASSET_DIR, "images", "resource_icons")
+        assert Paths.RACE_PORTRAITS_DIR == os.path.join(Paths.ASSET_DIR, "images", "race_portraits")
+        assert Paths.MODIFIER_ICONS_DIR == os.path.join(Paths.ASSET_DIR, "images", "modifier_icons")
+        assert Paths.FLAGS_PROCESSED_DIR == os.path.join(Paths.ASSET_DIR, "images", "flags", "Processed")
+        assert Paths.DEFAULT_SHIP_PORTRAIT == os.path.join(Paths.ASSET_DIR, "images", "default_ship_portrait.png")
 
     def test_starter_designs_dir_under_data(self):
         """STARTER_DESIGNS_DIR must be under DATA_DIR."""
@@ -94,8 +98,8 @@ class TestPathConstants:
         assert isinstance(Paths.SHIP_THEMES_TARGET_SIZE, int)
 
     def test_ship_themes_dir_endswith_shipthemes(self):
-        """PROJ-314: SHIP_THEMES_DIR ends with `ShipThemes`."""
-        assert Paths.SHIP_THEMES_DIR.endswith("ShipThemes")
+        """PROJ-314: SHIP_THEMES_DIR ends with `ship_themes`."""
+        assert Paths.SHIP_THEMES_DIR.endswith("ship_themes")
         assert Paths.SHIP_THEMES_DIR.startswith(Paths.ASSET_DIR)
 
     def test_component_resolution_dirs_defined(self):

@@ -1,6 +1,6 @@
 """Audit script for ship-theme assets (PROJ-314).
 
-Walks ``assets/Images/ShipThemes/`` and reports per-theme schema version,
+Walks ``assets/images/ship_themes/`` and reports per-theme schema version,
 coverage gaps, filename casing violations, and image-size mismatches in
 a single table. Read-only — produces no side effects.
 
@@ -303,7 +303,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     )
     parser.add_argument(
         "--theme",
-        help="Audit a single theme by name (default: all under assets/Images/ShipThemes/)",
+        help="Audit a single theme by name (default: all under assets/images/ship_themes/)",
     )
     parser.add_argument(
         "--json", action="store_true",

@@ -176,7 +176,7 @@ class TestSetItemsGrouping:
         wps = [_WarpPointStub("a"), _WarpPointStub("b")]
         panel.set_items(wps, stub_scene_interface)
         header = panel.root_items[0]
-        assert header.label_text == "Warp Points (2)"
+        assert header.label_text == "warp_points (2)"
         assert header.group_key == "wp_group"
 
     def test_set_items_planet_stack_at_same_hex_creates_sector_group_with_count(

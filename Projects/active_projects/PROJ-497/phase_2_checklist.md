@@ -40,7 +40,7 @@
 5. GREEN phase confirmed: 4 of 4 pass post-edit.
 6. Zero snapshot files referenced `efficient_engines` (verified by grep `tests/regression/snapshots/`), so PROJ-499's bulk pass is not pre-empted.
 7. Zero `data/designs/*.json` references (verified by grep). Zero other `tests/` references (verified by grep).
-8. Orphaned asset `assets/Images/Modifier Icons/mod_efficient_engines.png` left in place — asset cleanup is out of project scope; UI never asks for it now.
+8. Orphaned asset `assets/images/modifier_icons/mod_efficient_engines.png` left in place — asset cleanup is out of project scope; UI never asks for it now.
 
 ### Task 2.2: Apply `mini_capital_missile` retype decision (if any) [Medium]
 **File:** `data/components.json`

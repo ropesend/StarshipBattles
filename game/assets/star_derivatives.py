@@ -1,7 +1,7 @@
 """Star image derivative generation.
 
 Per-family wrapper over ``game.assets.image_derivatives`` for star
-portraits. Masters live at ``Stellar Objects/Stars/1024/``; smaller
+portraits. Masters live at ``stellar_objects/stars/1024/``; smaller
 sizes (512/256/128) are generated at startup.
 
 See ``docs/03_CONVENTIONS.md`` for the canonical asset-derivative pattern.

@@ -1,7 +1,7 @@
 # Gemini Capture Prompt — Race Portrait
 
 Paste the text below this line into Gemini after uploading a race portrait.
-Save the JSON output to `assets/Images/Race Portraits/<filename>.caption.json`
+Save the JSON output to `assets/images/race_portraits/<filename>.caption.json`
 (next to the original image file, with `.caption.json` appended).
 
 ---

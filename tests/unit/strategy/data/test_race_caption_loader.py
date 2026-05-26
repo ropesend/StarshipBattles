@@ -14,9 +14,9 @@ FIXTURES_DIR = Path(__file__).resolve().parents[3] / "fixtures" / "captions"
 @pytest.fixture
 def fake_assets(tmp_path: Path):
     """Build a temporary `assets/` tree mirroring the real layout."""
-    flags_dir = tmp_path / "Images" / "Flags" / "Processed"
-    portraits_dir = tmp_path / "Images" / "Race Portraits"
-    themes_dir = tmp_path / "ShipThemes"
+    flags_dir = tmp_path / "images" / "flags" / "Processed"
+    portraits_dir = tmp_path / "images" / "race_portraits"
+    themes_dir = tmp_path / "images" / "ship_themes"
     flags_dir.mkdir(parents=True)
     portraits_dir.mkdir(parents=True)
     themes_dir.mkdir(parents=True)

@@ -108,7 +108,7 @@ def _patched_bootstrap(call_order: list[str]):
         return real_load_sprites(self, *args, **kwargs)
 
     # `ensure_component_derivatives` is asset-side-effect code (writes to
-    # `assets/Images/Components/.component_derivatives_manifest.json`). Real
+    # `assets/images/components/.component_derivatives_manifest.json`). Real
     # invocation under pytest-xdist races on the manifest tempfile across
     # workers. These tests assert ORDERING, not asset generation — stub it.
     def record_ensure_derivatives():

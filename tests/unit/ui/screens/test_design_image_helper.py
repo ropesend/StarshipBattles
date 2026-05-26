@@ -65,7 +65,7 @@ class TestLoadPortraitThumbnail:
         # exists but cannot be loaded.
         manager = Mock(spec=ShipThemeManager)
         manager.discovery_complete = True
-        manager.get_portrait_path.return_value = "/fake/Federation/Portraits/cruiser.png"
+        manager.get_portrait_path.return_value = "/fake/Federation/portraits/cruiser.png"
         set_default_ship_theme_manager(manager)
         try:
             with patch('os.path.exists', return_value=True):

@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 def _get_default_asset_path() -> str:
-    """Return the path to the ShipThemes asset directory."""
+    """Return the path to the ship_themes asset directory."""
     return Paths.SHIP_THEMES_DIR
 
 

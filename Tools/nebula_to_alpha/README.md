@@ -19,9 +19,9 @@ python Tools/nebula_to_alpha/nebula_to_alpha.py
 
 The tool takes no command-line arguments. It processes three hardcoded asset directories automatically:
 
-1. **Nebulae** -- `assets/Images/Stellar Objects/Nebulae/Nebulae_*.png` (outputs `*_transparent.png` alongside originals)
-2. **System Backgrounds** -- `assets/Images/System Backgrounds/*.jpg` (outputs `.png` versions)
-3. **Warp Points** -- `assets/Images/Stellar Objects/Warp Points/*.jpg` (outputs `.png` versions)
+1. **Nebulae** -- `assets/images/stellar_objects/Nebulae/Nebulae_*.png` (outputs `*_transparent.png` alongside originals)
+2. **system_backgrounds** -- `assets/images/system_backgrounds/*.jpg` (outputs `.png` versions)
+3. **warp_points** -- `assets/images/stellar_objects/warp_points/*.jpg` (outputs `.png` versions)
 
 ### Processing Parameters
 

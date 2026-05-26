@@ -114,7 +114,7 @@ def draw_dyson_spheres(r: Any, screen: Any, sys: Any, sys_world_pos: Any) -> Non
 
 
 def load_dyson_sphere_image(r: Any) -> "pygame.Surface | None":
-    """Load the Dyson Sphere image from Sphere world directory.
+    """Load the Dyson Sphere image from sphere_world directory.
 
     Returns:
         Pygame Surface or None if loading fails

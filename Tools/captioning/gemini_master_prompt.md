@@ -22,10 +22,10 @@ There are exactly three categories. For each, the rule is: enumerate the directo
 
 #### 1. Flags — 15 expected
 
-- **Source directory:** `assets/Images/Flags/Processed/`
+- **Source directory:** `assets/images/flags/Processed/`
 - **Per-asset rule:** every immediate subdirectory whose name starts with `flag_` is one flag asset. The subdirectory name is the `flag_id` (e.g. `flag_2fl0bh2fl0bh2fl0`).
 - **Image to view:** `<flag_id>_512.png` inside the flag's subdirectory. If `512` is missing, fall back to any `<flag_id>_<size>.png` — they are all the same artwork at different resolutions.
-- **Sidecar path:** `assets/Images/Flags/Processed/<flag_id>/<flag_id>.caption.json`
+- **Sidecar path:** `assets/images/flags/Processed/<flag_id>/<flag_id>.caption.json`
 - **Schema (use these exact keys, in this order):**
   ```json
   {
@@ -42,10 +42,10 @@ There are exactly three categories. For each, the rule is: enumerate the directo
 
 #### 2. Race portraits — 14 expected
 
-- **Source directory:** `assets/Images/Race Portraits/`
+- **Source directory:** `assets/images/race_portraits/`
 - **Per-asset rule:** every file directly inside that directory whose extension is `.jpg`, `.jpeg`, or `.png` is one portrait asset. **Skip** any file whose name ends in `.caption.json`.
 - **Image to view:** the file itself.
-- **Sidecar path:** `assets/Images/Race Portraits/<original_filename_with_extension>.caption.json` — i.e. append `.caption.json` to the full filename. Example: `Gemini_Generated_Image_59rl4259rl4259rl.jpg` → sidecar `Gemini_Generated_Image_59rl4259rl4259rl.jpg.caption.json`.
+- **Sidecar path:** `assets/images/race_portraits/<original_filename_with_extension>.caption.json` — i.e. append `.caption.json` to the full filename. Example: `Gemini_Generated_Image_59rl4259rl4259rl.jpg` → sidecar `Gemini_Generated_Image_59rl4259rl4259rl.jpg.caption.json`.
 - **Schema:**
   ```json
   {
@@ -62,10 +62,10 @@ There are exactly three categories. For each, the rule is: enumerate the directo
 
 #### 3. Ship themes — 9 expected
 
-- **Source directory:** `assets/Images/ShipThemes/`
+- **Source directory:** `assets/images/ship_themes/`
 - **Per-asset rule:** the nine theme subdirectories are: `Aetherwake`, `Atlantians`, `Federation`, `Klingons`, `Ossivine`, `Prismsteel`, `Romulans`, `Thoraliens`, `Voidforged`. Each contains a `theme.json`.
-- **Image to view:** `assets/Images/ShipThemes/<theme_id>/Skins/battleship.png` is the canonical representative ship and is present in every theme (case-insensitive match — `Atlantians/Skins/Battleship.png` is also valid). If for any reason that file is missing, fall back to the largest `.png` or `.jpg` in `Skins/` whose name suggests a capital ship (`dreadnought`, `dreadnaught`, `battlecruiser`, `cruiser`, in that priority).
-- **Sidecar path:** `assets/Images/ShipThemes/<theme_id>/theme.caption.json` (always literally named `theme.caption.json`).
+- **Image to view:** `assets/images/ship_themes/<theme_id>/skins/battleship.png` is the canonical representative ship and is present in every theme (case-insensitive match — `Atlantians/skins/Battleship.png` is also valid). If for any reason that file is missing, fall back to the largest `.png` or `.jpg` in `Skins/` whose name suggests a capital ship (`dreadnought`, `dreadnaught`, `battlecruiser`, `cruiser`, in that priority).
+- **Sidecar path:** `assets/images/ship_themes/<theme_id>/theme.caption.json` (always literally named `theme.caption.json`).
 - **Schema:**
   ```json
   {

@@ -1,7 +1,7 @@
 # Gemini Capture Prompt — Flag
 
 Paste the text below this line into Gemini after uploading a flag PNG.
-Save the JSON output to `assets/Images/Flags/Processed/<flag_id>/<flag_id>.caption.json`.
+Save the JSON output to `assets/images/flags/Processed/<flag_id>/<flag_id>.caption.json`.
 
 ---
 

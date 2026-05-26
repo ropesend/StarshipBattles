@@ -157,7 +157,7 @@ class TestGameConfig:
         theme_path = config.get_player_theme_path(0)
 
         assert "Romulans" in theme_path
-        assert "ShipThemes" in theme_path
+        assert "ship_themes" in theme_path
 
     def test_game_config_theme_path_invalid_index(self):
         """get_player_theme_path returns None for invalid index"""

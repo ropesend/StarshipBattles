@@ -255,9 +255,9 @@ class TestSpriteManagerThreadSafety:
         """
         from PIL import Image
 
-        # Build base_path/assets/Images/Components/64/<NN>Portrait_Comp_<NNN>.png.
+        # Build base_path/assets/images/components/64/<NN>Portrait_Comp_<NNN>.png.
         # SpriteManager.load_sprites(base_path) resolves
-        # base_path/assets/Images/Components/64/ as the sprite source.
+        # base_path/assets/images/components/64/ as the sprite source.
         sprite_dir = tmp_path / "assets" / "Images" / "Components" / "64"
         sprite_dir.mkdir(parents=True)
         for idx in range(5):

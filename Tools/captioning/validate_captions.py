@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Validate caption sidecar JSON files for the visual assets (PROJ-299).
 
-Walks `assets/Images/Flags/Processed/`, `assets/Images/Race Portraits/`,
-and `assets/Images/ShipThemes/`, looks up the canonical sidecar location for
+Walks `assets/images/flags/Processed/`, `assets/images/race_portraits/`,
+and `assets/images/ship_themes/`, looks up the canonical sidecar location for
 each asset, and validates the sidecar against the appropriate schema in
 `Tools/captioning/schemas/`.
 
@@ -148,7 +148,7 @@ def discover_flags() -> List[Tuple[str, Path]]:
 
 def discover_portraits() -> List[Tuple[str, Path]]:
     """Returns [(portrait_filename, sidecar_path), ...] for every portrait."""
-    base = ASSETS_DIR / "Images" / "Race Portraits"
+    base = ASSETS_DIR / "Images" / "race_portraits"
     if not base.exists():
         return []
     out: List[Tuple[str, Path]] = []
@@ -165,7 +165,7 @@ def discover_portraits() -> List[Tuple[str, Path]]:
 
 def discover_themes() -> List[Tuple[str, Path]]:
     """Returns [(theme_name, sidecar_path), ...] for every ship theme."""
-    base = ASSETS_DIR / "ShipThemes"
+    base = ASSETS_DIR / "ship_themes"
     if not base.exists():
         return []
     out: List[Tuple[str, Path]] = []

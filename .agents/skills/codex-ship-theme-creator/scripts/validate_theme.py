@@ -149,7 +149,7 @@ def main() -> int:
 
         skin_rel = _relative_png_path(entry.get("skin"), f"{class_name} skin", errors)
         if skin_rel is not None:
-            expected_skin_ref = f"Skins/{skin_name}"
+            expected_skin_ref = f"skins/{skin_name}"
             if skin_rel != expected_skin_ref:
                 errors.append(f"Manifest skin ref mismatch for {class_name}: {skin_rel!r}")
             skin_count += 1
@@ -160,7 +160,7 @@ def main() -> int:
         if portrait_rel is not None:
             portrait_ref = _relative_png_path(portrait_rel, f"{class_name} portrait", errors)
             if portrait_ref is not None:
-                expected_portrait_ref = f"Portraits/{portrait_name}"
+                expected_portrait_ref = f"portraits/{portrait_name}"
                 if portrait_ref != expected_portrait_ref:
                     errors.append(
                         f"Manifest portrait ref mismatch for {class_name}: {portrait_ref!r}"

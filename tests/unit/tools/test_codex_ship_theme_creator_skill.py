@@ -62,11 +62,11 @@ def test_create_manifest_writes_assets_schema(tmp_path: Path) -> None:
     assert manifest["image_sizes"] == {"skin": [2048, 2048], "portrait": [2048, 2048]}
     assert set(manifest["assets"]) == SHIP_CLASSES_WITH_VISUAL_THEMES
     assert manifest["assets"]["Battleship"] == {
-        "skin": "Skins/battleship.png",
+        "skin": "skins/battleship.png",
         "scale": 1.0,
-        "portrait": "Portraits/battleship.png",
+        "portrait": "portraits/battleship.png",
     }
-    assert manifest["assets"]["Fighter (Medium)"]["skin"] == "Skins/medium_fighter.png"
+    assert manifest["assets"]["Fighter (Medium)"]["skin"] == "skins/medium_fighter.png"
 
 
 def test_validate_theme_accepts_generated_assets_schema_from_any_cwd(tmp_path: Path) -> None:
@@ -111,7 +111,7 @@ def test_validate_theme_rejects_legacy_images_schema(tmp_path: Path) -> None:
     (theme_root / "theme.json").write_text(
         json.dumps({
             "name": "LegacyTheme",
-            "images": {"Battleship": "Skins/battleship.png"},
+            "images": {"Battleship": "skins/battleship.png"},
         }),
         encoding="utf-8",
     )

@@ -1,6 +1,6 @@
 """One-shot migration script for PROJ-314 Phase 5.
 
-Re-emits every theme.json under assets/Images/ShipThemes/ in the new
+Re-emits every theme.json under assets/images/ship_themes/ in the new
 canonical schema. Assumes Phase 4's filename normalisation + the Phase 5
 skin/portrait basename canonicalisation step have run, so every ship
 class shares a single canonical basename across the whole project.
@@ -12,7 +12,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-ROOT = Path("assets/Images/ShipThemes")
+ROOT = Path("assets/images/ship_themes")
 
 # Canonical basename per ship-class display name. Used for BOTH skin and
 # portrait file lookups. Phase 5 normalises every theme to this set.
@@ -64,12 +64,12 @@ def main() -> None:
 
         assets: dict[str, dict] = {}
         for cls, base in CANONICAL_BASENAMES.items():
-            skin_rel = f"Skins/{base}.png"
+            skin_rel = f"skins/{base}.png"
             if not (theme_dir / skin_rel).exists():
                 print(f"  WARN {theme_name}/{cls}: skin missing -> {skin_rel}")
             entry: dict[str, object] = {"skin": skin_rel, "scale": 1.0}
             if has_portraits_dir:
-                portrait_rel = f"Portraits/{base}.png"
+                portrait_rel = f"portraits/{base}.png"
                 if (theme_dir / portrait_rel).exists():
                     entry["portrait"] = portrait_rel
             assets[cls] = entry

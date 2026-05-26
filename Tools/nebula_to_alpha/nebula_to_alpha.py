@@ -51,7 +51,7 @@ def process_nebula(input_path, output_path, gamma_color=0.8, gamma_alpha=0.6):
 
 if __name__ == "__main__":
     # Settings
-    dir_path = Path(Paths.ASSET_DIR) / "Images" / "Stellar Objects" / "Nebulae"
+    dir_path = Path(Paths.ASSET_DIR) / "Images" / "stellar_objects" / "Nebulae"
     
     print(f"Processing nebulae in: {dir_path}")
     
@@ -68,26 +68,26 @@ if __name__ == "__main__":
             print(f"Processing {img_file.name}...")
             process_nebula(img_file, output_file, gamma_color=0.7, gamma_alpha=0.5)
     
-    # --- Run for System Backgrounds ---
-    sys_dir_path = Path(Paths.ASSET_DIR) / "Images" / "System Backgrounds"
+    # --- Run for system_backgrounds ---
+    sys_dir_path = Path(Paths.ASSET_DIR) / "Images" / "system_backgrounds"
     print(f"\nProcessing system backgrounds in: {sys_dir_path}")
     
     jpg_files = list(sys_dir_path.glob("*.jpg"))
     if not jpg_files:
-        print("No JPG files found in System Backgrounds!")
+        print("No JPG files found in system_backgrounds!")
     else:
         for img_file in jpg_files:
             output_file = sys_dir_path / f"{img_file.stem}.png"
             print(f"Processing {img_file.name}...")
             process_nebula(img_file, output_file, gamma_color=0.7, gamma_alpha=0.5)
             
-    # --- Run for Warp Points ---
-    warp_dir_path = Path(Paths.ASSET_DIR) / "Images" / "Stellar Objects" / "Warp Points"
+    # --- Run for warp_points ---
+    warp_dir_path = Path(Paths.ASSET_DIR) / "Images" / "stellar_objects" / "warp_points"
     print(f"\nProcessing warp points in: {warp_dir_path}")
     
     jpg_files = list(warp_dir_path.glob("*.jpg"))
     if not jpg_files:
-        print("No JPG files found in Warp Points!")
+        print("No JPG files found in warp_points!")
     else:
         for img_file in jpg_files:
             output_file = warp_dir_path / f"{img_file.stem}.png"

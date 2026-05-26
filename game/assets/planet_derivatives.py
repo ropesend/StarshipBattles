@@ -1,7 +1,7 @@
 """Planet image derivative generation.
 
 Per-family wrapper over ``game.assets.image_derivatives`` for planet
-portraits. Masters live at ``Stellar Objects/Planets/2048/``; smaller
+portraits. Masters live at ``stellar_objects/planets/2048/``; smaller
 sizes (1024/512/256/128) are generated at startup. The runtime loader
 in ``AssetManager.load_planet_image`` walks the size chain, so all four
 derivative sizes need to exist on disk by the time strategy rendering

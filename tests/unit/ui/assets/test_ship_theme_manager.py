@@ -4,7 +4,7 @@ Pins observed behavior of the ship-theme asset loader at
 ``game/ui/assets/ship_theme_manager.py``. Tests:
 
 * Build hand-written ``theme.json`` files in a ``tmp_path`` fake themes
-  tree (rather than touching the real ``assets/Images/ShipThemes`` tree).
+  tree (rather than touching the real ``assets/images/ship_themes`` tree).
 * Monkeypatch ``Paths.SHIP_THEMES_DIR`` to that fake tree (PROJ-340 D-003).
 * Patch ``pygame.image.load`` to return a synthetic SRCALPHA Surface
   whose ``.convert_alpha()`` returns itself, so disk PNGs are never
@@ -65,7 +65,7 @@ def _write_theme(themes_dir: Path, theme_name: str, payload: dict,
 @pytest.fixture
 def fake_themes_dir(tmp_path: Path, monkeypatch):
     """Redirect Paths.SHIP_THEMES_DIR at the import site to a tmp tree."""
-    fake_dir = tmp_path / "ShipThemes"
+    fake_dir = tmp_path / "ship_themes"
     fake_dir.mkdir()
     monkeypatch.setattr(stm_module.Paths, "SHIP_THEMES_DIR", str(fake_dir))
     yield fake_dir

@@ -191,7 +191,7 @@ testpaths = tests
 addopts = -n 4 --ignore=Refactoring --ignore-glob=*.txt --ignore=combat_lab --junitxml=./.pytest_cache/test-results.xml
 python_files = test_*.py
 pythonpath = .
-norecursedirs = .* build dist CVS _darcs {arch} *.egg venv env .venv ShipThemes
+norecursedirs = .* build dist CVS _darcs {arch} *.egg venv env .venv ship_themes
 ```
 
 `norecursedirs` rationale (PROJ-443): three tokens were removed from the

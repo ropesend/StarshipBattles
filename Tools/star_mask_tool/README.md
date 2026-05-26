@@ -22,7 +22,7 @@ python Tools/star_mask_tool/server.py
 
 Then open `http://127.0.0.1:8000` in a browser.
 
-**Note:** The `BASE_DIR` path in `server.py` is hardcoded and may need to be updated to match your local project layout. It expects star source images in `assets/Images/Stellar Objects/Stars/BlackBackground/`.
+**Note:** The `BASE_DIR` path in `server.py` is hardcoded and may need to be updated to match your local project layout. It expects star source images in `assets/images/stellar_objects/Stars/BlackBackground/`.
 
 ### Web Interface
 
@@ -64,7 +64,7 @@ A sidebar lists all star images with checkmarks indicating which have been proce
 
 ## Output
 
-Processed star images are saved as transparent PNGs to `assets/Images/Stellar Objects/Stars/`. The transparency is computed using:
+Processed star images are saved as transparent PNGs to `assets/images/stellar_objects/Stars/`. The transparency is computed using:
 
 - **Power-law curve** (`alpha = luminance^0.152`) as the base transparency from pixel brightness.
 - **Radial falloff** -- full opacity within the core radius, linear falloff to zero at the corona radius.

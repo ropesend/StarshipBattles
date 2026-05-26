@@ -13,7 +13,7 @@ python Tools/process_components/process_components.py
 This writes cleaned masters and size variants to:
 
 ```text
-assets/Images/Components/_processed_preview
+assets/images/components/_processed_preview
 ```
 
 For the stronger v2 GrabCut processor, run:
@@ -25,7 +25,7 @@ python Tools/process_components/process_components.py --method grabcut
 That writes to:
 
 ```text
-assets/Images/Components/_processed_preview_v2
+assets/images/components/_processed_preview_v2
 ```
 
 For the conservative v3 hybrid processor, which writes only 1024 masters until
@@ -38,7 +38,7 @@ python Tools/process_components/process_components.py --method hybrid
 That writes to:
 
 ```text
-assets/Images/Components/_processed_preview_v3
+assets/images/components/_processed_preview_v3
 ```
 
 2. Start the viewer:
@@ -65,13 +65,13 @@ python Tools/component_transparency_viewer/server.py
 Statuses are saved into:
 
 ```text
-assets/Images/Components/_processed_preview/review_manifest.json
+assets/images/components/_processed_preview/review_manifest.json
 ```
 
 Use `Recreate` for images that should be regenerated with an image model. The viewer can export those to:
 
 ```text
-assets/Images/Components/_processed_preview/recreate_queue.json
+assets/images/components/_processed_preview/recreate_queue.json
 ```
 
 4. After QA, promote staged assets into the live component folders:
@@ -83,5 +83,5 @@ python Tools/process_components/process_components.py --promote --backup
 The backup option copies the current live component folders to:
 
 ```text
-assets/Images/Components/_backup_before_transparency
+assets/images/components/_backup_before_transparency
 ```

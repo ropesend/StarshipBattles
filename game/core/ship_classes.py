@@ -1,7 +1,7 @@
 """Canonical ship-class display-name set used by visual themes.
 
 This module is the single source of truth for the set of ship classes
-that participate in the `assets/Images/ShipThemes/<Theme>/theme.json` schema.
+that participate in the `assets/images/ship_themes/<Theme>/theme.json` schema.
 The :data:`SHIP_CLASSES_WITH_VISUAL_THEMES` frozenset enumerates exactly
 the 19 display-form ship-class keys that every theme is expected to
 declare, and that :class:`game.ui.assets.ship_theme_manager.ShipThemeManager`

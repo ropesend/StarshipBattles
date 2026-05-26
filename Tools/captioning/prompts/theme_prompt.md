@@ -3,7 +3,7 @@
 Paste the text below this line into Gemini after uploading a representative
 ship image from the theme (e.g., the theme's Battlecruiser or Battleship
 portrait). Save the JSON output to
-`assets/Images/ShipThemes/<theme_name>/theme.caption.json`.
+`assets/images/ship_themes/<theme_name>/theme.caption.json`.
 
 If the theme has multiple representative ships, use whichever shows the
 most defining visual features. The caption is meant to capture the theme's

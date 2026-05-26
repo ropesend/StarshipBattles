@@ -28,13 +28,13 @@ def _theme_json(name: str = "TestTheme") -> dict:
         "image_sizes": {"skin": [2048, 2048], "portrait": [2048, 2048]},
         "assets": {
             "Battleship": {
-                "skin": "Skins/battleship.png",
-                "portrait": "Portraits/battleship.png",
+                "skin": "skins/battleship.png",
+                "portrait": "portraits/battleship.png",
                 "scale": 1.0,
             },
             "Escort": {
-                "skin": "Skins/escort.png",
-                "portrait": "Portraits/escort.png",
+                "skin": "skins/escort.png",
+                "portrait": "portraits/escort.png",
                 "scale": 1.5,
             },
         },
@@ -162,7 +162,7 @@ class TestShipThemeLogic:
         mock_exists.return_value = True
         mock_load_json.return_value = {
             "name": "LegacyTheme",
-            "images": {"Battleship": "Skins/battleship.png"},
+            "images": {"Battleship": "skins/battleship.png"},
         }
 
         self.manager.initialize()

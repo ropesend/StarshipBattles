@@ -16,7 +16,7 @@ The game's cursor set is authored as a single 2x4 sprite sheet image. This tool 
 python Tools/process_cursors/process_cursors.py
 ```
 
-No command-line arguments. The tool reads a hardcoded input file (`assets/Images/Cursor/71wO8.jpg`) and writes output to subdirectories within the same cursor directory.
+No command-line arguments. The tool reads a hardcoded input file (`assets/images/cursor/71wO8.jpg`) and writes output to subdirectories within the same cursor directory.
 
 ### Extracted Cursors
 
@@ -34,7 +34,7 @@ No command-line arguments. The tool reads a hardcoded input file (`assets/Images
 ## Output
 
 ```
-assets/Images/Cursor/
+assets/images/cursor/
   64x64/
     cursor_default.png
     cursor_add.png

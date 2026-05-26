@@ -11,7 +11,7 @@ app = FastAPI(title="Background Eraser API")
 # Paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
-ASSETS_DIR = r"C:\Developer\StarshipBattles\assets\Images\System Backgrounds"
+ASSETS_DIR = r"C:\Developer\StarshipBattles\assets\Images\system_backgrounds"
 
 @app.get("/api/images")
 async def list_images():

@@ -39,11 +39,11 @@ def _build_assets(include_portraits: bool) -> dict[str, dict[str, object]]:
     assets: dict[str, dict[str, object]] = {}
     for class_name, skin, portrait in CLASSES:
         entry: dict[str, object] = {
-            "skin": f"Skins/{skin}",
+            "skin": f"skins/{skin}",
             "scale": 1.0,
         }
         if include_portraits:
-            entry["portrait"] = f"Portraits/{portrait}"
+            entry["portrait"] = f"portraits/{portrait}"
         assets[class_name] = entry
     return assets
 
@@ -62,8 +62,8 @@ def main() -> int:
 
     theme_root = Path(args.theme_root)
     for child in [
-        "Skins",
-        "Portraits",
+        "skins",
+        "portraits",
         "Production",
         "Production/skin_sources",
         "Production/skin_alpha",

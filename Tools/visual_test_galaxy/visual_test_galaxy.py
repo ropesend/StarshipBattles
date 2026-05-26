@@ -129,9 +129,9 @@ def main():
             
             # Simple line drawing between systems for better visual scaling?
             # Or use correct warp points... let's stick to simple lines for high zoom out
-            # High Detail: Warp Points
+            # High Detail: warp_points
             
-            # Draw Warp Lanes connecting specific Warp Points
+            # Draw Warp Lanes connecting specific warp_points
             for wp in sys.warp_points:
                 target_id = wp.destination_id
                 target = next((s for s in galaxy.systems.values() if s.name == target_id), None)
@@ -284,8 +284,8 @@ def main():
                 
                 # Stars already drawn above in loop
                 
-                # Draw Warp Points (Close zoom)
-                # Draw Warp Points (Close zoom)
+                # Draw warp_points (Close zoom)
+                # Draw warp_points (Close zoom)
                 if camera.zoom > 1.5:
                     for wp in sys.warp_points:
                         # Draw Line to Destination System (in Galaxy Map)

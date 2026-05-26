@@ -260,9 +260,9 @@ class SystemTreePanel:
              self.root_items.append(item)
              self.items.append(item)
 
-        # 3. Warp Points
+        # 3. warp_points
         if len(warp_points) > 1:
-            group_label = f"Warp Points ({len(warp_points)})"
+            group_label = f"warp_points ({len(warp_points)})"
             group_icon = scene_interface._get_object_asset(warp_points[0]) if warp_points else None
             
             wp_header = SystemTreeItem(None, group_label, group_icon,

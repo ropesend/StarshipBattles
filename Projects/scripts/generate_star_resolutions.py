@@ -24,7 +24,7 @@ except ImportError:
     # Fallback if structure is different
     class Paths:
         ASSET_DIR = os.path.join(str(PROJECT_ROOT), "assets")
-        STARS_DIR = os.path.join(ASSET_DIR, "Images", "Stellar Objects", "Stars")
+        STARS_DIR = os.path.join(ASSET_DIR, "Images", "stellar_objects", "Stars")
         STARS_1024_DIR = os.path.join(STARS_DIR, "1024")
 
 def resize_image(source_path: Path, target_path: Path, target_size: int) -> bool:

@@ -1,7 +1,7 @@
 """Race-Setup Ships tab smoke test (PROJ-314).
 
 Validates the end-to-end loader contract against the live
-``assets/Images/ShipThemes/`` filesystem: every theme registers all 19
+``assets/images/ship_themes/`` filesystem: every theme registers all 19
 canonical ship classes, every skin renders as a non-fallback Surface,
 and every declared portrait file exists.
 """
@@ -41,7 +41,7 @@ def initialized_manager() -> ShipThemeManager:
     if not pygame.display.get_surface():
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
     if not os.path.isdir(Paths.SHIP_THEMES_DIR):
-        pytest.skip("ShipThemes directory not present in this checkout")
+        pytest.skip("ship_themes directory not present in this checkout")
 
     manager = ShipThemeManager()
     set_default_ship_theme_manager(manager)

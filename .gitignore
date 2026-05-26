@@ -83,50 +83,50 @@ combat_lab/battle.log
 # Codex repo config is tracked; local Codex artifacts stay ignored.
 .codex/*
 !.codex/config.toml
-assets/Images/ShipThemes/Ossivine/Production/*
-assets/Images/ShipThemes/Prismsteel/Production/*
-assets/Images/Components/_ai_recreate_enhanced_preview/*
-assets/Images/Components/_ai_recreate_preview/*
-assets/Images/Components/_processed_preview/*
-assets/Images/Components/_processed_preview_v2/*
-assets/Images/Components/_processed_preview_v3/*
-assets/Images/ShipThemes/Aetherwake/Production/*
-assets/Images/Components/_ai_recreate_enhanced_fixes_preview/*
-assets/Images/Components/_ai_recreate_enhanced_repaired_preview/*
-assets/Images/Components/_ai_recreate_enhanced_corrected_preview/*
-assets/Images/Components/.component_derivatives_manifest.json
+assets/images/ship_themes/Ossivine/Production/*
+assets/images/ship_themes/Prismsteel/Production/*
+assets/images/components/_ai_recreate_enhanced_preview/*
+assets/images/components/_ai_recreate_preview/*
+assets/images/components/_processed_preview/*
+assets/images/components/_processed_preview_v2/*
+assets/images/components/_processed_preview_v3/*
+assets/images/ship_themes/Aetherwake/Production/*
+assets/images/components/_ai_recreate_enhanced_fixes_preview/*
+assets/images/components/_ai_recreate_enhanced_repaired_preview/*
+assets/images/components/_ai_recreate_enhanced_corrected_preview/*
+assets/images/components/.component_derivatives_manifest.json
 # Image-derivative manifests + generated size folders. See
 # docs/03_CONVENTIONS.md "Image Asset Derivatives" for the pattern:
 # each family stores one master size in source control; all other sizes
 # are regenerated locally at startup by game.assets.image_derivatives.
 
 # Components: master is 1024/; all others are derivatives.
-assets/Images/Components/2048/*
-assets/Images/Components/512/*
-assets/Images/Components/256/*
-assets/Images/Components/128/*
-assets/Images/Components/64/*
+assets/images/components/2048/*
+assets/images/components/512/*
+assets/images/components/256/*
+assets/images/components/128/*
+assets/images/components/64/*
 
 # Flags: master is flag_*/1024/; all others are derivatives.
-assets/Images/Flags/Processed/.flag_derivatives_manifest.json
-assets/Images/Flags/Processed/flag_*/512/*
-assets/Images/Flags/Processed/flag_*/256/*
-assets/Images/Flags/Processed/flag_*/128/*
-assets/Images/Flags/Processed/flag_*/64/*
-assets/Images/Flags/Processed/flag_*/32/*
+assets/images/flags/Processed/.flag_derivatives_manifest.json
+assets/images/flags/Processed/flag_*/512/*
+assets/images/flags/Processed/flag_*/256/*
+assets/images/flags/Processed/flag_*/128/*
+assets/images/flags/Processed/flag_*/64/*
+assets/images/flags/Processed/flag_*/32/*
 
 # Stars: master is 1024/; all others are derivatives.
-assets/Images/Stellar Objects/Stars/.star_derivatives_manifest.json
-assets/Images/Stellar Objects/Stars/512/*
-assets/Images/Stellar Objects/Stars/256/*
-assets/Images/Stellar Objects/Stars/128/*
+assets/images/stellar_objects/Stars/.star_derivatives_manifest.json
+assets/images/stellar_objects/Stars/512/*
+assets/images/stellar_objects/Stars/256/*
+assets/images/stellar_objects/Stars/128/*
 
 # Planets: master is 2048/; all others are derivatives.
-assets/Images/Stellar Objects/Planets/.planet_derivatives_manifest.json
-assets/Images/Stellar Objects/Planets/1024/*
-assets/Images/Stellar Objects/Planets/512/*
-assets/Images/Stellar Objects/Planets/256/*
-assets/Images/Stellar Objects/Planets/128/*
+assets/images/stellar_objects/Planets/.planet_derivatives_manifest.json
+assets/images/stellar_objects/Planets/1024/*
+assets/images/stellar_objects/Planets/512/*
+assets/images/stellar_objects/Planets/256/*
+assets/images/stellar_objects/Planets/128/*
 
 # Legacy pre-rename size-folder names. The asset rename pass moved
 # tracked content from "Components <N>/", "Stars/Stars_<N>/", and
@@ -137,17 +137,17 @@ assets/Images/Stellar Objects/Planets/128/*
 # them out of `git status` until they're manually deleted. Safe to
 # remove the old-named folders from disk at any time — the engine
 # regenerates everything under the new (numeric-only) paths.
-assets/Images/Components/Components 64/
-assets/Images/Components/Components 128/
-assets/Images/Components/Components 256/
-assets/Images/Components/Components 512/
-assets/Images/Components/Components 1024/
-assets/Images/Components/Components 2048/
-assets/Images/Stellar Objects/Stars/Stars_128/
-assets/Images/Stellar Objects/Stars/Stars_256/
-assets/Images/Stellar Objects/Stars/Stars_512/
-assets/Images/Stellar Objects/Stars/Stars_1024/
-assets/Images/Stellar Objects/Planets/Planets_V3/
+assets/images/components/Components 64/
+assets/images/components/Components 128/
+assets/images/components/Components 256/
+assets/images/components/Components 512/
+assets/images/components/Components 1024/
+assets/images/components/Components 2048/
+assets/images/stellar_objects/Stars/Stars_128/
+assets/images/stellar_objects/Stars/Stars_256/
+assets/images/stellar_objects/Stars/Stars_512/
+assets/images/stellar_objects/Stars/Stars_1024/
+assets/images/stellar_objects/Planets/Planets_V3/
 
 # PROJ-314: ship-portrait regeneration manifest (per-run, ephemeral).
 Tools/regenerate_ship_portraits/last_run.json

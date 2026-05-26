@@ -455,7 +455,7 @@ Colony detail:
 - scanner dependent
 ```
 
-## Warp Points
+## warp_points
 
 Warp points should have variable detectability.
 

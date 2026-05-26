@@ -263,12 +263,12 @@ Additional rules:
 
 ### 3.1 File Path Convention (PROJ-256)
 
-All file/directory paths in production code must use constants from `game.core.paths.Paths`. Never hardcode paths like `"data/components.json"` or `os.path.join("assets", "ShipThemes", ...)`.
+All file/directory paths in production code must use constants from `game.core.paths.Paths`. Never hardcode paths like `"data/components.json"` or `os.path.join("assets", "ship_themes", ...)`.
 
 ```python
 # WRONG
 path = os.path.join(os.getcwd(), "data", "components.json")
-path = os.path.join("assets", "ShipThemes", theme, "Portraits", filename)
+path = os.path.join("assets", "ship_themes", theme, "Portraits", filename)
 
 # RIGHT
 from game.core.paths import Paths
@@ -293,7 +293,7 @@ def load_data(file_path=None):
 - **Existing `.jpg` files:** Should be transitioned to `.png` when touched or as part of asset work. Do not convert them all at once — migrate them when working in the area.
 - **Code that loads images:** Should accept `.png` as the primary format. Filter conditions that accept multiple formats (e.g., `.endswith(('.png', '.jpg'))`) are acceptable for backward compatibility during the transition, but new code should construct filenames with `.png`.
 
-**Component images** follow a resolution-based directory structure under `assets/Images/Components/`:
+**Component images** follow a resolution-based directory structure under `assets/images/components/`:
 
 | Directory | Resolution | Filename pattern | Usage |
 |-----------|-----------|-----------------|-------|
@@ -306,7 +306,7 @@ def load_data(file_path=None):
 
 The filename prefix matches the actual resolution of the images in that directory. Use `Paths.COMPONENTS_64_DIR` through `Paths.COMPONENTS_2048_DIR` for path constants.
 
-`Components 1024/` is the tracked source-of-truth set. The `2048`, `512`, `256`, `128`, and `64` directories are generated derivatives and must not be committed. Runtime startup calls `game.assets.component_derivatives.ensure_component_derivatives()` before component sprites load; it creates missing derivatives and refreshes stale derivatives when a 1024 source hash changes. The hash manifest lives at `assets/Images/Components/.component_derivatives_manifest.json` and is intentionally ignored.
+`Components 1024/` is the tracked source-of-truth set. The `2048`, `512`, `256`, `128`, and `64` directories are generated derivatives and must not be committed. Runtime startup calls `game.assets.component_derivatives.ensure_component_derivatives()` before component sprites load; it creates missing derivatives and refreshes stale derivatives when a 1024 source hash changes. The hash manifest lives at `assets/images/components/.component_derivatives_manifest.json` and is intentionally ignored.
 
 ---
 
@@ -570,7 +570,7 @@ See PROJ-307 for the backfill that established this convention.
 
 ## 10. Ship Theme Asset Conventions (PROJ-314)
 
-Every ship-theme directory under `assets/ShipThemes/<Theme>/` must
+Every ship-theme directory under `assets/ship_themes/<Theme>/` must
 declare its skin and portrait art via a single `theme.json` file in the
 canonical schema below. The legacy `images:` schema (flat
 `{class: path}` map) and the hardcoded `<Class>_Portrait.jpg` filename
@@ -589,8 +589,8 @@ convention have both been retired.
   },
   "assets": {
     "Battleship": {
-      "skin":     "Skins/battleship.png",
-      "portrait": "Portraits/battleship.png",
+      "skin":     "skins/battleship.png",
+      "portrait": "portraits/battleship.png",
       "scale":    1.0
     }
   }
@@ -634,8 +634,8 @@ convention have both been retired.
 
 ### 10.4 Adding a new theme
 
-1. Create `assets/ShipThemes/<NewTheme>/`,
-   `<NewTheme>/Skins/`, `<NewTheme>/Portraits/`.
+1. Create `assets/ship_themes/<NewTheme>/`,
+   `<NewTheme>/skins/`, `<NewTheme>/portraits/`.
 2. Place 19 lowercase_with_underscores `.png` skins (one per canonical
    ship class).
 3. Optionally place 19 portraits with the same basenames; or run the

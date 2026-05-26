@@ -123,7 +123,7 @@ def _load_theme_json(theme_dir: pathlib.Path) -> dict:
 
 
 def _list_themes() -> list[str]:
-    """Return sorted list of theme names under assets/Images/ShipThemes/."""
+    """Return sorted list of theme names under assets/images/ship_themes/."""
     root = pathlib.Path(Paths.SHIP_THEMES_DIR)
     return sorted(p.name for p in root.iterdir() if p.is_dir())
 
@@ -137,7 +137,7 @@ def _portrait_default_path(ship_class: str) -> str:
         .replace(" ", "_")
         .replace("__", "_")
     )
-    return f"Portraits/{safe}.png"
+    return f"portraits/{safe}.png"
 
 
 def plan_generations(
@@ -149,7 +149,7 @@ def plan_generations(
     """Build the list of GenerationRequest for a theme.
 
     Args:
-        theme: Theme name (must be a directory under assets/Images/ShipThemes/).
+        theme: Theme name (must be a directory under assets/images/ship_themes/).
         ship_class_filter: When set, plan only this single ship class.
         force: When True, regenerate even if portrait file exists.
 
@@ -310,7 +310,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     )
     parser.add_argument(
         "--list-themes", action="store_true",
-        help="List the themes discovered under assets/Images/ShipThemes/ and exit.",
+        help="List the themes discovered under assets/images/ship_themes/ and exit.",
     )
     parser.add_argument(
         "--list-classes", action="store_true",

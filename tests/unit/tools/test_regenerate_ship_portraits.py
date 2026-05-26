@@ -31,16 +31,16 @@ def _write_theme(
     (theme_dir / "Portraits").mkdir(exist_ok=True)
     assets = {
         "Battleship": {
-            "skin": "Skins/battleship.png",
+            "skin": "skins/battleship.png",
             "scale": 1.0,
         },
         "Escort": {
-            "skin": "Skins/escort.png",
+            "skin": "skins/escort.png",
             "scale": 1.0,
         },
     }
     if with_portrait:
-        assets["Battleship"]["portrait"] = "Portraits/battleship.png"
+        assets["Battleship"]["portrait"] = "portraits/battleship.png"
         # Escort intentionally has no portrait declared.
     _write_png(theme_dir / "Skins" / "battleship.png")
     _write_png(theme_dir / "Skins" / "escort.png")
@@ -80,8 +80,8 @@ def _write_full_theme(
             .replace(" ", "_")
             .replace("__", "_")
         )
-        skin_rel = f"Skins/{basename}.png"
-        portrait_rel = f"Portraits/{basename}.png"
+        skin_rel = f"skins/{basename}.png"
+        portrait_rel = f"portraits/{basename}.png"
         assets[ship_class] = {"skin": skin_rel, "scale": 1.0}
         _write_png(theme_dir / skin_rel)
         if ship_class not in omit_portraits:
@@ -135,7 +135,7 @@ class TestAudit:
         theme_dir.mkdir()
         (theme_dir / "theme.json").write_text(json.dumps({
             "name": "Legacy",
-            "images": {"Battleship": "Skins/battleship.png"},
+            "images": {"Battleship": "skins/battleship.png"},
         }))
         finding = audit.audit_theme(str(theme_dir))
         assert not finding.schema_ok
@@ -146,7 +146,7 @@ class TestAudit:
         _write_theme(theme_dir, "PartGap", with_portrait=False)
         # Add a declared but missing portrait path.
         data = json.loads((theme_dir / "theme.json").read_text())
-        data["assets"]["Battleship"]["portrait"] = "Portraits/battleship.png"
+        data["assets"]["Battleship"]["portrait"] = "portraits/battleship.png"
         (theme_dir / "theme.json").write_text(json.dumps(data))
         finding = audit.audit_theme(str(theme_dir))
         bs = next(s for s in finding.ships if s.ship_class == "Battleship")
@@ -157,7 +157,7 @@ class TestAudit:
         self, tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture[str],
     ) -> None:
-        themes_root = tmp_path / "ShipThemes"
+        themes_root = tmp_path / "ship_themes"
         themes_root.mkdir()
         _write_full_theme(themes_root / "Clean", "Clean")
         monkeypatch.setattr("game.core.paths.Paths.SHIP_THEMES_DIR", str(themes_root))
@@ -170,7 +170,7 @@ class TestAudit:
         self, tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture[str],
     ) -> None:
-        themes_root = tmp_path / "ShipThemes"
+        themes_root = tmp_path / "ship_themes"
         themes_root.mkdir()
         _write_full_theme(themes_root / "Mismatch", "Mismatch", portrait_size=(1024, 1024))
         monkeypatch.setattr("game.core.paths.Paths.SHIP_THEMES_DIR", str(themes_root))
@@ -184,7 +184,7 @@ class TestAudit:
         self, tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture[str],
     ) -> None:
-        themes_root = tmp_path / "ShipThemes"
+        themes_root = tmp_path / "ship_themes"
         themes_root.mkdir()
         _write_full_theme(
             themes_root / "Missing",
@@ -202,7 +202,7 @@ class TestAudit:
         self, tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture[str],
     ) -> None:
-        themes_root = tmp_path / "ShipThemes"
+        themes_root = tmp_path / "ship_themes"
         themes_root.mkdir()
         _write_full_theme(
             themes_root / "Mixed",
@@ -234,7 +234,7 @@ class TestAudit:
         self, tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture[str],
     ) -> None:
-        themes_root = tmp_path / "ShipThemes"
+        themes_root = tmp_path / "ship_themes"
         themes_root.mkdir()
         _write_theme(themes_root / "T1", "T1")
         monkeypatch.setattr("game.core.paths.Paths.SHIP_THEMES_DIR", str(themes_root))
@@ -271,7 +271,7 @@ class TestCLI:
         self, tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture[str],
     ) -> None:
-        themes_root = tmp_path / "ShipThemes"
+        themes_root = tmp_path / "ship_themes"
         themes_root.mkdir()
         _write_theme(themes_root / "TestTheme", "TestTheme")
         monkeypatch.setattr("game.core.paths.Paths.SHIP_THEMES_DIR", str(themes_root))
@@ -284,7 +284,7 @@ class TestCLI:
     def test_idempotent_skip_when_portrait_exists(
         self, tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        themes_root = tmp_path / "ShipThemes"
+        themes_root = tmp_path / "ship_themes"
         themes_root.mkdir()
         _write_theme(themes_root / "T1", "T1")  # Battleship has a portrait.
         monkeypatch.setattr("game.core.paths.Paths.SHIP_THEMES_DIR", str(themes_root))
@@ -296,7 +296,7 @@ class TestCLI:
     def test_force_re_generates_existing(
         self, tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        themes_root = tmp_path / "ShipThemes"
+        themes_root = tmp_path / "ship_themes"
         themes_root.mkdir()
         _write_theme(themes_root / "T1", "T1")
         monkeypatch.setattr("game.core.paths.Paths.SHIP_THEMES_DIR", str(themes_root))
@@ -308,13 +308,13 @@ class TestCLI:
         self, tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture[str],
     ) -> None:
-        themes_root = tmp_path / "ShipThemes"
+        themes_root = tmp_path / "ship_themes"
         themes_root.mkdir()
         # No portrait dir: every canonical class is missing.
         td = themes_root / "T1"
         td.mkdir()
         (td / "Skins").mkdir()
-        assets = {cls: {"skin": "Skins/x.png"} for cls in SHIP_CLASSES_WITH_VISUAL_THEMES}
+        assets = {cls: {"skin": "skins/x.png"} for cls in SHIP_CLASSES_WITH_VISUAL_THEMES}
         (td / "Skins" / "x.png").write_bytes(b"\x89PNG\r\n\x1a\n")
         (td / "theme.json").write_text(json.dumps({
             "schema_version": 1, "name": "T1", "description": "",
@@ -332,7 +332,7 @@ class TestCLI:
     ) -> None:
         from game.ui.services.image import ImageResult
 
-        themes_root = tmp_path / "ShipThemes"
+        themes_root = tmp_path / "ship_themes"
         themes_root.mkdir()
         # Theme with NO portrait declared, so it becomes a generation target.
         td = themes_root / "T1"

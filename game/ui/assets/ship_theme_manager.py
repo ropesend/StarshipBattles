@@ -1,7 +1,7 @@
 """Ship-theme asset loader (PROJ-314).
 
 Reads the canonical ``assets:`` schema from
-``assets/Images/ShipThemes/<Theme>/theme.json`` and lazy-loads skin + portrait
+``assets/images/ship_themes/<Theme>/theme.json`` and lazy-loads skin + portrait
 :class:`pygame.Surface` instances on demand.
 
 Schema (PROJ-314)::
@@ -16,8 +16,8 @@ Schema (PROJ-314)::
         },
         "assets": {
             "Battleship": {
-                "skin":     "Skins/battleship.png",
-                "portrait": "Portraits/battleship.png",
+                "skin":     "skins/battleship.png",
+                "portrait": "portraits/battleship.png",
                 "scale":    1.0
             }
         }
@@ -102,14 +102,14 @@ class ShipThemeManager:
                 logger.info("ShipThemeManager caches cleared.")
 
     def initialize(self) -> None:
-        """Discover all themes from assets/Images/ShipThemes without loading images."""
+        """Discover all themes from assets/images/ship_themes without loading images."""
         with self._init_lock:
             if self.discovery_complete and self.theme_data:
                 return  # Already initialized.
 
             themes_dir = Paths.SHIP_THEMES_DIR
             if not os.path.exists(themes_dir):
-                logger.error("ShipThemes directory not found: %s", themes_dir)
+                logger.error("ship_themes directory not found: %s", themes_dir)
                 return
 
             with profile_block("Theme: Discover All"):

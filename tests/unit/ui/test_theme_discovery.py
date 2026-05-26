@@ -33,7 +33,7 @@ def _shared_pygame_display():
 
 
 class TestNewThemes:
-    """Smoke tests against the real assets/Images/ShipThemes/ directory."""
+    """Smoke tests against the real assets/images/ship_themes/ directory."""
 
     @pytest.fixture(autouse=True)
     def setup(self):
@@ -44,8 +44,8 @@ class TestNewThemes:
         set_default_ship_theme_manager(ShipThemeManager())
         manager = get_default_ship_theme_manager()
 
-        klingon_json = os.path.join(Paths.ASSET_DIR, "ShipThemes", "Klingons", "theme.json")
-        romulan_json = os.path.join(Paths.ASSET_DIR, "ShipThemes", "Romulans", "theme.json")
+        klingon_json = os.path.join(Paths.ASSET_DIR, "ship_themes", "Klingons", "theme.json")
+        romulan_json = os.path.join(Paths.ASSET_DIR, "ship_themes", "Romulans", "theme.json")
         if not os.path.exists(klingon_json) or not os.path.exists(romulan_json):
             pytest.skip("Theme JSON files not found - skipping theme discovery tests")
 
@@ -91,7 +91,7 @@ class TestThemeContractAgainstRealAssets:
             pygame.display.set_mode((1, 1), pygame.NOFRAME)
         themes_dir = Paths.SHIP_THEMES_DIR
         if not os.path.isdir(themes_dir):
-            pytest.skip("ShipThemes directory not found")
+            pytest.skip("ship_themes directory not found")
         self.themes_dir = themes_dir
         self.theme_dirs = [
             os.path.join(themes_dir, name)
@@ -211,8 +211,8 @@ class TestImageSizeValidationWarning:
             "image_sizes": {"skin": [2048, 2048], "portrait": [2048, 2048]},
             "assets": {
                 "Battleship": {
-                    "skin": "Skins/battleship.png",
-                    "portrait": "Portraits/battleship.png",
+                    "skin": "skins/battleship.png",
+                    "portrait": "portraits/battleship.png",
                     "scale": 1.0,
                 }
             },
@@ -383,7 +383,7 @@ class TestShipThemeManagerCaching:
 
     def test_load_image_caching(self):
         mgr = get_default_ship_theme_manager()
-        themes_dir = os.path.join(Paths.ASSET_DIR, "ShipThemes", "Federation")
+        themes_dir = os.path.join(Paths.ASSET_DIR, "ship_themes", "Federation")
         if not os.path.exists(themes_dir):
             pytest.skip("Federation theme not found")
         mgr.initialize()
@@ -396,7 +396,7 @@ class TestShipThemeManagerCaching:
 
     def test_clear_invalidates_cache(self):
         mgr = get_default_ship_theme_manager()
-        themes_dir = os.path.join(Paths.ASSET_DIR, "ShipThemes", "Federation")
+        themes_dir = os.path.join(Paths.ASSET_DIR, "ship_themes", "Federation")
         if not os.path.exists(themes_dir):
             pytest.skip("Federation theme not found")
         mgr.initialize()
@@ -424,7 +424,7 @@ class TestShipThemeManagerMetrics:
 
     def test_get_metrics_returns_rect(self):
         mgr = get_default_ship_theme_manager()
-        themes_dir = os.path.join(Paths.ASSET_DIR, "ShipThemes", "Federation")
+        themes_dir = os.path.join(Paths.ASSET_DIR, "ship_themes", "Federation")
         if not os.path.exists(themes_dir):
             pytest.skip("Federation theme not found")
         mgr.initialize()
@@ -438,7 +438,7 @@ class TestShipThemeManagerMetrics:
 
     def test_get_metrics_caching(self):
         mgr = get_default_ship_theme_manager()
-        themes_dir = os.path.join(Paths.ASSET_DIR, "ShipThemes", "Federation")
+        themes_dir = os.path.join(Paths.ASSET_DIR, "ship_themes", "Federation")
         if not os.path.exists(themes_dir):
             pytest.skip("Federation theme not found")
         mgr.initialize()
@@ -484,7 +484,7 @@ class TestShipThemeManagerThreadSafety:
 
     def test_concurrent_load_image_no_corruption(self):
         mgr = get_default_ship_theme_manager()
-        themes_dir = os.path.join(Paths.ASSET_DIR, "ShipThemes", "Federation")
+        themes_dir = os.path.join(Paths.ASSET_DIR, "ship_themes", "Federation")
         if not os.path.exists(themes_dir):
             pytest.skip("Federation theme not found")
         mgr.initialize()

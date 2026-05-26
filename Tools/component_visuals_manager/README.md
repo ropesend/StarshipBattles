@@ -33,7 +33,7 @@ This is a standalone script that reads component image descriptions from a text 
 
 ### Server
 
-The server loads component data from `data/components.json` and image metadata from `assets/Images/Components/image_metadata.json`. It serves component sprite images from multiple resolution directories (64px through 2048px) and provides the following API:
+The server loads component data from `data/components.json` and image metadata from `assets/images/components/image_metadata.json`. It serves component sprite images from multiple resolution directories (64px through 2048px) and provides the following API:
 
 ### API Endpoints
 
