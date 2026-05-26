@@ -254,7 +254,7 @@ This applies to every size-tiered image family in the repo:
 | Family | Root | Master | Generated sizes | Wrapper module |
 |---|---|---:|---|---|
 | Components | `assets/images/components/` | `1024/` | `2048`, `512`, `256`, `128`, `64` | [`game/assets/component_derivatives.py`](game/assets/component_derivatives.py) |
-| Flags | `assets/images/flags/Processed/` | `flag_*/1024/` | `512`, `256`, `128`, `64`, `32` (per flag) | [`game/assets/flag_derivatives.py`](game/assets/flag_derivatives.py) |
+| Flags | `assets/images/flags/` | `flag_*/1024/` | `512`, `256`, `128`, `64`, `32` (per flag) | [`game/assets/flag_derivatives.py`](game/assets/flag_derivatives.py) |
 | Stars | `assets/images/Stars/` | `1024/` | `512`, `256`, `128` | [`game/assets/star_derivatives.py`](game/assets/star_derivatives.py) |
 | Planets | `assets/images/Planets/` | `2048/` | `1024`, `512`, `256`, `128` | [`game/assets/planet_derivatives.py`](game/assets/planet_derivatives.py) |
 

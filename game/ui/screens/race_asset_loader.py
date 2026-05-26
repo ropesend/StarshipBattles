@@ -43,7 +43,7 @@ class RaceAssetLoader:
             List of [rectangle, shield, triangle] surfaces (original size, caller scales)
         """
         shapes = []
-        flag_dir = os.path.join(Paths.FLAGS_PROCESSED_DIR, flag_id)
+        flag_dir = os.path.join(Paths.FLAGS_DIR, flag_id)
 
         for shape in ["rectangle", "shield", "triangle"]:
             # Try 1024px first for best quality, then 512, 256, then root

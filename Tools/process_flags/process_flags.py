@@ -23,7 +23,7 @@ from game.core.paths import Paths
 
 # Configuration
 INPUT_DIR = os.path.join(Paths.ASSET_DIR, "Images", "Flags", "Processed Flags")
-OUTPUT_BASE_DIR = os.path.join(Paths.ASSET_DIR, "Images", "Flags", "Processed")
+OUTPUT_BASE_DIR = os.path.join(Paths.ASSET_DIR, "Images", "flags")
 SIZES = [1024, 512, 256, 128, 64, 32]
 FLAG_TYPES = ["rectangle", "shield", "triangle"]
 

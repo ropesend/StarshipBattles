@@ -22,10 +22,10 @@ There are exactly three categories. For each, the rule is: enumerate the directo
 
 #### 1. Flags — 15 expected
 
-- **Source directory:** `assets/images/flags/Processed/`
+- **Source directory:** `assets/images/flags/`
 - **Per-asset rule:** every immediate subdirectory whose name starts with `flag_` is one flag asset. The subdirectory name is the `flag_id` (e.g. `flag_2fl0bh2fl0bh2fl0`).
 - **Image to view:** `<flag_id>_512.png` inside the flag's subdirectory. If `512` is missing, fall back to any `<flag_id>_<size>.png` — they are all the same artwork at different resolutions.
-- **Sidecar path:** `assets/images/flags/Processed/<flag_id>/<flag_id>.caption.json`
+- **Sidecar path:** `assets/images/flags/<flag_id>/<flag_id>.caption.json`
 - **Schema (use these exact keys, in this order):**
   ```json
   {

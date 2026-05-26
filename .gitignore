@@ -108,12 +108,12 @@ assets/images/components/128/*
 assets/images/components/64/*
 
 # Flags: master is flag_*/1024/; all others are derivatives.
-assets/images/flags/Processed/.flag_derivatives_manifest.json
-assets/images/flags/Processed/flag_*/512/*
-assets/images/flags/Processed/flag_*/256/*
-assets/images/flags/Processed/flag_*/128/*
-assets/images/flags/Processed/flag_*/64/*
-assets/images/flags/Processed/flag_*/32/*
+assets/images/flags/.flag_derivatives_manifest.json
+assets/images/flags/flag_*/512/*
+assets/images/flags/flag_*/256/*
+assets/images/flags/flag_*/128/*
+assets/images/flags/flag_*/64/*
+assets/images/flags/flag_*/32/*
 
 # Stars: master is 1024/; all others are derivatives.
 assets/images/Stars/.star_derivatives_manifest.json

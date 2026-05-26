@@ -37,7 +37,7 @@ them by hand:
    - Race portraits → `prompts/portrait_prompt.md`
    - Ship themes → `prompts/theme_prompt.md`
 4. **Save Gemini's JSON output** to the sidecar location next to the asset:
-   - Flag: `assets/images/flags/Processed/<flag_id>/<flag_id>.caption.json`
+   - Flag: `assets/images/flags/<flag_id>/<flag_id>.caption.json`
    - Portrait: `assets/images/race_portraits/<portrait_filename>.caption.json`
    - Theme: `assets/images/ship_themes/<theme_name>/theme.caption.json`
 5. **Validate** with `python Tools/captioning/validate_captions.py`. The

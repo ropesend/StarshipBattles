@@ -2,7 +2,7 @@
 
 Per-family wrapper over ``game.assets.image_derivatives`` for race-flag
 shape PNGs. Each flag's master art (rectangle/shield/triangle shapes at
-1024 px) lives under ``Flags/Processed/<flag_id>/1024/``; smaller sizes
+1024 px) lives under ``flags/<flag_id>/1024/``; smaller sizes
 are generated at startup.
 
 See ``docs/03_CONVENTIONS.md`` for the canonical asset-derivative pattern.
@@ -41,7 +41,7 @@ def _flag_spec(
 ) -> DerivativeFamilySpec:
     return DerivativeFamilySpec(
         name="flag",
-        root_dir=flags_root if flags_root is not None else Paths.FLAGS_PROCESSED_DIR,
+        root_dir=flags_root if flags_root is not None else Paths.FLAGS_DIR,
         master_size=MASTER_SIZE,
         derivative_sizes=sizes,
         master_glob="flag_*/{master_size}/*.png",

@@ -274,12 +274,12 @@ class TestIssue11FlagModuleCache:
         # Build a fake flags directory: one flag_<id>/ with a 256/rectangle.png
         # (the loader's preferred-path entry; 128/ + root fallbacks not needed
         # for this test).
-        processed = tmp_path / "Images" / "Flags" / "Processed"
+        processed = tmp_path / "Images" / "flags"
         flag_dir = processed / "flag_x"
         (flag_dir / "256").mkdir(parents=True)
         (flag_dir / "256" / "rectangle.png").write_bytes(b"x")
 
-        monkeypatch.setattr(rfg.Paths, "FLAGS_PROCESSED_DIR", str(processed))
+        monkeypatch.setattr(rfg.Paths, "FLAGS_DIR", str(processed))
         rfg._clear_thumbnail_caches()
 
         # Stub the disk-touching pieces so the scan succeeds against the
@@ -342,14 +342,14 @@ class TestIssue11FlagReads256:
         from game.ui.panels import race_flag_gallery as rfg
 
         # Build a fake flags directory: one flag with both 128/ and 256/.
-        processed = tmp_path / "Images" / "Flags" / "Processed"
+        processed = tmp_path / "Images" / "flags"
         flag_dir = processed / "flag_x"
         (flag_dir / "128").mkdir(parents=True)
         (flag_dir / "256").mkdir(parents=True)
         (flag_dir / "128" / "rectangle.png").write_bytes(b"x")
         (flag_dir / "256" / "rectangle.png").write_bytes(b"x")
 
-        monkeypatch.setattr(rfg.Paths, "FLAGS_PROCESSED_DIR", str(processed))
+        monkeypatch.setattr(rfg.Paths, "FLAGS_DIR", str(processed))
         rfg._clear_thumbnail_caches()
 
         loaded_paths = []

@@ -127,7 +127,7 @@ class RaceFlagGallery(BaseGallery):
             return _FLAG_THUMBNAIL_CACHE
 
         flags: List[Tuple[str, pygame.Surface]] = []
-        flags_dir = Paths.FLAGS_PROCESSED_DIR
+        flags_dir = Paths.FLAGS_DIR
 
         if not os.path.exists(flags_dir):
             logger.warning(f"Flags directory not found: {flags_dir}")

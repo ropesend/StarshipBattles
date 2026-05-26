@@ -29,7 +29,7 @@ def _write_png(path: Path, size: int) -> None:
 
 def test_flag_wrapper_generates_per_flag_size_subdirs(tmp_path: Path) -> None:
     """Flag masters at <root>/<flag_id>/1024/{shape}.png produce derivative size dirs."""
-    root = tmp_path / "Flags" / "Processed"
+    root = tmp_path / "flags"
     # Two flags, three shapes each at the master resolution.
     for flag_id in ("flag_abc", "flag_xyz"):
         for shape in ("rectangle", "shield", "triangle"):

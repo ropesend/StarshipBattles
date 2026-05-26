@@ -81,7 +81,7 @@ class TestPathConstants:
         assert Paths.RESOURCE_ICONS_DIR == os.path.join(Paths.ASSET_DIR, "images", "resource_icons")
         assert Paths.RACE_PORTRAITS_DIR == os.path.join(Paths.ASSET_DIR, "images", "race_portraits")
         assert Paths.MODIFIER_ICONS_DIR == os.path.join(Paths.ASSET_DIR, "images", "modifier_icons")
-        assert Paths.FLAGS_PROCESSED_DIR == os.path.join(Paths.ASSET_DIR, "images", "flags", "Processed")
+        assert Paths.FLAGS_DIR == os.path.join(Paths.ASSET_DIR, "images", "flags")
         assert Paths.DEFAULT_SHIP_PORTRAIT == os.path.join(Paths.ASSET_DIR, "images", "default_ship_portrait.png")
 
     def test_starter_designs_dir_under_data(self):

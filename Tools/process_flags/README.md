@@ -22,8 +22,8 @@ No command-line arguments. The tool processes all `.png` files in the input dire
 
 | Directory | Path |
 |-----------|------|
-| Input     | `assets/images/flags/Processed Flags/` |
-| Output    | `assets/images/flags/Processed/`        |
+| Input     | `assets/images/flags Flags/` |
+| Output    | `assets/images/flags/`        |
 
 Input filenames are expected to follow the pattern `Gemini_Generated_Image_*_no_bg.png`. The tool derives a folder name from each input file (e.g., `flag_abc123`).
 
@@ -32,7 +32,7 @@ Input filenames are expected to follow the pattern `Gemini_Generated_Image_*_no_
 For each input image, a folder is created containing:
 
 ```
-assets/images/flags/Processed/flag_<id>/
+assets/images/flags/flag_<id>/
   rectangle.png      # 1024x1024 master
   shield.png
   triangle.png

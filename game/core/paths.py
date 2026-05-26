@@ -80,7 +80,7 @@ class Paths:
     RESOURCE_ICONS_DIR: str = os.path.join(ASSET_DIR, "images", "resource_icons")
     RACE_PORTRAITS_DIR: str = os.path.join(ASSET_DIR, "images", "race_portraits")
     MODIFIER_ICONS_DIR: str = os.path.join(ASSET_DIR, "images", "modifier_icons")
-    FLAGS_PROCESSED_DIR: str = os.path.join(ASSET_DIR, "images", "flags", "Processed")
+    FLAGS_DIR: str = os.path.join(ASSET_DIR, "images", "flags")
 
     # Resolution subdirectories within Components/ (only 1024 is tracked;
     # the others are regenerated at startup by game.assets.component_derivatives).

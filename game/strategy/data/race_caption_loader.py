@@ -5,7 +5,7 @@ the user (via the Gemini prompts in `Tools/captioning/prompts/`). Returns
 parsed dicts or `None` when the sidecar is missing or malformed.
 
 Sidecar locations:
-- Flag:     `<assets>/images/flags/Processed/<flag_id>/<flag_id>.caption.json`
+- Flag:     `<assets>/images/flags/<flag_id>/<flag_id>.caption.json`
 - Portrait: `<assets>/images/race_portraits/<portrait_filename>.caption.json`
 - Theme:    `<assets>/images/ship_themes/<theme_id>/theme.caption.json`
 
@@ -48,7 +48,7 @@ class RaceCaptionLoader:
     def load_flag(self, flag_id: str) -> Optional[dict]:
         """Load the caption for a flag asset, or None on missing/malformed."""
         sidecar = (
-            self.assets_dir / "images" / "flags" / "Processed"
+            self.assets_dir / "images" / "flags"
             / flag_id / f"{flag_id}.caption.json"
         )
         return self._load(sidecar, asset_type="flag", asset_id=flag_id)

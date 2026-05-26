@@ -72,7 +72,7 @@ class TestRaceFlagLoading:
         empire = mock_empire_factory(empire_id=1, flag_id="flag_test123", empire_theme_id="Federation")
 
         mock_surface = MagicMock(spec=pygame.Surface)
-        mock_surface.loaded_from_path = "assets/images/flags/Processed/flag_test123/256/rectangle.png"
+        mock_surface.loaded_from_path = "assets/images/flags/flag_test123/256/rectangle.png"
 
         mock_race_loader = MagicMock()
         mock_race_loader.load_all_empire_assets.return_value = {'colony': mock_surface, 'fleet_flag': mock_surface}
@@ -102,7 +102,7 @@ class TestRaceFlagLoading:
         empire = mock_empire_factory(empire_id=1, flag_id="flag_rootonly", empire_theme_id="Federation")
 
         mock_surface = MagicMock(spec=pygame.Surface)
-        mock_surface.loaded_from_path = "assets/images/flags/Processed/flag_rootonly/rectangle.png"
+        mock_surface.loaded_from_path = "assets/images/flags/flag_rootonly/rectangle.png"
 
         mock_race_loader = MagicMock()
         mock_race_loader.load_all_empire_assets.return_value = {'colony': mock_surface}
@@ -221,7 +221,7 @@ class TestFlagPrecedence:
         empire = mock_empire_factory(empire_id=1, flag_id="flag_race", empire_theme_id="Federation")
 
         race_surface = MagicMock(spec=pygame.Surface)
-        race_surface.loaded_from_path = "assets/images/flags/Processed/flag_race/256/rectangle.png"
+        race_surface.loaded_from_path = "assets/images/flags/flag_race/256/rectangle.png"
 
         mock_race_loader = MagicMock()
         # RaceAssetLoader returns race flag (it handles precedence internally)
