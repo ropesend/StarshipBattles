@@ -90,9 +90,9 @@ class Paths:
     COMPONENTS_256_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "256")
     COMPONENTS_128_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "128")
     COMPONENTS_64_DIR: str = os.path.join(COMPONENTS_IMAGES_DIR, "64")
-    PLANETS_DIR: str = os.path.join(ASSET_DIR, "images", "stellar_objects", "planets")
+    PLANETS_DIR: str = os.path.join(ASSET_DIR, "images", "planets")
 
-    # Resolution subdirectories within Planets/
+    # Resolution subdirectories within planets/
     PLANETS_2048_DIR: str = os.path.join(PLANETS_DIR, "2048")
     PLANETS_1024_DIR: str = os.path.join(PLANETS_DIR, "1024")
     PLANETS_512_DIR: str = os.path.join(PLANETS_DIR, "512")
@@ -100,14 +100,15 @@ class Paths:
     PLANETS_128_DIR: str = os.path.join(PLANETS_DIR, "128")
 
     # Star subdirectories
-    STARS_DIR: str = os.path.join(ASSET_DIR, "images", "stellar_objects", "stars")
+    STARS_DIR: str = os.path.join(ASSET_DIR, "images", "stars")
     STARS_1024_DIR: str = os.path.join(STARS_DIR, "1024")
     STARS_512_DIR: str = os.path.join(STARS_DIR, "512")
     STARS_256_DIR: str = os.path.join(STARS_DIR, "256")
     STARS_128_DIR: str = os.path.join(STARS_DIR, "128")
+    STAR_METADATA_FILE: str = os.path.join(STARS_DIR, "star_metadata.json")
 
-    # stellar_objects subdirectories
-    SPHERE_WORLD_DIR: str = os.path.join(ASSET_DIR, "images", "stellar_objects", "sphere_world")
+    # Other stellar-object families (single resolution; flat under images/).
+    SPHERE_WORLD_DIR: str = os.path.join(ASSET_DIR, "images", "sphere_world")
 
     # === Core Data Files ===
     COMPONENTS_FILE: str = os.path.join(DATA_DIR, "components.json")
@@ -201,11 +202,11 @@ class Paths:
 
     @classmethod
     def get_planets_dir(cls) -> Path:
-        return _PROJECT_ROOT / "assets" / "images" / "stellar_objects" / "planets"
+        return _PROJECT_ROOT / "assets" / "images" / "planets"
 
     @classmethod
     def get_stars_dir(cls) -> Path:
-        return _PROJECT_ROOT / "assets" / "images" / "stellar_objects" / "stars"
+        return _PROJECT_ROOT / "assets" / "images" / "stars"
 
     @classmethod
     def get_starter_designs_dir(cls) -> Path:

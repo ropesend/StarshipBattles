@@ -39,7 +39,7 @@ class AssetManager:
 
     def _load_star_metadata(self) -> None:
         """Load the star core metadata JSON."""
-        metadata_path = os.path.join(Paths.ASSET_DIR, "star_metadata.json")
+        metadata_path = Paths.STAR_METADATA_FILE
         if os.path.exists(metadata_path):
             self.star_metadata = load_json(metadata_path)
             logger.info(f"Loaded star metadata from {metadata_path}")
