@@ -15,15 +15,18 @@ def _find_project_root():
 
 
 _PROJECT_ROOT = _find_project_root()
+_SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(_PROJECT_ROOT))
 
 from game.core.paths import Paths
 
 
 def process_cursors():
-    cursor_dir = os.path.join(Paths.ASSET_DIR, 'Images', 'Cursor')
-    input_path = os.path.join(cursor_dir, '71wO8.jpg')
-    output_base = cursor_dir
+    # Source image lives next to the script (not under the runtime asset
+    # tree). Output cursor sprites are written into the runtime cursor
+    # asset folder for the UI to load.
+    input_path = os.path.join(_SCRIPT_DIR, 'source', '71wO8.jpg')
+    output_base = os.path.join(Paths.ASSET_DIR, 'images', 'cursor')
     
     # Ensure directories exist
     os.makedirs(os.path.join(output_base, '64x64'), exist_ok=True)

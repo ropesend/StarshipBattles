@@ -16,10 +16,15 @@ class TestStarImageRegistryLoading:
             assert count > 0, f"No images for {star_type.name}"
 
     def test_total_image_count(self):
-        """Should load 42 images (7 colors × 6 variants)."""
+        """Should load 41 images: 6 colors × 6 variants + white has 5 variants only.
+
+        White is short StarWhiteVariant_5.png; the matching manifest entry
+        was pruned during the asset-reorganization cleanup after on-disk
+        verification confirmed the file was never present.
+        """
         registry = StarImageRegistry()
         total = registry.get_total_image_count()
-        assert total == 42
+        assert total == 41
 
     def test_each_color_has_six_variants(self):
         """Each star type maps to a color with 6 variants."""
