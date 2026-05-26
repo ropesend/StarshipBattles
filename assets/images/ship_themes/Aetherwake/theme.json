@@ -14,79 +14,79 @@
   },
   "assets": {
     "Escort": {
-      "skin": "Skins/escort.png",
+      "skin": "skins/escort.png",
       "scale": 1.0
     },
     "Frigate": {
-      "skin": "Skins/frigate.png",
+      "skin": "skins/frigate.png",
       "scale": 1.0
     },
     "Destroyer": {
-      "skin": "Skins/destroyer.png",
+      "skin": "skins/destroyer.png",
       "scale": 1.0
     },
     "Light Cruiser": {
-      "skin": "Skins/light_cruiser.png",
+      "skin": "skins/light_cruiser.png",
       "scale": 1.0
     },
     "Cruiser": {
-      "skin": "Skins/cruiser.png",
+      "skin": "skins/cruiser.png",
       "scale": 1.0
     },
     "Heavy Cruiser": {
-      "skin": "Skins/heavy_cruiser.png",
+      "skin": "skins/heavy_cruiser.png",
       "scale": 1.0
     },
     "Battle Cruiser": {
-      "skin": "Skins/battle_cruiser.png",
+      "skin": "skins/battle_cruiser.png",
       "scale": 1.0
     },
     "Battleship": {
-      "skin": "Skins/battleship.png",
+      "skin": "skins/battleship.png",
       "scale": 1.0
     },
     "Dreadnought": {
-      "skin": "Skins/dreadnought.png",
+      "skin": "skins/dreadnought.png",
       "scale": 1.0
     },
     "Superdreadnought": {
-      "skin": "Skins/super_dreadnought.png",
+      "skin": "skins/super_dreadnought.png",
       "scale": 1.0
     },
     "Monitor": {
-      "skin": "Skins/monitor.png",
+      "skin": "skins/monitor.png",
       "scale": 1.0
     },
     "Fighter (Small)": {
-      "skin": "Skins/small_fighter.png",
+      "skin": "skins/small_fighter.png",
       "scale": 1.0
     },
     "Fighter (Medium)": {
-      "skin": "Skins/medium_fighter.png",
+      "skin": "skins/medium_fighter.png",
       "scale": 1.0
     },
     "Fighter (Large)": {
-      "skin": "Skins/large_fighter.png",
+      "skin": "skins/large_fighter.png",
       "scale": 1.0
     },
     "Fighter (Heavy)": {
-      "skin": "Skins/heavy_fighter.png",
+      "skin": "skins/heavy_fighter.png",
       "scale": 1.0
     },
     "Satellite (Small)": {
-      "skin": "Skins/small_satellite.png",
+      "skin": "skins/small_satellite.png",
       "scale": 1.0
     },
     "Satellite (Medium)": {
-      "skin": "Skins/medium_satellite.png",
+      "skin": "skins/medium_satellite.png",
       "scale": 1.0
     },
     "Satellite (Large)": {
-      "skin": "Skins/large_satellite.png",
+      "skin": "skins/large_satellite.png",
       "scale": 1.0
     },
     "Satellite (Heavy)": {
-      "skin": "Skins/heavy_satellite.png",
+      "skin": "skins/heavy_satellite.png",
       "scale": 1.0
     }
   }

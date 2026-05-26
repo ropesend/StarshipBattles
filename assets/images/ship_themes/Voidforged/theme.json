@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "name": "Voidforged",
+  "description": "Cracked obsidian hulls with magma-orange seams and shadowed crevices.",
+  "image_sizes": {
+    "skin": [
+      2048,
+      2048
+    ],
+    "portrait": [
+      2048,
+      2048
+    ]
+  },
+  "assets": {
+    "Escort": {
+      "skin": "skins/escort.png",
+      "scale": 1.0,
+      "portrait": "portraits/escort.png"
+    },
+    "Frigate": {
+      "skin": "skins/frigate.png",
+      "scale": 1.0,
+      "portrait": "portraits/frigate.png"
+    },
+    "Destroyer": {
+      "skin": "skins/destroyer.png",
+      "scale": 1.0,
+      "portrait": "portraits/destroyer.png"
+    },
+    "Light Cruiser": {
+      "skin": "skins/light_cruiser.png",
+      "scale": 1.0,
+      "portrait": "portraits/light_cruiser.png"
+    },
+    "Cruiser": {
+      "skin": "skins/cruiser.png",
+      "scale": 1.0,
+      "portrait": "portraits/cruiser.png"
+    },
+    "Heavy Cruiser": {
+      "skin": "skins/heavy_cruiser.png",
+      "scale": 1.0,
+      "portrait": "portraits/heavy_cruiser.png"
+    },
+    "Battle Cruiser": {
+      "skin": "skins/battle_cruiser.png",
+      "scale": 1.0,
+      "portrait": "portraits/battle_cruiser.png"
+    },
+    "Battleship": {
+      "skin": "skins/battleship.png",
+      "scale": 1.0,
+      "portrait": "portraits/battleship.png"
+    },
+    "Dreadnought": {
+      "skin": "skins/dreadnought.png",
+      "scale": 1.0,
+      "portrait": "portraits/dreadnought.png"
+    },
+    "Superdreadnought": {
+      "skin": "skins/super_dreadnought.png",
+      "scale": 1.0,
+      "portrait": "portraits/super_dreadnought.png"
+    },
+    "Monitor": {
+      "skin": "skins/monitor.png",
+      "scale": 1.0,
+      "portrait": "portraits/monitor.png"
+    },
+    "Fighter (Small)": {
+      "skin": "skins/small_fighter.png",
+      "scale": 1.0,
+      "portrait": "portraits/small_fighter.png"
+    },
+    "Fighter (Medium)": {
+      "skin": "skins/medium_fighter.png",
+      "scale": 1.0,
+      "portrait": "portraits/medium_fighter.png"
+    },
+    "Fighter (Large)": {
+      "skin": "skins/large_fighter.png",
+      "scale": 1.0,
+      "portrait": "portraits/large_fighter.png"
+    },
+    "Fighter (Heavy)": {
+      "skin": "skins/heavy_fighter.png",
+      "scale": 1.0,
+      "portrait": "portraits/heavy_fighter.png"
+    },
+    "Satellite (Small)": {
+      "skin": "skins/small_satellite.png",
+      "scale": 1.0,
+      "portrait": "portraits/small_satellite.png"
+    },
+    "Satellite (Medium)": {
+      "skin": "skins/medium_satellite.png",
+      "scale": 1.0,
+      "portrait": "portraits/medium_satellite.png"
+    },
+    "Satellite (Large)": {
+      "skin": "skins/large_satellite.png",
+      "scale": 1.0,
+      "portrait": "portraits/large_satellite.png"
+    },
+    "Satellite (Heavy)": {
+      "skin": "skins/heavy_satellite.png",
+      "scale": 1.0,
+      "portrait": "portraits/heavy_satellite.png"
+    }
+  }
+}
